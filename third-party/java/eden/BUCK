@@ -9,8 +9,8 @@ prebuilt_jar(
     name = "eden-thrift-bindings",
     binary_jar = "eden.jar",
     visibility = [
-        "//src/com/facebook/buck/eden/...",
-        "//test/com/facebook/buck/eden/...",
+        "//src/com/facebook/buck/edenfs/...",
+        "//test/com/facebook/buck/edenfs/...",
     ],
     deps = [
         "//third-party/java/fbthrift:fbthrift",

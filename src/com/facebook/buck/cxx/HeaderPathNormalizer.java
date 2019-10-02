@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
 
 class HeaderPathNormalizer {
 
-  private final SourcePathResolver pathResolver;
-
   /**
    * A mapping from absolute path of a header path (file or directory) to it's corresponding source
    * path.
@@ -50,19 +48,16 @@ class HeaderPathNormalizer {
   private final ImmutableMap<Path, Path> prefixMap;
 
   protected HeaderPathNormalizer(
-      SourcePathResolver pathResolver,
       ImmutableMap<Path, SourcePath> headers,
       ImmutableMap<Path, SourcePath> normalized,
       ImmutableMap<Path, Path> prefixMap) {
-    this.pathResolver = pathResolver;
     this.headers = headers;
     this.normalized = normalized;
     this.prefixMap = prefixMap;
   }
 
-  public static HeaderPathNormalizer empty(SourcePathResolver pathResolver) {
-    return new HeaderPathNormalizer(
-        pathResolver, ImmutableMap.of(), ImmutableMap.of(), ImmutableMap.of());
+  public static HeaderPathNormalizer empty() {
+    return new HeaderPathNormalizer(ImmutableMap.of(), ImmutableMap.of(), ImmutableMap.of());
   }
 
   private static <T> Optional<Map.Entry<Path, T>> pathLookup(Path path, Map<Path, T> map) {
@@ -76,7 +71,8 @@ class HeaderPathNormalizer {
     return Optional.empty();
   }
 
-  public Optional<Path> getAbsolutePathForUnnormalizedPath(Path unnormalizedPath) {
+  public Optional<Path> getAbsolutePathForUnnormalizedPath(
+      SourcePathResolver pathResolver, Path unnormalizedPath) {
     Preconditions.checkArgument(unnormalizedPath.isAbsolute());
     Optional<Map.Entry<Path, SourcePath>> result = pathLookup(unnormalizedPath, normalized);
     if (!result.isPresent()) {
@@ -197,7 +193,6 @@ class HeaderPathNormalizer {
 
     public HeaderPathNormalizer build() {
       return new HeaderPathNormalizer(
-          pathResolver,
           ImmutableMap.copyOf(headers),
           ImmutableMap.copyOf(normalized),
           ImmutableMap.copyOf(prefixMap));

@@ -36,6 +36,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
+import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -50,6 +51,7 @@ import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
@@ -214,6 +216,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             Optional.empty(),
             getFilterString(options),
             Optional.empty(),
+            options.getEnvironmentOverrides(),
             executionContext.isDebugEnabled(),
             executionContext.isCodeCoverageEnabled(),
             false));
@@ -246,6 +249,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       Optional<Path> instrumentationApkPath,
       Optional<String> classFilterArg,
       Optional<Path> apkUnderTestPath,
+      ImmutableMap<String, String> environmentOverrides,
       boolean debugEnabled,
       boolean codeCoverageEnabled,
       boolean isExternalRun) {
@@ -290,6 +294,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             .setKxmlJarPath(kxml2)
             .setGuavaJarPath(guava)
             .setAndroidToolsCommonJarPath(toolsCommon)
+            .setEnvironmentOverrides(environmentOverrides)
             .build();
 
     return new InstrumentationStep(
@@ -407,7 +412,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   @Override
-  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+  public ExternalTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
@@ -430,6 +435,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             instrumentationApkPath,
             Optional.empty(),
             apkUnderTestPath,
+            testRunningOptions.getEnvironmentOverrides(),
             executionContext.isDebugEnabled(),
             executionContext.isCodeCoverageEnabled(),
             true);

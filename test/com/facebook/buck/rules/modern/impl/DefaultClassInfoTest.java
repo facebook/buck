@@ -37,12 +37,14 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.InputRuleResolver;
+import com.facebook.buck.rules.modern.NoOpModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
@@ -334,5 +336,21 @@ public class DefaultClassInfoTest {
     default SourcePath getLazyPath() {
       return getPath();
     }
+  }
+
+  @Test
+  public void testBuckStyleValueImmutable() {
+    SourcePath path = FakeSourcePath.of(filesystem, "some.path");
+    BuckStyleValueImmutable immutable = new ImmutableBuckStyleValueImmutable(path);
+    ClassInfo<BuckStyleValueImmutable> classInfo = DefaultClassInfoFactory.forInstance(immutable);
+    StringifyingValueVisitor visitor = new StringifyingValueVisitor();
+    classInfo.visit(immutable, visitor);
+    assertEquals("path:SourcePath(/project/root/some.path)", visitor.getValue());
+  }
+
+  @BuckStyleValue
+  interface BuckStyleValueImmutable extends AddsToRuleKey {
+    @AddToRuleKey
+    SourcePath getPath();
   }
 }

@@ -464,13 +464,14 @@ public class AppleCxxPlatforms {
     AppleSdkPaths.Builder swiftSdkPathsBuilder = AppleSdkPaths.builder().from(sdkPaths);
     Optional<SwiftPlatform> swiftPlatform =
         getSwiftPlatform(
-            applePlatform.getName(),
             targetArchitecture
                 + "-apple-"
                 + applePlatform.getSwiftName().orElse(applePlatform.getName())
                 + minVersion,
             version,
+            targetSdk,
             swiftSdkPathsBuilder.build(),
+            appleConfig.shouldLinkSystemSwift(),
             swiftOverrideSearchPathBuilder.addAll(toolSearchPaths).build(),
             xcodeToolFinder,
             filesystem);
@@ -502,10 +503,11 @@ public class AppleCxxPlatforms {
   }
 
   private static Optional<SwiftPlatform> getSwiftPlatform(
-      String platformName,
       String targetArchitectureName,
       String version,
+      AppleSdk sdk,
       AppleSdkPaths sdkPaths,
+      boolean shouldLinkSystemSwift,
       ImmutableList<Path> toolSearchPaths,
       XcodeToolFinder xcodeToolFinder,
       ProjectFilesystem filesystem) {
@@ -517,6 +519,7 @@ public class AppleCxxPlatforms {
             "-target",
             targetArchitectureName);
 
+    String platformName = sdk.getApplePlatform().getName();
     ImmutableList.Builder<String> swiftStdlibToolParamsBuilder = ImmutableList.builder();
     swiftStdlibToolParamsBuilder
         .add("--copy")
@@ -526,6 +529,7 @@ public class AppleCxxPlatforms {
         .add(platformName);
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
       swiftStdlibToolParamsBuilder.add("--toolchain").add(toolchainPath.toString());
+      applySourceLibrariesParamIfNeeded(swiftStdlibToolParamsBuilder, toolchainPath, platformName);
     }
 
     Optional<Tool> swiftc =
@@ -543,7 +547,24 @@ public class AppleCxxPlatforms {
     return swiftc.map(
         tool ->
             SwiftPlatformFactory.build(
-                platformName, sdkPaths.getToolchainPaths(), tool, swiftStdLibTool));
+                sdk, sdkPaths, tool, swiftStdLibTool, shouldLinkSystemSwift));
+  }
+
+  private static void applySourceLibrariesParamIfNeeded(
+      ImmutableList.Builder<String> swiftStdlibToolParamsBuilder,
+      Path toolchainPath,
+      String platformName) {
+    Optional<Path> foundSwiftRuntimePath =
+        SwiftPlatformFactory.findSwiftRuntimePath(toolchainPath, platformName);
+    if (foundSwiftRuntimePath.isPresent()) {
+      swiftStdlibToolParamsBuilder
+          .add("--source-libraries")
+          .add(foundSwiftRuntimePath.get().toString());
+    } else {
+      if (platformName != "driverkit") {
+        LOG.info("Swift stdlib missing from: %s for platform: %s", toolchainPath, platformName);
+      }
+    }
   }
 
   private static Optional<Tool> getOptionalTool(

@@ -19,6 +19,7 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.string.StringMatcher;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
@@ -30,7 +31,8 @@ import org.immutables.value.Value;
 /** A class representing a string containing ordered, embedded, strongly typed macros. */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractStringWithMacros implements TargetTranslatable<StringWithMacros> {
+abstract class AbstractStringWithMacros
+    implements TargetTranslatable<StringWithMacros>, StringMatcher {
 
   // The components of the macro string.  Each part is either a plain string or a macro.
   abstract ImmutableList<Either<String, MacroContainer>> getParts();
@@ -94,5 +96,26 @@ abstract class AbstractStringWithMacros implements TargetTranslatable<StringWith
       }
     }
     return modified ? Optional.of(StringWithMacros.of(parts.build())) : Optional.empty();
+  }
+
+  @Override
+  public boolean matches(String s) {
+    if (hasMacros()) {
+      return false;
+    }
+    String result = "";
+    for (Either<String, MacroContainer> part : getParts()) {
+      result += part.getLeft();
+    }
+    return result.equals(s);
+  }
+
+  private boolean hasMacros() {
+    for (Either<String, MacroContainer> part : getParts()) {
+      if (part.isRight()) {
+        return true;
+      }
+    }
+    return false;
   }
 }

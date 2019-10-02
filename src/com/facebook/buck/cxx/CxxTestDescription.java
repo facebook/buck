@@ -164,6 +164,7 @@ public class CxxTestDescription
     BuildTarget buildTarget = inputBuildTarget;
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
     CxxPlatform cxxPlatform =
         getCxxPlatform(buildTarget, args)
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
@@ -173,6 +174,7 @@ public class CxxTestDescription
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       CxxLinkAndCompileRules cxxLinkAndCompileRules =
           CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+              context.getTargetGraph(),
               buildTarget.withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
               projectFilesystem,
               graphBuilder,
@@ -199,6 +201,7 @@ public class CxxTestDescription
     // Generate the link rule that builds the test binary.
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+            context.getTargetGraph(),
             buildTarget,
             projectFilesystem,
             graphBuilder,
@@ -288,7 +291,8 @@ public class CxxTestDescription
                               .getDelegate()
                               .getView(TestBuckConfig.class)
                               .getDefaultTestRuleTimeoutMs()),
-                  cxxBuckConfig.getMaximumTestOutputSize());
+                  cxxBuckConfig.getMaximumTestOutputSize(),
+                  cxxBuckConfig.checkGTestTestList());
           break;
         }
       case BOOST:

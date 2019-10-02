@@ -29,6 +29,7 @@ import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -53,6 +54,7 @@ import javax.annotation.Nullable;
 
 /** Buildable for DefaultJavaLibrary. */
 class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineState> {
+  @AddToRuleKey private final int buckJavaVersion = JavaVersion.getMajorVersion();
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
   @AddToRuleKey private final UnusedDependenciesAction unusedDependenciesAction;
   @AddToRuleKey private final Optional<NonHashableSourcePathContainer> sourceAbiOutput;
@@ -88,11 +90,15 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     CompilerOutputPaths outputPaths = CompilerOutputPaths.of(buildTarget, filesystem);
 
-    Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(buildTarget, filesystem);
+    Path pathToClassHashes = getPathToClassHashes(filesystem);
     this.pathToClassHashesOutputPath = new PublicOutputPath(pathToClassHashes);
 
     this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
     this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
+  }
+
+  Path getPathToClassHashes(ProjectFilesystem filesystem) {
+    return JavaLibraryRules.getPathToClassHashes(buildTarget, filesystem);
   }
 
   public ImmutableSortedSet<SourcePath> getSources() {

@@ -32,8 +32,8 @@ import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
@@ -43,13 +43,13 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TestParserFactory;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
@@ -69,6 +69,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
@@ -173,7 +174,7 @@ public class BuckQueryEnvironmentTest {
 
   @Test
   public void testResolveSingleTargets() throws QueryException {
-    ImmutableSet<QueryTarget> targets;
+    Set<QueryTarget> targets;
     ImmutableSet<QueryTarget> expectedTargets;
 
     targets = buckQueryEnvironment.getTargetsMatchingPattern("//example:six");

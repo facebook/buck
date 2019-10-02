@@ -17,25 +17,33 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException
+import com.facebook.buck.core.model.ImmutableCanonicalCellName
 import com.facebook.buck.core.model.ImmutableInternedUnconfiguredBuildTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import java.util.Optional
 
 /**
  * Collection of convenience methods for parsing build targets. Returned build targets are strongly
  * interned to make `equals` calls faster in order to speed up maps/set data structure operations.
  */
 object BuildTargets {
-    fun createBuildTargetFromParts(cell: String, basePath: FsAgnosticPath, name: String): UnconfiguredBuildTarget =
-            ImmutableInternedUnconfiguredBuildTarget.of(
-                    cell,
-                    "//$basePath",
-                    name,
-                    UnconfiguredBuildTarget.NO_FLAVORS)
+    fun createBuildTargetFromParts(
+        cell: String,
+        basePath: FsAgnosticPath,
+        name: String
+    ): UnconfiguredBuildTarget {
+        // TODO(cjhopman, sergeyb): This is probably wrong and doesn't handle canonicalization correctly.
+        return ImmutableInternedUnconfiguredBuildTarget.of(
+            ImmutableCanonicalCellName.of(if (cell.isEmpty()) Optional.empty() else Optional.of(cell)),
+            "//$basePath", name, UnconfiguredBuildTarget.NO_FLAVORS)
+    }
 
-    fun createBuildTargetFromParts(basePath: FsAgnosticPath, name: String): UnconfiguredBuildTarget =
-            createBuildTargetFromParts("", basePath, name)
+    fun createBuildTargetFromParts(
+        basePath: FsAgnosticPath,
+        name: String
+    ): UnconfiguredBuildTarget = createBuildTargetFromParts("", basePath, name)
 
     /**
      * @param target must be a fully-qualified build target

@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;

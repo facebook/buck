@@ -36,7 +36,6 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDeps;
@@ -47,20 +46,19 @@ import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceTypes;
-import com.facebook.buck.cxx.CxxToolFlags;
-import com.facebook.buck.cxx.ExplicitCxxToolFlags;
-import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -73,10 +71,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -323,11 +321,9 @@ public class HaskellLibraryDescription
         ImmutableSortedMap.naturalOrder();
     for (BuildRule rule : deps) {
       if (rule instanceof HaskellCompileDep) {
-        ImmutableList<HaskellPackage> packages =
-            ((HaskellCompileDep) rule).getCompileInput(platform, depType, hsProfile).getPackages();
-        for (HaskellPackage pkg : packages) {
-          depPackagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
-        }
+        HaskellPackage pkg =
+            ((HaskellCompileDep) rule).getCompileInput(platform, depType, hsProfile).getPackage();
+        depPackagesBuilder.put(pkg.getIdentifier(), pkg);
       }
     }
 
@@ -447,55 +443,14 @@ public class HaskellLibraryDescription
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
     ImmutableSet<BuildRule> deps = allDeps.get(graphBuilder, cxxPlatform);
-
-    // Collect all Haskell deps
-    ImmutableSet.Builder<SourcePath> haddockInterfaces = ImmutableSet.builder();
-    ImmutableSortedMap.Builder<String, HaskellPackage> packagesBuilder =
-        ImmutableSortedMap.naturalOrder();
-    ImmutableSortedMap.Builder<String, HaskellPackage> exposedPackagesBuilder =
-        ImmutableSortedMap.naturalOrder();
-
-    // Traverse all deps to pull interfaces
-    new AbstractBreadthFirstTraversal<BuildRule>(deps) {
-      @Override
-      public Iterable<BuildRule> visit(BuildRule rule) {
-        ImmutableSet.Builder<BuildRule> traverse = ImmutableSet.builder();
-        if (rule instanceof HaskellCompileDep) {
-          HaskellCompileDep haskellCompileDep = (HaskellCompileDep) rule;
-
-          // Get haddock-interfaces
-          HaskellHaddockInput inp = haskellCompileDep.getHaddockInput(platform);
-          haddockInterfaces.addAll(inp.getInterfaces());
-
-          HaskellCompileInput compileInput =
-              haskellCompileDep.getCompileInput(
-                  platform, Linker.LinkableDepType.STATIC, args.isEnableProfiling());
-          boolean firstOrderDep = deps.contains(rule);
-          for (HaskellPackage pkg : compileInput.getPackages()) {
-            if (firstOrderDep) {
-              exposedPackagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
-            } else {
-              packagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
-            }
-          }
-          traverse.addAll(haskellCompileDep.getCompileDeps(platform));
-        }
-        return traverse.build();
-      }
-    }.start();
-
-    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, deps);
-    ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
-    PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
-    toolFlagsBuilder.setPlatformFlags(
-        StringArg.from(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C)));
-    for (CxxPreprocessorInput input : cxxPreprocessorInputs) {
-      ppFlagsBuilder.addAllIncludes(input.getIncludes());
-      ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
-      toolFlagsBuilder.addAllRuleFlags(input.getPreprocessorFlags().get(CxxSource.Type.C));
-    }
-    ppFlagsBuilder.setOtherFlags(toolFlagsBuilder.build());
+    HaskellCompilerFlags compilerFlags =
+        HaskellDescriptionUtils.createCompileFlags(
+            graphBuilder,
+            deps,
+            platform,
+            Linker.LinkableDepType.STATIC,
+            args.isEnableProfiling(),
+            args.getCompilerFlags());
 
     return graphBuilder.addToIndex(
         HaskellHaddockLibRule.from(
@@ -506,16 +461,12 @@ public class HaskellLibraryDescription
             HaskellSources.from(baseTarget, graphBuilder, platform, "srcs", args.getSrcs()),
             platform.getHaddock().resolve(graphBuilder, baseTarget.getTargetConfiguration()),
             args.getHaddockFlags(),
-            args.getCompilerFlags(),
+            compilerFlags,
             platform.getLinkerFlags(),
-            haddockInterfaces.build(),
-            packagesBuilder.build(),
-            exposedPackagesBuilder.build(),
             getPackageInfo(platform, baseTarget),
             platform,
             CxxSourceTypes.getPreprocessor(platform.getCxxPlatform(), CxxSource.Type.C)
-                .resolve(graphBuilder, baseTarget.getTargetConfiguration()),
-            ppFlagsBuilder.build()));
+                .resolve(graphBuilder, baseTarget.getTargetConfiguration())));
   }
 
   private HaskellLinkRule createSharedLibrary(
@@ -716,6 +667,8 @@ public class HaskellLibraryDescription
     }
 
     return new HaskellLibrary(buildTarget, projectFilesystem, params) {
+      private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+          LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
       @Override
       public Iterable<BuildRule> getCompileDeps(HaskellPlatform platform) {
@@ -739,7 +692,7 @@ public class HaskellLibraryDescription
                 allDeps.get(graphBuilder, platform.getCxxPlatform()),
                 depType,
                 hsProfile);
-        return HaskellCompileInput.builder().addPackages(rule.getPackage()).build();
+        return HaskellCompileInput.builder().setPackage(rule.getPackage()).build();
       }
 
       @Override
@@ -797,6 +750,20 @@ public class HaskellLibraryDescription
       public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
           BuildRuleResolver ruleResolver) {
         return ImmutableList.of();
+      }
+
+      @Override
+      public Optional<Iterable<? extends NativeLinkableGroup>> getOmnibusPassthroughDeps(
+          CxxPlatform platform, ActionGraphBuilder graphBuilder) {
+        ImmutableSet<? extends NativeLinkable> platformDeps =
+            ImmutableSet.copyOf(
+                getNativeLinkable(platform, graphBuilder)
+                    .getNativeLinkableExportedDeps(graphBuilder));
+        Iterable<? extends NativeLinkableGroup> allDeps =
+            getNativeLinkableExportedDeps(graphBuilder);
+        return Optional.of(
+            Iterables.filter(
+                allDeps, g -> platformDeps.contains(g.getNativeLinkable(platform, graphBuilder))));
       }
 
       private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
@@ -894,6 +861,11 @@ public class HaskellLibraryDescription
                 args.isEnableProfiling());
         libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
         return libs.build();
+      }
+
+      @Override
+      public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+        return linkableCache;
       }
     };
   }

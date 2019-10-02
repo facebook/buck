@@ -16,10 +16,13 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.skylark.function.attr.AttributeHolder;
+import com.facebook.buck.core.rules.providers.impl.UserDefinedProvider;
+import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
+import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
+import com.google.devtools.build.lib.skylarkinterface.ParamType;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkConstructor;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkGlobalLibrary;
@@ -29,6 +32,7 @@ import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.SkylarkList;
 
 /**
  * Interface for a global Skylark library containing rule-related helper and registration functions.
@@ -80,4 +84,52 @@ public interface SkylarkRuleFunctionsApi {
       FuncallExpression ast,
       Environment env)
       throws EvalException;
+
+  @SkylarkCallable(
+      name = "provider",
+      doc =
+          "Creates a declared provider, which is both an identifier of, and constructor "
+              + "used to create, \"struct-like\" values called Infos. Note that unlike other "
+              + "build systems, a list of fields *must* be provided. If a schemaless struct is "
+              + "desired, use the struct() function. If a less-schemaful provider is required, "
+              + "a dictionary can be used for one of the fields. Example:<br>"
+              + "<pre class=\"language-python\">DataInfo = provider(fields=[\"x\", \"y\", \"z\"])\n"
+              + "d = DataInfo(x = 2, y = 3)\n"
+              + "print(d.x + d.y) # prints 5"
+              + "print(d.z == None) # prints True, as Z was not specified</pre>",
+      parameters = {
+        @Param(
+            name = "doc",
+            type = String.class,
+            named = true,
+            defaultValue = "''",
+            doc =
+                "A description of the provider that can be extracted by documentation generating tools."),
+        @Param(
+            name = "fields",
+            doc =
+                "Restricts the set of allowed fields. <br>"
+                    + "Possible values are:"
+                    + "<ul>"
+                    + "  <li> list of fields:<br>"
+                    + "       <pre class=\"language-python\">provider(fields = ['a', 'b'])</pre><p>"
+                    + "  <li> dictionary field name -> documentation:<br>"
+                    + "       <pre class=\"language-python\">provider(\n"
+                    + "       fields = { 'a' : 'Documentation for a', 'b' : 'Documentation for b' })</pre>"
+                    + "</ul>"
+                    + "All fields are optional, and have the value None if not specified.<br>"
+                    + "Documentation strings provided for a field in the dictionary form are not "
+                    + "currently used by Buck itself, however they can be used by external "
+                    + "documentation generating tools.",
+            allowedTypes = {
+              @ParamType(type = SkylarkList.class, generic1 = String.class),
+              @ParamType(type = SkylarkDict.class)
+            },
+            noneable = false,
+            named = true,
+            positional = false,
+            defaultValue = "[]")
+      },
+      useLocation = true)
+  UserDefinedProvider provider(String doc, Object fields, Location location) throws EvalException;
 }

@@ -36,12 +36,7 @@ to be packaged into a top-level {call buck.lua_binary /} rule.
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'main_module' /}

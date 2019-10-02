@@ -58,7 +58,7 @@ public class JavaTestGetClassNamesIntegrationTest {
     Path classesFolder = Paths.get("default.jar");
     Set<SourcePath> sources = ImmutableSet.of(makeSourcePath("src/com/facebook/DummyTest.java"));
     Set<String> classNames =
-        JavaTest.CompiledClassFileFinder.getClassNamesForSources(
+        CompiledClassFileFinder.getClassNamesForSources(
             sources, classesFolder, projectFilesystem, resolver);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
@@ -68,7 +68,7 @@ public class JavaTestGetClassNamesIntegrationTest {
     Path classesFolder = Paths.get("case1.jar");
     Set<SourcePath> sources = ImmutableSet.of(makeSourcePath("src/com/facebook/DummyTest.java"));
     Set<String> classNames =
-        JavaTest.CompiledClassFileFinder.getClassNamesForSources(
+        CompiledClassFileFinder.getClassNamesForSources(
             sources, classesFolder, projectFilesystem, resolver);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
@@ -78,7 +78,7 @@ public class JavaTestGetClassNamesIntegrationTest {
     Path classesFolder = Paths.get("case2.jar");
     Set<SourcePath> sources = ImmutableSet.of(makeSourcePath("src/com/facebook/DummyTest.java"));
     Set<String> classNames =
-        JavaTest.CompiledClassFileFinder.getClassNamesForSources(
+        CompiledClassFileFinder.getClassNamesForSources(
             sources, classesFolder, projectFilesystem, resolver);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
@@ -91,7 +91,7 @@ public class JavaTestGetClassNamesIntegrationTest {
             makeSourcePath("src/com/facebook/feed/DummyTest.java"),
             makeSourcePath("src/com/facebook/nav/OtherDummyTest.java"));
     Set<String> classNames =
-        JavaTest.CompiledClassFileFinder.getClassNamesForSources(
+        CompiledClassFileFinder.getClassNamesForSources(
             sources, classesFolder, projectFilesystem, resolver);
     assertEquals(
         "Ideally, if the implementation of getClassNamesForSources() were tightened up,"

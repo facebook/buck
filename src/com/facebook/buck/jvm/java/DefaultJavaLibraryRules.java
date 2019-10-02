@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.collect.ImmutableList;
@@ -61,6 +62,7 @@ public abstract class DefaultJavaLibraryRules {
         ImmutableSortedSet<BuildRule> fullJarExportedDeps,
         ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
         ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps,
+        ImmutableSortedSet<BuildRule> runtimeDeps,
         @Nullable BuildTarget abiJar,
         @Nullable BuildTarget sourceOnlyAbiJar,
         Optional<String> mavenCoords,
@@ -185,6 +187,8 @@ public abstract class DefaultJavaLibraryRules {
     BuildTarget rootmostTarget = getLibraryTarget();
     if (willProduceCompareAbis()) {
       rootmostTarget = JavaAbis.getVerifiedSourceAbiJar(rootmostTarget);
+    } else if (willProduceSourceAbiFromLibraryTarget()) {
+      rootmostTarget = JavaAbis.getSourceAbiJar(rootmostTarget);
     } else if (willProduceClassAbi()) {
       rootmostTarget = JavaAbis.getClassAbiJar(rootmostTarget);
     }
@@ -193,6 +197,20 @@ public abstract class DefaultJavaLibraryRules {
     graphBuilder.computeIfAbsent(
         rootmostTarget,
         target -> {
+          if (willProduceSourceAbiFromLibraryTarget()) {
+            DefaultJavaLibrary libraryRule = buildLibraryRule(/* sourceAbiRule */ null);
+            CalculateSourceAbiFromLibraryTarget sourceAbiRule =
+                buildSourceAbiRuleFromLibraryTarget(libraryRule);
+            CalculateClassAbi classAbiRule = buildClassAbiRule(libraryRule);
+
+            if (JavaAbis.isLibraryTarget(target)) {
+              return libraryRule;
+            } else if (JavaAbis.isClassAbiTarget(target)) {
+              return classAbiRule;
+            } else if (JavaAbis.isSourceAbiTarget(target)) {
+              return sourceAbiRule;
+            }
+          }
           CalculateSourceAbi sourceOnlyAbiRule = buildSourceOnlyAbiRule();
           CalculateSourceAbi sourceAbiRule = buildSourceAbiRule();
           DefaultJavaLibrary libraryRule = buildLibraryRule(sourceAbiRule);
@@ -290,7 +308,7 @@ public abstract class DefaultJavaLibraryRules {
       result = args.getAbiGenerationMode().orElse(null);
     }
     if (result == null) {
-      result = Objects.requireNonNull(getJavaBuckConfig()).getAbiGenerationMode();
+      result = Objects.requireNonNull(getConfiguredCompilerFactory()).getAbiGenerationMode();
     }
 
     if (result == AbiGenerationMode.CLASS) {
@@ -336,6 +354,11 @@ public abstract class DefaultJavaLibraryRules {
     }
 
     return result;
+  }
+
+  private boolean willProduceSourceAbiFromLibraryTarget() {
+    return willProduceSourceAbi()
+        && getConfiguredCompilerFactory().sourceAbiCopiesFromLibraryTargetOutput();
   }
 
   private boolean willProduceSourceAbi() {
@@ -384,7 +407,8 @@ public abstract class DefaultJavaLibraryRules {
     UnusedDependenciesAction unusedDependenciesAction = getUnusedDependenciesAction();
     Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory = Optional.empty();
 
-    if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE) {
+    if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE
+        && getConfiguredCompilerFactory().trackClassUsage(getJavacOptions())) {
       ProjectFilesystem projectFilesystem = getProjectFilesystem();
       BuildTarget buildTarget = getLibraryTarget();
       SourcePathResolver sourcePathResolver = getSourcePathResolver();
@@ -416,6 +440,7 @@ public abstract class DefaultJavaLibraryRules {
                 Objects.requireNonNull(getDeps()).getExportedDeps(),
                 Objects.requireNonNull(getDeps()).getProvidedDeps(),
                 Objects.requireNonNull(getDeps()).getExportedProvidedDeps(),
+                Objects.requireNonNull(getDeps()).getRuntimeDeps(),
                 getAbiJar(),
                 getSourceOnlyAbiJar(),
                 getMavenCoords(),
@@ -472,6 +497,23 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Nullable
+  private CalculateSourceAbiFromLibraryTarget buildSourceAbiRuleFromLibraryTarget(
+      DefaultJavaLibrary libraryRule) {
+    if (!willProduceSourceAbi()) {
+      return null;
+    }
+
+    BuildTarget sourceAbiTarget = JavaAbis.getSourceAbiJar(getLibraryTarget());
+    return getActionGraphBuilder()
+        .addToIndex(
+            new CalculateSourceAbiFromLibraryTarget(
+                libraryRule.getSourcePathToOutput(),
+                sourceAbiTarget,
+                getProjectFilesystem(),
+                getActionGraphBuilder()));
+  }
+
+  @Nullable
   private CalculateClassAbi buildClassAbiRule(DefaultJavaLibrary libraryRule) {
     if (!willProduceClassAbi()) {
       return null;
@@ -496,7 +538,7 @@ public abstract class DefaultJavaLibraryRules {
         // Use the BuckConfig version (rather than the inferred one) because if any
         // targets are using source_only it can affect the output of other targets
         // in ways that are hard to simulate
-        : getJavaBuckConfig().getAbiGenerationMode();
+        : getConfiguredCompilerFactory().getAbiGenerationMode();
   }
 
   @Value.Lazy
@@ -606,15 +648,40 @@ public abstract class DefaultJavaLibraryRules {
         getProjectFilesystem(), getActionGraphBuilder(), getResources(), getResourcesRoot());
   }
 
+  /**
+   * This is a little complicated, but goes along the lines of: 1. If the buck config value is
+   * "ignore_always", then ignore. 2. If the buck config value is "warn_if_fail", then downgrade a
+   * local "fail" to "warn". 3. Use the local action if available. 4. Use the buck config value if
+   * available. 5. Default to ignore.
+   */
   private static UnusedDependenciesAction getUnusedDependenciesAction(
       @Nullable JavaBuckConfig javaBuckConfig, @Nullable JavaLibraryDescription.CoreArg args) {
-    if (args != null && args.getOnUnusedDependencies().isPresent()) {
-      return args.getOnUnusedDependencies().get();
-    }
-    if (javaBuckConfig == null) {
+    UnusedDependenciesAction localAction =
+        args == null ? null : args.getOnUnusedDependencies().orElse(null);
+
+    UnusedDependenciesConfig configAction =
+        javaBuckConfig == null ? null : javaBuckConfig.getUnusedDependenciesAction();
+
+    if (configAction == UnusedDependenciesConfig.IGNORE_ALWAYS) {
       return UnusedDependenciesAction.IGNORE;
     }
-    return javaBuckConfig.getUnusedDependenciesAction();
+
+    if (configAction == UnusedDependenciesConfig.WARN_IF_FAIL
+        && localAction == UnusedDependenciesAction.FAIL) {
+      return UnusedDependenciesAction.WARN;
+    }
+
+    if (localAction != null) {
+      return localAction;
+    }
+
+    if (configAction == UnusedDependenciesConfig.FAIL) {
+      return UnusedDependenciesAction.FAIL;
+    } else if (configAction == UnusedDependenciesConfig.WARN) {
+      return UnusedDependenciesAction.WARN;
+    } else {
+      return UnusedDependenciesAction.IGNORE;
+    }
   }
 
   @org.immutables.builder.Builder.AccessibleFields

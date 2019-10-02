@@ -17,7 +17,10 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.starlark.compatible.BuckStarlark;
+import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.skylark.function.SkylarkBuiltInProviders;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.facebook.buck.skylark.function.SkylarkProviderFunction;
 import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
@@ -35,7 +38,6 @@ import com.google.devtools.build.lib.syntax.Environment.GlobalFrame;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.MethodLibrary;
 import com.google.devtools.build.lib.syntax.Runtime;
-import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Lazy;
 
@@ -62,6 +64,8 @@ abstract class AbstractBuckGlobals {
 
   abstract LoadingCache<String, Label> getLabelCache();
 
+  abstract KnownUserDefinedRuleTypes getKnownUserDefinedRuleTypes();
+
   /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
   @Lazy
   Environment.GlobalFrame getBuckLoadContextGlobals() {
@@ -72,8 +76,12 @@ abstract class AbstractBuckGlobals {
     if (getEnableUserDefinedRules()) {
       Runtime.setupSkylarkLibrary(builder, new SkylarkRuleFunctions(getLabelCache()));
       Runtime.setupSkylarkLibrary(builder, new AttrModule());
+      builder.putAll(SkylarkBuiltInProviders.PROVIDERS);
+    } else {
+      // TODO(T48021397): provider() has some legacy behavior we'll need to migrate. The more
+      // correct provider() is made available for user-defined rules in
+      Runtime.setupSkylarkLibrary(builder, new SkylarkProviderFunction());
     }
-    Runtime.setupSkylarkLibrary(builder, new SkylarkProviderFunction());
     return GlobalFrame.createForBuiltins(builder.build());
   }
 
@@ -135,7 +143,7 @@ abstract class AbstractBuckGlobals {
   private void addNativeModuleFunctions(ImmutableMap.Builder<String, Object> builder) {
     for (String nativeFunction :
         FuncallExpression.getMethodNames(
-            StarlarkSemantics.DEFAULT_SEMANTICS, SkylarkNativeModule.class)) {
+            BuckStarlark.BUCK_STARLARK_SEMANTICS, SkylarkNativeModule.class)) {
       builder.put(
           nativeFunction,
           FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));

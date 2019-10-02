@@ -175,7 +175,7 @@ class ArchiveStep implements Step {
         archiver.isArgfileRequired()
             ? ImmutableList.<String>builder().addAll(archiverCommand).add("@" + getArgfile())
             : ImmutableList.<String>builder()
-                .add("ar")
+                .addAll(archiverCommand)
                 .addAll(archiverFlags)
                 .addAll(archiverExtraFlags)
                 .addAll(archiver.outputArgs(output.toString()))

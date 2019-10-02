@@ -35,12 +35,7 @@ and deps which build an executable.
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'main' /}
@@ -58,6 +53,8 @@ and deps which build an executable.
 {call haskell_common.compiler_flags_arg /}
 
 {call haskell_common.deps_arg /}
+
+{call buck.platform_deps_arg /}
 
 {/param} // close args
 

@@ -20,7 +20,7 @@ kotlin_library(
     ],
     deps = [
         ":runner_lib",
-        "//src/com/facebook/buck/multitenant/importer:importer",
+        "//src/com/facebook/buck/multitenant/fs:fs",
         "//src/com/facebook/buck/multitenant/service:service",
         "//third-party/java/kotlinx-coroutines:kotlinx-coroutines",
     ],
@@ -39,7 +39,6 @@ kotlin_library(
     deps = [
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/multitenant/fs:fs",
-        "//src/com/facebook/buck/multitenant/importer:importer",
         "//src/com/facebook/buck/multitenant/query:query",
         "//src/com/facebook/buck/multitenant/service:service",
         "//src/com/facebook/buck/query:query",

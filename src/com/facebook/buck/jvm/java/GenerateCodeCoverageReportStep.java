@@ -189,7 +189,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
           .getUnarchiver()
           .extractArchive(
               projectFilesystemFactory,
-              outputJar,
+              filesystem.getPathForRelativePath(outputJar),
               classesDir,
               ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     } catch (IOException e) {

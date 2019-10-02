@@ -27,6 +27,7 @@ import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -105,5 +106,10 @@ public class LazyPythonPlatform implements PythonPlatform {
   @Override
   public Optional<BuildTarget> getCxxLibrary() {
     return pythonBuckConfig.getCxxLibrary(configSection, targetConfiguration);
+  }
+
+  @Override
+  public ImmutableList<String> getInplaceBinaryInterpreterFlags() {
+    return pythonBuckConfig.inplaceBinaryInterpreterFlags();
   }
 }

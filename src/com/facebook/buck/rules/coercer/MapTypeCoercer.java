@@ -31,7 +31,7 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   private final TypeCoercer<K> keyTypeCoercer;
   private final TypeCoercer<V> valueTypeCoercer;
 
-  MapTypeCoercer(TypeCoercer<K> keyTypeCoercer, TypeCoercer<V> valueTypeCoercer) {
+  public MapTypeCoercer(TypeCoercer<K> keyTypeCoercer, TypeCoercer<V> valueTypeCoercer) {
     this.keyTypeCoercer = keyTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
   }

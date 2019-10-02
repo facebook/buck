@@ -74,11 +74,13 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
 class Jsr199JavacInvocation implements Javac.Invocation {
-
   private static final Logger LOG = Logger.get(Jsr199JavacInvocation.class);
   private static final ListeningExecutorService threadPool =
       MoreExecutors.listeningDecorator(
           Executors.newCachedThreadPool(new NamedThreadFactory("javac")));
+
+  static final String NO_JAVA_FILES_ERROR_MESSAGE =
+      "No Java files provided for library compilation";
 
   private final Supplier<JavaCompiler> compilerConstructor;
   private final JavacExecutionContext context;
@@ -644,6 +646,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         Set<Path> javaSourceFilePaths)
         throws IOException {
       List<JavaFileObject> compilationUnits = new ArrayList<>();
+      boolean seenZipOrJarSources = false;
       for (Path path : javaSourceFilePaths) {
         String pathString = path.toString();
         if (pathString.endsWith(".java")) {
@@ -656,6 +659,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           // For a Zip of .java files, create a JavaFileObject for each .java entry.
           ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
           boolean hasZipFileBeenUsed = false;
+          seenZipOrJarSources = true;
           for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
               entries.hasMoreElements(); ) {
             ZipEntry entry = entries.nextElement();
@@ -671,6 +675,17 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             zipFile.close();
           }
         }
+      }
+
+      // Bail now if none of the given files were Java files - we don't want to run non-Java files
+      // through javac and it's unlikely that this was the user's intention.
+      //
+      // If we've seen a source zip file that was empty, allow it. Annotation processor rules
+      // generate zip files of java sources which may not contain any java files if there were no
+      // annotations to process. Since this process is automated, it doesn't make sense to raise
+      // a human-facing error message in that case.
+      if (!seenZipOrJarSources && !javaSourceFilePaths.isEmpty() && compilationUnits.isEmpty()) {
+        throw new HumanReadableException(NO_JAVA_FILES_ERROR_MESSAGE);
       }
       return compilationUnits;
     }

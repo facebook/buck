@@ -16,11 +16,15 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
+
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -67,5 +71,26 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
       zipInspector.assertFileExists("lib/armeabi-v7a/libc++_shared.so");
       zipInspector.assertFileExists("lib/x86/libc++_shared.so");
     }
+  }
+
+  @Test
+  public void instrumentationApkCannotTestAnotherInstrumentationApk() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_instrumentation_apk_integration_test", tmpFolder);
+    workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
+
+    ProcessResult result =
+        workspace.runBuckCommand("build", "//:instrumentation_apk_with_instrumentation_apk");
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "In //:instrumentation_apk_with_instrumentation_apk, apk='//:app_cxx_lib_dep'"
+                + " must be an android_binary() or apk_genrule() but was"
+                + " android_instrumentation_apk()."));
   }
 }

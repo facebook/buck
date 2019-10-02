@@ -80,10 +80,7 @@ public class BuildReportIntegrationTest {
             "//:failing_rule")
         .assertFailure();
 
-    assertTrue(Files.exists(buildReport));
-    String buildReportContents = new String(Files.readAllBytes(buildReport), Charsets.UTF_8);
-    assertEquals(
-        workspace.getFileContents("expected_failed_build_report.json"), buildReportContents);
+    TestUtils.assertBuildReport(workspace, tmp, buildReport, "expected_failed_build_report.json");
   }
 
   @Test

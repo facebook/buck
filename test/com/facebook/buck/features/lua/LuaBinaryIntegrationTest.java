@@ -123,7 +123,7 @@ public class LuaBinaryIntegrationTest {
             .build();
     ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     ProcessExecutor.LaunchedProcess launchedProcess = executor.launchProcess(params);
-    launchedProcess.getOutputStream().close();
+    launchedProcess.getStdin().close();
     int exitCode = executor.waitForLaunchedProcess(launchedProcess).getExitCode();
     luaDevel = exitCode == 0;
     if (starterType == LuaBinaryDescription.StarterType.NATIVE) {

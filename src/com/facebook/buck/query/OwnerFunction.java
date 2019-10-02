@@ -20,7 +20,7 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import java.util.Set;
 
 /**
  * A "owner" query expression, which computes the rules that own the given files.
@@ -51,7 +51,7 @@ public class OwnerFunction<ENV_NODE_TYPE extends QueryTarget>
   }
 
   @Override
-  public ImmutableSet<ENV_NODE_TYPE> eval(
+  public Set<ENV_NODE_TYPE> eval(
       QueryEvaluator<ENV_NODE_TYPE> evaluator,
       QueryEnvironment<ENV_NODE_TYPE> env,
       ImmutableList<Argument<ENV_NODE_TYPE>> args)

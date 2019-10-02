@@ -36,6 +36,7 @@ import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -113,7 +114,7 @@ public class DistBuildController {
       String tenantId,
       ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> ruleKeyCalculatorFuture)
       throws InterruptedException {
-    Pair<StampedeId, ListenableFuture<Void>> stampedeIdAndPendingPrepFuture = null;
+    Pair<StampedeId, ListenableFuture<Unit>> stampedeIdAndPendingPrepFuture = null;
     try {
       stampedeIdAndPendingPrepFuture =
           Objects.requireNonNull(
@@ -143,7 +144,7 @@ public class DistBuildController {
 
     stampedeIdReference.set(stampedeIdAndPendingPrepFuture.getFirst());
 
-    ListenableFuture<Void> pendingPrepFuture = stampedeIdAndPendingPrepFuture.getSecond();
+    ListenableFuture<Unit> pendingPrepFuture = stampedeIdAndPendingPrepFuture.getSecond();
     try {
       LOG.info("Waiting for pre-build preparation to finish.");
       pendingPrepFuture.get();

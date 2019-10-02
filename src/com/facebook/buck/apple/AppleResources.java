@@ -18,6 +18,8 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -62,7 +64,8 @@ public class AppleResources {
         .toSet();
   }
 
-  public static <T> AppleBundleResources collectResourceDirsAndFiles(
+  /** Collect resource dirs and files */
+  public static <T extends ConstructorArg> AppleBundleResources collectResourceDirsAndFiles(
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       BuildRuleResolver resolver,
@@ -85,11 +88,11 @@ public class AppleResources {
 
     for (TargetNode<?> resourceNode : resourceNodes) {
       @SuppressWarnings("unchecked")
-      TargetNode<Object> node = (TargetNode<Object>) resourceNode;
+      TargetNode<CommonDescriptionArg> node = (TargetNode<CommonDescriptionArg>) resourceNode;
 
       @SuppressWarnings("unchecked")
-      HasAppleBundleResourcesDescription<Object> description =
-          (HasAppleBundleResourcesDescription<Object>) node.getDescription();
+      HasAppleBundleResourcesDescription<CommonDescriptionArg> description =
+          (HasAppleBundleResourcesDescription<CommonDescriptionArg>) node.getDescription();
 
       description.addAppleBundleResources(builder, node, filesystem, resolver);
     }

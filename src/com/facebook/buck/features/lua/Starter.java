@@ -20,7 +20,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 
 /** An interface which builds a Lua starter executable. */
 public interface Starter {
-
   /** @return builds and returns the {@link SourcePath} to the starter. */
   SourcePath build();
 }

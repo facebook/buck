@@ -22,7 +22,14 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 
-/** Static helpers for working with build targets. */
+/**
+ * Static helpers for working with build targets.
+ *
+ * @deprecated use {@link BuildPaths} instead, which handles flavoured and unflavoured {@link
+ *     BuildTarget}s in the paths the same way as RE/{@link
+ *     com.facebook.buck.rules.modern.ModernBuildRule}s do.
+ */
+@Deprecated
 public class BuildTargetPaths {
 
   /** Utility class: do not instantiate. */
@@ -43,11 +50,7 @@ public class BuildTargetPaths {
       ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
-    return filesystem
-        .getBuckPaths()
-        .getScratchDir()
-        .resolve(target.getBasePath())
-        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
+    return filesystem.getBuckPaths().getScratchDir().resolve(getBasePath(target, format));
   }
 
   /**
@@ -65,11 +68,7 @@ public class BuildTargetPaths {
       ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
-    return filesystem
-        .getBuckPaths()
-        .getAnnotationDir()
-        .resolve(target.getBasePath())
-        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
+    return filesystem.getBuckPaths().getAnnotationDir().resolve(getBasePath(target, format));
   }
 
   /**
@@ -86,10 +85,26 @@ public class BuildTargetPaths {
   public static Path getGenPath(ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
-    return filesystem
-        .getBuckPaths()
-        .getGenDir()
-        .resolve(target.getBasePath())
+    return filesystem.getBuckPaths().getGenDir().resolve(getBasePath(target, format));
+  }
+
+  /**
+   * Return a relative path to a file. {@code format} will be prepended with the target base path,
+   * then formatted with the target short name.
+   *
+   * <p>This is portion of the path returned by, e.g., {@link #getGenPath(ProjectFilesystem,
+   * BuildTarget, String)}
+   *
+   * @param target The {@link BuildTarget} to scope this path to.
+   * @param format {@link String#format} string for the path name. It should contain one "%s", which
+   *     will be filled in with the rule's short name. It should not start with a slash.
+   * @return A {@link java.nio.file.Path} scoped to the base path of {@code target}.
+   */
+  public static Path getBasePath(BuildTarget target, String format) {
+    Preconditions.checkArgument(
+        !format.startsWith("/"), "format string should not start with a slash");
+    return target
+        .getBasePath()
         .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
   }
 }

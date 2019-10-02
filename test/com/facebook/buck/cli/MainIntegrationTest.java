@@ -101,7 +101,7 @@ public class MainIntegrationTest {
         "  project        generates project configuration files for an IDE",
         "  publish        builds and publishes a library to a central repository",
         "  query          "
-            + "provides facilities to query information about the target nodes graph",
+            + "provides facilities to query information about the configured target nodes graph",
         "  rage           debug and fix issues of Buck commands",
         "  root           prints the absolute path to the root of the current buck project",
         "  run            runs a target as a command",
@@ -109,12 +109,14 @@ public class MainIntegrationTest {
         "  targets        prints the list of buildable targets",
         "  test           builds and runs the tests for the specified target",
         "  uninstall      uninstalls an APK",
+        "  uquery         "
+            + "provides facilities to query information about the unconfigured target nodes graph",
         "  verify-caches  Verify contents of internal Buck in-memory caches.",
         "",
         "Options:",
-        " --flagfile FILE : File to read command line arguments from.",
-        " --help (-h)     : Shows this screen and exits.",
-        " --version (-V)  : Show version number.",
+        " --flagfile FILE         : File to read command line arguments from.",
+        " --help (-h)             : Shows this screen and exits.",
+        " --version (-V)          : Show version number.",
         "",
         "");
   }

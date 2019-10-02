@@ -1,0 +1,17 @@
+load("//:defs.bzl", "my_rule")
+
+my_rule(
+    name = "can_use_providers_in_impl",
+)
+
+my_rule(
+    name = "return_non_list",
+)
+
+my_rule(
+    name = "return_non_info_in_list",
+)
+
+my_rule(
+    name = "return_duplicate_info_types",
+)

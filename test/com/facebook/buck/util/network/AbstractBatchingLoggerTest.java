@@ -18,6 +18,7 @@ package com.facebook.buck.util.network;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -40,10 +41,10 @@ public class AbstractBatchingLoggerTest {
     }
 
     @Override
-    protected ListenableFuture<Void> logMultiple(
+    protected ListenableFuture<Unit> logMultiple(
         ImmutableCollection<AbstractBatchingLogger.BatchEntry> data) {
       uploadedBatches.add(data);
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
   }
 

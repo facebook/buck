@@ -20,10 +20,13 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.MissingExcludeReporter;
+import com.facebook.buck.core.rules.actions.AbstractAction;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableCollection;
@@ -37,7 +40,6 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection<AlterRuleKey>> {
@@ -49,6 +51,7 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
       };
 
   @Override
+  @SuppressWarnings("unchecked")
   public ImmutableCollection<AlterRuleKey> load(Class<?> key) {
     ImmutableList.Builder<AlterRuleKey> builder = ImmutableList.builder();
     List<Class<?>> superClasses = new ArrayList<>();
@@ -64,50 +67,84 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
     while (!workQueue.isEmpty()) {
       Class<?> cls = workQueue.poll();
       if (superClassesAndInterfaces.add(cls)) {
-        workQueue.addAll(
-            Stream.of(cls.getInterfaces()).filter(x -> isBuckType(x)).collect(Collectors.toList()));
+        Stream.of(cls.getInterfaces()).filter(x -> isBuckType(x)).forEach(workQueue::add);
       }
     }
 
     for (Class<?> current : superClassesAndInterfaces) {
       ImmutableSortedMap.Builder<ValueExtractor, AlterRuleKey> sortedExtractors =
           ImmutableSortedMap.orderedBy(COMPARATOR);
-      for (Field field : current.getDeclaredFields()) {
-        field.setAccessible(true);
-        AddToRuleKey annotation = field.getAnnotation(AddToRuleKey.class);
-        if (annotation != null) {
-          ValueExtractor valueExtractor = new FieldValueExtractor(field);
-          sortedExtractors.put(
-              valueExtractor, createAlterRuleKey(valueExtractor, annotation.stringify()));
-        } else {
-          ExcludeFromRuleKey excludeAnnotation = field.getAnnotation(ExcludeFromRuleKey.class);
-          if (excludeAnnotation != null) {
-            MissingExcludeReporter.reportExcludedField(key, field, excludeAnnotation);
-          } else {
-            MissingExcludeReporter.reportFieldMissingAnnotation(key, field);
-          }
-        }
-      }
-      for (Method method : current.getDeclaredMethods()) {
-        method.setAccessible(true);
-        AddToRuleKey annotation = method.getAnnotation(AddToRuleKey.class);
-        if (annotation != null) {
-          Preconditions.checkState(
-              hasImmutableAnnotation(current) && AddsToRuleKey.class.isAssignableFrom(current),
-              "AddToRuleKey can only be applied to methods of Immutables. It cannot be applied to %s.%s(...)",
-              current.getName(),
-              method.getName());
 
-          ValueExtractor valueExtractor = new ValueMethodValueExtractor(method);
-          sortedExtractors.put(
-              valueExtractor, createAlterRuleKey(valueExtractor, annotation.stringify()));
-        }
-        // For methods, we're unable here to determine whether we expect that a method should or
-        // shouldn't have an annotation.
+      if (Action.class.isAssignableFrom(key)) {
+        getExtractorsForActions((Class<? extends Action>) current, sortedExtractors);
+      } else {
+        getExtractorsForObject(key, current, sortedExtractors);
       }
       builder.addAll(sortedExtractors.build().values());
     }
     return builder.build();
+  }
+
+  private void getExtractorsForActions(
+      Class<? extends Action> current,
+      ImmutableSortedMap.Builder<ValueExtractor, AlterRuleKey> sortedExtractors) {
+
+    /**
+     * We skip adding any fields in {@link AbstractAction} since {@link RuleKeyFieldLoader} takes
+     * care of the generic {@link Action} interface based rule keys
+     */
+    if (AbstractAction.class.equals(current)) {
+      return;
+    }
+
+    for (Field field : current.getDeclaredFields()) {
+      try {
+        AbstractAction.class.getDeclaredField(field.getName());
+      } catch (NoSuchFieldException e) {
+        field.setAccessible(true);
+        ValueExtractor valueExtractor = new FieldValueExtractor(field);
+        sortedExtractors.put(valueExtractor, createAlterRuleKey(valueExtractor, false));
+      }
+    }
+  }
+
+  private void getExtractorsForObject(
+      Class<?> key,
+      Class<?> current,
+      ImmutableSortedMap.Builder<ValueExtractor, AlterRuleKey> sortedExtractors) {
+    for (Field field : current.getDeclaredFields()) {
+      field.setAccessible(true);
+      AddToRuleKey annotation = field.getAnnotation(AddToRuleKey.class);
+      if (annotation != null) {
+        ValueExtractor valueExtractor = new FieldValueExtractor(field);
+        sortedExtractors.put(
+            valueExtractor, createAlterRuleKey(valueExtractor, annotation.stringify()));
+      } else {
+        ExcludeFromRuleKey excludeAnnotation = field.getAnnotation(ExcludeFromRuleKey.class);
+        if (excludeAnnotation != null) {
+          MissingExcludeReporter.reportExcludedField(key, field, excludeAnnotation);
+        } else {
+          MissingExcludeReporter.reportFieldMissingAnnotation(key, field);
+        }
+      }
+    }
+    for (Method method : current.getDeclaredMethods()) {
+      method.setAccessible(true);
+      AddToRuleKey annotation = method.getAnnotation(AddToRuleKey.class);
+      if (annotation != null) {
+        Preconditions.checkState(
+            hasImmutableAnnotation(current) && AddsToRuleKey.class.isAssignableFrom(current),
+            "AddToRuleKey can only be applied to methods of Immutables. It cannot be applied to %s.%s(...)",
+            current.getName(),
+            method.getName());
+
+        ValueExtractor valueExtractor = new ValueMethodValueExtractor(method);
+        sortedExtractors.put(
+            valueExtractor, createAlterRuleKey(valueExtractor, annotation.stringify()));
+      }
+      // For methods, we're unable here to determine whether we expect that a method should or
+      // shouldn't have an annotation.
+    }
   }
 
   private static boolean isBuckType(Class<?> current) {
@@ -120,7 +157,8 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
     return current.getAnnotation(BuckStyleImmutable.class) != null
         || current.getAnnotation(BuckStylePackageVisibleImmutable.class) != null
         || current.getAnnotation(BuckStylePackageVisibleTuple.class) != null
-        || current.getAnnotation(BuckStyleTuple.class) != null;
+        || current.getAnnotation(BuckStyleTuple.class) != null
+        || current.getAnnotation(BuckStyleValue.class) != null;
   }
 
   private AlterRuleKey createAlterRuleKey(ValueExtractor valueExtractor, boolean stringify) {

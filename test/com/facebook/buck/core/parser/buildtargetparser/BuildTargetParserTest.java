@@ -24,7 +24,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.UnknownCellException;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -32,6 +34,7 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -172,13 +175,13 @@ public class BuildTargetParserTest {
   public void testParseWithRepoName() {
     Path localRepoRoot = Paths.get("/opt/local/repo");
     CellPathResolver cellRoots =
-        DefaultCellPathResolver.of(
+        TestCellPathResolver.create(
             Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
     String targetStr = "localreponame//foo/bar:baz";
 
     UnconfiguredBuildTargetView buildTarget = parser.parse(cellRoots, targetStr, "", false);
     assertEquals("localreponame//foo/bar:baz", buildTarget.getFullyQualifiedName());
-    assertTrue(buildTarget.getCell().isPresent());
+    assertTrue(buildTarget.getCell().getLegacyName().isPresent());
     assertEquals(localRepoRoot, buildTarget.getCellPath());
   }
 
@@ -186,19 +189,19 @@ public class BuildTargetParserTest {
   public void atPrefixOfCellsIsSupportedAndIgnored() {
     Path localRepoRoot = Paths.get("/opt/local/repo");
     CellPathResolver cellRoots =
-        DefaultCellPathResolver.of(
+        TestCellPathResolver.create(
             Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
     String targetStr = "@localreponame//foo/bar:baz";
 
     UnconfiguredBuildTargetView buildTarget = parser.parse(cellRoots, targetStr, "", false);
     assertEquals("localreponame//foo/bar:baz", buildTarget.getFullyQualifiedName());
-    assertTrue(buildTarget.getCell().isPresent());
+    assertTrue(buildTarget.getCell().getLegacyName().isPresent());
     assertEquals(localRepoRoot, buildTarget.getCellPath());
   }
 
-  @Test(expected = BuildTargetParseException.class)
+  @Test
   public void testParseFailsWithRepoNameAndRelativeTarget() throws NoSuchBuildTargetException {
-
+    exception.expect(BuildTargetParseException.class);
     String invalidTargetStr = "myRepo:baz";
     parser.parse(createCellRoots(null), invalidTargetStr, "", false);
   }
@@ -215,7 +218,7 @@ public class BuildTargetParserTest {
   public void testIncludesTargetNameInMissingCellErrorMessage() {
     Path localRepoRoot = Paths.get("/opt/local/repo");
     CellPathResolver cellRoots =
-        DefaultCellPathResolver.of(
+        TestCellPathResolver.create(
             Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
 
     exception.expect(BuildTargetParseException.class);

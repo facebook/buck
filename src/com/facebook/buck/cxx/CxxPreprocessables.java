@@ -19,10 +19,8 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
@@ -33,17 +31,16 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.Predicate;
 
 public class CxxPreprocessables {
 
@@ -100,42 +97,31 @@ public class CxxPreprocessables {
   }
 
   /**
-   * Find and return the {@link CxxPreprocessorInput} objects from {@link CxxPreprocessorDep} found
-   * while traversing the dependencies starting from the {@link BuildRule} objects given.
+   * Find and return the {@link CxxPreprocessorInput} objects from {@link CxxPreprocessorDep} found.
    */
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
-      Iterable<? extends BuildRule> inputs,
-      Predicate<Object> traverse) {
-
+      Iterable<? extends CxxPreprocessorDep> inputs) {
     // We don't really care about the order we get back here, since headers shouldn't
-    // conflict.  However, we want something that's deterministic, so sort by build
-    // target.
+    // conflict.  However, we want something that's deterministic, so maintain the insertion order.
     Map<BuildTarget, CxxPreprocessorInput> deps = new LinkedHashMap<>();
-
-    // Build up the map of all C/C++ preprocessable dependencies.
-    new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
-      @Override
-      public Iterable<BuildRule> visit(BuildRule rule) {
-        if (rule instanceof CxxPreprocessorDep) {
-          CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
-          deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder));
-          return ImmutableSet.of();
-        }
-        return traverse.test(rule) ? rule.getBuildDeps() : ImmutableSet.of();
-      }
-    }.start();
-
-    // Grab the cxx preprocessor inputs and return them.
+    for (CxxPreprocessorDep input : inputs) {
+      deps.putAll(input.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder));
+    }
     return deps.values();
   }
 
-  public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+  /**
+   * Find and return the {@link CxxPreprocessorInput} objects from {@link CxxPreprocessorDep} found
+   * from a list of all deps.
+   */
+  public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInputFromDeps(
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
-      Iterable<? extends BuildRule> inputs) {
-    return getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, inputs, x -> false);
+      Iterable<? extends BuildRule> deps) {
+    return getTransitiveCxxPreprocessorInput(
+        cxxPlatform, graphBuilder, FluentIterable.from(deps).filter(CxxPreprocessorDep.class));
   }
 
   /**
@@ -146,20 +132,19 @@ public class CxxPreprocessables {
   public static HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildTarget target,
       ProjectFilesystem filesystem,
-      SourcePathRuleFinder ruleFinder,
       Path root,
       ImmutableMap<Path, SourcePath> links,
       HeaderMode headerMode) {
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:
-        return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links, ruleFinder);
+        return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links);
       case SYMLINK_TREE_WITH_MODULEMAP:
-        return HeaderSymlinkTreeWithModuleMap.create(target, filesystem, root, links, ruleFinder);
+        return HeaderSymlinkTreeWithModuleMap.create(target, filesystem, root, links);
       case HEADER_MAP_ONLY:
-        return new DirectHeaderMap(target, filesystem, root, links, ruleFinder);
+        return new DirectHeaderMap(target, filesystem, root, links);
       default:
       case SYMLINK_TREE_ONLY:
-        return new HeaderSymlinkTree(target, filesystem, root, links, ruleFinder);
+        return new HeaderSymlinkTree(target, filesystem, root, links);
     }
   }
 

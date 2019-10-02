@@ -18,7 +18,6 @@ package com.facebook.buck.core.model;
 
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -33,7 +32,7 @@ public interface BuildTarget extends Comparable<BuildTarget> {
 
   TargetConfiguration getTargetConfiguration();
 
-  Optional<String> getCell();
+  CanonicalCellName getCell();
 
   Path getCellPath();
 
@@ -44,7 +43,7 @@ public interface BuildTarget extends Comparable<BuildTarget> {
   String getShortName();
 
   /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
+   * If this build target were cell//third_party/java/guava:guava-latest, then this would return
    * "guava-latest". Note that the flavor of the target is included here.
    */
   String getShortNameAndFlavorPostfix();
@@ -52,10 +51,16 @@ public interface BuildTarget extends Comparable<BuildTarget> {
   String getFlavorPostfix();
 
   /**
-   * If this build target is //third_party/java/guava:guava-latest, then this would return
-   * "//third_party/java/guava:guava-latest".
+   * If this build target is cell//third_party/java/guava:guava-latest, then this would return
+   * "cell//third_party/java/guava:guava-latest".
    */
   String getFullyQualifiedName();
+
+  /**
+   * If this build target is cell//third_party/java/guava:guava-latest, then this would return
+   * "//third_party/java/guava:guava-latest".
+   */
+  String getCellRelativeName();
 
   boolean isFlavored();
 
@@ -84,6 +89,4 @@ public interface BuildTarget extends Comparable<BuildTarget> {
   BuildTarget withAppendedFlavors(Flavor... flavors);
 
   BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTargetView target);
-
-  BuildTarget withoutCell();
 }

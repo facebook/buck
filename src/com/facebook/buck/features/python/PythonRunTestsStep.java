@@ -187,7 +187,7 @@ public class PythonRunTestsStep implements Step {
         // The test runner returns 0 if all tests passed, or
         // TEST_FAILURES_EXIT_CODE if some tests failed.  Either of these
         // return codes indicates that we succeeded in running the tests.
-        if (executionResult.getExitCode() == 0
+        if (executionResult.isSuccess()
             || executionResult.getExitCode() == TEST_FAILURES_EXIT_CODE) {
           return StepExecutionResults.SUCCESS;
         }

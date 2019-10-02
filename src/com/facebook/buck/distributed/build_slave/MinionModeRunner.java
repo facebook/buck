@@ -34,6 +34,7 @@ import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -344,10 +345,10 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
   private void registerUploadCompletionHandler(BuildResult buildResult) {
     String fullyQualifiedName = buildResult.getRule().getFullyQualifiedName();
     Futures.addCallback(
-        buildResult.getUploadCompleteFuture().orElse(Futures.immediateFuture(null)),
-        new FutureCallback<Void>() {
+        buildResult.getUploadCompleteFuture().orElse(Futures.immediateFuture(Unit.UNIT)),
+        new FutureCallback<Unit>() {
           @Override
-          public void onSuccess(@Nullable Void result) {
+          public void onSuccess(Unit result) {
             buildTracker.recordUploadedTarget(fullyQualifiedName);
           }
 

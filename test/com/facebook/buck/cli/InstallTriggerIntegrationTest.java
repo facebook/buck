@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -30,7 +31,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.attr.NoopInstallable;
 import com.facebook.buck.core.rules.common.InstallTrigger;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -70,7 +71,7 @@ public class InstallTriggerIntegrationTest {
             sandboxExecutionStrategyFactory,
             knownConfigurationDescriptions) ->
             cell ->
-                KnownRuleTypes.of(
+                KnownNativeRuleTypes.of(
                     ImmutableList.of(
                         new InstallTriggerDescription(),
                         new ExportFileDescription(FakeBuckConfig.builder().build())),
@@ -157,5 +158,5 @@ public class InstallTriggerIntegrationTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractInstallTriggerDescriptionArg extends HasDeclaredDeps {}
+  interface AbstractInstallTriggerDescriptionArg extends HasDeclaredDeps, ConstructorArg {}
 }

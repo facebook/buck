@@ -34,7 +34,6 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxToolFlags;
-import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -53,7 +52,6 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
@@ -71,23 +69,16 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
   @AddToRuleKey private final ImmutableList<String> haddockFlags;
 
-  @AddToRuleKey ImmutableList<String> compilerFlags;
+  @AddToRuleKey HaskellCompilerFlags compilerFlags;
 
   @AddToRuleKey ImmutableList<String> linkerFlags;
-
-  @AddToRuleKey private final PreprocessorFlags ppFlags;
 
   @AddToRuleKey HaskellSources srcs;
 
   @AddToRuleKey private final Preprocessor preprocessor;
 
-  @AddToRuleKey private final ImmutableSet<SourcePath> interfaces;
-
   @AddToRuleKey HaskellPackageInfo packageInfo;
   private HaskellPlatform platform;
-
-  @AddToRuleKey final ImmutableSortedMap<String, HaskellPackage> packages;
-  @AddToRuleKey final ImmutableSortedMap<String, HaskellPackage> exposedPackages;
 
   private HaskellHaddockLibRule(
       BuildTarget buildTarget,
@@ -96,28 +87,20 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       HaskellSources srcs,
       Tool haddockTool,
       ImmutableList<String> haddockFlags,
-      ImmutableList<String> compilerFlags,
+      HaskellCompilerFlags compilerFlags,
       ImmutableList<String> linkerFlags,
-      ImmutableSet<SourcePath> interfaces,
-      ImmutableSortedMap<String, HaskellPackage> packages,
-      ImmutableSortedMap<String, HaskellPackage> exposedPackages,
       HaskellPackageInfo packageInfo,
       HaskellPlatform platform,
-      Preprocessor preprocessor,
-      PreprocessorFlags ppFlags) {
+      Preprocessor preprocessor) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.srcs = srcs;
     this.haddockTool = haddockTool;
     this.haddockFlags = haddockFlags;
     this.compilerFlags = compilerFlags;
     this.linkerFlags = linkerFlags;
-    this.interfaces = interfaces;
-    this.packages = packages;
-    this.exposedPackages = exposedPackages;
     this.packageInfo = packageInfo;
     this.platform = platform;
     this.preprocessor = preprocessor;
-    this.ppFlags = ppFlags;
   }
 
   public static HaskellHaddockLibRule from(
@@ -128,34 +111,19 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       HaskellSources sources,
       Tool haddockTool,
       ImmutableList<String> haddockFlags,
-      ImmutableList<String> compilerFlags,
+      HaskellCompilerFlags compilerFlags,
       ImmutableList<String> linkerFlags,
-      ImmutableSet<SourcePath> interfaces,
-      ImmutableSortedMap<String, HaskellPackage> packages,
-      ImmutableSortedMap<String, HaskellPackage> exposedPackages,
       HaskellPackageInfo packageInfo,
       HaskellPlatform platform,
-      Preprocessor preprocessor,
-      PreprocessorFlags ppFlags) {
-
-    ImmutableList.Builder<BuildRule> pkgDeps = ImmutableList.builder();
-
-    for (HaskellPackage pkg : packages.values()) {
-      pkgDeps.addAll(pkg.getDeps(ruleFinder).iterator());
-    }
-    for (HaskellPackage pkg : exposedPackages.values()) {
-      pkgDeps.addAll(pkg.getDeps(ruleFinder).iterator());
-    }
-
+      Preprocessor preprocessor) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
         MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(BuildableSupport.getDepsCollection(haddockTool, ruleFinder))
                     .addAll(sources.getDeps(ruleFinder))
-                    .addAll(ruleFinder.filterBuildRuleInputs(interfaces))
-                    .addAll(pkgDeps.build())
-                    .addAll(ppFlags.getDeps(ruleFinder))
+                    .addAll(ruleFinder.filterBuildRuleInputs(compilerFlags.getHaddockInterfaces()))
+                    .addAll(compilerFlags.getDeps(ruleFinder))
                     .build());
     return new HaskellHaddockLibRule(
         buildTarget,
@@ -166,13 +134,9 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
         haddockFlags,
         compilerFlags,
         linkerFlags,
-        interfaces,
-        packages,
-        exposedPackages,
         packageInfo,
         platform,
-        preprocessor,
-        ppFlags);
+        preprocessor);
   }
 
   private Path getObjectDir() {
@@ -248,12 +212,15 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
   private Iterable<String> getPreprocessorFlags(SourcePathResolver resolver) {
     CxxToolFlags cxxToolFlags =
-        ppFlags.toToolFlags(
-            resolver,
-            PathShortener.identity(),
-            CxxDescriptionEnhancer.frameworkPathToSearchPath(platform.getCxxPlatform(), resolver),
-            preprocessor,
-            /* pch */ Optional.empty());
+        compilerFlags
+            .getPreprocessorFlags()
+            .toToolFlags(
+                resolver,
+                PathShortener.identity(),
+                CxxDescriptionEnhancer.frameworkPathToSearchPath(
+                    platform.getCxxPlatform(), resolver),
+                preprocessor,
+                /* pch */ Optional.empty());
     return MoreIterables.zipAndConcat(
         Iterables.cycle("-optP"), Arg.stringify(cxxToolFlags.getAllFlags(), resolver));
   }
@@ -341,7 +308,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
       // Haddock doesn't like RTS options, so strip them out.
       boolean isRTS = false;
-      for (String s : compilerFlags) {
+      for (String s : compilerFlags.getAdditionalFlags()) {
         if (s.equals("+RTS")) {
           isRTS = true;
           continue;
@@ -355,25 +322,17 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
         cmdArgs.add(s);
       }
 
-      ImmutableSet.Builder<String> dbBuilder = ImmutableSet.builder();
-      ImmutableSet.Builder<String> exposeBuilder = ImmutableSet.builder();
-      for (HaskellPackage pkg : packages.values()) {
-        dbBuilder.add(resolver.getRelativePath(pkg.getPackageDb()).toString());
-      }
-      for (HaskellPackage pkg : exposedPackages.values()) {
-        dbBuilder.add(resolver.getRelativePath(pkg.getPackageDb()).toString());
-        exposeBuilder.add(
-            String.format("%s-%s", pkg.getInfo().getName(), pkg.getInfo().getVersion()));
-      }
-      cmdArgs.addAll(MoreIterables.zipAndConcat(Iterables.cycle("-package-db"), dbBuilder.build()));
-      cmdArgs.addAll(
-          MoreIterables.zipAndConcat(Iterables.cycle("-expose-package"), exposeBuilder.build()));
+      cmdArgs.addAll(compilerFlags.getPackageFlags(platform, resolver));
       cmdArgs.addAll(linkerFlags);
       cmdArgs.addAll(getPreprocessorFlags(resolver));
       // Tell GHC where to place build files for TemplateHaskell
       cmdArgs.add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString());
       cmdArgs.add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString());
       cmdArgs.add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString());
+
+      String thisUnitId = String.format("%s-%s", packageInfo.getName(), packageInfo.getVersion());
+
+      cmdArgs.add("-this-unit-id", thisUnitId);
 
       ImmutableList.Builder<String> builder = ImmutableList.builder();
 
@@ -385,7 +344,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
           .addAll(
               MoreIterables.zipAndConcat(
                   Iterables.cycle("--read-interface"),
-                  RichStream.from(interfaces)
+                  RichStream.from(compilerFlags.getHaddockInterfaces())
                       .map(sp -> resolver.getRelativePath(sp).toString())
                       .toImmutableList()))
           .add("--dump-interface", getInterface().toString())

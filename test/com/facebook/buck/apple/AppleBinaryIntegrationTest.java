@@ -53,6 +53,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import javax.annotation.Nonnull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -441,7 +442,7 @@ public class AppleBinaryIntegrationTest {
         containsString("executable"));
   }
 
-  @Test
+  @Test(timeout = 120000)
   public void testAppleBinaryWithLibraryDependencyWithSwiftSourcesBuildsSomething()
       throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
@@ -467,7 +468,154 @@ public class AppleBinaryIntegrationTest {
     // Check binary contains statically linked Swift runtime
     assertThat(
         workspace.runCommand("nm", outputPath.toString()).getStdout().get(),
-        containsString("T _swift_retain"));
+        containsString("U _swift_bridgeObjectRetain"));
+  }
+
+  @Nonnull
+  private String getMacDylibSymbolTable(
+      String dylibTargetName, String dylibName, ProjectWorkspace workspace) throws Exception {
+    BuildTarget dylibTarget =
+        BuildTargetFactory.newInstance(dylibTargetName)
+            .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"), InternalFlavor.of("shared"));
+
+    Path dylibDirOutputPath =
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, dylibTarget, "%s"));
+    Path dylibOutputPath = dylibDirOutputPath.resolve(dylibName);
+    assertThat(Files.exists(dylibOutputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", dylibOutputPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+
+    return workspace.runCommand("nm", dylibOutputPath.toString()).getStdout().get();
+  }
+
+  @Nonnull
+  private String buildAndGetMacBinarySymbolTable(String appTargetName, ProjectWorkspace workspace)
+      throws Exception {
+    BuildTarget binaryTarget =
+        BuildTargetFactory.newInstance(appTargetName)
+            .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"));
+    workspace.runBuckCommand("build", binaryTarget.getFullyQualifiedName()).assertSuccess();
+
+    Path binaryOutputPath =
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, binaryTarget, "%s"));
+    assertThat(Files.exists(binaryOutputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", binaryOutputPath.toString()).getStdout().get(),
+        containsString("executable"));
+
+    return workspace.runCommand("nm", binaryOutputPath.toString()).getStdout().get();
+  }
+
+  private void runLinkGroupTestForSingleDylib(
+      String appTargetName, String dylibTargetName, String dylibName) throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_single_dylib", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+
+    // Check that binary contains symbols _only_ from A and not from B, C
+    String binarySymbolTable = buildAndGetMacBinarySymbolTable(appTargetName, workspace);
+    assertThat(binarySymbolTable, containsString("T _get_value_from_a"));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_b")));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_c")));
+
+    // Check that dylib contains symbols _only_ from B, C and not from A
+    String dylibSymbolTable = getMacDylibSymbolTable(dylibTargetName, dylibName, workspace);
+    assertThat(dylibSymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(dylibSymbolTable, containsString("T _get_value_from_b"));
+    assertThat(dylibSymbolTable, containsString("T _get_value_from_c"));
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupsForExhaustiveMapWithSingleDylib() throws Exception {
+    runLinkGroupTestForSingleDylib(
+        "//Apps/TestApp:ExhaustiveApp", "//Apps/TestApp:ExhaustiveDylib", "ExhaustiveDylib.dylib");
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupsForCatchAllMapWithSingleDylib() throws Exception {
+    runLinkGroupTestForSingleDylib(
+        "//Apps/TestApp:CatchAllApp", "//Apps/TestApp:CatchAllDylib", "CatchAllDylib.dylib");
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupWithCuttingGenruleBranchEnabled() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_with_genrule", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_cutting_genrule_branch_enabled", "true");
+
+    String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:TestApp", workspace);
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(binarySymbolTable, containsString("T _get_value_from_b"));
+
+    String dylibSymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:Dylib", "Dylib.dylib", workspace);
+    assertThat(dylibSymbolTable, containsString("T _get_value_from_a"));
+    assertThat(dylibSymbolTable, not(containsString("T _get_value_from_b")));
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupWithCuttingGenruleBranchDisabled() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_with_genrule", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+
+    String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:TestApp", workspace);
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_b")));
+
+    String dylibSymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:Dylib", "Dylib.dylib", workspace);
+    assertThat(dylibSymbolTable, containsString("T _get_value_from_a"));
+    assertThat(dylibSymbolTable, containsString("T _get_value_from_b"));
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupsWithMultipleDylibs() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_multiples_dylibs", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+
+    // Check that binary does _not_ contain any symbols from the libraries
+    String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:TestApp", workspace);
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_b")));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_c")));
+
+    // Check that Dylib1 only contains symbols from //Apps/Libs:B
+    String dylib1SymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:Dylib1", "Dylib1.dylib", workspace);
+    assertThat(dylib1SymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(dylib1SymbolTable, containsString("T _get_value_from_b"));
+    assertThat(dylib1SymbolTable, not(containsString("T _get_value_from_c")));
+
+    // Check that Dylib2 contains symbols from //Apps/Libs:A and //Apps/Libs:C
+    String dylib2SymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:Dylib2", "Dylib2.dylib", workspace);
+    assertThat(dylib2SymbolTable, containsString("T _get_value_from_a"));
+    assertThat(dylib2SymbolTable, not(containsString("T _get_value_from_b")));
+    assertThat(dylib2SymbolTable, containsString("T _get_value_from_c"));
   }
 
   @Test

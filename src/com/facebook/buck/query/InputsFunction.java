@@ -21,7 +21,6 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
 /**
@@ -48,17 +47,11 @@ public class InputsFunction<T extends QueryTarget> implements QueryFunction<Quer
 
   /** Evaluates to the direct inputs of the argument. */
   @Override
-  public ImmutableSet<QueryFileTarget> eval(
+  public Set<QueryFileTarget> eval(
       QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
-    Set<T> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
-    env.buildTransitiveClosure(argumentSet, 0);
-
-    ImmutableSet.Builder<QueryFileTarget> result = new ImmutableSet.Builder<>();
-
-    for (T target : argumentSet) {
-      result.addAll(env.getInputs(target));
-    }
-    return result.build();
+    Set<T> targets = evaluator.eval(args.get(0).getExpression(), env);
+    env.buildTransitiveClosure(targets, 0);
+    return Unions.of((T target) -> env.getInputs(target), targets);
   }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -25,6 +26,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.test.event.TestSummaryEvent;
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
@@ -60,7 +62,6 @@ import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessResourceConsumption;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -595,7 +596,17 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             .put("rule_key", Joiner.on(", ").join(finished.getRuleKeys()))
             .put(
                 "rule",
-                finished.getTarget().map(BuildTarget::getFullyQualifiedName).orElse("unknown"));
+                finished.getTarget().map(BuildTarget::getFullyQualifiedName).orElse("unknown"))
+            .put(
+                "artifact_size",
+                finished
+                    .getCacheResult()
+                    .map(
+                        result ->
+                            result.getType() == CacheResultType.HIT
+                                ? Long.toString(result.getArtifactSizeBytes())
+                                : "unknown")
+                    .orElse("unknown"));
     Optionals.putIfPresent(
         finished.getCacheResult().map(Object::toString), "cache_result", argumentsBuilder);
 
@@ -609,21 +620,28 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void artifactCompressionStarted(ArtifactCompressionEvent.Started started) {
-    writeArtifactCompressionEvent(started, ChromeTraceEvent.Phase.BEGIN);
+    writeArtifactCompressionEvent(started, ChromeTraceEvent.Phase.BEGIN, ImmutableMap.builder());
   }
 
   @Subscribe
   public void artifactCompressionFinished(ArtifactCompressionEvent.Finished finished) {
-    writeArtifactCompressionEvent(finished, ChromeTraceEvent.Phase.END);
+    writeArtifactCompressionEvent(
+        finished,
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.<String, String>builder()
+            .put("full_size", Long.toString(finished.fullSize))
+            .put("compressed_size", Long.toString(finished.compressedSize)));
   }
 
   public void writeArtifactCompressionEvent(
-      ArtifactCompressionEvent event, ChromeTraceEvent.Phase phase) {
+      ArtifactCompressionEvent event,
+      ChromeTraceEvent.Phase phase,
+      ImmutableMap.Builder<String, String> builder) {
     writeChromeTraceEvent(
         "buck",
         event.getCategory(),
         phase,
-        ImmutableMap.of("rule_key", Joiner.on(", ").join(event.getRuleKeys())),
+        builder.put("rule_key", Joiner.on(", ").join(event.getRuleKeys())).build(),
         event);
   }
 

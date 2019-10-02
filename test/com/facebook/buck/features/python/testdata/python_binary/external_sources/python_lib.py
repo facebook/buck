@@ -1,0 +1,4 @@
+from . import CONSTANT
+
+
+EXPORTED_CONSTANT = CONSTANT

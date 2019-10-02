@@ -38,14 +38,15 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.query.AllPathsFunction;
 import com.facebook.buck.query.AttrFilterFunction;
+import com.facebook.buck.query.AttrRegexFilterFunction;
 import com.facebook.buck.query.BuildFileFunction;
 import com.facebook.buck.query.DepsFunction;
 import com.facebook.buck.query.FilterFunction;
@@ -64,6 +65,7 @@ import com.facebook.buck.query.TestsOfFunction;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.QueryTargetAccessor;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -106,6 +108,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
       ImmutableList.of(
           new AllPathsFunction<>(),
           new AttrFilterFunction(),
+          new AttrRegexFilterFunction(),
           new BuildFileFunction<>(),
           new DepsFunction<>(),
           new DepsFunction.FirstOrderDepsFunction<>(),
@@ -365,10 +368,10 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     // TODO(mkosiba): This looks more and more like the Parser.buildTargetGraph method. Unify the
     // two.
 
-    ConcurrentHashMap<BuildTarget, ListenableFuture<Void>> jobsCache = new ConcurrentHashMap<>();
+    ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache = new ConcurrentHashMap<>();
 
     try {
-      List<ListenableFuture<Void>> depsFuture = new ArrayList<>();
+      List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
       for (BuildTarget buildTarget : newBuildTargets) {
         discoverNewTargetsConcurrently(buildTarget, jobsCache)
             .ifPresent(dep -> depsFuture.add(dep));
@@ -430,24 +433,24 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     jobsCache.keySet().forEach(this::getOrCreateQueryBuildTarget);
   }
 
-  private Optional<ListenableFuture<Void>> discoverNewTargetsConcurrently(
-      BuildTarget buildTarget, ConcurrentHashMap<BuildTarget, ListenableFuture<Void>> jobsCache)
+  private Optional<ListenableFuture<Unit>> discoverNewTargetsConcurrently(
+      BuildTarget buildTarget, ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache)
       throws BuildFileParseException {
-    ListenableFuture<Void> job = jobsCache.get(buildTarget);
+    ListenableFuture<Unit> job = jobsCache.get(buildTarget);
     if (job != null) {
       return Optional.empty();
     }
-    SettableFuture<Void> newJob = SettableFuture.create();
+    SettableFuture<Unit> newJob = SettableFuture.create();
     if (jobsCache.putIfAbsent(buildTarget, newJob) != null) {
       return Optional.empty();
     }
 
-    ListenableFuture<Void> future =
+    ListenableFuture<Unit> future =
         Futures.transformAsync(
             parser.getTargetNodeJob(parserState, buildTarget),
             targetNode -> {
               targetsToNodes.put(buildTarget, targetNode);
-              List<ListenableFuture<Void>> depsFuture = new ArrayList<>();
+              List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
               Set<BuildTarget> parseDeps = targetNode.getParseDeps();
               for (BuildTarget parseDep : parseDeps) {
                 discoverNewTargetsConcurrently(parseDep, jobsCache)
@@ -465,8 +468,8 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     return Optional.of(newJob);
   }
 
-  private static ListenableFuture<Void> attachParentNodeToErrorMessage(
-      BuildTarget buildTarget, BuildTarget parseDep, ListenableFuture<Void> depWork) {
+  private static ListenableFuture<Unit> attachParentNodeToErrorMessage(
+      BuildTarget buildTarget, BuildTarget parseDep, ListenableFuture<Unit> depWork) {
     return Futures.catchingAsync(
         depWork,
         Exception.class,

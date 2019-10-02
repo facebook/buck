@@ -1,0 +1,52 @@
+constraint_setting(
+    name = "fruit",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+constraint_value(
+    name = "apple",
+    constraint_setting = ":fruit",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+constraint_value(
+    name = "banana",
+    constraint_setting = ":fruit",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "apple-config",
+    constraint_values = [
+        ":apple",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+platform(
+    name = "apple-platform",
+    constraint_values = [
+        ":apple",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+platform(
+    name = "banana-platform",
+    constraint_values = [
+        ":banana",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.jvm.java.JavaLibraryClasspathProvider.getClasspathDeps;
-
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.apkmodule.APKModule;
@@ -26,6 +24,7 @@ import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
@@ -49,6 +48,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.fs.XzStep;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +57,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AndroidInstrumentationApkDescription
@@ -99,7 +100,8 @@ public class AndroidInstrumentationApkDescription
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     params = params.withoutExtraDeps();
     BuildRule installableApk = graphBuilder.getRule(args.getApk());
-    if (!(installableApk instanceof HasInstallableApk)) {
+    if (!(installableApk instanceof HasInstallableApk)
+        || (installableApk instanceof AndroidInstrumentationApk)) {
       throw new HumanReadableException(
           "In %s, apk='%s' must be an android_binary() or apk_genrule() but was %s().",
           buildTarget, installableApk.getFullyQualifiedName(), installableApk.getType());
@@ -107,11 +109,16 @@ public class AndroidInstrumentationApkDescription
     AndroidBinary apkUnderTest =
         ApkGenruleDescription.getUnderlyingApk((HasInstallableApk) installableApk);
 
-    ImmutableSet<JavaLibrary> rulesToExcludeFromDex =
-        ImmutableSet.<JavaLibrary>builder()
-            .addAll(apkUnderTest.getRulesToExcludeFromDex())
-            .addAll(getClasspathDeps(apkUnderTest.getClasspathDeps()))
-            .build();
+    ImmutableSet<JavaLibrary> apkUnderTestTransitiveClasspathDeps =
+        apkUnderTest.getTransitiveClasspathDeps();
+
+    ImmutableSet.Builder<BuildTarget> buildTargetsToExclude = ImmutableSet.builder();
+    apkUnderTest.getRulesToExcludeFromDex().get().stream()
+        .map(BuildRule::getBuildTarget)
+        .forEach(buildTargetsToExclude::add);
+    apkUnderTestTransitiveClasspathDeps.stream()
+        .map(BuildRule::getBuildTarget)
+        .forEach(buildTargetsToExclude::add);
 
     APKModule rootAPKModule = APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true);
     AndroidPackageableCollection.ResourceDetails resourceDetails =
@@ -202,9 +209,7 @@ public class AndroidInstrumentationApkDescription
             /* shouldBuildStringSourceMap */ false,
             /* shouldPreDex */ false,
             DexSplitMode.NO_SPLIT,
-            rulesToExcludeFromDex.stream()
-                .map(BuildRule::getBuildTarget)
-                .collect(ImmutableSet.toImmutableSet()),
+            buildTargetsToExclude.build(),
             resourcesToExclude,
             nativeLibsToExclude,
             nativeLinkablesToExcludeGroup,
@@ -242,8 +247,10 @@ public class AndroidInstrumentationApkDescription
             args.getDexTool(),
             /* postFilterResourcesCommands */ Optional.empty(),
             nonPreDexedDexBuildableArgs,
-            rulesToExcludeFromDex,
-            false);
+            createRulesToExcludeFromDexSupplier(
+                apkUnderTest.getRulesToExcludeFromDex(), apkUnderTestTransitiveClasspathDeps),
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
     AndroidBinaryFilesInfo filesInfo =
@@ -256,12 +263,22 @@ public class AndroidInstrumentationApkDescription
         params,
         graphBuilder,
         apkUnderTest,
-        rulesToExcludeFromDex,
         enhancementResult,
         filesInfo.getDexFilesInfo(),
         filesInfo.getNativeFilesInfo(),
         filesInfo.getResourceFilesInfo(),
         filesInfo.getExopackageInfo());
+  }
+
+  private static Supplier<ImmutableSet<JavaLibrary>> createRulesToExcludeFromDexSupplier(
+      Supplier<ImmutableSet<JavaLibrary>> apkUnderTestRulesToExcludeFromDex,
+      ImmutableSet<JavaLibrary> apkUnderTestTransitiveClasspathDeps) {
+    return Suppliers.memoize(
+        () ->
+            ImmutableSet.<JavaLibrary>builder()
+                .addAll(apkUnderTestRulesToExcludeFromDex.get())
+                .addAll(apkUnderTestTransitiveClasspathDeps)
+                .build());
   }
 
   @Override
@@ -272,6 +289,8 @@ public class AndroidInstrumentationApkDescription
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    AndroidTools.addParseTimeDepsToAndroidTools(
+        toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }
 
   @BuckStyleImmutable

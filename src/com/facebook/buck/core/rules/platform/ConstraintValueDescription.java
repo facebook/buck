@@ -16,11 +16,15 @@
 
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
 /**
@@ -48,14 +52,20 @@ public class ConstraintValueDescription
   @Override
   public ConfigurationRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
-      UnconfiguredBuildTargetView buildTarget,
+      BuildTarget buildTarget,
       ConstraintValueArg arg) {
-    return new ConstraintValueRule(buildTarget, arg.getName(), arg.getConstraintSetting());
+    return new ConstraintValueRule(
+        buildTarget, arg.getName(), ConfigurationBuildTargets.convert(arg.getConstraintSetting()));
+  }
+
+  @Override
+  public ImmutableSet<BuildTarget> getConfigurationDeps(ConstraintValueArg arg) {
+    return ImmutableSet.of(ConfigurationBuildTargets.convert(arg.getConstraintSetting()));
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractConstraintValueArg {
+  interface AbstractConstraintValueArg extends ConstructorArg {
     String getName();
 
     UnconfiguredBuildTargetView getConstraintSetting();

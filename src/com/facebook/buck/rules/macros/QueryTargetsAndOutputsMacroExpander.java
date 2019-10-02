@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -68,7 +67,6 @@ public class QueryTargetsAndOutputsMacroExpander
   @Override
   public Arg expandFrom(
       BuildTarget target,
-      CellPathResolver cellNames,
       ActionGraphBuilder graphBuilder,
       QueryTargetsAndOutputsMacro input,
       QueryResults precomputedWork) {
@@ -85,7 +83,7 @@ public class QueryTargetsAndOutputsMacroExpander
         input.getSeparator());
   }
 
-  private class QueriedTargestAndOutputsArg implements Arg {
+  private static class QueriedTargestAndOutputsArg implements Arg {
     @AddToRuleKey private final ImmutableList<BuildTarget> targets;
     @AddToRuleKey private final ImmutableList<SourcePath> outputs;
     @AddToRuleKey private final String separator;

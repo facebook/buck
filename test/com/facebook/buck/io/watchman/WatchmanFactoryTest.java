@@ -345,6 +345,7 @@ public class WatchmanFactoryTest {
         watchman.getCapabilities());
 
     assertEquals(ImmutableMap.of(root, "c:0:0:1"), watchman.getClockIds());
+    assertEquals("3.8.0", watchman.getVersion());
   }
 
   @Test
@@ -400,6 +401,7 @@ public class WatchmanFactoryTest {
         watchman.getCapabilities());
 
     assertEquals(ImmutableMap.of(root, "c:0:0:1"), watchman.getClockIds());
+    assertEquals("4.7.0", watchman.getVersion());
   }
 
   @Test
@@ -445,5 +447,6 @@ public class WatchmanFactoryTest {
             executor, rootPaths, env, finder, new TestConsole(), clock, Optional.empty());
 
     assertEquals(ImmutableMap.of(), watchman.getClockIds());
+    assertEquals("4.7.0", watchman.getVersion());
   }
 }

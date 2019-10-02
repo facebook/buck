@@ -16,10 +16,15 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
+import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Path;
 import java.util.stream.StreamSupport;
 import org.immutables.value.Value;
 
@@ -68,6 +73,44 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
                         "Cannot find target node for build target "
                             + getUnconfiguredBuildTargetView()));
     return ImmutableMap.of(firstMatchingNode.getBuildTarget(), firstMatchingNode);
+  }
+
+  @Override
+  public BuildTargetPattern getBuildTargetPattern(Cell cell) {
+    BuildFileSpec buildFileSpec = getBuildFileSpec();
+    if (!cell.getRoot().equals(buildFileSpec.getCellPath())) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Root of cell should agree with build file spec for %s: %s vs %s",
+              toString(), cell.getRoot(), buildFileSpec.getCellPath()));
+    }
+    // TODO(strager): Check this invariant during construction.
+    Preconditions.checkState(
+        cell.getCanonicalName().equals(getUnconfiguredBuildTargetView().getCell()));
+
+    // TODO(strager): Check these invariants during construction.
+    Path basePath = buildFileSpec.getBasePath();
+    if (basePath.isAbsolute()) {
+      // TargetNodePredicateSpec's BuildFileSpec sometimes has an absolute base path, but our
+      // BuildFileSpec should never have a relative base path.
+      throw new IllegalStateException(
+          String.format("Base path for %s should be relative: %s", toString(), basePath));
+    }
+    if (!basePath.equals(getUnconfiguredBuildTargetView().getBasePath())) {
+      throw new IllegalStateException(
+          String.format(
+              "Base path for %s's build target and build file spec should agree: %s vs %s",
+              toString(), basePath, getUnconfiguredBuildTargetView().getBasePath()));
+    }
+    if (buildFileSpec.isRecursive()) {
+      throw new IllegalStateException(String.format("%s should be non-recursive", toString()));
+    }
+
+    return ImmutableBuildTargetPattern.of(
+        cell.getCanonicalName().getName(),
+        BuildTargetPattern.Kind.SINGLE,
+        basePath,
+        getUnconfiguredBuildTargetView().getShortNameAndFlavorPostfix());
   }
 
   @Override

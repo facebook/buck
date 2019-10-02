@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.aapt;
 
+import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.xml.DocumentLocation;
 import java.io.IOException;
@@ -41,13 +42,11 @@ class AndroidResourceIndexCollector implements ResourceCollector {
 
   @Override
   public void addCustomDrawableResourceIfNotPresent(
-      RDotTxtEntry.RType rType, String name, Path path, DocumentLocation documentLocation) {
-    addResource(rType, name, documentLocation, path);
-  }
-
-  @Override
-  public void addGrayscaleImageResourceIfNotPresent(
-      RDotTxtEntry.RType rType, String name, Path path, DocumentLocation documentLocation) {
+      RDotTxtEntry.RType rType,
+      String name,
+      Path path,
+      DocumentLocation documentLocation,
+      CustomDrawableType drawableType) {
     addResource(rType, name, documentLocation, path);
   }
 
@@ -91,11 +90,6 @@ class AndroidResourceIndexCollector implements ResourceCollector {
             documentLocation.getLineNumber(),
             documentLocation.getColumnNumber(),
             path));
-  }
-
-  @Override
-  public void addResourceIfNotPresent(RDotTxtEntry rDotTxtEntry) {
-    // do nothing -- this method just adds references from rDotTxt files
   }
 
   public SortedSet<AndroidResourceIndexEntry> getResourceIndex() {

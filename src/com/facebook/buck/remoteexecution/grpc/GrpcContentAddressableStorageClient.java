@@ -20,6 +20,7 @@ import build.bazel.remote.execution.v2.ContentAddressableStorageGrpc.ContentAddr
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
@@ -28,45 +29,68 @@ import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.facebook.buck.remoteexecution.util.OutputsMaterializer;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.types.Unit;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 
 /** Implementation of a CAS client using GRPC. */
 public class GrpcContentAddressableStorageClient implements ContentAddressedStorageClient {
+
+  private static final int SIZE_LIMIT = 10 * 1024 * 1024; // 10MB
+  private static final int FIND_MISSING_CHECK_LIMIT = 1000;
+  private static final int EXECUTOR_THREADS = 4;
+
   private final MultiThreadedBlobUploader uploader;
   private final OutputsMaterializer outputsMaterializer;
+  private final GrpcAsyncBlobFetcher fetcher;
 
   public GrpcContentAddressableStorageClient(
       ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
+      int casDeadline,
       String instanceName,
       Protocol protocol,
       BuckEventBus buckEventBus,
-      RemoteExecutionMetadata metadata) {
+      RemoteExecutionMetadata metadata,
+      RemoteExecutionStrategyConfig strategyConfig) {
     this.uploader =
         new MultiThreadedBlobUploader(
-            1000,
-            10 * 1024 * 1024,
-            MostExecutors.newMultiThreadExecutor("blob-uploader", 4),
+            FIND_MISSING_CHECK_LIMIT,
+            SIZE_LIMIT,
+            MostExecutors.newMultiThreadExecutor("blob-uploader", EXECUTOR_THREADS),
             new GrpcCasBlobUploader(
                 instanceName, storageStub, byteStreamStub, buckEventBus, metadata));
 
+    this.fetcher =
+        new GrpcAsyncBlobFetcher(
+            instanceName,
+            storageStub,
+            byteStreamStub,
+            buckEventBus,
+            metadata,
+            protocol,
+            casDeadline);
     this.outputsMaterializer =
         new OutputsMaterializer(
-            new GrpcAsyncBlobFetcher(instanceName, byteStreamStub, buckEventBus, metadata),
-            protocol);
+            SIZE_LIMIT,
+            MostExecutors.newMultiThreadExecutor(
+                "output-materializer", strategyConfig.getOutputMaterializationThreads()),
+            fetcher,
+            protocol,
+            buckEventBus);
   }
 
   @Override
-  public ListenableFuture<Void> addMissing(Collection<UploadDataSupplier> data) throws IOException {
+  public ListenableFuture<Unit> addMissing(Collection<UploadDataSupplier> data) throws IOException {
     return uploader.addMissing(data.stream());
   }
 
   @Override
-  public ListenableFuture<Void> materializeOutputs(
+  public ListenableFuture<Unit> materializeOutputs(
       List<OutputDirectory> outputDirectories,
       List<OutputFile> outputFiles,
       FileMaterializer materializer)
@@ -77,5 +101,10 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
   @Override
   public boolean containsDigest(Digest digest) {
     return uploader.containsDigest(digest);
+  }
+
+  @Override
+  public ListenableFuture<ByteBuffer> fetch(Digest digest) {
+    return fetcher.fetch(digest);
   }
 }

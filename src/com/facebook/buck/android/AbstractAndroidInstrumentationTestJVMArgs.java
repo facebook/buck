@@ -21,8 +21,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -80,6 +83,8 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
   /** @return The filesystem path to the compiled Buck test runner classes. */
   abstract Path getTestRunnerClasspath();
 
+  abstract ImmutableMap<String, String> getEnvironmentOverrides();
+
   public void formatCommandLineArgsToList(
       ProjectFilesystem filesystem, ImmutableList.Builder<String> args) {
     // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
@@ -119,6 +124,12 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
 
     if (getTestFilter().isPresent()) {
       args.add("--extra-instrumentation-argument", "class=" + getTestFilter().get());
+    }
+
+    for (Map.Entry<String, String> argPair : getEnvironmentOverrides().entrySet()) {
+      args.add(
+          "--extra-instrumentation-argument",
+          String.format(Locale.US, "%s=%s", argPair.getKey(), argPair.getValue()));
     }
 
     // If the test APK supports exopackage installation, this will be the location of a

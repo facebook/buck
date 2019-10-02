@@ -148,7 +148,7 @@ public class BuckAnnotator implements Annotator {
   private void annotateSimpleExpression(
       BuckSimpleExpression simpleExpression, AnnotationHolder annotationHolder) {
     Optional.of(simpleExpression)
-        .map(BuckPsiUtils::getStringValueFromSimpleExpression)
+        .map(BuckSimpleExpression::getStringValue)
         .filter(
             s ->
                 annotateStringAsTargetPattern(simpleExpression, s, annotationHolder)

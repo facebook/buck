@@ -27,6 +27,7 @@ import com.facebook.buck.artifact_cache.thrift.ManifestSetRequest;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.slb.HybridThriftOverHttpService;
 import com.facebook.buck.slb.ThriftService;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -47,7 +48,7 @@ public class ThriftManifestService implements ManifestService {
   }
 
   @Override
-  public ListenableFuture<Void> appendToManifest(Manifest manifest) {
+  public ListenableFuture<Unit> appendToManifest(Manifest manifest) {
     BuckCacheRequest request =
         new BuckCacheRequest()
             .setType(BuckCacheRequestType.MANIFEST_APPEND)
@@ -69,7 +70,7 @@ public class ThriftManifestService implements ManifestService {
   }
 
   @Override
-  public ListenableFuture<Void> deleteManifest(String manifestKey) {
+  public ListenableFuture<Unit> deleteManifest(String manifestKey) {
     BuckCacheRequest request =
         new BuckCacheRequest()
             .setType(BuckCacheRequestType.MANIFEST_DELETE)
@@ -82,7 +83,7 @@ public class ThriftManifestService implements ManifestService {
   }
 
   @Override
-  public ListenableFuture<Void> setManifest(Manifest manifest) {
+  public ListenableFuture<Unit> setManifest(Manifest manifest) {
     BuckCacheRequest request =
         new BuckCacheRequest()
             .setType(BuckCacheRequestType.MANIFEST_SET)

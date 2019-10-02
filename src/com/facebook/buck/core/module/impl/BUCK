@@ -7,7 +7,7 @@ java_library(
         "//src/com/facebook/buck/core/module:module",
     ],
     tests = [
-        "//test/com/facebook/buck/core/module/impl/jarwithouthash:moduleclass-test",
+        "//test/com/facebook/buck/core/module/impl/jarwithouthash:jarwithouthash-test",
         "//test/com/facebook/buck/core/module/impl/moduleclass:moduleclass-test",
         "//test/com/facebook/buck/core/module/impl/nonmoduleclass:nonmoduleclass-test",
     ],

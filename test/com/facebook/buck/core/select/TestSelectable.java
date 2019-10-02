@@ -16,32 +16,37 @@
 
 package com.facebook.buck.core.select;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.platform.ConstraintResolver;
+import com.facebook.buck.core.model.platform.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 
 public class TestSelectable implements Selectable {
 
-  private final UnconfiguredBuildTargetView buildTarget;
+  private final BuildTarget buildTarget;
   private final boolean matches;
-  private final Map<UnconfiguredBuildTargetView, Boolean> refinedTargets;
+  private final Map<BuildTarget, Boolean> refinedTargets;
 
   public TestSelectable(
-      UnconfiguredBuildTargetView buildTarget,
-      boolean matches,
-      Map<UnconfiguredBuildTargetView, Boolean> refinedTargets) {
+      BuildTarget buildTarget, boolean matches, Map<BuildTarget, Boolean> refinedTargets) {
     this.buildTarget = buildTarget;
     this.matches = matches;
     this.refinedTargets = refinedTargets;
   }
 
-  public TestSelectable(UnconfiguredBuildTargetView buildTarget, boolean matches) {
+  public TestSelectable(BuildTarget buildTarget, boolean matches) {
     this(buildTarget, matches, ImmutableMap.of());
   }
 
   @Override
   public boolean matches(SelectableConfigurationContext configurationContext) {
     return matches;
+  }
+
+  @Override
+  public boolean matchesPlatform(Platform platform, ConstraintResolver constraintResolver) {
+    throw new RuntimeException("not implemented");
   }
 
   @Override
@@ -53,7 +58,7 @@ public class TestSelectable implements Selectable {
   }
 
   @Override
-  public UnconfiguredBuildTargetView getBuildTarget() {
+  public BuildTarget getBuildTarget() {
     return buildTarget;
   }
 

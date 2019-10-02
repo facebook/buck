@@ -1,0 +1,46 @@
+/*
+ * Copyright 2019-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+package com.facebook.buck.core.test.rule;
+
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.google.common.base.Preconditions;
+import java.util.Map;
+import org.immutables.value.Value;
+
+/**
+ * Freeform JSON to be used for the test protocol. The JSON is composed of {@link
+ * com.facebook.buck.rules.macros.StringWithMacros}.
+ *
+ * <p>The JSON map keys must be {@link StringWithMacros}, and not other complicated collection
+ * structures.
+ */
+@Value.Immutable(builder = false, copy = false)
+public abstract class TestRunnerSpec {
+
+  @Value.Parameter
+  public abstract Object getData();
+
+  @Value.Check
+  protected void check() {
+    // the json should be a map, iterable, a single stringwithmacros, or a Number
+    Object object = getData();
+    Preconditions.checkState(
+        object instanceof Map
+            || object instanceof Iterable
+            || object instanceof StringWithMacros
+            || object instanceof Number);
+  }
+}

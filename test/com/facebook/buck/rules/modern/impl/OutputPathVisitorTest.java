@@ -209,8 +209,9 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
 
   @Test
   @Override
-  public void buildTargetWithHostConfiguration() {
+  public void buildTargetWithConfigurationForConfigurationTargets() {
     MoreAsserts.assertIterablesEquals(
-        ImmutableList.of(), getOutputs(new WithBuildTargetWithHostConfiguration()));
+        ImmutableList.of(),
+        getOutputs(new WithBuildTargetWithConfigurationForConfigurationTargets()));
   }
 }

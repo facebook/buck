@@ -423,7 +423,7 @@ docsearch({
 
 /**
  * @param? rendered_text  Optionally, specify the rendered text for the
- *                        link. If not specified, the rendered text is 
+ *                        link. If not specified, the rendered text is
  *                        "Key Concepts".
  */
 {template .key_concepts_link}
@@ -449,11 +449,6 @@ docsearch({
 /***/
 {template .abi_rule_keys}
 {call .concept_link_heading}{param page : 'rule_keys' /}{param heading : 'abi_rule_keys' /}{param name : 'ABI rule keys' /}{/call}
-{/template}
-
-/***/
-{template .skylark}
-{call .concept_link_heading}{param page : 'skylark' /}{param heading : 'migration' /}{param name : 'Python DSL to Skylark migration' /}{/call}
 {/template}
 
 /***/
@@ -517,6 +512,31 @@ docsearch({
 {/template}
 
 /***/
+{template .command_alias}
+{call .ruleLink}{param name : 'command_alias' /}{/call}
+{/template}
+
+/***/
+{template .cxx_binary}
+{call .ruleLink}{param name : 'cxx_binary' /}{/call}
+{/template}
+
+/***/
+{template .cxx_genrule}
+{call .ruleLink}{param name : 'cxx_genrule' /}{/call}
+{/template}
+
+/***/
+{template .cxx_library}
+{call .ruleLink}{param name : 'cxx_library' /}{/call}
+{/template}
+
+/***/
+{template .cxx_lua_extension}
+{call .ruleLink}{param name : 'cxx_lua_extension' /}{/call}
+{/template}
+
+/***/
 {template .genrule}
 {call .ruleLink}{param name : 'genrule' /}{/call}
 {/template}
@@ -537,11 +557,6 @@ docsearch({
 {/template}
 
 /***/
-{template .prebuilt_haskell_library}
-{call .ruleLink}{param name : 'prebuilt_haskell_library' /}{/call}
-{/template}
-
-/***/
 {template .java_binary}
 {call .ruleLink}{param name : 'java_binary' /}{/call}
 {/template}
@@ -557,6 +572,11 @@ docsearch({
 {/template}
 
 /***/
+{template .keystore}
+{call .ruleLink}{param name : 'keystore' /}{/call}
+{/template}
+
+/***/
 {template .kotlin_library}
 {call .ruleLink}{param name : 'kotlin_library' /}{/call}
 {/template}
@@ -567,11 +587,6 @@ docsearch({
 {/template}
 
 /***/
-{template .cxx_lua_extension}
-{call .ruleLink}{param name : 'cxx_lua_extension' /}{/call}
-{/template}
-
-/***/
 {template .lua_binary}
 {call .ruleLink}{param name : 'lua_binary' /}{/call}
 {/template}
@@ -579,11 +594,6 @@ docsearch({
 /***/
 {template .lua_library}
 {call .ruleLink}{param name : 'lua_library' /}{/call}
-{/template}
-
-/***/
-{template .keystore}
-{call .ruleLink}{param name : 'keystore' /}{/call}
 {/template}
 
 /***/
@@ -604,6 +614,11 @@ docsearch({
 /***/
 {template .prebuilt_cxx_library_group}
 {call .ruleLink}{param name : 'prebuilt_cxx_library_group' /}{/call}
+{/template}
+
+/***/
+{template .prebuilt_haskell_library}
+{call .ruleLink}{param name : 'prebuilt_haskell_library' /}{/call}
 {/template}
 
 /***/
@@ -632,18 +647,8 @@ docsearch({
 {/template}
 
 /***/
-{template .cxx_binary}
-{call .ruleLink}{param name : 'cxx_binary' /}{/call}
-{/template}
-
-/***/
-{template .cxx_genrule}
-{call .ruleLink}{param name : 'cxx_genrule' /}{/call}
-{/template}
-
-/***/
-{template .cxx_library}
-{call .ruleLink}{param name : 'cxx_library' /}{/call}
+{template .sh_binary}
+{call .ruleLink}{param name : 'sh_binary' /}{/call}
 {/template}
 
 /***/
@@ -654,17 +659,22 @@ docsearch({
 {/call}
 {/template}
 
+/***/
+{template .skylark}
+{call .concept_link_heading}{param page : 'skylark' /}{param heading : 'migration' /}{param name : 'Python DSL to Skylark migration' /}{/call}
+{/template}
+
 /**
  * @param name            Specify the name of the function to link to.
  * @param? rendered_text  Optionally, specify the rendered text for the
- *                        link. If not specified, the rendered text is 
+ *                        link. If not specified, the rendered text is
  *                        the name of the function.
  *
  *   Examples
- *   
- *   {call buck.function_link}{param name: 'allow_unsafe_import' /}{/call} 
  *
- *   {call buck.function_link}{param name: 'allow_unsafe_import' /}{param rendered_text: 'a bad function' /}{/call} 
+ *   {call buck.function_link}{param name: 'allow_unsafe_import' /}{/call}
+ *
+ *   {call buck.function_link}{param name: 'allow_unsafe_import' /}{param rendered_text: 'a bad function' /}{/call}
  *
  */
 {template .function_link}
@@ -681,6 +691,16 @@ docsearch({
 {/template}
 
 /***/
+{template .fn_flatten_dicts}
+<a href="{ROOT}function/flatten_dicts.html"><code>flatten_dicts()</code></a>
+{/template}
+
+/***/
+{template .fn_get_base_path}
+<a href="{ROOT}function/get_base_path.html"><code>get_base_path()</code></a>
+{/template}
+
+/***/
 {template .fn_glob}
 <a href="{ROOT}function/glob.html"><code>glob()</code></a>
 {/template}
@@ -690,14 +710,14 @@ docsearch({
 <a href="{ROOT}function/include_defs.html"><code>include_defs()</code></a>
 {/template}
 
-/***/
-{template .fn_load}
-<a href="{ROOT}function/load.html"><code>load()</code></a>
+/***/      
+{template .fn_host_info}
+<a href="{ROOT}function/host_info.html"><code>host_info()</code></a>
 {/template}
 
 /***/
-{template .fn_get_base_path}
-<a href="{ROOT}function/get_base_path.html"><code>get_base_path()</code></a>
+{template .fn_load}
+<a href="{ROOT}function/load.html"><code>load()</code></a>
 {/template}
 
 /***/
@@ -706,18 +726,8 @@ docsearch({
 {/template}
 
 /***/
-{template .fn_host_info}
-<a href="{ROOT}function/host_info.html"><code>host_info()</code></a>
-{/template}
-
-/***/
 {template .string_parameter_macros}
 <a href="{ROOT}function/string_parameter_macros.html">string parameter macros</a>
-{/template}
-
-/***/
-{template .fn_flatten_dicts}
-<a href="{ROOT}function/flatten_dicts.html"><code>flatten_dicts()</code></a>
 {/template}
 
 
@@ -888,6 +898,18 @@ docsearch({
 <a href="{ROOT}files-and-dirs/buck-out.html"><code>buck-out</code></a>
 {/template}
 
+
+/***/
+{template .name_arg}
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The <em>short name</em> for this {call buck.build_target /}.
+  {/param}
+{/call}
+{/template}
+
+
 /***/
 {template .deps_query_arg}
 {call buck.arg}
@@ -942,6 +964,23 @@ docsearch({
   using <code>$declared</code> are the provided deps of the target, and the results of the query
   are appended to the declared provided deps.
   {/param}
+{/call}
+{/template}
+
+/***/
+{template .platform_deps_arg}
+{call buck.arg}
+  {param name : 'platform_deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Platform specific dependencies.
+  These should be specified as a list of pairs where the first element is an
+  un-anchored regex (in java.util.regex.Pattern syntax) against which the
+  platform name is matched, and the second element is a list of
+  dependencies (same format as <code>deps</code>) that are exported
+  if the platform matches the regex.
+  See <code>deps</code> for more information.
+ {/param}
 {/call}
 {/template}
 

@@ -21,12 +21,16 @@ import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
+import com.facebook.buck.apple.SourcePathWithAppleBundleDestination;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -43,6 +47,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -53,6 +58,7 @@ import com.facebook.buck.shell.ExportFileDirectoryAction;
 import com.facebook.buck.shell.ProvidesWorkerTool;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -68,7 +74,8 @@ public class JsBundleDescription
     implements DescriptionWithTargetGraph<JsBundleDescriptionArg>,
         Flavored,
         HasAppleBundleResourcesDescription<JsBundleDescriptionArg>,
-        JsBundleOutputsDescription<JsBundleDescriptionArg> {
+        JsBundleOutputsDescription<JsBundleDescriptionArg>,
+        ImplicitDepsInferringDescription<JsBundleDescriptionArg> {
 
   static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS =
       ImmutableSet.of(
@@ -266,18 +273,19 @@ public class JsBundleDescription
       ToolchainProvider toolchainProvider,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
+      ActionGraphBuilder graphBuilder,
       JsBundle jsBundle,
       String rDotJavaPackage) {
     if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
       AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
               AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+      ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
-          androidPlatformTarget,
-          ImmutableSortedSet.of(jsBundle),
+          graphBuilder,
+          aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           jsBundle.getSourcePathToResources());
     }
 
@@ -289,7 +297,7 @@ public class JsBundleDescription
         buildTarget,
         projectFilesystem,
         params,
-        ruleFinder,
+        graphBuilder,
         ImmutableSortedSet.of(), // deps
         jsBundle.getSourcePathToResources(),
         ImmutableSortedMap.of(), // resSrcs
@@ -325,13 +333,26 @@ public class JsBundleDescription
 
   static void addAppleBundleResourcesJSOutputOnly(
       AppleBundleResources.Builder builder, JsBundleOutputs bundle) {
-    builder.addDirsContainingResourceDirs(bundle.getSourcePathToOutput());
+    builder.addDirsContainingResourceDirs(
+        SourcePathWithAppleBundleDestination.of(bundle.getSourcePathToOutput()));
   }
 
   static void addAppleBundleResources(
       AppleBundleResources.Builder builder, JsBundleOutputs bundle) {
     addAppleBundleResourcesJSOutputOnly(builder, bundle);
-    builder.addDirsContainingResourceDirs(bundle.getSourcePathToResources());
+    builder.addDirsContainingResourceDirs(
+        SourcePathWithAppleBundleDestination.of(bundle.getSourcePathToResources()));
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      JsBundleDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    AndroidTools.addParseTimeDepsToAndroidTools(
+        toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }
 
   @BuckStyleImmutable

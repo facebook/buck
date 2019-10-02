@@ -18,7 +18,6 @@ package com.facebook.buck.intellij.ideabuck.util;
 
 import com.facebook.buck.intellij.ideabuck.lang.BuckFile;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckAndExpression;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArithmeticExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckAtomicExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckBitwiseAndExpression;
@@ -155,115 +154,15 @@ public final class BuckPsiUtils {
   }
 
   /**
-   * Return the text content if the given BuckExpression has only one string value. Return null if
-   * this expression has multiple values, for example: "a" + "b"
-   */
-  @Nullable
-  public static String getStringValueFromExpression(BuckExpression expression) {
-    return Optional.of(expression)
-        .map(BuckExpression::getOrExpressionList)
-        .filter(list -> list.size() == 1)
-        .map(list -> list.get(0))
-        .map(BuckOrExpression::getAndExpressionList)
-        .filter(list -> list.size() == 1)
-        .map(list -> list.get(0))
-        .map(BuckAndExpression::getNotExpressionList)
-        .filter(list -> list.size() == 1)
-        .map(list -> list.get(0))
-        .map(BuckNotExpression::getComparisonExpression)
-        .map(BuckComparisonExpression::getSimpleExpressionList)
-        .filter(list -> list.size() == 1)
-        .map(list -> list.get(0))
-        .map(BuckPsiUtils::getStringValueFromSimpleExpression)
-        .orElse(null);
-  }
-  /**
-   * Return the text content if the given BuckSimpleExpression has only one string value. Return
-   * null if this expression has multiple values, for example: "a" + "b"
-   */
-  @Nullable
-  public static String getStringValueFromSimpleExpression(BuckSimpleExpression expression) {
-    return Optional.of(expression)
-        .map(BuckSimpleExpression::getXorExpressionList)
-        .filter(list -> list.size() == 1)
-        .map(list -> list.get(0))
-        .map(BuckXorExpression::getBitwiseAndExpressionList)
-        .filter(list -> list.size() == 1)
-        .map(list -> list.get(0))
-        .map(BuckBitwiseAndExpression::getShiftExpressionList)
-        .filter(list -> list.size() == 1)
-        .map(list -> list.get(0))
-        .map(BuckShiftExpression::getArithmeticExpressionList)
-        .filter(list -> list.size() == 1)
-        .map(list -> list.get(0))
-        .map(BuckArithmeticExpression::getTermExpressionList)
-        .filter(list -> list.size() == 1)
-        .map(list -> list.get(0))
-        .map(BuckTermExpression::getFactorExpressionList)
-        .filter(list -> list.size() == 1)
-        .map(list -> list.get(0))
-        .map(BuckFactorExpression::getPowerExpression)
-        .filter(e -> e.getExpressionTrailerList().isEmpty())
-        .filter(e -> e.getFactorExpression() == null)
-        .map(BuckPowerExpression::getAtomicExpression)
-        .map(BuckAtomicExpression::getString)
-        .map(BuckString::getValue)
-        .orElse(null);
-  }
-
-  /**
-   * Returns the text content of the given element (without the appropriate quoting).
-   *
-   * @deprecated Use the variation of this method that accepts a {@link BuckString}.
-   */
-  @Deprecated
-  @Nullable
-  public static String getStringValueFromBuckString(@Nullable PsiElement stringElement) {
-    if (stringElement == null) {
-      return null;
-    }
-    if (hasElementType(stringElement, STRING_LITERALS)) {
-      stringElement = stringElement.getParent();
-    }
-    if (stringElement instanceof BuckString) {
-      return ((BuckString) stringElement).getValue();
-    }
-    return null;
-  }
-
-  /**
-   * Returns the text content of the given string (without the appropriate quoting).
-   *
-   * <p>Note that this method is currently underdeveloped and hacky. It does not process escape
-   * sequences correctly.
-   */
-  public static String getStringValueFromBuckString(BuckString buckString) {
-    return buckString.getValue();
-  }
-
-  /**
    * Returns the definition for a rule with the given target name in the given root, or {@code null}
    * if it cannot be found.
    */
   @Nullable
   public static BuckFunctionTrailer findTargetInPsiTree(PsiElement root, String name) {
-    for (BuckFunctionTrailer buckRuleBody :
-        PsiTreeUtil.findChildrenOfType(root, BuckFunctionTrailer.class)) {
-      for (BuckArgument buckArgument :
-          PsiTreeUtil.findChildrenOfType(buckRuleBody, BuckArgument.class)) {
-        if (!Optional.ofNullable(buckArgument.getIdentifier())
-            .map(BuckIdentifier::getIdentifierToken)
-            .map(PsiElement::getText)
-            .filter("name"::equals)
-            .isPresent()) {
-          continue;
-        }
-        if (name.equals(getStringValueFromExpression(buckArgument.getExpression()))) {
-          return buckRuleBody;
-        }
-      }
-    }
-    return null;
+    return PsiTreeUtil.findChildrenOfType(root, BuckFunctionTrailer.class).stream()
+        .filter(buckFunctionTrailer -> name.equals(buckFunctionTrailer.getName()))
+        .findFirst()
+        .orElse(null);
   }
 
   /**
@@ -271,23 +170,12 @@ public final class BuckPsiUtils {
    */
   public static Map<String, PsiElement> findTargetsInPsiTree(PsiFile psiFile, String namePrefix) {
     Map<String, PsiElement> targetsByName = new HashMap<>();
-    for (BuckFunctionTrailer buckRuleBody :
-        PsiTreeUtil.findChildrenOfType(psiFile, BuckFunctionTrailer.class)) {
-      for (BuckArgument buckArgument :
-          PsiTreeUtil.findChildrenOfType(buckRuleBody, BuckArgument.class)) {
-        BuckIdentifier buckIdentifier = buckArgument.getIdentifier();
-        if (buckIdentifier == null || !"name".equals(buckIdentifier.getName())) {
-          continue;
-        }
-        String name = BuckPsiUtils.getStringValueFromExpression(buckArgument.getExpression());
-        if (name != null) {
-          if (name.startsWith(namePrefix)) {
-            targetsByName.put(name, buckRuleBody);
-          }
-          break;
-        }
-      }
-    }
+    PsiTreeUtil.findChildrenOfType(psiFile, BuckFunctionTrailer.class)
+        .forEach(
+            buckFunctionTrailer ->
+                Optional.ofNullable(buckFunctionTrailer.getName())
+                    .filter(name -> name.startsWith(namePrefix))
+                    .ifPresent(name -> targetsByName.put(name, buckFunctionTrailer)));
     return targetsByName;
   }
 

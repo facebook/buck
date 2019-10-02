@@ -17,19 +17,11 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.BuildFileTree;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collection;
 import java.util.Optional;
 
 /**
@@ -91,43 +83,6 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
     this.projectFilesystem = projectFilesystem;
     this.buildFile = projectFilesystem.getPath(buildFileName);
     this.rootPath = projectFilesystem.getPath("");
-  }
-
-  /** @return paths relative to BuildTarget that contain their own build files. */
-  @Override
-  public Collection<Path> getChildPaths(BuildTarget target) {
-    // Crawl the subdirectories of target's base path, looking for build files.
-    // When we find one, we can stop crawling anything under the directory it's in.
-    ImmutableSet.Builder<Path> childPaths = ImmutableSet.builder();
-    Path basePath = target.getBasePath();
-    ImmutableSet<PathMatcher> ignoredPaths = projectFilesystem.getIgnorePaths();
-    try {
-      projectFilesystem.walkRelativeFileTree(
-          basePath,
-          new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-              for (PathMatcher ignoredPath : ignoredPaths) {
-                if (ignoredPath.matches(dir)) {
-                  return FileVisitResult.SKIP_SUBTREE;
-                }
-              }
-              if (dir.equals(basePath)) {
-                return FileVisitResult.CONTINUE;
-              }
-              Optional<Path> baseAncestorPathPath = basePathOfAncestorCache.getUnchecked(dir);
-              if (baseAncestorPathPath.isPresent() && baseAncestorPathPath.get().equals(dir)) {
-                childPaths.add(basePath.relativize(dir));
-                return FileVisitResult.SKIP_SUBTREE;
-              }
-
-              return FileVisitResult.CONTINUE;
-            }
-          });
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    return childPaths.build();
   }
 
   /**

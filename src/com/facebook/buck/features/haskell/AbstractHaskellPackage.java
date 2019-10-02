@@ -59,4 +59,8 @@ abstract class AbstractHaskellPackage implements AddsToRuleKey {
     return Stream.of(ImmutableList.of(getPackageDb()), getLibraries(), getInterfaces())
         .flatMap(input -> ruleFinder.filterBuildRuleInputs(input).stream());
   }
+
+  public final String getIdentifier() {
+    return getInfo().getIdentifier();
+  }
 }

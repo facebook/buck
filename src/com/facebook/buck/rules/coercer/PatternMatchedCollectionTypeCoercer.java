@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 public class PatternMatchedCollectionTypeCoercer<T>
     implements TypeCoercer<PatternMatchedCollection<T>> {
@@ -92,5 +93,11 @@ public class PatternMatchedCollectionTypeCoercer<T>
       builder.add(platformSelector, value);
     }
     return builder.build();
+  }
+
+  @Nullable
+  @Override
+  public PatternMatchedCollection<T> concat(Iterable<PatternMatchedCollection<T>> elements) {
+    return PatternMatchedCollection.concat(elements);
   }
 }

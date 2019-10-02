@@ -23,7 +23,15 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
-/** Performs a breadth-first traversal of dependencies of a graph node. */
+/**
+ * Performs a breadth-first traversal of dependencies of a graph node.
+ *
+ * <p>In cases where the cost of allocating {@link Iterable}s for node dependencies is
+ * expensive/costly, {@link ConsumingTraverser#breadthFirst(Iterable, ForEachSuccessorFunction)}
+ * provides a lighter-weight option.
+ *
+ * <p>TODO: Implement via {@link ConsumingTraverser}.
+ */
 public abstract class AbstractBreadthFirstThrowingTraversal<Node, E extends Throwable> {
 
   private final Queue<Node> toExplore;

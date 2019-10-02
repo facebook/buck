@@ -10,6 +10,7 @@ kotlin_library(
     ],
     deps = [
         "//src/com/facebook/buck/io/pathformat:pathformat",
+        "//src/com/facebook/buck/util/json:json",
         "//third-party/java/guava:guava",
     ],
 )

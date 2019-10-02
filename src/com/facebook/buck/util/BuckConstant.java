@@ -36,6 +36,10 @@ public class BuckConstant {
   public static final String RULE_KEY_DIAG_KEYS_FILE_NAME = "rule_key_diag_keys.txt";
   public static final String RULE_KEY_DIAG_GRAPH_FILE_NAME = "rule_key_diag_graph.txt";
 
+  public static final String CONFIG_JSON_FILE_NAME = "buckconfig.json";
+
+  public static final String BUCK_FIX_SPEC_FILE_NAME = "buck_fix_spec.json";
+
   private BuckConstant() {}
 
   /**

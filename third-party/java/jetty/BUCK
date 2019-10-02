@@ -23,6 +23,7 @@ java_library(
         "//test/com/facebook/buck/httpserver:",
         "//test/com/facebook/buck/maven:maven",
         "//test/com/facebook/buck/maven:testutil",
+        "//test/com/facebook/buck/support/build/report:report",
         "//test/com/facebook/buck/testutil/integration:",
         "//tools/ideabuck:ideabuck-lib",
     ],

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
-import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -218,12 +218,12 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
   public void visitTargetConfiguration(TargetConfiguration value) throws RuntimeException {
     if (value instanceof EmptyTargetConfiguration) {
       append("configuration<>");
-    } else if (value instanceof HostTargetConfiguration) {
-      append("configuration<hostPlatform>");
     } else if (value instanceof DefaultTargetConfiguration) {
       append(
           "configuration<targetPlatform(%s)>",
           ((DefaultTargetConfiguration) value).getTargetPlatform().getFullyQualifiedName());
+    } else if (value instanceof ConfigurationForConfigurationTargets) {
+      append("configuration<configurationTarget>");
     } else {
       throw new IllegalArgumentException("Cannot visit target configuration: " + value);
     }

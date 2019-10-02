@@ -92,7 +92,7 @@ public class FakeBuckConfig {
     public BuckConfig build() {
       Config config = new Config(sections);
       CellPathResolver cellPathResolver =
-          DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+          DefaultCellPathResolver.create(filesystem.getRootPath(), config);
       UnconfiguredBuildTargetViewFactory buildTargetFactory =
           new ParsingUnconfiguredBuildTargetViewFactory();
       return new BuckConfig(

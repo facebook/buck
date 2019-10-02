@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.network;
 
+import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Optional;
 
@@ -26,12 +27,12 @@ public interface BatchingLogger {
    * @return {@link Optional#empty()} if the data has merely been buffered, a {@link
    *     ListenableFuture} representing the upload otherwise.
    */
-  Optional<ListenableFuture<Void>> log(String logLine);
+  Optional<ListenableFuture<Unit>> log(String logLine);
 
   /**
    * Signals to upload whatever remaining information is buffered.
    *
    * @return future representing the forced upload.
    */
-  ListenableFuture<Void> forceFlush();
+  ListenableFuture<Unit> forceFlush();
 }

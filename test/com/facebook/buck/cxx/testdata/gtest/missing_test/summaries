@@ -1,0 +1,12 @@
+[
+  {
+    "message": "Test wasn't run",
+    "stacktrace": "",
+    "stdErr": "",
+    "stdOut": "",
+    "testCase": "FOO",
+    "testCaseName": "BAR",
+    "time": 0,
+    "type": "FAILURE"
+  }
+]

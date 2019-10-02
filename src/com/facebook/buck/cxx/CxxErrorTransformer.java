@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Escaper;
@@ -71,7 +72,7 @@ class CxxErrorTransformer {
                       + "(?<suffix>(?::\\d+(?::\\d+:)?)?:)"));
 
   @VisibleForTesting
-  String transformLine(String line) {
+  String transformLine(SourcePathResolver pathResolver, String line) {
     for (Pattern pattern : PATH_PATTERNS) {
       Matcher m = pattern.matcher(line);
       if (m.find()) {
@@ -80,7 +81,7 @@ class CxxErrorTransformer {
         if (prefix != null) {
           builder.append(prefix);
         }
-        builder.append(transformPath(m.group("path")));
+        builder.append(transformPath(pathResolver, m.group("path")));
         String suffix = m.group("suffix");
         if (suffix != null) {
           builder.append(suffix);
@@ -91,11 +92,12 @@ class CxxErrorTransformer {
     return line;
   }
 
-  private String transformPath(String original) {
+  private String transformPath(SourcePathResolver pathResolver, String original) {
     Path path = MorePaths.normalize(filesystem.resolve(original));
 
     // And, of course, we need to fixup any replacement paths.
-    Optional<Path> normalizedPath = pathNormalizer.getAbsolutePathForUnnormalizedPath(path);
+    Optional<Path> normalizedPath =
+        pathNormalizer.getAbsolutePathForUnnormalizedPath(pathResolver, path);
     if (normalizedPath.isPresent()) {
       path = normalizedPath.get();
     }

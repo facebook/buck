@@ -116,7 +116,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalLong;
-import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
@@ -148,8 +147,6 @@ public class SuperConsoleEventBusListenerTest {
   private BuildRuleDurationTracker durationTracker;
   private SuperConsoleConfig emptySuperConsoleConfig =
       new SuperConsoleConfig(FakeBuckConfig.builder().build());
-
-  private final TimeZone timeZone = TimeZone.getTimeZone("UTC");
 
   private String formatCacheStatsLine(boolean running, int artifacts, float size, float ratio) {
     String operationString = running ? "Downloading..." : "Downloaded";
@@ -363,7 +360,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ArtifactCompressionEvent.finished(compressStarted),
+            ArtifactCompressionEvent.finished(compressStarted, 0, 0),
             704L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -2317,7 +2314,6 @@ public class SuperConsoleEventBusListenerTest {
                 EnvVariablesProvider.getSystemEnv(), System.getProperties()),
             Locale.US,
             logPath,
-            timeZone,
             0L,
             0L,
             1000L,
@@ -3275,7 +3271,6 @@ public class SuperConsoleEventBusListenerTest {
                 EnvVariablesProvider.getSystemEnv(), System.getProperties()),
             Locale.US,
             logPath,
-            timeZone,
             0L,
             0L,
             1000L,

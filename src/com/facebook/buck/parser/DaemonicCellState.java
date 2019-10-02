@@ -18,7 +18,11 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -39,8 +43,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import javax.annotation.concurrent.GuardedBy;
 
 class DaemonicCellState {
@@ -52,29 +56,50 @@ class DaemonicCellState {
    *
    * @param <T> the type of value cached
    */
-  class Cache<T> {
+  class Cache<K, T> {
+
+    private final CellCacheType<K, T> type;
 
     /** Unbounded cache for all computed objects associated with build targets. */
     @GuardedBy("rawAndComputedNodesLock")
-    public final ConcurrentMapCache<BuildTarget, T> allComputedNodes =
+    public final ConcurrentMapCache<K, T> allComputedNodes =
         new ConcurrentMapCache<>(parsingThreads);
 
-    public Optional<T> lookupComputedNode(BuildTarget target) throws BuildTargetException {
+    /**
+     * Provides access to all flavored build targets created and stored in all of the caches for a
+     * given unflavored build target.
+     *
+     * <p>This map is used to locate all the build targets that need to be invalidated when a build
+     * build file that produced those build targets has changed.
+     */
+    @GuardedBy("rawAndComputedNodesLock")
+    private final SetMultimap<UnflavoredBuildTargetView, K> targetsCornucopia =
+        HashMultimap.create();
+
+    Cache(CellCacheType<K, T> type) {
+      this.type = type;
+    }
+
+    private void invalidateFor(UnflavoredBuildTargetView target) {
+      Set<K> keys = targetsCornucopia.removeAll(target);
+      allComputedNodes.invalidateAll(keys);
+    }
+
+    public Optional<T> lookupComputedNode(K target) throws BuildTargetException {
       try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
         return Optional.ofNullable(allComputedNodes.getIfPresent(target));
       }
     }
 
-    public T putComputedNodeIfNotPresent(BuildTarget target, T targetNode)
-        throws BuildTargetException {
+    public T putComputedNodeIfNotPresent(K target, T targetNode) throws BuildTargetException {
       try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
         T updatedNode = allComputedNodes.putIfAbsentAndGet(target, targetNode);
         Preconditions.checkState(
-            allRawNodeTargets.contains(target.getUnflavoredBuildTarget()),
+            allRawNodeTargets.contains(type.keyToUnflavoredBuildTargetView.apply(target)),
             "Added %s to computed nodes, which isn't present in raw nodes",
             target);
         if (updatedNode.equals(targetNode)) {
-          targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
+          targetsCornucopia.put(type.keyToUnflavoredBuildTargetView.apply(target), target);
         }
         return updatedNode;
       }
@@ -82,7 +107,7 @@ class DaemonicCellState {
   }
 
   private final Path cellRoot;
-  private final Optional<String> cellCanonicalName;
+  private final CanonicalCellName cellCanonicalName;
   private final AtomicReference<Cell> cell;
 
   /**
@@ -95,16 +120,6 @@ class DaemonicCellState {
    */
   @GuardedBy("rawAndComputedNodesLock")
   private final SetMultimap<Path, Path> buildFileDependents;
-
-  /**
-   * Provides access to all flavored build targets created and stored in all of the caches for a
-   * given unflavored build target.
-   *
-   * <p>This map is used to locate all the build targets that need to be invalidated when a build
-   * build file that produced those build targets has changed.
-   */
-  @GuardedBy("rawAndComputedNodesLock")
-  private final SetMultimap<UnflavoredBuildTargetView, BuildTarget> targetsCornucopia;
 
   /**
    * Contains environment variables used during parsing of a particular build file.
@@ -131,9 +146,46 @@ class DaemonicCellState {
   @GuardedBy("rawAndComputedNodesLock")
   private final Set<UnflavoredBuildTargetView> allRawNodeTargets;
 
+  /** Type-safe accessor to one of state caches */
+  static class CellCacheType<K, T> {
+    private final Function<DaemonicCellState, Cache<K, T>> getCache;
+    private final Function<K, UnconfiguredBuildTargetView> keyToUnconfiguredBuildTargetView;
+    private final Function<K, UnflavoredBuildTargetView> keyToUnflavoredBuildTargetView;
+
+    CellCacheType(
+        Function<DaemonicCellState, Cache<K, T>> getCache,
+        Function<K, UnconfiguredBuildTargetView> keyToUnconfiguredBuildTargetView,
+        Function<K, UnflavoredBuildTargetView> keyToUnflavoredBuildTargetView) {
+      this.getCache = getCache;
+      this.keyToUnconfiguredBuildTargetView = keyToUnconfiguredBuildTargetView;
+      this.keyToUnflavoredBuildTargetView = keyToUnflavoredBuildTargetView;
+    }
+
+    UnconfiguredBuildTargetView convertToUnconfiguredBuildTargetView(K key) {
+      return keyToUnconfiguredBuildTargetView.apply(key);
+    }
+  }
+
+  static final CellCacheType<UnconfiguredBuildTargetView, RawTargetNode>
+      RAW_TARGET_NODE_CACHE_TYPE =
+          new CellCacheType<>(
+              state -> state.rawTargetNodeCache,
+              k -> k,
+              UnconfiguredBuildTargetView::getUnflavoredBuildTargetView);
+  static final CellCacheType<BuildTarget, TargetNode<?>> TARGET_NODE_CACHE_TYPE =
+      new CellCacheType<>(
+          state -> state.targetNodeCache,
+          BuildTarget::getUnconfiguredBuildTargetView,
+          BuildTarget::getUnflavoredBuildTarget);
+
+  private Cache<?, ?>[] typedNodeCaches() {
+    return new Cache[] {targetNodeCache, rawTargetNodeCache};
+  }
+
   /** Keeps caches by the object type supported by the cache. */
-  @GuardedBy("rawAndComputedNodesLock")
-  private final ConcurrentMap<Class<?>, Cache<?>> typedNodeCaches;
+  private final Cache<BuildTarget, TargetNode<?>> targetNodeCache;
+
+  private final Cache<UnconfiguredBuildTargetView, RawTargetNode> rawTargetNodeCache;
 
   private final AutoCloseableReadWriteUpdateLock rawAndComputedNodesLock;
   private final int parsingThreads;
@@ -144,12 +196,12 @@ class DaemonicCellState {
     this.cellRoot = cell.getRoot();
     this.cellCanonicalName = cell.getCanonicalName();
     this.buildFileDependents = HashMultimap.create();
-    this.targetsCornucopia = HashMultimap.create();
     this.buildFileEnv = new HashMap<>();
     this.allBuildFileManifests = new ConcurrentMapCache<>(parsingThreads);
     this.allRawNodeTargets = new HashSet<>();
-    this.typedNodeCaches = Maps.newConcurrentMap();
     this.rawAndComputedNodesLock = new AutoCloseableReadWriteUpdateLock();
+    this.targetNodeCache = new Cache<>(TARGET_NODE_CACHE_TYPE);
+    this.rawTargetNodeCache = new Cache<>(RAW_TARGET_NODE_CACHE_TYPE);
   }
 
   // TODO(mzlee): Only needed for invalidateBasedOn which does not have access to cell metadata
@@ -161,25 +213,8 @@ class DaemonicCellState {
     return cellRoot;
   }
 
-  @SuppressWarnings("unchecked")
-  public <T> Cache<T> getOrCreateCache(Class<T> type) {
-    try (AutoCloseableLock updateLock = rawAndComputedNodesLock.updateLock()) {
-      Cache<?> cache = typedNodeCaches.get(type);
-      if (cache == null) {
-        try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
-          cache = new Cache<>();
-          typedNodeCaches.put(type, cache);
-        }
-      }
-      return (Cache<T>) cache;
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  public <T> Cache<T> getCache(Class<T> type) {
-    try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
-      return (Cache<T>) typedNodeCaches.get(type);
-    }
+  public <K, T> Cache<K, T> getCache(CellCacheType<K, T> type) {
+    return type.getCache.apply(this);
   }
 
   Optional<BuildFileManifest> lookupBuildFileManifest(Path buildFile) {
@@ -226,10 +261,9 @@ class DaemonicCellState {
               UnflavoredBuildTargetFactory.createFromRawNode(
                   cellRoot, cellCanonicalName, rawNode, path);
           LOG.debug("Invalidating target for path %s: %s", path, target);
-          for (Cache<?> cache : typedNodeCaches.values()) {
-            cache.allComputedNodes.invalidateAll(targetsCornucopia.get(target));
+          for (Cache<?, ?> cache : typedNodeCaches()) {
+            cache.invalidateFor(target);
           }
-          targetsCornucopia.removeAll(target);
           allRawNodeTargets.remove(target);
         }
         allBuildFileManifests.invalidate(path);

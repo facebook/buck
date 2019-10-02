@@ -17,7 +17,9 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -59,15 +61,14 @@ public interface ConstructorArgMarshaller {
    * if none is set. This is typically {@link Optional#empty()}, but in the case of collections is
    * an empty collection.
    *
-   * @param dtoClass The type of the immutable constructor dto to be populated.
    * @param declaredDeps A builder to be populated with the declared dependencies.
    * @return The fully populated DTO.
    */
-  <T> T populate(
+  <T extends ConstructorArg> T populate(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
-      Class<T> dtoClass,
+      ConstructorArgBuilder<T> constructorArgBuilder,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       Map<String, ?> instance)
       throws ParamInfoException;
@@ -78,14 +79,16 @@ public interface ConstructorArgMarshaller {
    * @param attributes configured attributes that cannot contain selectable values (instances of
    *     {@link SelectorList})
    */
-  <T> T populateWithConfiguringAttributes(
+  <T extends ConstructorArg> T populateWithConfiguringAttributes(
       CellPathResolver cellPathResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
+      TargetConfigurationTransformer targetConfigurationTransformer,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
-      Class<T> dtoClass,
+      ConstructorArgBuilder<T> constructorArgBuilder,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
+      ImmutableSet.Builder<BuildTarget> configurationDeps,
       ImmutableMap<String, ?> attributes)
       throws CoerceFailedException;
 }

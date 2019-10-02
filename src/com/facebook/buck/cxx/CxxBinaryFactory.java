@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -57,6 +58,7 @@ public class CxxBinaryFactory {
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   public BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -91,6 +93,7 @@ public class CxxBinaryFactory {
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       CxxLinkAndCompileRules cxxLinkAndCompileRules =
           CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+              targetGraph,
               target.withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
               projectFilesystem,
               graphBuilder,
@@ -130,30 +133,31 @@ public class CxxBinaryFactory {
           inferBuckConfig);
     }
 
-    if (flavors.contains(CxxDescriptionEnhancer.INCREMENTAL_THINLTO)) {
-      return CxxDescriptionEnhancer.createBuildRuleForCxxThinLtoBinary(
-          target,
-          projectFilesystem,
-          graphBuilder,
-          cellRoots,
-          cxxBuckConfig,
-          cxxPlatform,
-          args,
-          extraCxxDeps);
-    }
-
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
-        CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
-            target,
-            projectFilesystem,
-            graphBuilder,
-            cellRoots,
-            cxxBuckConfig,
-            cxxPlatform,
-            args,
-            extraCxxDeps,
-            flavoredStripStyle,
-            flavoredLinkerMapMode);
+        flavors.contains(CxxDescriptionEnhancer.INCREMENTAL_THINLTO)
+            ? CxxDescriptionEnhancer.createBuildRuleForCxxThinLtoBinary(
+                target,
+                projectFilesystem,
+                graphBuilder,
+                cellRoots,
+                cxxBuckConfig,
+                cxxPlatform,
+                args,
+                extraCxxDeps,
+                flavoredStripStyle,
+                flavoredLinkerMapMode)
+            : CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+                targetGraph,
+                target,
+                projectFilesystem,
+                graphBuilder,
+                cellRoots,
+                cxxBuckConfig,
+                cxxPlatform,
+                args,
+                extraCxxDeps,
+                flavoredStripStyle,
+                flavoredLinkerMapMode);
 
     if (target.getFlavors().contains(CxxDescriptionEnhancer.CXX_LINK_MAP_FLAVOR)) {
       return CxxDescriptionEnhancer.createLinkMap(

@@ -62,8 +62,8 @@ abstract class AbstractIjModule implements IjProjectElement {
 
   public abstract Optional<IjModuleAndroidFacet> getAndroidFacet();
 
-  /** @return a set of classpaths that the module requires to index correctly. */
-  public abstract ImmutableSet<Path> getExtraClassPathDependencies();
+  /** @return a set of IjLibrary that the module requires to index all symbols correctly. */
+  public abstract ImmutableSet<IjLibrary> getExtraLibraryDependencies();
 
   /** @return a set of module paths that the module requires to index correctly. */
   public abstract ImmutableSet<Path> getExtraModuleDependencies();

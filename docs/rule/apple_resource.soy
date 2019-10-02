@@ -37,12 +37,7 @@ an <a href="{ROOT}rule/apple_bundle.html"><code>apple_bundle()</code> rule</a>.
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'dirs' /}
@@ -80,6 +75,15 @@ an <a href="{ROOT}rule/apple_bundle.html"><code>apple_bundle()</code> rule</a>.
   Usually, an <code>apple_bundle</code> collects all <code>apple_resource</code> rules transitively
   reachable through apple_library rules. This field allows for resources which are not reachable
   using the above traversal strategy to be considered for inclusion in the bundle.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'destination' /}
+  {param default : 'resources' /}
+  {param desc}
+  Specifies the destination in the final application bundle where resource will be copied. Possible
+  values: "resources", "frameworks", "executables", "plugins", "xpcservices".
   {/param}
 {/call}
 

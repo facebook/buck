@@ -23,7 +23,9 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 import org.immutables.value.Value;
 
-public interface CommonDescriptionArg extends HasTargetCompatibleWith {
+/** Common arguments for build rules (but not configuration rules) */
+public interface CommonDescriptionArg extends ConstructorArg, HasTargetCompatibleWith {
+  @Hint(isConfigurable = false)
   String getName();
 
   ImmutableSet<SourcePath> getLicenses();

@@ -127,7 +127,10 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
                             reconstructed,
                             rule.getProjectFilesystem(),
                             rule.getBuildTarget())) {
-                      StepRunner.runStep(strategyContext.getExecutionContext(), step);
+                      StepRunner.runStep(
+                          strategyContext.getExecutionContext(),
+                          step,
+                          Optional.of(rule.getBuildTarget()));
                     }
                     converted.recordOutputs(strategyContext.getBuildableContext());
                   } catch (IOException | StepFailedException | InterruptedException e) {

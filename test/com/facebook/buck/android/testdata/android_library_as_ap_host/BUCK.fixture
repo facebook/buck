@@ -21,9 +21,9 @@ java_library(
         #add_file 'Unrelated.java',
     ],
     resources = [
-        "res/META-INF/res1.json",
-        "res/META-INF/unread.json",
-        #add_res 'res/META-INF/res2.json',
+        "res/_STRIPPED_RESOURCES/res1.json",
+        "res/_STRIPPED_RESOURCES/unread.json",
+        #add_res 'res/_STRIPPED_RESOURCES/res2.json',
     ],
     resources_root = "res",
 )
@@ -32,7 +32,7 @@ java_library(
     name = "lib2",
     srcs = [],
     resources = [
-        "res/META-INF/res2.json",
+        "res/_STRIPPED_RESOURCES/res2.json",
     ],
     resources_root = "res",
 )

@@ -1,0 +1,21 @@
+<component name="libraryTable">
+  <library name="mockk-runtime">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/mockk-agent-jvm-1.9.3.kotlin12.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/mockk-agent-api-1.9.3.kotlin12.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/byte-buddy-agent-1.10.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/byte-buddy-1.10.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/byte-buddy-1.10.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/byte-buddy-agent-1.10.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/mockk-agent-common-1.9.3.kotlin12.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/mockk-agent-jvm-1.9.3.kotlin12-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/mockk-agent-api-1.9.3.kotlin12-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/byte-buddy-agent-1.10.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/byte-buddy-1.10.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/mockk-agent-common-1.9.3.kotlin12-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

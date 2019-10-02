@@ -23,6 +23,8 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -51,12 +53,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
 public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements BinaryBuildRule, HasClasspathDeps, HasClasspathEntries {
+    implements BinaryBuildRule, HasClasspathDeps, HasClasspathEntries, HasRuntimeDeps {
 
   // We're just propagating the runtime launcher through `getExecutable`, so don't add it to the
   // rule key.
@@ -237,5 +240,18 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
     return ImmutableSortedSet.copyOf(getTransitiveClasspathDeps());
+  }
+
+  @Override
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
+    Stream<BuildTarget> transitiveRuntimeDeps = Stream.of();
+    for (JavaLibrary lib : getTransitiveClasspathDeps()) {
+      // Skip ourself to avoid infinite recursion.
+      if (lib == this) continue;
+
+      transitiveRuntimeDeps =
+          Stream.concat(transitiveRuntimeDeps, lib.getRuntimeDeps(buildRuleResolver));
+    }
+    return transitiveRuntimeDeps;
   }
 }

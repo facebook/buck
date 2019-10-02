@@ -23,16 +23,28 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
+import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.TargetConfigurationTransformer;
+import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.TargetPlatformResolver;
+import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
+import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
+import com.facebook.buck.core.model.platform.impl.MultiPlatform;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
+import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.TestSelectable;
@@ -47,6 +59,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.DefaultSelectableConfigurationContext;
 import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,6 +85,7 @@ public class ConstructorArgMarshallerImmutableTest {
   private Path basePath;
   private ConstructorArgMarshaller marshaller;
   private ProjectFilesystem filesystem;
+  private KnownRuleTypes knownRuleTypes;
 
   @Rule public ExpectedException expected = ExpectedException.none();
 
@@ -80,16 +94,29 @@ public class ConstructorArgMarshallerImmutableTest {
     basePath = Paths.get("example", "path");
     marshaller = new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     filesystem = new FakeProjectFilesystem();
+    knownRuleTypes = KnownNativeRuleTypes.of(ImmutableList.of(), ImmutableList.of());
+  }
+
+  RuleType ruleType(Class<?> dtoClass) {
+    return RuleType.of(
+        CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, dtoClass.getName()),
+        AbstractRuleType.Kind.BUILD);
+  }
+
+  <T extends ConstructorArg> ConstructorArgBuilder<T> builder(Class<T> dtoClass) {
+    return knownRuleTypes.getConstructorArgBuilder(
+        new DefaultTypeCoercerFactory(), ruleType(dtoClass), dtoClass, TARGET);
   }
 
   @Test
   public void shouldPopulateAStringValue() throws Exception {
+
     DtoWithString built =
         marshaller.populate(
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithString.class,
+            builder(DtoWithString.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("string", "cheese"));
 
@@ -103,7 +130,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithBoolean.class,
+            builder(DtoWithBoolean.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "booleanOne", true,
@@ -120,7 +147,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithBuildTargets.class,
+            builder(DtoWithBuildTargets.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "target", "//cake:walk",
@@ -140,7 +167,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithLong.class,
+            builder(DtoWithLong.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("number", 42L));
 
@@ -154,7 +181,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithPath.class,
+            builder(DtoWithPath.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("path", "Fish.java"));
 
@@ -170,7 +197,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithSourcePaths.class,
+            builder(DtoWithSourcePaths.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "filePath", "cheese.txt",
@@ -193,7 +220,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithImmutableSortedSet.class,
+            builder(DtoWithImmutableSortedSet.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "stuff", ImmutableList.of("//please/go:here", ":there")));
@@ -208,7 +235,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithSetOfPaths.class,
+            builder(DtoWithSetOfPaths.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("paths", ImmutableList.of("one", "two")));
 
@@ -224,7 +251,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithListOfStrings.class,
+            builder(DtoWithListOfStrings.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("list", ImmutableList.of("alpha", "beta")));
 
@@ -249,7 +276,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithDepsAndNotDeps.class,
+            builder(DtoWithDepsAndNotDeps.class),
             declaredDeps,
             args);
 
@@ -269,7 +296,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithFakeDeps.class,
+            builder(DtoWithFakeDeps.class),
             declaredDeps,
             args);
 
@@ -284,7 +311,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithCollections.class,
+            builder(DtoWithCollections.class),
             ImmutableSet.builder(),
             ImmutableMap.of());
 
@@ -309,7 +336,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithOptionalSetOfStrings.class,
+            builder(DtoWithOptionalSetOfStrings.class),
             ImmutableSet.builder(),
             args);
 
@@ -328,7 +355,7 @@ public class ConstructorArgMarshallerImmutableTest {
         createCellRoots(filesystem),
         filesystem,
         TARGET,
-        DtoWithBoolean.class,
+        builder(DtoWithBoolean.class),
         ImmutableSet.builder(),
         ImmutableMap.of());
   }
@@ -343,7 +370,7 @@ public class ConstructorArgMarshallerImmutableTest {
         createCellRoots(filesystem),
         filesystem,
         TARGET,
-        DtoWithCheck.class,
+        builder(DtoWithCheck.class),
         ImmutableSet.builder(),
         ImmutableMap.of("string", "secrets"));
   }
@@ -355,7 +382,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithCheck.class,
+            builder(DtoWithCheck.class),
             ImmutableSet.builder(),
             ImmutableMap.of("string", "not secrets"));
     assertEquals("not secrets", built.getString());
@@ -367,7 +394,7 @@ public class ConstructorArgMarshallerImmutableTest {
         createCellRoots(filesystem),
         filesystem,
         TARGET,
-        DtoWithString.class,
+        builder(DtoWithString.class),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("string", ImmutableList.of("a", "b")));
   }
@@ -378,7 +405,7 @@ public class ConstructorArgMarshallerImmutableTest {
         createCellRoots(filesystem),
         filesystem,
         TARGET,
-        DtoWithSetOfStrings.class,
+        builder(DtoWithSetOfStrings.class),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("strings", "isn't going to happen"));
   }
@@ -389,7 +416,7 @@ public class ConstructorArgMarshallerImmutableTest {
         createCellRoots(filesystem),
         filesystem,
         TARGET,
-        DtoWithSetOfStrings.class,
+        builder(DtoWithSetOfStrings.class),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("strings", ImmutableSet.of(true, false)));
   }
@@ -401,7 +428,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithPath.class,
+            builder(DtoWithPath.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("path", "./bar/././fish.txt"));
 
@@ -415,7 +442,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithBuildTargetList.class,
+            builder(DtoWithBuildTargetList.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "single", "//com/example:cheese",
@@ -452,7 +479,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithVariousTypes.class,
+            builder(DtoWithVariousTypes.class),
             ImmutableSet.builder(),
             args);
 
@@ -478,7 +505,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithOptionalValues.class,
+            builder(DtoWithOptionalValues.class),
             ImmutableSet.builder(),
             args);
 
@@ -499,7 +526,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithDefaultValues.class,
+            builder(DtoWithDefaultValues.class),
             ImmutableSet.builder(),
             args);
 
@@ -522,7 +549,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithDefaultValues.class,
+            builder(DtoWithDefaultValues.class),
             ImmutableSet.builder(),
             args);
 
@@ -539,7 +566,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithSetOfSourcePaths.class,
+            builder(DtoWithSetOfSourcePaths.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "srcs", ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py")));
@@ -563,7 +590,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithDerivedAndOrdinaryMethods.class,
+            builder(DtoWithDerivedAndOrdinaryMethods.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("string", "tamarins"));
     assertEquals("tamarins", built.getString());
@@ -578,7 +605,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithDerivedAndOrdinaryMethods.class,
+            builder(DtoWithDerivedAndOrdinaryMethods.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "string", "tamarins",
@@ -594,7 +621,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            InheritsFromHasDefaultMethod.class,
+            builder(InheritsFromHasDefaultMethod.class),
             ImmutableSet.builder(),
             ImmutableMap.of());
     assertEquals("foo", built.getString());
@@ -607,7 +634,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            InheritsFromHasDefaultMethod.class,
+            builder(InheritsFromHasDefaultMethod.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("string", "bar"));
     assertEquals("bar", built.getString());
@@ -615,8 +642,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @Test
   public void populateWithConfiguringAttributesResolvesConfigurableAttributes() throws Exception {
-    UnconfiguredBuildTargetView selectableTarget =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//x:y");
+    BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
@@ -629,45 +655,54 @@ public class ConstructorArgMarshallerImmutableTest {
                 ImmutableSelectorValue.of(
                     ImmutableMap.of("DEFAULT", "string3", "//x:y", "string4"), "")),
             ImmutableMap.class);
+    TargetPlatformResolver targetPlatformResolver = configuration -> DefaultPlatform.INSTANCE;
     SelectableConfigurationContext selectableConfigurationContext =
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
             new RuleBasedConstraintResolver(DummyConfigurationRule::of),
             EmptyTargetConfiguration.INSTANCE,
-            configuration -> EmptyPlatform.INSTANCE);
+            targetPlatformResolver);
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
+    ImmutableSet.Builder<BuildTarget> configurationDeps = ImmutableSet.builder();
 
     DtoWithString dto =
         marshaller.populateWithConfiguringAttributes(
             createCellRoots(filesystem),
             filesystem,
             selectorListResolver,
+            targetConfigurationTransformer,
             selectableConfigurationContext,
             TARGET,
-            DtoWithString.class,
+            builder(DtoWithString.class),
             declaredDeps,
+            configurationDeps,
             ImmutableMap.<String, Object>of("string", selectorList));
 
     assertEquals("string2string4", dto.getString());
     assertTrue(declaredDeps.build().isEmpty());
+    assertEquals(ImmutableSet.of(selectableTarget), configurationDeps.build());
   }
 
   @Test
   public void populateWithConfiguringAttributesCopiesValuesToImmutable() throws Exception {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
-    SelectableConfigurationContext selectableConfigurationContext =
-        new SelectableConfigurationContext() {};
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(configuration -> DefaultPlatform.INSTANCE);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     DtoWithString dto =
         marshaller.populateWithConfiguringAttributes(
             createCellRoots(filesystem),
             filesystem,
             selectorListResolver,
-            selectableConfigurationContext,
+            targetConfigurationTransformer,
+            NonCopyingSelectableConfigurationContext.INSTANCE,
             TARGET,
-            DtoWithString.class,
+            builder(DtoWithString.class),
             declaredDeps,
+            ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("string", "value"));
     assertEquals("value", dto.getString());
     assertTrue(declaredDeps.build().isEmpty());
@@ -677,18 +712,20 @@ public class ConstructorArgMarshallerImmutableTest {
   public void populateWithConfiguringAttributesCollectsDeclaredDeps() throws Exception {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
-    SelectableConfigurationContext selectableConfigurationContext =
-        new SelectableConfigurationContext() {};
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(configuration -> DefaultPlatform.INSTANCE);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     BuildTarget dep = BuildTargetFactory.newInstance("//a/b:c");
     marshaller.populateWithConfiguringAttributes(
         createCellRoots(filesystem),
         filesystem,
         selectorListResolver,
-        selectableConfigurationContext,
+        targetConfigurationTransformer,
+        NonCopyingSelectableConfigurationContext.INSTANCE,
         TARGET,
-        DtoWithDepsAndNotDeps.class,
+        builder(DtoWithDepsAndNotDeps.class),
         declaredDeps,
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("deps", ImmutableList.of("//a/b:c")));
     assertEquals(ImmutableSet.of(dep), declaredDeps.build());
   }
@@ -697,30 +734,85 @@ public class ConstructorArgMarshallerImmutableTest {
   public void populateWithConfiguringAttributesSkipsMissingValues() throws Exception {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
-    SelectableConfigurationContext selectableConfigurationContext =
-        new SelectableConfigurationContext() {};
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(configuration -> DefaultPlatform.INSTANCE);
     DtoWithOptionalSetOfStrings dto =
         marshaller.populateWithConfiguringAttributes(
             createCellRoots(filesystem),
             filesystem,
             selectorListResolver,
-            selectableConfigurationContext,
+            targetConfigurationTransformer,
+            NonCopyingSelectableConfigurationContext.INSTANCE,
             TARGET,
-            DtoWithOptionalSetOfStrings.class,
+            builder(DtoWithOptionalSetOfStrings.class),
+            ImmutableSet.builder(),
             ImmutableSet.builder(),
             ImmutableMap.of());
     assertFalse(dto.getStrings().isPresent());
   }
 
+  @Test
+  public void populateWithConfiguringAttributesSplitsConfiguration() throws Exception {
+    BuildTarget multiPlatformTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//platform:multi_platform");
+    BuildTarget basePlatformTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//platform:base_platform");
+    BuildTarget nestedPlatform1Target =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//platform:nested_platform_1");
+    BuildTarget nestedPlatform2Target =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//platform:nested_platform_2");
+
+    MultiPlatform multiPlatform =
+        new MultiPlatform(
+            multiPlatformTarget,
+            new ConstraintBasedPlatform(basePlatformTarget, ImmutableSet.of()),
+            ImmutableList.of(
+                new ConstraintBasedPlatform(nestedPlatform1Target, ImmutableSet.of()),
+                new ConstraintBasedPlatform(nestedPlatform2Target, ImmutableSet.of())));
+    SelectorListResolver selectorListResolver =
+        new DefaultSelectorListResolver(new TestSelectableResolver());
+    TargetPlatformResolver targetPlatformResolver = configuration -> multiPlatform;
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
+    SelectableConfigurationContext selectableConfigurationContext =
+        DefaultSelectableConfigurationContext.of(
+            FakeBuckConfig.builder().build(),
+            new RuleBasedConstraintResolver(DummyConfigurationRule::of),
+            ImmutableDefaultTargetConfiguration.of(multiPlatformTarget),
+            targetPlatformResolver);
+
+    DtoWithSplit dto =
+        marshaller.populateWithConfiguringAttributes(
+            createCellRoots(filesystem),
+            filesystem,
+            selectorListResolver,
+            targetConfigurationTransformer,
+            selectableConfigurationContext,
+            TARGET,
+            builder(DtoWithSplit.class),
+            ImmutableSet.builder(),
+            ImmutableSet.builder(),
+            ImmutableMap.of("deps", ImmutableList.of("//a/b:c")));
+
+    assertEquals(3, dto.getDeps().size());
+    assertEquals(
+        ImmutableSet.of(multiPlatformTarget, nestedPlatform1Target, nestedPlatform2Target),
+        dto.getDeps().stream()
+            .map(BuildTarget::getTargetConfiguration)
+            .map(DefaultTargetConfiguration.class::cast)
+            .map(DefaultTargetConfiguration::getTargetPlatform)
+            .collect(ImmutableSet.toImmutableSet()));
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithString {
+  abstract static class AbstractDtoWithString implements ConstructorArg {
     abstract String getString();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithBoolean {
+  abstract static class AbstractDtoWithBoolean implements ConstructorArg {
     abstract boolean getBooleanOne();
 
     abstract boolean isBooleanTwo();
@@ -728,13 +820,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithListOfStrings {
+  abstract static class AbstractDtoWithListOfStrings implements ConstructorArg {
     abstract List<String> getList();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithFakeDeps {
+  abstract static class AbstractDtoWithFakeDeps implements ConstructorArg {
     @Hint(isDep = false)
     abstract Set<BuildTarget> getDeps();
 
@@ -744,7 +836,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithCollections {
+  abstract static class AbstractDtoWithCollections implements ConstructorArg {
     abstract Set<String> getSet();
 
     abstract ImmutableSet<String> getImmutableSet();
@@ -766,29 +858,29 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithOptionalSetOfStrings {
+  abstract static class AbstractDtoWithOptionalSetOfStrings implements ConstructorArg {
     abstract Optional<Set<String>> getStrings();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithSetOfStrings {
+  abstract static class AbstractDtoWithSetOfStrings implements ConstructorArg {
     abstract Set<String> getStrings();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithPath {
+  abstract static class AbstractDtoWithPath implements ConstructorArg {
     abstract Path getPath();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractEmptyImmutableDto {}
+  abstract static class AbstractEmptyImmutableDto implements ConstructorArg {}
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithBuildTargets {
+  abstract static class AbstractDtoWithBuildTargets implements ConstructorArg {
     abstract BuildTarget getTarget();
 
     abstract BuildTarget getLocal();
@@ -796,13 +888,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithLong {
+  abstract static class AbstractDtoWithLong implements ConstructorArg {
     abstract long getNumber();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithSourcePaths {
+  abstract static class AbstractDtoWithSourcePaths implements ConstructorArg {
     abstract SourcePath getFilePath();
 
     abstract SourcePath getTargetPath();
@@ -810,13 +902,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithImmutableSortedSet {
+  abstract static class AbstractDtoWithImmutableSortedSet implements ConstructorArg {
     abstract ImmutableSortedSet<BuildTarget> getStuff();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithDeclaredDeps {
+  abstract static class AbstractDtoWithDeclaredDeps implements ConstructorArg {
     abstract ImmutableSet<BuildTarget> getDeps();
 
     abstract ImmutableSet<SourcePath> getPaths();
@@ -824,13 +916,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithSetOfPaths {
+  abstract static class AbstractDtoWithSetOfPaths implements ConstructorArg {
     abstract Set<Path> getPaths();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithDepsAndNotDeps {
+  abstract static class AbstractDtoWithDepsAndNotDeps implements ConstructorArg {
     abstract Set<BuildTarget> getDeps();
 
     abstract Set<BuildTarget> getNotDeps();
@@ -838,7 +930,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithBuildTargetList {
+  abstract static class AbstractDtoWithBuildTargetList implements ConstructorArg {
     abstract BuildTarget getSingle();
 
     abstract BuildTarget getSameBuildFileTarget();
@@ -848,7 +940,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithVariousTypes {
+  abstract static class AbstractDtoWithVariousTypes implements ConstructorArg {
     abstract String getRequired();
 
     abstract Optional<String> getNotRequired();
@@ -872,7 +964,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithOptionalValues {
+  abstract static class AbstractDtoWithOptionalValues implements ConstructorArg {
     abstract Optional<String> getNoString();
 
     abstract Optional<String> getDefaultString();
@@ -884,7 +976,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithDefaultValues {
+  abstract static class AbstractDtoWithDefaultValues implements ConstructorArg {
     @Value.Default
     public String getSomething() {
       return "foo";
@@ -908,13 +1000,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithSetOfSourcePaths {
+  abstract static class AbstractDtoWithSetOfSourcePaths implements ConstructorArg {
     abstract ImmutableSortedSet<SourcePath> getSrcs();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithCheck {
+  abstract static class AbstractDtoWithCheck implements ConstructorArg {
     abstract String getString();
 
     @Value.Check
@@ -925,7 +1017,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithDerivedAndOrdinaryMethods {
+  abstract static class AbstractDtoWithDerivedAndOrdinaryMethods implements ConstructorArg {
     abstract String getString();
 
     public String getConstant() {
@@ -938,7 +1030,7 @@ public class ConstructorArgMarshallerImmutableTest {
     }
   }
 
-  interface HasDefaultMethod {
+  interface HasDefaultMethod extends ConstructorArg {
     @Value.Default
     default String getString() {
       return "foo";
@@ -948,4 +1040,11 @@ public class ConstructorArgMarshallerImmutableTest {
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractInheritsFromHasDefaultMethod extends HasDefaultMethod {}
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractDtoWithSplit implements ConstructorArg {
+    @Hint(splitConfiguration = true)
+    abstract ImmutableSortedSet<BuildTarget> getDeps();
+  }
 }

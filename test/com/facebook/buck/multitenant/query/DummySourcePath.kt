@@ -27,7 +27,7 @@ import com.facebook.buck.core.sourcepath.SourcePath
  * to make [com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem] available to a unit test in
  * the multitenant module in IntelliJ. Getting it to work with `buck test` is not an issue, though.
  */
-class DummySourcePath(val path: String) : SourcePath {
+class DummySourcePath(private val path: String) : SourcePath {
     override fun compareTo(other: SourcePath): Int {
         if (this === other) {
             return 0

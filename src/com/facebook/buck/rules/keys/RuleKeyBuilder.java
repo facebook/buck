@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.ContainerScope;
 import static com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Container;
 import static com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Wrapper;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -27,6 +28,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -130,6 +132,13 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
           };
     }
     return hasher;
+  }
+
+  /** To be called from {@link #setAction(Action)}. */
+  final RuleKeyBuilder<RULE_KEY> setActionRuleKey(RuleKey ruleKey) {
+    try (Scope ignored = scopedHasher.wrapperScope(Wrapper.ACTION)) {
+      return setSingleValue(ruleKey);
+    }
   }
 
   /** To be called from {@link #setBuildRule(BuildRule)}. */
@@ -257,6 +266,11 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
           "Unrecognized SourcePath implementation: " + sourcePath.getClass());
     }
     return this;
+  }
+
+  @Override
+  protected AbstractRuleKeyBuilder<RULE_KEY> setArtifact(Artifact artifact) throws IOException {
+    return setSourcePath(artifact.asBound().getSourcePath());
   }
 
   @Override

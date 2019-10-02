@@ -40,6 +40,12 @@ public enum CacheResultType {
 
   /** Artifact cache not queried because the local cache key was unchanged. */
   LOCAL_KEY_UNCHANGED_HIT(/* success */ true),
+
+  /**
+   * An unexpected exception is thrown when fetching the artifact, which becomes converted to soft
+   * error.
+   */
+  SOFT_ERROR(/* success */ false),
   ;
 
   private boolean success;

@@ -46,7 +46,7 @@ public class RemoteExecutionEventListener
   private final LongAdder totalBuildRules;
 
   private final LongAdder downloads;
-  private final LongAdder donwloadBytes;
+  private final LongAdder downloadBytes;
   private final LongAdder uploads;
   private final LongAdder uploadBytes;
 
@@ -62,7 +62,7 @@ public class RemoteExecutionEventListener
 
   public RemoteExecutionEventListener() {
     this.downloads = new LongAdder();
-    this.donwloadBytes = new LongAdder();
+    this.downloadBytes = new LongAdder();
     this.uploads = new LongAdder();
     this.uploadBytes = new LongAdder();
     this.remoteCpuTime = new LongAdder();
@@ -100,7 +100,7 @@ public class RemoteExecutionEventListener
   public void onCasDownloadEvent(CasBlobDownloadEvent.Finished event) {
     hasFirstRemoteActionStarted.set(true);
     downloads.add(event.getStartedEvent().getBlobCount());
-    donwloadBytes.add(event.getStartedEvent().getSizeBytes());
+    downloadBytes.add(event.getStartedEvent().getSizeBytes());
   }
 
   /** Event specific subscriber method. */
@@ -194,7 +194,7 @@ public class RemoteExecutionEventListener
 
   @Override
   public long getCasDownloadSizeBytes() {
-    return donwloadBytes.sum();
+    return downloadBytes.sum();
   }
 
   @Override

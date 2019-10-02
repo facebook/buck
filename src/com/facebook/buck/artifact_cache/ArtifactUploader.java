@@ -29,6 +29,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.CloseableHolder;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.NamedTemporaryFile;
+import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.util.ObjectFileCommonModificationDate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -59,7 +60,8 @@ import org.apache.commons.compress.compressors.zstandard.ZstdCompressorOutputStr
 public class ArtifactUploader {
   private static final Logger LOG = Logger.get(ArtifactUploader.class);
 
-  public static ListenableFuture<Void> performUploadToArtifactCache(
+  /** As method name says */
+  public static ListenableFuture<Unit> performUploadToArtifactCache(
       ImmutableSet<RuleKey> ruleKeys,
       ArtifactCache artifactCache,
       BuckEventBus eventBus,
@@ -80,7 +82,7 @@ public class ArtifactUploader {
     }
 
     // Store the artifact, including any additional metadata.
-    ListenableFuture<Void> storeFuture =
+    ListenableFuture<Unit> storeFuture =
         artifactCache.store(
             ArtifactInfo.builder()
                 .setRuleKeys(ruleKeys)
@@ -91,9 +93,9 @@ public class ArtifactUploader {
             BorrowablePath.borrowablePath(archive.get()));
     Futures.addCallback(
         storeFuture,
-        new FutureCallback<Void>() {
+        new FutureCallback<Unit>() {
           @Override
-          public void onSuccess(Void result) {
+          public void onSuccess(Unit result) {
             onCompletion();
           }
 
@@ -165,11 +167,14 @@ public class ArtifactUploader {
     ArtifactCompressionEvent.Started started =
         ArtifactCompressionEvent.started(ArtifactCompressionEvent.Operation.COMPRESS, ruleKeys);
     eventBus.post(started);
+    long compressedSize = 0L;
+    long fullSize = 0L;
     try (CloseableHolder<NamedTemporaryFile> archive =
         new CloseableHolder<>(
             new NamedTemporaryFile(
                 "buck_artifact_" + MostFiles.sanitize(buildTarget.getShortName()), ".tar.zst"))) {
-      compress(projectFilesystem, pathsToIncludeInArchive, archive.get().get());
+      fullSize = compress(projectFilesystem, pathsToIncludeInArchive, archive.get().get());
+      compressedSize = Files.size(archive.get().get());
       return archive.release();
     } catch (IOException e) {
       throw new BuckUncheckedExecutionException(
@@ -178,15 +183,16 @@ public class ArtifactUploader {
           buildTarget,
           Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInArchive)));
     } finally {
-      eventBus.post(ArtifactCompressionEvent.finished(started));
+      eventBus.post(ArtifactCompressionEvent.finished(started, fullSize, compressedSize));
     }
   }
 
   /** Archive and compress 'pathsToIncludeInArchive' into 'out', using tar+zstandard. */
   @VisibleForTesting
-  static void compress(
+  static long compress(
       ProjectFilesystem projectFilesystem, Collection<Path> pathsToIncludeInArchive, Path out)
       throws IOException {
+    long fullSize = 0L;
     try (OutputStream o = new BufferedOutputStream(Files.newOutputStream(out));
         OutputStream z = new ZstdCompressorOutputStream(o);
         TarArchiveOutputStream archive = new TarArchiveOutputStream(z)) {
@@ -202,7 +208,9 @@ public class ArtifactUploader {
         e.setModTime((long) ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP * 1000);
 
         if (isRegularFile) {
-          e.setSize(projectFilesystem.getFileSize(path));
+          long pathSize = projectFilesystem.getFileSize(path);
+          e.setSize(pathSize);
+          fullSize += pathSize;
           archive.putArchiveEntry(e);
           try (InputStream input = projectFilesystem.newFileInputStream(path)) {
             ByteStreams.copy(input, archive);
@@ -214,5 +222,7 @@ public class ArtifactUploader {
       }
       archive.finish();
     }
+
+    return fullSize;
   }
 }

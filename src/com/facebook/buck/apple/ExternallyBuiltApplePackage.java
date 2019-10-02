@@ -16,9 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -35,7 +33,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.LegacyGenrule;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -43,7 +41,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Rule for generating an apple package via external script. */
-public class ExternallyBuiltApplePackage extends Genrule {
+public class ExternallyBuiltApplePackage extends LegacyGenrule {
   @AddToRuleKey private String sdkVersion;
   @AddToRuleKey private Optional<String> platformBuildVersion;
 
@@ -64,9 +62,7 @@ public class ExternallyBuiltApplePackage extends Genrule {
       SourcePath bundle,
       boolean cacheable,
       Optional<String> environmentExpansionSeparator,
-      Optional<AndroidPlatformTarget> androidPlatformTarget,
-      Optional<AndroidNdk> androidNdk,
-      Optional<AndroidSdkLocation> androidSdkLocation) {
+      Optional<AndroidTools> androidTools) {
     super(
         buildTarget,
         projectFilesystem,
@@ -82,9 +78,7 @@ public class ExternallyBuiltApplePackage extends Genrule {
         false,
         cacheable,
         environmentExpansionSeparator,
-        androidPlatformTarget,
-        androidNdk,
-        androidSdkLocation,
+        androidTools,
         false);
     this.sdkPath = packageConfigAndPlatformInfo.getSdkPath();
     this.sdkVersion = packageConfigAndPlatformInfo.getSdkVersion();

@@ -37,12 +37,7 @@ must provide a main() function.
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call d_common.srcs_arg /}
 
@@ -63,6 +58,8 @@ must provide a main() function.
 {call buck.test_rule_timeout_ms /}
 
 {call d_common.deps_arg /}
+
+{call test_common.contacts_arg /}
 
 {/param} // close args
 

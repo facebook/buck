@@ -162,6 +162,14 @@ public class BuckProjectSettingsProvider
     return buckExecutableSettingsProvider.resolveAdbExecutable();
   }
 
+  public boolean isAutoFormatOnBlur() {
+    return state.autoFormatOnBlur;
+  }
+
+  public void setAutoFormatOnBlur(boolean autoFormatOnBlur) {
+    state.autoFormatOnBlur = autoFormatOnBlur;
+  }
+
   public boolean isShowDebugWindow() {
     return state.showDebug;
   }
@@ -249,6 +257,9 @@ public class BuckProjectSettingsProvider
      */
     @Nullable public String adbExecutable = null;
 
+    /** Enable autoformatting of Buck files when the file loses focus in the editor. */
+    public boolean autoFormatOnBlur = false;
+
     /** Enable the debug window for the plugin. */
     public boolean showDebug = false;
 
@@ -287,6 +298,7 @@ public class BuckProjectSettingsProvider
       }
       State state = (State) o;
       return showDebug == state.showDebug
+          && autoFormatOnBlur == state.autoFormatOnBlur
           && enableAutoDeps == state.enableAutoDeps
           && runAfterInstall == state.runAfterInstall
           && multiInstallMode == state.multiInstallMode
@@ -306,6 +318,7 @@ public class BuckProjectSettingsProvider
           buckExecutable,
           adbExecutable,
           showDebug,
+          autoFormatOnBlur,
           enableAutoDeps,
           runAfterInstall,
           multiInstallMode,

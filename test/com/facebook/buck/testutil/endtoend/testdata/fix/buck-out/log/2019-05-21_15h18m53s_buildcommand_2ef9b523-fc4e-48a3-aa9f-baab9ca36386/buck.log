@@ -1,0 +1,2 @@
+[2019-05-21 08:18:53.681][debug][command:2ef9b523-fc4e-48a3-aa9f-baab9ca36386][tid:12][com.facebook.buck.event.listener.RenderingConsole] Starting render scheduler (interval 100 ms)
+[2019-05-21 08:18:53.713][debug][command:2ef9b523-fc4e-48a3-aa9f-baab9ca36386][tid:12][com.facebook.buck.cli.MainRunner] InvocationInfo BuildId=[2ef9b523-fc4e-48a3-aa9f-baab9ca36386] Args=[build, -c, foo.bar=baz, buck]

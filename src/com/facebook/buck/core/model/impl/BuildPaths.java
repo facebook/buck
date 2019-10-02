@@ -62,6 +62,20 @@ public class BuildPaths {
     return BuildTargetPaths.getGenPath(filesystem, target, getFormat(target));
   }
 
+  /**
+   * Return a relative path to a file taking into account the {@code target}'s package path and
+   * formatting with the short name.
+   *
+   * <p>This is a portion of the path returned by, e.g., {@link #getGenDir(ProjectFilesystem,
+   * BuildTarget)}
+   *
+   * @param target The {@link BuildTarget} to scope this path to.
+   * @return A {@link java.nio.file.Path} scoped to the base path to {@code target}.
+   */
+  public static Path getBaseDir(BuildTarget target) {
+    return BuildTargetPaths.getBasePath(target, getFormat(target));
+  }
+
   private static String getFormat(BuildTarget target) {
     return target.isFlavored() ? "%s" : "%s__";
   }

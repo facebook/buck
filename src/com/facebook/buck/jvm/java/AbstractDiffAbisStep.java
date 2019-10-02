@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.util.immutables.BuckStyleStep;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -26,6 +27,7 @@ import com.google.common.base.Joiner;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -61,7 +63,10 @@ abstract class AbstractDiffAbisStep implements Step {
         LOG.info(message);
         return StepExecutionResults.SUCCESS;
       case FAIL:
-        return StepExecutionResults.ERROR.withStderr(message);
+        return ImmutableStepExecutionResult.builder()
+            .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
+            .setStderr(Optional.of(message))
+            .build();
       default:
         throw new AssertionError(String.format("Unknown verification mode: %s", verificationMode));
     }

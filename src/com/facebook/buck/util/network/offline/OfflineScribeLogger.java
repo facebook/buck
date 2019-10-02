@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.network.ScribeLogger;
+import com.facebook.buck.util.types.Unit;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -139,14 +140,14 @@ public class OfflineScribeLogger extends ScribeLogger {
   }
 
   @Override
-  public ListenableFuture<Void> log(
+  public ListenableFuture<Unit> log(
       String category, Iterable<String> lines, Optional<Integer> bucket) {
-    ListenableFuture<Void> upload = scribeLogger.log(category, lines, bucket);
+    ListenableFuture<Unit> upload = scribeLogger.log(category, lines, bucket);
     Futures.addCallback(
         upload,
-        new FutureCallback<Void>() {
+        new FutureCallback<Unit>() {
           @Override
-          public void onSuccess(Void result) {
+          public void onSuccess(Unit result) {
             if (startedSendingStored.compareAndSet(false, true) && !startedStoring) {
               sendStoredLogs();
             }
@@ -327,7 +328,7 @@ public class OfflineScribeLogger extends ScribeLogger {
 
         // Read and submit.
         int scribeLinesInFile = 0;
-        List<ListenableFuture<Void>> logFutures = new LinkedList<>();
+        List<ListenableFuture<Unit>> logFutures = new LinkedList<>();
         Map<String, CategoryData> logReadData = new HashMap<>();
         try {
           boolean interrupted = false;

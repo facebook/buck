@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -90,6 +91,12 @@ public class PrebuiltCxxLibraryGroupBuilder
 
   public PrebuiltCxxLibraryGroupBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> deps) {
     getArgForPopulating().setExportedDeps(deps);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryGroupBuilder setExportedPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> exportedPlatformDeps) {
+    getArgForPopulating().setExportedPlatformDeps(exportedPlatformDeps);
     return this;
   }
 

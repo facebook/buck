@@ -24,7 +24,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
 public abstract class PrebuiltHaskellLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements HaskellCompileDep, NativeLinkableGroup, CxxPreprocessorDep {
+    implements HaskellCompileDep, HaskellOmnibusLinkable, NativeLinkableGroup, CxxPreprocessorDep {
 
   public PrebuiltHaskellLibrary(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {

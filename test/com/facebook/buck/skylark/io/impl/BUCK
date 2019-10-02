@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 standard_java_test(
     name = "impl",
     deps = [
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/io/filesystem/skylark:skylark",
         "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/skylark/function:function",

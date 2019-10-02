@@ -36,6 +36,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -164,7 +165,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
         }
       }
 
-      return StepExecutionResult.of(0);
+      return StepExecutionResults.SUCCESS;
     }
 
     @VisibleForTesting

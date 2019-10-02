@@ -1,0 +1,7 @@
+rust_binary(
+    name = "thinguser",
+    srcs = ["main.rs"],
+    deps = [
+        "top//:thing",
+    ],
+)

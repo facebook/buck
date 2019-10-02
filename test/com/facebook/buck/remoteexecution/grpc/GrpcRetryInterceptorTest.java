@@ -34,16 +34,22 @@ import org.junit.Test;
 
 public class GrpcRetryInterceptorTest {
   private static class ExecutionImpl extends ExecutionImplBase {
+
+    private final int partialResponses;
     public int calls = 0;
     private final Status status;
 
-    public ExecutionImpl(Status status) {
+    public ExecutionImpl(Status status, int partialResponses) {
       this.status = status;
+      this.partialResponses = partialResponses;
     }
 
     @Override
     public void execute(ExecuteRequest request, StreamObserver<Operation> responseObserver) {
       calls++;
+      for (int i = 0; i < partialResponses; i++) {
+        responseObserver.onNext(Operation.newBuilder().build());
+      }
       responseObserver.onError(status.asRuntimeException());
     }
   }
@@ -60,7 +66,7 @@ public class GrpcRetryInterceptorTest {
   @Test
   public void testRetryOnUnavailable() throws IOException {
     String uniqueName = InProcessServerBuilder.generateName();
-    ExecutionImpl service = new ExecutionImpl(Status.UNAVAILABLE);
+    ExecutionImpl service = new ExecutionImpl(Status.UNAVAILABLE, 0);
     InProcessServerBuilder.forName(uniqueName).addService(service).build().start();
     CallCounter beforeRetry = new CallCounter();
     ManagedChannel channel =
@@ -84,7 +90,7 @@ public class GrpcRetryInterceptorTest {
   @Test
   public void testNoRetryOnOk() throws IOException {
     String uniqueName = InProcessServerBuilder.generateName();
-    ExecutionImpl service = new ExecutionImpl(Status.OK);
+    ExecutionImpl service = new ExecutionImpl(Status.OK, 0);
     InProcessServerBuilder.forName(uniqueName).addService(service).build().start();
     CallCounter beforeRetry = new CallCounter();
     ManagedChannel channel =
@@ -98,5 +104,33 @@ public class GrpcRetryInterceptorTest {
 
     Assert.assertEquals(1, service.calls);
     Assert.assertEquals(0, beforeRetry.calls);
+  }
+
+  @Test
+  public void testRetryOnPartialResponse() throws IOException {
+    String uniqueName = InProcessServerBuilder.generateName();
+    ExecutionImpl service = new ExecutionImpl(Status.UNAVAILABLE, 1);
+    InProcessServerBuilder.forName(uniqueName).addService(service).build().start();
+    CallCounter beforeRetry = new CallCounter();
+    ManagedChannel channel =
+        InProcessChannelBuilder.forName(uniqueName)
+            .intercept(
+                new RetryClientInterceptor(
+                    RetryPolicy.builder()
+                        .setMaxRetries(2)
+                        .setBeforeRetry(beforeRetry)
+                        .setRestartAllStreamingCalls(true)
+                        .build()))
+            .build();
+    ExecutionBlockingStub stub = ExecutionGrpc.newBlockingStub(channel);
+    try {
+      stub.execute(ExecuteRequest.newBuilder().build()).forEachRemaining(resp -> {});
+      Assert.fail("Final retry should cause an exception");
+    } catch (StatusRuntimeException ex) {
+      Assert.assertEquals(Status.Code.UNAVAILABLE, ex.getStatus().getCode());
+    }
+
+    Assert.assertEquals(3, service.calls);
+    Assert.assertEquals(2, beforeRetry.calls);
   }
 }

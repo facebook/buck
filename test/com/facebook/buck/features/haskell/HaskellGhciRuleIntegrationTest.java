@@ -88,4 +88,16 @@ public class HaskellGhciRuleIntegrationTest {
     workspace.runBuckBuild("//:foo_prof").assertSuccess();
     workspace.verify(Paths.get("foo_prof_output.expected"), genPath);
   }
+
+  @Test
+  public void mutuallyRecursive() throws IOException {
+    workspace.runBuckBuild("//:mutually_recursive").assertSuccess();
+    workspace.verify(Paths.get("mutually_recursive_output.expected"), genPath);
+  }
+
+  @Test
+  public void foreign() throws IOException {
+    workspace.runBuckBuild("//:prebuilt_foreign").assertSuccess();
+    workspace.verify(Paths.get("prebuilt_foreign_output.expected"), genPath);
+  }
 }

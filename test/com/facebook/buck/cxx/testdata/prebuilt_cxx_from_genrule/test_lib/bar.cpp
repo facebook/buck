@@ -1,3 +1,5 @@
+#include "lib.h"
+
 int bar() {
-    return 5;
+    return return3() + 2;
 }

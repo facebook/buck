@@ -62,9 +62,9 @@ public abstract class DepsAwareTask<T, Impl extends DepsAwareTask<T, Impl>> {
       this.prereqSupplier = prereqSupplier;
     }
 
-    /** @return a single stage {@link DepsSupplier} */
-    public static <U> DepsSupplier<U> of(ThrowingSupplier<ImmutableSet<U>, Exception> depSupplier) {
-      return of(depSupplier, ImmutableSet::of);
+    /** @return a {@link DepsSupplier} with no dependencies */
+    public static <U> DepsSupplier<U> of() {
+      return of(ImmutableSet::of, ImmutableSet::of);
     }
 
     /**

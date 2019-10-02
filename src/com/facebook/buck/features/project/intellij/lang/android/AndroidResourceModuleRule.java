@@ -15,13 +15,16 @@
  */
 package com.facebook.buck.features.project.intellij.lang.android;
 
+import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
+import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
@@ -82,7 +85,15 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
 
     Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
     if (dummyRDotJavaClassPath.isPresent()) {
-      context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
+      BuildTarget dummyRDotJavaTarget =
+          target.getBuildTarget().withFlavors(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR);
+      IjLibrary extraClassPathLibrary =
+          IjLibrary.builder()
+              .setBinaryJars(ImmutableSet.of(dummyRDotJavaClassPath.get()))
+              .setTargets(ImmutableSet.of(dummyRDotJavaTarget))
+              .setName(dummyRDotJavaTarget.getFullyQualifiedName())
+              .build();
+      context.addExtraLibraryDependency(extraClassPathLibrary);
       context.addExtraModuleDependency(dummyRDotJavaClassPath.get());
     }
 

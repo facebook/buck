@@ -16,11 +16,38 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
+import com.facebook.buck.jvm.java.AbstractJavacLanguageLevelOptions;
+import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.infer.annotation.PropagatesNullable;
+import java.util.Optional;
 
 public final class JavaLanguageLevelHelper {
 
   private JavaLanguageLevelHelper() {}
+
+  /** Get Java language level for a JVM library target */
+  public static <T extends JvmLibraryArg> Optional<String> getLanguageLevel(
+      IjProjectConfig projectConfig, TargetNode<T> targetNode) {
+
+    JvmLibraryArg arg = targetNode.getConstructorArg();
+
+    if (arg.getSource().isPresent()) {
+      AbstractJavacLanguageLevelOptions languageLevelOptions =
+          projectConfig.getJavaBuckConfig().getJavacLanguageLevelOptions();
+      String defaultSourceLevel = languageLevelOptions.getSourceLevel();
+      String defaultTargetLevel = languageLevelOptions.getTargetLevel();
+      boolean languageLevelsAreDifferent =
+          !defaultSourceLevel.equals(arg.getSource().orElse(defaultSourceLevel))
+              || !defaultTargetLevel.equals(arg.getTarget().orElse(defaultTargetLevel));
+      if (languageLevelsAreDifferent) {
+        return Optional.of(normalizeSourceLevel(arg.getSource().get()));
+      }
+    }
+
+    return Optional.empty();
+  }
 
   /** Ensures that source level has format "majorVersion.minorVersion". */
   public static String normalizeSourceLevel(String jdkVersion) {

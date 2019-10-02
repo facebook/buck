@@ -18,13 +18,11 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.DirectoryListComputation;
-import com.facebook.buck.core.files.FileTree;
 import com.facebook.buck.core.files.FileTreeCache;
 import com.facebook.buck.core.files.FileTreeComputation;
-import com.facebook.buck.core.files.FileTreeFileNameIterator;
-import com.facebook.buck.core.files.ImmutableFileTreeKey;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformationEngine;
@@ -33,16 +31,20 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.BuildPackagePaths;
+import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathComputation;
+import com.facebook.buck.core.parser.ImmutableBuildTargetPatternToBuildPackagePathKey;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.util.MoreThrowables;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -112,8 +114,10 @@ public class TargetSpecResolver implements AutoCloseable {
             .build(
                 CacheLoader.from(
                     path -> {
-                      ProjectFilesystemView fileSystemView =
-                          cellProvider.getCellByPath(path).getFilesystemViewForSourceFiles();
+                      Cell cell = cellProvider.getCellByPath(path);
+                      String buildFileName =
+                          cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
+                      ProjectFilesystemView fileSystemView = cell.getFilesystemViewForSourceFiles();
 
                       DirectoryListCache dirListCache = dirListCachePerRoot.getUnchecked(path);
                       Verify.verifyNotNull(
@@ -130,6 +134,9 @@ public class TargetSpecResolver implements AutoCloseable {
                       return new DefaultGraphTransformationEngine(
                           ImmutableList.of(
                               new GraphComputationStage<>(
+                                  BuildTargetPatternToBuildPackagePathComputation.of(
+                                      buildFileName)),
+                              new GraphComputationStage<>(
                                   DirectoryListComputation.of(fileSystemView), dirListCache),
                               new GraphComputationStage<>(FileTreeComputation.of(), fileTreeCache)),
                           16,
@@ -145,9 +152,9 @@ public class TargetSpecResolver implements AutoCloseable {
       Cell rootCell,
       Iterable<? extends TargetNodeSpec> specs,
       TargetConfiguration targetConfiguration,
-      FlavorEnhancer<T> flavorEnhancer,
-      TargetNodeProviderForSpecResolver<T> targetNodeProvider,
-      TargetNodeFilterForSpecResolver<T> targetNodeFilter)
+      FlavorEnhancer flavorEnhancer,
+      PerBuildState perBuildState,
+      TargetNodeFilterForSpecResolver targetNodeFilter)
       throws BuildFileParseException, InterruptedException {
 
     // Convert the input spec iterable into a list so we have a fixed ordering, which we'll rely on
@@ -174,7 +181,7 @@ public class TargetSpecResolver implements AutoCloseable {
         TargetNodeSpec spec = orderedSpecs.get(index);
         handleTargetNodeSpec(
             flavorEnhancer,
-            targetNodeProvider,
+            perBuildState,
             targetNodeFilter,
             targetFutures,
             cell,
@@ -215,23 +222,16 @@ public class TargetSpecResolver implements AutoCloseable {
           perBuildFileSpecs.put(buildFile, index);
         } else {
           // For recursive spec, i.e. //path/to/... we use cached file tree
-          Path basePath = spec.getBuildFileSpec().getBasePath();
-
-          // sometimes spec comes with absolute path as base path, sometimes it is relative to
-          // cell path
-          // TODO(sergeyb): find out why
-          if (basePath.isAbsolute()) {
-            basePath = cellPath.relativize(basePath);
-          }
-          FileTree fileTree =
+          BuildTargetPattern pattern = spec.getBuildTargetPattern(cell);
+          BuildPackagePaths paths =
               graphEngineForRecursiveSpecPerRoot
                   .getUnchecked(cellPath)
-                  .computeUnchecked(ImmutableFileTreeKey.of(basePath));
+                  .computeUnchecked(ImmutableBuildTargetPatternToBuildPackagePathKey.of(pattern));
 
-          for (Path path :
-              FileTreeFileNameIterator.ofIterable(
-                  fileTree, cell.getBuckConfigView(ParserConfig.class).getBuildFileName())) {
-            perBuildFileSpecs.put(projectFilesystemView.resolve(path), index);
+          String buildFileName = cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
+          for (Path path : paths.getPackageRoots()) {
+            perBuildFileSpecs.put(
+                projectFilesystemView.resolve(path).resolve(buildFileName), index);
           }
         }
       }
@@ -239,10 +239,10 @@ public class TargetSpecResolver implements AutoCloseable {
     return perBuildFileSpecs;
   }
 
-  private <T extends HasBuildTarget> void handleTargetNodeSpec(
-      FlavorEnhancer<T> flavorEnhancer,
-      TargetNodeProviderForSpecResolver<T> targetNodeProvider,
-      TargetNodeFilterForSpecResolver<T> targetNodeFilter,
+  private void handleTargetNodeSpec(
+      FlavorEnhancer flavorEnhancer,
+      PerBuildState perBuildState,
+      TargetNodeFilterForSpecResolver targetNodeFilter,
       List<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures,
       Cell cell,
       Path buildFile,
@@ -253,7 +253,7 @@ public class TargetSpecResolver implements AutoCloseable {
       BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
       targetFutures.add(
           Futures.transform(
-              targetNodeProvider.getTargetNodeJob(
+              perBuildState.getTargetNodeJob(
                   buildTargetSpec.getUnconfiguredBuildTargetView().configure(targetConfiguration)),
               node -> {
                 ImmutableSet<BuildTarget> buildTargets =
@@ -270,7 +270,7 @@ public class TargetSpecResolver implements AutoCloseable {
       // Build up a list of all target nodes from the build file.
       targetFutures.add(
           Futures.transform(
-              targetNodeProvider.getAllTargetNodesJob(cell, buildFile, targetConfiguration),
+              perBuildState.getAllTargetNodesJob(cell, buildFile, targetConfiguration),
               nodes ->
                   new AbstractMap.SimpleEntry<>(
                       index, applySpecFilter(spec, nodes, flavorEnhancer, targetNodeFilter)),
@@ -293,7 +293,7 @@ public class TargetSpecResolver implements AutoCloseable {
       }
     } catch (ExecutionException e) {
       MoreThrowables.throwIfAnyCauseInstanceOf(e, InterruptedException.class);
-      Throwables.throwIfUnchecked(e.getCause());
+      HumanReadableExceptions.throwIfHumanReadableUnchecked(e.getCause());
       throw new RuntimeException(e);
     }
     // Finally, pull out the final build target results in input target spec order, and place them
@@ -305,14 +305,15 @@ public class TargetSpecResolver implements AutoCloseable {
     return targets.build();
   }
 
-  private <T extends HasBuildTarget> ImmutableSet<BuildTarget> applySpecFilter(
+  private ImmutableSet<BuildTarget> applySpecFilter(
       TargetNodeSpec spec,
-      ImmutableList<T> targetNodes,
-      FlavorEnhancer<T> flavorEnhancer,
-      TargetNodeFilterForSpecResolver<T> targetNodeFilter) {
+      ImmutableList<TargetNode<?>> targetNodes,
+      FlavorEnhancer flavorEnhancer,
+      TargetNodeFilterForSpecResolver targetNodeFilter) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    ImmutableMap<BuildTarget, T> partialTargets = targetNodeFilter.filter(spec, targetNodes);
-    for (Map.Entry<BuildTarget, T> partialTarget : partialTargets.entrySet()) {
+    ImmutableMap<BuildTarget, TargetNode<?>> partialTargets =
+        targetNodeFilter.filter(spec, targetNodes);
+    for (Map.Entry<BuildTarget, TargetNode<?>> partialTarget : partialTargets.entrySet()) {
       BuildTarget target =
           flavorEnhancer.enhanceFlavors(
               partialTarget.getKey(), partialTarget.getValue(), spec.getTargetType());
@@ -327,22 +328,14 @@ public class TargetSpecResolver implements AutoCloseable {
   }
 
   /** Allows to change flavors of some targets while performing the resolution. */
-  public interface FlavorEnhancer<T extends HasBuildTarget> {
+  public interface FlavorEnhancer {
     BuildTarget enhanceFlavors(
-        BuildTarget target, T targetNode, TargetNodeSpec.TargetType targetType);
-  }
-
-  /** Provides target nodes of a given type. */
-  public interface TargetNodeProviderForSpecResolver<T extends HasBuildTarget> {
-    ListenableFuture<T> getTargetNodeJob(BuildTarget target) throws BuildTargetException;
-
-    ListenableFuture<ImmutableList<T>> getAllTargetNodesJob(
-        Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
-        throws BuildTargetException;
+        BuildTarget target, TargetNode<?> targetNode, TargetNodeSpec.TargetType targetType);
   }
 
   /** Performs filtering of target nodes using a given {@link TargetNodeSpec}. */
-  public interface TargetNodeFilterForSpecResolver<T extends HasBuildTarget> {
-    ImmutableMap<BuildTarget, T> filter(TargetNodeSpec spec, Iterable<T> nodes);
+  public interface TargetNodeFilterForSpecResolver {
+    ImmutableMap<BuildTarget, TargetNode<?>> filter(
+        TargetNodeSpec spec, Iterable<TargetNode<?>> nodes);
   }
 }

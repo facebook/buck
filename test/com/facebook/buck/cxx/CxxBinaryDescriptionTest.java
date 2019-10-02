@@ -21,6 +21,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
@@ -58,7 +61,8 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.versions.ParallelVersionedTargetGraphBuilder;
+import com.facebook.buck.testutil.CloseableResource;
+import com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionUniverse;
 import com.facebook.buck.versions.VersionUniverseVersionSelector;
@@ -69,14 +73,16 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.util.Optional;
-import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class CxxBinaryDescriptionTest {
 
-  private static final int NUMBER_OF_THREADS = ForkJoinPool.commonPool().getParallelism();
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   @Test
   public void createBuildRule() {
@@ -380,7 +386,8 @@ public class CxxBinaryDescriptionTest {
         TargetGraphFactory.newInstance(
             transitiveDepBuilder.build(), depBuilder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    CxxLibrary transitiveDep = (CxxLibrary) transitiveDepBuilder.build(graphBuilder, targetGraph);
+    CxxLibraryGroup transitiveDep =
+        (CxxLibraryGroup) transitiveDepBuilder.build(graphBuilder, targetGraph);
     depBuilder.build(graphBuilder, targetGraph);
     CxxBinary binary = builder.build(graphBuilder, targetGraph);
     // TODO(agallagher): should also test that `:dep` does *not* get included.
@@ -412,12 +419,12 @@ public class CxxBinaryDescriptionTest {
         VersionUniverse.of(ImmutableMap.of(depBuilder.getTarget(), Version.of("2.0")));
 
     TargetGraph versionedTargetGraph =
-        ParallelVersionedTargetGraphBuilder.transform(
+        AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
                 new ImmutableTargetGraphCreationResult(
                     unversionedTargetGraph, ImmutableSet.of(builder.getTarget())),
-                NUMBER_OF_THREADS,
+                executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 20)

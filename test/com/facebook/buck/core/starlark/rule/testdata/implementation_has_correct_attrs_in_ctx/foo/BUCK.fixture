@@ -1,0 +1,19 @@
+load("//:defs.bzl", "my_rule")
+
+my_rule(
+    name = "no_defaults",
+    int = 1,
+    int_list = [
+        3,
+        4,
+    ],
+    string = "foo_value",
+    string_list = [
+        "foo",
+        "baz",
+    ],
+)
+
+my_rule(
+    name = "defaults",
+)

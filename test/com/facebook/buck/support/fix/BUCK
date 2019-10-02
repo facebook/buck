@@ -1,0 +1,20 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "fix",
+    with_test_data = True,
+    deps = [
+        "//src/com/facebook/buck/log:log",
+        "//src/com/facebook/buck/support/fix:fix",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/json:json",
+        "//test/com/facebook/buck/core/config:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:hamcrest-junit",
+        "//third-party/java/junit:junit",
+    ],
+)

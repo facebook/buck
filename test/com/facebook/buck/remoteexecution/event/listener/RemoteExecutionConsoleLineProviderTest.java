@@ -45,7 +45,7 @@ public class RemoteExecutionConsoleLineProviderTest {
     Assert.assertEquals(
         "[RE] Metadata: Session ID=[super cool info about the session]", lines.get(0));
     Assert.assertEquals(
-        "[RE] Actions: Local=0 Remote=[wait=0 del=0 comp=0 upl=0 exec=0 dwl=0 suc=84 fail=0 cncl=0]",
+        "[RE] Actions: Local=0 Remote=[wait=0 comp=0 upl_in=0 upl_act=0 exec=0 del=0 dwl=0 suc=84 fail=0 cncl=0]",
         lines.get(1));
     Assert.assertEquals(
         "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(2));
@@ -111,7 +111,7 @@ public class RemoteExecutionConsoleLineProviderTest {
     Assert.assertEquals(
         "[RE] Metadata: Session ID=[super cool info about the session]", lines.get(0));
     Assert.assertEquals(
-        "[RE] Actions: Local=0 Remote=[wait=0 del=0 comp=0 upl=0 exec=0 dwl=0 suc=84 fail=0 cncl=0]",
+        "[RE] Actions: Local=0 Remote=[wait=0 comp=0 upl_in=0 upl_act=0 exec=0 del=0 dwl=0 suc=84 fail=0 cncl=0]",
         lines.get(1));
     Assert.assertEquals(
         "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(2));

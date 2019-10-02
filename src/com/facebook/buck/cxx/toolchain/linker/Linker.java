@@ -43,6 +43,9 @@ public interface Linker extends Tool {
    */
   ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap);
 
+  // TODO(cjhopman): We should only require SourcePathResolver at the action execution phase, not
+  // during action graph creation. This is only ever used to get filenames, and that should be safe.
+  // We should introduce an interface that is limited to just safe operations like that.
   /**
    * @return the platform-specific way to specify that the library represented by the given argument
    *     should be linked whole.

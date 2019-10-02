@@ -34,6 +34,8 @@ import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.ExtraOutputsDeriver;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
+import com.facebook.buck.cxx.toolchain.nativelink.LinkableListFilter;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -81,7 +83,8 @@ public class CxxLinkableEnhancer {
       BuildTarget target,
       Path output,
       Linker.LinkableDepType depType,
-      Iterable<? extends NativeLinkableGroup> nativeLinkableDeps,
+      Optional<LinkableListFilter> linkableListFilter,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSet<BuildTarget> linkWholeDeps,
@@ -120,6 +123,7 @@ public class CxxLinkableEnhancer {
             Linker.LinkType.EXECUTABLE,
             Optional.empty(),
             depType,
+            linkableListFilter,
             nativeLinkableDeps,
             Optional.empty(),
             blacklist,
@@ -237,7 +241,8 @@ public class CxxLinkableEnhancer {
       Linker.LinkType linkType,
       Optional<String> soname,
       Linker.LinkableDepType depType,
-      Iterable<? extends NativeLinkableGroup> nativeLinkableDeps,
+      Optional<LinkableListFilter> linkableListFilter,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSet<BuildTarget> linkWholeDeps,
@@ -257,13 +262,12 @@ public class CxxLinkableEnhancer {
             .maybeParallelizeTransform(
                 Collections2.filter(
                     NativeLinkables.getNativeLinkables(
-                        cxxPlatform, graphBuilder, nativeLinkableDeps, depType),
+                        graphBuilder, nativeLinkableDeps, depType, linkableListFilter),
                     linkable -> !blacklist.contains(linkable.getBuildTarget())),
                 nativeLinkable -> {
-                  Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
+                  Linkage link = nativeLinkable.getPreferredLinkage();
                   NativeLinkableInput input =
                       nativeLinkable.getNativeLinkableInput(
-                          cxxPlatform,
                           NativeLinkables.getLinkStyle(link, depType),
                           linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
                           graphBuilder,
@@ -347,8 +351,9 @@ public class CxxLinkableEnhancer {
       Path output,
       ImmutableList<String> extraOutputNames,
       Linker.LinkableDepType depType,
+      Optional<LinkableListFilter> linkableListFilter,
       CxxLinkOptions linkOptions,
-      Iterable<? extends NativeLinkableGroup> nativeLinkableDeps,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
@@ -365,6 +370,7 @@ public class CxxLinkableEnhancer {
             linkType,
             soname,
             depType,
+            linkableListFilter,
             nativeLinkableDeps,
             bundleLoader,
             blacklist,

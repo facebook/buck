@@ -1,10 +1,9 @@
 Use the following instructions to build d8.jar:
 
 - Install depot_tools: http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
-- Clone r8 repository: git clone https://r8.googlesource.com/r8
-- Checkout the current revision
-- Apply patch with Buck changes: git am <buck>/third-party/java/d8/changes.mbox
+- Clone Buck's fork of the r8 repository: git clone https://github.com/facebookexperimental/r8
+- Checkout the buck fork branch: git checkout buck
 - Build d8: tools/gradle.py -Pexclude_deps d8
 - d8.jar can be found in build/libs/d8.jar
 
-Current revision: 887271c359ed811656e4b116fb58d64fa9728e0a
+Current revision: https://github.com/facebookexperimental/r8/commit/08ff3ef2730eeff0f232cbd19ae9a1a03da1962e

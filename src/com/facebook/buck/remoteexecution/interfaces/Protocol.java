@@ -24,6 +24,7 @@ import com.google.common.hash.HashFunction;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -40,9 +41,13 @@ public interface Protocol {
     int getSize();
   }
 
-  /** Represents a possibly executable file in directories/trees. */
-  interface FileNode {
+  /** Represents a tree node */
+  interface TreeNode {
     String getName();
+  }
+
+  /** Represents a possibly executable file in directories/trees. */
+  interface FileNode extends TreeNode {
 
     Digest getDigest();
 
@@ -50,16 +55,12 @@ public interface Protocol {
   }
 
   /** Representation of a symlink. */
-  interface SymlinkNode {
-    String getName();
-
+  interface SymlinkNode extends TreeNode {
     String getTarget();
   }
 
   /** Represents a child of a Directory. */
-  interface DirectoryNode {
-    String getName();
-
+  interface DirectoryNode extends TreeNode {
     Digest getDigest();
   }
 
@@ -148,7 +149,9 @@ public interface Protocol {
   DirectoryNode newDirectoryNode(String name, Digest child);
 
   Directory newDirectory(
-      List<DirectoryNode> children, Collection<FileNode> files, Collection<SymlinkNode> symlinks);
+      List<DirectoryNode> directories,
+      Collection<FileNode> files,
+      Collection<SymlinkNode> symlinks);
 
   byte[] toByteArray(Directory directory);
 
@@ -163,4 +166,6 @@ public interface Protocol {
   Digest computeDigest(byte[] data);
 
   HashFunction getHashFunction();
+
+  MessageDigest getMessageDigest();
 }

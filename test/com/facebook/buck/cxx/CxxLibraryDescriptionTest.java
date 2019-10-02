@@ -225,7 +225,8 @@ public class CxxLibraryDescriptionTest {
     genSourceBuilder.build(graphBuilder, filesystem, targetGraph);
     depBuilder.build(graphBuilder, filesystem, targetGraph);
     sharedDepBuilder.build(graphBuilder, filesystem, targetGraph);
-    CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
+    CxxLibraryGroup rule =
+        (CxxLibraryGroup) cxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
 
     // Verify public preprocessor input.
     CxxPreprocessorInput publicInput = rule.getCxxPreprocessorInput(cxxPlatform, graphBuilder);
@@ -400,7 +401,8 @@ public class CxxLibraryDescriptionTest {
     TargetGraph normalGraph = TargetGraphFactory.newInstance(normalBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(normalGraph);
     SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
-    CxxLibrary normal = (CxxLibrary) normalBuilder.build(graphBuilder, filesystem, normalGraph);
+    CxxLibraryGroup normal =
+        (CxxLibraryGroup) normalBuilder.build(graphBuilder, filesystem, normalGraph);
 
     // Lookup the link whole flags.
     Linker linker = cxxPlatform.getLd().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE);
@@ -429,8 +431,8 @@ public class CxxLibraryDescriptionTest {
 
     TargetGraph linkWholeGraph = TargetGraphFactory.newInstance(linkWholeBuilder.build());
     graphBuilder = new TestActionGraphBuilder(normalGraph);
-    CxxLibrary linkWhole =
-        (CxxLibrary)
+    CxxLibraryGroup linkWhole =
+        (CxxLibraryGroup)
             linkWholeBuilder
                 .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.cpp"))))
                 .build(graphBuilder, filesystem, linkWholeGraph);
@@ -518,7 +520,8 @@ public class CxxLibraryDescriptionTest {
     genHeaderBuilder.build(graphBuilder, filesystem, targetGraph);
     genSourceBuilder.build(graphBuilder, filesystem, targetGraph);
     depBuilder.build(graphBuilder, filesystem, targetGraph);
-    CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
+    CxxLibraryGroup rule =
+        (CxxLibraryGroup) cxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
 
     // Verify the C/C++ preprocessor input is setup correctly.
     CxxPreprocessorInput publicInput = rule.getCxxPreprocessorInput(cxxPlatform, graphBuilder);
@@ -665,8 +668,8 @@ public class CxxLibraryDescriptionTest {
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.c"))));
     TargetGraph targetGraph1 = TargetGraphFactory.newInstance(cxxLibraryBuilder.build());
     ActionGraphBuilder builder1 = new TestActionGraphBuilder(targetGraph1);
-    CxxLibrary cxxLibrary =
-        (CxxLibrary) cxxLibraryBuilder.build(builder1, filesystem, targetGraph1);
+    CxxLibraryGroup cxxLibrary =
+        (CxxLibraryGroup) cxxLibraryBuilder.build(builder1, filesystem, targetGraph1);
     assertThat(
         cxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM, builder1).entrySet(),
         not(empty()));
@@ -684,7 +687,7 @@ public class CxxLibraryDescriptionTest {
     cxxLibraryBuilder.setSupportedPlatformsRegex(Pattern.compile("nothing"));
     TargetGraph targetGraph2 = TargetGraphFactory.newInstance(cxxLibraryBuilder.build());
     ActionGraphBuilder builder2 = new TestActionGraphBuilder(targetGraph2);
-    cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(builder2, filesystem, targetGraph2);
+    cxxLibrary = (CxxLibraryGroup) cxxLibraryBuilder.build(builder2, filesystem, targetGraph2);
     assertThat(
         cxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM, builder2).entrySet(),
         empty());
@@ -708,7 +711,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of(filesystem, "test.cpp"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    CxxLibrary lib = (CxxLibrary) libBuilder.build(graphBuilder, filesystem, targetGraph);
+    CxxLibraryGroup lib = (CxxLibraryGroup) libBuilder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput nativeLinkableInput =
         lib.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -883,7 +886,7 @@ public class CxxLibraryDescriptionTest {
         TargetGraphFactory.newInstance(libBuilder.build(), locBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     ExportFile loc = locBuilder.build(graphBuilder, filesystem, targetGraph);
-    CxxLibrary lib = (CxxLibrary) libBuilder.build(graphBuilder, filesystem, targetGraph);
+    CxxLibraryGroup lib = (CxxLibraryGroup) libBuilder.build(graphBuilder, filesystem, targetGraph);
 
     NativeLinkableInput nativeLinkableInput =
         lib.getNativeLinkableInput(
@@ -928,7 +931,7 @@ public class CxxLibraryDescriptionTest {
         TargetGraphFactory.newInstance(libBuilder.build(), locBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     ExportFile loc = locBuilder.build(graphBuilder, filesystem, targetGraph);
-    CxxLibrary lib = (CxxLibrary) libBuilder.build(graphBuilder, filesystem, targetGraph);
+    CxxLibraryGroup lib = (CxxLibraryGroup) libBuilder.build(graphBuilder, filesystem, targetGraph);
 
     NativeLinkableInput nativeLinkableInput =
         lib.getNativeLinkableInput(
@@ -975,7 +978,7 @@ public class CxxLibraryDescriptionTest {
         TargetGraphFactory.newInstance(libBuilder.build(), locBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     ExportFile loc = locBuilder.build(graphBuilder, filesystem, targetGraph);
-    CxxLibrary lib = (CxxLibrary) libBuilder.build(graphBuilder, filesystem, targetGraph);
+    CxxLibraryGroup lib = (CxxLibraryGroup) libBuilder.build(graphBuilder, filesystem, targetGraph);
 
     NativeLinkableInput nativeLinkableInput =
         lib.getNativeLinkableInput(
@@ -1034,11 +1037,11 @@ public class CxxLibraryDescriptionTest {
   @Test
   public void nativeLinkableDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    CxxLibrary dep =
-        (CxxLibrary)
+    CxxLibraryGroup dep =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep")).build(graphBuilder);
-    CxxLibrary rule =
-        (CxxLibrary)
+    CxxLibraryGroup rule =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
                 .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
                 .build(graphBuilder);
@@ -1055,11 +1058,11 @@ public class CxxLibraryDescriptionTest {
   @Test
   public void nativeLinkableExportedDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    CxxLibrary dep =
-        (CxxLibrary)
+    CxxLibraryGroup dep =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep")).build(graphBuilder);
-    CxxLibrary rule =
-        (CxxLibrary)
+    CxxLibraryGroup rule =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
                 .setExportedDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
                 .build(graphBuilder);
@@ -1076,8 +1079,8 @@ public class CxxLibraryDescriptionTest {
   @Test
   public void nativeLinkTargetMode() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    CxxLibrary rule =
-        (CxxLibrary)
+    CxxLibraryGroup rule =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
                 .setSoname("libsoname.so")
                 .build(graphBuilder);
@@ -1089,15 +1092,15 @@ public class CxxLibraryDescriptionTest {
   @Test
   public void nativeLinkTargetDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    CxxLibrary dep =
-        (CxxLibrary)
+    CxxLibraryGroup dep =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep")).build(graphBuilder);
-    CxxLibrary exportedDep =
-        (CxxLibrary)
+    CxxLibraryGroup exportedDep =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:exported_dep"))
                 .build(graphBuilder);
-    CxxLibrary rule =
-        (CxxLibrary)
+    CxxLibraryGroup rule =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
                 .setExportedDeps(
                     ImmutableSortedSet.of(dep.getBuildTarget(), exportedDep.getBuildTarget()))
@@ -1117,7 +1120,7 @@ public class CxxLibraryDescriptionTest {
                 ImmutableList.of(StringWithMacrosUtils.format("--exported-flag")));
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(ruleBuilder.build()));
-    CxxLibrary rule = (CxxLibrary) ruleBuilder.build(graphBuilder);
+    CxxLibraryGroup rule = (CxxLibraryGroup) ruleBuilder.build(graphBuilder);
     NativeLinkableInput input =
         rule.getNativeLinkTargetInput(
             CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, graphBuilder.getSourcePathResolver());
@@ -1138,7 +1141,8 @@ public class CxxLibraryDescriptionTest {
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), cxxBinaryBuilder.build()));
     cxxBinaryBuilder.build(graphBuilder, filesystem);
-    CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(graphBuilder, filesystem);
+    CxxLibraryGroup cxxLibrary =
+        (CxxLibraryGroup) cxxLibraryBuilder.build(graphBuilder, filesystem);
     assertThat(
         cxxLibrary.getRuntimeDeps(graphBuilder).collect(ImmutableSet.toImmutableSet()),
         hasItem(cxxBinaryBuilder.getTarget()));
@@ -1188,7 +1192,8 @@ public class CxxLibraryDescriptionTest {
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    CxxLibrary library = (CxxLibrary) libraryBuilder.build(graphBuilder, filesystem, targetGraph);
+    CxxLibraryGroup library =
+        (CxxLibraryGroup) libraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         library
             .getNativeLinkTargetInput(platform, graphBuilder, graphBuilder.getSourcePathResolver())
@@ -1203,7 +1208,7 @@ public class CxxLibraryDescriptionTest {
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"));
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
-    CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(graphBuilder, filesystem);
+    CxxLibraryGroup rule = (CxxLibraryGroup) cxxLibraryBuilder.build(graphBuilder, filesystem);
     CxxPreprocessorInput input =
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     assertThat(getHeaderNames(input.getIncludes()), empty());
@@ -1240,7 +1245,7 @@ public class CxxLibraryDescriptionTest {
             .setPreferredLinkage(NativeLinkableGroup.Linkage.STATIC);
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
-    CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(graphBuilder, filesystem);
+    CxxLibraryGroup rule = (CxxLibraryGroup) cxxLibraryBuilder.build(graphBuilder, filesystem);
     assertThat(
         rule.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         equalTo(NativeLinkableGroup.Linkage.STATIC));
@@ -1331,7 +1336,8 @@ public class CxxLibraryDescriptionTest {
                 depABuilder.build(), depBBuilder.build(), cxxLibraryBuilder.build()));
     graphBuilder.requireRule(depABuilder.getTarget());
     graphBuilder.requireRule(depBBuilder.getTarget());
-    CxxLibrary rule = (CxxLibrary) graphBuilder.requireRule(cxxLibraryBuilder.getTarget());
+    CxxLibraryGroup rule =
+        (CxxLibraryGroup) graphBuilder.requireRule(cxxLibraryBuilder.getTarget());
     assertThat(
         rule.getNativeLinkableExportedDepsForPlatform(
             CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),

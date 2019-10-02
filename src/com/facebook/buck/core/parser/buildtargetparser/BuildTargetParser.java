@@ -16,10 +16,14 @@
 
 package com.facebook.buck.core.parser.buildtargetparser;
 
+import com.facebook.buck.core.cell.CellNameResolver;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.UnknownCellException;
+import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
@@ -72,10 +76,12 @@ class BuildTargetParser {
    *     parsing target name patterns.
    */
   UnconfiguredBuildTargetView parse(
-      CellPathResolver cellPathResolver,
+      CellPathResolver legacyCellPathResolver,
       String buildTargetName,
       String buildTargetBaseName,
       boolean allowWildCards) {
+    CellNameResolver cellNameResolver = legacyCellPathResolver.getCellNameResolver();
+    NewCellPathResolver cellPathResolver = legacyCellPathResolver.getNewCellPathResolver();
 
     if (buildTargetName.endsWith(BUILD_RULE_SEPARATOR) && !allowWildCards) {
       throw new BuildTargetParseException(
@@ -105,37 +111,40 @@ class BuildTargetParser {
               "%s must contain exactly one colon (found %d)", buildTargetName, parts.size() - 1));
     }
 
-    String baseName = parts.get(0).isEmpty() ? buildTargetBaseName : parts.get(0);
-    String shortName = parts.get(1);
-    Iterable<String> flavorNames = new HashSet<>();
-    int hashIndex = shortName.indexOf('#');
-    if (hashIndex != -1 && hashIndex < shortName.length()) {
-      flavorNames = flavorParser.parseFlavorString(shortName.substring(hashIndex + 1));
-      shortName = shortName.substring(0, hashIndex);
-    }
-
-    Objects.requireNonNull(baseName);
-    // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
-    baseName = baseName.replace('\\', '/');
-    checkBaseName(baseName, buildTargetName);
-
-    Path cellPath;
     try {
-      cellPath = cellPathResolver.getCellPathOrThrow(givenCellName);
-    } catch (UnknownCellException e) {
-      throw new BuildTargetParseException(
-          String.format("When parsing %s: %s", buildTargetName, e.getHumanReadableErrorMessage()));
-    }
 
-    // Set the cell path correctly. Because the cellNames comes from the owning cell we can
-    // be sure that if this doesn't throw an exception the target cell is visible to the
-    // owning cell.
-    UnflavoredBuildTargetView unflavoredBuildTargetView =
-        ImmutableUnflavoredBuildTargetView.of(
-            cellPath, cellPathResolver.getCanonicalCellName(cellPath), baseName, shortName);
-    return flavoredTargetCache.intern(
-        ImmutableUnconfiguredBuildTargetView.of(
-            unflavoredBuildTargetView, RichStream.from(flavorNames).map(InternalFlavor::of)));
+      CanonicalCellName canonicalCellName = cellNameResolver.getName(givenCellName);
+      String baseName = parts.get(0).isEmpty() ? buildTargetBaseName : parts.get(0);
+      String shortName = parts.get(1);
+      Iterable<String> flavorNames = new HashSet<>();
+      int hashIndex = shortName.indexOf('#');
+      if (hashIndex != -1 && hashIndex < shortName.length()) {
+        flavorNames = flavorParser.parseFlavorString(shortName.substring(hashIndex + 1));
+        shortName = shortName.substring(0, hashIndex);
+      }
+
+      Objects.requireNonNull(baseName);
+      // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
+      baseName = baseName.replace('\\', '/');
+      checkBaseName(baseName, buildTargetName);
+
+      Path cellPath = cellPathResolver.getCellPath(canonicalCellName);
+
+      // Set the cell path correctly. Because the cellNames comes from the owning cell we can
+      // be sure that if this doesn't throw an exception the target cell is visible to the
+      // owning cell.
+      UnflavoredBuildTargetView unflavoredBuildTargetView =
+          ImmutableUnflavoredBuildTargetView.of(cellPath, canonicalCellName, baseName, shortName);
+      return flavoredTargetCache.intern(
+          ImmutableUnconfiguredBuildTargetView.of(
+              unflavoredBuildTargetView, RichStream.from(flavorNames).map(InternalFlavor::of)));
+    } catch (HumanReadableException e) {
+      throw new BuildTargetParseException(
+          e,
+          String.format("When parsing %s: %s.", buildTargetName, e.getHumanReadableErrorMessage()));
+    } catch (Exception e) {
+      throw new BuckUncheckedExecutionException(e, "When parsing %s.", buildTargetName);
+    }
   }
 
   protected static void checkBaseName(String baseName, String buildTargetName) {

@@ -13,7 +13,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/util/log:log",
-        "//src/com/facebook/buck/eden:eden",
+        "//src/com/facebook/buck/edenfs:edenfs",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",

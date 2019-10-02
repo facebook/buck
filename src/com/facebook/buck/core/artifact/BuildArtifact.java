@@ -15,41 +15,28 @@
  */
 package com.facebook.buck.core.artifact;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
-import java.nio.file.Path;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-/** An artifact generated from build */
-@Value.Immutable(builder = false, copy = false, prehash = true)
-@Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
-public abstract class BuildArtifact implements Artifact {
-
-  /** @return the key to the {@link ActionAnalysisData} that owns this artifact */
-  @Value.Parameter
-  public abstract ActionAnalysisDataKey getActionDataKey();
-
-  /** @return the {@link BuildTarget} of the rule that creates this {@link Artifact} */
-  @Value.Parameter
-  abstract BuildTarget getBuildTarget();
+/**
+ * Represents an {@link Artifact} that is materialized by an {@link
+ * com.facebook.buck.core.rules.actions.Action}.
+ *
+ * <p>This is not intended to be exposed to users, but used only by the build engine.
+ */
+public interface BuildArtifact extends Artifact {
 
   /**
-   * @return the buck-out package path folder that the specific output of this resides in. This is a
-   *     buck-out/gen folder generated using the {@link BuildTarget}.
+   * @return the key to the {@link ActionAnalysisData} that owns this artifact. This is null if this
+   *     is a legacy artifact (one that refers to a source path of an old BuildRule.
    */
   @Value.Parameter
-  public abstract Path getPackagePath();
-
-  /** @return the output path relative to the {@link #getPackagePath()} */
-  @Value.Parameter
-  public abstract Path getOutputPath();
+  @Nullable
+  ActionAnalysisDataKey getActionDataKey();
 
   /** @return the path to the artifact */
-  @Value.Derived
-  public ExplicitBuildTargetSourcePath getPath() {
-    return ExplicitBuildTargetSourcePath.of(
-        getBuildTarget(), getPackagePath().resolve(getOutputPath()));
-  }
+  ExplicitBuildTargetSourcePath getSourcePath();
 }

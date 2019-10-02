@@ -23,6 +23,8 @@ import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectSubCommand;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.features.apple.common.Mode;
+import com.facebook.buck.features.apple.common.PrintStreamPathOutputPresenter;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.google.common.collect.ImmutableList;
@@ -77,6 +79,9 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
       usage = "Print the path to the output for each of the built rules relative to the cell.")
   private boolean showOutput;
 
+  @Option(name = "--experimental", usage = "Generate an experimental Xcode workspace.")
+  private boolean experimental = false;
+
   protected Mode getOutputMode() {
     if (this.showFullOutput) {
       return Mode.FULL;
@@ -100,48 +105,92 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
             .getCell()
             .getToolchainProvider()
             .getByName(AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
-    XCodeProjectCommandHelper xcodeProjectCommandHelper =
-        new XCodeProjectCommandHelper(
-            params.getBuckEventBus(),
-            params.getPluginManager(),
-            params.getParser(),
-            params.getBuckConfig(),
-            params.getVersionedTargetGraphCache(),
-            params.getTypeCoercerFactory(),
-            params.getUnconfiguredBuildTargetFactory(),
-            params.getCell(),
-            params.getRuleKeyConfiguration(),
-            params.getTargetConfiguration(),
-            params.getConsole(),
-            params.getProcessManager(),
-            params.getEnvironment(),
-            params.getExecutors().get(ExecutorPool.PROJECT),
-            executor,
-            params.getDepsAwareExecutorSupplier(),
-            appleCxxPlatformsProvider.getAppleCxxPlatforms().getFlavors(),
-            getAbsoluteHeaderMapPaths(params.getBuckConfig()),
-            getSharedLibrariesInBundles(params.getBuckConfig()),
-            projectGeneratorParameters.getEnableParserProfiling(),
-            projectGeneratorParameters.isWithTests(),
-            projectGeneratorParameters.isWithoutTests(),
-            projectGeneratorParameters.isWithoutDependenciesTests(),
-            modulesToFocusOn,
-            combinedProject,
-            getProjectSchemes(params.getBuckConfig()),
-            projectGeneratorParameters.isDryRun(),
-            getReadOnly(params.getBuckConfig()),
-            new PrintStreamPathOutputPresenter(
-                params.getConsole().getStdOut(), getOutputMode(), params.getCell().getRoot()),
-            projectGeneratorParameters.getArgsParser(),
-            arguments -> {
-              try {
-                return runBuild(params, arguments);
-              } catch (Exception e) {
-                throw new RuntimeException("Cannot run a build", e);
-              }
-            },
-            projectCommandArguments);
-    return xcodeProjectCommandHelper.parseTargetsAndRunXCodeGenerator();
+    if (!experimental) {
+      XCodeProjectCommandHelper xcodeProjectCommandHelper =
+          new XCodeProjectCommandHelper(
+              params.getBuckEventBus(),
+              params.getPluginManager(),
+              params.getParser(),
+              params.getBuckConfig(),
+              params.getVersionedTargetGraphCache(),
+              params.getTypeCoercerFactory(),
+              params.getUnconfiguredBuildTargetFactory(),
+              params.getCell(),
+              params.getRuleKeyConfiguration(),
+              params.getTargetConfiguration(),
+              params.getConsole(),
+              params.getProcessManager(),
+              params.getEnvironment(),
+              params.getExecutors().get(ExecutorPool.PROJECT),
+              executor,
+              params.getDepsAwareExecutorSupplier(),
+              appleCxxPlatformsProvider.getAppleCxxPlatforms().getFlavors(),
+              getAbsoluteHeaderMapPaths(params.getBuckConfig()),
+              getSharedLibrariesInBundles(params.getBuckConfig()),
+              projectGeneratorParameters.getEnableParserProfiling(),
+              projectGeneratorParameters.isWithTests(),
+              projectGeneratorParameters.isWithoutTests(),
+              projectGeneratorParameters.isWithoutDependenciesTests(),
+              modulesToFocusOn,
+              combinedProject,
+              getProjectSchemes(params.getBuckConfig()),
+              projectGeneratorParameters.isDryRun(),
+              getReadOnly(params.getBuckConfig()),
+              new PrintStreamPathOutputPresenter(
+                  params.getConsole().getStdOut(), getOutputMode(), params.getCell().getRoot()),
+              projectGeneratorParameters.getArgsParser(),
+              arguments -> {
+                try {
+                  return runBuild(params, arguments);
+                } catch (Exception e) {
+                  throw new RuntimeException("Cannot run a build", e);
+                }
+              },
+              projectCommandArguments);
+      return xcodeProjectCommandHelper.parseTargetsAndRunXCodeGenerator();
+    } else {
+      com.facebook.buck.features.apple.projectV2.XCodeProjectCommandHelper
+          xcodeProjectCommandHelper =
+              new com.facebook.buck.features.apple.projectV2.XCodeProjectCommandHelper(
+                  params.getBuckEventBus(),
+                  params.getPluginManager(),
+                  params.getParser(),
+                  params.getBuckConfig(),
+                  params.getVersionedTargetGraphCache(),
+                  params.getTypeCoercerFactory(),
+                  params.getUnconfiguredBuildTargetFactory(),
+                  params.getCell(),
+                  params.getRuleKeyConfiguration(),
+                  params.getTargetConfiguration(),
+                  params.getConsole(),
+                  params.getProcessManager(),
+                  params.getEnvironment(),
+                  params.getExecutors().get(ExecutorPool.PROJECT),
+                  executor,
+                  params.getDepsAwareExecutorSupplier(),
+                  appleCxxPlatformsProvider.getAppleCxxPlatforms().getFlavors(),
+                  getSharedLibrariesInBundles(params.getBuckConfig()),
+                  projectGeneratorParameters.getEnableParserProfiling(),
+                  projectGeneratorParameters.isWithTests(),
+                  projectGeneratorParameters.isWithoutTests(),
+                  projectGeneratorParameters.isWithoutDependenciesTests(),
+                  modulesToFocusOn,
+                  getProjectSchemes(params.getBuckConfig()),
+                  projectGeneratorParameters.isDryRun(),
+                  getReadOnly(params.getBuckConfig()),
+                  new PrintStreamPathOutputPresenter(
+                      params.getConsole().getStdOut(), getOutputMode(), params.getCell().getRoot()),
+                  projectGeneratorParameters.getArgsParser(),
+                  arguments -> {
+                    try {
+                      return runBuild(params, arguments);
+                    } catch (Exception e) {
+                      throw new RuntimeException("Cannot run a build", e);
+                    }
+                  },
+                  projectCommandArguments);
+      return xcodeProjectCommandHelper.parseTargetsAndRunXCodeGenerator();
+    }
   }
 
   private ExitCode runBuild(CommandRunnerParams params, ImmutableList<String> arguments)

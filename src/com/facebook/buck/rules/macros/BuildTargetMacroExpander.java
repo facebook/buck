@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -46,8 +45,7 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
   }
 
   @Override
-  public Arg expandFrom(
-      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, M input)
+  public Arg expandFrom(BuildTarget target, ActionGraphBuilder graphBuilder, M input)
       throws MacroException {
     return expand(graphBuilder.getSourcePathResolver(), input, resolve(graphBuilder, input));
   }

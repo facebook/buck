@@ -35,12 +35,7 @@ A <code>kotlin_test()</code> rule is used to define a set of
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'srcs' /}
@@ -113,6 +108,8 @@ A <code>kotlin_test()</code> rule is used to define a set of
   Same as <code>std_out_log_level</code>, but for std err.
   {/param}
 {/call}
+
+{call test_common.contacts_arg /}
 
 {call buck.arg}
   {param name: 'vm_args' /}

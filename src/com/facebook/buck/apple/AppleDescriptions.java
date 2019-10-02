@@ -629,7 +629,8 @@ public class AppleDescriptions {
       Optional<ImmutableList<String>> ibtoolFlags,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
-      boolean cacheStrips) {
+      boolean cacheStrips,
+      boolean useEntitlementsWhenAdhocCodeSigning) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -859,7 +860,8 @@ public class AppleDescriptions {
         ibtoolModuleFlag,
         ibtoolFlagsUnwrapped,
         codesignTimeout,
-        copySwiftStdlibToFrameworks);
+        copySwiftStdlibToFrameworks,
+        useEntitlementsWhenAdhocCodeSigning);
   }
 
   /**

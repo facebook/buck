@@ -22,6 +22,8 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
@@ -31,9 +33,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.hash.HashCode;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -58,10 +59,7 @@ public class JavaLibraryRules {
   static JavaLibrary.Data initializeFromDisk(BuildTarget buildTarget, ProjectFilesystem filesystem)
       throws IOException {
     List<String> lines = filesystem.readLines(getPathToClassHashes(buildTarget, filesystem));
-    ImmutableSortedMap<String, HashCode> classHashes =
-        AccumulateClassNamesStep.parseClassHashes(lines);
-
-    return new JavaLibrary.Data(classHashes);
+    return new JavaLibrary.Data(AccumulateClassNamesStep.parseClassHashes(lines));
   }
 
   static Path getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
@@ -77,14 +75,16 @@ public class JavaLibraryRules {
     // Allow the transitive walk to find NativeLinkables through the BuildRuleParams deps of a
     // JavaLibrary or CalculateAbi object. The deps may be either one depending if we're compiling
     // against ABI rules or full rules
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(
+            deps,
+            r ->
+                r instanceof JavaLibrary
+                    ? Optional.of(((JavaLibrary) r).getDepsForTransitiveClasspathEntries())
+                    : r instanceof CalculateAbi ? Optional.of(r.getBuildDeps()) : Optional.empty());
     return NativeLinkables.getTransitiveSharedLibraries(
-        cxxPlatform,
         graphBuilder,
-        deps,
-        r ->
-            r instanceof JavaLibrary
-                ? Optional.of(((JavaLibrary) r).getDepsForTransitiveClasspathEntries())
-                : r instanceof CalculateAbi ? Optional.of(r.getBuildDeps()) : Optional.empty(),
+        Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
         true);
   }
 

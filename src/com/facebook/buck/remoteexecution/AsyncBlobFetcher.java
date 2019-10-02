@@ -18,13 +18,23 @@ package com.facebook.buck.remoteexecution;
 
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
+import com.facebook.buck.util.types.Unit;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
+import java.util.concurrent.Callable;
 
 /** Interface used by OutputsMaterializer to fetch outputs from the CAS. */
 public interface AsyncBlobFetcher {
   ListenableFuture<ByteBuffer> fetch(Protocol.Digest digest);
 
-  ListenableFuture<Void> fetchToStream(Digest digest, WritableByteChannel channel);
+  ListenableFuture<Unit> fetchToStream(Digest digest, WritableByteChannel channel);
+
+  ListenableFuture<Unit> batchFetchBlobs(
+      ImmutableMultimap<Digest, Callable<WritableByteChannel>> requests,
+      ImmutableMultimap<Digest, SettableFuture<Unit>> futures)
+      throws IOException;
 }

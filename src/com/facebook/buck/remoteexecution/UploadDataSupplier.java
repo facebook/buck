@@ -36,7 +36,8 @@ public interface UploadDataSupplier {
   Digest getDigest();
 
   /** Create a simple UploadDataSupplier. */
-  static UploadDataSupplier of(Digest digest, ThrowingSupplier<InputStream, IOException> stream) {
+  static UploadDataSupplier of(
+      String name, Digest digest, ThrowingSupplier<InputStream, IOException> stream) {
     return new UploadDataSupplier() {
       @Override
       public InputStream get() throws IOException {
@@ -46,6 +47,11 @@ public interface UploadDataSupplier {
       @Override
       public Digest getDigest() {
         return digest;
+      }
+
+      @Override
+      public String describe() {
+        return name;
       }
     };
   }

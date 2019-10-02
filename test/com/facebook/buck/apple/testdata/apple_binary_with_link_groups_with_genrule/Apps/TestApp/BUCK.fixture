@@ -1,0 +1,87 @@
+"""
+There is the dependency graph for the test case
+
+                             +--------+
+                             |        |
+                    + - - - -+  Root  +- - - - +
+                    |        |        |        |
+                    |        +--------+        |
+               +----v----+                     |
+               |         |                     |
+               |  Lib A  |                     |
+               |         |                     |
+               +---------+                     |
+                    |                          |
+                    |                          |
+               +----v----+                +----v----+
+               |         |                |         |
+               |  Gen C  | - - - - - - - >|  Lib B  |
+               |         |                |         |
+               +---------+                +---------+
+
+The link group map passed in
+[
+    (
+        "dynamic",
+        [("//Apps/Libs:A", "tree")],
+    ),
+    (
+        "app",
+        [("//Apps/Libs:Root", "tree")],
+    ),
+],
+
+If cut genrule branch enabled, LibA will not pull in the Lib B in the dylib,
+else Dylib should pull in Lib B because the chain LibA -> GenC -> LibB.
+
+"""
+
+apple_binary(
+    name = "TestApp",
+    srcs = ["main.c"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    link_group = "app",
+    link_group_map = [
+        (
+            "dynamic",
+            [("//Apps/Libs:A", "tree")],
+        ),
+        (
+            "app",
+            [("//Apps/Libs:Root", "tree")],
+        ),
+    ],
+    deps = [
+        ":Dylib",
+        "//Apps/Libs:Root",
+    ],
+)
+
+apple_library(
+    name = "Dylib",
+    srcs = ["dummy.c"],
+    link_group = "dynamic",
+    # In the real world, the link group definition must be the same
+    # across the binary and the dylibs. This would be achieved by
+    # a single definition in a .bzl file.
+    link_group_map = [
+        (
+            "dynamic",
+            [("//Apps/Libs:A", "tree")],
+        ),
+        (
+            "app",
+            [("//Apps/Libs:Root", "tree")],
+        ),
+    ],
+    link_style = "static",
+    # To make the binary runnable, an rpath must be added via exported_linker_flags.
+    linker_flags = ["-Wl,-all_load"],
+    preferred_linkage = "shared",
+    soname = "Dylib.dylib",
+    deps = [
+        "//Apps/Libs:Root",
+    ],
+)

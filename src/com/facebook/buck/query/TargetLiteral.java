@@ -16,7 +16,7 @@
 package com.facebook.buck.query;
 
 import com.facebook.buck.core.model.QueryTarget;
-import com.google.common.collect.ImmutableSet;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -38,9 +38,9 @@ public final class TargetLiteral<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <OUTPUT_TYPE extends QueryTarget> ImmutableSet<OUTPUT_TYPE> eval(
+  public <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
       QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) throws QueryException {
-    return (ImmutableSet<OUTPUT_TYPE>) env.getTargetsMatchingPattern(getPattern());
+    return (Set<OUTPUT_TYPE>) env.getTargetsMatchingPattern(getPattern());
   }
 
   @Override

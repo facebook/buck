@@ -33,9 +33,9 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.parser.BuildTargetMatcherTargetNodeParser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -77,6 +77,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.CmdLineException;
@@ -164,8 +165,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
 
   @Option(
       name = GlobalCliOptions.EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG,
-      usage =
-          "Exclude targets that are not compatible with the given target platform. (experimental)")
+      usage = "This option is ignored")
   private boolean excludeIncompatibleTargets = false;
 
   @Option(name = GlobalCliOptions.HELP_LONG_ARG, usage = "Prints the available options and exits.")
@@ -177,6 +177,13 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       forbids = {GlobalCliOptions.CONFIG_LONG_ARG, GlobalCliOptions.CONFIG_FILE_LONG_ARG})
   private boolean reuseCurrentConfig = false;
 
+  @Nullable
+  @Option(
+      name = GlobalCliOptions.COMMAND_ARGS_FILE_LONG_ARG,
+      usage = GlobalCliOptions.COMMAND_ARGS_FILE_HELP,
+      hidden = true)
+  protected String commandArgsFile;
+
   /** @return {code true} if the {@code [cache]} in {@code .buckconfig} should be ignored. */
   public boolean isNoCache() {
     return noCache;
@@ -184,6 +191,11 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
 
   public boolean isReuseCurrentConfig() {
     return reuseCurrentConfig;
+  }
+
+  @Nullable
+  public String getCommandArgsFile() {
+    return commandArgsFile;
   }
 
   public Optional<Path> getEventsOutputPath() {
@@ -270,9 +282,13 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
                 outputStream,
                 Format.JSON_TRACE_FILE_FORMAT,
                 "Buck profile for " + skylarkProfile + " at " + LocalDate.now(),
+                "buck",
+                UUID.nameUUIDFromBytes(new byte[0]),
                 false,
                 clock,
                 clock.nanoTime(),
+                false,
+                false,
                 false);
       } catch (IOException e) {
         throw new HumanReadableException(
@@ -411,7 +427,12 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   public boolean getExcludeIncompatibleTargets() {
-    return excludeIncompatibleTargets;
+    // Exclude platform-incompatible target because
+    // this is generally what Buck users want.
+    // But keep the function virtual because
+    // `uquery` command (and probably others in the future)
+    // do not need target filtering by design.
+    return true;
   }
 
   /**

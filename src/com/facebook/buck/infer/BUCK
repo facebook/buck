@@ -1,0 +1,32 @@
+load("//tools/build_rules:module_rules.bzl", "buck_module")
+
+buck_module(
+    name = "infer",
+    srcs = glob([
+        "*.java",
+        "toolchain/*.java",
+    ]),
+    tests = [
+        "//test/com/facebook/buck/infer:infer",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/build/context:context",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/impl:impl",
+        "//src/com/facebook/buck/core/toolchain:toolchain",
+        "//src/com/facebook/buck/core/toolchain/tool:tool",
+        "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
+        "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
+        "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//src/com/facebook/buck/jvm/core:core",
+        "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/rules/tool/config:config",
+        "//src/com/facebook/buck/shell:steps",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/step/fs:fs",
+        "//third-party/java/guava:guava",
+        "//third-party/java/pf4j:pf4j",
+    ],
+)

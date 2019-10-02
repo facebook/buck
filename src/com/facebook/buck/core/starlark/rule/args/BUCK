@@ -1,0 +1,14 @@
+java_library(
+    name = "args",
+    srcs = glob(
+        ["*.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules/actions/lib/args:args",
+        "//third-party/java/bazel:bazel",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+)

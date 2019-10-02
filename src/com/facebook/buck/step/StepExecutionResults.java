@@ -18,11 +18,14 @@ package com.facebook.buck.step;
 
 /** A collection of common StepExecutionResult constants. */
 public class StepExecutionResults {
-  // NB: These constants cannot live in AbstractStepExecutionResult, as referencing subclass in
+  // NB: These constants cannot live in StepExecutionResult, as referencing subclass in
   // static initializer may cause deadlock during classloading.
 
-  public static final StepExecutionResult SUCCESS = StepExecutionResult.of(0);
-  public static final StepExecutionResult ERROR = StepExecutionResult.of(1);
+  public static final int SUCCESS_EXIT_CODE = 0;
+  public static final int ERROR_EXIT_CODE = 1;
+
+  public static final StepExecutionResult SUCCESS = StepExecutionResult.of(SUCCESS_EXIT_CODE);
+  public static final StepExecutionResult ERROR = StepExecutionResult.of(ERROR_EXIT_CODE);
 
   private StepExecutionResults() {} // Utility class. Do not instantiate.
 }

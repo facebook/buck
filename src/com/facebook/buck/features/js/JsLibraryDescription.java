@@ -40,14 +40,10 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.macros.BuildTargetMacro;
-import com.facebook.buck.rules.macros.MacroContainer;
-import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.shell.ProvidesWorkerTool;
 import com.facebook.buck.shell.WorkerTool;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.cache.Cache;
@@ -58,7 +54,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,7 +61,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -121,25 +115,6 @@ public class JsLibraryDescription
     WorkerTool worker =
         graphBuilder.getRuleWithType(workerTarget, ProvidesWorkerTool.class).getWorkerTool();
 
-    // this params object is used as base for the JsLibrary build rule, but also for all dynamically
-    // created JsFile rules.
-    // For the JsLibrary case, we want to propagate flavors to library dependencies
-    // For the JsFile case, we only want to depend on the worker, not on any libraries
-    Predicate<BuildTarget> isWorker = workerTarget::equals;
-    Predicate<BuildTarget> extraDepsFilter =
-        args.getExtraJson()
-            .map(StringWithMacros::getMacros)
-            .map(RichStream::from)
-            .map(JsLibraryDescription::getMacroTargets)
-            .map(macroTargets -> isWorker.or(macroTargets::contains))
-            .orElse(isWorker);
-    ImmutableSortedSet<BuildRule> workerAndMacrosExtraDeps =
-        params.getExtraDeps().get().stream()
-            .filter(x -> extraDepsFilter.test(x.getBuildTarget()))
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-    BuildRuleParams baseParams =
-        params.withoutDeclaredDeps().withExtraDeps(workerAndMacrosExtraDeps);
-
     if (file.isPresent()) {
       return buildTarget.getFlavors().contains(JsFlavors.RELEASE)
           ? createReleaseFileRule(
@@ -147,7 +122,7 @@ public class JsLibraryDescription
           : createDevFileRule(
               buildTarget, projectFilesystem, graphBuilder, cellRoots, args, file.get(), worker);
     } else if (buildTarget.getFlavors().contains(JsFlavors.LIBRARY_FILES)) {
-      return new LibraryFilesBuilder(graphBuilder, buildTarget, baseParams, sourcesToFlavors)
+      return new LibraryFilesBuilder(graphBuilder, buildTarget, sourcesToFlavors)
           .setSources(args.getSrcs())
           .build(projectFilesystem, worker);
     } else {
@@ -160,7 +135,7 @@ public class JsLibraryDescription
               .filter(target -> JsUtil.isJsLibraryTarget(target, context.getTargetGraph()));
       Stream<BuildTarget> declaredDeps = args.getDeps().stream();
       Stream<BuildTarget> deps = Stream.concat(declaredDeps, queryDeps);
-      return new LibraryBuilder(context.getTargetGraph(), graphBuilder, buildTarget, baseParams)
+      return new LibraryBuilder(context.getTargetGraph(), graphBuilder, buildTarget)
           .setLibraryDependencies(deps)
           .build(projectFilesystem, worker);
     }
@@ -209,14 +184,12 @@ public class JsLibraryDescription
     private final ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>
         sourcesToFlavors;
     private final BuildTarget fileBaseTarget;
-    private final BuildRuleParams baseParams;
 
     @Nullable private ImmutableList<JsFile<?>> jsFileRules;
 
     public LibraryFilesBuilder(
         ActionGraphBuilder graphBuilder,
         BuildTarget baseTarget,
-        BuildRuleParams baseParams,
         ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors) {
       this.graphBuilder = graphBuilder;
       this.baseTarget = baseTarget;
@@ -229,7 +202,6 @@ public class JsLibraryDescription
           !baseTarget.getFlavors().contains(JsFlavors.RELEASE)
               ? baseTarget.withFlavors()
               : baseTarget;
-      this.baseParams = baseParams;
     }
 
     private LibraryFilesBuilder setSources(
@@ -251,7 +223,7 @@ public class JsLibraryDescription
       return new JsLibrary.Files(
           baseTarget.withAppendedFlavors(JsFlavors.LIBRARY_FILES),
           projectFileSystem,
-          baseParams.copyAppendingExtraDeps(jsFileRules),
+          graphBuilder,
           jsFileRules.stream()
               .map(JsFile::getSourcePathToOutput)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
@@ -264,18 +236,13 @@ public class JsLibraryDescription
     private final TargetGraph targetGraph;
     private final ActionGraphBuilder graphBuilder;
     private final BuildTarget baseTarget;
-    private final BuildRuleParams baseParams;
 
     @Nullable private ImmutableList<JsLibrary> libraryDependencies;
 
     private LibraryBuilder(
-        TargetGraph targetGraph,
-        ActionGraphBuilder graphBuilder,
-        BuildTarget baseTarget,
-        BuildRuleParams baseParams) {
+        TargetGraph targetGraph, ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
       this.targetGraph = targetGraph;
       this.baseTarget = baseTarget;
-      this.baseParams = baseParams;
       this.graphBuilder = graphBuilder;
     }
 
@@ -293,12 +260,11 @@ public class JsLibraryDescription
       Objects.requireNonNull(libraryDependencies, "No library dependencies set");
 
       BuildTarget filesTarget = baseTarget.withAppendedFlavors(JsFlavors.LIBRARY_FILES);
-      BuildRule filesRule = graphBuilder.requireRule(filesTarget);
+      graphBuilder.requireRule(filesTarget);
       return new JsLibrary(
           baseTarget,
           projectFilesystem,
-          baseParams.copyAppendingExtraDeps(
-              Iterables.concat(ImmutableList.of(filesRule), libraryDependencies)),
+          graphBuilder,
           graphBuilder.getRuleWithType(filesTarget, JsLibrary.Files.class).getSourcePathToOutput(),
           libraryDependencies.stream()
               .map(JsLibrary::getSourcePathToOutput)
@@ -399,14 +365,6 @@ public class JsLibraryDescription
       builder.put(source, JsFlavors.fileFlavorForSourcePath(relativePath));
     }
     return builder.build();
-  }
-
-  private static ImmutableSet<BuildTarget> getMacroTargets(RichStream<MacroContainer> containers) {
-    return containers
-        .map(MacroContainer::getMacro)
-        .filter(BuildTargetMacro.class)
-        .map(BuildTargetMacro::getTarget)
-        .collect(ImmutableSet.toImmutableSet());
   }
 
   private static Path changePathPrefix(

@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -389,44 +390,48 @@ public final class AppleBuildRules {
         .toImmutableSet();
   }
 
-  public static <T> ImmutableSet<AppleAssetCatalogDescriptionArg> collectRecursiveAssetCatalogs(
-      XCodeDescriptions xcodeDescriptions,
-      TargetGraph targetGraph,
-      Optional<AppleDependenciesCache> cache,
-      Iterable<TargetNode<T>> targetNodes,
-      RecursiveDependenciesMode mode) {
+  /** Collect recursive asset catalogs */
+  public static <T extends ConstructorArg>
+      ImmutableSet<AppleAssetCatalogDescriptionArg> collectRecursiveAssetCatalogs(
+          XCodeDescriptions xcodeDescriptions,
+          TargetGraph targetGraph,
+          Optional<AppleDependenciesCache> cache,
+          Iterable<TargetNode<T>> targetNodes,
+          RecursiveDependenciesMode mode) {
     return RichStream.from(targetNodes)
         .flatMap(
             input ->
                 getRecursiveTargetNodeDependenciesOfTypes(
-                        xcodeDescriptions,
-                        targetGraph,
-                        cache,
-                        mode,
-                        input,
-                        APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES)
+                    xcodeDescriptions,
+                    targetGraph,
+                    cache,
+                    mode,
+                    input,
+                    APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES)
                     .stream())
         .map(input -> (AppleAssetCatalogDescriptionArg) input.getConstructorArg())
         .toImmutableSet();
   }
 
-  public static <T> ImmutableSet<AppleWrapperResourceArg> collectRecursiveWrapperResources(
-      XCodeDescriptions xcodeDescriptions,
-      TargetGraph targetGraph,
-      Optional<AppleDependenciesCache> cache,
-      Iterable<TargetNode<T>> targetNodes,
-      RecursiveDependenciesMode mode) {
+  /** Collect recursive wrapper resources */
+  public static <T extends ConstructorArg>
+      ImmutableSet<AppleWrapperResourceArg> collectRecursiveWrapperResources(
+          XCodeDescriptions xcodeDescriptions,
+          TargetGraph targetGraph,
+          Optional<AppleDependenciesCache> cache,
+          Iterable<TargetNode<T>> targetNodes,
+          RecursiveDependenciesMode mode) {
 
     return RichStream.from(targetNodes)
         .flatMap(
             input ->
                 getRecursiveTargetNodeDependenciesOfTypes(
-                        xcodeDescriptions,
-                        targetGraph,
-                        cache,
-                        mode,
-                        input,
-                        WRAPPER_RESOURCE_DESCRIPTION_CLASSES)
+                    xcodeDescriptions,
+                    targetGraph,
+                    cache,
+                    mode,
+                    input,
+                    WRAPPER_RESOURCE_DESCRIPTION_CLASSES)
                     .stream())
         .map(input -> (AppleWrapperResourceArg) input.getConstructorArg())
         .toImmutableSet();
@@ -445,7 +450,7 @@ public final class AppleBuildRules {
         .flatMap(
             targetNode ->
                 getRecursiveTargetNodeDependenciesOfTypes(
-                        xcodeDescriptions, targetGraph, cache, mode, targetNode, descriptionClasses)
+                    xcodeDescriptions, targetGraph, cache, mode, targetNode, descriptionClasses)
                     .stream())
         .map(input -> (T) input.getConstructorArg())
         .toImmutableSet();

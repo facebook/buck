@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 public class TestPythonPlatform implements PythonPlatform {
@@ -48,5 +49,10 @@ public class TestPythonPlatform implements PythonPlatform {
   @Override
   public Optional<BuildTarget> getCxxLibrary() {
     return cxxLibrary;
+  }
+
+  @Override
+  public ImmutableList<String> getInplaceBinaryInterpreterFlags() {
+    return ImmutableList.of("-Es");
   }
 }

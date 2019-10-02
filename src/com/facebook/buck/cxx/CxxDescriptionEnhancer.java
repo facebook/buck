@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -54,7 +55,9 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.CxxRuntimeType;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
+import com.facebook.buck.cxx.toolchain.nativelink.LinkableListFilter;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -89,6 +92,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
@@ -122,6 +126,7 @@ public class CxxDescriptionEnhancer {
       InternalFlavor.of("binary-with-shared-libraries-symlink-tree");
 
   public static final Flavor CXX_LINK_BINARY_FLAVOR = InternalFlavor.of("binary");
+  public static final Flavor CXX_LINK_THININDEX_FLAVOR = InternalFlavor.of("thinindex");
 
   public static final Flavor CXX_LINK_MAP_FLAVOR = UserFlavor.of("linkmap", "LinkMap file");
 
@@ -156,7 +161,6 @@ public class CxxDescriptionEnhancer {
   public static HeaderSymlinkTree createHeaderSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       HeaderMode mode,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility,
@@ -168,12 +172,7 @@ public class CxxDescriptionEnhancer {
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             projectFilesystem, buildTarget, headerVisibility, flavors);
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-        headerSymlinkTreeTarget,
-        projectFilesystem,
-        ruleFinder,
-        headerSymlinkTreeRoot,
-        headers,
-        mode);
+        headerSymlinkTreeTarget, projectFilesystem, headerSymlinkTreeRoot, headers, mode);
   }
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(
@@ -187,7 +186,6 @@ public class CxxDescriptionEnhancer {
     return createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        resolver,
         getHeaderModeForPlatform(
             resolver,
             buildTarget.getTargetConfiguration(),
@@ -479,7 +477,7 @@ public class CxxDescriptionEnhancer {
 
           // Add any dependent headers
           cxxPreprocessorInputFromTestedRulesBuilder.addAll(
-              CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+              CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
                   cxxPlatform, graphBuilder, ImmutableList.of(rule)));
         }
       }
@@ -696,7 +694,7 @@ public class CxxDescriptionEnhancer {
     }
   }
 
-  public static BuildRule createBuildRuleForCxxThinLtoBinary(
+  public static CxxLinkAndCompileRules createBuildRuleForCxxThinLtoBinary(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -704,7 +702,9 @@ public class CxxDescriptionEnhancer {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CommonArg args,
-      ImmutableSet<BuildTarget> extraDeps) {
+      ImmutableSet<BuildTarget> extraDeps,
+      Optional<StripStyle> stripStyle,
+      Optional<LinkerMapMode> flavoredLinkerMapMode) {
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(target, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
         parseHeaders(target, graphBuilder, Optional.of(cxxPlatform), args);
@@ -756,9 +756,10 @@ public class CxxDescriptionEnhancer {
             args.getRawHeaders(),
             args.getIncludeDirectories());
 
+    BuildTarget thinIndexTarget = target.withAppendedFlavors(CXX_LINK_THININDEX_FLAVOR);
     Path indexOutput =
         getBinaryOutputPath(
-            target, projectFilesystem, Optional.empty(), Optional.of("thinlto.indices"));
+            thinIndexTarget, projectFilesystem, Optional.empty(), Optional.of("thinlto.indices"));
 
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
     Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
@@ -782,17 +783,21 @@ public class CxxDescriptionEnhancer {
     CxxThinLTOIndex cxxThinLTOIndex =
         (CxxThinLTOIndex)
             graphBuilder.computeIfAbsent(
-                target,
+                thinIndexTarget,
                 ignored ->
                     CxxLinkableEnhancer.createCxxThinLTOIndexBuildRule(
                         cxxBuckConfig,
                         cxxPlatform,
                         projectFilesystem,
                         graphBuilder,
-                        target,
+                        thinIndexTarget,
                         indexOutput,
                         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
-                        RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
+                        Optional.empty(),
+                        RichStream.from(deps)
+                            .filter(NativeLinkableGroup.class)
+                            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                            .toImmutableList(),
                         args.getCxxRuntimeType(),
                         ImmutableSet.of(),
                         args.getLinkDepsQueryWhole()
@@ -806,10 +811,160 @@ public class CxxDescriptionEnhancer {
                             .setLibraries(args.getLibraries())
                             .build()));
 
-    return cxxThinLTOIndex;
+    ImmutableMap.Builder<String, CxxSource> srcObjects = ImmutableMap.builder();
+    // We need a map<key, val>.
+    // key is the filename of the output thin object file, with the full directory structure
+    // of the original input source. The directory structure is required to disambiguate
+    // source files with the same name.
+    // val is the sourcePath of the output of the compile phase.
+    // Example:
+    // lib/item.cpp.o -> buck-out/gen/binary/target#flavors-item.cpp.o/item.cpp.o
+    objects.entrySet().stream()
+        .forEach(
+            entry -> {
+              final CxxPreprocessAndCompile rule = entry.getKey();
+              final SourcePath path = entry.getValue();
+              final String filenameWithPath =
+                  rule.getSourceInputPath(graphBuilder.getSourcePathResolver());
+              final String outputNameWithPath =
+                  filenameWithPath + "." + cxxPlatform.getObjectFileExtension();
+
+              Preconditions.checkState(
+                  srcs.get(filenameWithPath) != null,
+                  "Requesting flags for non existent source file in ThinLTO build");
+
+              srcObjects.put(
+                  outputNameWithPath,
+                  CxxSource.of(Type.CXX_THINLINK, path, srcs.get(filenameWithPath).getFlags()));
+            });
+
+    ImmutableMap<CxxThinLTOOpt, SourcePath> nativeObjects =
+        createThinOptRulesForCxxBinary(
+            target,
+            projectFilesystem,
+            graphBuilder,
+            cellRoots,
+            cxxBuckConfig,
+            cxxPlatform,
+            srcObjects.build(),
+            args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+            linkOptions,
+            args.getCompilerFlags(),
+            args.getLangCompilerFlags(),
+            args.getPlatformCompilerFlags(),
+            args.getLangPlatformCompilerFlags(),
+            args.getPrefixHeader(),
+            args.getPrecompiledHeader(),
+            cxxThinLTOIndex.getSourcePathToOutput());
+
+    Path linkOutput =
+        getBinaryOutputPath(
+            flavoredLinkerMapMode.isPresent()
+                ? target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor())
+                : target,
+            projectFilesystem,
+            cxxPlatform.getBinaryExtension(),
+            args.getExecutableName());
+
+    ImmutableList<Arg> linkArgs =
+        createLinkArgsForCxxBinary(
+            target,
+            projectFilesystem,
+            graphBuilder,
+            cellRoots,
+            cxxPlatform,
+            nativeObjects,
+            deps,
+            executableBuilder,
+            linker,
+            args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+            indexOutput,
+            args.getLinkerFlags(),
+            args.getPlatformLinkerFlags());
+
+    BuildTarget linkRuleTarget = createCxxLinkTarget(target, flavoredLinkerMapMode);
+
+    CxxLink cxxLink =
+        (CxxLink)
+            graphBuilder.computeIfAbsent(
+                linkRuleTarget,
+                ignored ->
+                    // Generate the final link rule.  We use the top-level target as the link rule's
+                    // target, so that it corresponds to the actual binary we build.
+                    CxxLinkableEnhancer.createCxxLinkableBuildRule(
+                        cxxBuckConfig,
+                        cxxPlatform,
+                        projectFilesystem,
+                        graphBuilder,
+                        linkRuleTarget,
+                        Linker.LinkType.EXECUTABLE,
+                        Optional.empty(),
+                        linkOutput,
+                        args.getLinkerExtraOutputs(),
+                        args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+                        Optional.empty(),
+                        CxxLinkOptions.of(
+                            args.getThinLto(),
+                            args.getFatLto()
+                            ),
+                        RichStream.from(deps)
+                            .filter(NativeLinkableGroup.class)
+                            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                            .toImmutableList(),
+                        args.getCxxRuntimeType(),
+                        Optional.empty(),
+                        ImmutableSet.of(),
+                        args.getLinkDepsQueryWhole()
+                            ? RichStream.from(depQueryDeps)
+                                .map(BuildRule::getBuildTarget)
+                                .toImmutableSet()
+                            : ImmutableSet.of(),
+                        NativeLinkableInput.builder()
+                            .setArgs(linkArgs)
+                            .setFrameworks(args.getFrameworks())
+                            .setLibraries(args.getLibraries())
+                            .build(),
+                        Optional.empty(),
+                        cellRoots));
+
+    BuildRule binaryRuleForExecutable;
+    Optional<CxxStrip> cxxStrip = Optional.empty();
+    if (stripStyle.isPresent()) {
+      BuildTarget cxxTarget = target;
+      if (flavoredLinkerMapMode.isPresent()) {
+        cxxTarget = cxxTarget.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor());
+      }
+      CxxStrip stripRule =
+          createCxxStripRule(
+              cxxTarget,
+              projectFilesystem,
+              graphBuilder,
+              stripStyle.get(),
+              cxxBuckConfig.shouldCacheStrip(),
+              cxxLink,
+              cxxPlatform,
+              args.getExecutableName());
+      cxxStrip = Optional.of(stripRule);
+      binaryRuleForExecutable = stripRule;
+    } else {
+      binaryRuleForExecutable = cxxLink;
+    }
+
+    SourcePath sourcePathToExecutable = binaryRuleForExecutable.getSourcePathToOutput();
+
+    // Add the output of the link as the lone argument needed to invoke this binary as a tool.
+    executableBuilder.addArg(SourcePathArg.of(sourcePathToExecutable));
+
+    return new CxxLinkAndCompileRules(
+        cxxLink,
+        cxxStrip,
+        ImmutableSortedSet.copyOf(objects.keySet()),
+        executableBuilder.build(),
+        deps);
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
+      TargetGraph targetGraph,
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -845,6 +1000,10 @@ public class CxxDescriptionEnhancer {
             args.getThinLto(),
             args.getFatLto()
             );
+
+    Optional<LinkableListFilter> linkableListFilter =
+        LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph);
+
     return createBuildRulesForCxxBinary(
         target,
         projectFilesystem,
@@ -861,6 +1020,7 @@ public class CxxDescriptionEnhancer {
         stripStyle,
         flavoredLinkerMapMode,
         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+        linkableListFilter,
         linkOptions,
         args.getPreprocessorFlags(),
         args.getPlatformPreprocessorFlags(),
@@ -889,7 +1049,7 @@ public class CxxDescriptionEnhancer {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
-      ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects,
+      ImmutableMap<? extends CxxIntermediateBuildProduct, SourcePath> objects,
       SortedSet<BuildRule> deps,
       CommandTool.Builder executableBuilder,
       Linker linker,
@@ -959,6 +1119,94 @@ public class CxxDescriptionEnhancer {
     return argsBuilder.build();
   }
 
+  // Generate and add all the build rules to preprocess and compile the source to the
+  // graphBuilder and get the `SourcePath`s representing the generated object files.
+  private static PicType createPicTypeForCxxBinary(
+      CxxPlatform cxxPlatform, LinkableDepType linkStyle) {
+    return linkStyle == Linker.LinkableDepType.STATIC
+        ? PicType.PDC
+        : cxxPlatform.getPicTypeForSharedLinking();
+  }
+
+  private static ImmutableListMultimap<CxxSource.Type, Arg> createCompilerFlagsForCxxBinary(
+      BuildTarget target,
+      CellPathResolver cellRoots,
+      ActionGraphBuilder graphBuilder,
+      CxxLinkOptions linkOptions,
+      CxxPlatform cxxPlatform,
+      ImmutableList<StringWithMacros> compilerFlags,
+      ImmutableMap<Type, ImmutableList<StringWithMacros>> langCompilerFlags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformCompilerFlags,
+      ImmutableMap<Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+          langPlatformCompilerFlags) {
+    StringWithMacrosConverter macrosConverter =
+        getStringWithMacrosArgsConverter(target, cellRoots, graphBuilder, cxxPlatform);
+    ImmutableListMultimap.Builder<CxxSource.Type, Arg> allCompilerFlagsBuilder =
+        ImmutableListMultimap.builder();
+    allCompilerFlagsBuilder.putAll(
+        Multimaps.transformValues(
+            CxxFlags.getLanguageFlagsWithMacros(
+                compilerFlags,
+                platformCompilerFlags,
+                langCompilerFlags,
+                langPlatformCompilerFlags,
+                cxxPlatform),
+            macrosConverter::convert));
+    if (linkOptions.getThinLto()) {
+      allCompilerFlagsBuilder.putAll(CxxFlags.toLanguageFlags(StringArg.from("-flto=thin")));
+    } else if (linkOptions.getFatLto()) {
+      allCompilerFlagsBuilder.putAll(CxxFlags.toLanguageFlags(StringArg.from("-flto")));
+    }
+
+    return allCompilerFlagsBuilder.build();
+  }
+
+  private static ImmutableMap<CxxThinLTOOpt, SourcePath> createThinOptRulesForCxxBinary(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
+      ImmutableMap<String, CxxSource> srcs,
+      LinkableDepType linkStyle,
+      CxxLinkOptions linkOptions,
+      ImmutableList<StringWithMacros> compilerFlags,
+      ImmutableMap<Type, ImmutableList<StringWithMacros>> langCompilerFlags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformCompilerFlags,
+      ImmutableMap<Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+          langPlatformCompilerFlags,
+      Optional<SourcePath> prefixHeader,
+      Optional<SourcePath> precompiledHeader,
+      SourcePath thinIndicesRoot) {
+    ImmutableListMultimap<CxxSource.Type, Arg> allCompilerFlags =
+        createCompilerFlagsForCxxBinary(
+            target,
+            cellRoots,
+            graphBuilder,
+            linkOptions,
+            cxxPlatform,
+            compilerFlags,
+            langCompilerFlags,
+            platformCompilerFlags,
+            langPlatformCompilerFlags);
+    PicType pic = createPicTypeForCxxBinary(cxxPlatform, linkStyle);
+
+    return CxxSourceRuleFactory.of(
+            projectFilesystem,
+            target,
+            graphBuilder,
+            graphBuilder.getSourcePathResolver(),
+            cxxBuckConfig,
+            cxxPlatform,
+            ImmutableList.of(),
+            allCompilerFlags,
+            prefixHeader,
+            precompiledHeader,
+            pic)
+        .requireThinOptRules(srcs, thinIndicesRoot);
+  }
+
   private static ImmutableMap<CxxPreprocessAndCompile, SourcePath> createCompileRulesForCxxBinary(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
@@ -989,6 +1237,19 @@ public class CxxDescriptionEnhancer {
     StringWithMacrosConverter macrosConverter =
         getStringWithMacrosArgsConverter(target, cellRoots, graphBuilder, cxxPlatform);
 
+    ImmutableListMultimap<CxxSource.Type, Arg> allCompilerFlags =
+        createCompilerFlagsForCxxBinary(
+            target,
+            cellRoots,
+            graphBuilder,
+            linkOptions,
+            cxxPlatform,
+            compilerFlags,
+            langCompilerFlags,
+            platformCompilerFlags,
+            langPlatformCompilerFlags);
+    PicType pic = createPicTypeForCxxBinary(cxxPlatform, linkStyle);
+
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
     boolean shouldCreatePrivateHeadersSymlinks = cxxBuckConfig.getPrivateHeadersSymlinksEnabled();
@@ -1018,7 +1279,7 @@ public class CxxDescriptionEnhancer {
                     macrosConverter::convert)),
             ImmutableList.of(headerSymlinkTree),
             frameworks,
-            CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
                 cxxPlatform,
                 graphBuilder,
                 RichStream.from(deps)
@@ -1028,30 +1289,6 @@ public class CxxDescriptionEnhancer {
             includeDirectories,
             projectFilesystem);
 
-    ImmutableListMultimap.Builder<CxxSource.Type, Arg> allCompilerFlagsBuilder =
-        ImmutableListMultimap.builder();
-    allCompilerFlagsBuilder.putAll(
-        Multimaps.transformValues(
-            CxxFlags.getLanguageFlagsWithMacros(
-                compilerFlags,
-                platformCompilerFlags,
-                langCompilerFlags,
-                langPlatformCompilerFlags,
-                cxxPlatform),
-            macrosConverter::convert));
-    if (linkOptions.getThinLto()) {
-      allCompilerFlagsBuilder.putAll(CxxFlags.toLanguageFlags(StringArg.from("-flto=thin")));
-    } else if (linkOptions.getFatLto()) {
-      allCompilerFlagsBuilder.putAll(CxxFlags.toLanguageFlags(StringArg.from("-flto")));
-    }
-    ImmutableListMultimap<CxxSource.Type, Arg> allCompilerFlags = allCompilerFlagsBuilder.build();
-
-    // Generate and add all the build rules to preprocess and compile the source to the
-    // graphBuilder and get the `SourcePath`s representing the generated object files.
-    PicType pic =
-        linkStyle == Linker.LinkableDepType.STATIC
-            ? PicType.PDC
-            : cxxPlatform.getPicTypeForSharedLinking();
     return CxxSourceRuleFactory.of(
             projectFilesystem,
             target,
@@ -1081,6 +1318,7 @@ public class CxxDescriptionEnhancer {
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode,
       LinkableDepType linkStyle,
+      Optional<LinkableListFilter> linkableListFilter,
       CxxLinkOptions linkOptions,
       ImmutableList<StringWithMacros> preprocessorFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformPreprocessorFlags,
@@ -1182,8 +1420,12 @@ public class CxxDescriptionEnhancer {
                         linkOutput,
                         linkerExtraOutputs,
                         linkStyle,
+                        linkableListFilter,
                         linkOptions,
-                        RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
+                        RichStream.from(deps)
+                            .filter(NativeLinkableGroup.class)
+                            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                            .toImmutableList(),
                         cxxRuntimeType,
                         Optional.empty(),
                         ImmutableSet.of(),
@@ -1382,22 +1624,21 @@ public class CxxDescriptionEnhancer {
     Path symlinkTreeRoot =
         getSharedLibrarySymlinkTreePath(filesystem, baseBuildTarget, cxxPlatform.getFlavor());
 
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(deps, passthrough);
     ImmutableSortedMap<String, SourcePath> libraries =
         NativeLinkables.getTransitiveSharedLibraries(
-            cxxPlatform, graphBuilder, deps, passthrough, false);
+            graphBuilder,
+            Iterables.transform(
+                roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
+            false);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
       links.put(Paths.get(ent.getKey()), ent.getValue());
     }
     return new SymlinkTree(
-        "cxx_binary",
-        symlinkTreeTarget,
-        filesystem,
-        symlinkTreeRoot,
-        links.build(),
-        ImmutableMultimap.of(),
-        graphBuilder);
+        "cxx_binary", symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
   }
 
   public static SymlinkTree requireSharedLibrarySymlinkTree(
@@ -1445,9 +1686,14 @@ public class CxxDescriptionEnhancer {
         getBinaryWithSharedLibrariesSymlinkTreePath(
             filesystem, baseBuildTarget, cxxPlatform.getFlavor());
 
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(deps, n -> Optional.empty());
     ImmutableSortedMap<String, SourcePath> libraries =
         NativeLinkables.getTransitiveSharedLibraries(
-            cxxPlatform, graphBuilder, deps, n -> Optional.empty(), false);
+            graphBuilder,
+            Iterables.transform(
+                roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
+            false);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
@@ -1455,13 +1701,7 @@ public class CxxDescriptionEnhancer {
     }
     links.put(binaryName, binarySource);
     return new SymlinkTree(
-        "cxx_binary",
-        symlinkTreeTarget,
-        filesystem,
-        symlinkTreeRoot,
-        links.build(),
-        ImmutableMultimap.of(),
-        graphBuilder);
+        "cxx_binary", symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
   }
 
   private static SymlinkTree requireBinaryWithSharedLibrariesSymlinkTree(

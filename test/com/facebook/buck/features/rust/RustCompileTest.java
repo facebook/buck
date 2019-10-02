@@ -41,8 +41,10 @@ import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.hamcrest.Matchers;
@@ -95,6 +97,19 @@ public class RustCompileTest {
     assertEquals(
         "i386-apple-ios",
         RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("iphonesimulator-i386")));
+
+    assertEquals(
+        "aarch64-linux-android",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-arm64")));
+    assertEquals(
+        "armv7-linux-androideabi",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-armv7")));
+    assertEquals(
+        "x86_64-linux-android",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-x86_64")));
+    assertEquals(
+        "i686-linux-android",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-i386")));
   }
 
   private static Tool fakeTool() {
@@ -226,9 +241,14 @@ public class RustCompileTest {
           /* depArgs */ ImmutableList.of(),
           /* linkerFlags */
           ImmutableList.of(),
-          srcs,
+          ImmutableSortedMap.of(),
+          srcs.stream()
+              .collect(
+                  ImmutableSortedMap.toImmutableSortedMap(
+                      Comparator.naturalOrder(), src -> src, src -> Optional.empty())),
           rootModule,
-          RustBuckConfig.RemapSrcPaths.NO);
+          RustBuckConfig.RemapSrcPaths.NO,
+          Optional.empty());
     }
 
     static FakeRustCompileRule from(String target, ImmutableSortedSet<SourcePath> srcs) {

@@ -115,7 +115,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             .collect(ImmutableList.toImmutableList());
 
     Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+        CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
             platform.getCxxPlatform(), graphBuilder, cxxDepsRules);
 
     PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
@@ -146,8 +146,10 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
     for (SourceWithFlags srcWithFlags : args.getSrcs()) {
       SourcePath pth = srcWithFlags.getSourcePath();
       String ext = Files.getFileExtension(pathResolver.getAbsolutePath(pth).toString());
+      Optional<CxxSource.Type> srcType = CxxSource.Type.fromExtension(ext);
 
-      if (CxxSource.Type.fromExtension(ext).equals(Optional.of(CxxSource.Type.C))) {
+      if (srcType.equals(Optional.of(CxxSource.Type.C))
+          || srcType.equals(Optional.of(CxxSource.Type.CXX))) {
         cxxSourcesFromArg.add(pth);
       } else if (ext.equals("go")) {
         goSourcesFromArg.add(pth);
@@ -381,6 +383,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             Optional.empty(),
             Optional.empty(),
             args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
+            Optional.empty(),
             CxxLinkOptions.of(),
             args.getPreprocessorFlags(),
             args.getPlatformPreprocessorFlags(),

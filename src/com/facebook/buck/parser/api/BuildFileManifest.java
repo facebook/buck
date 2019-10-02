@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.api;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.parser.exceptions.ParsingError;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -58,4 +59,13 @@ public abstract class BuildFileManifest implements ComputeResult {
   @Value.Parameter
   @JsonProperty("globManifest")
   public abstract ImmutableList<GlobSpecWithResult> getGlobManifest();
+
+  /**
+   * @return A list of fatal errors occurred during parsing a build file, i.e. errors that might
+   *     render manifest incomplete. It is up for the parser to decide if still wants to fill this
+   *     object with unaffected targets
+   */
+  @Value.Parameter
+  @JsonProperty("errors")
+  public abstract ImmutableList<ParsingError> getErrors();
 }

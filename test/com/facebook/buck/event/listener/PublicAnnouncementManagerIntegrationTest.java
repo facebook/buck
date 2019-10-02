@@ -52,7 +52,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -129,9 +128,10 @@ public class PublicAnnouncementManagerIntegrationTest {
                   ImmutableMap.of(
                       "log",
                       ImmutableMap.of(
-                          "slb_server_pool", "http://localhost:" + httpd.getRootUri().getPort()),
-                      "cache",
-                      ImmutableMap.of("repository", REPOSITORY)))
+                          "slb_server_pool",
+                          "http://localhost:" + httpd.getRootUri().getPort(),
+                          "repository",
+                          REPOSITORY)))
               .build();
 
       TestConsole console = new TestConsole();
@@ -144,7 +144,6 @@ public class PublicAnnouncementManagerIntegrationTest {
               executionEnvironment,
               Locale.US,
               logPath,
-              TimeZone.getTimeZone("UTC"),
               new BuildId("1234-5679"),
               false,
               Optional.empty(),

@@ -1,6 +1,8 @@
 java_library(
     name = "version",
     srcs = glob(["*.java"]),
+    source = "8",
+    target = "8",
     visibility = [
         "PUBLIC",
     ],

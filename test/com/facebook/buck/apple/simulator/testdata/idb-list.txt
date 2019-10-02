@@ -1,0 +1,35 @@
+{"name": "iPhone", "udid": "", "state": "Booted", "type": "device", "os_version": "iOS 12.4", "architecture": "arm64", "host": "", "port": 0, "is_local": false}
+{"name": "Apple Watch Series 2 - 38mm", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "watchOS 5.2", "architecture": "i386", "host": "", "port": 0, "is_local": false}
+{"name": "Apple Watch Series 2 - 42mm", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "watchOS 5.2", "architecture": "i386", "host": "", "port": 0, "is_local": false}
+{"name": "Apple Watch Series 3 - 38mm", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "watchOS 5.2", "architecture": "i386", "host": "", "port": 0, "is_local": false}
+{"name": "Apple Watch Series 3 - 42mm", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "watchOS 5.2", "architecture": "i386", "host": "", "port": 0, "is_local": false}
+{"name": "Apple Watch Series 4 - 40mm", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "watchOS 5.2", "architecture": "i386", "host": "", "port": 0, "is_local": false}
+{"name": "Apple Watch Series 4 - 44mm", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "watchOS 5.2", "architecture": "i386", "host": "", "port": 0, "is_local": false}
+{"name": "iPad Air (3rd generation)", "udid": "", "state": "Booted", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone 5s", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone 6", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone 6 Plus", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone 6s", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone 6s Plus", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone 7", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone 7 Plus", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone 8", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone 8 Plus", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone SE", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone X", "udid": "DF85F9BE-70D1-4706-B95F-58CD25986051", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.4", "architecture": "x86_64"}
+{"name": "iPhone Xs", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone Xs Max", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone X\u0280", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPad (5th generation)", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPad (6th generation)", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPad Air", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPad Air 2", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPad Pro (10.5-inch)", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPad Pro (11-inch)", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPad Pro (12.9-inch)", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPad Pro (12.9-inch) (2nd generation)", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPad Pro (12.9-inch) (3rd generation)", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPad Pro (9.7-inch)", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "Apple TV", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "tvOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "Apple TV 4K", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "tvOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "Apple TV 4K (at 1080p)", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "tvOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}

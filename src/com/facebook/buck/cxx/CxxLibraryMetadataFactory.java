@@ -79,7 +79,7 @@ public class CxxLibraryMetadataFactory {
                                     .withAppendedFlavors(
                                         CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
                                         mode.getFlavor())),
-                        CxxPreprocessables.IncludeType.LOCAL));
+                        args.getExportedHeaderStyle()));
           }
           return symlinkTree.map(metadataClass::cast);
         }
@@ -173,7 +173,7 @@ public class CxxLibraryMetadataFactory {
                                   CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
                                   platform.getKey()));
               cxxPreprocessorInputBuilder.addIncludes(
-                  CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
+                  CxxSymlinkTreeHeaders.from(symlinkTree, args.getExportedHeaderStyle()));
             }
 
             if (!args.getRawHeaders().isEmpty()) {

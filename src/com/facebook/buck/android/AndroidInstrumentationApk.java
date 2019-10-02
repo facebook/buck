@@ -25,7 +25,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
@@ -58,7 +57,6 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       AndroidBinary apkUnderTest,
-      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
@@ -85,7 +83,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getCpuFilters(),
         apkUnderTest.getResourceFilter(),
         EnumSet.noneOf(ExopackageMode.class),
-        rulesToExcludeFromDex,
+        ImmutableSet::of,
         enhancementResult,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         false,

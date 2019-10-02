@@ -20,12 +20,15 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.cell.CellNameResolver;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.InvalidCellOverrideException;
+import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -69,6 +72,10 @@ public class LocalCellProviderFactory {
     }
 
     ImmutableSet<Path> allRoots = ImmutableSet.copyOf(cellPathMapping.values());
+
+    NewCellPathResolver newCellPathResolver =
+        CellMappingsFactory.create(rootFilesystem.getRootPath(), rootConfig.getConfig());
+
     return new CellProvider(
         cellProvider ->
             new CacheLoader<Path, Cell>() {
@@ -94,7 +101,8 @@ public class LocalCellProviderFactory {
                 // The cell should only contain a subset of cell mappings of the root cell.
                 cellMapping.forEach(
                     (name, path) -> {
-                      Path pathInRootResolver = rootCellCellPathResolver.getCellPaths().get(name);
+                      Path pathInRootResolver =
+                          rootCellCellPathResolver.getCellPathsByRootCellExternalName().get(name);
                       if (pathInRootResolver == null) {
                         throw new HumanReadableException(
                             "In the config of %s:  %s.%s must exist in the root cell's cell mappings.",
@@ -112,22 +120,27 @@ public class LocalCellProviderFactory {
                             path);
                       }
                     });
+                CellNameResolver cellNameResolver =
+                    CellMappingsFactory.createCellNameResolver(
+                        cellPath, config, newCellPathResolver);
 
                 CellPathResolver cellPathResolver =
                     new CellPathResolverView(
-                        rootCellCellPathResolver, cellMapping.keySet(), cellPath);
+                        rootCellCellPathResolver, cellNameResolver, cellMapping.keySet(), cellPath);
 
                 Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo = Optional.empty();
-                Optional<String> canonicalCellName =
-                    cellPathResolver.getCanonicalCellName(normalizedCellPath);
+                CanonicalCellName canonicalCellName =
+                    cellPathResolver
+                        .getNewCellPathResolver()
+                        .getCanonicalCellName(normalizedCellPath);
                 if (rootConfig.getView(BuildBuckConfig.class).isEmbeddedCellBuckOutEnabled()
-                    && canonicalCellName.isPresent()) {
+                    && canonicalCellName.getLegacyName().isPresent()) {
                   embeddedCellBuckOutInfo =
                       Optional.of(
                           EmbeddedCellBuckOutInfo.of(
                               rootFilesystem.resolve(rootFilesystem.getRootPath()),
                               rootFilesystem.getBuckPaths(),
-                              canonicalCellName.get()));
+                              canonicalCellName.getName()));
                 }
                 ProjectFilesystem cellFilesystem =
                     projectFilesystemFactory.createProjectFilesystem(
@@ -160,12 +173,15 @@ public class LocalCellProviderFactory {
                     buckConfig,
                     cellProvider,
                     toolchainProvider,
-                    cellPathResolver);
+                    cellPathResolver,
+                    newCellPathResolver,
+                    cellNameResolver);
               }
             },
         cellProvider ->
             RootCellFactory.create(
                 cellProvider,
+                newCellPathResolver,
                 rootCellCellPathResolver,
                 toolchainProviderFactory,
                 rootFilesystem,

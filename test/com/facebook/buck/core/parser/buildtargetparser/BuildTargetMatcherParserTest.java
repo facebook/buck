@@ -22,7 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellPathResolverView;
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.TestCellNameResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -31,6 +32,7 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.FileSystem;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Rule;
@@ -99,16 +101,16 @@ public class BuildTargetMatcherParserTest {
 
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     CellPathResolver cellNames =
-        DefaultCellPathResolver.of(
-            filesystem.getPath("foo/root"),
-            ImmutableMap.of("other", filesystem.getPath("foo/other")));
+        TestCellPathResolver.create(
+            filesystem.resolve("foo/root"),
+            ImmutableMap.of("other", filesystem.getPath("../other")));
 
     assertEquals(
-        SingletonBuildTargetMatcher.of(filesystem.getPath("foo/other"), "//:something"),
+        SingletonBuildTargetMatcher.of(filesystem.resolve("foo/other"), "//:something"),
         buildTargetPatternParser.parse(cellNames, "other//:something"));
     assertEquals(
         SubdirectoryBuildTargetMatcher.of(
-            filesystem.getPath("foo/other"), filesystem.getPath("sub")),
+            filesystem.resolve("foo/other"), filesystem.getPath("sub")),
         buildTargetPatternParser.parse(cellNames, "other//sub/..."));
   }
 
@@ -119,14 +121,17 @@ public class BuildTargetMatcherParserTest {
 
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     CellPathResolver rootCellPathResolver =
-        DefaultCellPathResolver.of(
-            filesystem.getPath("root").normalize(),
+        TestCellPathResolver.create(
+            filesystem.resolve("root").normalize(),
             ImmutableMap.of(
-                "other", filesystem.getPath("other").normalize(),
-                "root", filesystem.getPath("root").normalize()));
+                "other", filesystem.getPath("../other").normalize(),
+                "root", filesystem.getPath("../root").normalize()));
     CellPathResolver otherCellPathResolver =
         new CellPathResolverView(
-            rootCellPathResolver, ImmutableSet.of("root"), filesystem.getPath("other").normalize());
+            rootCellPathResolver,
+            TestCellNameResolver.forSecondary("other", Optional.of("root")),
+            ImmutableSet.of("root"),
+            filesystem.resolve("other").normalize());
     UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
         new ParsingUnconfiguredBuildTargetViewFactory();
 
@@ -190,7 +195,7 @@ public class BuildTargetMatcherParserTest {
 
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     CellPathResolver rootCellPathResolver =
-        DefaultCellPathResolver.of(
+        TestCellPathResolver.create(
             filesystem.getPath("root").normalize(),
             ImmutableMap.of("localreponame", filesystem.getPath("localrepo").normalize()));
 

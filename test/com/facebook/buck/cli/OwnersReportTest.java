@@ -43,9 +43,9 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.TestPerBuildStateFactory;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.CloseableResource;
@@ -53,6 +53,7 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Function;
@@ -107,6 +108,7 @@ public class OwnersReportTest {
               filesystem,
               buildTarget,
               ImmutableSet.of(),
+              ImmutableSortedSet.of(),
               ImmutableSet.of(),
               ImmutableSet.of(),
               createCellRoots(filesystem));

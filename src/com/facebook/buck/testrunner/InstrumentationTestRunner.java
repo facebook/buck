@@ -24,22 +24,14 @@ import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.math.BigInteger;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class InstrumentationTestRunner {
@@ -240,13 +232,8 @@ public class InstrumentationTestRunner {
     if (this.instrumentationApkPath != null) {
       DdmPreferences.setTimeOut(60000);
       device.installPackage(this.instrumentationApkPath, true);
-      if (this.apkUnderTestPath != null
-          && !isApkAlreadyInstalled(device, this.apkUnderTestPath, this.targetPackageName)) {
-        String remoteFilePath = device.syncPackageToDevice(this.apkUnderTestPath);
-        if (!isApkAlreadyInstalled(device, this.apkUnderTestPath, this.targetPackageName)) {
-          device.installRemotePackage(remoteFilePath, true);
-        }
-        device.removeRemotePackage(remoteFilePath);
+      if (this.apkUnderTestPath != null) {
+        device.installPackage(this.apkUnderTestPath, true);
       }
     }
 
@@ -409,107 +396,4 @@ public class InstrumentationTestRunner {
 
   /** We minimize external dependencies, but we'd like to have {@link javax.annotation.Nullable}. */
   @interface Nullable {}
-
-  private static boolean isApkAlreadyInstalled(
-      IDevice device, String apkPath, String apkPackageName) throws Exception {
-    final ApkLocationReceiver apkLocationReceiver = new ApkLocationReceiver();
-    device.executeShellCommand(
-        String.format("pm path \"%1$s\"", apkPackageName), apkLocationReceiver);
-    final String apk = apkLocationReceiver.getApkLocation();
-    if (apk.isEmpty()) {
-      return false;
-    }
-
-    final Md5SumReceiver md5SumReceiver = new Md5SumReceiver(apk);
-    device.executeShellCommand(String.format("md5sum \"%1$s\"", apk), md5SumReceiver);
-    final String remoteMd5 = md5SumReceiver.getMd5Sum();
-    final String localMd5 = getMd5Hash(apkPath);
-
-    return remoteMd5.equals(localMd5);
-  }
-
-  /** * Gets the md5 hash of an APK */
-  private static String getMd5Hash(String apkPath) {
-    String digestStr;
-    try {
-      File libFile = new File(apkPath);
-      MessageDigest digest = MessageDigest.getInstance("MD5");
-      try (InputStream libInStream = new FileInputStream(libFile)) {
-        byte[] buffer = new byte[4096];
-        int bytesRead;
-        while ((bytesRead = libInStream.read(buffer)) > 0) {
-          digest.update(buffer, 0, bytesRead);
-        }
-        digestStr = String.format("%32x", new BigInteger(1, digest.digest()));
-      }
-    } catch (IOException e) {
-      digestStr = e.toString();
-    } catch (SecurityException e) {
-      digestStr = e.toString();
-    } catch (NoSuchAlgorithmException e) {
-      digestStr = e.toString();
-    }
-
-    return digestStr;
-  }
-
-  /** Class for receiving the result of a query to determine if an apk is installed. */
-  static final class ApkLocationReceiver extends MultiLineReceiver {
-    private static final Pattern PATTERN = Pattern.compile("package:([\\S]+)");
-
-    private String mApkLocation = "";
-
-    public ApkLocationReceiver() {}
-
-    @Override
-    public void processNewLines(String[] lines) {
-      for (String line : lines) {
-        Matcher matcher = PATTERN.matcher(line);
-        if (matcher.matches()) {
-          mApkLocation = matcher.group(1);
-        }
-      }
-    }
-
-    @Override
-    public boolean isCancelled() {
-      return false;
-    }
-
-    public String getApkLocation() {
-      return mApkLocation;
-    }
-  }
-
-  /** Class for receiving the result of an md5sum shell command. */
-  static final class Md5SumReceiver extends MultiLineReceiver {
-    private final String mPackageToCheck;
-    private final Pattern mPattern;
-
-    private String mHash = "";
-
-    public Md5SumReceiver(String packageToCheck) {
-      mPackageToCheck = packageToCheck;
-      mPattern = Pattern.compile("([\\da-fA-F]+)[\\s]+" + mPackageToCheck);
-    }
-
-    @Override
-    public void processNewLines(String[] lines) {
-      for (String line : lines) {
-        Matcher matcher = mPattern.matcher(line);
-        if (matcher.matches()) {
-          mHash = matcher.group(1);
-        }
-      }
-    }
-
-    @Override
-    public boolean isCancelled() {
-      return false;
-    }
-
-    public String getMd5Sum() {
-      return mHash;
-    }
-  }
 }

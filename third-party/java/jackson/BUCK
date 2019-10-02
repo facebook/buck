@@ -80,3 +80,13 @@ prebuilt_jar(
     ],
     source_jar = "jackson-databind-2.9.7-sources.jar",
 )
+
+prebuilt_jar(
+    name = "jackson-module-kotlin",
+    binary_jar = "jackson-module-kotlin-2.9.9.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "jackson-module-kotlin-2.9.9-sources.jar",
+    visibility = ["PUBLIC"],
+)

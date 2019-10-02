@@ -16,7 +16,6 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -43,13 +42,6 @@ public class GenruleBuilder
             createToolchainProvider(),
             FakeBuckConfig.builder().build(),
             new NoSandboxExecutionStrategy()),
-        target);
-  }
-
-  private GenruleBuilder(BuildTarget target, BuckConfig buckConfig) {
-    super(
-        new GenruleDescription(
-            createToolchainProvider(), buckConfig, new NoSandboxExecutionStrategy()),
         target);
   }
 
@@ -135,6 +127,11 @@ public class GenruleBuilder
 
   public GenruleBuilder setNoRemote(@Nullable Boolean noRemote) {
     getArgForPopulating().setNoRemote(Optional.ofNullable(noRemote));
+    return this;
+  }
+
+  public GenruleBuilder setNeedAndroidTools(boolean needAndroidTools) {
+    getArgForPopulating().setNeedAndroidTools(needAndroidTools);
     return this;
   }
 

@@ -1,0 +1,17 @@
+{
+  "//:dummy_list_plus_select" : {
+    "buck.type" : "cxx_library",
+    "deps" : {
+      "concatable" : true,
+      "elements" : [ [ ":1" ], {
+        "selectable" : true,
+        "conditions" : {
+          ":linux" : [ ":2" ],
+          "DEFAULT" : [ ":3" ]
+        },
+        "no_match_error" : ""
+      } ]
+    },
+    "name" : "dummy_list_plus_select"
+  }
+}

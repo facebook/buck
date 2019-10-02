@@ -22,6 +22,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -128,13 +129,13 @@ public class MultiArtifactCache implements ArtifactCache {
     }
   }
 
-  private static ListenableFuture<Void> storeToCaches(
+  private static ListenableFuture<Unit> storeToCaches(
       ImmutableList<ArtifactCache> caches, ArtifactInfo info, BorrowablePath output) {
     // TODO(cjhopman): support BorrowablePath with multiple writable caches.
     if (caches.size() != 1) {
       output = BorrowablePath.notBorrowablePath(output.getPath());
     }
-    List<ListenableFuture<Void>> storeFutures = Lists.newArrayListWithExpectedSize(caches.size());
+    List<ListenableFuture<Unit>> storeFutures = Lists.newArrayListWithExpectedSize(caches.size());
     for (ArtifactCache artifactCache : caches) {
       storeFutures.add(artifactCache.store(info, output));
     }
@@ -146,12 +147,12 @@ public class MultiArtifactCache implements ArtifactCache {
 
   /** Store the artifact to all encapsulated ArtifactCaches. */
   @Override
-  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+  public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
     return storeToCaches(writableArtifactCaches, info, output);
   }
 
   @Override
-  public ListenableFuture<Void> store(ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
+  public ListenableFuture<Unit> store(ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
     if (writableArtifactCaches.size() != 1) {
       ImmutableList.Builder<Pair<ArtifactInfo, BorrowablePath>> artifactTemporaryPaths =
           ImmutableList.builderWithExpectedSize(artifacts.size());
@@ -164,7 +165,7 @@ public class MultiArtifactCache implements ArtifactCache {
       artifacts = artifactTemporaryPaths.build();
     }
 
-    List<ListenableFuture<Void>> storeFutures =
+    List<ListenableFuture<Unit>> storeFutures =
         Lists.newArrayListWithExpectedSize(writableArtifactCaches.size());
     for (ArtifactCache artifactCache : writableArtifactCaches) {
       storeFutures.add(artifactCache.store(artifacts));

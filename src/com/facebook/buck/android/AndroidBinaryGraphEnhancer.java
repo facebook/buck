@@ -79,6 +79,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -143,7 +144,8 @@ public class AndroidBinaryGraphEnhancer {
   private final String dexTool;
   private final AndroidBinaryResourcesGraphEnhancer androidBinaryResourcesGraphEnhancer;
   private final NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
-  private final ImmutableSet<JavaLibrary> rulesToExcludeFromDex;
+  private final Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex;
+  private final AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher;
 
   AndroidBinaryGraphEnhancer(
       ToolchainProvider toolchainProvider,
@@ -205,8 +207,9 @@ public class AndroidBinaryGraphEnhancer {
       String dexTool,
       Optional<Arg> postFilterResourcesCmd,
       NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
-      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
-      boolean useProtoFormat) {
+      Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,
+      boolean useProtoFormat,
+      AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher) {
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     this.androidPlatformTarget = androidPlatformTarget;
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
@@ -251,13 +254,13 @@ public class AndroidBinaryGraphEnhancer {
             nativeLibraryMergeLocalizedSymbols,
             relinkerMode,
             relinkerWhitelist,
-            apkModuleGraph);
+            apkModuleGraph,
+            androidNativeTargetConfigurationMatcher);
     this.androidBinaryResourcesGraphEnhancer =
         new AndroidBinaryResourcesGraphEnhancer(
             originalBuildTarget,
             projectFilesystem,
-            toolchainProvider.getByName(
-                AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+            androidPlatformTarget,
             graphBuilder,
             originalBuildTarget,
             ExopackageMode.enabledForResources(exopackageModes),
@@ -289,6 +292,7 @@ public class AndroidBinaryGraphEnhancer {
     this.dexTool = dexTool;
     this.javacFactory = javacFactory;
     this.javac = javacFactory.create(graphBuilder, null);
+    this.androidNativeTargetConfigurationMatcher = androidNativeTargetConfigurationMatcher;
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() {
@@ -303,7 +307,9 @@ public class AndroidBinaryGraphEnhancer {
             nativeLinkablesToExcludeGroup,
             nativeLibAssetsToExclude,
             nativeLinkablesAssetsToExcludeGroup,
-            apkModuleGraph);
+            apkModuleGraph,
+            AndroidPackageableFilterFactory.createFromConfigurationMatcher(
+                originalBuildTarget, androidNativeTargetConfigurationMatcher));
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(originalDeps), graphBuilder);
     AndroidPackageableCollection packageableCollection = collector.build();
@@ -318,6 +324,10 @@ public class AndroidBinaryGraphEnhancer {
     copyNativeLibraries.ifPresent(
         apkModuleCopyNativeLibrariesImmutableMap ->
             apkModuleCopyNativeLibrariesImmutableMap.values().forEach(graphBuilder::addToIndex));
+
+    nativeLibsEnhancementResult
+        .getCopyNativeLibrariesForSystemLibraryLoader()
+        .ifPresent(graphBuilder::addToIndex);
 
     if (nativeLibraryProguardConfigGenerator.isPresent()) {
       NativeLibraryProguardGenerator nativeLibraryProguardGenerator =
@@ -458,7 +468,7 @@ public class AndroidBinaryGraphEnhancer {
           Either.ofRight(
               createNonPredexedDexBuildable(
                   dexSplitMode,
-                  rulesToExcludeFromDex,
+                  rulesToExcludeFromDex.get(),
                   xzCompressionLevel,
                   proguardConfigs,
                   packageableCollection,
@@ -479,6 +489,8 @@ public class AndroidBinaryGraphEnhancer {
         .setClasspathEntriesToDex(classpathEntriesToDex)
         .setAPKModuleGraph(apkModuleGraph)
         .setModuleResourceApkPaths(resourcesEnhancementResult.getModuleResourceApkPaths())
+        .setCopyNativeLibrariesForSystemLibraryLoader(
+            nativeLibsEnhancementResult.getCopyNativeLibrariesForSystemLibraryLoader())
         .build();
   }
 
@@ -590,11 +602,12 @@ public class AndroidBinaryGraphEnhancer {
           new DexProducedFromJavaLibrary(
               splitJarTarget.withAppendedFlavors(dexFlavor, rtypeFlavor, getDexFlavor(dexTool)),
               projectFilesystem,
+              graphBuilder,
               androidPlatformTarget,
-              buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(prebuiltJar)),
               prebuiltJar,
               dexTool,
-              weightFactor);
+              weightFactor,
+              ImmutableSortedSet.of());
       graphBuilder.addToIndex(dexJar);
       builder.add(dexJar);
     }
@@ -647,7 +660,7 @@ public class AndroidBinaryGraphEnhancer {
                     "int",
                     BuildConfigs.EXOPACKAGE_FLAGS,
                     String.valueOf(ExopackageMode.toBitmask(exopackageModes)))));
-    for (Map.Entry<String, BuildConfigFields> entry :
+    for (Entry<String, BuildConfigFields> entry :
         packageableCollection.getBuildConfigs().entrySet()) {
       // Merge the user-defined constants with the APK-specific overrides.
       BuildConfigFields totalBuildConfigValues =
@@ -752,15 +765,13 @@ public class AndroidBinaryGraphEnhancer {
                             && javaLibrary.isDesugarEnabled()
                             && javaLibrary.isInterfaceMethodsDesugarEnabled()
                         ? getDesugarDeps(javaLibrary, graphBuilder::getRule)
-                        : null;
-                BuildRuleParams paramsForPreDex =
-                    buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(javaLibrary));
+                        : ImmutableSortedSet.of();
 
                 return new DexProducedFromJavaLibrary(
                     preDexTarget,
                     javaLibrary.getProjectFilesystem(),
+                    graphBuilder,
                     androidPlatformTarget,
-                    paramsForPreDex,
                     javaLibrary,
                     dexTool,
                     1,
@@ -810,11 +821,10 @@ public class AndroidBinaryGraphEnhancer {
             .flatMap((javaLibrary) -> javaLibrary.getImmediateClasspaths().stream())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
-    Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths =
-        Optional.of(
-            RichStream.from(classpathEntriesToDex)
-                .concat(RichStream.of(compiledUberRDotJava.getSourcePathToOutput()))
-                .collect(ImmutableSet.toImmutableSet()));
+    ImmutableSet<SourcePath> classpathEntriesToDexSourcePaths =
+        RichStream.from(classpathEntriesToDex)
+            .concat(RichStream.of(compiledUberRDotJava.getSourcePathToOutput()))
+            .collect(ImmutableSet.toImmutableSet());
     Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
         moduleMappedClasspathEntriesToDex =
             Optional.of(

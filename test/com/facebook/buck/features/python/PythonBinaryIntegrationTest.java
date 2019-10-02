@@ -16,11 +16,11 @@
 
 package com.facebook.buck.features.python;
 
-import static com.sun.org.apache.xerces.internal.util.PropertyState.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -53,6 +53,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unarchive.Unzip;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -65,6 +66,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -158,6 +160,24 @@ public class PythonBinaryIntegrationTest {
         result.getStdout().orElse("") + result.getStderr().orElse(""),
         result.getExitCode(),
         equalTo(0));
+  }
+
+  @Test
+  public void inplaceBinariesWriteCorrectInterpreter() throws IOException {
+    assumeThat(
+        packageStyle,
+        Matchers.in(ImmutableList.of(PackageStyle.INPLACE, PackageStyle.INPLACE_LITE)));
+
+    String expectedPythonPath =
+        new PythonInterpreterFromConfig(getPythonBuckConfig(), new ExecutableFinder())
+            .getPythonInterpreterPath()
+            .toString();
+
+    Path binPath = workspace.buildAndReturnOutput("//:bin");
+    workspace.runBuckCommand("run", "//:bin").assertSuccess();
+
+    String firstLine = workspace.getProjectFileSystem().readLines(binPath).get(0);
+    assertTrue(firstLine.startsWith(String.format("#!%s", expectedPythonPath)));
   }
 
   @Test
@@ -297,7 +317,7 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void multiplePythonHomes() {
-    assumeThat(Platform.detect(), not(Matchers.is(Platform.WINDOWS)));
+    assumeThat(Platform.detect(), not(is(Platform.WINDOWS)));
     ProcessResult result =
         workspace.runBuckBuild(
             "-c",
@@ -311,13 +331,13 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void mainModuleNameIsSetProperly() {
-    assumeThat(packageStyle, not(Matchers.is(PythonBuckConfig.PackageStyle.STANDALONE)));
+    assumeThat(packageStyle, not(is(PythonBuckConfig.PackageStyle.STANDALONE)));
     workspace.runBuckCommand("run", "//:main_module_bin").assertSuccess();
   }
 
   @Test
   public void disableCachingForPackagedBinaries() throws IOException {
-    assumeThat(packageStyle, Matchers.is(PythonBuckConfig.PackageStyle.STANDALONE));
+    assumeThat(packageStyle, is(PythonBuckConfig.PackageStyle.STANDALONE));
     workspace.enableDirCache();
     workspace.runBuckBuild("-c", "python.cache_binaries=false", ":bin").assertSuccess();
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
@@ -327,7 +347,7 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void standalonePackagePrebuiltLibrariesProperly() throws IOException {
-    assumeThat(packageStyle, Matchers.is(PythonBuckConfig.PackageStyle.STANDALONE));
+    assumeThat(packageStyle, is(PythonBuckConfig.PackageStyle.STANDALONE));
 
     workspace.runBuckCommand("run", "//:main_module_with_prebuilt_dep_bin").assertSuccess();
     Path binPath =
@@ -375,9 +395,10 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void inplacePackagePrebuiltLibrariesProperly() throws IOException {
-    assumeThat(packageStyle, Matchers.is(PackageStyle.INPLACE));
+    assumeThat(packageStyle, is(PackageStyle.INPLACE));
 
-    workspace.runBuckCommand("run", "//:main_module_with_prebuilt_dep_bin").assertSuccess();
+    ProcessResult res = workspace.runBuckCommand("run", "//:main_module_with_prebuilt_dep_bin");
+    res.assertSuccess();
 
     Path linkTreeDir =
         workspace.resolve(
@@ -415,6 +436,40 @@ public class PythonBinaryIntegrationTest {
     assertThat(links, everyItem(not(endsWith(".whl"))));
   }
 
+  @Test
+  public void inplaceFailsWhenPrebuiltLibraryConflictsWithOtherInitPy() throws IOException {
+    assumeThat(packageStyle, is(PackageStyle.INPLACE));
+
+    assertThat(
+        workspace
+            .runBuckCommand("run", "//:main_module_with_prebuilt_dep_and_init_conflict_bin")
+            .assertFailure()
+            .getStderr(),
+        Matchers.matchesPattern(
+            Pattern.compile(
+                ".*Tried to link.*external_sources/__init__.py.*",
+                Pattern.MULTILINE | Pattern.DOTALL)));
+  }
+
+  @Test
+  public void inplaceFailsWhenTwoPrebuiltLibrariesConflictWithInitPy() throws IOException {
+    assumeThat(packageStyle, is(PackageStyle.INPLACE));
+
+    // Iteration order on whls not guaranteed, but we want to make sure it's the whls conflicting
+    String expected =
+        ".*Tried to link .*__whl_dep__extracted\\S+__init__.py, but "
+            + ".*__whl_dep_copy__extracted\\S+__init__.py.*|"
+            + ".*Tried to link .*__whl_dep_copy__extracted\\S+__init__.py, but "
+            + ".*__whl_dep__extracted\\S+__init__.py.*";
+
+    assertThat(
+        workspace
+            .runBuckCommand("run", "//:main_module_with_prebuilt_dep_and_whl_init_conflict_bin")
+            .assertFailure()
+            .getStderr(),
+        Matchers.matchesPattern(Pattern.compile(expected, Pattern.MULTILINE | Pattern.DOTALL)));
+  }
+
   /**
    * Test a bug where a C/C++ library that is transitively excluded by a `python_library` containing
    * native extensions (in this case, it has to be a 2nd-order dep of the `python_library`) but
@@ -423,7 +478,7 @@ public class PythonBinaryIntegrationTest {
    */
   @Test
   public void omnibusExcludedNativeLinkableRoot() {
-    assumeThat(nativeLinkStrategy, Matchers.is(NativeLinkStrategy.MERGED));
+    assumeThat(nativeLinkStrategy, is(NativeLinkStrategy.MERGED));
     workspace
         .runBuckCommand("targets", "--show-output", "//omnibus_excluded_root:bin")
         .assertSuccess();
@@ -454,7 +509,7 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void stripsPathEarlyInInplaceBinaries() throws IOException, InterruptedException {
-    assumeThat(packageStyle, Matchers.is(PackageStyle.INPLACE));
+    assumeThat(packageStyle, is(PackageStyle.INPLACE));
     Path pexPath = workspace.buildAndReturnOutput("//pathtest:pathtest");
 
     DefaultProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
@@ -470,7 +525,7 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void preloadDeps() throws IOException, InterruptedException {
-    assumeThat(packageStyle, Matchers.is(PackageStyle.INPLACE));
+    assumeThat(packageStyle, is(PackageStyle.INPLACE));
     Path pexPath = workspace.buildAndReturnOutput("//preload_deps:bin");
 
     DefaultProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
@@ -482,5 +537,59 @@ public class PythonBinaryIntegrationTest {
                 .setCommand(ImmutableList.of(pexPath.toString()))
                 .build());
     Assert.assertEquals(0, ret.getExitCode());
+  }
+
+  @Test
+  public void preloadDepsOrder() throws IOException, InterruptedException {
+    assumeThat(packageStyle, is(PackageStyle.INPLACE));
+    DefaultProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+
+    for (Pair<String, String> test :
+        ImmutableList.of(
+            new Pair<>("//preload_deps:bin_a_first", "a\n"),
+            new Pair<>("//preload_deps:bin_b_first", "b\n"))) {
+      Path pexPath = workspace.buildAndReturnOutput(test.getFirst());
+      Result ret =
+          executor.launchAndExecute(
+              ProcessExecutorParams.builder()
+                  .setDirectory(workspace.resolve("pathtest"))
+                  .setCommand(ImmutableList.of(pexPath.toString()))
+                  .build());
+      Assert.assertEquals(
+          ret.getStdout().orElse("") + ret.getStderr().orElse(""), 0, ret.getExitCode());
+      assertThat(ret.getStdout().orElse(""), equalTo(test.getSecond()));
+    }
+  }
+
+  @Test
+  public void inplaceBinaryUsesInterpreterFlags() throws IOException {
+    assumeThat(
+        packageStyle,
+        Matchers.in(ImmutableList.of(PackageStyle.INPLACE, PackageStyle.INPLACE_LITE)));
+
+    workspace.addBuckConfigLocalOption("python", "inplace_interpreter_flags", "-EsB");
+    workspace.runBuckCommand("run", "//:bin").assertSuccess();
+
+    ImmutableList<Path> pycFiles =
+        Files.find(
+                tmp.getRoot(),
+                Integer.MAX_VALUE,
+                (path, attr) -> path.getFileName().toString().endsWith(".pyc"))
+            .map(path -> tmp.getRoot().relativize(path))
+            .collect(ImmutableList.toImmutableList());
+    Assert.assertEquals(ImmutableList.of(), pycFiles);
+
+    workspace.removeBuckConfigLocalOption("python", "inplace_interpreter_flags");
+    workspace.runBuckCommand("run", "//:bin").assertSuccess();
+
+    // Fall back to using the defaults (-Es), which should write out bytecode
+    pycFiles =
+        Files.find(
+                tmp.getRoot(),
+                Integer.MAX_VALUE,
+                (path, attr) -> path.getFileName().toString().endsWith(".pyc"))
+            .map(path -> tmp.getRoot().relativize(path))
+            .collect(ImmutableList.toImmutableList());
+    Assert.assertEquals(3, pycFiles.size());
   }
 }

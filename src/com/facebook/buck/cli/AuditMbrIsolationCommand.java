@@ -208,7 +208,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
           failuresByMessageAndPackage.computeIfAbsent(
               error, ignored -> new ByPackageFailureRecorder(error));
       failuresByMessage.record(
-          buildTarget.getCell().orElse("") + "//" + buildTarget.getBaseName(),
+          buildTarget.getCell().getName() + "//" + buildTarget.getBaseName(),
           buildTarget.getFullyQualifiedName());
     }
 

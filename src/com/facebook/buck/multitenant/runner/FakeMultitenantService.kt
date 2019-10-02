@@ -16,11 +16,13 @@
 
 package com.facebook.buck.multitenant.runner
 
+import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.query.MultitenantQueryEnvironment
+import com.facebook.buck.multitenant.service.DefaultFsToBuildPackageChangeTranslator
 import com.facebook.buck.multitenant.service.FsChanges
-import com.facebook.buck.multitenant.service.FsToBuildPackageChangeTranslator
 import com.facebook.buck.multitenant.service.Index
 import com.facebook.buck.multitenant.service.IndexAppender
+import java.nio.file.Path
 
 /**
  * Note that a real implementation of the service would subscribe to new commits to the repo and use
@@ -30,13 +32,19 @@ import com.facebook.buck.multitenant.service.IndexAppender
 class FakeMultitenantService(
     private val index: Index,
     private val indexAppender: IndexAppender,
-    private val changeTranslator: FsToBuildPackageChangeTranslator
+    private val buildFileName: FsAgnosticPath,
+    private val projectRoot: Path
 ) {
     fun handleBuckQueryRequest(query: String, changes: FsChanges): List<String> {
-        val generation = indexAppender.getGeneration(changes.commit)
-                ?: throw IllegalArgumentException("commit '${changes.commit}' not indexed by service")
+        val generation = requireNotNull(indexAppender.getGeneration(changes.commit)) {
+            "commit '${changes.commit}' not indexed by service"
+        }
+        val changeTranslator = DefaultFsToBuildPackageChangeTranslator(buildFileName, projectRoot,
+            { path -> index.packageExists(generation, path) },
+            { buildPackage -> index.containsBuildPackage(generation, buildPackage) })
         val buildPackageChanges = changeTranslator.translateChanges(changes)
-        val localizedIndex = index.createIndexForGenerationWithLocalChanges(generation, buildPackageChanges)
+        val localizedIndex =
+            index.createIndexForGenerationWithLocalChanges(generation, buildPackageChanges)
         val cellToBuildFileName = mapOf("" to "BUCK")
         val env = MultitenantQueryEnvironment(localizedIndex, generation, cellToBuildFileName)
         val queryTargets = env.evaluateQuery(query)

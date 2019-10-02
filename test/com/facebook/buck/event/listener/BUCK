@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_library(
     name = "testutil",
@@ -111,8 +111,12 @@ java_library(
     ],
 )
 
-standard_java_test(
+java_test(
     name = "listener",
+    srcs = glob(
+        ["*.java"],
+    ),
+    has_immutable_types = True,
     deps = [
         "//src-gen:protobuf",
         "//src-gen:thrift",
@@ -187,9 +191,11 @@ standard_java_test(
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/shell:worker",
         "//src/com/facebook/buck/shell:worker_tool",
+        "//src/com/facebook/buck/skylark/parser:parser",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/support/bgtasks:bgtasks",
+        "//src/com/facebook/buck/support/build/report:report",
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/config:config",

@@ -24,8 +24,10 @@ import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -116,13 +118,16 @@ public class JavacStep implements Step {
         pipeline.close();
       }
     }
-    if (declaredDepsBuildResult != 0) {
+    if (declaredDepsBuildResult != StepExecutionResults.SUCCESS_EXIT_CODE) {
       returnedStderr =
           processBuildFailure(context.getBuckEventBus(), firstOrderStdout, firstOrderStderr);
     } else {
       returnedStderr = Optional.empty();
     }
-    return StepExecutionResult.of(declaredDepsBuildResult, returnedStderr);
+    return ImmutableStepExecutionResult.builder()
+        .setExitCode(declaredDepsBuildResult)
+        .setStderr(returnedStderr)
+        .build();
   }
 
   private Optional<String> processBuildFailure(

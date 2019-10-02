@@ -40,12 +40,7 @@ This rule borrows from {call buck.cxx_binary /} since C/C++ sources are being co
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call go_common.package_name_arg /}
 

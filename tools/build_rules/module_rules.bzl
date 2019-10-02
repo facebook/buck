@@ -62,15 +62,26 @@ def buck_module(
         ]),
     )
 
-    module_name = name + "-module"
+    meta_inf_name = name + "-meta-inf"
     native.genrule(
+        name = meta_inf_name,
+        out = "META-INF",
+        cmd = " ".join([
+            "mkdir $OUT && ",
+            "cp $(location :{}) $OUT/module-binary-hash.txt".format(calculate_module_hash_name),
+        ]),
+    )
+
+    module_name = name + "-module"
+    native.zip_file(
         name = module_name,
         out = "{}.jar".format(name),
-        cmd = " ".join([
-            "$(exe //py/buck/zip:append_with_copy)",
-            "$(location :{}) $OUT".format(jar_without_hash_name),
-            "META-INF/module-binary-hash.txt $(location :{})".format(calculate_module_hash_name),
-        ]),
+        srcs = [
+            ":" + meta_inf_name,
+        ],
+        zip_srcs = [
+            ":" + jar_without_hash_name,
+        ],
         visibility = [
             "//programs:bucklib",
             "//programs:calculate-buck-binary-hash",

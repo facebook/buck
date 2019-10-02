@@ -83,7 +83,8 @@ public class CxxGtestTestTest {
             "simple_success",
             "simple_failure",
             "simple_failure_with_output",
-            "simple_disabled");
+            "simple_disabled",
+            "missing_test");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
@@ -120,7 +121,8 @@ public class CxxGtestTestTest {
             ImmutableSet.of(),
             /* runTestSeparately */ false,
             /* testRuleTimeoutMs */ Optional.empty(),
-            /* maxTestOutputSize */ 100L);
+            /* maxTestOutputSize */ 100L,
+            true);
 
     for (String sample : samples) {
       Path exitCode = workspace.resolve(Paths.get(sample)).resolve("exitCode");

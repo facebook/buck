@@ -22,6 +22,19 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public interface CellPathResolver {
+
+  /**
+   * Provides access to the {@link CellNameResolver} for this cell. This is to assist in migration
+   * to the new name/path resolvers.
+   */
+  CellNameResolver getCellNameResolver();
+
+  /**
+   * Provides access to the {@link NewCellPathResolver}. This is to assist in migration to the new
+   * name/path resolvers.
+   */
+  NewCellPathResolver getNewCellPathResolver();
+
   /**
    * @param cellName name of cell, Optional.empty() for root cell.
    * @return Absolute path to the physical location of the cell, or {@code Optional.empty()} if the
@@ -42,8 +55,11 @@ public interface CellPathResolver {
    */
   Path getCellPathOrThrow(UnflavoredBuildTargetView buildTarget);
 
-  /** @return absolute paths to all cells this resolver knows about. */
-  ImmutableMap<String, Path> getCellPaths();
+  /**
+   * @return absolute paths to all cells this resolver knows about. The key is the name of the cell
+   *     in the root cell's config (this is not necessarily the canonical name).
+   */
+  ImmutableMap<String, Path> getCellPathsByRootCellExternalName();
 
   /**
    * Returns a cell name that can be used to refer to the cell at the given path.

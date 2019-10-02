@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleC
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -52,7 +53,7 @@ public class RemoteBuildRuleSynchronizer
     implements RemoteBuildRuleCompletionWaiter, RemoteBuildRuleCompletionNotifier, AutoCloseable {
   private static final Logger LOG = Logger.get(RemoteBuildRuleSynchronizer.class);
 
-  private final Map<String, SettableFuture<Void>> completionFuturesByBuildTarget = new HashMap<>();
+  private final Map<String, SettableFuture<Unit>> completionFuturesByBuildTarget = new HashMap<>();
   private final Set<String> completedRules = new HashSet<>();
   private final Set<String> startedRules = new HashSet<>();
   private final Set<String> unlockedRules = new HashSet<>();
@@ -167,7 +168,7 @@ public class RemoteBuildRuleSynchronizer
             ? cacheCheck.get()
             : Futures.transformAsync(
                 createCompletionFutureIfNotPresent(buildTarget),
-                (Void v) -> cacheCheck.get(),
+                unit -> cacheCheck.get(),
                 MoreExecutors.directExecutor());
 
     // Backoffs are disabled.
@@ -229,14 +230,14 @@ public class RemoteBuildRuleSynchronizer
         buildTarget, now - completionTimestamp, backOffNumber + 1, backOffMillis);
 
     // Register timestamped settable future for the rule.
-    SettableFuture<Void> backOffFuture = SettableFuture.create();
+    SettableFuture<Unit> backOffFuture = SettableFuture.create();
     backedOffBuildRulesWaitingForCacheSync.add(
         new TimestampedBuildRuleCacheSyncFuture(now + backOffMillis, backOffFuture));
 
     // Use 'scheduler' as executor instead of direct executor so that when
     // triggerCacheChecksForBackedOffBuildRulesWithSyncedCache() runs, it only does unlocking of
     // ready futures and doesn't execute any code of cacheCheck -> it will execute quickly.
-    return Futures.transformAsync(backOffFuture, (Void v) -> cacheCheck.get(), scheduler);
+    return Futures.transformAsync(backOffFuture, unit -> cacheCheck.get(), scheduler);
   }
 
   @Override
@@ -299,7 +300,7 @@ public class RemoteBuildRuleSynchronizer
     LOG.info("Remote build is finished. Signalling completion for all rules");
 
     // Signalling completion for all existing rules
-    for (SettableFuture<Void> completionFuture : completionFuturesByBuildTarget.values()) {
+    for (SettableFuture<Unit> completionFuture : completionFuturesByBuildTarget.values()) {
       completionFuture.set(null);
     }
 
@@ -352,7 +353,7 @@ public class RemoteBuildRuleSynchronizer
     return completionFuturesByBuildTarget.containsKey(buildTarget);
   }
 
-  private SettableFuture<Void> createCompletionFutureIfNotPresent(String buildTarget) {
+  private SettableFuture<Unit> createCompletionFutureIfNotPresent(String buildTarget) {
     if (!completionFuturesByBuildTarget.containsKey(buildTarget)) {
       completionFuturesByBuildTarget.put(buildTarget, SettableFuture.create());
     }
@@ -366,10 +367,10 @@ public class RemoteBuildRuleSynchronizer
 
   private class TimestampedBuildRuleCacheSyncFuture {
     private long timestampMillis;
-    private SettableFuture<Void> cacheSyncFuture;
+    private SettableFuture<Unit> cacheSyncFuture;
 
     public TimestampedBuildRuleCacheSyncFuture(
-        long timestampMillis, SettableFuture<Void> cacheSyncFuture) {
+        long timestampMillis, SettableFuture<Unit> cacheSyncFuture) {
       this.timestampMillis = timestampMillis;
       this.cacheSyncFuture = cacheSyncFuture;
     }

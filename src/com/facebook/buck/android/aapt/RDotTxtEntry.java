@@ -36,9 +36,29 @@ import javax.annotation.Nullable;
 public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
 
   public enum CustomDrawableType {
-    NONE,
-    CUSTOM,
-    GRAYSCALE_IMAGE,
+    NONE("") {
+      @Override
+      public String getIdentifier() {
+        throw new IllegalArgumentException(
+            String.format("'%s' does not have a custom identifier.", this));
+      }
+    },
+    CUSTOM(CUSTOM_DRAWABLE_IDENTIFIER),
+    GRAYSCALE_IMAGE(GRAYSCALE_IMAGE_IDENTIFIER);
+
+    private final String identifier;
+
+    CustomDrawableType(String identifier) {
+      this.identifier = identifier;
+    }
+
+    /**
+     * Get the string identifier (currently a single character) for the custom drawable type. Used
+     * in R.txt files to identify custom drawables.
+     */
+    public String getIdentifier() {
+      return identifier;
+    }
   }
 
   // Taken from http://developer.android.com/reference/android/R.html
@@ -104,22 +124,18 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
       };
 
   // An identifier for custom drawables.
-  public static final String CUSTOM_DRAWABLE_IDENTIFIER = "#";
-  public static final String GRAYSCALE_IMAGE_IDENTIFIER = "G";
+  private static final String CUSTOM_DRAWABLE_IDENTIFIER = "#";
+  private static final String GRAYSCALE_IMAGE_IDENTIFIER = "G";
   public static final String INT_ARRAY_SEPARATOR = ",";
-  private static final Pattern INT_ARRAY_VALUES = Pattern.compile("\\s*\\{\\s*(\\S+)?\\s*\\}\\s*");
   private static final Pattern TEXT_SYMBOLS_LINE =
       Pattern.compile(
           "(\\S+) (\\S+) (\\S+) ([^("
               + CUSTOM_DRAWABLE_IDENTIFIER
-              + "|"
               + GRAYSCALE_IMAGE_IDENTIFIER
-              + ")]+)"
-              + "( ("
+              + ")]+)( ["
               + CUSTOM_DRAWABLE_IDENTIFIER
-              + "|"
               + GRAYSCALE_IMAGE_IDENTIFIER
-              + "))?");
+              + "])?");
 
   // A symbols file may look like:
   //
@@ -198,17 +214,6 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     }
   }
 
-  public int getNumArrayValues() {
-    Preconditions.checkState(idType == IdType.INT_ARRAY);
-
-    Matcher matcher = INT_ARRAY_VALUES.matcher(idValue);
-    if (!matcher.matches() || matcher.group(1) == null) {
-      return 0;
-    }
-
-    return matcher.group(1).split(INT_ARRAY_SEPARATOR).length;
-  }
-
   public RDotTxtEntry copyWithNewIdValue(String newIdValue) {
     return new RDotTxtEntry(idType, type, name, newIdValue, customType, parent);
   }
@@ -231,7 +236,8 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     String custom = matcher.group(5);
 
     if (custom != null && custom.length() > 0) {
-      custom = matcher.group(6);
+      // Remove the leading space.
+      custom = custom.substring(1);
     }
 
     if (CUSTOM_DRAWABLE_IDENTIFIER.equals(custom)) {

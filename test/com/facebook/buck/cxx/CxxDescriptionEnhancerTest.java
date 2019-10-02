@@ -81,7 +81,7 @@ public class CxxDescriptionEnhancerTest {
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
-            CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, deps),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
@@ -152,7 +152,7 @@ public class CxxDescriptionEnhancerTest {
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
-            CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, deps),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
@@ -209,7 +209,7 @@ public class CxxDescriptionEnhancerTest {
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
-            CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, deps),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),

@@ -19,6 +19,7 @@ java_test(
         "//src/com/facebook/buck/remoteexecution/grpc/retry:retry",
         "//src/com/facebook/buck/remoteexecution/util:util",
         "//src/com/facebook/buck/util/function:function",
+        "//src/com/facebook/buck/util/types:types",
         "//test/com/facebook/buck/core/config:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/testutil:testutil",

@@ -16,9 +16,16 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.skylark.function.attr.AttributeHolder;
+import com.facebook.buck.core.rules.providers.impl.UserDefinedProvider;
+import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
+import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
+import com.facebook.buck.core.starlark.rule.attr.Attribute;
+import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
+import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.cmdline.LabelValidator;
@@ -29,6 +36,7 @@ import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -37,6 +45,13 @@ import java.util.concurrent.ExecutionException;
 public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
 
   private final LoadingCache<String, Label> labelCache;
+
+  /** The attributes that are applicable to all rules. This will expand over time. */
+  // TODO: Once list attributes are added, ensure visibility exists
+  public static ImmutableMap<String, Attribute<?>> IMPLICIT_ATTRIBUTES =
+      ImmutableMap.of(
+          "name",
+          new ImmutableStringAttribute("", "The name of the target", true, ImmutableList.of()));
 
   public SkylarkRuleFunctions(LoadingCache<String, Label> labelCache) {
     this.labelCache = labelCache;
@@ -77,6 +92,27 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
     Map<String, AttributeHolder> checkedAttributes =
         attrs.getContents(String.class, AttributeHolder.class, "attrs keyword of rule()");
 
-    return SkylarkUserDefinedRule.of(loc, implementation, checkedAttributes);
+    return SkylarkUserDefinedRule.of(loc, implementation, IMPLICIT_ATTRIBUTES, checkedAttributes);
+  }
+
+  @Override
+  public UserDefinedProvider provider(String doc, Object fields, Location location)
+      throws EvalException {
+    Iterable<String> fieldNames;
+    if (fields instanceof SkylarkList<?>) {
+      fieldNames = ((SkylarkList<?>) fields).getContents(String.class, "fields parameter");
+    } else if (fields instanceof SkylarkDict) {
+      fieldNames =
+          ((SkylarkDict<?, ?>) fields)
+              .getContents(String.class, String.class, "fields parameter")
+              .keySet();
+    } else {
+      throw new EvalException(location, "fields attribute must be either list or dict.");
+    }
+
+    for (String field : fieldNames) {
+      BuckSkylarkTypes.validateKwargName(location, field);
+    }
+    return new UserDefinedProvider(location, Iterables.toArray(fieldNames, String.class));
   }
 }

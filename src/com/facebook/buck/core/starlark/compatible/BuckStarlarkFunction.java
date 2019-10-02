@@ -30,7 +30,6 @@ import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.MethodDescriptor;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Runtime;
-import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.WrongMethodTypeException;
@@ -39,6 +38,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -63,13 +63,17 @@ public abstract class BuckStarlarkFunction
    * @param namedParams a list of named parameters for skylark. The names are mapped in order to the
    */
   public BuckStarlarkFunction(
-      String methodName, Constructor<?> constructor, List<String> namedParams) {
+      String methodName,
+      Constructor<?> constructor,
+      List<String> namedParams,
+      List<String> defaultSkylarkValues) {
     try {
       this.method = lookup.unreflectConstructor(constructor);
     } catch (IllegalAccessException e) {
       throw new IllegalStateException("Unable to access the supplied constructor", e);
     }
-    this.methodDescriptor = inferMethodDescriptor(methodName, method, namedParams);
+    this.methodDescriptor =
+        inferMethodDescriptor(methodName, method, namedParams, defaultSkylarkValues);
   }
 
   /**
@@ -82,9 +86,14 @@ public abstract class BuckStarlarkFunction
    *     end of the parameters of the actual method.
    */
   @VisibleForTesting
-  BuckStarlarkFunction(String methodName, ImmutableList<String> namedParams) throws Throwable {
+  BuckStarlarkFunction(
+      String methodName,
+      ImmutableList<String> namedParams,
+      ImmutableList<String> defaultSkylarkValues)
+      throws Throwable {
     this.method = lookup.unreflect(findMethod(methodName)).bindTo(this);
-    this.methodDescriptor = inferMethodDescriptor(methodName, method, namedParams);
+    this.methodDescriptor =
+        inferMethodDescriptor(methodName, method, namedParams, defaultSkylarkValues);
   }
 
   /**
@@ -92,7 +101,10 @@ public abstract class BuckStarlarkFunction
    * in skylark
    */
   private MethodDescriptor inferMethodDescriptor(
-      String methodName, MethodHandle method, List<String> namedParams) {
+      String methodName,
+      MethodHandle method,
+      List<String> namedParams,
+      List<String> defaultSkylarkValues) {
 
     try {
       return MethodDescriptor.of(
@@ -101,8 +113,9 @@ public abstract class BuckStarlarkFunction
                        piggy back off skylark's parameter handling. We don't actually have a
                        Method object to use in many cases (e.g. if the MethodHandle is a
                        constructor). */
-          inferSkylarkCallableAnnotationFromMethod(methodName, method, namedParams),
-          StarlarkSemantics.DEFAULT_SEMANTICS);
+          inferSkylarkCallableAnnotationFromMethod(
+              methodName, method, namedParams, defaultSkylarkValues),
+          BuckStarlark.BUCK_STARLARK_SEMANTICS);
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException();
     }
@@ -112,9 +125,14 @@ public abstract class BuckStarlarkFunction
   public Object call(
       List<Object> args,
       @Nullable Map<String, Object> kwargs,
-      FuncallExpression ast,
+      @Nullable FuncallExpression nullableAst,
       Environment env)
       throws EvalException, InterruptedException {
+
+    FuncallExpression ast =
+        Objects.requireNonNull(
+            nullableAst, "AST should not be null as this should only be called from Starlark");
+
     // this is the effectively the same as bazel's {@BuiltInCallable}
     try (SilentCloseable c =
         Profiler.instance().profile(ProfilerTask.STARLARK_BUILTIN_FN, methodDescriptor.getName())) {
@@ -202,8 +220,11 @@ public abstract class BuckStarlarkFunction
   }
 
   private SkylarkCallable inferSkylarkCallableAnnotationFromMethod(
-      String methodName, MethodHandle method, List<String> namedParams) {
-    return BuckStarlarkCallable.fromMethod(methodName, method, namedParams);
+      String methodName,
+      MethodHandle method,
+      List<String> namedParams,
+      List<String> defaultSkylarkValues) {
+    return BuckStarlarkCallable.fromMethod(methodName, method, namedParams, defaultSkylarkValues);
   }
 
   // a fake method to hand to the MethodDescriptor that this uses.

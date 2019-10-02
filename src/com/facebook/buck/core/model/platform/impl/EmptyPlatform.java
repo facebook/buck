@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.platform.impl;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * A platform that doesn't match any constraints.
@@ -25,13 +26,14 @@ import java.util.Collection;
  * <p>Note that this platform matches an empty list of constraints. The behavior of this platform is
  * equivalent to {@link ConstraintBasedPlatform} with an empty list of constraints.
  *
- * <p>Can be used in places that don't have enough information about constraints.
+ * <p>Can be used in places when some platform is needed, but {@link DefaultPlatform} does not work
+ * because it if effectively prohibits using platforms.
  */
 public class EmptyPlatform implements Platform {
 
   public static final EmptyPlatform INSTANCE = new EmptyPlatform();
 
-  private final int hashCode = EmptyPlatform.class.getName().hashCode();
+  private final int hashCode = Objects.hash(EmptyPlatform.class);
 
   private EmptyPlatform() {}
 

@@ -16,18 +16,18 @@
 
 package com.facebook.buck.doctor;
 
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.ImmutableSourceControlInfo;
-import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.ImmutableUserLocalConfiguration;
+import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigPaths;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
@@ -45,6 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -148,6 +149,7 @@ public abstract class AbstractReport {
                   Optionals.addIfPresent(input.getMachineReadableLogFile(), result);
                   Optionals.addIfPresent(input.getRuleKeyDiagKeysFile(), result);
                   Optionals.addIfPresent(input.getRuleKeyDiagGraphFile(), result);
+                  Optionals.addIfPresent(input.getConfigJsonFile(), result);
                   result.add(input.getRelativePath());
                   return result.build();
                 })
@@ -201,7 +203,8 @@ public abstract class AbstractReport {
       return ImmutableMap.of();
     }
     List<String> args = entry.getCommandArgs().get();
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    Map<String, String> configOverrides = new HashMap<>();
+
     for (int i = 0; i < args.size(); i++) {
       if (args.get(i).equals("--config") || args.get(i).equals("-c")) {
         i++;
@@ -209,10 +212,11 @@ public abstract class AbstractReport {
           break;
         }
         String[] pieces = args.get(i).split("=", 2);
-        builder.put(pieces[0], pieces.length == 2 ? pieces[1] : "");
+        // If duplicate entries exist, latter one will override previous one
+        configOverrides.put(pieces[0], pieces.length == 2 ? pieces[1] : "");
       }
     }
-    return builder.build();
+    return ImmutableMap.copyOf(configOverrides);
   }
 
   private ImmutableMap<Path, String> getLocalConfigs() {

@@ -26,14 +26,22 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -365,15 +373,83 @@ public class JavaTestIntegrationTest {
             .addAll((Iterable<String>) spec.get("required_paths"))
             .build();
     // The runtime classpath of the test should all be present in the required paths
-    assertEquals(
+    MoreAsserts.assertContainsOne(
         requiredPaths,
-        ImmutableSortedSet.of(
-            workspace
-                .getPath(Paths.get("buck-out/gen/lib__transitive_lib__output/transitive_lib.jar"))
-                .toString(),
-            workspace
-                .getPath(
-                    Paths.get("buck-out/gen/lib__mid_test#testsjar__output/mid_test#testsjar.jar"))
-                .toString()));
+        workspace
+            .getPath(Paths.get("buck-out/gen/lib__transitive_lib__output/transitive_lib.jar"))
+            .toString());
+    MoreAsserts.assertContainsOne(
+        requiredPaths,
+        workspace
+            .getPath(Paths.get("buck-out/gen/lib__mid_test#testsjar__output/mid_test#testsjar.jar"))
+            .toString());
+  }
+
+  @Test
+  public void testProtocolJavaTestRuleShouldBuildAndGenerateSpec() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "testx_rule", temp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    ProcessResult result = workspace.runBuckCommand("test", "//:some_test");
+    result.assertSuccess();
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0).get("specs");
+
+    assertEquals("spec", spec.get("my").textValue());
+
+    JsonNode other = spec.get("other");
+    assertTrue(other.isArray());
+    assertTrue(other.has(0));
+    assertEquals("stuff", other.get(0).get("complicated").textValue());
+    assertEquals(1, other.get(0).get("integer").intValue());
+    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
+
+    String cmd = spec.get("cmd").textValue();
+    DefaultProcessExecutor processExecutor =
+        new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.Result processResult =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
+    assertEquals(0, processResult.getExitCode());
+  }
+
+  @Test
+  public void testProtocolJavaTestWithJVMArgsRuleShouldBuildAndGenerateSpec() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "testx_rule", temp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    ProcessResult resultWithJVMArgs = workspace.runBuckCommand("test", "//:some_test_with_jvm");
+    resultWithJVMArgs.assertSuccess();
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0).get("specs");
+
+    assertEquals("spec", spec.get("my").textValue());
+
+    JsonNode other = spec.get("other");
+    assertTrue(other.isArray());
+    assertTrue(other.has(0));
+    assertEquals("stuff", other.get(0).get("complicated").textValue());
+    assertEquals(1, other.get(0).get("integer").intValue());
+    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
+
+    String cmd = spec.get("cmd").textValue();
+    DefaultProcessExecutor processExecutor =
+        new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.Result processResult =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
+    assertEquals(0, processResult.getExitCode());
   }
 }

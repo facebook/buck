@@ -22,6 +22,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -248,12 +249,13 @@ class XctoolRunTestsStep implements Step {
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .setEnvironment(env);
 
+    Console console = context.getConsole();
     if (!testSelectorList.isEmpty()) {
       ImmutableList.Builder<String> xctoolFilterParamsBuilder = ImmutableList.builder();
       int returnCode =
           listAndFilterTestsThenFormatXctoolParams(
               context.getProcessExecutor(),
-              context.getConsole(),
+              console,
               testSelectorList,
               // Copy the entire xctool command and environment but add a -listTestsOnly arg.
               ProcessExecutorParams.builder()
@@ -262,18 +264,16 @@ class XctoolRunTestsStep implements Step {
                   .build(),
               xctoolFilterParamsBuilder);
       if (returnCode != 0) {
-        context.getConsole().printErrorText("Failed to query tests with xctool");
+        console.printErrorText("Failed to query tests with xctool");
         return StepExecutionResult.of(returnCode);
       }
       ImmutableList<String> xctoolFilterParams = xctoolFilterParamsBuilder.build();
       if (xctoolFilterParams.isEmpty()) {
-        context
-            .getConsole()
-            .printBuildFailure(
-                String.format(
-                    Locale.US,
-                    "No tests found matching specified filter (%s)",
-                    testSelectorList.getExplanation()));
+        console.printBuildFailure(
+            String.format(
+                Locale.US,
+                "No tests found matching specified filter (%s)",
+                testSelectorList.getExplanation()));
         return StepExecutionResults.SUCCESS;
       }
       processExecutorParamsBuilder.addAllCommand(xctoolFilterParams);
@@ -292,8 +292,8 @@ class XctoolRunTestsStep implements Step {
       ProcessExecutor.LaunchedProcess launchedProcess =
           context.getProcessExecutor().launchProcess(processExecutorParams);
 
-      int exitCode = -1;
-      String stderr = "Unexpected termination";
+      int exitCode;
+      String stderr;
       try {
         ProcessStdoutReader stdoutReader = new ProcessStdoutReader(launchedProcess);
         ProcessStderrReader stderrReader = new ProcessStderrReader(launchedProcess);
@@ -317,22 +317,21 @@ class XctoolRunTestsStep implements Step {
         context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
       }
 
-      if (exitCode != 0) {
+      if (exitCode != StepExecutionResults.SUCCESS_EXIT_CODE) {
         if (!stderr.isEmpty()) {
-          context
-              .getConsole()
-              .printErrorText(
-                  String.format(
-                      Locale.US, "xctool failed with exit code %d: %s", exitCode, stderr));
+          console.printErrorText(
+              String.format(Locale.US, "xctool failed with exit code %d: %s", exitCode, stderr));
         } else {
-          context
-              .getConsole()
-              .printErrorText(
-                  String.format(Locale.US, "xctool failed with exit code %d", exitCode));
+          console.printErrorText(
+              String.format(Locale.US, "xctool failed with exit code %d", exitCode));
         }
       }
 
-      return StepExecutionResult.of(exitCode);
+      return ImmutableStepExecutionResult.builder()
+          .setExitCode(exitCode)
+          .setExecutedCommand(launchedProcess.getCommand())
+          .setStderr(Optional.ofNullable(stderr))
+          .build();
 
     } finally {
       releaseStutterLock(stutterLockIsNotified);
@@ -352,7 +351,7 @@ class XctoolRunTestsStep implements Step {
     public void run() {
       try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath);
           TeeInputStream stdoutWrapperStream =
-              new TeeInputStream(launchedProcess.getInputStream(), outputStream)) {
+              new TeeInputStream(launchedProcess.getStdout(), outputStream)) {
         if (stdoutReadingCallback.isPresent()) {
           // The caller is responsible for reading all the data, which TeeInputStream will
           // copy to outputStream.
@@ -361,7 +360,7 @@ class XctoolRunTestsStep implements Step {
           // Nobody's going to read from stdoutWrapperStream, so close it and copy
           // the process's stdout to outputPath directly.
           stdoutWrapperStream.close();
-          ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
+          ByteStreams.copy(launchedProcess.getStdout(), outputStream);
         }
       } catch (IOException e) {
         exception = Optional.of(e);
@@ -385,7 +384,7 @@ class XctoolRunTestsStep implements Step {
     @Override
     public void run() {
       try (InputStreamReader stderrReader =
-              new InputStreamReader(launchedProcess.getErrorStream(), StandardCharsets.UTF_8);
+              new InputStreamReader(launchedProcess.getStderr(), StandardCharsets.UTF_8);
           BufferedReader bufferedStderrReader = new BufferedReader(stderrReader)) {
         stderr = CharStreams.toString(bufferedStderrReader).trim();
       } catch (IOException e) {
@@ -421,10 +420,10 @@ class XctoolRunTestsStep implements Step {
     String stderr;
     int listTestsResult;
     try (InputStreamReader isr =
-            new InputStreamReader(launchedProcess.getInputStream(), StandardCharsets.UTF_8);
+            new InputStreamReader(launchedProcess.getStdout(), StandardCharsets.UTF_8);
         BufferedReader br = new BufferedReader(isr);
         InputStreamReader esr =
-            new InputStreamReader(launchedProcess.getErrorStream(), StandardCharsets.UTF_8);
+            new InputStreamReader(launchedProcess.getStderr(), StandardCharsets.UTF_8);
         BufferedReader ebr = new BufferedReader(esr)) {
       XctoolOutputParsing.streamOutputFromReader(br, listTestsOnlyHandler);
       stderr = CharStreams.toString(ebr).trim();

@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-import com.android.bundle.Config.BundleConfig;
 import com.android.common.SdkConstants;
 import com.android.common.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkCreationException;
@@ -27,7 +26,6 @@ import com.android.sdklib.build.IArchiveBuilder;
 import com.android.sdklib.build.SealedApkException;
 import com.android.tools.build.bundletool.commands.BuildBundleCommand;
 import com.android.tools.build.bundletool.model.BundleModule;
-import com.android.tools.build.bundletool.utils.files.BufferedIo;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -39,13 +37,10 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.util.JsonFormat;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -58,10 +53,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
-/**
- * Merges resources into a final Android App Bundle. This code is based off of the now deprecated
- * apkbuilder tool:
- */
+/** Merges resources into a final Android App Bundle using bundletool. */
 public class AabBuilderStep implements Step {
 
   private final ProjectFilesystem filesystem;
@@ -74,7 +66,6 @@ public class AabBuilderStep implements Step {
   private static final Pattern PATTERN_BITCODELIB_EXT =
       Pattern.compile("^.+\\.bc$", Pattern.CASE_INSENSITIVE);
   private final ImmutableSet<ModuleInfo> modulesInfo;
-  private final ImmutableSet<String> moduleNames;
 
   /**
    * @param modulesInfo A set of ModuleInfo containing information about modules to be built within
@@ -88,15 +79,23 @@ public class AabBuilderStep implements Step {
       Optional<Path> pathToBundleConfigFile,
       BuildTarget buildTarget,
       boolean debugMode,
-      ImmutableSet<ModuleInfo> modulesInfo,
-      ImmutableSet<String> moduleNames) {
+      ImmutableSet<ModuleInfo> modulesInfo) {
     this.filesystem = filesystem;
     this.pathToOutputAabFile = pathToOutputAabFile;
     this.pathToBundleConfigFile = pathToBundleConfigFile;
     this.buildTarget = buildTarget;
     this.debugMode = debugMode;
     this.modulesInfo = modulesInfo;
-    this.moduleNames = moduleNames;
+  }
+
+  private ImmutableList<Path> getModulesPaths() {
+    ImmutableList.Builder<Path> modulesPathsBuilder = new Builder<>();
+
+    for (ModuleInfo moduleInfo : modulesInfo) {
+      Path moduleGenPath = getPathForModule(moduleInfo);
+      modulesPathsBuilder.add(filesystem.getPathForRelativePath(moduleGenPath));
+    }
+    return modulesPathsBuilder.build();
   }
 
   @Override
@@ -106,51 +105,34 @@ public class AabBuilderStep implements Step {
       output = context.getStdOut();
     }
 
-    ImmutableList.Builder<Path> modulesPathsBuilder = new Builder<>();
     File fakeResApk = filesystem.createTempFile("fake", ".txt").toFile();
-    Set<String> addedFiles = new HashSet<>();
-    Set<Path> addedSourceFiles = new HashSet<>();
-
     for (ModuleInfo moduleInfo : modulesInfo) {
-      Path moduleGenPath = getPathForModule(moduleInfo);
+      Set<String> addedFiles = new HashSet<>();
+      Set<Path> addedSourceFiles = new HashSet<>();
       StepExecutionResult moduleBuildResult =
           addModule(
-              context, moduleGenPath, fakeResApk, output, moduleInfo, addedFiles, addedSourceFiles);
+              context,
+              getPathForModule(moduleInfo),
+              fakeResApk,
+              output,
+              moduleInfo,
+              addedFiles,
+              addedSourceFiles);
       if (!moduleBuildResult.isSuccess()) {
         return moduleBuildResult;
       }
-      modulesPathsBuilder.add(moduleGenPath);
     }
 
     BuildBundleCommand.Builder bundleBuilder =
         BuildBundleCommand.builder()
-            .setOutputPath(pathToOutputAabFile)
-            .setModulesPaths(modulesPathsBuilder.build());
+            .setOutputPath(filesystem.getPathForRelativePath(pathToOutputAabFile))
+            .setModulesPaths(getModulesPaths());
 
     if (pathToBundleConfigFile.isPresent()) {
-      bundleBuilder.setBundleConfig(parseBundleConfigJson(pathToBundleConfigFile.get()));
+      bundleBuilder.setBundleConfig(pathToBundleConfigFile.get());
     }
     bundleBuilder.build().execute();
     return StepExecutionResults.SUCCESS;
-  }
-
-  // To be removed when https://github.com/google/bundletool/issues/63 is fixed
-  private static BundleConfig parseBundleConfigJson(Path bundleConfigJsonPath) {
-    BundleConfig.Builder bundleConfig = BundleConfig.newBuilder();
-    try (Reader bundleConfigReader = BufferedIo.reader(bundleConfigJsonPath)) {
-      JsonFormat.parser().merge(bundleConfigReader, bundleConfig);
-    } catch (InvalidProtocolBufferException e) {
-      throw new HumanReadableException(
-          e,
-          String.format(
-              "The file '%s' is not a valid BundleConfig JSON file.", bundleConfigJsonPath));
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          e,
-          String.format(
-              "An error occurred while trying to read the file '%s'.", bundleConfigJsonPath));
-    }
-    return bundleConfig.build();
   }
 
   private void addFile(
@@ -160,6 +142,7 @@ public class AabBuilderStep implements Step {
       Set<String> addedFiles,
       Set<Path> addedSourceFiles)
       throws SealedApkException, DuplicateFileException, ApkCreationException {
+
     if (addedFiles.contains(destination) || addedSourceFiles.contains(file)) {
       return;
     }
@@ -188,7 +171,13 @@ public class AabBuilderStep implements Step {
 
     try {
       ApkBuilder moduleBuilder =
-          new ApkBuilder(moduleGenPath.toFile(), fakeResApk, null, null, null, verboseStream);
+          new ApkBuilder(
+              filesystem.getPathForRelativePath(moduleGenPath).toFile(),
+              filesystem.getPathForRelativePath(fakeResApk.getPath()).toFile(),
+              null,
+              null,
+              null,
+              verboseStream);
       addModuleFiles(moduleBuilder, moduleInfo, addedFiles, addedSourceFiles);
       // Build the APK
       moduleBuilder.sealApk();
@@ -214,23 +203,12 @@ public class AabBuilderStep implements Step {
     moduleBuilder.setDebugMode(debugMode);
     if (moduleInfo.getDexFile() != null) {
       for (Path dexFile : moduleInfo.getDexFile()) {
-        if (moduleInfo.isBaseModule()) {
-          addFile(
-              moduleBuilder,
-              filesystem.getPathForRelativePath(dexFile),
-              getDexFileName(addedFiles),
-              addedFiles,
-              addedSourceFiles);
-        } else {
-          addFile(
-              moduleBuilder,
-              filesystem.getPathForRelativePath(dexFile),
-              Paths.get(BundleModule.ASSETS_DIRECTORY.toString())
-                  .resolve(dexFile.getFileName())
-                  .toString(),
-              addedFiles,
-              addedSourceFiles);
-        }
+        addFile(
+            moduleBuilder,
+            filesystem.getPathForRelativePath(dexFile),
+            getDexFileName(addedFiles),
+            addedFiles,
+            addedSourceFiles);
       }
     }
     if (moduleInfo.getResourceApk() != null) {
@@ -351,7 +329,8 @@ public class AabBuilderStep implements Step {
                 .toString(),
             addedFiles,
             addedSourceFiles);
-      } else if (file.getName().equals(BundleModule.RESOURCES_PROTO_PATH.toString())) {
+      } else if (file.getName()
+          .equals(BundleModule.SpecialModuleEntry.RESOURCE_TABLE.getPath().toString())) {
         addFile(
             builder,
             file.toPath(),
@@ -520,8 +499,20 @@ public class AabBuilderStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    String summaryOfModules = Joiner.on(',').join(moduleNames);
-    return String.format("Build a Bundle contains following modules: %s", summaryOfModules);
+    ImmutableList.Builder<String> args =
+        ImmutableList.<String>builder()
+            .add("bundletool")
+            .add("build-bundle")
+            .add("--output")
+            .add("\"" + filesystem.getPathForRelativePath(pathToOutputAabFile).toString() + "\"")
+            .add("--modules")
+            .add("\"" + Joiner.on(",").join(getModulesPaths()) + "\"");
+
+    if (pathToBundleConfigFile.isPresent()) {
+      args.add("--config").add("\"" + pathToBundleConfigFile.get().toString() + "\"");
+    }
+
+    return Joiner.on(" ").join(args.build());
   }
 
   @Override

@@ -35,7 +35,7 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void simpleArgument() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction("foo", ImmutableList.of("i")) {
+        new BuckStarlarkFunction("foo", ImmutableList.of("i"), ImmutableList.of("")) {
           public void foo(int i) {
             i++;
           }
@@ -52,7 +52,7 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void manyArgs() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction("manyArgs", ImmutableList.of("a", "b")) {
+        new BuckStarlarkFunction("manyArgs", ImmutableList.of("a", "b"), ImmutableList.of("", "")) {
           public String manyArgs(String a, String b) {
             return a + b;
           }
@@ -71,7 +71,7 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void skylarkCollection() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction("skylarkLists", ImmutableList.of("list")) {
+        new BuckStarlarkFunction("skylarkLists", ImmutableList.of("list"), ImmutableList.of("[]")) {
           public String skylarkLists(SkylarkList<Integer> list) {
             return list.toString();
           }
@@ -89,7 +89,7 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void skylarkCall() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction("toStr", ImmutableList.of("num")) {
+        new BuckStarlarkFunction("toStr", ImmutableList.of("num"), ImmutableList.of("")) {
           public String toStr(Integer num) {
             return num.toString();
           }
@@ -98,7 +98,7 @@ public class BuckStarlarkFunctionTest {
     Mutability mutability = Mutability.create("test");
     Environment env =
         Environment.builder(mutability)
-            .useDefaultSemantics()
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .setGlobals(
                 Environment.GlobalFrame.createForBuiltins(
                     ImmutableMap.of(function.getMethodDescriptor().getName(), function)))

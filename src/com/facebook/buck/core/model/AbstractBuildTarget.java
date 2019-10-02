@@ -17,10 +17,8 @@
 package com.facebook.buck.core.model;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public abstract class AbstractBuildTarget implements BuildTarget {
 
@@ -38,7 +36,7 @@ public abstract class AbstractBuildTarget implements BuildTarget {
   }
 
   @Override
-  public Optional<String> getCell() {
+  public CanonicalCellName getCell() {
     return getUnconfiguredBuildTargetView().getCell();
   }
 
@@ -85,6 +83,11 @@ public abstract class AbstractBuildTarget implements BuildTarget {
   }
 
   @Override
+  public String getCellRelativeName() {
+    return getUnconfiguredBuildTargetView().getCellRelativeName();
+  }
+
+  @Override
   public boolean isFlavored() {
     return getUnconfiguredBuildTargetView().isFlavored();
   }
@@ -101,8 +104,20 @@ public abstract class AbstractBuildTarget implements BuildTarget {
       return 0;
     }
 
-    return ComparisonChain.start()
-        .compare(getUnconfiguredBuildTargetView(), o.getUnconfiguredBuildTargetView())
-        .result();
+    int unconfiguredBuildTargetComparison =
+        getUnconfiguredBuildTargetView().compareTo(o.getUnconfiguredBuildTargetView());
+    if (unconfiguredBuildTargetComparison != 0) {
+      return unconfiguredBuildTargetComparison;
+    }
+    if (getTargetConfiguration().equals(o.getTargetConfiguration())) {
+      return 0;
+    }
+    if (getTargetConfiguration().hashCode() == o.getTargetConfiguration().hashCode()) {
+      // configurations are not equal, but hash codes are equal (hash collision)
+      return System.identityHashCode(getTargetConfiguration())
+          - System.identityHashCode(o.getTargetConfiguration());
+    } else {
+      return getTargetConfiguration().hashCode() - o.getTargetConfiguration().hashCode();
+    }
   }
 }

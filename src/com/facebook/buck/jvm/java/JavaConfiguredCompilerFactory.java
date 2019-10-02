@@ -19,6 +19,8 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import java.util.Optional;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -56,6 +58,11 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   @Override
+  public AbiGenerationMode getAbiGenerationMode() {
+    return javaBuckConfig.getAbiGenerationMode();
+  }
+
+  @Override
   public boolean shouldGenerateSourceAbi() {
     return javaBuckConfig.getAbiGenerationMode().isSourceAbi();
   }
@@ -82,6 +89,12 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         getJavac(buildRuleResolver, arg),
         javacOptions,
         extraClasspathProviderSupplier.apply(toolchainProvider));
+  }
+
+  @Override
+  public Optional<ExtraClasspathProvider> getExtraClasspathProvider(
+      ToolchainProvider toolchainProvider) {
+    return Optional.of(extraClasspathProviderSupplier.apply(toolchainProvider));
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {

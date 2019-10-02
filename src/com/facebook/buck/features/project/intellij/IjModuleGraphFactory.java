@@ -229,18 +229,18 @@ public final class IjModuleGraphFactory {
     Set<IjLibrary> referencedLibraries = new HashSet<>();
     Optional<Path> extraCompileOutputRootPath = projectConfig.getExtraCompilerOutputModulesPath();
 
-    for (IjModule module : ImmutableSet.copyOf(rulesToModules.values())) {
+    Set<IjModule> seenModules = new HashSet<>();
+    for (Map.Entry<BuildTarget, IjModule> ruleAndModule : rulesToModules.entrySet()) {
+      IjModule module = ruleAndModule.getValue();
+      if (!seenModules.add(module)) {
+        continue;
+      }
+
       Map<IjProjectElement, DependencyType> moduleDeps = new LinkedHashMap<>();
 
-      if (!module.getExtraClassPathDependencies().isEmpty()) {
-        IjLibrary extraClassPathLibrary =
-            IjLibrary.builder()
-                .setBinaryJars(module.getExtraClassPathDependencies())
-                .setTargets(ImmutableSet.of())
-                .setName("library_" + module.getName() + "_extra_classpath")
-                .build();
-        moduleDeps.put(extraClassPathLibrary, DependencyType.PROD);
-      }
+      module
+          .getExtraLibraryDependencies()
+          .forEach(library -> moduleDeps.put(library, DependencyType.PROD));
 
       if (extraCompileOutputRootPath.isPresent()
           && !module.getExtraModuleDependencies().isEmpty()) {

@@ -1,0 +1,137 @@
+[
+  {
+    "commit": "608fd7bdf9",
+    "added": [
+      {
+        "path": "java/com/facebook/buck/base",
+        "nodes": {
+          "base": {
+            "attributes": {
+              "buck.type": "java_library"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "commit": "9efba3bca1",
+    "added": [
+      {
+        "path": "java/com/facebook/buck/model",
+        "nodes": {
+          "model": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//java/com/facebook/buck/base:base"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "commit": "1b522b5b47",
+    "added": [
+      {
+        "path": "java/com/facebook/buck/util",
+        "nodes": {
+          "util": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//java/com/facebook/buck/base:base"
+            ]
+          }
+        }
+      }
+    ],
+    "modified": [
+      {
+        "path": "java/com/facebook/buck/model",
+        "nodes": {
+          "model": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//java/com/facebook/buck/base:base",
+              "//java/com/facebook/buck/util:util"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    // Nothing changes!
+    "commit": "270c3e4c42"
+  },
+  {
+    "commit": "c880d5b5d8",
+    "removed": [
+      "java/com/facebook/buck/model"
+    ]
+  },
+  {
+    "commit": "c5c58c844c",
+    "added": [
+      {
+        "path": "empty/build/file",
+        "nodes": {
+          // In practice, we would not expect there to be a build file that
+          // does not define any build rules, but it is certainly possible.
+        }
+      },
+      {
+        "path": "deep/package",
+        "nodes": {
+          "lib": {
+            "attributes": {
+              "buck.type": "java_library",
+              // Imagine this were defined in the build file as
+              // `glob(["src/**/*.java"])`.
+              "srcs": [
+                "src/com/example/Example.java"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "path": "nested/attributes",
+        "nodes": {
+          "nested": {
+            "attributes": {
+              "buck.type": "java_library",
+              "res": {
+                "res1": "resource1.jpg",
+                "res2": "resource2.jpg"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "commit": "b5b5b5cccc",
+    "added": [
+      {
+        // new build file was added for the commit, but it failed to parse
+        "path": "error/build/file",
+        "nodes": {
+        },
+        "errors": [
+          {
+            "message": "Error parsing error/build/file",
+            "stacktrace": ["error/build/file/BUCK:1:1", "error/build/file/def.bzl:10:1"]
+          }
+        ]
+      }
+    ]
+  }
+]

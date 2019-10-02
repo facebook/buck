@@ -21,6 +21,7 @@ java_test(
         "//test/com/facebook/buck/core/rules:testutil",
         "//test/com/facebook/buck/core/rules/actions:testutil",
         "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
+        "//test/com/facebook/buck/core/rules/providers/collect/impl:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",

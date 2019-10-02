@@ -38,6 +38,8 @@ public abstract class ZipFileTraversal {
         ZipEntry entry = entries.nextElement();
         visit(zipFile, entry);
       }
+    } catch (IllegalArgumentException e) { // help debugging a "MALFORMED" error
+      throw new IllegalArgumentException("zipfile traverse exception on file:" + file, e);
     }
   }
 }

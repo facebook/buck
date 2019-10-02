@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.string;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -29,6 +30,12 @@ import java.util.List;
 import java.util.Optional;
 
 public final class MoreStrings {
+
+  private static final Logger LOG = Logger.get(MoreStrings.class);
+
+  private static final int KEEP_CHARS_DEFAULT = 10_000;
+  private static final String TRUNCATE_MESSAGE =
+      "...\n<truncated>\n...".replace("\n", System.lineSeparator());
 
   /** Utility class: do not instantiate. */
   private MoreStrings() {}
@@ -120,10 +127,15 @@ public final class MoreStrings {
   }
 
   public static String truncatePretty(String data) {
-    int keepFirstChars = 10000;
-    int keepLastChars = 10000;
-    String truncateMessage = "...\n<truncated>\n...";
-    return truncateMiddle(data, keepFirstChars, keepLastChars, truncateMessage);
+    return truncateMiddle(data, KEEP_CHARS_DEFAULT, KEEP_CHARS_DEFAULT);
+  }
+
+  public static String truncateTail(String data, int keepFirstChars) {
+    return truncateMiddle(data, keepFirstChars, 0, TRUNCATE_MESSAGE);
+  }
+
+  public static String truncateMiddle(String data, int keepFirstChars, int keepLastChars) {
+    return truncateMiddle(data, keepFirstChars, keepLastChars, TRUNCATE_MESSAGE);
   }
 
   public static String truncateMiddle(
@@ -131,9 +143,14 @@ public final class MoreStrings {
     if (data.length() <= keepFirstChars + keepLastChars + truncateMessage.length()) {
       return data;
     }
-    return data.substring(0, keepFirstChars)
-        + truncateMessage
-        + data.substring(data.length() - keepLastChars);
+    LOG.info("Before truncate: " + data);
+
+    StringBuilder resultBuilder = new StringBuilder(data.substring(0, keepFirstChars));
+    resultBuilder.append(truncateMessage);
+    if (keepLastChars > 0) {
+      resultBuilder.append(data.substring(data.length() - keepLastChars));
+    }
+    return resultBuilder.toString();
   }
 
   public static ImmutableList<String> lines(String data) throws IOException {

@@ -23,7 +23,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -45,9 +44,8 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
-      SourcePathRuleFinder ruleFinder,
       Optional<String> moduleName) {
-    super(target, filesystem, root, links, ruleFinder);
+    super(target, filesystem, root, links);
     this.moduleName = moduleName;
   }
 
@@ -55,11 +53,9 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
-      ImmutableMap<Path, SourcePath> links,
-      SourcePathRuleFinder ruleFinder) {
+      ImmutableMap<Path, SourcePath> links) {
     Optional<String> moduleName = getModuleName(links);
-    return new HeaderSymlinkTreeWithModuleMap(
-        target, filesystem, root, links, ruleFinder, moduleName);
+    return new HeaderSymlinkTreeWithModuleMap(target, filesystem, root, links, moduleName);
   }
 
   @Override

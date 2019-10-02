@@ -56,6 +56,14 @@ public class CxxSourceTypes {
         || sourceType == CxxSource.Type.PCM;
   }
 
+  /**
+   * Returns true for source types which can be optimized with the C++ compiler during an
+   * incremental ThinLTO build.
+   */
+  public static boolean isOptimizableType(CxxSource.Type sourceType) {
+    return sourceType == CxxSource.Type.CXX_THINLINK;
+  }
+
   /** @return the appropriate {@link Tool} representing the preprocessor. */
   public static PreprocessorProvider getPreprocessor(CxxPlatform cxxPlatform, CxxSource.Type type) {
     PreprocessorProvider preprocessor;
@@ -201,6 +209,7 @@ public class CxxSourceTypes {
         break;
       case CXX_CPP_OUTPUT:
       case PCM:
+      case CXX_THINLINK:
         compiler = cxxPlatform.getCxx();
         break;
       case OBJC_CPP_OUTPUT:
@@ -250,6 +259,7 @@ public class CxxSourceTypes {
         break;
       case CXX_CPP_OUTPUT:
       case PCM:
+      case CXX_THINLINK:
         flags.addAll(cxxPlatform.getCxxflags());
         break;
       case OBJC_CPP_OUTPUT:

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.facebook.buck.core.starlark.compatible.BuckStarlark;
+import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -32,7 +34,6 @@ import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
-import com.facebook.buck.skylark.function.SkylarkUserDefinedRule;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.Globber;
@@ -58,18 +59,20 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.EventHandler;
+import com.google.devtools.build.lib.packages.SkylarkExportable;
 import com.google.devtools.build.lib.syntax.AssignmentStatement;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.Environment.Extension;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Identifier;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.SkylarkImport;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.SkylarkUtils.Phase;
-import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import com.google.devtools.build.lib.syntax.Statement;
+import com.google.devtools.build.lib.syntax.ValidationEnvironment;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.PathFragment;
@@ -168,7 +171,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   public BuildFileManifest getBuildFileManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     LOG.verbose("Started parsing build file %s", buildFile);
-    ParseBuckFileEvent.Started startEvent = ParseBuckFileEvent.started(buildFile, this.getClass());
+    ParseBuckFileEvent.Started startEvent =
+        ParseBuckFileEvent.started(
+            buildFile, ParseBuckFileEvent.ParserKind.SKYLARK, this.getClass());
     buckEventBus.post(startEvent);
     int rulesParsed = 0;
     try {
@@ -192,7 +197,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
           parseResult.getReadConfigurationOptions(),
           Optional.empty(),
-          parseResult.getGlobManifestWithResult());
+          parseResult.getGlobManifestWithResult(),
+          ImmutableList.of());
     } finally {
       LOG.verbose("Finished parsing build file %s", buildFile);
       buckEventBus.post(ParseBuckFileEvent.finished(startEvent, rulesParsed, 0L, Optional.empty()));
@@ -291,8 +297,18 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               mutability,
               parseContext,
               implicitLoad.getExtensionData());
+      if (!ValidationEnvironment.checkBuildSyntax(
+          buildFileAst.getStatements(), eventHandler, envData.getEnvironment())) {
+        throw BuildFileParseException.createForUnknownParseError(
+            "Cannot parse build file " + buildFile);
+      }
       boolean exec = buildFileAst.exec(envData.getEnvironment(), eventHandler);
       if (!exec) {
+        // buildFileAst.exec reports extended error information to console with eventHandler
+        // but this is not propagated to BuildFileParseException. So in case of resilient parsing
+        // when exceptions are stored in BuildFileManifest they do not have detailed information.
+        // TODO(sergeyb): propagate detailed error information from AST evaluation to exception
+
         throw BuildFileParseException.createForUnknownParseError(
             "Cannot evaluate build file " + buildFile);
       }
@@ -316,13 +332,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private BuildFileAST parseBuildFile(
       com.google.devtools.build.lib.vfs.Path buildFilePath, Label containingLabel)
       throws IOException {
-    BuildFileAST buildFileAst =
-        parseSkylarkFile(buildFilePath, containingLabel).validateBuildFile(eventHandler);
+    BuildFileAST buildFileAst = parseSkylarkFile(buildFilePath, containingLabel, FileKind.BUCK);
 
     if (buildFileAst.containsErrors()) {
       throw BuildFileParseException.createForUnknownParseError(
           "Cannot parse build file %s", buildFilePath);
     }
+
     return buildFileAst;
   }
 
@@ -352,7 +368,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         Environment.builder(mutability)
             .setImportedExtensions(importMap)
             .setGlobals(buckGlobals.getBuckBuildFileContextGlobals())
-            .setSemantics(StarlarkSemantics.DEFAULT_SEMANTICS)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .setEventHandler(eventHandler)
             .build();
     SkylarkUtils.setPhase(env, Phase.LOADING);
@@ -415,6 +431,12 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     return loadedPathsBuilder.build();
   }
 
+  /** {@code BUCK} or {@code .bzl} file, which have slight different syntax */
+  protected enum FileKind {
+    BUCK,
+    BZL,
+  }
+
   /**
    * Reads file and returns abstract syntax tree for that file.
    *
@@ -422,21 +444,28 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * @return abstract syntax tree; does not handle any errors.
    */
   @VisibleForTesting
-  protected BuildFileAST readSkylarkAST(com.google.devtools.build.lib.vfs.Path path)
-      throws IOException {
-    return BuildFileAST.parseSkylarkFile(
+  protected BuildFileAST readSkylarkAST(
+      com.google.devtools.build.lib.vfs.Path path, FileKind fileKind) throws IOException {
+    ParserInputSource input =
         ParserInputSource.create(
-            FileSystemUtils.readContent(path, StandardCharsets.UTF_8), path.asFragment()),
-        eventHandler);
+            FileSystemUtils.readContent(path, StandardCharsets.UTF_8), path.asFragment());
+    switch (fileKind) {
+      case BUCK:
+        return BuildFileAST.parseBuildFile(input, eventHandler);
+      case BZL:
+        return BuildFileAST.parseSkylarkFile(input, eventHandler);
+      default:
+        throw new AssertionError("unreachable");
+    }
   }
 
   private BuildFileAST parseSkylarkFile(
-      com.google.devtools.build.lib.vfs.Path path, Label containingLabel)
+      com.google.devtools.build.lib.vfs.Path path, Label containingLabel, FileKind fileKind)
       throws BuildFileParseException, IOException {
     BuildFileAST result = astCache.getIfPresent(path);
     if (result == null) {
       try {
-        result = readSkylarkAST(path);
+        result = readSkylarkAST(path, fileKind);
       } catch (FileNotFoundException e) {
         throw BuildFileParseException.createForUnknownParseError(
             "%s cannot be loaded because it does not exist. It was referenced from %s",
@@ -461,7 +490,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     Label label = loadImport.getLabel();
     com.google.devtools.build.lib.vfs.Path filePath = getImportPath(label, loadImport.getImport());
 
-    BuildFileAST fileAst = parseSkylarkFile(filePath, loadImport.getContainingLabel());
+    BuildFileAST fileAst =
+        parseSkylarkFile(filePath, loadImport.getContainingLabel(), FileKind.BZL);
 
     ImmutableList<IncludesData> dependencies =
         fileAst.getImports().isEmpty()
@@ -702,7 +732,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     if (load.haveAST()) {
       return false;
     }
-    load.setAST(parseSkylarkFile(load.getPath(), load.getParentLabel()));
+    load.setAST(parseSkylarkFile(load.getPath(), load.getParentLabel(), FileKind.BZL));
     return true;
   }
 
@@ -756,10 +786,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
       // Create this extension.
       Environment extensionEnv =
-          envBuilder.setSemantics(StarlarkSemantics.DEFAULT_SEMANTICS).build();
+          envBuilder.setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS).build();
       SkylarkUtils.setPhase(extensionEnv, Phase.LOADING);
 
       BuildFileAST ast = load.getAST();
+      buckGlobals.getKnownUserDefinedRuleTypes().invalidateExtension(load.getLabel());
       for (Statement stmt : ast.getStatements()) {
         if (!ast.execTopLevelStatement(stmt, extensionEnv, eventHandler)) {
           throw BuildFileParseException.createForUnknownParseError(
@@ -767,7 +798,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               load.getLabel(), load.getParentLabel());
         }
         if (stmt.kind() == Statement.Kind.ASSIGNMENT) {
-          ensureExportedIfExportable(extensionEnv, (AssignmentStatement) stmt);
+          try {
+            ensureExportedIfExportable(extensionEnv, (AssignmentStatement) stmt);
+          } catch (EvalException e) {
+            throw BuildFileParseException.createForUnknownParseError(
+                "Could evaluate extension %s referenced from %s: %s",
+                load.getLabel(), load.getParentLabel(), e.getMessage());
+          }
         }
       }
       loadedExtension = new Extension(extensionEnv);
@@ -785,27 +822,33 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * Call {@link com.google.devtools.build.lib.packages.SkylarkExportable#export(Label, String)} on
    * any objects that are assigned to
    *
-   * <p>This is primarily used to make sure that {@link SkylarkUserDefinedRule} instances set their
-   * name properly upon assignment
+   * <p>This is primarily used to make sure that {@link SkylarkUserDefinedRule} and {@link
+   * com.facebook.buck.core.rules.providers.impl.UserDefinedProvider} instances set their name
+   * properly upon assignment
    *
    * @param extensionEnv The environment where an exportable variable with the name in {@code stmt}
    *     is bound
    * @param stmt The assignment statement used to lookup the variable in the environment
    */
   private void ensureExportedIfExportable(Environment extensionEnv, AssignmentStatement stmt)
-      throws BuildFileParseException {
-    ImmutableSet<Identifier> identifiers = stmt.getLValue().boundIdentifiers();
+      throws BuildFileParseException, EvalException {
+    ImmutableSet<Identifier> identifiers = ValidationEnvironment.boundIdentifiers(stmt.getLHS());
     if (identifiers.size() != 1) {
       return;
     }
     String identifier = Iterables.getOnlyElement(identifiers).getName();
     Object lookedUp = extensionEnv.moduleLookup(identifier);
-    if (lookedUp instanceof SkylarkUserDefinedRule) {
-      SkylarkUserDefinedRule exportable = (SkylarkUserDefinedRule) lookedUp;
+    if (lookedUp instanceof SkylarkExportable) {
+      SkylarkExportable exportable = (SkylarkExportable) lookedUp;
       if (!exportable.isExported()) {
         Label extensionLabel = extensionEnv.getGlobals().getLabel();
         if (extensionLabel != null) {
           exportable.export(extensionLabel, identifier);
+          if (lookedUp instanceof SkylarkUserDefinedRule) {
+            this.buckGlobals
+                .getKnownUserDefinedRuleTypes()
+                .addRule((SkylarkUserDefinedRule) exportable);
+          }
         }
       }
     }

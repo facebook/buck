@@ -41,6 +41,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatternParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 import org.junit.Test;
 
@@ -247,6 +248,7 @@ public class TargetNodeVisibilityTest {
             filesystem,
             buildTarget,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             visibilities.stream()
                 .map(s -> VisibilityPatternParser.parse(cellNames, s))
                 .collect(ImmutableSet.toImmutableSet()),

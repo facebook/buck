@@ -37,6 +37,7 @@ buck_module(
     visibility = [
         "//src/com/facebook/buck/cli:main",
         "//src/com/facebook/buck/features/apple/project:",
+        "//src/com/facebook/buck/features/apple/projectV2:",
         "//test/...",
     ],
 )

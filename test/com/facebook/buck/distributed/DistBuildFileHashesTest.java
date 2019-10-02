@@ -474,7 +474,9 @@ public class DistBuildFileHashesTest {
             return FakeBuckConfig.builder()
                 .setSections(
                     "[repositories]",
-                    "second_repo = " + secondProjectFilesystem.getRootPath().toAbsolutePath())
+                    "second_repo = "
+                        + projectFilesystem.relativize(
+                            secondProjectFilesystem.getRootPath().toAbsolutePath()))
                 .build();
           }
         };

@@ -29,7 +29,7 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 25 Platform" jdkType="AndroidSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="library_modules_dep1_extra_classpath" scope="COMPILE" level="project" />
+    <orderEntry type="library" name="//modules/dep1:dep2#dummy_r_dot_java" scope="COMPILE" level="project" />
     <orderEntry type="module" module-name="buck_out_extra_intellij_output_modules_dep1" scope="COMPILE" />
   </component>
 </module>

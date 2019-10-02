@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.function;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
@@ -89,7 +90,7 @@ public class SkylarkNativeModuleTest {
     Environment env =
         Environment.builder(mutability)
             .setGlobals(BazelLibrary.GLOBALS)
-            .useDefaultSemantics()
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
     SkylarkUtils.setPhase(env, Phase.LOADING);
     new ParseContext(

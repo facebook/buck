@@ -23,6 +23,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
+import com.facebook.buck.remoteexecution.event.RemoteBuildRuleExecutionEvent;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -85,6 +86,16 @@ public class CriticalPathEventListener implements BuckEventListener {
     BuildRule buildRule = event.getBuildRule();
     BuildTarget buildTarget = buildRule.getBuildTarget();
     handleBuildRule(buildRule, buildTargetToExecutionTimeMap.getOrDefault(buildTarget, 0L));
+  }
+
+  /** Subscribes to {@link RemoteBuildRuleExecutionEvent} events */
+  @Subscribe
+  public void subscribe(RemoteBuildRuleExecutionEvent event) {
+    LOG.debug(
+        "RemoteBuildRuleExecutionEvent %s took: %s",
+        event.getBuildRule().getFullyQualifiedName(), event.getExecutionDurationMs());
+    buildTargetToExecutionTimeMap.put(
+        event.getBuildRule().getBuildTarget(), event.getExecutionDurationMs());
   }
 
   @VisibleForTesting
@@ -159,10 +170,16 @@ public class CriticalPathEventListener implements BuckEventListener {
     }
   }
 
-  /** Return all the build targets in the critical path */
-  public ImmutableList<BuildTarget> getCriticalPathBuildTargets() {
-    Collection<Pair<BuildTarget, CriticalPathNode>> criticalPath = getCriticalPath();
-    return criticalPath.stream().map(Pair::getFirst).collect(ImmutableList.toImmutableList());
+  /** Return all the critical path nodes for reports */
+  public ImmutableList<CriticalPathReportableNode> getCriticalPathReportNodes() {
+    return getCriticalPath().stream()
+        .map(
+            pair -> {
+              CriticalPathNode criticalPathNode = pair.getSecond();
+              return new ImmutableCriticalPathReportableNode(
+                  pair.getFirst(), criticalPathNode.getElapsedTimeMs(), criticalPathNode.getType());
+            })
+        .collect(ImmutableList.toImmutableList());
   }
 
   @VisibleForTesting

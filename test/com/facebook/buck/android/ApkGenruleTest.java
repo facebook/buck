@@ -36,8 +36,6 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -115,10 +113,9 @@ public class ApkGenruleTest {
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//src/com/facebook:sign_fb4a");
 
-    ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
-
     ApkGenruleDescription description =
-        new ApkGenruleDescription(toolchainProvider, new NoSandboxExecutionStrategy());
+        new ApkGenruleDescription(
+            ApkGenruleBuilder.getToolchainProvider(), new NoSandboxExecutionStrategy());
     ApkGenruleDescriptionArg arg =
         ApkGenruleDescriptionArg.builder()
             .setName(buildTarget.getShortName())

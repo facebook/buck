@@ -108,7 +108,8 @@ public class LocalBuildExecutor implements BuildExecutor {
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfiguration targetConfiguration,
       TargetConfigurationSerializer targetConfigurationSerializer,
-      boolean whitelistedForRemoteExecution) {
+      boolean remoteExecutionAutoEnabled,
+      boolean forceDisableRemoteExecution) {
     this.actionGraphAndBuilder = actionGraphAndBuilder;
     this.executorService = executorService;
     this.args = args;
@@ -123,7 +124,8 @@ public class LocalBuildExecutor implements BuildExecutor {
     this.targetConfigurationSerializer = targetConfigurationSerializer;
 
     // Init resources.
-    this.cachingBuildEngine = createCachingBuildEngine(whitelistedForRemoteExecution);
+    this.cachingBuildEngine =
+        createCachingBuildEngine(remoteExecutionAutoEnabled, forceDisableRemoteExecution);
     this.build =
         new Build(
             actionGraphAndBuilder.getActionGraphBuilder(),
@@ -215,7 +217,8 @@ public class LocalBuildExecutor implements BuildExecutor {
                     .configure(targetConfiguration)));
   }
 
-  private CachingBuildEngine createCachingBuildEngine(boolean whitelistedForRemoteExecution) {
+  private CachingBuildEngine createCachingBuildEngine(
+      boolean remoteExecutionAutoEnabled, boolean forceDisableRemoteExecution) {
     CachingBuildEngineBuckConfig engineConfig =
         args.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
 
@@ -230,7 +233,8 @@ public class LocalBuildExecutor implements BuildExecutor {
             cachingBuildEngineDelegate.getFileHashCache(),
             args.getBuckEventBus(),
             metadataProvider,
-            whitelistedForRemoteExecution),
+            remoteExecutionAutoEnabled,
+            forceDisableRemoteExecution),
         executorService,
         buildEngineMode.orElse(engineConfig.getBuildEngineMode()),
         engineConfig.getBuildDepFiles(),

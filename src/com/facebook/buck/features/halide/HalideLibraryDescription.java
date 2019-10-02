@@ -159,6 +159,7 @@ public class HalideLibraryDescription
             flavoredStripStyle,
             flavoredLinkerMapMode,
             Linker.LinkableDepType.STATIC,
+            Optional.empty(),
             CxxLinkOptions.of(),
             ImmutableList.of(),
             PatternMatchedCollection.of(),
@@ -280,6 +281,7 @@ public class HalideLibraryDescription
         cxxPlatformsProvider.getUnresolvedCxxPlatforms();
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(buildTarget.getFlavors());
     // TODO(cjhopman): This description doesn't handle parse time deps correctly.
     CxxPlatform cxxPlatform =

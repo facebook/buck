@@ -165,8 +165,8 @@ public class JsLibraryDescriptionTest {
   public void internalFileRuleDependsOnWorker() {
     JsTestScenario scenario = scenarioBuilder.library(target).build();
     BuildRule filesRule = internalFileRule(scenario.graphBuilder);
-    assertThat(
-        filesRule.getBuildDeps(), hasItem(scenario.graphBuilder.getRule(scenario.workerTarget)));
+    BuildRule workerRule = scenario.graphBuilder.getRule(scenario.workerTarget);
+    assertThat(filesRule.getBuildDeps(), hasItem(workerRule));
   }
 
   @Test
@@ -479,7 +479,7 @@ public class JsLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacrosInExtraJsonAddBuildDeps() {
+  public void locationMacrosInTransitiveBuildDeps() {
     BuildTarget referencedTarget = BuildTargetFactory.newInstance("//:ref");
     JsTestScenario scenario =
         scenarioBuilder
@@ -493,11 +493,9 @@ public class JsLibraryDescriptionTest {
 
     BuildRule referenced = scenario.graphBuilder.getRule(referencedTarget);
 
-    assertThat(referenced, in(scenario.graphBuilder.getRule(target).getBuildDeps()));
-
-    RichStream<JsFile> jsFileRules = findJsFileRules(scenario.graphBuilder);
-    jsFileRules.collect(
-        countAssertions(jsFile -> assertThat(referenced, in(jsFile.getBuildDeps()))));
+    JsLibrary jsLibraryRule = (JsLibrary) scenario.graphBuilder.getRule(target);
+    Stream<JsFile<?>> jsFiles = jsLibraryRule.getJsFiles(scenario.graphBuilder);
+    jsFiles.collect(countAssertions(jsFile -> assertThat(referenced, in(jsFile.getBuildDeps()))));
   }
 
   private JsTestScenario buildScenario(String basePath, SourcePath source) {

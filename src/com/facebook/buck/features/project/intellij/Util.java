@@ -38,6 +38,7 @@ public abstract class Util {
         .replace('-', '_')
         .replace(':', '_')
         .replace(' ', '_')
-        .replace('/', '_');
+        .replace('/', '_')
+        .replace('#', '_');
   }
 }

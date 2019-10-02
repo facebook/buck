@@ -243,6 +243,13 @@ public class GenruleDescriptionIntegrationTest {
         ImmutableList.of("//:app", "//:lib_a", "//:lib_b", "//:lib_d", "//annotations:proc-lib"));
   }
 
+  @Test
+  public void depsFromDepsQueryWithSelect() throws Exception {
+    expectGenruleOutput(
+        ":echo_deps_of_a_with_select",
+        ImmutableList.of("//:lib_a_with_select", "//:lib_b", "//annotations:proc-lib"));
+  }
+
   private void expectOutputPathsGenruleOutput(String genrule, List<String> expectedOutputs)
       throws Exception {
     expectGenruleOutput(

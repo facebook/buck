@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.network;
 
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
@@ -32,11 +33,11 @@ public final class FakeScribeLogger extends ScribeLogger {
   private final Multimap<String, String> loggedCategoryLines = LinkedListMultimap.create();
 
   @Override
-  public ListenableFuture<Void> log(
+  public ListenableFuture<Unit> log(
       String category, Iterable<String> lines, Optional<Integer> bucket) {
     synchronized (this) {
       loggedCategoryLines.putAll(category, lines);
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
   }
 

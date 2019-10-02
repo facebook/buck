@@ -22,24 +22,29 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.nativelink.CanProvideNativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInfo;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements AbstractCxxLibrary, CanProvideNativeLinkTarget {
+    implements AbstractCxxLibraryGroup {
+  private final PlatformMappedCache<NativeLinkable> linkableCache = new PlatformMappedCache<>();
 
   PrebuiltCxxLibrary(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
     super(buildTarget, projectFilesystem, params);
   }
 
-  public abstract ImmutableList<Arg> getExportedLinkerArgs(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
+  @Override
+  public NativeLinkable getNativeLinkable(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return linkableCache.get(cxxPlatform, () -> createNativeLinkable(cxxPlatform, graphBuilder));
+  }
 
-  public abstract ImmutableList<String> getExportedPostLinkerFlags(CxxPlatform cxxPlatform);
+  protected abstract NativeLinkableInfo createNativeLinkable(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   abstract Optional<SourcePath> getStaticLibrary(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);

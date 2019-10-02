@@ -1,0 +1,42 @@
+prebuilt_jar(
+    name = "annotations",
+    binary_jar = "annotations-13.0.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
+    name = "kotlin-stdlib",
+    binary_jar = "kotlin-stdlib.jar",
+    source_jar = "kotlin-stdlib-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
+    name = "kotlin-compiler",
+    binary_jar = "kotlin-compiler.jar",
+    source_jar = "kotlin-compiler-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
+    name = "trove",
+    binary_jar = "trove4j.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
+    name = "kotlin-reflect",
+    binary_jar = "kotlin-reflect.jar",
+    source_jar = "kotlin-reflect-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)

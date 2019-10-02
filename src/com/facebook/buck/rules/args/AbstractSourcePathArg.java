@@ -49,6 +49,7 @@ abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
     consumer.accept(line);
   }
 
+  // TODO(T47190884): cellPath here is just used as a cell identifier. Change to CanonicalCellName.
   public void appendToCommandLineRel(
       Consumer<String> consumer,
       Path cellPath,

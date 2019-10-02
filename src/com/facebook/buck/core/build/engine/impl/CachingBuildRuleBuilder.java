@@ -99,6 +99,7 @@ import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
@@ -185,7 +186,7 @@ class CachingBuildRuleBuilder {
 
   // These fields contain data that may be computed during a build.
 
-  private volatile ListenableFuture<Void> uploadCompleteFuture = Futures.immediateFuture(null);
+  private volatile ListenableFuture<Unit> uploadCompleteFuture = Futures.immediateFuture(Unit.UNIT);
   private volatile boolean depsAreAvailable;
   private final Optional<BuildRuleStrategy> customBuildRuleStrategy;
 
@@ -415,7 +416,7 @@ class CachingBuildRuleBuilder {
             thrown -> {
               String message = String.format("Building rule [%s] failed.", rule.getBuildTarget());
               BuildRuleFailedException failedException = getFailedException(thrown);
-              LOG.debug(failedException, message);
+              LOG.warn(failedException, message);
               if (consoleLogBuildFailuresInline) {
                 // TODO(cjhopman): This probably shouldn't be a thing. Why can't we just rely on the
                 // propagated failure being printed?
@@ -1277,7 +1278,8 @@ class CachingBuildRuleBuilder {
                       rule.getType(),
                       CachingBuildEngine.STEP_TYPE_CONTEXT_KEY,
                       CachingBuildEngine.StepType.POST_BUILD_STEP.toString()))),
-          step);
+          step,
+          Optional.of(rule.getBuildTarget()));
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {
@@ -1444,7 +1446,7 @@ class CachingBuildRuleBuilder {
       try (Scope ignored = BuildRuleExecutionEvent.scope(eventBus, rule)) {
         // Get and run all of the commands.
         for (Step step : getSteps(buildRuleBuildContext, buildableContext)) {
-          StepRunner.runStep(executionContext, step);
+          StepRunner.runStep(executionContext, step, Optional.of(rule.getBuildTarget()));
           rethrowIgnoredInterruptedException(step);
         }
       }
@@ -1482,7 +1484,7 @@ class CachingBuildRuleBuilder {
     ListenableFuture<List<BuildResult>> getDepResults(
         BuildRule rule, ExecutionContext executionContext);
 
-    void addAsyncCallback(ListenableFuture<Void> callback);
+    void addAsyncCallback(ListenableFuture<Unit> callback);
 
     void onRuleAboutToBeBuilt(BuildRule rule);
   }

@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.junit.Before;
@@ -50,7 +50,7 @@ public class RuleAnalysisCacheTest {
 
     RuleAnalysisResult cachedResult =
         ImmutableRuleAnalysisResultImpl.of(
-            buildTarget, ProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
+            buildTarget, TestProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
     cache.put(ImmutableRuleAnalysisKey.of(buildTarget), cachedResult);
 
     // assert that we cache and return the same instance
@@ -69,10 +69,10 @@ public class RuleAnalysisCacheTest {
 
     RuleAnalysisResult cachedResult1 =
         ImmutableRuleAnalysisResultImpl.of(
-            buildTarget1, ProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
+            buildTarget1, TestProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
     RuleAnalysisResult cachedResult2 =
         ImmutableRuleAnalysisResultImpl.of(
-            buildTarget2, ProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
+            buildTarget2, TestProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
 
     cache.put(ImmutableRuleAnalysisKey.of(buildTarget1), cachedResult1);
     cache.put(ImmutableRuleAnalysisKey.of(buildTarget2), cachedResult2);

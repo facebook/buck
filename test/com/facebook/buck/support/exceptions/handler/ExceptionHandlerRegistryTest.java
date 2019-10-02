@@ -21,10 +21,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.FileSystemLoopException;
@@ -148,6 +151,16 @@ public class ExceptionHandlerRegistryTest {
             throwableMessage, new Exception("t1", new Exception("t2", new Exception("t3", t4))));
     t4.initCause(t0.getCause());
     assertThat(registry.handleException(t0), is(ExitCode.FATAL_GENERIC));
+  }
+
+  @Test
+  public void testWithRuleAnalysisException() {
+    Exception e =
+        new RuleAnalysisException(
+            new EvalException.EvalExceptionWithJavaCause(
+                Location.BUILTIN, new IllegalStateException("Bad state")),
+            "error with user function");
+    assertThat(registry.handleException(e), is(ExitCode.BUILD_ERROR));
   }
 
   @Test

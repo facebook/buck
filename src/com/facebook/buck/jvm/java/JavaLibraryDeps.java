@@ -50,7 +50,8 @@ public abstract class JavaLibraryDeps {
             .setExportedDepTargets(args.getExportedDeps())
             .setProvidedDepTargets(args.getProvidedDeps())
             .setExportedProvidedDepTargets(args.getExportedProvidedDeps())
-            .setSourceOnlyAbiDepTargets(args.getSourceOnlyAbiDeps());
+            .setSourceOnlyAbiDepTargets(args.getSourceOnlyAbiDeps())
+            .setRuntimeDepTargets(args.getRuntimeDeps());
     compilerFactory.getNonProvidedClasspathDeps(targetConfiguration, builder::addDepTargets);
 
     if (args instanceof HasDepsQuery) {
@@ -80,6 +81,9 @@ public abstract class JavaLibraryDeps {
   @Value.NaturalOrder
   abstract ImmutableSortedSet<BuildTarget> getSourceOnlyAbiDepTargets();
 
+  @Value.NaturalOrder
+  abstract ImmutableSortedSet<BuildTarget> getRuntimeDepTargets();
+
   abstract Optional<Query> getDepsQuery();
 
   abstract Optional<Query> getProvidedDepsQuery();
@@ -90,7 +94,8 @@ public abstract class JavaLibraryDeps {
         Iterables.concat(
             getDepTargets(),
             getExportedDepTargets(),
-            getDepsQuery().map(Query::getResolvedQuery).orElse(ImmutableSortedSet.of())));
+            getDepsQuery().map(Query::getResolvedQuery).orElse(ImmutableSortedSet.of()),
+            getRuntimeDepTargets()));
   }
 
   @Value.Lazy
@@ -115,6 +120,11 @@ public abstract class JavaLibraryDeps {
   @Value.Lazy
   public ImmutableSortedSet<BuildRule> getSourceOnlyAbiDeps() {
     return resolve(getSourceOnlyAbiDepTargets());
+  }
+
+  @Value.Lazy
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return resolve(getRuntimeDepTargets());
   }
 
   private ImmutableSortedSet<BuildRule> resolve(Iterable<BuildTarget> targets) {

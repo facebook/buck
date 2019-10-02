@@ -25,6 +25,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -47,12 +48,14 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public static final int DEFAULT_REMOTE_PORT = 19030;
   public static final int DEFAULT_CAS_PORT = 19031;
+  public static final int DEFAULT_CAS_DEADLINE_S = 300;
 
   public static final int DEFAULT_REMOTE_STRATEGY_THREADS = 12;
   public static final int DEFAULT_REMOTE_CONCURRENT_ACTION_COMPUTATIONS = 4;
   public static final int DEFAULT_REMOTE_CONCURRENT_PENDING_UPLOADS = 100;
   public static final int DEFAULT_REMOTE_CONCURRENT_EXECUTIONS = 80;
   public static final int DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING = 6;
+  public static final int DEFAULT_REMOTE_OUTPUT_MATERIALIZATION_THREADS = 4;
   public static final boolean DEFAULT_IS_LOCAL_FALLBACK_ENABLED = false;
 
   private static final String CONFIG_CERT = "cert";
@@ -70,11 +73,10 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
    * Number of actions to compute at a time. These should be <25ms average, but require I/O and cpu.
    */
   public static final String CONCURRENT_ACTION_COMPUTATIONS_KEY = "concurrent_action_computations";
-  /**
-   * Number of results to concurrently handle at a time. This is mostly just downloading outputs
-   * which is currently a blocking operation.
-   */
+  /** Number of results to concurrently handle at a time. */
   public static final String CONCURRENT_RESULT_HANDLING_KEY = "concurrent_result_handling";
+  /** Number of threads to handle output materialization. */
+  public static final String OUTPUT_MATERIALIZATION_THREADS_KEY = "output_materialization_threads";
   /** Whether failed remote executions are retried locally. */
   public static final String IS_LOCAL_FALLBACK_ENABLED_KEY = "is_local_fallback_enabled";
   /** The maximum size of inputs allowed on remote execution, if unset, no maximum. */
@@ -120,8 +122,72 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       "auto_re_build_projects_whitelist";
   public static final String AUTO_RE_BUILD_USERS_BLACKLIST_KEY = "auto_re_build_users_blacklist";
 
+  /**
+   * Strategy used to determine whether to enable Remote Execution automatically for the current
+   * build
+   */
+  public static final String AUTO_RE_STRATEGY_KEY = "auto_re_strategy";
+
   // Auxiliary flag used for setting custom build tags.
   public static final String BUILD_TAGS_KEY = "build_tags";
+
+  // Property inside [experiments] section that will be used to enable Remote Execution
+  // automatically or not
+  public static final String AUTO_RE_EXPERIMENT_PROPERTY_KEY = "auto_re_experiment_property";
+
+  public static final String DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY = "remote_execution_beta_test";
+
+  public static final String DISABLE_DISTCC_IF_REMOTE_EXECUTION_ENABLED_EXPERIMENT_PROPERTY =
+      "disable_distcc_if_remote_execution_enabled";
+
+  private String getAutoReExperimentPropertyKey() {
+    return getValue(AUTO_RE_EXPERIMENT_PROPERTY_KEY).orElse(DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY);
+  }
+
+  @VisibleForTesting
+  boolean isExperimentEnabled() {
+    return getDelegate().getBooleanValue("experiments", getAutoReExperimentPropertyKey(), false);
+  }
+
+  public boolean shouldDisableDistccIfRemoteExecutionEnabled() {
+    return getDelegate()
+        .getBooleanValue(
+            "experiments", DISABLE_DISTCC_IF_REMOTE_EXECUTION_ENABLED_EXPERIMENT_PROPERTY, false);
+  }
+
+  public boolean isRemoteExecutionAutoEnabled(String username, List<String> commandArguments) {
+    return isRemoteExecutionAutoEnabled(
+        isBuildWhitelistedForRemoteExecution(username, commandArguments),
+        isExperimentEnabled(),
+        getAutoRemoteExecutionStrategy());
+  }
+
+  @VisibleForTesting
+  static boolean isRemoteExecutionAutoEnabled(
+      boolean whitelistedForRemoteExecution,
+      boolean experimentEnabled,
+      AutoRemoteExecutionStrategy autoRemoteExecutionStrategy) {
+    switch (autoRemoteExecutionStrategy) {
+      case DISABLED:
+        return false;
+      case RE_IF_EXPERIMENT_ENABLED:
+        return experimentEnabled;
+      case RE_IF_WHITELIST_MATCH:
+        return whitelistedForRemoteExecution;
+      case RE_IF_EXPERIMENT_ENABLED_AND_WHITELIST_MATCH:
+        return experimentEnabled && whitelistedForRemoteExecution;
+      case RE_IF_EXPERIMENT_ENABLED_OR_WHITELIST_MATCH:
+        return experimentEnabled || whitelistedForRemoteExecution;
+      default:
+        return false;
+    }
+  }
+
+  private AutoRemoteExecutionStrategy getAutoRemoteExecutionStrategy() {
+    return getDelegate()
+        .getEnum(SECTION, AUTO_RE_STRATEGY_KEY, AutoRemoteExecutionStrategy.class)
+        .orElse(AutoRemoteExecutionStrategy.DEFAULT);
+  }
 
   public String getRemoteHost() {
     return getValue("remote_host").orElse("localhost");
@@ -137,6 +203,10 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public int getCasPort() {
     return getValue("cas_port").map(Integer::parseInt).orElse(DEFAULT_CAS_PORT);
+  }
+
+  public int getCasDeadline() {
+    return getValue("cas_deadline_sec").map(Integer::parseInt).orElse(DEFAULT_CAS_DEADLINE_S);
   }
 
   public boolean getInsecure() {
@@ -224,6 +294,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
             .getInteger(SECTION, CONCURRENT_RESULT_HANDLING_KEY)
             .orElse(DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING);
 
+    int outputMaterializationThreads =
+        getDelegate()
+            .getInteger(SECTION, OUTPUT_MATERIALIZATION_THREADS_KEY)
+            .orElse(DEFAULT_REMOTE_OUTPUT_MATERIALIZATION_THREADS);
+
     boolean isLocalFallbackEnabled =
         getDelegate()
             .getBooleanValue(
@@ -251,17 +326,6 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
           SECTION,
           CONCURRENT_ACTION_COMPUTATIONS_KEY,
           concurrentActionComputations,
-          SECTION,
-          STRATEGY_WORKER_THREADS_KEY,
-          workerThreads);
-    }
-
-    if (workerThreads < concurrentResultHandling) {
-      LOG.error(
-          "%s.%s=%d will be limited by %s.%s=%d",
-          SECTION,
-          CONCURRENT_ACTION_COMPUTATIONS_KEY,
-          concurrentResultHandling,
           SECTION,
           STRATEGY_WORKER_THREADS_KEY,
           workerThreads);
@@ -302,6 +366,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       @Override
       public int getMaxConcurrentResultHandling() {
         return concurrentResultHandling;
+      }
+
+      @Override
+      public int getOutputMaterializationThreads() {
+        return outputMaterializationThreads;
       }
 
       @Override
@@ -371,7 +440,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     }
   }
 
-  public boolean isBuildWhitelistedForRemoteExecution(
+  private boolean isBuildWhitelistedForRemoteExecution(
       String username, List<String> commandArguments) {
     Optional<ImmutableList<String>> optionalUsersBlacklist =
         getDelegate().getOptionalListWithoutComments(SECTION, AUTO_RE_BUILD_USERS_BLACKLIST_KEY);

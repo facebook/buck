@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -35,12 +36,12 @@ import java.util.function.Function;
  * <p>This is used to create {@link TargetNode} for targets that represent configuration rules.
  */
 public class NonResolvingRawTargetNodeToTargetNodeFactory
-    implements ParserTargetNodeFactory<RawTargetNode> {
+    implements ParserTargetNodeFromRawTargetNodeFactory {
 
-  private final ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory;
+  private final ParserTargetNodeFromAttrMapFactory parserTargetNodeFactory;
 
   public NonResolvingRawTargetNodeToTargetNodeFactory(
-      ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory) {
+      ParserTargetNodeFromAttrMapFactory parserTargetNodeFactory) {
     this.parserTargetNodeFactory = parserTargetNodeFactory;
   }
 

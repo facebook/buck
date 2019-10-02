@@ -46,7 +46,7 @@ public class TreeBackedVariableElementTest extends CompilerTreeApiParameterizedT
 
   @Test
   public void testGetConstantValueDelegatedValueMissing() throws IOException {
-    withClasspath(
+    withClasspathForJavacOnly(
         ImmutableMap.of(
             "Bar.java",
             Joiner.on('\n')
@@ -84,7 +84,7 @@ public class TreeBackedVariableElementTest extends CompilerTreeApiParameterizedT
 
   @Test
   public void testGetConstantValueComplexValueMissing() throws IOException {
-    withClasspath(
+    withClasspathForJavacOnly(
         ImmutableMap.of(
             "Bar.java",
             Joiner.on('\n')

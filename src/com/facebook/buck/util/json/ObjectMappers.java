@@ -40,10 +40,12 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -61,6 +63,9 @@ public class ObjectMappers {
 
   /** ObjectWrite that serializes objects along with their type information */
   public static final ObjectWriter WRITER_WITH_TYPE;
+
+  /** ObjectReader that interns custom objects on serialization, like UnconfiguredBuildTarget */
+  public static final ObjectReader READER_INTERNED;
 
   public static <T> T readValue(Path file, Class<T> clazz) throws IOException {
     try (JsonParser parser = createParser(file)) {
@@ -100,6 +105,10 @@ public class ObjectMappers {
 
   public static JsonParser createParser(InputStream stream) throws IOException {
     return jsonFactory.createParser(stream);
+  }
+
+  public static JsonParser createParser(Reader reader) throws IOException {
+    return jsonFactory.createParser(reader);
   }
 
   public static JsonGenerator createGenerator(OutputStream stream) throws IOException {
@@ -150,13 +159,16 @@ public class ObjectMappers {
 
   // Callers must not modify (i.e. reconfigure) this ObjectMapper.
   private static final ObjectMapper mapper;
+  private static final ObjectMapper mapper_interned;
 
   // Callers must not modify (i.e. reconfigure) this JsonFactory.
   private static final JsonFactory jsonFactory;
 
   static {
     mapper = create_without_type();
+    mapper_interned = create_without_type_interned();
     READER = mapper.reader();
+    READER_INTERNED = mapper_interned.reader();
     WRITER = mapper.writer();
     jsonFactory = mapper.getFactory();
     ObjectMapper mapper_with_type = create_with_type();
@@ -174,6 +186,7 @@ public class ObjectMappers {
     // Add support for serializing Guava collections.
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new Jdk8Module());
+    mapper.registerModule(new KotlinModule());
 
     // With some version of Jackson JDK8 module, it starts to serialize Path objects using
     // getURI() function, this results for serialized paths to be absolute paths with 'file:///'
@@ -223,7 +236,15 @@ public class ObjectMappers {
 
   private static ObjectMapper create_without_type() {
     ObjectMapper mapper = create();
+    return addCustomModules(mapper, false);
+  }
 
+  private static ObjectMapper create_without_type_interned() {
+    ObjectMapper mapper = create();
+    return addCustomModules(mapper, true);
+  }
+
+  private static ObjectMapper addCustomModules(ObjectMapper mapper, boolean intern) {
     // with this mixin RawTargetNode properties are flattened with RawTargetNodeWithDeps properties
     // for prettier view. It only works for non-typed serialization.
     mapper.addMixIn(
@@ -239,7 +260,7 @@ public class ObjectMappers {
           @Override
           protected UnconfiguredBuildTarget _deserialize(
               String value, DeserializationContext ctxt) {
-            return UnconfiguredBuildTargetParser.parse(value);
+            return UnconfiguredBuildTargetParser.parse(value, intern);
           }
         });
     mapper.registerModule(buildTargetModule);

@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -48,9 +49,9 @@ public class DummyArtifactCache extends NoopArtifactCache {
   }
 
   @Override
-  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+  public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
     storeKey = Iterables.getFirst(info.getRuleKeys(), null);
-    return Futures.immediateFuture(null);
+    return Futures.immediateFuture(Unit.UNIT);
   }
 
   @Override

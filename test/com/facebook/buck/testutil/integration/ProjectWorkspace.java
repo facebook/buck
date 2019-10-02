@@ -42,7 +42,7 @@ import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
+import com.facebook.buck.core.rules.knowntypes.DefaultKnownNativeRuleTypesFactory;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.io.ExecutableFinder;
@@ -75,6 +75,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.string.MoreStrings;
@@ -175,7 +176,9 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
   private ProjectFilesystemAndConfig getProjectFilesystemAndConfig() throws IOException {
     if (projectFilesystemAndConfig == null) {
-      Config config = Configs.createDefaultConfig(destPath);
+      Config config =
+          Configs.createDefaultConfig(
+              destPath, Configs.getRepoConfigurationFiles(destPath), RawConfig.of());
       projectFilesystemAndConfig =
           new ProjectFilesystemAndConfig(
               TestProjectFilesystems.createProjectFilesystem(destPath, config), config);
@@ -549,7 +552,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
               testConsole,
               stdin,
               knownRuleTypesFactoryFactory == null
-                  ? DefaultKnownRuleTypesFactory::new
+                  ? DefaultKnownNativeRuleTypesFactory::new
                   : knownRuleTypesFactoryFactory,
               repoRoot,
               sanizitedEnv,
@@ -700,6 +703,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
         root, Files.readAllLines(root.resolve(PATH_TO_BUILD_LOG), UTF_8));
   }
 
+  public ProjectFilesystem getProjectFileSystem() throws IOException {
+    return getProjectFilesystemAndConfig().projectFilesystem;
+  }
+
   public Config getConfig() throws IOException {
     return getProjectFilesystemAndConfig().config;
   }
@@ -710,7 +717,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     Config config = filesystemAndConfig.config;
 
     DefaultCellPathResolver rootCellCellPathResolver =
-        DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+        DefaultCellPathResolver.create(filesystem.getRootPath(), config);
 
     ImmutableMap<String, String> env = EnvVariablesProvider.getSystemEnv();
     BuckConfig buckConfig =

@@ -1,0 +1,14 @@
+cxx_library(
+    name = "top",
+    srcs = ["top.c"],
+    soname = "libtop.so",
+    visibility = ["PUBLIC"],
+    deps = [":lib"],
+)
+
+prebuilt_cxx_library(
+    name = "lib",
+    exported_headers = ["lib.h"],
+    header_only = True,
+    visibility = ["PUBLIC"],
+)

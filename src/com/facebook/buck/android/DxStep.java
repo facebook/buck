@@ -22,6 +22,7 @@ import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.DiagnosticsHandler;
 import com.android.tools.r8.OutputMode;
+import com.android.tools.r8.utils.InternalOptions;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.event.ConsoleEvent;
@@ -61,7 +62,7 @@ public class DxStep extends ShellStep {
     /** Specify the {@code --no-optimize} flag when running {@code dx}. */
     NO_OPTIMIZE,
 
-    /** Specify the {@code --force-jumbo} flag when running {@code dx}. */
+    /** Force the dexer to emit jumbo string references */
     FORCE_JUMBO,
 
     /**
@@ -104,6 +105,7 @@ public class DxStep extends ShellStep {
   private final boolean intermediate;
   // used to differentiate different dexing buckets (if any)
   private final Optional<String> bucketId;
+  private final Optional<Integer> minSdkVersion;
 
   @Nullable private Collection<String> resourcesReferencedInCode;
 
@@ -178,7 +180,8 @@ public class DxStep extends ShellStep {
         dexTool,
         intermediate,
         null,
-        Optional.empty());
+        Optional.empty(),
+        Optional.empty() /* minSdkVersion */);
   }
 
   /**
@@ -189,6 +192,7 @@ public class DxStep extends ShellStep {
    * @param maxHeapSize The max heap size used for out of process dex.
    * @param dexTool the tool used to perform dexing.
    * @param classpathFiles specifies classpath for interface static and default methods desugaring.
+   * @param minSdkVersion
    */
   public DxStep(
       ProjectFilesystem filesystem,
@@ -200,7 +204,8 @@ public class DxStep extends ShellStep {
       String dexTool,
       boolean intermediate,
       @Nullable Collection<Path> classpathFiles,
-      Optional<String> bucketId) {
+      Optional<String> bucketId,
+      Optional<Integer> minSdkVersion) {
     super(filesystem.getRootPath());
     this.filesystem = filesystem;
     this.androidPlatformTarget = androidPlatformTarget;
@@ -212,6 +217,7 @@ public class DxStep extends ShellStep {
     this.dexTool = dexTool;
     this.intermediate = intermediate;
     this.bucketId = bucketId;
+    this.minSdkVersion = minSdkVersion;
 
     Preconditions.checkArgument(
         !options.contains(Option.RUN_IN_PROCESS)
@@ -270,6 +276,13 @@ public class DxStep extends ShellStep {
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
       commandArgs.add("--verbose");
     }
+
+    // min api flag if known
+    minSdkVersion.ifPresent(
+        minApi -> {
+          commandArgs.add("--min-sdk-version");
+          commandArgs.add(Integer.toString(minApi));
+        });
 
     commandArgs.add("--output");
     commandArgs.add(filesystem.resolve(outputDexFile).toString());
@@ -343,11 +356,14 @@ public class DxStep extends ShellStep {
                         ? CompilationMode.DEBUG
                         : CompilationMode.RELEASE)
                 .setOutput(output, OutputMode.DexIndexed)
-                .setDisableDesugaring(options.contains(Option.NO_DESUGAR));
+                .setDisableDesugaring(options.contains(Option.NO_DESUGAR))
+                .setInternalOptionsModifier(
+                    (InternalOptions opt) -> {
+                      opt.testing.forceJumboStringProcessing = options.contains(Option.FORCE_JUMBO);
+                    });
 
-        if (bucketId.isPresent()) {
-          builder.setBucketId(bucketId.get());
-        }
+        bucketId.ifPresent(builder::setBucketId);
+        minSdkVersion.ifPresent(builder::setMinApiLevel);
 
         if (classpathFiles != null && !classpathFiles.isEmpty()) {
           // classpathFiles is needed only for D8 java 8 desugar

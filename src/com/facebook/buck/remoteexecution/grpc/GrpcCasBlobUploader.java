@@ -43,7 +43,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -71,7 +71,7 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
   }
 
   @Override
-  public ImmutableSet<String> getMissingHashes(List<Digest> requiredDigests) throws IOException {
+  public ImmutableSet<String> getMissingHashes(Set<Digest> requiredDigests) throws IOException {
     try {
       FindMissingBlobsRequest.Builder requestBuilder = FindMissingBlobsRequest.newBuilder();
       requiredDigests.forEach(digest -> requestBuilder.addBlobDigests((GrpcProtocol.get(digest))));
@@ -117,9 +117,10 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
       MoreThrowables.throwIfInitialCauseInstanceOf(e, IOException.class);
       throw new BuckUncheckedExecutionException(
           e,
-          "When uploading a batch of blobs: <%s>. Digests: %s.",
-          blobs.stream().map(b -> b.describe()).collect(Collectors.joining(">, <")),
-          blobs.stream().map(b -> b.getDigest().toString()).collect(Collectors.joining(" ")));
+          "When uploading a batch of blobs: <%s>.",
+          blobs.stream()
+              .map(b -> "[" + b.describe() + ": " + b.getDigest().toString() + "]")
+              .collect(Collectors.joining(", ")));
     }
   }
 

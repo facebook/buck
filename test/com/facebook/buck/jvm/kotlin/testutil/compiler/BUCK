@@ -1,0 +1,14 @@
+kotlin_library(
+    name = "compiler",
+    srcs = glob(["*.kt"]),
+    visibility = [
+        "//test/com/facebook/buck/jvm/...",
+    ],
+    deps = [
+        "//test/com/facebook/buck/jvm/java/testutil/compiler:compiler",
+        "//third-party/java/junit:junit",
+        "//third-party/java/kotlin:kotlin-compiler",
+        "//third-party/java/kotlin:kotlin-stdlib",
+        "//third-party/java/kotlin:trove",
+    ],
+)

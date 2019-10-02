@@ -1,0 +1,11 @@
+rust_binary(
+    name = "subbin",
+    srcs = ["main.rs"],
+    mapped_srcs = {"//:generated": "generated.rs"},
+)
+
+rust_test(
+    name = "subbin-test",
+    srcs = ["main.rs"],
+    mapped_srcs = {"//:generated": "generated.rs"},
+)

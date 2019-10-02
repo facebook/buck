@@ -38,24 +38,34 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.lang.reflect.Field;
 import java.util.Map;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(JUnitParamsRunner.class)
 public class VersionedTargetGraphBuilderTest {
 
   private DepsAwareExecutor executor;
   private UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
+  private VersionedTargetGraphBuilderFactory factory;
 
   @Before
   public void setUp() {
     executor = DefaultDepsAwareExecutor.of(2);
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
+    factory =
+        (executor,
+            versionSelector,
+            unversionedTargetGraphAndBuildTargets,
+            typeCoercerFactory,
+            unconfiguredBuildTargetFactory) ->
+            new AsyncVersionedTargetGraphBuilder(
+                executor,
+                versionSelector,
+                unversionedTargetGraphAndBuildTargets,
+                typeCoercerFactory,
+                unconfiguredBuildTargetFactory,
+                20);
   }
 
   @After
@@ -66,7 +76,7 @@ public class VersionedTargetGraphBuilderTest {
   private static String getVersionedTarget(
       BuildTarget target, ImmutableSortedMap<BuildTarget, Version> versions) {
     return target
-        .withAppendedFlavors(ParallelVersionedTargetGraphBuilder.getVersionedFlavor(versions))
+        .withAppendedFlavors(AbstractVersionedTargetGraphBuilder.getVersionedFlavor(versions))
         .toString();
   }
 
@@ -115,8 +125,7 @@ public class VersionedTargetGraphBuilderTest {
   }
 
   @Test
-  @Parameters(method = "builderFactory")
-  public void singleRootNode(VersionedTargetGraphBuilderFactory factory) throws Exception {
+  public void singleRootNode() throws Exception {
     TargetNode<?> root = new VersionRootBuilder("//:root").build();
     TargetGraph graph = TargetGraphFactory.newInstanceExact(root);
     VersionedTargetGraphBuilder builder =
@@ -131,8 +140,7 @@ public class VersionedTargetGraphBuilderTest {
   }
 
   @Test
-  @Parameters(method = "builderFactory")
-  public void rootWithDepOnRoot(VersionedTargetGraphBuilderFactory factory) throws Exception {
+  public void rootWithDepOnRoot() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstanceExact(
             new VersionRootBuilder("//:root2").build(),
@@ -153,8 +161,7 @@ public class VersionedTargetGraphBuilderTest {
   }
 
   @Test
-  @Parameters(method = "builderFactory")
-  public void versionedSubGraph(VersionedTargetGraphBuilderFactory factory) throws Exception {
+  public void versionedSubGraph() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstanceExact(
             new VersionPropagatorBuilder("//:dep").build(),
@@ -177,9 +184,7 @@ public class VersionedTargetGraphBuilderTest {
   }
 
   @Test
-  @Parameters(method = "builderFactory")
-  public void versionedSubGraphWithDepOnRoot(VersionedTargetGraphBuilderFactory factory)
-      throws Exception {
+  public void versionedSubGraphWithDepOnRoot() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstanceExact(
             new VersionRootBuilder("//:dep_root").build(),
@@ -204,9 +209,7 @@ public class VersionedTargetGraphBuilderTest {
   }
 
   @Test
-  @Parameters(method = "builderFactory")
-  public void versionedSubGraphWithDepAnotherVersionedSubGraph(
-      VersionedTargetGraphBuilderFactory factory) throws Exception {
+  public void versionedSubGraphWithDepAnotherVersionedSubGraph() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstanceExact(
             new VersionPropagatorBuilder("//:dep2").build(),
@@ -234,9 +237,7 @@ public class VersionedTargetGraphBuilderTest {
   }
 
   @Test
-  @Parameters(method = "builderFactory")
-  public void versionedSubGraphWithVersionedFlavor(VersionedTargetGraphBuilderFactory factory)
-      throws Exception {
+  public void versionedSubGraphWithVersionedFlavor() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstanceExact(
             new VersionPropagatorBuilder("//:dep").build(),
@@ -265,9 +266,7 @@ public class VersionedTargetGraphBuilderTest {
   }
 
   @Test
-  @Parameters(method = "builderFactory")
-  public void versionedSubGraphWithConstraints(VersionedTargetGraphBuilderFactory factory)
-      throws Exception {
+  public void versionedSubGraphWithConstraints() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstanceExact(
             new VersionPropagatorBuilder("//:v2").build(),
@@ -322,9 +321,7 @@ public class VersionedTargetGraphBuilderTest {
   }
 
   @Test
-  @Parameters(method = "builderFactory")
-  public void explicitNonRootTreatedAsRoot(VersionedTargetGraphBuilderFactory factory)
-      throws Exception {
+  public void explicitNonRootTreatedAsRoot() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstanceExact(
             new VersionPropagatorBuilder("//:dep").build(),
@@ -347,9 +344,7 @@ public class VersionedTargetGraphBuilderTest {
   }
 
   @Test
-  @Parameters(method = "builderFactory")
-  public void nodeWithTestParameterReferringToNonExistentTarget(
-      VersionedTargetGraphBuilderFactory factory) throws Exception {
+  public void nodeWithTestParameterReferringToNonExistentTarget() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstanceExact(
             new VersionPropagatorBuilder("//:root2")
@@ -369,62 +364,6 @@ public class VersionedTargetGraphBuilderTest {
             unconfiguredBuildTargetFactory);
     TargetGraph versionedGraph = builder.build();
     assertEquals(graph, versionedGraph);
-  }
-
-  @SuppressWarnings("unused")
-  private Object[] builderFactory() {
-    return new Object[] {
-      new Object[] {
-        new VersionedTargetGraphBuilderFactory() {
-
-          @Override
-          public VersionedTargetGraphBuilder create(
-              DepsAwareExecutor executor,
-              VersionSelector versionSelector,
-              TargetGraphCreationResult unversionedTargetGraphAndBuildTargets,
-              TypeCoercerFactory typeCoercerFactory,
-              UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
-            return new ParallelVersionedTargetGraphBuilder(
-                2,
-                versionSelector,
-                unversionedTargetGraphAndBuildTargets,
-                typeCoercerFactory,
-                unconfiguredBuildTargetFactory,
-                20);
-          }
-
-          @Override
-          public String toString() {
-            return "parallel";
-          }
-        }
-      },
-      new Object[] {
-        new VersionedTargetGraphBuilderFactory() {
-
-          @Override
-          public VersionedTargetGraphBuilder create(
-              DepsAwareExecutor executor,
-              VersionSelector versionSelector,
-              TargetGraphCreationResult unversionedTargetGraphAndBuildTargets,
-              TypeCoercerFactory typeCoercerFactory,
-              UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
-            return new AsyncVersionedTargetGraphBuilder(
-                executor,
-                versionSelector,
-                unversionedTargetGraphAndBuildTargets,
-                typeCoercerFactory,
-                unconfiguredBuildTargetFactory,
-                20);
-          }
-
-          @Override
-          public String toString() {
-            return "async";
-          }
-        }
-      }
-    };
   }
 
   private interface VersionedTargetGraphBuilderFactory {

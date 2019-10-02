@@ -24,11 +24,10 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
@@ -105,11 +104,10 @@ public class SelectorListCoercerTest {
 
     assertThat(traversedObjects, hasItem(selectors));
     assertThat(
-        traversedObjects, hasItem(UnconfiguredBuildTargetFactoryForTests.newInstance("//a:b")));
+        traversedObjects, hasItem(ConfigurationBuildTargetFactoryForTests.newInstance("//a:b")));
     assertThat(traversedObjects, hasItem(InternalFlavor.of("test1")));
     assertThat(traversedObjects, hasItem(InternalFlavor.of("test2")));
     assertThat(traversedObjects, hasItem(InternalFlavor.of("test3")));
-    assertEquals(
-        1, traversedObjects.stream().filter(UnconfiguredBuildTargetView.class::isInstance).count());
+    assertEquals(1, traversedObjects.stream().filter(BuildTarget.class::isInstance).count());
   }
 }

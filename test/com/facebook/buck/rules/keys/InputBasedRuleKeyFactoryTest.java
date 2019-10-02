@@ -18,6 +18,8 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.artifact.BuildTargetSourcePathToArtifactConverter;
+import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -29,6 +31,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -52,6 +55,7 @@ import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -101,6 +105,52 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
+  public void actionRuleKeyDoesNotChangeWhenOnlyDependencyRuleKeyChanges() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+
+    Path depOutput = Paths.get("output");
+
+    class ChangeableFakeBuildRule extends FakeBuildRule {
+
+      @AddToRuleKey public int i = 1;
+
+      public ChangeableFakeBuildRule(BuildTarget target) {
+        super(target);
+      }
+    }
+
+    ChangeableFakeBuildRule dep =
+        graphBuilder.addToIndex(
+            new ChangeableFakeBuildRule(BuildTargetFactory.newInstance("//:dep")));
+
+    dep.setOutputFile(depOutput.toString());
+    filesystem.writeContentsToPath(
+        "hello", graphBuilder.getSourcePathResolver().getRelativePath(dep.getSourcePathToOutput()));
+
+    FakeFileHashCache hashCache =
+        new FakeFileHashCache(ImmutableMap.of(filesystem.resolve(depOutput), HashCode.fromInt(0)));
+
+    SomeAction action =
+        new SomeAction(
+            new ActionRegistryForTests(BuildTargetFactory.newInstance("//:foo")),
+            ImmutableSet.of(
+                BuildTargetSourcePathToArtifactConverter.convert(
+                    filesystem, dep.getSourcePathToOutput())),
+            ImmutableSet.of(),
+            1,
+            "a");
+
+    RuleKey inputKey1 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(action);
+
+    dep.i = 5;
+
+    RuleKey inputKey2 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(action);
+
+    assertThat(inputKey1, Matchers.equalTo(inputKey2));
+  }
+
+  @Test
   public void ruleKeyChangesIfInputContentsFromPathSourceChanges() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -123,6 +173,35 @@ public class InputBasedRuleKeyFactoryTest {
         new FakeFileHashCache(ImmutableMap.of(filesystem.resolve(output), HashCode.fromInt(1)));
 
     RuleKey inputKey2 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(rule);
+
+    assertThat(inputKey1, Matchers.not(Matchers.equalTo(inputKey2)));
+  }
+
+  @Test
+  public void actionRuleKeyChangesIfInputContentsFromPathSourceChanges() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path output = Paths.get("output");
+
+    SomeAction action =
+        new SomeAction(
+            new ActionRegistryForTests(BuildTargetFactory.newInstance("//:rule")),
+            ImmutableSet.of(ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, output))),
+            ImmutableSet.of(),
+            1,
+            "a");
+
+    // Build a rule key with a particular hash set for the output for the above rule.
+    FakeFileHashCache hashCache =
+        new FakeFileHashCache(ImmutableMap.of(filesystem.resolve(output), HashCode.fromInt(0)));
+
+    RuleKey inputKey1 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(action);
+
+    // Now, build a rule key with a different hash for the output for the above rule.
+    hashCache =
+        new FakeFileHashCache(ImmutableMap.of(filesystem.resolve(output), HashCode.fromInt(1)));
+
+    RuleKey inputKey2 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(action);
 
     assertThat(inputKey1, Matchers.not(Matchers.equalTo(inputKey2)));
   }
@@ -161,6 +240,48 @@ public class InputBasedRuleKeyFactoryTest {
                 HashCode.fromInt(1)));
 
     RuleKey inputKey2 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(rule);
+
+    assertThat(inputKey1, Matchers.not(Matchers.equalTo(inputKey2)));
+  }
+
+  @Test
+  public void actionRuleKeyChangesIfInputContentsFromBuildTargetSourcePathChanges() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    BuildRule dep =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(graphBuilder, filesystem);
+
+    SomeAction action =
+        new SomeAction(
+            new ActionRegistryForTests(BuildTargetFactory.newInstance("//:action")),
+            ImmutableSet.of(
+                BuildTargetSourcePathToArtifactConverter.convert(
+                    filesystem, dep.getSourcePathToOutput())),
+            ImmutableSet.of(),
+            1,
+            "");
+
+    // Build a rule key with a particular hash set for the output for the above rule.
+    FakeFileHashCache hashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                pathResolver.getAbsolutePath(Objects.requireNonNull(dep.getSourcePathToOutput())),
+                HashCode.fromInt(0)));
+
+    RuleKey inputKey1 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(action);
+
+    // Now, build a rule key with a different hash for the output for the above rule.
+    hashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                pathResolver.getAbsolutePath(Objects.requireNonNull(dep.getSourcePathToOutput())),
+                HashCode.fromInt(1)));
+
+    RuleKey inputKey2 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(action);
 
     assertThat(inputKey1, Matchers.not(Matchers.equalTo(inputKey2)));
   }

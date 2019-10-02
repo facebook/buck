@@ -16,8 +16,9 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.BuildArtifact;
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -25,7 +26,7 @@ import com.google.common.collect.ImmutableSet;
  *
  * <p>This is the actual operations necessary in the build to form the final {@link Artifact}.
  */
-public interface Action {
+public interface Action extends BuildEngineAction {
 
   /** @return the identifier to the creator of this action */
   BuildTarget getOwner();
@@ -34,7 +35,10 @@ public interface Action {
   ImmutableSet<Artifact> getInputs();
 
   /** @return the set of outputs this action generates */
-  ImmutableSet<BuildArtifact> getOutputs();
+  ImmutableSet<Artifact> getOutputs();
+
+  @Override
+  ImmutableSet<SourcePath> getSourcePathOutputs();
 
   /**
    * @return a name for this action to be printed to console when executing and for logging purposes
@@ -64,6 +68,7 @@ public interface Action {
    *
    * @return whether the output {@link Artifact}s should be cached
    */
+  @Override
   boolean isCacheable();
 
   /**
@@ -71,7 +76,17 @@ public interface Action {
    *     on the machine that initiated a build instead of one of the remote workers taking part in
    *     the distributed build.
    */
+  @Override
   default boolean shouldBuildLocally() {
     return false;
+  }
+
+  /**
+   * @return true if this rule should only be allowed to be executed via Remote Execution if it
+   *     satisfies input size limits.
+   */
+  @Override
+  default boolean shouldRespectInputSizeLimitForRemoteExecution() {
+    return true;
   }
 }

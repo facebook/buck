@@ -22,9 +22,7 @@ import static org.junit.Assert.assertNull;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -44,15 +42,13 @@ public class DexWithClassesTest {
     JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
-    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
         new DexProducedFromJavaLibrary(
             buildTarget,
             new FakeProjectFilesystem(),
+            new TestActionGraphBuilder(),
             TestAndroidPlatformTargetFactory.create(),
-            params,
-            javaLibrary,
-            DxStep.DX);
+            javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutputForTests(
@@ -65,7 +61,7 @@ public class DexWithClassesTest {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertEquals(
-        BuildTargetPaths.getGenPath(javaLibrary.getProjectFilesystem(), buildTarget, "%s.dex.jar"),
+        BuildTargetPaths.getGenPath(javaLibrary.getProjectFilesystem(), buildTarget, "%s/dex.jar"),
         ruleFinder
             .getSourcePathResolver()
             .getRelativePath(dexWithClasses.getSourcePathToDexFile()));
@@ -79,15 +75,13 @@ public class DexWithClassesTest {
     JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
-    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
         new DexProducedFromJavaLibrary(
             buildTarget,
             new FakeProjectFilesystem(),
+            new TestActionGraphBuilder(),
             TestAndroidPlatformTargetFactory.create(),
-            params,
-            javaLibrary,
-            DxStep.DX);
+            javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutputForTests(

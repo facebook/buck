@@ -42,7 +42,7 @@ import org.junit.runner.RunWith;
 public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTest {
   @Test
   public void testToStringUnnamedPackage() throws IOException {
-    initCompiler();
+    compile("class Foo { }");
 
     assertEquals("unnamed package", elements.getPackageElement("").toString());
   }
@@ -109,7 +109,7 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
 
   @Test
   public void testUnnamedPackageHasEmptyNames() throws IOException {
-    initCompiler();
+    compile("class Foo { }");
 
     PackageElement unnamedPackage = elements.getPackageElement("");
     Name emptyName = elements.getName("");
@@ -131,14 +131,19 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
 
   @Test
   public void testCanExtendPackageFromDependencies() throws IOException {
-    compile(Joiner.on('\n').join("package java.util;", "class Foo { }"));
+    withClasspath(
+        ImmutableMap.of(
+            "com/example/buck/List.java",
+            Joiner.on('\n').join("package com.example.buck;", "public class List { }")));
 
-    PackageElement javaUtilPackage = elements.getPackageElement("java.util");
-    TypeElement listType = elements.getTypeElement("java.util.List");
-    TypeElement fooType = elements.getTypeElement("java.util.Foo");
+    compile(Joiner.on('\n').join("package com.example.buck;", "class Foo { }"));
 
-    assertPackageContains(javaUtilPackage, listType);
-    assertPackageContains(javaUtilPackage, fooType);
+    PackageElement buckPackage = elements.getPackageElement("com.example.buck");
+    TypeElement listType = elements.getTypeElement("com.example.buck.List");
+    TypeElement fooType = elements.getTypeElement("com.example.buck.Foo");
+
+    assertPackageContains(buckPackage, listType);
+    assertPackageContains(buckPackage, fooType);
   }
 
   @Test

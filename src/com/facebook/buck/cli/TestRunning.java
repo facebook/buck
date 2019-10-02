@@ -47,6 +47,7 @@ import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavaLibraryWithTests;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -66,6 +67,7 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -151,7 +153,7 @@ public class TestRunning {
                       buildContext.getBuildCellRootPath(),
                       library.getProjectFilesystem(),
                       JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem())))) {
-            StepRunner.runStep(executionContext, step);
+            StepRunner.runStep(executionContext, step, Optional.empty());
           }
         } catch (StepFailedException e) {
           params
@@ -323,7 +325,7 @@ public class TestRunning {
     List<TestResults> completedResults = new ArrayList<>();
 
     ListeningExecutorService directExecutorService = MoreExecutors.newDirectExecutorService();
-    ListenableFuture<Void> uberFuture =
+    ListenableFuture<Unit> uberFuture =
         MoreFutures.addListenableCallback(
             parallelTestStepsFuture,
             new FutureCallback<List<TestResults>>() {
@@ -433,7 +435,8 @@ public class TestRunning {
                         .getSpoolMode()
                     == JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK,
                 options.getCoverageIncludes(),
-                options.getCoverageExcludes()));
+                options.getCoverageExcludes()),
+            Optional.empty());
       } catch (StepFailedException e) {
         params
             .getBuckEventBus()
@@ -557,7 +560,7 @@ public class TestRunning {
   }
 
   /** Generates the set of Java library rules under test. */
-  private static ImmutableSet<JavaLibrary> getRulesUnderTest(Iterable<TestRule> tests) {
+  static ImmutableSet<JavaLibrary> getRulesUnderTest(Iterable<TestRule> tests) {
     ImmutableSet.Builder<JavaLibrary> rulesUnderTest = ImmutableSet.builder();
 
     // Gathering all rules whose source will be under test.
@@ -567,7 +570,8 @@ public class TestRunning {
         JavaTest javaTest = (JavaTest) test;
 
         ImmutableSet<JavaLibrary> transitiveDeps =
-            javaTest.getCompiledTestsLibrary().getTransitiveClasspathDeps();
+            JavaLibraryClasspathProvider.getAllReachableJavaLibraries(
+                ImmutableSet.of(javaTest.getCompiledTestsLibrary()));
         for (JavaLibrary dep : transitiveDeps) {
           if (dep instanceof JavaLibraryWithTests) {
             ImmutableSortedSet<BuildTarget> depTests = ((JavaLibraryWithTests) dep).getTests();
@@ -732,7 +736,10 @@ public class TestRunning {
 
       if (useIntermediateClassesDir) {
         classesItem = CompilerOutputPaths.getClassesDir(rule.getBuildTarget(), filesystem);
-      } else {
+      }
+      // If we aren't configured to use the classes dir on disk, or it wasn't part of this
+      // compilation run, then we'll need to unzip the output jar to get access to the classes
+      if (classesItem == null || !filesystem.isDirectory(classesItem)) {
         SourcePath path = rule.getSourcePathToOutput();
         if (path != null) {
           classesItem = ruleFinder.getSourcePathResolver().getRelativePath(path);
@@ -839,7 +846,7 @@ public class TestRunning {
           LOG.debug("Test steps will run for %s", buildTarget);
           eventBus.post(TestRuleEvent.started(buildTarget));
           for (Step step : steps) {
-            StepRunner.runStep(context, step);
+            StepRunner.runStep(context, step, Optional.of(buildTarget));
           }
           LOG.debug("Test steps did run for %s", buildTarget);
           eventBus.post(TestRuleEvent.finished(buildTarget));

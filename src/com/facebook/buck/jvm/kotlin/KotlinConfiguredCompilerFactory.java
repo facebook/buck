@@ -26,9 +26,12 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.CoreArg;
+import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -61,9 +64,12 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider) {
     CoreArg kotlinArgs = Objects.requireNonNull((CoreArg) args);
+    Path pathToAbiGenerationPluginJar =
+        shouldGenerateSourceAbi() ? kotlinBuckConfig.getPathToAbiGenerationPluginJar() : null;
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinc(),
         kotlinBuckConfig.getKotlinHomeLibraries(),
+        pathToAbiGenerationPluginJar,
         kotlinArgs.getExtraKotlincArguments(),
         kotlinArgs.getKotlincPlugins(),
         kotlinArgs.getFriendPaths(),
@@ -74,6 +80,12 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         javacOptions);
   }
 
+  @Override
+  public Optional<ExtraClasspathProvider> getExtraClasspathProvider(
+      ToolchainProvider toolchainProvider) {
+    return Optional.ofNullable(extraClasspathProviderSupplier.apply(toolchainProvider));
+  }
+
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
     return javacFactory.create(resolver, arg);
   }
@@ -81,6 +93,26 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   @Override
   public boolean shouldDesugarInterfaceMethods() {
     // Enable desugaring for kotlin libraries by default
+    return true;
+  }
+
+  @Override
+  public boolean shouldCompileAgainstAbis() {
+    return kotlinBuckConfig.shouldCompileAgainstAbis();
+  }
+
+  @Override
+  public AbiGenerationMode getAbiGenerationMode() {
+    return kotlinBuckConfig.getAbiGenerationMode();
+  }
+
+  @Override
+  public boolean shouldGenerateSourceAbi() {
+    return kotlinBuckConfig.getAbiGenerationMode().isSourceAbi();
+  }
+
+  @Override
+  public boolean sourceAbiCopiesFromLibraryTargetOutput() {
     return true;
   }
 }

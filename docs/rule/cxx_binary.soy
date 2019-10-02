@@ -37,12 +37,7 @@ and link against their static archives (which are *not* built using {sp}
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call cxx_common.srcs_arg /}
 

@@ -41,8 +41,10 @@ import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -63,10 +65,12 @@ import java.util.stream.Stream;
  * interfaces to make it consumable by C/C native linkable rules.
  */
 class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements HasRuntimeDeps, NativeLinkableGroup, CxxPreprocessorDep {
+    implements HasRuntimeDeps, LegacyNativeLinkableGroup, CxxPreprocessorDep {
 
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
       new TransitiveCxxPreprocessorInputCache(this);
+  private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
   private final ActionGraphBuilder graphBuilder;
 
@@ -104,6 +108,11 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
     return !supportedPlatformsRegex.isPresent()
         || supportedPlatformsRegex.get().matcher(cxxPlatform.getFlavor().toString()).find();
+  }
+
+  @Override
+  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+    return linkableCache;
   }
 
   @Override

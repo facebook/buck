@@ -1,0 +1,14 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+apple_test(
+    name = "Tests",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    info_plist = "Info.plist",
+    visibility = ["PUBLIC"],
+    deps = [],
+)

@@ -56,7 +56,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import org.junit.Test;
@@ -253,7 +252,6 @@ public class CacheCommandTest {
 
   private SuperConsoleEventBusListener createSuperConsole(
       Console console, Clock clock, BuckEventBus eventBus) {
-    TimeZone timeZone = TimeZone.getTimeZone("UTC");
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     Path logPath = vfs.getPath("log.txt");
     SuperConsoleConfig emptySuperConsoleConfig =
@@ -269,7 +267,6 @@ public class CacheCommandTest {
                 EnvVariablesProvider.getSystemEnv(), System.getProperties()),
             Locale.US,
             logPath,
-            timeZone,
             0L,
             0L,
             1000L,

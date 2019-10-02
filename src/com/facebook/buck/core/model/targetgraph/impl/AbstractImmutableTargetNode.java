@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -47,7 +48,7 @@ import org.immutables.value.Value;
  */
 @BuckStyleImmutable
 @Value.Immutable(builder = false, prehash = true)
-abstract class AbstractImmutableTargetNode<T> implements TargetNode<T> {
+abstract class AbstractImmutableTargetNode<T extends ConstructorArg> implements TargetNode<T> {
 
   @Value.Parameter
   @Override
@@ -101,6 +102,10 @@ abstract class AbstractImmutableTargetNode<T> implements TargetNode<T> {
 
   @Value.Parameter
   @Override
+  public abstract ImmutableSortedSet<BuildTarget> getConfigurationDeps();
+
+  @Value.Parameter
+  @Override
   public abstract CellPathResolver getCellNames();
 
   @Value.Parameter
@@ -134,6 +139,11 @@ abstract class AbstractImmutableTargetNode<T> implements TargetNode<T> {
   @Override
   public Set<BuildTarget> getParseDeps() {
     return Sets.union(getBuildDeps(), getTargetGraphOnlyDeps());
+  }
+
+  @Override
+  public Set<BuildTarget> getTotalDeps() {
+    return Sets.union(getParseDeps(), getConfigurationDeps());
   }
 
   @Override

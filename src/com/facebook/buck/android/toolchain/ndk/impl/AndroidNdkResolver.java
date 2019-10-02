@@ -47,7 +47,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
   private static final Logger LOG = Logger.get(AndroidNdkResolver.class);
 
   /** Android NDK versions starting with this number are not supported. */
-  private static final String NDK_MIN_UNSUPPORTED_VERSION = "20";
+  private static final String NDK_MIN_UNSUPPORTED_VERSION = "21";
 
   // Pre r11 NDKs store the version at RELEASE.txt.
   @VisibleForTesting static final String NDK_PRE_R11_VERSION_FILENAME = "RELEASE.TXT";

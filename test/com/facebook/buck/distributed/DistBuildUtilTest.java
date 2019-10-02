@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
 import com.facebook.buck.event.ConsoleEvent;
 import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 import java.util.logging.Level;
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,6 +28,8 @@ import org.junit.Test;
 public class DistBuildUtilTest {
   private static final ImmutableSet<String> PROJECT_WHITELIST =
       ImmutableSet.of("//projectOne", "//projectTwo");
+
+  private static final String PROJECT_ONE_PREFIX = "//projectOne";
 
   private static final String PROJECT_ONE_LIB_ONE = "//projectOne:libOne";
   private static final String PROJECT_ONE_LIB_TWO = "//projectOne/subdir:libOne";
@@ -90,6 +93,23 @@ public class DistBuildUtilTest {
     Assert.assertTrue(
         consoleEvent.getMessage().endsWith(slaveConsoleEvent.getConsoleEvent().getMessage()));
     Assert.assertEquals(consoleEvent.getLevel(), Level.SEVERE);
+  }
+
+  @Test
+  public void testGetCommonTargetPrefixWithTargetsFromSameProjectReturnsProjectPrefix() {
+    Optional<String> commonTargetPrefix =
+        DistBuildUtil.getCommonProjectPrefix(
+            ImmutableSet.of(PROJECT_ONE_LIB_ONE, PROJECT_ONE_LIB_TWO));
+    Assert.assertTrue(commonTargetPrefix.isPresent());
+    Assert.assertEquals(PROJECT_ONE_PREFIX, commonTargetPrefix.get());
+  }
+
+  @Test
+  public void testGetCommonTargetPrefixWithTargetsFromDifferentProjectReturnsEmpty() {
+    Optional<String> commonTargetPrefix =
+        DistBuildUtil.getCommonProjectPrefix(
+            ImmutableSet.of(PROJECT_ONE_LIB_ONE, PROJECT_TWO_LIB_ONE));
+    Assert.assertFalse(commonTargetPrefix.isPresent());
   }
 
   @Test

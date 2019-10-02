@@ -122,6 +122,10 @@ public class HaskellBuckConfig {
     return delegate.getBoolean(section, "old_binary_output_location");
   }
 
+  public boolean getSupportExposePackage(String section) {
+    return delegate.getBooleanValue(section, "support_expose_package", false);
+  }
+
   public Optional<String> getPackageNamePrefix(String section) {
     return delegate.getValue(section, "package_name_prefix");
   }

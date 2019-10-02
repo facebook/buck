@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -511,23 +512,19 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean isProtoFormat) {
 
     ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
+    ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
     if (filteredResourcesProvider.isPresent()) {
-      Optional<BuildRule> resourceFilterRule =
-          filteredResourcesProvider.get().getResourceFilterRule();
-      Preconditions.checkState(
-          resourceFilterRule.isPresent(),
-          "Expected ResourceFilterRule to be present when filtered resources are present.");
 
-      ImmutableSortedSet<BuildRule> compileDeps = ImmutableSortedSet.of(resourceFilterRule.get());
       int index = 0;
       for (SourcePath resDir : filteredResourcesProvider.get().getResDirectories()) {
+        BuildTarget aapt2BuildTarget =
+            buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_compile_" + index), flavor);
         Aapt2Compile compileRule =
             new Aapt2Compile(
-                buildTarget.withAppendedFlavors(
-                    InternalFlavor.of("aapt2_compile_" + index), flavor),
+                aapt2BuildTarget,
                 projectFilesystem,
-                androidPlatformTarget,
-                compileDeps,
+                graphBuilder,
+                aapt2ToolProvider.resolve(graphBuilder, aapt2BuildTarget.getTargetConfiguration()),
                 resDir);
         graphBuilder.addToIndex(compileRule);
         compileListBuilder.add(compileRule);
@@ -542,13 +539,16 @@ class AndroidBinaryResourcesGraphEnhancer {
                         AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)));
       }
     }
-    return new Aapt2Link(
+
+    BuildTarget aaptLinkBuildTarget =
         buildTarget.withAppendedFlavors(
-            AAPT2_LINK_FLAVOR, flavor, InternalFlavor.of(isProtoFormat ? "proto" : "arsc")),
+            AAPT2_LINK_FLAVOR, flavor, InternalFlavor.of(isProtoFormat ? "proto" : "arsc"));
+
+    return new Aapt2Link(
+        aaptLinkBuildTarget,
         projectFilesystem,
         graphBuilder,
         compileListBuilder.build(),
-        getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         realManifest,
         manifestEntries,
         packageId,
@@ -558,7 +558,8 @@ class AndroidBinaryResourcesGraphEnhancer {
         noVersionTransitionsResources,
         noAutoAddOverlayResources,
         isProtoFormat,
-        androidPlatformTarget);
+        aapt2ToolProvider.resolve(graphBuilder, aaptLinkBuildTarget.getTargetConfiguration()),
+        androidPlatformTarget.getAndroidJar());
   }
 
   private GenerateRDotJava createGenerateRDotJava(

@@ -18,9 +18,7 @@ package com.facebook.buck.features.js;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -35,7 +33,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.LegacyGenrule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -47,7 +45,7 @@ import java.util.OptionalInt;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class JsBundleGenrule extends Genrule
+public class JsBundleGenrule extends LegacyGenrule
     implements AndroidPackageable, HasRuntimeDeps, JsBundleOutputs, JsDependenciesOutputs {
 
   @AddToRuleKey final SourcePath jsBundleSourcePath;
@@ -70,9 +68,7 @@ public class JsBundleGenrule extends Genrule
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
       Optional<String> environmentExpansionSeparator,
-      Optional<AndroidPlatformTarget> androidPlatformTarget,
-      Optional<AndroidNdk> androidNdk,
-      Optional<AndroidSdkLocation> androidSdkLocation,
+      Optional<AndroidTools> androidTools,
       JsBundleOutputs jsBundle,
       JsDependenciesOutputs jsDependencies,
       String bundleName) {
@@ -91,9 +87,7 @@ public class JsBundleGenrule extends Genrule
         false,
         true,
         environmentExpansionSeparator,
-        androidPlatformTarget,
-        androidNdk,
-        androidSdkLocation,
+        androidTools,
         false);
     this.jsBundle = jsBundle;
     this.jsDependencies = jsDependencies;
@@ -207,7 +201,6 @@ public class JsBundleGenrule extends Genrule
       SourcePath dependenciesFilePath = getSourcePathToDepsFile();
       buildableContext.recordArtifact(sourcePathResolver.getRelativePath(dependenciesFilePath));
     }
-
     // Last, we add all remaining genrule commands after the last RmStep
     return builder.addAll(buildSteps.subList(lastRmStep.getAsInt() + 1, buildSteps.size())).build();
   }

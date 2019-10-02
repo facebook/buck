@@ -51,7 +51,7 @@ public class WorkerMacroExpander extends BuildTargetMacroExpander<WorkerMacro> {
     return new WorkerToolArg(getTool(rule));
   }
 
-  private class WorkerToolArg implements Arg {
+  private static class WorkerToolArg implements Arg {
     @AddToRuleKey private final Tool tool;
 
     public WorkerToolArg(Tool tool) {

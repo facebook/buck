@@ -17,6 +17,7 @@
 package com.facebook.buck.core.parser.buildtargetpattern;
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.ImmutableInternedUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
@@ -25,6 +26,8 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Streams;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Factory that parses a string into {@link com.facebook.buck.core.model.UnconfiguredBuildTarget}.
@@ -35,6 +38,8 @@ import com.google.common.collect.Streams;
  * `target` at the package on the root path of the default cell without flavors
  */
 public class UnconfiguredBuildTargetParser {
+  // TODO(buck_team): This is an unsafe parser and the naming doesn't indicate that. It doesn't do
+  // cell name canonicalization and so it is really easy to use incorrectly.
 
   private UnconfiguredBuildTargetParser() {}
 
@@ -43,6 +48,8 @@ public class UnconfiguredBuildTargetParser {
    *
    * <p>Fully qualified build target format is `cell//path/to:target#flavor1,flavor2` where cell may
    * be an empty string, and flavors may be omitted along with `#` sign
+   *
+   * <p>The target must be in canonical form. Importantly, the cell name must be the canonical name.
    *
    * @param target String representing fully-qualified build target, for example "//foo/bar:bar"
    * @throws BuildTargetParseException If build target format is invalid; at this moment {@link
@@ -59,6 +66,8 @@ public class UnconfiguredBuildTargetParser {
    *
    * <p>Fully qualified build target format is `cell//path/to:target#flavor1,flavor2` where cell may
    * be an empty string, and flavors may be omitted along with `#` sign
+   *
+   * <p>The target must be in canonical form. Importantly, the cell name must be the canonical name.
    *
    * @param target String representing fully-qualified build target, for example "//foo/bar:bar"
    * @param intern Whether to intern parsed instance; once interned the instance stays in memory
@@ -93,12 +102,18 @@ public class UnconfiguredBuildTargetParser {
       flavors = UnconfiguredBuildTarget.NO_FLAVORS;
     } else {
       String flavorsString = target.substring(flavorSymbolPos + 1);
-      flavors =
+      Stream<String> stream =
           Streams.stream(
-                  Splitter.on(BuildTargetLanguageConstants.FLAVOR_DELIMITER)
-                      .omitEmptyStrings()
-                      .trimResults()
-                      .split(flavorsString))
+              Splitter.on(BuildTargetLanguageConstants.FLAVOR_DELIMITER)
+                  .omitEmptyStrings()
+                  .trimResults()
+                  .split(flavorsString));
+      if (intern) {
+        stream = stream.map(String::intern);
+      }
+      flavors =
+          stream
+              // potentially we could intern InternalFlavor object as well
               .map(flavor -> (Flavor) InternalFlavor.of(flavor))
               .collect(
                   ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING));
@@ -128,10 +143,15 @@ public class UnconfiguredBuildTargetParser {
         "should have target name after '%s' sign",
         BuildTargetLanguageConstants.TARGET_SYMBOL);
 
+    CanonicalCellName canonicalCellName =
+        cellName.isEmpty()
+            ? CanonicalCellName.rootCell()
+            : CanonicalCellName.unsafeOf(Optional.of(cellName));
     if (intern) {
-      return ImmutableInternedUnconfiguredBuildTarget.of(cellName, baseName, targetName, flavors);
+      return ImmutableInternedUnconfiguredBuildTarget.of(
+          canonicalCellName, baseName.intern(), targetName, flavors);
     }
-    return ImmutableUnconfiguredBuildTarget.of(cellName, baseName, targetName, flavors);
+    return ImmutableUnconfiguredBuildTarget.of(canonicalCellName, baseName, targetName, flavors);
   }
 
   private static void check(boolean condition, String target, String message, Object... args)

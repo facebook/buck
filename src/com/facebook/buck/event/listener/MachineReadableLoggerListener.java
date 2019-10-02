@@ -46,6 +46,7 @@ import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
+import com.facebook.buck.support.build.report.BuildReportFileUploader;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -68,6 +69,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -83,11 +85,13 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private final ProjectFilesystem filesystem;
   private final ObjectWriter objectWriter;
   private BufferedOutputStream outputStream;
+  private final Optional<BuildReportFileUploader> buildReportFileUploader;
 
   private final TaskManagerCommandScope managerScope;
 
   private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHits = Maps.newConcurrentMap();
   private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeErrors = Maps.newConcurrentMap();
+  private ConcurrentMap<ArtifactCacheMode, AtomicLong> cacheModeBytes = Maps.newConcurrentMap();
   private AtomicInteger cacheMisses = new AtomicInteger(0);
   private AtomicInteger cacheIgnores = new AtomicInteger(0);
   private AtomicInteger localKeyUnchangedHits = new AtomicInteger(0);
@@ -106,16 +110,19 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       ProjectFilesystem filesystem,
       ExecutorService executor,
       ImmutableSet<ArtifactCacheMode> cacheModes,
+      Optional<BuildReportFileUploader> buildReportFileUploader,
       TaskManagerCommandScope managerScope)
       throws FileNotFoundException {
     this.info = info;
     this.filesystem = filesystem;
     this.executor = executor;
+    this.buildReportFileUploader = buildReportFileUploader;
     this.managerScope = managerScope;
 
     for (ArtifactCacheMode mode : cacheModes) {
       cacheModeHits.put(mode, new AtomicInteger(0));
       cacheModeErrors.put(mode, new AtomicInteger(0));
+      cacheModeBytes.put(mode, new AtomicLong(0L));
     }
 
     this.objectWriter =
@@ -161,7 +168,17 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       if (cacheResult.getType() == CacheResultType.LOCAL_KEY_UNCHANGED_HIT) {
         localKeyUnchangedHits.incrementAndGet();
       } else if (cacheResult.getType() == CacheResultType.HIT) {
-        cacheResult.cacheMode().ifPresent(mode -> cacheModeHits.get(mode).incrementAndGet());
+        if (cacheResult.cacheMode().isPresent()) {
+          ArtifactCacheMode mode = cacheResult.cacheMode().get();
+          AtomicInteger hits = cacheModeHits.get(mode);
+          if (hits != null) {
+            hits.incrementAndGet();
+          }
+          AtomicLong bytes = cacheModeBytes.get(mode);
+          if (bytes != null) {
+            bytes.addAndGet(cacheResult.artifactSizeBytes().orElse(0L));
+          }
+        }
       } else {
         throw new IllegalArgumentException("Unexpected CacheResult: " + cacheResult);
       }
@@ -261,10 +278,12 @@ public class MachineReadableLoggerListener implements BuckEventListener {
                 CacheCountersSummary.of(
                     cacheModeHits,
                     cacheModeErrors,
+                    cacheModeBytes,
                     cacheModeHits.values().stream().mapToInt(AtomicInteger::get).sum(),
                     cacheModeErrors.values().stream().mapToInt(AtomicInteger::get).sum(),
                     cacheMisses.get(),
                     cacheIgnores.get(),
+                    cacheModeBytes.values().stream().mapToLong(AtomicLong::get).sum(),
                     localKeyUnchangedHits.get(),
                     cacheUploadSuccessCount,
                     cacheUploadFailureCount));
@@ -280,12 +299,18 @@ public class MachineReadableLoggerListener implements BuckEventListener {
             LOG.warn("Failed to close output stream.");
           }
         });
+
+    MachineReadableLoggerListenerCloseArgs args =
+        MachineReadableLoggerListenerCloseArgs.of(
+            executor,
+            buildReportFileUploader,
+            info.getLogDirectoryPath().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME));
+
     BackgroundTask<MachineReadableLoggerListenerCloseArgs> task =
-        ImmutableBackgroundTask.<MachineReadableLoggerListenerCloseArgs>builder()
-            .setAction(new MachineReadableLoggerListenerCloseAction())
-            .setActionArgs(MachineReadableLoggerListenerCloseArgs.of(executor))
-            .setName("MachineReadableLoggerListener_close")
-            .build();
+        ImmutableBackgroundTask.of(
+            "MachineReadableLoggerListener_close",
+            new MachineReadableLoggerListenerCloseAction(),
+            args);
     managerScope.schedule(task);
   }
 
@@ -298,6 +323,13 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     @Override
     public void run(MachineReadableLoggerListenerCloseArgs args) {
       args.getExecutor().shutdown();
+
+      args.getBuildReportFileUploader()
+          .ifPresent(
+              uploader ->
+                  uploader.uploadFile(
+                      args.getMachineReadableLogFilePath(), "machine_readable_log"));
+
       // Allow SHUTDOWN_TIMEOUT_SECONDS seconds for already scheduled writeToLog calls
       // to complete.
       try {
@@ -318,5 +350,11 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   abstract static class AbstractMachineReadableLoggerListenerCloseArgs {
     @Value.Parameter
     public abstract ExecutorService getExecutor();
+
+    @Value.Parameter
+    public abstract Optional<BuildReportFileUploader> getBuildReportFileUploader();
+
+    @Value.Parameter
+    public abstract Path getMachineReadableLogFilePath();
   }
 }

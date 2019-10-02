@@ -68,13 +68,30 @@ public class BuildLogHelperIntegrationTest {
   }
 
   @Test
+  public void testBuildExpandedCommand() throws Exception {
+    ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
+    ImmutableMap<BuildId, String> buildIdToCommandMap =
+        buildLogs.stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    e -> e.getBuildId().get(),
+                    e -> Joiner.on(" ").join(e.getExpandedCommandArgs().get())));
+
+    assertThat(
+        buildIdToCommandMap,
+        Matchers.equalTo(
+            ImmutableMap.of(
+                new BuildId("ac8bd626-6137-4747-84dd-5d4f215c876c"),
+                "build --config foo.bar=baz --config mode.setting=something buck")));
+  }
+
+  @Test
   public void testBuildDuration() throws Exception {
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
     ImmutableMap<BuildId, OptionalInt> buildIdToCommandMap =
         buildLogs.stream()
             .collect(
                 ImmutableMap.toImmutableMap(e -> e.getBuildId().get(), e -> e.getBuildTimeMs()));
-
     assertThat(
         buildIdToCommandMap,
         Matchers.equalTo(

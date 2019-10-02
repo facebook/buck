@@ -71,7 +71,7 @@ public class LocalFallbackStrategyTest {
     EasyMock.replay(strategyBuildResult, buildStrategyContext);
     FallbackStrategyBuildResult fallbackStrategyBuildResult =
         new FallbackStrategyBuildResult(
-            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus);
+            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, true);
     Assert.assertEquals(buildResult, fallbackStrategyBuildResult.getBuildResult().get().get());
 
     EasyMock.verify(strategyBuildResult, buildStrategyContext);
@@ -92,7 +92,7 @@ public class LocalFallbackStrategyTest {
     EasyMock.replay(strategyBuildResult, buildStrategyContext);
     FallbackStrategyBuildResult fallbackStrategyBuildResult =
         new FallbackStrategyBuildResult(
-            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus);
+            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, true);
     Assert.assertEquals(
         localResult.getStatus(),
         fallbackStrategyBuildResult.getBuildResult().get().get().getStatus());
@@ -114,10 +114,50 @@ public class LocalFallbackStrategyTest {
     EasyMock.replay(strategyBuildResult, buildStrategyContext);
     FallbackStrategyBuildResult fallbackStrategyBuildResult =
         new FallbackStrategyBuildResult(
-            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus);
+            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, true);
     Assert.assertEquals(
         localResult.getStatus(),
         fallbackStrategyBuildResult.getBuildResult().get().get().getStatus());
+
+    EasyMock.verify(strategyBuildResult, buildStrategyContext);
+  }
+
+  @Test
+  public void testRemoteActionErrorFallbackDisabled()
+      throws ExecutionException, InterruptedException {
+    EasyMock.expect(strategyBuildResult.getBuildResult())
+        .andReturn(Futures.immediateFuture(Optional.of(failedBuildResult("//super:cool"))))
+        .times(2);
+
+    EasyMock.replay(strategyBuildResult, buildStrategyContext);
+    FallbackStrategyBuildResult fallbackStrategyBuildResult =
+        new FallbackStrategyBuildResult(
+            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, false);
+    Assert.assertEquals(
+        BuildRuleStatus.FAIL, fallbackStrategyBuildResult.getBuildResult().get().get().getStatus());
+
+    EasyMock.verify(strategyBuildResult, buildStrategyContext);
+  }
+
+  @Test
+  public void testRemoteActionExceptionFallbackDisabled()
+      throws ExecutionException, InterruptedException {
+    Exception exception = new Exception("local failed miserably.");
+    EasyMock.expect(strategyBuildResult.getBuildResult())
+        .andReturn(Futures.immediateFailedFuture(exception))
+        .times(2);
+
+    EasyMock.replay(strategyBuildResult, buildStrategyContext);
+    FallbackStrategyBuildResult fallbackStrategyBuildResult =
+        new FallbackStrategyBuildResult(
+            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, false);
+    Assert.assertTrue(fallbackStrategyBuildResult.getBuildResult().isDone());
+    try {
+      fallbackStrategyBuildResult.getBuildResult().get();
+      Assert.fail("Should've thrown...");
+    } catch (ExecutionException e) {
+      Assert.assertEquals(exception.getMessage(), e.getCause().getMessage());
+    }
 
     EasyMock.verify(strategyBuildResult, buildStrategyContext);
   }
@@ -136,7 +176,7 @@ public class LocalFallbackStrategyTest {
     EasyMock.replay(strategyBuildResult, buildStrategyContext);
     FallbackStrategyBuildResult fallbackStrategyBuildResult =
         new FallbackStrategyBuildResult(
-            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus);
+            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, true);
     Assert.assertEquals(
         localResult.getStatus(),
         fallbackStrategyBuildResult.getBuildResult().get().get().getStatus());
@@ -158,7 +198,7 @@ public class LocalFallbackStrategyTest {
     EasyMock.replay(strategyBuildResult, buildStrategyContext);
     FallbackStrategyBuildResult fallbackStrategyBuildResult =
         new FallbackStrategyBuildResult(
-            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus);
+            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, true);
     Assert.assertTrue(fallbackStrategyBuildResult.getBuildResult().isDone());
     try {
       fallbackStrategyBuildResult.getBuildResult().get();

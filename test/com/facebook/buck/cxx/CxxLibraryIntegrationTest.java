@@ -499,4 +499,12 @@ public class CxxLibraryIntegrationTest {
             "build", "--config", "cxx.exported_headers_symlinks_enabled=false", "//:bar");
     result.assertFailure();
   }
+
+  @Test
+  public void exportedHeaderStyleSystem() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exported_header_style", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:bin").assertSuccess();
+  }
 }

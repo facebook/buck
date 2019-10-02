@@ -53,7 +53,7 @@ interface LibraryReader extends AutoCloseable {
 
   InputStream openResourceFile(Path relativePath) throws IOException;
 
-  void visitClass(Path relativePath, ClassVisitor cv) throws IOException;
+  void visitClass(Path relativePath, ClassVisitor cv, boolean skipCode) throws IOException;
 
   @Override
   void close() throws IOException;

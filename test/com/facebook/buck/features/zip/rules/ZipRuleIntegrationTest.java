@@ -18,6 +18,7 @@ package com.facebook.buck.features.zip.rules;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -33,15 +34,18 @@ import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class ZipRuleIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void shouldZipSources() throws IOException {
@@ -95,23 +99,6 @@ public class ZipRuleIntegrationTest {
     workspace.runBuckBuild("//example:inputbased");
     workspace.getBuildLog().assertTargetBuiltLocally("//example:lib");
     workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//example:inputbased");
-  }
-
-  @Test
-  public void shouldFlattenZipsIfRequested() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-flatten", tmp);
-    workspace.setUp();
-    // Warm the cache
-    Path zip = workspace.buildAndReturnOutput("//example:flatten");
-
-    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
-      ZipArchiveEntry cake = zipFile.getEntry("cake.txt");
-      assertThat(cake, Matchers.notNullValue());
-
-      ZipArchiveEntry beans = zipFile.getEntry("beans.txt");
-      assertThat(beans, Matchers.notNullValue());
-    }
   }
 
   @Test
@@ -236,19 +223,6 @@ public class ZipRuleIntegrationTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenZipSourcesAndMergeSourcesDefined() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
-    workspace.setUp();
-
-    ProcessResult processResult = workspace.runBuckBuild("//example:zipbreak");
-    processResult.assertExitCode(ExitCode.FATAL_GENERIC);
-    assertThat(
-        processResult.getStderr(),
-        containsString("Illegal to define merge_source_zips when zip_srcs is present"));
-  }
-
-  @Test
   public void shouldOnlyUnpackContentsOfZipSources() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
@@ -307,6 +281,17 @@ public class ZipRuleIntegrationTest {
   }
 
   @Test
+  public void duplicateInSrcsOverwritesDuplicatesInZipSrcs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    Path zip = workspace.buildAndReturnOutput("//example:overwrite_mixed_duplicates");
+    ZipInspector inspector = new ZipInspector(zip);
+    inspector.assertFileContents(Paths.get("cake.txt"), "Guten Tag");
+  }
+
+  @Test
   public void testCrossCellWithEmbeddedBuckOut() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cross-cell", tmp);
@@ -346,5 +331,38 @@ public class ZipRuleIntegrationTest {
       ZipInspector inspector = new ZipInspector(zip);
       assertThat(inspector.getZipFileEntries().size(), greaterThan(0));
     }
+  }
+
+  @Test
+  public void emptyDirectoryIsCopiedFromZip() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+    Path zip = workspace.buildAndReturnOutput("//example:copy-zip-with-empty-dir");
+    try (ZipFile ignored = new ZipFile(zip.toFile())) {
+      ZipInspector inspector = new ZipInspector(zip);
+      inspector.assertFileExists("empty/");
+    }
+  }
+
+  @Test
+  public void failWhenInputHasDuplicates() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckBuild("//example:fail_on_duplicates");
+    result.assertExitCode(ExitCode.BUILD_ERROR);
+    assertThat(result.getStderr(), containsString("Duplicate entry \"cake.txt\" is coming from"));
+  }
+
+  @Test
+  public void appendDuplicatesKeepsAllEntries() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+    Path zip = workspace.buildAndReturnOutput("//example:append_duplicates");
+    ZipInspector inspector = new ZipInspector(zip);
+    assertEquals(Arrays.asList("cake.txt", "cake.txt", "cake.txt"), inspector.getZipFileEntries());
   }
 }

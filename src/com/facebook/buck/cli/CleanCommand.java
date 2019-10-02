@@ -73,6 +73,7 @@ public class CleanCommand extends AbstractCommand {
     pathsToDelete.add(projectFilesystem.getBuckPaths().getScratchDir());
     pathsToDelete.add(projectFilesystem.getBuckPaths().getGenDir());
     pathsToDelete.add(projectFilesystem.getBuckPaths().getTrashDir());
+    pathsToDelete.add(projectFilesystem.getBuckPaths().getJournalDir());
 
     CleanCommandBuckConfig buckConfig = cell.getBuckConfig().getView(CleanCommandBuckConfig.class);
 

@@ -1,0 +1,16 @@
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+insert_final_newline = true
+max_line_length = 100
+indent_size = 4
+tab_width = 4
+
+[*.java]
+indent_size = 2
+tab_width = 2
+
+[{*.yml,*.yaml}]
+indent_size = 2
+tab_width = 2

@@ -55,6 +55,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -64,6 +65,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -95,14 +97,13 @@ public class AndroidBinary extends AbstractBuildRule
   private final ProGuardObfuscateStep.SdkProguardType sdkProguardConfig;
   private final int optimizationPasses;
   private final Optional<SourcePath> proguardConfig;
-  private final SourcePathRuleFinder ruleFinder;
 
   private final Optional<List<String>> proguardJvmArgs;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final ResourceFilter resourceFilter;
   private final EnumSet<ExopackageMode> exopackageModes;
-  private final ImmutableSet<JavaLibrary> rulesToExcludeFromDex;
+  private final Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex;
 
   private final AndroidGraphEnhancementResult enhancementResult;
   private final ManifestEntries manifestEntries;
@@ -117,6 +118,8 @@ public class AndroidBinary extends AbstractBuildRule
   private final BuildRuleParams buildRuleParams;
 
   @AddToRuleKey private final AndroidBinaryBuildable buildable;
+
+  private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
   // TODO(cjhopman): What's the difference between shouldProguard and skipProguard?
   AndroidBinary(
@@ -139,7 +142,7 @@ public class AndroidBinary extends AbstractBuildRule
       Set<TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
       EnumSet<ExopackageMode> exopackageModes,
-      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
+      Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
       int xzCompressionLevel,
       boolean packageAssetLibraries,
@@ -156,7 +159,6 @@ public class AndroidBinary extends AbstractBuildRule
       Optional<ExopackageInfo> exopackageInfo) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
-    this.ruleFinder = ruleFinder;
     this.proguardJvmArgs = proguardJvmArgs;
     this.keystore = keystore;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
@@ -230,11 +232,26 @@ public class AndroidBinary extends AbstractBuildRule
     this.exopackageInfo = exopackageInfo;
 
     params =
-        params.withExtraDeps(
+        new BuildRuleParams(
+            ImmutableSortedSet::of,
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
-                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
+            params.getTargetGraphOnlyDeps());
     this.buildRuleParams = params;
+
+    this.transitiveClasspathDepsSupplier =
+        createTransitiveClasspathDepsSupplier(ruleFinder, enhancementResult);
+  }
+
+  private static Supplier<ImmutableSet<JavaLibrary>> createTransitiveClasspathDepsSupplier(
+      SourcePathRuleFinder ruleFinder, AndroidGraphEnhancementResult enhancementResult) {
+    return Suppliers.memoize(
+        () ->
+            JavaLibraryClasspathProvider.getClasspathDeps(
+                ruleFinder
+                    .filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex().stream())
+                    .collect(ImmutableSet.toImmutableSet())));
   }
 
   @Override
@@ -257,7 +274,7 @@ public class AndroidBinary extends AbstractBuildRule
     return buildRuleParams.getTargetGraphOnlyDeps();
   }
 
-  public ImmutableSet<JavaLibrary> getRulesToExcludeFromDex() {
+  public Supplier<ImmutableSet<JavaLibrary>> getRulesToExcludeFromDex() {
     return rulesToExcludeFromDex;
   }
 
@@ -355,10 +372,6 @@ public class AndroidBinary extends AbstractBuildRule
     return keystore;
   }
 
-  public SortedSet<BuildRule> getClasspathDeps() {
-    return getDeclaredDeps();
-  }
-
   @Override
   public ImmutableSet<SourcePath> getTransitiveClasspaths() {
     // This is used primarily for buck audit classpath.
@@ -367,10 +380,7 @@ public class AndroidBinary extends AbstractBuildRule
 
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
-    return JavaLibraryClasspathProvider.getClasspathDeps(
-        ruleFinder
-            .filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex().stream())
-            .collect(ImmutableSet.toImmutableSet()));
+    return transitiveClasspathDepsSupplier.get();
   }
 
   @Override

@@ -51,14 +51,19 @@ class DirectoryReader implements LibraryReader {
   }
 
   @Override
-  public void visitClass(Path relativePath, ClassVisitor cv) throws IOException {
+  public void visitClass(Path relativePath, ClassVisitor cv, boolean skipCode) throws IOException {
     if (!isClass(relativePath)) {
       throw new IllegalArgumentException();
     }
 
+    int parsingOptions = ClassReader.SKIP_FRAMES;
+    if (skipCode) {
+      parsingOptions |= ClassReader.SKIP_DEBUG | ClassReader.SKIP_CODE;
+    }
+
     try (InputStream inputStream = openInputStream(relativePath)) {
       ClassReader reader = new ClassReader(inputStream);
-      reader.accept(cv, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+      reader.accept(cv, parsingOptions);
     }
   }
 

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
+import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -30,6 +31,7 @@ import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Identifier;
 import com.google.devtools.build.lib.syntax.IntegerLiteral;
 import com.google.devtools.build.lib.syntax.Mutability;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.StringLiteral;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
@@ -39,7 +41,9 @@ import org.junit.Test;
 
 public class BuiltInProviderInfoTest {
 
-  @ImmutableInfo(args = {"str", "my_info"})
+  @ImmutableInfo(
+      args = {"str", "my_info"},
+      defaultSkylarkValues = {"\"default value\"", "1"})
   public abstract static class SomeInfo extends BuiltInProviderInfo<SomeInfo> {
     public static final BuiltInProvider<SomeInfo> PROVIDER =
         BuiltInProvider.of(ImmutableSomeInfo.class);
@@ -49,7 +53,9 @@ public class BuiltInProviderInfoTest {
     public abstract int myInfo();
   }
 
-  @ImmutableInfo(args = {"str"})
+  @ImmutableInfo(
+      args = {"str"},
+      defaultSkylarkValues = {""})
   public abstract static class OtherInfo extends BuiltInProviderInfo<OtherInfo> {
     public static final BuiltInProvider<OtherInfo> PROVIDER =
         BuiltInProvider.of(ImmutableOtherInfo.class);
@@ -57,13 +63,26 @@ public class BuiltInProviderInfoTest {
     public abstract String str();
   }
 
-  @ImmutableInfo(args = {"set"})
+  @ImmutableInfo(
+      args = {"set"},
+      defaultSkylarkValues = "[]")
   public abstract static class InfoWithSet extends BuiltInProviderInfo<InfoWithSet> {
     public static final BuiltInProvider<InfoWithSet> PROVIDER =
         BuiltInProvider.of(ImmutableInfoWithSet.class);
 
     @Value.Parameter(order = 0)
     public abstract Set<String> set();
+  }
+
+  @ImmutableInfo(
+      args = {"map"},
+      defaultSkylarkValues = "{}")
+  public abstract static class InfoWithMap extends BuiltInProviderInfo<InfoWithMap> {
+    public static final BuiltInProvider<InfoWithMap> PROVIDER =
+        BuiltInProvider.of(ImmutableInfoWithMap.class);
+
+    @Value.Parameter(order = 0)
+    public abstract SkylarkDict<String, Integer> map();
   }
 
   @Test
@@ -85,7 +104,7 @@ public class BuiltInProviderInfoTest {
     Mutability mutability = Mutability.create("providertest");
     Environment env =
         Environment.builder(mutability)
-            .useDefaultSemantics()
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .setGlobals(
                 Environment.GlobalFrame.createForBuiltins(
                     ImmutableMap.of(SomeInfo.PROVIDER.getName(), SomeInfo.PROVIDER)))
@@ -119,6 +138,19 @@ public class BuiltInProviderInfoTest {
   }
 
   @Test
+  public void infoWithMapCanBeCreatedProperly()
+      throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    InfoWithMap someInfo1 = new ImmutableInfoWithMap(SkylarkDict.of(null, "a", 1));
+    assertEquals(SkylarkDict.of(null, "a", 1), someInfo1.map());
+
+    InfoWithMap someInfo2 = someInfo1.getProvider().createInfo(SkylarkDict.of(null, "b", 2));
+    assertEquals(SkylarkDict.of(null, "b", 2), someInfo2.map());
+
+    InfoWithMap someInfo3 = InfoWithMap.PROVIDER.createInfo(SkylarkDict.of(null));
+    assertEquals(SkylarkDict.of(null), someInfo3.map());
+  }
+
+  @Test
   public void differentInfoInstanceProviderKeyEquals()
       throws IllegalAccessException, InstantiationException, InvocationTargetException {
     SomeInfo someInfo1 = new ImmutableSomeInfo("a", 1);
@@ -132,5 +164,27 @@ public class BuiltInProviderInfoTest {
   @Test
   public void differentInfoTypeProviderKeyNotEquals() {
     assertNotEquals(SomeInfo.PROVIDER.getKey(), OtherInfo.PROVIDER.getKey());
+  }
+
+  @Test
+  public void defaultValuesWorkInStarlarkContext() throws InterruptedException, EvalException {
+
+    Mutability mutability = Mutability.create("test");
+    Environment env =
+        Environment.builder(mutability)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+            .setGlobals(
+                Environment.GlobalFrame.createForBuiltins(
+                    ImmutableMap.of(
+                        ImmutableSomeInfo.PROVIDER.getName(), ImmutableSomeInfo.PROVIDER)))
+            .build();
+
+    FuncallExpression ast =
+        new FuncallExpression(
+            new Identifier(ImmutableSomeInfo.PROVIDER.getName()),
+            ImmutableList.of(
+                new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(2))));
+
+    assertEquals(new ImmutableSomeInfo("default value", 2), ast.eval(env));
   }
 }

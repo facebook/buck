@@ -27,6 +27,7 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -487,7 +488,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   @Override
-  public final ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+  public final ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
     if (!getCacheReadMode().isWritable()) {
       return Futures.immediateFuture(null);
     }
@@ -497,7 +498,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
       LOG.info(
           "Artifact too big so not storing it in the %s cache. " + "file=[%s] buildTarget=[%s]",
           name, output.getPath(), info.getBuildTarget());
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
     Path tmp;
@@ -505,7 +506,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
       tmp = getPathForArtifact(output);
     } catch (IOException e) {
       LOG.error(e, "Failed to store artifact in temp file: " + output.getPath());
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
     StoreEvents events = eventListener.storeScheduled(info, artifactSizeBytes);
@@ -515,7 +516,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
           try {
             StoreResult result = storeImpl(info, tmp);
             requestEvents.finished(result);
-            return null;
+            return Unit.UNIT;
           } catch (IOException e) {
             String msg =
                 String.format(
@@ -528,10 +529,10 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   @Override
-  public final ListenableFuture<Void> store(
+  public final ListenableFuture<Unit> store(
       ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
     if (!getCacheReadMode().isWritable()) {
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
     ImmutableList.Builder<Pair<ArtifactInfo, Path>> matchedArtifactsBuilder =
@@ -565,7 +566,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     ImmutableList<Pair<ArtifactInfo, Path>> matchedArtifacts = matchedArtifactsBuilder.build();
 
     if (matchedArtifacts.isEmpty()) {
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
     ImmutableList<Long> artifactSizesInBytes = artifactSizesInBytesBuilder.build();
@@ -601,7 +602,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
             }
           }
 
-          return null;
+          return Unit.UNIT;
         });
   }
 

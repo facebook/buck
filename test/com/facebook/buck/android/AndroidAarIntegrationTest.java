@@ -16,8 +16,13 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.relinker.Symbols;
+import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
+import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolGetter;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -258,6 +263,38 @@ public class AndroidAarIntegrationTest {
     zipInspector.assertFileExists("assets/lib/x86/libfoo.so");
     zipInspector.assertFileExists("jni/armeabi-v7a/libbar.so");
     zipInspector.assertFileExists("jni/x86/libbar.so");
+  }
+
+  @Test
+  public void testNativeLibraryRelinker() throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
+    workspace.setUp();
+    String target = "//apps/aar_build_config:app_with_relinker";
+    workspace.runBuckBuild(target).assertSuccess();
+    SymbolGetter syms = AndroidNdkHelper.getSymbolGetter(filesystem, tmp);
+    Symbols sym;
+
+    Path aar =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+    sym = syms.getDynamicSymbols(aar, "assets/lib/x86/libnative_xdsodce_top.so");
+    assertTrue(sym.global.contains("_Z10JNI_OnLoadii"));
+    assertTrue(sym.undefined.contains("_Z10midFromTopi"));
+    assertTrue(sym.undefined.contains("_Z10botFromTopi"));
+    assertFalse(sym.all.contains("_Z6unusedi"));
+
+    sym = syms.getDynamicSymbols(aar, "jni/x86/libnative_xdsodce_mid.so");
+    assertTrue(sym.global.contains("_Z10midFromTopi"));
+    assertTrue(sym.undefined.contains("_Z10botFromMidi"));
+    assertFalse(sym.all.contains("_Z6unusedi"));
+
+    sym = syms.getDynamicSymbols(aar, "jni/x86/libnative_xdsodce_bot.so");
+    assertTrue(sym.global.contains("_Z10botFromTopi"));
+    assertTrue(sym.global.contains("_Z10botFromMidi"));
+    assertFalse(sym.all.contains("_Z6unusedi"));
   }
 
   @Test

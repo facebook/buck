@@ -25,9 +25,12 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.immutables.value.Value;
 
@@ -42,6 +45,9 @@ abstract class AbstractJUnitJvmArgs {
   private static final String MODULE_BASE_PATH_PROPERTY = "com.facebook.buck.moduleBasePath";
   private static final String STD_OUT_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdOutLogLevel";
   private static final String STD_ERR_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdErrLogLevel";
+
+  /** @return The version of Java we think we're targeting. */
+  abstract int getTargetJavaVersion();
 
   /** @return Directory to use to write test results to. */
   abstract Optional<Path> getDirectoryForTestResults();
@@ -129,15 +135,19 @@ abstract class AbstractJUnitJvmArgs {
   public void formatCommandLineArgsToList(
       ImmutableList.Builder<String> args,
       ProjectFilesystem filesystem,
+      Supplier<Path> classpathArgfile,
       Verbosity verbosity,
       long defaultTestTimeoutMillis) {
-    args.add(
-        String.format(
-            "-D%s=%s", FileClassPathRunner.TESTRUNNER_CLASSES_PROPERTY, getTestRunnerClasspath()));
-    args.add(
-        String.format(
-            "-D%s=%s",
-            FileClassPathRunner.CLASSPATH_FILE_PROPERTY, filesystem.resolve(getClasspathFile())));
+    if (!shouldUseClasspathArgfile()) {
+      args.add(
+          String.format(
+              "-D%s=%s",
+              FileClassPathRunner.TESTRUNNER_CLASSES_PROPERTY, getTestRunnerClasspath()));
+      args.add(
+          String.format(
+              "-D%s=%s",
+              FileClassPathRunner.CLASSPATH_FILE_PROPERTY, filesystem.resolve(getClasspathFile())));
+    }
 
     if (isCodeCoverageEnabled()) {
       args.add(
@@ -192,7 +202,14 @@ abstract class AbstractJUnitJvmArgs {
       args.add("-verbose");
     }
 
-    args.add("-classpath", getTestRunnerClasspath().toString());
+    if (shouldUseClasspathArgfile()) {
+      // Java 9+ supports argfiles for commandline arguments. We leverage this when we know we're
+      // launching a version of Java that supports this, as classloader changes in Java 9 preclude
+      // use from using the approach we use for Java 8-.
+      args.add("@" + filesystem.resolve(classpathArgfile.get()));
+    } else {
+      args.add("-classpath", getTestRunnerClasspath().toString());
+    }
 
     args.add(FileClassPathRunner.class.getName());
 
@@ -231,5 +248,36 @@ abstract class AbstractJUnitJvmArgs {
 
   public Map<String, String> getEnvironment() {
     return ImmutableMap.of(BuckClasspath.TEST_ENV_VAR_NAME, getClasspathFile().toString());
+  }
+
+  /** Whether or not we should use an argfile for the classpath when invoking Java. */
+  public boolean shouldUseClasspathArgfile() {
+    return getTargetJavaVersion() >= 9;
+  }
+
+  /** Writes an argfile for the classpath to a file, which is supported in Java 9+. */
+  public void writeClasspathArgfile(ProjectFilesystem filesystem, Path argfile) throws IOException {
+    StringBuilder builder = new StringBuilder();
+    builder.append("-classpath");
+    builder.append(System.lineSeparator());
+    builder.append('"');
+
+    builder.append(escapePathForArgfile(getTestRunnerClasspath().toString()));
+
+    for (String classpathEntry : filesystem.readLines(getClasspathFile())) {
+      builder.append(File.pathSeparatorChar);
+      builder.append('\\');
+      builder.append(System.lineSeparator());
+      builder.append(escapePathForArgfile(classpathEntry));
+    }
+
+    builder.append('"');
+    builder.append(System.lineSeparator());
+
+    filesystem.writeContentsToPath(builder.toString(), argfile);
+  }
+
+  private String escapePathForArgfile(String path) {
+    return path.replace("\\", "\\\\");
   }
 }

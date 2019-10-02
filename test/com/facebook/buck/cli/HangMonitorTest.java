@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.SettableFuture;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +50,7 @@ public class HangMonitorTest {
   @Test
   public void reportContainsCurrentThread() throws Exception {
     AtomicBoolean sleepingThreadShouldRun = new AtomicBoolean(true);
-    SettableFuture<Void> sleepingThreadRunning = SettableFuture.create();
+    SettableFuture<Unit> sleepingThreadRunning = SettableFuture.create();
     try {
       Thread sleepingThread =
           new Thread("testThread") {
@@ -59,7 +60,7 @@ public class HangMonitorTest {
             }
 
             private void hangForHangMonitorTestReport() {
-              sleepingThreadRunning.set(null);
+              sleepingThreadRunning.set(Unit.UNIT);
               try {
                 while (sleepingThreadShouldRun.get()) {
                   Thread.sleep(1000);

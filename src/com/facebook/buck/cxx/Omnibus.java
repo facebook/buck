@@ -35,7 +35,9 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -82,66 +84,61 @@ public class Omnibus {
     return root.withAppendedFlavors(InternalFlavor.of("dummy"));
   }
 
-  private static boolean shouldCreateDummyRoot(NativeLinkTarget target, CxxPlatform cxxPlatform) {
-    return target.getNativeLinkTargetMode(cxxPlatform).getType() == Linker.LinkType.EXECUTABLE;
+  private static boolean shouldCreateDummyRoot(NativeLinkTarget target) {
+    return target.getNativeLinkTargetMode().getType() == Linker.LinkType.EXECUTABLE;
   }
 
-  private static Iterable<NativeLinkableGroup> getDeps(
-      NativeLinkableGroup nativeLinkableGroup,
-      CxxPlatform cxxPlatform,
-      ActionGraphBuilder graphBuilder) {
+  private static Iterable<NativeLinkable> getDeps(
+      NativeLinkable nativeLinkable, ActionGraphBuilder graphBuilder) {
     return Iterables.concat(
-        nativeLinkableGroup.getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
-        nativeLinkableGroup.getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder));
+        nativeLinkable.getNativeLinkableDeps(graphBuilder),
+        nativeLinkable.getNativeLinkableExportedDeps(graphBuilder));
   }
 
   // Returned the dependencies for the given node, which can either be a `NativeLinkable` or a
   // `NativeLinkTarget`.
-  private static Iterable<? extends NativeLinkableGroup> getDeps(
+  private static Iterable<? extends NativeLinkable> getDeps(
       BuildTarget target,
       Map<BuildTarget, ? extends NativeLinkTarget> nativeLinkTargets,
-      Map<BuildTarget, ? extends NativeLinkableGroup> nativeLinkables,
-      CxxPlatform cxxPlatform,
+      Map<BuildTarget, ? extends NativeLinkable> nativeLinkables,
       ActionGraphBuilder graphBuilder) {
     if (nativeLinkables.containsKey(target)) {
-      NativeLinkableGroup nativeLinkableGroup = Objects.requireNonNull(nativeLinkables.get(target));
-      return getDeps(nativeLinkableGroup, cxxPlatform, graphBuilder);
+      NativeLinkable nativeLinkable = Objects.requireNonNull(nativeLinkables.get(target));
+      return getDeps(nativeLinkable, graphBuilder);
     } else {
       NativeLinkTarget nativeLinkTarget = Objects.requireNonNull(nativeLinkTargets.get(target));
-      return nativeLinkTarget.getNativeLinkTargetDeps(cxxPlatform, graphBuilder);
+      return nativeLinkTarget.getNativeLinkTargetDeps(graphBuilder);
     }
   }
 
   // Build the data structure containing bookkeeping which describing the omnibus link for the
   // given included and excluded roots.
   static OmnibusSpec buildSpec(
-      CxxPlatform cxxPlatform,
       Iterable<? extends NativeLinkTarget> includedRoots,
-      Iterable<? extends NativeLinkableGroup> excludedRoots,
+      Iterable<? extends NativeLinkable> excludedRoots,
       ActionGraphBuilder actionGraphBuilder) {
 
     // A map of targets to native linkable objects.  We maintain this, so that we index our
     // bookkeeping around `BuildTarget` and avoid having to guarantee that all other types are
     // hashable.
-    Map<BuildTarget, NativeLinkableGroup> nativeLinkables = new LinkedHashMap<>();
+    Map<BuildTarget, NativeLinkable> nativeLinkables = new LinkedHashMap<>();
 
     // The nodes which should *not* be included in the omnibus link.
     Set<BuildTarget> excluded = new LinkedHashSet<>();
 
     // Process all the roots included in the omnibus link.
     Map<BuildTarget, NativeLinkTarget> roots = new LinkedHashMap<>();
-    Map<BuildTarget, NativeLinkableGroup> rootDeps = new LinkedHashMap<>();
+    Map<BuildTarget, NativeLinkable> rootDeps = new LinkedHashMap<>();
     for (NativeLinkTarget root : includedRoots) {
       roots.put(root.getBuildTarget(), root);
-      for (NativeLinkableGroup dep :
+      for (NativeLinkable dep :
           NativeLinkables.getNativeLinkables(
-              cxxPlatform,
               actionGraphBuilder,
-              root.getNativeLinkTargetDeps(cxxPlatform, actionGraphBuilder),
+              root.getNativeLinkTargetDeps(actionGraphBuilder),
               Linker.LinkableDepType.SHARED)) {
         Linker.LinkableDepType linkStyle =
-            NativeLinkables.getLinkStyle(
-                dep.getPreferredLinkage(cxxPlatform), Linker.LinkableDepType.SHARED);
+            NativeLinkableGroups.getLinkStyle(
+                dep.getPreferredLinkage(), Linker.LinkableDepType.SHARED);
         Preconditions.checkState(linkStyle != Linker.LinkableDepType.STATIC);
 
         // We only consider deps which aren't *only* statically linked.
@@ -154,7 +151,7 @@ public class Omnibus {
 
     // Process all roots excluded from the omnibus link, and add them to our running list of
     // excluded nodes.
-    for (NativeLinkableGroup root : excludedRoots) {
+    for (NativeLinkable root : excludedRoots) {
       nativeLinkables.put(root.getBuildTarget(), root);
       excluded.add(root.getBuildTarget());
     }
@@ -166,14 +163,12 @@ public class Omnibus {
     new AbstractBreadthFirstTraversal<BuildTarget>(rootDeps.keySet()) {
       @Override
       public Iterable<BuildTarget> visit(BuildTarget target) {
-        NativeLinkableGroup nativeLinkableGroup =
-            Objects.requireNonNull(nativeLinkables.get(target));
-        ImmutableMap<BuildTarget, NativeLinkableGroup> deps =
+        NativeLinkable nativeLinkable = Objects.requireNonNull(nativeLinkables.get(target));
+        ImmutableMap<BuildTarget, NativeLinkable> deps =
             Maps.uniqueIndex(
-                getDeps(nativeLinkableGroup, cxxPlatform, actionGraphBuilder),
-                NativeLinkableGroup::getBuildTarget);
+                getDeps(nativeLinkable, actionGraphBuilder), NativeLinkable::getBuildTarget);
         nativeLinkables.putAll(deps);
-        if (!nativeLinkableGroup.supportsOmnibusLinking(cxxPlatform)) {
+        if (!nativeLinkable.supportsOmnibusLinking()) {
           excluded.add(target);
         }
         return deps.keySet();
@@ -184,12 +179,10 @@ public class Omnibus {
     new AbstractBreadthFirstTraversal<BuildTarget>(excluded) {
       @Override
       public Iterable<BuildTarget> visit(BuildTarget target) {
-        NativeLinkableGroup nativeLinkableGroup =
-            Objects.requireNonNull(nativeLinkables.get(target));
-        ImmutableMap<BuildTarget, NativeLinkableGroup> deps =
+        NativeLinkable nativeLinkable = Objects.requireNonNull(nativeLinkables.get(target));
+        ImmutableMap<BuildTarget, NativeLinkable> deps =
             Maps.uniqueIndex(
-                getDeps(nativeLinkableGroup, cxxPlatform, actionGraphBuilder),
-                NativeLinkableGroup::getBuildTarget);
+                getDeps(nativeLinkable, actionGraphBuilder), NativeLinkable::getBuildTarget);
         nativeLinkables.putAll(deps);
         excluded.add(target);
         return deps.keySet();
@@ -207,8 +200,8 @@ public class Omnibus {
         Set<BuildTarget> keep = new LinkedHashSet<>();
         for (BuildTarget dep :
             Iterables.transform(
-                getDeps(target, roots, nativeLinkables, cxxPlatform, actionGraphBuilder),
-                NativeLinkableGroup::getBuildTarget)) {
+                getDeps(target, roots, nativeLinkables, actionGraphBuilder),
+                NativeLinkable::getBuildTarget)) {
           if (excluded.contains(dep)) {
             deps.add(dep);
           } else {
@@ -236,9 +229,7 @@ public class Omnibus {
         .deps(Maps.asMap(deps, Functions.forMap(nativeLinkables)))
         .excluded(Maps.asMap(excluded, Functions.forMap(nativeLinkables)))
         .excludedRoots(
-            RichStream.from(excludedRoots)
-                .map(NativeLinkableGroup::getBuildTarget)
-                .toImmutableSet())
+            RichStream.from(excludedRoots).map(NativeLinkable::getBuildTarget).toImmutableSet())
         .build();
   }
 
@@ -308,33 +299,30 @@ public class Omnibus {
 
     // Add the args for the root link target first.
     NativeLinkableInput input =
-        root.getNativeLinkTargetInput(
-            cxxPlatform, graphBuilder, graphBuilder.getSourcePathResolver());
+        root.getNativeLinkTargetInput(graphBuilder, graphBuilder.getSourcePathResolver());
     argsBuilder.addAll(input.getArgs());
 
     // Grab a topologically sorted mapping of all the root's deps.
-    ImmutableList<NativeLinkableGroup> deps =
+    ImmutableList<? extends NativeLinkable> deps =
         NativeLinkables.getNativeLinkables(
-            cxxPlatform,
             graphBuilder,
-            root.getNativeLinkTargetDeps(cxxPlatform, graphBuilder),
+            root.getNativeLinkTargetDeps(graphBuilder),
             Linker.LinkableDepType.SHARED);
 
     // Now process the dependencies in topological order, to assemble the link line.
     boolean alreadyAddedOmnibusToArgs = false;
-    for (NativeLinkableGroup nativeLinkableGroup : deps) {
-      BuildTarget linkableTarget = nativeLinkableGroup.getBuildTarget();
+    for (NativeLinkable nativeLinkable : deps) {
+      BuildTarget linkableTarget = nativeLinkable.getBuildTarget();
       Linker.LinkableDepType linkStyle =
-          NativeLinkables.getLinkStyle(
-              nativeLinkableGroup.getPreferredLinkage(cxxPlatform), Linker.LinkableDepType.SHARED);
+          NativeLinkableGroups.getLinkStyle(
+              nativeLinkable.getPreferredLinkage(), Linker.LinkableDepType.SHARED);
 
       // If this dep needs to be linked statically, then we always link it directly.
       if (linkStyle != Linker.LinkableDepType.SHARED) {
         Preconditions.checkState(linkStyle == Linker.LinkableDepType.STATIC_PIC);
         argsBuilder.addAll(
-            nativeLinkableGroup
-                .getNativeLinkableInput(
-                    cxxPlatform, linkStyle, graphBuilder, target.getTargetConfiguration())
+            nativeLinkable
+                .getNativeLinkableInput(linkStyle, graphBuilder, target.getTargetConfiguration())
                 .getArgs());
         continue;
       }
@@ -362,15 +350,14 @@ public class Omnibus {
       // normally.
       Preconditions.checkState(spec.getExcluded().containsKey(linkableTarget));
       argsBuilder.addAll(
-          nativeLinkableGroup
-              .getNativeLinkableInput(
-                  cxxPlatform, linkStyle, graphBuilder, target.getTargetConfiguration())
+          nativeLinkable
+              .getNativeLinkableInput(linkStyle, graphBuilder, target.getTargetConfiguration())
               .getArgs());
     }
 
     // Create the root library rule using the arguments assembled above.
     BuildTarget rootTarget = getRootTarget(target, rootTargetBase);
-    NativeLinkTargetMode rootTargetMode = root.getNativeLinkTargetMode(cxxPlatform);
+    NativeLinkTargetMode rootTargetMode = root.getNativeLinkTargetMode();
     CxxLink rootLinkRule;
     switch (rootTargetMode.getType()) {
 
@@ -539,9 +526,7 @@ public class Omnibus {
               .requireRule(
                   getRootTarget(
                       buildTarget,
-                      shouldCreateDummyRoot(linkTarget, cxxPlatform)
-                          ? getDummyRootTarget(target)
-                          : target))
+                      shouldCreateDummyRoot(linkTarget) ? getDummyRootTarget(target) : target))
               .getSourcePathToOutput());
     }
     argsBuilder.addAll(
@@ -572,12 +557,11 @@ public class Omnibus {
 
       // Otherwise, this is a body node, and we need to add its static library to the link line,
       // so that the linker can discard unused object files from it.
-      NativeLinkableGroup nativeLinkableGroup = Objects.requireNonNull(spec.getBody().get(target));
+      NativeLinkable nativeLinkable = Objects.requireNonNull(spec.getBody().get(target));
       NativeLinkableInput input =
           NativeLinkables.getNativeLinkableInput(
-              cxxPlatform,
               Linker.LinkableDepType.STATIC_PIC,
-              nativeLinkableGroup,
+              nativeLinkable,
               graphBuilder,
               buildTarget.getTargetConfiguration());
       argsBuilder.addAll(input.getArgs());
@@ -585,15 +569,14 @@ public class Omnibus {
 
     // We process all excluded omnibus deps last, and just add their components as if this were a
     // normal shared link.
-    ImmutableList<NativeLinkableGroup> deps =
+    ImmutableList<? extends NativeLinkable> deps =
         NativeLinkables.getNativeLinkables(
-            cxxPlatform, graphBuilder, spec.getDeps().values(), Linker.LinkableDepType.SHARED);
-    for (NativeLinkableGroup nativeLinkableGroup : deps) {
+            graphBuilder, spec.getDeps().values(), Linker.LinkableDepType.SHARED);
+    for (NativeLinkable nativeLinkable : deps) {
       NativeLinkableInput input =
           NativeLinkables.getNativeLinkableInput(
-              cxxPlatform,
               Linker.LinkableDepType.SHARED,
-              nativeLinkableGroup,
+              nativeLinkable,
               graphBuilder,
               buildTarget.getTargetConfiguration());
       argsBuilder.addAll(input.getArgs());
@@ -642,12 +625,11 @@ public class Omnibus {
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraOmnibusLdflags,
       Iterable<? extends NativeLinkTarget> nativeLinkTargetRoots,
-      Iterable<? extends NativeLinkableGroup> nativeLinkableRoots) {
+      Iterable<? extends NativeLinkable> nativeLinkableRoots) {
 
     OmnibusLibraries.Builder libs = OmnibusLibraries.builder();
 
-    OmnibusSpec spec =
-        buildSpec(cxxPlatform, nativeLinkTargetRoots, nativeLinkableRoots, graphBuilder);
+    OmnibusSpec spec = buildSpec(nativeLinkTargetRoots, nativeLinkableRoots, graphBuilder);
 
     // Create an empty dummy omnibus library, to give the roots something to link against before
     // we have the actual omnibus library available.  Note that this requires that the linker
@@ -668,7 +650,7 @@ public class Omnibus {
       // For executable roots, some platforms can't properly build them when there are any
       // unresolved symbols, so we initially link a dummy root just to provide a way to grab the
       // undefined symbol list we need to build the real omnibus library.
-      if (shouldCreateDummyRoot(target, cxxPlatform)) {
+      if (shouldCreateDummyRoot(target)) {
         createDummyRoot(
             buildTarget,
             projectFilesystem,
@@ -716,7 +698,7 @@ public class Omnibus {
     // Do another pass over executable roots, building the real DSO which links to the real omnibus.
     // See the comment above in the first pass for more details.
     for (NativeLinkTarget target : spec.getRoots().values()) {
-      if (shouldCreateDummyRoot(target, cxxPlatform)) {
+      if (shouldCreateDummyRoot(target)) {
         OmnibusRoot root =
             createRoot(
                 buildTarget,
@@ -734,12 +716,11 @@ public class Omnibus {
 
     // Lastly, add in any shared libraries from excluded nodes the normal way, omitting non-root
     // static libraries.
-    for (NativeLinkableGroup nativeLinkableGroup : spec.getExcluded().values()) {
-      if (spec.getExcludedRoots().contains(nativeLinkableGroup.getBuildTarget())
-          || nativeLinkableGroup.getPreferredLinkage(cxxPlatform)
-              != NativeLinkableGroup.Linkage.STATIC) {
+    for (NativeLinkable nativeLinkable : spec.getExcluded().values()) {
+      if (spec.getExcludedRoots().contains(nativeLinkable.getBuildTarget())
+          || nativeLinkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {
         for (Map.Entry<String, SourcePath> ent :
-            nativeLinkableGroup.getSharedLibraries(cxxPlatform, graphBuilder).entrySet()) {
+            nativeLinkable.getSharedLibraries(graphBuilder).entrySet()) {
           libs.addLibraries(OmnibusLibrary.of(ent.getKey(), ent.getValue()));
         }
       }
@@ -759,16 +740,16 @@ public class Omnibus {
     public abstract ImmutableMap<BuildTarget, NativeLinkTarget> getRoots();
 
     // All native nodes which are to be statically linked into the giant combined shared library.
-    public abstract ImmutableMap<BuildTarget, NativeLinkableGroup> getBody();
+    public abstract ImmutableMap<BuildTarget, NativeLinkable> getBody();
 
     // All root native nodes which are not included in the omnibus link.
     public abstract ImmutableSet<BuildTarget> getExcludedRoots();
 
     // All native nodes which are not included in the omnibus link, as either a root or a body node.
-    public abstract ImmutableMap<BuildTarget, NativeLinkableGroup> getExcluded();
+    public abstract ImmutableMap<BuildTarget, NativeLinkable> getExcluded();
 
     // The subset of excluded nodes which are first-order deps of any root or body nodes.
-    public abstract ImmutableMap<BuildTarget, NativeLinkableGroup> getDeps();
+    public abstract ImmutableMap<BuildTarget, NativeLinkable> getDeps();
 
     @Value.Check
     public void verify() {

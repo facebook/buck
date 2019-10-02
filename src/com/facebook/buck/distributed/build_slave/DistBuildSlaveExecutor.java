@@ -24,7 +24,7 @@ import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.HostTargetConfiguration;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
@@ -296,9 +296,10 @@ public class DistBuildSlaveExecutor {
                 new NoOpRemoteBuildRuleCompletionWaiter(),
                 args.getMetadataProvider(),
                 args.getUnconfiguredBuildTargetFactory(),
-                HostTargetConfiguration.INSTANCE,
+                EmptyTargetConfiguration.INSTANCE,
                 args.getTargetConfigurationSerializer(),
-                false),
+                false,
+                true),
         args.getExecutorService());
   }
 
@@ -312,7 +313,7 @@ public class DistBuildSlaveExecutor {
                     args.getRootCell().getCellPathResolver(), target))
         .map(
             unconfiguredBuildTarget ->
-                unconfiguredBuildTarget.configure(HostTargetConfiguration.INSTANCE))
+                unconfiguredBuildTarget.configure(EmptyTargetConfiguration.INSTANCE))
         .collect(Collectors.toList());
   }
 }

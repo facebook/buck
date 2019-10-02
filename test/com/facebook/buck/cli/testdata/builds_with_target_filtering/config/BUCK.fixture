@@ -4,6 +4,9 @@ platform(
         "buck//config/constraints:osx",
         "buck//config/constraints:x86_64",
     ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 platform(
@@ -11,5 +14,8 @@ platform(
     constraint_values = [
         "buck//config/constraints:linux",
         "buck//config/constraints:x86_64",
+    ],
+    visibility = [
+        "PUBLIC",
     ],
 )

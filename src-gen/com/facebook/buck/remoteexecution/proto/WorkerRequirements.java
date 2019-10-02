@@ -24,7 +24,6 @@ private static final long serialVersionUID = 0L;
   private WorkerRequirements() {
     workerSize_ = 0;
     platformType_ = 0;
-    shouldTryLargerWorkerOnOom_ = false;
   }
 
   @java.lang.Override
@@ -68,8 +67,21 @@ private static final long serialVersionUID = 0L;
             shouldTryLargerWorkerOnOom_ = input.readBool();
             break;
           }
+          case 34: {
+            com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder subBuilder = null;
+            if (testing_ != null) {
+              subBuilder = testing_.toBuilder();
+            }
+            testing_ = input.readMessage(com.facebook.buck.remoteexecution.proto.CapabilityValue.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(testing_);
+              testing_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
-            if (!parseUnknownFieldProto3(
+            if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
               done = true;
             }
@@ -219,6 +231,10 @@ private static final long serialVersionUID = 0L;
      * <code>XLARGE = 3;</code>
      */
     XLARGE(3),
+    /**
+     * <code>XXLARGE = 4;</code>
+     */
+    XXLARGE(4),
     UNRECOGNIZED(-1),
     ;
 
@@ -238,6 +254,10 @@ private static final long serialVersionUID = 0L;
      * <code>XLARGE = 3;</code>
      */
     public static final int XLARGE_VALUE = 3;
+    /**
+     * <code>XXLARGE = 4;</code>
+     */
+    public static final int XXLARGE_VALUE = 4;
 
 
     public final int getNumber() {
@@ -262,6 +282,7 @@ private static final long serialVersionUID = 0L;
         case 1: return MEDIUM;
         case 2: return LARGE;
         case 3: return XLARGE;
+        case 4: return XXLARGE;
         default: return null;
       }
     }
@@ -361,6 +382,39 @@ private static final long serialVersionUID = 0L;
     return shouldTryLargerWorkerOnOom_;
   }
 
+  public static final int TESTING_FIELD_NUMBER = 4;
+  private com.facebook.buck.remoteexecution.proto.CapabilityValue testing_;
+  /**
+   * <pre>
+   * Needed when aiming for a testing/canaried worker
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+   */
+  public boolean hasTesting() {
+    return testing_ != null;
+  }
+  /**
+   * <pre>
+   * Needed when aiming for a testing/canaried worker
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.CapabilityValue getTesting() {
+    return testing_ == null ? com.facebook.buck.remoteexecution.proto.CapabilityValue.getDefaultInstance() : testing_;
+  }
+  /**
+   * <pre>
+   * Needed when aiming for a testing/canaried worker
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder getTestingOrBuilder() {
+    return getTesting();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -384,6 +438,9 @@ private static final long serialVersionUID = 0L;
     if (shouldTryLargerWorkerOnOom_ != false) {
       output.writeBool(3, shouldTryLargerWorkerOnOom_);
     }
+    if (testing_ != null) {
+      output.writeMessage(4, getTesting());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -405,6 +462,10 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeBoolSize(3, shouldTryLargerWorkerOnOom_);
     }
+    if (testing_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(4, getTesting());
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -420,13 +481,17 @@ private static final long serialVersionUID = 0L;
     }
     com.facebook.buck.remoteexecution.proto.WorkerRequirements other = (com.facebook.buck.remoteexecution.proto.WorkerRequirements) obj;
 
-    boolean result = true;
-    result = result && workerSize_ == other.workerSize_;
-    result = result && platformType_ == other.platformType_;
-    result = result && (getShouldTryLargerWorkerOnOom()
-        == other.getShouldTryLargerWorkerOnOom());
-    result = result && unknownFields.equals(other.unknownFields);
-    return result;
+    if (workerSize_ != other.workerSize_) return false;
+    if (platformType_ != other.platformType_) return false;
+    if (getShouldTryLargerWorkerOnOom()
+        != other.getShouldTryLargerWorkerOnOom()) return false;
+    if (hasTesting() != other.hasTesting()) return false;
+    if (hasTesting()) {
+      if (!getTesting()
+          .equals(other.getTesting())) return false;
+    }
+    if (!unknownFields.equals(other.unknownFields)) return false;
+    return true;
   }
 
   @java.lang.Override
@@ -443,6 +508,10 @@ private static final long serialVersionUID = 0L;
     hash = (37 * hash) + SHOULD_TRY_LARGER_WORKER_ON_OOM_FIELD_NUMBER;
     hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
         getShouldTryLargerWorkerOnOom());
+    if (hasTesting()) {
+      hash = (37 * hash) + TESTING_FIELD_NUMBER;
+      hash = (53 * hash) + getTesting().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -586,6 +655,12 @@ private static final long serialVersionUID = 0L;
 
       shouldTryLargerWorkerOnOom_ = false;
 
+      if (testingBuilder_ == null) {
+        testing_ = null;
+      } else {
+        testing_ = null;
+        testingBuilder_ = null;
+      }
       return this;
     }
 
@@ -615,41 +690,46 @@ private static final long serialVersionUID = 0L;
       result.workerSize_ = workerSize_;
       result.platformType_ = platformType_;
       result.shouldTryLargerWorkerOnOom_ = shouldTryLargerWorkerOnOom_;
+      if (testingBuilder_ == null) {
+        result.testing_ = testing_;
+      } else {
+        result.testing_ = testingBuilder_.build();
+      }
       onBuilt();
       return result;
     }
 
     @java.lang.Override
     public Builder clone() {
-      return (Builder) super.clone();
+      return super.clone();
     }
     @java.lang.Override
     public Builder setField(
         com.google.protobuf.Descriptors.FieldDescriptor field,
         java.lang.Object value) {
-      return (Builder) super.setField(field, value);
+      return super.setField(field, value);
     }
     @java.lang.Override
     public Builder clearField(
         com.google.protobuf.Descriptors.FieldDescriptor field) {
-      return (Builder) super.clearField(field);
+      return super.clearField(field);
     }
     @java.lang.Override
     public Builder clearOneof(
         com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-      return (Builder) super.clearOneof(oneof);
+      return super.clearOneof(oneof);
     }
     @java.lang.Override
     public Builder setRepeatedField(
         com.google.protobuf.Descriptors.FieldDescriptor field,
         int index, java.lang.Object value) {
-      return (Builder) super.setRepeatedField(field, index, value);
+      return super.setRepeatedField(field, index, value);
     }
     @java.lang.Override
     public Builder addRepeatedField(
         com.google.protobuf.Descriptors.FieldDescriptor field,
         java.lang.Object value) {
-      return (Builder) super.addRepeatedField(field, value);
+      return super.addRepeatedField(field, value);
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -671,6 +751,9 @@ private static final long serialVersionUID = 0L;
       }
       if (other.getShouldTryLargerWorkerOnOom() != false) {
         setShouldTryLargerWorkerOnOom(other.getShouldTryLargerWorkerOnOom());
+      }
+      if (other.hasTesting()) {
+        mergeTesting(other.getTesting());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -828,10 +911,163 @@ private static final long serialVersionUID = 0L;
       onChanged();
       return this;
     }
+
+    private com.facebook.buck.remoteexecution.proto.CapabilityValue testing_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.CapabilityValue, com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder, com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder> testingBuilder_;
+    /**
+     * <pre>
+     * Needed when aiming for a testing/canaried worker
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+     */
+    public boolean hasTesting() {
+      return testingBuilder_ != null || testing_ != null;
+    }
+    /**
+     * <pre>
+     * Needed when aiming for a testing/canaried worker
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.CapabilityValue getTesting() {
+      if (testingBuilder_ == null) {
+        return testing_ == null ? com.facebook.buck.remoteexecution.proto.CapabilityValue.getDefaultInstance() : testing_;
+      } else {
+        return testingBuilder_.getMessage();
+      }
+    }
+    /**
+     * <pre>
+     * Needed when aiming for a testing/canaried worker
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+     */
+    public Builder setTesting(com.facebook.buck.remoteexecution.proto.CapabilityValue value) {
+      if (testingBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        testing_ = value;
+        onChanged();
+      } else {
+        testingBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * Needed when aiming for a testing/canaried worker
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+     */
+    public Builder setTesting(
+        com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder builderForValue) {
+      if (testingBuilder_ == null) {
+        testing_ = builderForValue.build();
+        onChanged();
+      } else {
+        testingBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * Needed when aiming for a testing/canaried worker
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+     */
+    public Builder mergeTesting(com.facebook.buck.remoteexecution.proto.CapabilityValue value) {
+      if (testingBuilder_ == null) {
+        if (testing_ != null) {
+          testing_ =
+            com.facebook.buck.remoteexecution.proto.CapabilityValue.newBuilder(testing_).mergeFrom(value).buildPartial();
+        } else {
+          testing_ = value;
+        }
+        onChanged();
+      } else {
+        testingBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * Needed when aiming for a testing/canaried worker
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+     */
+    public Builder clearTesting() {
+      if (testingBuilder_ == null) {
+        testing_ = null;
+        onChanged();
+      } else {
+        testing_ = null;
+        testingBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * Needed when aiming for a testing/canaried worker
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder getTestingBuilder() {
+      
+      onChanged();
+      return getTestingFieldBuilder().getBuilder();
+    }
+    /**
+     * <pre>
+     * Needed when aiming for a testing/canaried worker
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder getTestingOrBuilder() {
+      if (testingBuilder_ != null) {
+        return testingBuilder_.getMessageOrBuilder();
+      } else {
+        return testing_ == null ?
+            com.facebook.buck.remoteexecution.proto.CapabilityValue.getDefaultInstance() : testing_;
+      }
+    }
+    /**
+     * <pre>
+     * Needed when aiming for a testing/canaried worker
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.CapabilityValue, com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder, com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder> 
+        getTestingFieldBuilder() {
+      if (testingBuilder_ == null) {
+        testingBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.remoteexecution.proto.CapabilityValue, com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder, com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder>(
+                getTesting(),
+                getParentForChildren(),
+                isClean());
+        testing_ = null;
+      }
+      return testingBuilder_;
+    }
     @java.lang.Override
     public final Builder setUnknownFields(
         final com.google.protobuf.UnknownFieldSet unknownFields) {
-      return super.setUnknownFieldsProto3(unknownFields);
+      return super.setUnknownFields(unknownFields);
     }
 
     @java.lang.Override

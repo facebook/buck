@@ -161,6 +161,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final boolean copySwiftStdlibToFrameworks;
 
+  @AddToRuleKey private final boolean useEntitlementsWhenAdhocCodeSigning;
+
   private final Optional<AppleAssetCatalog> assetCatalog;
   private final Optional<CoreDataModel> coreDataModel;
   private final Optional<SceneKitAssets> sceneKitAssets;
@@ -218,7 +220,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Boolean> ibtoolModuleFlag,
       ImmutableList<String> ibtoolFlags,
       Duration codesignTimeout,
-      boolean copySwiftStdlibToFrameworks) {
+      boolean copySwiftStdlibToFrameworks,
+      boolean useEntitlementsWhenAdhocCodeSigning) {
     super(buildTarget, projectFilesystem, params);
     this.extension =
         extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
@@ -291,6 +294,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     this.codesignTimeout = codesignTimeout;
     this.copySwiftStdlibToFrameworks = copySwiftStdlibToFrameworks;
+    this.useEntitlementsWhenAdhocCodeSigning = useEntitlementsWhenAdhocCodeSigning;
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -459,50 +463,14 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       appendCopyDsymStep(stepsBuilder, buildableContext, context);
     }
 
-    if (!Iterables.isEmpty(
-        Iterables.concat(
-            resources.getResourceDirs(),
-            resources.getDirsContainingResourceDirs(),
-            resources.getResourceFiles()))) {
-      if (verifyResources) {
-        verifyResourceConflicts(resources, context.getSourcePathResolver());
-      }
-      stepsBuilder.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  getProjectFilesystem(),
-                  resourcesDestinationPath)));
-      for (SourcePath dir : resources.getResourceDirs()) {
-        stepsBuilder.add(
-            CopyStep.forDirectory(
-                getProjectFilesystem(),
-                context.getSourcePathResolver().getAbsolutePath(dir),
-                resourcesDestinationPath,
-                CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
-      }
-      for (SourcePath dir : resources.getDirsContainingResourceDirs()) {
-        stepsBuilder.add(
-            CopyStep.forDirectory(
-                getProjectFilesystem(),
-                context.getSourcePathResolver().getAbsolutePath(dir),
-                resourcesDestinationPath,
-                CopyStep.DirectoryMode.CONTENTS_ONLY));
-      }
-      for (SourcePath file : resources.getResourceFiles()) {
-        Path resolvedFilePath = context.getSourcePathResolver().getAbsolutePath(file);
-        Path destinationPath = resourcesDestinationPath.resolve(resolvedFilePath.getFileName());
-        addResourceProcessingSteps(
-            context.getSourcePathResolver(), resolvedFilePath, destinationPath, stepsBuilder);
-      }
-    }
+    addStepsToCopyResources(context, stepsBuilder);
 
     ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder = ImmutableList.builder();
 
     addStepsToCopyExtensionBundlesDependencies(context, stepsBuilder, codeSignOnCopyPathsBuilder);
 
-    for (SourcePath variantSourcePath : resources.getResourceVariantFiles()) {
-      Path variantFilePath = context.getSourcePathResolver().getAbsolutePath(variantSourcePath);
+    for (SourcePath path : resources.getResourceVariantFiles()) {
+      Path variantFilePath = context.getSourcePathResolver().getAbsolutePath(path);
 
       Path variantDirectory = variantFilePath.getParent();
       if (variantDirectory == null || !variantDirectory.toString().endsWith(".lproj")) {
@@ -512,8 +480,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             variantFilePath);
       }
 
+      Path bundleDestinationPath = bundleRoot.resolve(destinations.getResourcesPath());
       Path bundleVariantDestinationPath =
-          resourcesDestinationPath.resolve(variantDirectory.getFileName());
+          bundleDestinationPath.resolve(variantDirectory.getFileName());
       stepsBuilder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -547,11 +516,13 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     if (needCodeSign()) {
-      Optional<Path> signingEntitlementsTempPath;
+      Optional<Path> signingEntitlementsTempPath = Optional.empty();
       Supplier<CodeSignIdentity> codeSignIdentitySupplier;
 
       if (adHocCodeSignIsSufficient()) {
-        signingEntitlementsTempPath = Optional.empty();
+        if (useEntitlementsWhenAdhocCodeSigning) {
+          signingEntitlementsTempPath = prepareEntitlementsPlistFile(context, stepsBuilder);
+        }
         CodeSignIdentity identity =
             codesignIdentitySubjectName
                 .map(id -> CodeSignIdentity.ofAdhocSignedWithSubjectCommonName(id))
@@ -559,47 +530,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         codeSignIdentitySupplier = () -> identity;
       } else {
         // Copy the .mobileprovision file if the platform requires it, and sign the executable.
-        Optional<Path> entitlementsPlist = Optional.empty();
-
-        // Try to use the entitlements file specified in the bundle's binary first.
-        entitlementsPlist =
-            entitlementsFile.map(p -> context.getSourcePathResolver().getAbsolutePath(p));
-
-        // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions.
-        if (!entitlementsPlist.isPresent()) {
-          Path srcRoot =
-              getProjectFilesystem().getRootPath().resolve(getBuildTarget().getBasePath());
-          Optional<String> entitlementsPlistString =
-              InfoPlistSubstitution.getVariableExpansionForPlatform(
-                  CODE_SIGN_ENTITLEMENTS,
-                  platform.getName(),
-                  withDefaults(
-                      infoPlistSubstitutions,
-                      ImmutableMap.of(
-                          "SOURCE_ROOT", srcRoot.toString(),
-                          "SRCROOT", srcRoot.toString())));
-          entitlementsPlist =
-              entitlementsPlistString.map(
-                  entitlementsPlistName -> {
-                    ProjectFilesystem filesystem = getProjectFilesystem();
-                    Path originalEntitlementsPlist =
-                        srcRoot.resolve(Paths.get(entitlementsPlistName));
-                    Path entitlementsPlistWithSubstitutions =
-                        BuildTargetPaths.getScratchPath(
-                            filesystem, getBuildTarget(), "%s-Entitlements.plist");
-
-                    stepsBuilder.add(
-                        new FindAndReplaceStep(
-                            filesystem,
-                            originalEntitlementsPlist,
-                            entitlementsPlistWithSubstitutions,
-                            InfoPlistSubstitution.createVariableExpansionFunction(
-                                infoPlistSubstitutions)));
-
-                    return filesystem.resolve(entitlementsPlistWithSubstitutions);
-                  });
-        }
-
+        Optional<Path> entitlementsPlist = prepareEntitlementsPlistFile(context, stepsBuilder);
         signingEntitlementsTempPath =
             Optional.of(
                 BuildTargetPaths.getScratchPath(
@@ -720,19 +651,67 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return stepsBuilder.build();
   }
 
+  private Optional<Path> prepareEntitlementsPlistFile(
+      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+
+    Optional<Path> entitlementsPlist;
+
+    // Try to use the entitlements file specified in the bundle's binary first.
+    entitlementsPlist =
+        entitlementsFile.map(p -> context.getSourcePathResolver().getAbsolutePath(p));
+
+    // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions.
+    if (!entitlementsPlist.isPresent()) {
+      Path srcRoot = getProjectFilesystem().getRootPath().resolve(getBuildTarget().getBasePath());
+      Optional<String> entitlementsPlistString =
+          InfoPlistSubstitution.getVariableExpansionForPlatform(
+              CODE_SIGN_ENTITLEMENTS,
+              platform.getName(),
+              withDefaults(
+                  infoPlistSubstitutions,
+                  ImmutableMap.of(
+                      "SOURCE_ROOT", srcRoot.toString(),
+                      "SRCROOT", srcRoot.toString())));
+      entitlementsPlist =
+          entitlementsPlistString.map(
+              entitlementsPlistName -> {
+                ProjectFilesystem filesystem = getProjectFilesystem();
+                Path originalEntitlementsPlist = srcRoot.resolve(Paths.get(entitlementsPlistName));
+                Path entitlementsPlistWithSubstitutions =
+                    BuildTargetPaths.getScratchPath(
+                        filesystem, getBuildTarget(), "%s-Entitlements.plist");
+
+                stepsBuilder.add(
+                    new FindAndReplaceStep(
+                        filesystem,
+                        originalEntitlementsPlist,
+                        entitlementsPlistWithSubstitutions,
+                        InfoPlistSubstitution.createVariableExpansionFunction(
+                            infoPlistSubstitutions)));
+
+                return filesystem.resolve(entitlementsPlistWithSubstitutions);
+              });
+    }
+    return entitlementsPlist;
+  }
+
   private void verifyResourceConflicts(
       AppleBundleResources resources, SourcePathResolver resolver) {
     // Ensure there are no resources that will overwrite each other
     // TODO: handle ResourceDirsContainingResourceDirs
-    Set<Path> resourcePaths = new HashSet<>();
-    for (SourcePath path :
-        Iterables.concat(resources.getResourceDirs(), resources.getResourceFiles())) {
-      Path pathInBundle = resolver.getRelativePath(path).getFileName();
-      if (resourcePaths.contains(pathInBundle)) {
-        throw new HumanReadableException(
-            "Bundle contains multiple resources with path %s", pathInBundle);
-      } else {
-        resourcePaths.add(pathInBundle);
+    for (AppleBundleDestination destination : resources.getAllDestinations()) {
+      Set<Path> resourcePaths = new HashSet<>();
+      for (SourcePath path :
+          Iterables.concat(
+              resources.getResourceDirsForDestination(destination),
+              resources.getResourceFilesForDestination(destination))) {
+        Path pathInBundle = resolver.getRelativePath(path).getFileName();
+        if (resourcePaths.contains(pathInBundle)) {
+          throw new HumanReadableException(
+              "Bundle contains multiple resources with path %s", pathInBundle);
+        } else {
+          resourcePaths.add(pathInBundle);
+        }
       }
     }
   }
@@ -861,6 +840,61 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     // record dSYM so we can fetch it from cache
     buildableContext.recordArtifact(dsymDestinationPath);
+  }
+
+  private void addStepsToCopyResources(
+      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+    boolean hasNoResourceToCopy =
+        resources.getResourceDirs().isEmpty()
+            && resources.getDirsContainingResourceDirs().isEmpty()
+            && resources.getResourceFiles().isEmpty();
+    if (hasNoResourceToCopy) {
+      return;
+    }
+    if (verifyResources) {
+      verifyResourceConflicts(resources, context.getSourcePathResolver());
+    }
+
+    for (AppleBundleDestination bundleDestination : resources.getAllDestinations()) {
+      Path bundleDestinationPath = bundleRoot.resolve(bundleDestination.getPath(destinations));
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), bundleDestinationPath)));
+    }
+
+    for (SourcePathWithAppleBundleDestination dirWithDestination : resources.getResourceDirs()) {
+      Path bundleDestinationPath =
+          bundleRoot.resolve(dirWithDestination.getDestination().getPath(destinations));
+      stepsBuilder.add(
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              context.getSourcePathResolver().getAbsolutePath(dirWithDestination.getSourcePath()),
+              bundleDestinationPath,
+              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+    }
+
+    for (SourcePathWithAppleBundleDestination dirWithDestination :
+        resources.getDirsContainingResourceDirs()) {
+      Path bundleDestinationPath =
+          bundleRoot.resolve(dirWithDestination.getDestination().getPath(destinations));
+      stepsBuilder.add(
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              context.getSourcePathResolver().getAbsolutePath(dirWithDestination.getSourcePath()),
+              bundleDestinationPath,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
+    }
+
+    for (SourcePathWithAppleBundleDestination fileWithDestination : resources.getResourceFiles()) {
+      Path resolvedFilePath =
+          context.getSourcePathResolver().getAbsolutePath(fileWithDestination.getSourcePath());
+      Path bundleDestinationPath =
+          bundleRoot.resolve(fileWithDestination.getDestination().getPath(destinations));
+      Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
+      addResourceProcessingSteps(
+          context.getSourcePathResolver(), resolvedFilePath, destinationPath, stepsBuilder);
+    }
   }
 
   private void addStepsToCopyExtensionBundlesDependencies(

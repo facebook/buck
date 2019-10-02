@@ -195,6 +195,6 @@ public class SwiftTestIOSIntegrationTest {
         containsString("XCTest.framework/Versions/A/XCTest"));
     assertThat(
         workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
-        not(containsString("@rpath/libswiftCore.dylib")));
+        (not(containsString("@rpath/libswiftCore.dylib"))));
   }
 }

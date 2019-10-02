@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.build.engine.BuildResult.Builder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Optional;
@@ -42,7 +43,7 @@ abstract class AbstractBuildResult {
   abstract Optional<CacheResult> getCacheResult();
 
   /** Signals that the cache upload for this rule (if there were one) has completed. */
-  abstract Optional<ListenableFuture<Void>> getUploadCompleteFuture();
+  abstract Optional<ListenableFuture<Unit>> getUploadCompleteFuture();
 
   abstract Optional<BuildRuleSuccessType> getSuccessOptional();
 
@@ -88,7 +89,7 @@ abstract class AbstractBuildResult {
       BuildRule rule,
       BuildRuleSuccessType success,
       CacheResult cacheResult,
-      ListenableFuture<Void> uploadCompleteFuture) {
+      ListenableFuture<Unit> uploadCompleteFuture) {
     return successBuilder(rule, success, cacheResult)
         .setUploadCompleteFuture(uploadCompleteFuture)
         .build();

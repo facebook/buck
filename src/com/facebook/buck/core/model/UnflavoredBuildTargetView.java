@@ -17,7 +17,6 @@
 package com.facebook.buck.core.model;
 
 import java.nio.file.Path;
-import java.util.Optional;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -38,10 +37,10 @@ public interface UnflavoredBuildTargetView extends Comparable<UnflavoredBuildTar
   // BuildTargetMacro after that
   Path getCellPath();
 
-  Optional<String> getCell();
+  CanonicalCellName getCell();
 
   /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
+   * If this build target were cell//third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava".
    */
   String getBaseName();

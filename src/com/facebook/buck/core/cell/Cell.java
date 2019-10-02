@@ -19,6 +19,7 @@ package com.facebook.buck.core.cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -37,9 +38,9 @@ import java.util.Optional;
  */
 public interface Cell {
 
-  ImmutableSortedSet<Path> getKnownRoots();
+  ImmutableSortedSet<Path> getKnownRootsOfAllCells();
 
-  Optional<String> getCanonicalName();
+  CanonicalCellName getCanonicalName();
 
   ProjectFilesystem getFilesystem();
 
@@ -85,7 +86,15 @@ public interface Cell {
 
   CellPathResolver getCellPathResolver();
 
-  Cell withCanonicalName(String canonicalName);
+  /**
+   * Return the {@link com.facebook.buck.core.cell.NewCellPathResolver}. This can be used to map
+   * between canonical names and cell root paths.
+   */
+  NewCellPathResolver getNewCellPathResolver();
 
-  Cell withCanonicalName(Optional<String> canonicalName);
+  /**
+   * Return the {@link com.facebook.buck.core.cell.CellNameResolver} for this cell. This can be used
+   * to resolve user-provided cell aliases to their canonical names.
+   */
+  CellNameResolver getCellNameResolver();
 }

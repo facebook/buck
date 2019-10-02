@@ -24,7 +24,9 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask.DepsSu
 import com.facebook.buck.core.graph.transformation.executor.impl.AbstractDepsAwareTask.TaskStatus;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -33,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -100,11 +103,23 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
   private AbstractDepsAwareWorker<?> worker1;
   private AbstractDepsAwareWorker<?> worker2;
 
+  private List<Thread> workerThreads = new ArrayList<>();
+
   @Before
   public void setUp() {
     workQueue = new LinkedBlockingDeque<>();
     worker1 = workerConstructor.apply(workQueue);
     worker2 = workerConstructor.apply(workQueue);
+  }
+
+  @After
+  public void cleanUpWorkerThreads() throws InterruptedException {
+    for (Thread thread : workerThreads) {
+      thread.interrupt();
+    }
+    for (Thread thread : workerThreads) {
+      thread.join(1000);
+    }
   }
 
   @Test(timeout = 5000)
@@ -120,19 +135,9 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     Verify.verify(task.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(task);
 
-    Thread testThread =
-        new Thread(
-            () -> {
-              try {
-                worker1.loopForever();
-              } catch (InterruptedException e) {
-                return;
-              }
-            });
-    testThread.start();
+    startWorkerThread(worker1);
 
     sem.acquire();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -154,24 +159,14 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
               sem.release();
               return null;
             },
-            DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1)));
+            DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1), ImmutableSet::of));
     depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED);
     workQueue.put(depsAwareTask2);
 
-    Thread testThread =
-        new Thread(
-            () -> {
-              try {
-                worker1.loopForever();
-              } catch (InterruptedException e) {
-                return;
-              }
-            });
-    testThread.start();
+    startWorkerThread(worker1);
 
     sem.acquire();
     depsAwareTask2.getFuture().get();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -197,20 +192,10 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED);
     workQueue.put(depsAwareTask2);
 
-    Thread testThread =
-        new Thread(
-            () -> {
-              try {
-                worker1.loopForever();
-              } catch (InterruptedException e) {
-                return;
-              }
-            });
-    testThread.start();
+    startWorkerThread(worker1);
 
     sem.acquire();
     depsAwareTask2.getFuture().get();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -242,20 +227,10 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED);
     workQueue.put(depsAwareTask2);
 
-    Thread testThread =
-        new Thread(
-            () -> {
-              try {
-                worker1.loopForever();
-              } catch (InterruptedException e) {
-                return;
-              }
-            });
-    testThread.start();
+    startWorkerThread(worker1);
 
     sem.acquire();
     depsAwareTask2.getFuture().get();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -271,25 +246,16 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
             DepsSupplier.of(
                 () -> {
                   throw ex;
-                }));
+                },
+                ImmutableSet::of));
 
     Verify.verify(
         depsAwareTask.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(depsAwareTask);
 
-    Thread testThread =
-        new Thread(
-            () -> {
-              try {
-                worker1.loopForever();
-              } catch (InterruptedException e) {
-                return;
-              }
-            });
-    testThread.start();
+    startWorkerThread(worker1);
 
     depsAwareTask.getResultFuture().get();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -311,19 +277,9 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
         depsAwareTask.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(depsAwareTask);
 
-    Thread testThread =
-        new Thread(
-            () -> {
-              try {
-                worker1.loopForever();
-              } catch (InterruptedException e) {
-                return;
-              }
-            });
-    testThread.start();
+    startWorkerThread(worker1);
 
     depsAwareTask.getResultFuture().get();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -339,58 +295,34 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
             DepsSupplier.of(
                 () -> {
                   throw ex;
-                }));
+                },
+                ImmutableSet::of));
 
     Verify.verify(
         depsAwareTask1.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(depsAwareTask1);
 
-    Thread testThread =
-        new Thread(
-            () -> {
-              try {
-                worker1.loopForever();
-              } catch (InterruptedException e) {
-                return;
-              }
-            });
-    testThread.start();
+    startWorkerThread(worker1);
 
     TaskType depsAwareTask2 =
-        createTask(() -> null, DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1)));
+        createTask(
+            () -> null, DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1), ImmutableSet::of));
 
     Verify.verify(
         depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(depsAwareTask2);
 
     depsAwareTask2.getResultFuture().get();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
   public void workCanBeExecutedInMultipleThreadSharingQueue() throws InterruptedException {
     // This tests that if we schedule multiple works, and one worker is occupied, the other worker
     // will pick start the other tasks
-    Thread testThread1 =
-        new Thread(
-            () -> {
-              try {
-                worker1.loopForever();
-              } catch (InterruptedException e) {
-                return;
-              }
-            });
+    Thread testThread1 = createWorkerThread(worker1);
     testThread1.start();
 
-    Thread testThread2 =
-        new Thread(
-            () -> {
-              try {
-                worker2.loopForever();
-              } catch (InterruptedException e) {
-                return;
-              }
-            });
+    Thread testThread2 = createWorkerThread(worker2);
 
     Semaphore semDone = new Semaphore(0);
     Semaphore semThread2 = new Semaphore(0);
@@ -423,9 +355,6 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     testThread2.start();
 
     semDone.acquire();
-
-    testThread1.interrupt();
-    testThread2.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -448,16 +377,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     Verify.verify(firstTask.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(firstTask);
 
-    Thread testThread =
-        new Thread(
-            () -> {
-              try {
-                worker1.loopForever();
-              } catch (InterruptedException e) {
-                return;
-              }
-            });
-    testThread.start();
+    Thread testThread = startWorkerThread(worker1);
 
     workerStarted.acquire();
 
@@ -501,18 +421,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
   @Test(timeout = 5000)
   @SuppressWarnings("PMD.EmptyWhileStmt")
   public void workerIsNotDuplicateScheduled() throws InterruptedException {
-    // This tests that if we schedule multiple works, and one worker is occupied, the other worker
-    // will pick start the other tasks
-    Thread testThread1 =
-        new Thread(
-            () -> {
-              try {
-                worker1.loopForever();
-              } catch (InterruptedException e) {
-                return;
-              }
-            });
-    testThread1.start();
+    startWorkerThread(worker1);
 
     Semaphore getDepsRan = new Semaphore(0);
 
@@ -526,7 +435,8 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
                 () -> {
                   getDepsRan.release();
                   return ImmutableSet.of(task1);
-                }));
+                },
+                ImmutableSet::of));
 
     // pretend task1 is scheduled
     Verify.verify(task1.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
@@ -539,10 +449,30 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
   }
 
   TaskType createTask(Callable<?> callable) {
-    return createTask(callable, DepsSupplier.of(ImmutableSet::of));
+    return createTask(callable, DepsSupplier.of());
   }
 
   TaskType createTask(Callable<?> callable, DepsSupplier<TaskType> depsSupplier) {
     return taskCreator.apply(callable, depsSupplier);
+  }
+
+  private Thread startWorkerThread(AbstractDepsAwareWorker<?> worker) {
+    Thread testThread = createWorkerThread(worker);
+    testThread.start();
+    return testThread;
+  }
+
+  private Thread createWorkerThread(AbstractDepsAwareWorker<?> worker) {
+    Thread thread =
+        new Thread(
+            () -> {
+              try {
+                worker.loopForever();
+              } catch (InterruptedException e) {
+                return;
+              }
+            });
+    workerThreads.add(thread);
+    return thread;
   }
 }

@@ -25,10 +25,11 @@ public class NoOpWorkerRequirementsProvider implements WorkerRequirementsProvide
    * Returns default WorkerRequirements always.
    *
    * @param target
+   * @param auxiliaryBuildTag
    * @return
    */
   @Override
-  public WorkerRequirements resolveRequirements(BuildTarget target) {
+  public WorkerRequirements resolveRequirements(BuildTarget target, String auxiliaryBuildTag) {
     return WorkerRequirements.newBuilder()
         .setWorkerSize(WorkerRequirements.WorkerSize.SMALL)
         .setPlatformType(WorkerRequirements.WorkerPlatformType.LINUX)

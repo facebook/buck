@@ -37,10 +37,12 @@ import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.pathformat.PathFormatter;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.RawTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.config.ParserConfig;
+import com.facebook.buck.parser.exceptions.ParsingError;
 import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileManifestKey;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -57,18 +59,33 @@ public class BuildPackagePathToRawTargetNodePackageComputation
 
   private final RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory;
   private final Cell cell;
+  private final boolean throwOnValidationError;
 
   private BuildPackagePathToRawTargetNodePackageComputation(
-      RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory, Cell cell) {
+      RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory,
+      Cell cell,
+      boolean throwOnValidationError) {
     this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
     this.cell = cell;
+    this.throwOnValidationError = throwOnValidationError;
   }
 
-  /** Create new instance of {@link BuildPackagePathToRawTargetNodePackageComputation} */
+  /**
+   * Create new instance of {@link BuildPackagePathToRawTargetNodePackageComputation}
+   *
+   * @param rawTargetNodeToTargetNodeFactory A factory that does translation from raw target node to
+   *     configured target node. We use configured target node to infer target dependencies, but in
+   *     the future we won't need that
+   * @param cell Cell object that owns the package being created
+   * @param throwOnValidationError If true, computation throws aborting the workflow. Otherwise a
+   *     package with no targets and no deps but errors is created
+   */
   public static BuildPackagePathToRawTargetNodePackageComputation of(
-      RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory, Cell cell) {
+      RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory,
+      Cell cell,
+      boolean throwOnValidationError) {
     return new BuildPackagePathToRawTargetNodePackageComputation(
-        rawTargetNodeToTargetNodeFactory, cell);
+        rawTargetNodeToTargetNodeFactory, cell, throwOnValidationError);
   }
 
   @Override
@@ -91,48 +108,76 @@ public class BuildPackagePathToRawTargetNodePackageComputation
     ImmutableMap.Builder<String, RawTargetNodeWithDeps> builder =
         ImmutableMap.builderWithExpectedSize(rawTargetNodes.size());
 
+    ImmutableList.Builder<ParsingError> errorsBuilder = ImmutableList.builder();
+
     for (Entry<BuildTargetToRawTargetNodeKey, RawTargetNode> entry : rawTargetNodes.entrySet()) {
       UnconfiguredBuildTarget unconfiguredBuildTarget = entry.getKey().getBuildTarget();
       RawTargetNode rawTargetNode = entry.getValue();
 
-      // To discover dependencies, we coerce RawTargetNode to TargetNode, get
-      // dependencies out of
-      // it, then trash target node
-      // THIS SOLUTION IS TEMPORARY and not 100% correct in general, because we have
-      // to resolve
-      // configuration for Target Node (we use default configuration at this point)
-
-      // Create short living UnconfiguredBuildTargetView
-      // TODO: configure data object directly
-      UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-          ImmutableUnconfiguredBuildTargetView.of(cell.getRoot(), unconfiguredBuildTarget);
-
-      BuildTarget buildTarget =
-          unconfiguredBuildTargetView.configure(EmptyTargetConfiguration.INSTANCE);
-
-      // All target nodes are created sequentially from raw target nodes
-      // TODO: use RawTargetNodeToTargetNode transformation
-      TargetNode<?> targetNode =
-          rawTargetNodeToTargetNodeFactory.createTargetNode(
-              cell,
-              buildFileAbsolutePath,
-              buildTarget,
-              rawTargetNode,
-              id -> SimplePerfEvent.scope(Optional.empty(), PerfEventId.of("raw_to_targetnode")));
-
-      ImmutableSet<UnconfiguredBuildTarget> deps =
-          targetNode.getParseDeps().stream()
-              .map(bt -> bt.getUnconfiguredBuildTargetView().getData())
-              .collect(ImmutableSet.toImmutableSet());
-
+      try {
+        ImmutableSet<UnconfiguredBuildTarget> deps =
+            getTargetDeps(rawTargetNode, buildFileAbsolutePath);
+        RawTargetNodeWithDeps rawTargetNodeWithDeps =
+            ImmutableRawTargetNodeWithDeps.of(rawTargetNode, deps);
+        builder.put(unconfiguredBuildTarget.getName(), rawTargetNodeWithDeps);
+      } catch (Exception ex) {
+        if (throwOnValidationError) {
+          throw ex;
+        }
+        errorsBuilder.add(ParsingError.from(ex));
+      }
       // END TEMPORARY
-
-      RawTargetNodeWithDeps rawTargetNodeWithDeps =
-          ImmutableRawTargetNodeWithDeps.of(rawTargetNode, deps);
-      builder.put(unconfiguredBuildTarget.getName(), rawTargetNodeWithDeps);
     }
 
-    return new ImmutableRawTargetNodeWithDepsPackage(key.getPath(), builder.build());
+    ImmutableList<ParsingError> translateErrors = errorsBuilder.build();
+
+    BuildFileManifest buildFileManifest =
+        env.getDep(ImmutableBuildPackagePathToBuildFileManifestKey.of(key.getPath()));
+
+    ImmutableList<ParsingError> allErrors;
+    if (translateErrors.isEmpty()) {
+      allErrors = buildFileManifest.getErrors();
+    } else if (buildFileManifest.getErrors().isEmpty()) {
+      allErrors = translateErrors;
+    } else {
+      ImmutableList.Builder<ParsingError> allErrorsBuilder =
+          ImmutableList.builderWithExpectedSize(
+              translateErrors.size() + buildFileManifest.getErrors().size());
+      allErrors =
+          allErrorsBuilder.addAll(buildFileManifest.getErrors()).addAll(translateErrors).build();
+    }
+
+    return new ImmutableRawTargetNodeWithDepsPackage(key.getPath(), builder.build(), allErrors);
+  }
+
+  private ImmutableSet<UnconfiguredBuildTarget> getTargetDeps(
+      RawTargetNode rawTargetNode, Path buildFileAbsolutePath) {
+    // To discover dependencies, we coerce RawTargetNode to TargetNode, get dependencies out of it,
+    // then trash target node
+    // THIS SOLUTION IS TEMPORARY and not 100% correct in general, because we have to resolve
+    // configuration for Target Node (we use empty configuration at this point)
+
+    // Create short living UnconfiguredBuildTargetView
+    // TODO: configure data object directly
+    UnconfiguredBuildTargetView unconfiguredBuildTargetView =
+        ImmutableUnconfiguredBuildTargetView.of(cell.getRoot(), rawTargetNode.getBuildTarget());
+
+    BuildTarget buildTarget =
+        unconfiguredBuildTargetView.configure(EmptyTargetConfiguration.INSTANCE);
+
+    // All target nodes are created sequentially from raw target nodes
+    // TODO: use RawTargetNodeToTargetNode transformation
+    TargetNode<?> targetNode =
+        rawTargetNodeToTargetNodeFactory.createTargetNode(
+            cell,
+            buildFileAbsolutePath,
+            buildTarget,
+            rawTargetNode,
+            id -> SimplePerfEvent.scope(Optional.empty(), PerfEventId.of("raw_to_targetnode")));
+
+    return targetNode.getParseDeps().stream()
+        .map(bt -> bt.getUnconfiguredBuildTargetView().getData())
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -150,10 +195,7 @@ public class BuildPackagePathToRawTargetNodePackageComputation
       BuildTargetToRawTargetNodeKey depkey =
           ImmutableBuildTargetToRawTargetNodeKey.of(
               ImmutableUnconfiguredBuildTarget.of(
-                  cell.getCanonicalName().orElse(""),
-                  baseName,
-                  target,
-                  UnconfiguredBuildTarget.NO_FLAVORS),
+                  cell.getCanonicalName(), baseName, target, UnconfiguredBuildTarget.NO_FLAVORS),
               key.getPath());
       builder.add(depkey);
     }

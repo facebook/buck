@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.config;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 
 /**
@@ -27,5 +28,5 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 public interface ConfigurationRule {
 
   /** {@link UnconfiguredBuildTargetView} that identifies this rule in a graph. */
-  UnconfiguredBuildTargetView getBuildTarget();
+  BuildTarget getBuildTarget();
 }

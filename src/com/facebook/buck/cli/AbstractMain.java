@@ -21,7 +21,7 @@ import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
+import com.facebook.buck.core.rules.knowntypes.DefaultKnownNativeRuleTypesFactory;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
@@ -160,7 +160,7 @@ abstract class AbstractMain {
 
   /** @return the {@link KnownRuleTypesFactoryFactory} for this command */
   protected KnownRuleTypesFactoryFactory getKnownRuleTypesFactory() {
-    return DefaultKnownRuleTypesFactory::new;
+    return DefaultKnownNativeRuleTypesFactory::new;
   }
 
   /**

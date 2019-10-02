@@ -40,7 +40,7 @@ abstract class RustAssumptions {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     RustPlatform rustPlatform =
         new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
-            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
+            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
             .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
     Throwable exception = null;
     try {
@@ -59,7 +59,7 @@ abstract class RustAssumptions {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     RustPlatform rustPlatform =
         new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
-            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
+            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
             .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
     ImmutableList<String> rustc =
         rustPlatform
@@ -76,7 +76,7 @@ abstract class RustAssumptions {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     RustPlatform rustPlatform =
         new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
-            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
+            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
             .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
     ImmutableList<String> rustc =
         rustPlatform

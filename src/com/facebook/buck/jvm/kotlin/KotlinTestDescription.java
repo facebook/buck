@@ -137,6 +137,7 @@ public class KotlinTestDescription
         args.getLabels(),
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
+        javacOptions.getLanguageLevelOptions().getTargetLevel(),
         javaOptionsForTests
             .get()
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),

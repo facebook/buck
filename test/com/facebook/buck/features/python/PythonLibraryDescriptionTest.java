@@ -20,6 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
@@ -45,24 +48,28 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.FixedVersionSelector;
-import com.facebook.buck.versions.ParallelVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionedAliasBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class PythonLibraryDescriptionTest {
 
-  private static final int NUMBER_OF_THREADS = ForkJoinPool.commonPool().getParallelism();
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   @Test
   public void baseModule() {
@@ -200,7 +207,7 @@ public class PythonLibraryDescriptionTest {
                         SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build());
     TargetGraph targetGraph =
-        ParallelVersionedTargetGraphBuilder.transform(
+        AsyncVersionedTargetGraphBuilder.transform(
                 new FixedVersionSelector(
                     ImmutableMap.of(
                         builder.getTarget(),
@@ -209,7 +216,7 @@ public class PythonLibraryDescriptionTest {
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
-                NUMBER_OF_THREADS,
+                executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 20)
@@ -250,7 +257,7 @@ public class PythonLibraryDescriptionTest {
                         SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build());
     TargetGraph targetGraph =
-        ParallelVersionedTargetGraphBuilder.transform(
+        AsyncVersionedTargetGraphBuilder.transform(
                 new FixedVersionSelector(
                     ImmutableMap.of(
                         builder.getTarget(),
@@ -259,7 +266,7 @@ public class PythonLibraryDescriptionTest {
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
-                NUMBER_OF_THREADS,
+                executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 20)
@@ -372,8 +379,9 @@ public class PythonLibraryDescriptionTest {
     cxxBuilder.build(graphBuilder);
     libBuilder.build(graphBuilder);
     PythonBinary binary = binaryBuilder.build(graphBuilder);
+    ImmutableSortedSet<Path> nativeLibs = binary.getComponents().getNativeLibraries().keySet();
     assertThat(
-        Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
+        Iterables.transform(nativeLibs, Object::toString),
         Matchers.containsInAnyOrder("libdep.so", "libcxx.so"));
   }
 }

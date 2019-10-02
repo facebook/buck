@@ -16,9 +16,12 @@
 
 package com.facebook.buck.multitenant.service
 
+import it.unimi.dsi.fastutil.ints.IntIterable
 import java.util.ArrayList
+import java.util.HashSet
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import javax.annotation.concurrent.GuardedBy
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
@@ -30,7 +33,6 @@ import kotlin.concurrent.write
  * This class is threadsafe.
  */
 internal class AppendOnlyBidirectionalCache<K> {
-    private val lock: ReentrantReadWriteLock = ReentrantReadWriteLock()
     // Note that we rely on the specific implementation of ConcurrentHashMap.computeIfAbsent()
     // because it provides stronger guarantees than ConcurrentMap.computeIfAbsent(). Specifically,
     // ConcurrentMap.computeIfAbsent() says that it can potentially call the mapping function
@@ -38,6 +40,9 @@ internal class AppendOnlyBidirectionalCache<K> {
     // function is applied at most once per key. We need the "at most once" guarantee to ensure
     // inserts into the forward and reverse maps are one-to-one.
     private val forward = ConcurrentHashMap<K, Int>()
+
+    private val lock: ReentrantReadWriteLock = ReentrantReadWriteLock()
+    @GuardedBy("lock")
     private val reverse = ArrayList<K>()
 
     /**
@@ -56,6 +61,40 @@ internal class AppendOnlyBidirectionalCache<K> {
     fun getByIndex(index: Int): K {
         return lock.read {
             reverse[index]
+        }
+    }
+
+    /**
+     * Maps each index in `iterable` to the corresponding value and adds it to a [Set].
+     */
+    fun resolveIndexes(iterable: Iterable<Int>): Set<K> {
+        val destination: HashSet<K> = if (iterable is java.util.Collection<*>) {
+            HashSet(iterable.size())
+        } else {
+            HashSet()
+        }
+
+        resolveIndexes(iterable, destination)
+        return destination
+    }
+
+    /**
+     * Maps each index in `iterable` to the corresponding value and adds it to `destination`.
+     */
+    fun resolveIndexes(iterable: Iterable<Int>, destination: MutableCollection<K>) {
+        // Note that this takes advantage of it.unimi.dsi.fastutil, if appropriate.
+        if (iterable is IntIterable) {
+            val indexes = iterable.iterator()
+            lock.read {
+                while (indexes.hasNext()) {
+                    val value = reverse[indexes.nextInt()]
+                    destination.add(value)
+                }
+            }
+        } else {
+            lock.read {
+                iterable.mapTo(destination) { reverse[it] }
+            }
         }
     }
 }

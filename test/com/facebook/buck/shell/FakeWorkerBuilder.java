@@ -19,11 +19,14 @@ package com.facebook.buck.shell;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -49,11 +52,14 @@ public class FakeWorkerBuilder
 
   static class FakeWorkerToolRule extends NoopBuildRuleWithDeclaredAndExtraDeps
       implements ProvidesWorkerTool {
-    private final FakeWorkerTool fakeWorkerTool = new FakeWorkerTool();
+    private final FakeWorkerTool fakeWorkerTool;
 
     public FakeWorkerToolRule(
         BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
       super(buildTarget, projectFilesystem, params);
+      SourcePath sourcePath =
+          ExplicitBuildTargetSourcePath.of(getBuildTarget(), Paths.get("output.fake"));
+      this.fakeWorkerTool = new FakeWorkerTool(sourcePath);
     }
 
     @Override
@@ -66,6 +72,11 @@ public class FakeWorkerBuilder
 
     private final Tool tool = new FakeTool();
     private final HashCode hashCode = HashCode.fromString("0123456789abcdef");
+    @AddToRuleKey private final SourcePath depRule;
+
+    FakeWorkerTool(SourcePath depRule) {
+      this.depRule = depRule;
+    }
 
     @Override
     public Tool getTool() {

@@ -1,0 +1,10 @@
+sh_binary(
+    name = "hello",
+    main = "hello.sh",
+    tests = [":test"],
+)
+
+sh_test(
+    name = "test",
+    test = "test.sh",
+)

@@ -32,23 +32,26 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.FakeJavaClassHashesProvider;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -89,7 +92,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
         BuildTargetPaths.getGenPath(
             filesystem,
             javaLibraryRule.getBuildTarget().withFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR),
-            "%s.dex.jar");
+            "%s/dex.jar");
     createFiles(filesystem, dexOutput.toString(), jarOutput.toString());
 
     AndroidPlatformTarget androidPlatformTarget =
@@ -98,7 +101,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             Paths.get(""),
             Collections.emptyList(),
             () -> new SimpleTool(""),
-            () -> new SimpleTool(""),
+            new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(""),
             Paths.get(""),
@@ -110,11 +113,11 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#dex");
-    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
-            buildTarget, filesystem, androidPlatformTarget, params, javaLibraryRule, DxStep.DX);
+            buildTarget, filesystem, graphBuilder, androidPlatformTarget, javaLibraryRule);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
+    steps = steps.subList(4, steps.size());
 
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
 
@@ -125,8 +128,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     MoreAsserts.assertSteps(
         "Generate bar.dex.jar.",
         ImmutableList.of(
-            String.format("rm -f %s", dexOutput),
-            String.format("mkdir -p %s", dexOutput.getParent()),
             "estimate_dex_weight",
             "(cd " + filesystem.getRootPath() + " && " + expectedDxCommand + ")",
             String.format("zip-scrub %s", filesystem.resolve(dexOutput)),
@@ -134,19 +135,19 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
         steps,
         executionContext);
 
-    ((EstimateDexWeightStep) steps.get(2)).setWeightEstimateForTesting(250);
-    Step recordArtifactAndMetadataStep = steps.get(5);
+    ((EstimateDexWeightStep) Iterables.getFirst(steps, null)).setWeightEstimateForTesting(250);
+    Step recordArtifactAndMetadataStep = Iterables.getLast(steps);
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
     MoreAsserts.assertContainsOne(
-        "The generated .dex.jar file should be in the set of recorded artifacts.",
+        "The folder that contain generated .dex.jar file should be in the set of recorded artifacts.",
         buildableContext.getRecordedArtifacts(),
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.dex.jar"));
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s"));
 
     BuildOutputInitializer<DexProducedFromJavaLibrary.BuildOutput> outputInitializer =
         preDex.getBuildOutputInitializer();
     outputInitializer.initializeFromDisk(graphBuilder.getSourcePathResolver());
-    assertEquals(250, outputInitializer.getBuildOutput().weightEstimate);
+    assertEquals(250, outputInitializer.getBuildOutput().getWeightEstimate());
   }
 
   private void createFiles(ProjectFilesystem filesystem, String... paths) throws IOException {
@@ -166,37 +167,25 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     javaLibrary
         .getBuildOutputInitializer()
         .setBuildOutputForTests(new JavaLibrary.Data(ImmutableSortedMap.of()));
+    javaLibrary.setJavaClassHashesProvider(new FakeJavaClassHashesProvider());
 
     BuildContext context = FakeBuildContext.NOOP_CONTEXT;
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
-    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
             buildTarget,
             projectFilesystem,
+            graphBuilder,
             TestAndroidPlatformTargetFactory.create(),
-            params,
-            javaLibrary,
-            DxStep.DX);
+            javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
-
-    Path dexOutput = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar");
 
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
 
-    MoreAsserts.assertSteps(
-        "Do not generate a .dex.jar file.",
-        ImmutableList.of(
-            String.format("rm -f %s", dexOutput),
-            String.format("mkdir -p %s", dexOutput.getParent()),
-            "record_empty_dx"),
-        steps,
-        executionContext);
-
-    Step recordArtifactAndMetadataStep = steps.get(2);
+    Step recordArtifactAndMetadataStep = Iterables.getLast(steps);
     assertThat(recordArtifactAndMetadataStep.getShortName(), startsWith("record_"));
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
@@ -215,18 +204,18 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDexWithClasses =
         new DexProducedFromJavaLibrary(
             buildTarget,
             projectFilesystem,
+            graphBuilder,
             TestAndroidPlatformTargetFactory.create(),
-            params,
-            accumulateClassNames,
-            DxStep.DX);
+            accumulateClassNames);
     assertNull(preDexWithClasses.getSourcePathToOutput());
+    OutputPathResolver outputPathResolver =
+        new DefaultOutputPathResolver(projectFilesystem, buildTarget);
     assertEquals(
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar"),
-        preDexWithClasses.getPathToDex());
+        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s__/dex.jar"),
+        outputPathResolver.resolvePath(preDexWithClasses.getPathToDex()));
   }
 }

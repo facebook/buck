@@ -38,15 +38,15 @@
 {call buck.command}
 {param overview}
 <p>
-The <code>buck query</code> command provides functionality to query 
+The <code>buck query</code> command provides functionality to query
 the <em>target-nodes</em> graph ("target graph") and return the build
-targets that satisfy the query expression. 
+targets that satisfy the query expression.
 </p>
 
 <p>
-The query language enables you to combine multiple operators in a single 
-command.  For example, to retrieve a list of all the tests for a build 
-target, you can combine the <code>deps()</code> and <code>testsof()</code> operators 
+The query language enables you to combine multiple operators in a single
+command.  For example, to retrieve a list of all the tests for a build
+target, you can combine the <code>deps()</code> and <code>testsof()</code> operators
 into a single call to <code>buck query</code>.
 </p>
 
@@ -61,9 +61,9 @@ buck query "testsof(deps('//java/com/example/app:amazing'))"
 <h2>Query Language</h2>
 
 <p>
-The Buck query language was inspired by 
-the <a href="http://bazel.io/docs/query.html"> Bazel Query Language</a>. 
-Buck's query language uses the same parser, so the lexical syntax is similar. 
+The Buck query language was inspired by
+the <a href="http://bazel.io/docs/query.html"> Bazel Query Language</a>.
+Buck's query language uses the same parser, so the lexical syntax is similar.
 Buck's query language supports a <em>subset</em> of Bazel's query functionality
 but also adds a few operators, such as <code>attrfilter</code>, <code>inputs</code>,
 and <code>owner</code>.
@@ -80,6 +80,7 @@ and <code>owner</code>.
 <ul style="line-height:0.5em">
     <li><a href="#allpaths"><code>allpaths</code></a>: All dependency paths</li>
     <li><a href="#attrfilter"><code>attrfilter</code></a>: Rule attribute filtering</li>
+    <li><a href="#attrregexfilter"><code>attrregexfilter</code></a>: Rule attribute filtering with regex</li>
     <li><a href="#buildfile"><code>buildfile</code></a>: Build files of targets</li>
     <li><a href="#deps"><code>deps and first-order-deps</code></a>: Transitive closure of dependencies</li>
     <li><a href="#set-operations"><code>except</code></a>: Set difference</li>
@@ -99,15 +100,15 @@ and <code>owner</code>.
 
 <p>
 The most common parameter for a Buck query operator is an expression that
-evaluates to a build target or collection of build targets. Such an 
+evaluates to a build target or collection of build targets. Such an
 expression could be an explicit {call buck.build_target /}, a {call
-buck.build_target_pattern /}, an {call buckconfig.alias /}, 
+buck.build_target_pattern /}, an {call buckconfig.alias /},
 or <em>the set of targets returned by another Buck query operator</em>.
 </p>
 
 <p>
-<strong>Tip:</strong> You can pass an alias directly to 
-the <code>buck query</code> command line to see what it resolves to. 
+<strong>Tip:</strong> You can pass an alias directly to
+the <code>buck query</code> command line to see what it resolves to.
 For example:
 </p>
 
@@ -124,7 +125,7 @@ $ buck query app
 
 <p>
 In addition to target parameters, some Buck query operators take string
-parameters such as filenames (<a href="#owner"><code>owner()</code></a>) or 
+parameters such as filenames (<a href="#owner"><code>owner()</code></a>) or
 regular expressions (<a href="#filter"><code>filter()</code></a>).
 </p>
 
@@ -137,10 +138,10 @@ tool-tip descriptions of the parameters.
 <h4>Quoting of arguments</h4>
 
   <p>
-    It is not necessary to quote arguments if they 
-    adhere to certain conditions. That is, they comprise sequences of characters drawn 
-    from the alphabet, numerals, forward slash (<code>/</code>), 
-    colon (<code>:</code>), period (<code>.</code>), hyphen (<code>-</code>), 
+    It is not necessary to quote arguments if they
+    adhere to certain conditions. That is, they comprise sequences of characters drawn
+    from the alphabet, numerals, forward slash (<code>/</code>),
+    colon (<code>:</code>), period (<code>.</code>), hyphen (<code>-</code>),
     underscore (<code>_</code>), or asterisk (<code>*</code>)&mdash;and
     they do not start with a hyphen or period.
     For example, quoting <code>java_test</code> is unnecessary.
@@ -152,13 +153,13 @@ tool-tip descriptions of the parameters.
   </p>
 
   <p>
-    You should always use quotes when writing scripts that 
+    You should always use quotes when writing scripts that
     construct <code>buck query</code> expressions <em>from user-supplied values</em>.
   </p>
 
   <p>
     Note that argument quoting for <code>buck query</code> is in
-    addition to any quoting that your shell requires.  In the following 
+    addition to any quoting that your shell requires.  In the following
     example, double-quotes are used for the shell and
     single-quotes are used for the <code>build target</code> expression.
   </p>
@@ -182,27 +183,27 @@ buck query "'//foo:bar=wiz'"
     <th>Nominal</th>
     <th>Symbolic</th>
   </tr>
-  <tr> 
-    <td>  
+  <tr>
+    <td>
       <code class="not-inline">intersect</code>
     </td>
-    <td style="text-align:center"> 
+    <td style="text-align:center">
       <code class="not-inline">^</code>
     </td>
   </tr>
-  <tr> 
-    <td>  
+  <tr>
+    <td>
       <code class="not-inline">union</code>
     </td>
-    <td style="text-align:center"> 
+    <td style="text-align:center">
       <code class="not-inline">+</code>
     </td>
   </tr>
-  <tr> 
-    <td>  
+  <tr>
+    <td>
       <code class="not-inline">except</code>
     </td>
-    <td style="text-align:center"> 
+    <td style="text-align:center">
       <code class="not-inline">-</code>
     </td>
   </tr>
@@ -210,8 +211,8 @@ buck query "'//foo:bar=wiz'"
 
 <p>
 These three operators compute the corresponding set operations over their arguments.
-Each operator has two forms, a nominal form, such as <code>intersect</code>, 
-and a symbolic form, such as <code>^</code>. 
+Each operator has two forms, a nominal form, such as <code>intersect</code>,
+and a symbolic form, such as <code>^</code>.
 the two forms are equivalent; the symbolic forms are just faster to type. For example,
 </p>
 
@@ -232,13 +233,13 @@ buck query "deps('//foo:bar') ^ deps('//baz:lib')"
 </p>
 
 <p>
-both return the targets that appear in the 
+both return the targets that appear in the
 {sp}<a href="https://en.wikipedia.org/wiki/Transitive_closure">transitive closure</a>{sp}
-of <code>//foo:bar</code> and <code>//baz:lib</code>. 
+of <code>//foo:bar</code> and <code>//baz:lib</code>.
 </p>
 <p>
 The <code>intersect</code> (<code>^</code>)
-and <code>union</code> (<code>+</code>) operators are commutative. 
+and <code>union</code> (<code>+</code>) operators are commutative.
 The <code>except</code> (<code>-</code>) operator is not commutative.
 </p>
 
@@ -286,8 +287,8 @@ they are parsed correctly.
 </p>
 
 <p>
-If you want to invoke <code>buck query</code> on a list of targets, 
-then <code>set()</code> is a way to group this list in a query. 
+If you want to invoke <code>buck query</code> on a list of targets,
+then <code>set()</code> is a way to group this list in a query.
 </p>
 
 <p>
@@ -368,7 +369,7 @@ the repository and the target <code>//foo:bar</code>.
 </p>
 
 <p>
-We recommend using <code>allpaths()</code> with 
+We recommend using <code>allpaths()</code> with
 the <code>--output-format dot</code>{sp}parameter to generate a
 graphviz file that can then be rendered as an image. For example:
 </p>
@@ -400,27 +401,27 @@ attrfilter(<em title="build rule attribute">attribute</em>, <em title="attribute
 </p>
 
 <p>
-The <code>attrfilter(<em>attribute</em>, <em>value</em>, <em>expr</em>)</code> operator 
+The <code>attrfilter(<em>attribute</em>, <em>value</em>, <em>expr</em>)</code> operator
 evaluates the given target expression and filters the resulting build targets
-to those where the specified <code><em>attribute</em></code> contains the 
+to those where the specified <code><em>attribute</em></code> contains the
 specified <code><em>value</em></code>.
 </p>
 
 <p>
-In this context, the term <code><em>attribute</em></code> refers to an argument in a build rule, 
+In this context, the term <code><em>attribute</em></code> refers to an argument in a build rule,
 such as <code>name</code>, <code>headers</code>, <code>srcs</code>, or <code>deps</code>.
 </p>
 
 <p>
 If the attribute is a single value, say <code>name</code>, it is compared to the
 specified <code><em>value</em></code>, and the target is returned if
-they match. 
-If the attribute is a list, the target is returned if that list contains the specified <code><em>value</em></code>. 
+they match.
+If the attribute is a list, the target is returned if that list contains the specified <code><em>value</em></code>.
 If the attribute is a dictionary, the target is returned if the <code><em>value</em></code> exists in either the keys or the values of the dictionary.
 </p>
 
 <p>
-For example, 
+For example,
 <p>
 
 <p>
@@ -432,13 +433,13 @@ buck query "attrfilter(deps, '//foo:bar', '//...')"
 </p>
 
 <p>
-returns the build targets in the repository that depend on <code>//foo:bar</code>&mdash;or 
-more precisely: those build targets that include <code>//foo:bar</code> in 
+returns the build targets in the repository that depend on <code>//foo:bar</code>&mdash;or
+more precisely: those build targets that include <code>//foo:bar</code> in
 their <code>deps</code> argument list.
 </p>
 
 <p>
-The match performed by <code>attrfilter()</code> is semantic rather than textual. 
+The match performed by <code>attrfilter()</code> is semantic rather than textual.
 So, for example, if you have the following <code>deps</code> argument in
 your build file:
 
@@ -477,6 +478,43 @@ argument to <code>attrfilter()</code>.
 
 
 {call .section}
+{param anchor: 'attrregexfilter' /}
+{param title: 'Rule attribute filtering with regex: attrregexfilter'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+attrregexfilter(<em title="build rule attribute">attribute</em>, <em title="attribute regex pattern">pattern</em>, <em title="target expression">expr</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>attrregexfilter(<em>attribute</em>, <em>pattern</em>, <em>expr</em>)</code> operator
+is identical to the <code>attrfilter(<em>attribute</em>, <em>value</em>, <em>expr</em>)</code> operator
+except that it takes a regular expression as the second argument.
+It evaluates the given target expression and filters the resulting build targets
+to those where the specified <code><em>attribute</em></code> matches the
+specified <code><em>pattern</em></code>.
+</p>
+
+<p>
+In this context, the term <code><em>attribute</em></code> refers to an argument in a build rule,
+such as <code>name</code>, <code>headers</code>, <code>srcs</code>, or <code>deps</code>.
+</p>
+
+<p>
+If the attribute is a single value, say <code>name</code>, it is matched against the
+specified <code><em>pattern</em></code>, and the target is returned if
+they match.
+If the attribute is a list, the target is returned if that list contains a value that matches the specified <code><em>pattern</em></code>.
+If the attribute is a dictionary, the target is returned if the <code><em>pattern</em></code> match is found in either the keys or the values of the dictionary.
+</p>
+
+
+{call .section}
 {param anchor: 'buildfile' /}
 {param title: 'Build files of targets: buildfile'/}
 {/call}
@@ -491,7 +529,7 @@ buildfile(<em title="target expression">expr</em>)
 </p>
 
 <p>
-The <code>buildfile(<em>expr</em>)</code> operator evaluates to those build 
+The <code>buildfile(<em>expr</em>)</code> operator evaluates to those build
 files that define the targets that result from the evaluation
 of the target expression, <code><em>expr</em></code>.
 </p>
@@ -520,21 +558,21 @@ deps(<em title="target expression">argset:expr</em>, <em title="integer expressi
 The <code>deps(<em>x</em>)</code> operator evaluates to the graph formed by the
 {sp}<a href="https://en.wikipedia.org/wiki/Transitive_closure">transitive closure</a>{sp}
 of the dependencies of its argument set, <i>x</i>,
-including the nodes from the argument set itself. 
-For example, the value of 
+including the nodes from the argument set itself.
+For example, the value of
 </p>
 
 <p>
 <pre>
 {literal}
-buck query "deps('//foo:bar')" 
+buck query "deps('//foo:bar')"
 {/literal}
 </pre>
 </p>
 
 <p>
-is the dependency graph rooted at the target node <code>//foo:bar</code>. 
-It includes all of the dependencies of <code>//foo:bar</code>. 
+is the dependency graph rooted at the target node <code>//foo:bar</code>.
+It includes all of the dependencies of <code>//foo:bar</code>.
 It also includes <code>//foo:bar</code> itself.
 </p>
 
@@ -546,19 +584,19 @@ an integer literal specifying an upper bound on the depth of the search.  So,
 <p>
 <pre>
 {literal}
-deps('//foo:bar', 1) 
+deps('//foo:bar', 1)
 {/literal}
 </pre>
 </p>
 
 <p>
-evaluates to the direct dependencies of the target <code>//foo:bar</code>, and 
+evaluates to the direct dependencies of the target <code>//foo:bar</code>, and
 </p>
 
 <p>
 <pre>
 {literal}
-deps('//foo:bar', 2) 
+deps('//foo:bar', 2)
 {/literal}
 </pre>
 </p>
@@ -566,7 +604,7 @@ deps('//foo:bar', 2)
 <p>
 further includes the nodes directly reachable from the nodes
 in <code>deps('//foo:bar', 1)</code>, and so on. If the depth parameter is
-omitted, the search is unbounded, that is, it computes the entire transitive 
+omitted, the search is unbounded, that is, it computes the entire transitive
 closure of dependencies.
 </p>
 
@@ -581,7 +619,7 @@ child nodes to recurse on when collecting transitive dependencies.
 This filter expression can use the <code>first_order_deps()</code> operator
 which returns a set that contains the first-order dependencies of the current
 node&mdash;which is equivalent to <code>deps(&lt;node&gt;, 1)</code>.
-For example, the query, 
+For example, the query,
 </p>
 
 <p>
@@ -593,7 +631,7 @@ buck query "deps('//foo:bar', 1, first_order_deps())"
 </p>
 
 <p>
-is equivalent to 
+is equivalent to
 </p>
 
 <p>
@@ -635,7 +673,7 @@ filter(<em title="regular expression">regex</em>, <em title="target expression">
 The <code>filter(<em>regex</em>, <em>expr</em>)</code> operator evaluates the
 specified target expression, <code><em>expr</em></code>, and returns the targets that have a
 name attribute that matches the specified regular expression <code><em>regex</em></code>.
-For example, 
+For example,
 </p>
 
 <p>
@@ -652,7 +690,7 @@ that contain the string {sp}<code>library</code> in their name attribute.
 </p>
 
 <p>
-The <code>filter()</code> operator performs a <em>partial</em> match. 
+The <code>filter()</code> operator performs a <em>partial</em> match.
 So, both of the following clauses would match a target with the name <code>main</code>.
 </p>
 
@@ -673,7 +711,7 @@ buck query "filter( 'mai', '//...' )"
 </p>
 
 <p>
-Another example: 
+Another example:
 </p>
 
 <p>
@@ -686,11 +724,11 @@ buck query "filter('.*\.java$', labels(srcs, '//foo:bar'))"
 
 <p>
 returns the <code>java</code> files used to build
-{sp}<code>//foo:bar</code>. 
+{sp}<code>//foo:bar</code>.
 </p>
 
 <p>
-You often need to quote the pattern to ensure that regular expressions, 
+You often need to quote the pattern to ensure that regular expressions,
 such as <code>.*xpto</code>, are parsed correctly.
 </p>
 
@@ -711,7 +749,7 @@ inputs(<em title="target expression">expr</em>)
 
 <p>
 The <code>inputs(<em>expr</em>)</code> operator returns the files that are inputs
-to the target expression, <code><em>expr</em></code>, ignoring all dependencies. 
+to the target expression, <code><em>expr</em></code>, ignoring all dependencies.
 Note that it does not include any files required for parsing, such as
 the BUCK file. Rather, it returns only the files required to actually
 run the build after parsing has been performed.
@@ -719,12 +757,12 @@ run the build after parsing has been performed.
 
 <p>
 Note also that <code>inputs()</code> returns only those input files indicated
-by the <em>target graph</em>. Input files that are present in the <em>action graph</em> but 
+by the <em>target graph</em>. Input files that are present in the <em>action graph</em> but
 not in the target graph are not returned by <code>inputs()</code>.
 </p>
 
 <p>
-You could consider the <code>inputs()</code> and <code>owner()</code> operators 
+You could consider the <code>inputs()</code> and <code>owner()</code> operators
 to be inverses of each other.
 </p>
 
@@ -745,9 +783,9 @@ kind(<em title="regular expression">regex</em>, <em title="target expression">ex
 
 <p>
 The <code>kind(<em>regex</em>, <em>expr</em>)</code> operator
-evaluates the specified target expression, <code><em>expr</em></code>, and 
-returns the targets where the rule type matches the 
-specified <code><em>regex</em></code>.  For example, 
+evaluates the specified target expression, <code><em>expr</em></code>, and
+returns the targets where the rule type matches the
+specified <code><em>regex</em></code>.  For example,
 </p>
 
 <p>
@@ -776,12 +814,12 @@ buck query "kind('.*_test', '//...')"
 </p>
 
 <p>
-returns all targets in the repository with a rule type that ends 
+returns all targets in the repository with a rule type that ends
 with <code>_test</code>, such as <code>java_test</code> and <code>cxx_test</code>.
 </p>
 
 <p>
-You often need to quote the pattern to ensure that regular expressions, 
+You often need to quote the pattern to ensure that regular expressions,
 such as <code>.*xpto</code>, are parsed correctly.
 </p>
 
@@ -800,8 +838,8 @@ buck query : --output-attribute buck.type
 
 <p>
 which prints all the rule types in the build file in the current
-directory (<code>:</code>)&mdash;in JSON format. 
-See <code>--output-attribute</code> described in the <b>Parameters</b> section 
+directory (<code>:</code>)&mdash;in JSON format.
+See <code>--output-attribute</code> described in the <b>Parameters</b> section
 below for more information.
 </p>
 
@@ -821,15 +859,15 @@ labels(<em title="srcs | headers | deps">attribute</em>, <em title="target expre
 </p>
 
 <p>
-The <code>labels(<em>attribute</em>, <em>expr</em>)</code> operator returns the 
-set of build targets and file paths listed in the 
-attribute specified by the <code><em>attribute</em></code> parameter, in the targets that result from the 
+The <code>labels(<em>attribute</em>, <em>expr</em>)</code> operator returns the
+set of build targets and file paths listed in the
+attribute specified by the <code><em>attribute</em></code> parameter, in the targets that result from the
 evaluation of target expression, <code><em>expr</em></code>.
 Valid values for <em>attribute</em> include <code>srcs</code>, <code>headers</code>, and <code>deps</code>.
 </p>
 
 <p>
-<b>Example</b>: Get all build targets and file paths specified in 
+<b>Example</b>: Get all build targets and file paths specified in
 the <code>srcs</code> attribute for <em>all the rules</em> in the build
 file in the current directory.
 </p>
@@ -848,9 +886,9 @@ an error if they do not.
 </p>
 
 <p>
-<strong>Example</strong>: Get all the build targets and file paths specified in 
-the <code>deps</code> arguments in the <em>tests of</em> the 
-target <code>//foo:bar</code>. 
+<strong>Example</strong>: Get all the build targets and file paths specified in
+the <code>deps</code> arguments in the <em>tests of</em> the
+target <code>//foo:bar</code>.
 </p>
 
 <p> <pre>
@@ -880,15 +918,15 @@ owner(<em title="input file to build rule">inputfile</em>)
 </p>
 
 <p>
-The <code>owner(<em>inputfile</em>)</code> operator returns the targets that own the 
+The <code>owner(<em>inputfile</em>)</code> operator returns the targets that own the
 specified <code><em>inputfile</em></code>. In this context, <em>own</em> means that the
-target has the specified file as an input. You could consider 
-the <code>owner()</code> and <code>inputs()</code> operators 
-to be inverses of each other.  
+target has the specified file as an input. You could consider
+the <code>owner()</code> and <code>inputs()</code> operators
+to be inverses of each other.
 </p>
 
 <p>
-<b>Example</b>: 
+<b>Example</b>:
 </p>
 
 <p>
@@ -905,12 +943,12 @@ which could be a value such as <code>//examples:one</code>.
 </p>
 
 <p>
-It is possible for the specified file to have multiple owners, in which 
+It is possible for the specified file to have multiple owners, in which
 case, <code>owner()</code> returns a set of targets.
 </p>
 
 <p>
-If no owner for the file is found, <code>owner()</code> outputs the message: 
+If no owner for the file is found, <code>owner()</code> outputs the message:
 <pre>
 {literal}
 No owner was found for &lt;file&gt;
@@ -928,25 +966,25 @@ No owner was found for &lt;file&gt;
 <b>Syntax</b>
 <pre>
 {literal}
-rdeps(<em title="target expression">universe:expr</em>, <em title="target expression">argset:expr</em>)</code> 
-rdeps(<em title="target expression">universe:expr</em>, <em title="target expression">argset:expr</em>, <em title="integer value">depth:int</em>)</code> 
+rdeps(<em title="target expression">universe:expr</em>, <em title="target expression">argset:expr</em>)</code>
+rdeps(<em title="target expression">universe:expr</em>, <em title="target expression">argset:expr</em>, <em title="integer value">depth:int</em>)</code>
 {/literal}
 </pre>
 </p>
 
 <p>
 The <code>rdeps(universe, argset)</code> operator returns the reverse dependencies
-of the argument set <code><em>argset</em></code> within the 
+of the argument set <code><em>argset</em></code> within the
 {sp}<a href="https://en.wikipedia.org/wiki/Transitive_closure">transitive closure</a>{sp}
-of the set <code><em>universe</em></code> (the <em>universe</em>). The returned values include 
+of the set <code><em>universe</em></code> (the <em>universe</em>). The returned values include
 the nodes from the argument set <code><em>argset</em></code> itself.
 </p>
 
 <p>
 The <code>rdeps</code> operator accepts an optional third argument,
 which is an integer literal specifying an upper bound on the depth of
-the search.  A value of one (<code>1</code>) specifies 
-that <code>buck query</code> should return only direct dependencies.  
+the search.  A value of one (<code>1</code>) specifies
+that <code>buck query</code> should return only direct dependencies.
 If the <code><em>depth</em></code> parameter is omitted, the search is unbounded.
 </p>
 
@@ -960,7 +998,7 @@ If the <code><em>depth</em></code> parameter is omitted, the search is unbounded
 The <em>universe:expr</em> parameter includes the <em>entire</em> transitive
 closure of the target pattern specified. So some of these targets might be
 outside the directory structure indicated by that target pattern.  For example,
-the result set of 
+the result set of
 </p>
 
 <p>
@@ -986,13 +1024,13 @@ foo/bar/
 <p>
 To say it another way, if a target in <code>//foo/bar/...</code> depends
 on, say, <code>//hoge,</code> which in turn depends on
-{sp}<code>//fuga:baz,</code> <em>then <code>//hoge</code> would show 
+{sp}<code>//fuga:baz,</code> <em>then <code>//hoge</code> would show
 up in the result set</em>.
 </p>
 
 <p>
 If you wanted to constrain the result set to only those targets beneath
-{sp}<code>foo/bar</code>, you could use 
+{sp}<code>foo/bar</code>, you could use
 the <a href="#set-operations"><code>intersect</code></a> operator:
 </p>
 
@@ -1024,9 +1062,9 @@ testsof(<em title="target expression">expr</em>)
 </p>
 
 <p>
-The <code>testsof(<em>expr</em>)</code> operator returns the tests associated with the 
+The <code>testsof(<em>expr</em>)</code> operator returns the tests associated with the
 targets specified by the target expression, <code><em>expr</em></code>.
-For example, 
+For example,
 </p>
 
 
@@ -1043,8 +1081,8 @@ returns the tests associated with <code>//foo:bar</code> and <code>//baz:app+lib
 </p>
 
 <p>
-To obtain all the tests associated with the target and its dependencies, 
-you can combine the <code>testsof()</code> operator with 
+To obtain all the tests associated with the target and its dependencies,
+you can combine the <code>testsof()</code> operator with
 the <code>deps()</code> operator. For example,
 </p>
 
@@ -1057,7 +1095,7 @@ buck query "testsof(deps('//foo:bar'))"
 </p>
 
 <p>
-first finds the transitive closure of <code>//foo:bar</code>, 
+first finds the transitive closure of <code>//foo:bar</code>,
 and then lists all the tests associated with the targets in this transitive closure.
 </p>
 
@@ -1065,8 +1103,8 @@ and then lists all the tests associated with the targets in this transitive clos
 <h2>Executing multiple queries at once</h2>
 
 <p>
-Suppose you want to know the tests associated with a set of targets. 
-This can be done by combining 
+Suppose you want to know the tests associated with a set of targets.
+This can be done by combining
 the <code>testsof</code>, <code>deps</code> and <code>set</code> operators.
 For example,
 </p>
@@ -1084,7 +1122,7 @@ Suppose you now want to know the tests for <em>each</em> of these targets;
 the above command returns the union of the tests.
 Instead of executing one query for the entire set of targets, <code>buck query</code> provides
 a way to repeat a query with different targets using a single command.
-To do this, first define the query expression format and then list the input targets, 
+To do this, first define the query expression format and then list the input targets,
 separated by spaces. For example,
 </p>
 
@@ -1098,18 +1136,18 @@ buck query "testsof(deps( %s ))" target1 target2 target3
 
 <p>
 The <code>%s</code> in the query expression is replaced by each of
-the listed targets, and for each target, the resulting query expression is evaluated. 
+the listed targets, and for each target, the resulting query expression is evaluated.
 If you add the <code>--output-format json</code> parameter, the result of
 the command is grouped by input target; otherwise, as in the previous
-example using <code>set()</code>, the command merges the results and 
+example using <code>set()</code>, the command merges the results and
 returns the union of the queries.
 </p>
 
 <p>
 This syntax is also useful for subcommands
-that take arguments that are not targets, 
-such as <code>owner()</code>. 
-Recall that the <code>set()</code> operator works only with targets, 
+that take arguments that are not targets,
+such as <code>owner()</code>.
+Recall that the <code>set()</code> operator works only with targets,
 but the <code>owner()</code> operator takes a filename as its argument.
 </p>
 
@@ -1179,7 +1217,7 @@ buck query "testsof(deps(set('//foo:bar' '//foo:baz')))"
 If you use multiple <code>%Ss</code> operators in a single query, you
 can specify which lines in the <code>@</code>-file should be used
 for each instance of <code>%Ss</code> in the query expression:
-use <code>--</code> to separate elements that go in different sets. 
+use <code>--</code> to separate elements that go in different sets.
 For example:
 </p>
 
@@ -1318,8 +1356,8 @@ $ dot -Tpng graph.dot -o graph.png
   target. Attributes are regular expressions (e.g. '.*' matches all attributes).
   If an attribute (e.g. <code>srcs</code>) is not defined for a build target,
   it is not present in the output.
-  <br /> 
-  <br /> 
+  <br />
+  <br />
   NOTE: There is ambiguity when using this option with '%s' style queries.
         It is suggested to use <code>--output-attribute</code> instead.
 
@@ -1360,14 +1398,14 @@ $ buck query '//example/...' --output-attributes buck.type name srcs
   target. Attributes are regular expressions (e.g. '.*' matches all attributes).
   If an attribute (e.g. <code>srcs</code>) is not defined for a build target,
   it is not present in the output.
-  
-  <br /> 
-  <br /> 
+
+  <br />
+  <br />
   Multiple attributes may be specified by providing the --output-attribute
   option multiple times.
 
-  <br /> 
-  <br /> 
+  <br />
+  <br />
   NOTE: The primary difference between this and --output-attributes is that
         --output-attribute works correctly with other multiple-argument
         queries.
@@ -1484,7 +1522,7 @@ cxx_test(
 
 
 <p>
-<b>Example</b>: Resolve multiple aliases. 
+<b>Example</b>: Resolve multiple aliases.
 </p>
 
 <p>
@@ -1528,8 +1566,8 @@ returns
 </p>
 
 <p>
-<b>Example</b>: List all of the targets on which 
-the <code>one</code> library <em>directly</em> depends. 
+<b>Example</b>: List all of the targets on which
+the <code>one</code> library <em>directly</em> depends.
 </p>
 
 <p>
@@ -1546,7 +1584,7 @@ $ buck query "deps(//examples:one, 1)"
 
 <p>
 <b>Example</b>: Display a JSON representation of the transitive closure of the targets
-on which the <code>one</code> library depends. 
+on which the <code>one</code> library depends.
 </p>
 
 <p>
@@ -1566,7 +1604,7 @@ $ buck query "deps(//examples:one)"
 
 
 <p>
-<b>Example</b>: Display a JSON representation of the tests associated with 
+<b>Example</b>: Display a JSON representation of the tests associated with
 the{sp} <code>one</code> and <code>three</code> libraries.
 </p>
 

@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class AndroidBinaryFactory {
 
@@ -61,7 +62,7 @@ public class AndroidBinaryFactory {
       DexSplitMode dexSplitMode,
       EnumSet<ExopackageMode> exopackageModes,
       ResourceFilter resourceFilter,
-      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
+      Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,
       AndroidBinaryDescriptionArg args,
       JavaOptions javaOptions) {
 

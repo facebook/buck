@@ -24,6 +24,8 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
@@ -57,12 +59,18 @@ public class ParallelActionGraphFactory implements ActionGraphFactoryDelegate {
       ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener,
       ActionGraphBuilderDecorator actionGraphBuilderDecorator) {
     ListeningExecutorService executorService = executorSupplier.get();
+    ConfigurationRuleRegistry configurationRuleRegistry =
+        ConfigurationRuleRegistryFactory.createRegistry(targetGraph);
 
     ActionGraphBuilder graphBuilder =
         actionGraphBuilderDecorator.create(
             nodeTransformer ->
                 new MultiThreadedActionGraphBuilder(
-                    executorService, targetGraph, nodeTransformer, cellProvider));
+                    executorService,
+                    targetGraph,
+                    configurationRuleRegistry,
+                    nodeTransformer,
+                    cellProvider));
 
     HashMap<BuildTarget, ListenableFuture<BuildRule>> futures = new HashMap<>();
 
@@ -72,10 +80,14 @@ public class ParallelActionGraphFactory implements ActionGraphFactoryDelegate {
     new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(targetGraph) {
       @Override
       public void visit(TargetNode<?> node) {
+        if (!node.getRuleType().isBuildRule()) {
+          return;
+        }
         // If we're loading this node from cache, we don't need to wait on our children, as the
         // entire subgraph will be loaded from cache.
         List<ListenableFuture<BuildRule>> depFutures =
             targetGraph.getOutgoingNodesFor(node).stream()
+                .filter(dep -> dep.getRuleType().isBuildRule())
                 .map(dep -> Objects.requireNonNull(futures.get(dep.getBuildTarget())))
                 .collect(ImmutableList.toImmutableList());
         futures.put(

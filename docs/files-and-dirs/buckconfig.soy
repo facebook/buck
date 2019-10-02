@@ -564,6 +564,18 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'android' /}
+  {param name: 'compile_sdk_version' /}
+  {param example_value: 'Google Inc.:Google APIs:21' /}
+  {param description}
+    This specifies the version of the Android SDK that all Android code in the project should be
+    built against.  Even if not specified, the version that Buck chose to use will be printed to the
+    console during the build.  A list of valid values on your system can be found by running{sp}
+    <code>android list target --compact</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'android' /}
   {param name: 'sdk_path' /}
   {param example_value: '/Library/Android/sdk' /}
   {param description}
@@ -587,18 +599,6 @@ $ buck targets --resolve-alias app#src_jar
       variables&mdash;in the order in which they are listed above&mdash;over 
       the value of this property in <code>.buckconfig</code>.
     </p>
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'android' /}
-  {param name: 'target' /}
-  {param example_value: 'Google Inc.:Google APIs:21' /}
-  {param description}
-    This specifies the version of the Android SDK that all Android code in the project should be
-    built against.  Even if not specified, the version that Buck chose to use will be printed to the
-    console during the build.  A list of valid values on your system can be found by running{sp}
-    <code>android list targets --compact</code>.
   {/param}
 {/call}
 
@@ -4323,6 +4323,15 @@ $ buck build app#py3
   {param description}
     The path to the python interpreter to use.  By default, Buck will search for this in your{sp}
     <code>PATH</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'python' /}
+  {param name: 'inplace_interpreter_flags' /}
+  {param example_value: '-EBs' /}
+  {param description}
+    Flags to pass to the python interpreter when running a .pex file that is configured to run 'inplace'. Defaults to <code>-Es</code>
   {/param}
 {/call}
 

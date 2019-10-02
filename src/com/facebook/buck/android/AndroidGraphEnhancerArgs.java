@@ -20,11 +20,13 @@ import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.List;
@@ -145,6 +147,8 @@ public interface AndroidGraphEnhancerArgs extends HasDuplicateAndroidResourceTyp
   }
 
   Set<TargetCpuType> getCpuFilters();
+
+  ImmutableMap<TargetCpuType, UnconfiguredBuildTargetView> getTargetCpuTypeConstraints();
 
   Optional<StringWithMacros> getPreprocessJavaClassesBash();
 

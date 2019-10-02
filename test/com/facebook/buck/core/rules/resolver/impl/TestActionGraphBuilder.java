@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.resolver.impl;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -35,6 +36,7 @@ public class TestActionGraphBuilder extends MultiThreadedActionGraphBuilder {
     super(
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         targetGraph,
+        ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
         buildRuleGenerator,
         cellProvider);
   }

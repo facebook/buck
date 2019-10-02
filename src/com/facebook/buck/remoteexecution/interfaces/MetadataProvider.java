@@ -22,5 +22,7 @@ import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 public interface MetadataProvider {
   RemoteExecutionMetadata get();
 
+  RemoteExecutionMetadata.Builder getBuilderForAction(String actionDigest, String ruleName);
+
   RemoteExecutionMetadata getForAction(String actionDigest, String ruleName);
 }

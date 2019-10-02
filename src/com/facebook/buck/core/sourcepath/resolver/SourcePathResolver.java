@@ -60,4 +60,10 @@ public interface SourcePathResolver {
    *     ProjectFilesystem}
    */
   Path getRelativePath(ProjectFilesystem projectFilesystem, SourcePath sourcePath);
+
+  /**
+   * Creates a map where given source paths are resolved relatively to the given base path and
+   * stored (as keys) with their absolute paths (as values).
+   */
+  ImmutableMap<Path, Path> createRelativeMap(Path basePath, Iterable<SourcePath> sourcePaths);
 }

@@ -29,10 +29,9 @@ import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
@@ -42,6 +41,7 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.BuildFileManifestFactory;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -227,8 +227,8 @@ public class ParsePipelineTest {
               rootBuildFilePath,
               BuildFileManifestFactory.create(
                   ImmutableMap.of("bar", ImmutableMap.of("name", "bar"))),
+              false,
               eventBus);
-      expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage("malformed raw data");
       fixture
           .getTargetNodeParsePipeline()
@@ -251,8 +251,7 @@ public class ParsePipelineTest {
               .lookupComputedNode(cell, rootBuildFilePath, eventBus);
       fixture
           .getRawNodeParsePipelineCache()
-          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), eventBus);
-      expectedException.expect(IllegalStateException.class);
+          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), false, eventBus);
       expectedException.expectMessage(
           "Raw data claims to come from [], but we tried rooting it at [a].");
       fixture
@@ -279,8 +278,7 @@ public class ParsePipelineTest {
               .lookupComputedNode(cell, rootBuildFilePath, eventBus);
       fixture
           .getRawNodeParsePipelineCache()
-          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), eventBus);
-      expectedException.expect(IllegalStateException.class);
+          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), false, eventBus);
       expectedException.expectMessage(
           "Raw data claims to come from [], but we tried rooting it at [a].");
       fixture
@@ -325,7 +323,7 @@ public class ParsePipelineTest {
 
     @Override
     public synchronized V putComputedNodeIfNotPresent(
-        Cell cell, K key, V value, BuckEventBus eventBus) {
+        Cell cell, K key, V value, boolean targetIsConfiguration, BuckEventBus eventBus) {
       if (!nodeMap.containsKey(key)) {
         nodeMap.put(key, value);
       }
@@ -421,7 +419,7 @@ public class ParsePipelineTest {
                   });
       buildFileRawNodeParsePipeline =
           new BuildFileRawNodeParsePipeline(
-              new PipelineNodeCache<>(rawNodeParsePipelineCache),
+              new PipelineNodeCache<>(rawNodeParsePipelineCache, n -> false),
               projectBuildFileParserPool,
               executorService,
               eventBus,
@@ -440,12 +438,13 @@ public class ParsePipelineTest {
               buildFileRawNodeParsePipeline,
               buildTargetRawNodeParsePipeline,
               new DefaultRawTargetNodeFactory(knownRuleTypesProvider, new BuiltTargetVerifier()));
-      ParserTargetNodeFactory<RawTargetNode> rawTargetNodeToTargetNodeFactory =
+      ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory =
           new NonResolvingRawTargetNodeToTargetNodeFactory(
-              DefaultParserTargetNodeFactory.createForParser(
+              new DefaultParserTargetNodeFactory(
+                  coercerFactory,
                   knownRuleTypesProvider,
                   constructorArgMarshaller,
-                  buildFileTrees,
+                  new ThrowingPackageBoundaryChecker(buildFileTrees),
                   nodeListener,
                   new TargetNodeFactory(coercerFactory)));
       this.targetNodeParsePipeline =

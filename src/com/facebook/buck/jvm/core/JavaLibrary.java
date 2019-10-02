@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.core;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -32,6 +33,7 @@ public interface JavaLibrary
         HasJavaAbi,
         HasJavaClassHashes,
         HasMavenCoordinates,
+        HasRuntimeDeps,
         HasSources {
 
   /**

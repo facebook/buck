@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Splitter;
@@ -72,7 +72,7 @@ public class AuditRuleTypesCommandTest {
     TestConsole console = new TestConsole();
 
     AuditRuleTypesCommand.collectAndDumpBuildRuleTypesInformation(
-        console, KnownRuleTypes.of(DESCRIPTIONS, ImmutableList.of()), true);
+        console, KnownNativeRuleTypes.of(DESCRIPTIONS, ImmutableList.of()), true);
 
     @SuppressWarnings("PMD.LooseCoupling")
     List<String> buildRuleTypes =
@@ -87,7 +87,7 @@ public class AuditRuleTypesCommandTest {
     TestConsole console = new TestConsole();
 
     AuditRuleTypesCommand.collectAndDumpBuildRuleTypesInformation(
-        console, KnownRuleTypes.of(DESCRIPTIONS, ImmutableList.of()), false);
+        console, KnownNativeRuleTypes.of(DESCRIPTIONS, ImmutableList.of()), false);
 
     List<String> buildRuleTypes =
         Splitter.on(System.lineSeparator())

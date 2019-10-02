@@ -23,6 +23,7 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.util.concurrent.ResourcePool;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;

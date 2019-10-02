@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
@@ -31,8 +32,10 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -87,9 +90,12 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
 
     Optional<String> message = messageHandler.getFinalMessage();
     if (message.isPresent()) {
-      return StepExecutionResult.of(1, message);
+      return ImmutableStepExecutionResult.builder()
+          .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
+          .setStderr(message)
+          .build();
     } else {
-      return StepExecutionResult.of(0);
+      return StepExecutionResults.SUCCESS;
     }
   }
 
@@ -123,13 +129,6 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
         messageHandler, usedJars, javaLibraryDeps.getDepTargets(), "deps");
     findUnusedDependenciesAndProcessMessages(
         messageHandler, usedJars, javaLibraryDeps.getProvidedDepTargets(), "provided_deps");
-    findUnusedDependenciesAndProcessMessages(
-        messageHandler, usedJars, javaLibraryDeps.getExportedDepTargets(), "exported_deps");
-    findUnusedDependenciesAndProcessMessages(
-        messageHandler,
-        usedJars,
-        javaLibraryDeps.getExportedProvidedDepTargets(),
-        "exported_provided_deps");
   }
 
   private void findUnusedDependenciesAndProcessMessages(
@@ -151,17 +150,7 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
     ImmutableSet.Builder<UnflavoredBuildTargetView> unusedDependencies = ImmutableSet.builder();
 
     for (BuildRule dependency : buildRuleResolver.getAllRules(targets)) {
-      SourcePath dependencyOutput = dependency.getSourcePathToOutput();
-      if (dependencyOutput == null) {
-        continue;
-      }
-
-      Path dependencyOutputPath = sourcePathResolver.getAbsolutePath(dependencyOutput);
-      if (!usedJars.contains(dependencyOutputPath)) {
-        Optional<Path> abiJarPath = getAbiJarPath(sourcePathResolver, dependency);
-        if (abiJarPath.isPresent() && usedJars.contains(abiJarPath.get())) {
-          continue;
-        }
+      if (isUnusedDependency(dependency, usedJars, sourcePathResolver)) {
         unusedDependencies.add(dependency.getBuildTarget().getUnflavoredBuildTarget());
       }
     }
@@ -169,20 +158,48 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
     return unusedDependencies.build();
   }
 
-  private Optional<BuildTarget> getAbiJarTarget(BuildRule dependency) {
+  private boolean isUnusedDependency(
+      BuildRule dependency, ImmutableSet<Path> usedJars, SourcePathResolver sourcePathResolver) {
     if (!(dependency instanceof HasJavaAbi)) {
-      return Optional.empty();
+      return false;
     }
-    HasJavaAbi hasAbi = (HasJavaAbi) dependency;
-    Optional<BuildTarget> abiJarTarget = hasAbi.getSourceOnlyAbiJar();
+
+    final SourcePath dependencyOutput = dependency.getSourcePathToOutput();
+    if (dependencyOutput == null) {
+      return false;
+    }
+
+    final Path dependencyOutputPath = sourcePathResolver.getAbsolutePath(dependencyOutput);
+    if (usedJars.contains(dependencyOutputPath)) {
+      return false;
+    }
+
+    final Optional<Path> abiJarPath = getAbiJarPath(sourcePathResolver, (HasJavaAbi) dependency);
+    if (abiJarPath.isPresent() && usedJars.contains(abiJarPath.get())) {
+      return false;
+    }
+
+    if (dependency instanceof ExportDependencies) {
+      for (BuildRule exportedDependency : ((ExportDependencies) dependency).getExportedDeps()) {
+        if (!isUnusedDependency(exportedDependency, usedJars, sourcePathResolver)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  private Optional<BuildTarget> getAbiJarTarget(HasJavaAbi dependency) {
+    Optional<BuildTarget> abiJarTarget = dependency.getSourceOnlyAbiJar();
     if (!abiJarTarget.isPresent()) {
-      abiJarTarget = hasAbi.getAbiJar();
+      abiJarTarget = dependency.getAbiJar();
     }
     return abiJarTarget;
   }
 
   private Optional<Path> getAbiJarPath(
-      SourcePathResolver sourcePathResolver, BuildRule dependency) {
+      SourcePathResolver sourcePathResolver, HasJavaAbi dependency) {
     Optional<BuildTarget> abiJarTarget = getAbiJarTarget(dependency);
     if (!abiJarTarget.isPresent()) {
       return Optional.empty();
@@ -211,7 +228,7 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
                     .collect(Collectors.toList()));
     String messageTemplate =
         "Target %s is declared with unused targets in %s: \n%s\n\n"
-            + "Use the following commands to remove them: \n%s\n";
+            + "Please remove them. You may be able to use the following commands: \n%s\n";
     String deps = Joiner.on('\n').join(unusedDependencies);
     String message = String.format(messageTemplate, buildTarget, dependencyType, deps, commands);
 

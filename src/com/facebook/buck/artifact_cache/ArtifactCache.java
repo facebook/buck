@@ -22,6 +22,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -61,7 +62,7 @@ public interface ArtifactCache extends AutoCloseable {
    *     cache without obtaining a copy of the file.
    * @return {@link ListenableFuture} that completes once the store has finished.
    */
-  ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output);
+  ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output);
 
   /**
    * Store the list of artifacts at path specified by output to cache in passed order, such that it
@@ -73,7 +74,7 @@ public interface ArtifactCache extends AutoCloseable {
    * @param artifacts list of artifact info and path to be uploaded to the cache in given order.
    * @return {@link ListenableFuture} that completes once the store has finished.
    */
-  default ListenableFuture<Void> store(
+  default ListenableFuture<Unit> store(
       ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
     if (artifacts.isEmpty()) {
       return Futures.immediateFuture(null);

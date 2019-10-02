@@ -20,7 +20,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.collect.ImmutableCollection;
+import java.util.Optional;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
@@ -33,6 +35,9 @@ public abstract class ConfiguredCompilerFactory {
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,
       TargetConfiguration targetConfiguration,
+      ToolchainProvider toolchainProvider);
+
+  public abstract Optional<ExtraClasspathProvider> getExtraClasspathProvider(
       ToolchainProvider toolchainProvider);
 
   public boolean trackClassUsage(@SuppressWarnings("unused") JavacOptions javacOptions) {
@@ -50,6 +55,10 @@ public abstract class ConfiguredCompilerFactory {
     return false;
   }
 
+  public AbiGenerationMode getAbiGenerationMode() {
+    return AbiGenerationMode.CLASS;
+  }
+
   public boolean shouldGenerateSourceAbi() {
     return false;
   }
@@ -59,6 +68,10 @@ public abstract class ConfiguredCompilerFactory {
   }
 
   public boolean shouldMigrateToSourceOnlyAbi() {
+    return false;
+  }
+
+  public boolean sourceAbiCopiesFromLibraryTargetOutput() {
     return false;
   }
 

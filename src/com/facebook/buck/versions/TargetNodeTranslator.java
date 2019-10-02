@@ -16,12 +16,14 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.types.Pair;
@@ -33,7 +35,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 /**
  * A helper class which uses reflection to translate {@link BuildTarget}s in {@link TargetNode}s.
@@ -256,7 +257,7 @@ public abstract class TargetNodeTranslator {
     return modified;
   }
 
-  private <A> Optional<A> translateConstructorArg(
+  private <A extends ConstructorArg> Optional<A> translateConstructorArg(
       CellPathResolver cellPathResolver, String targetBaseName, TargetNode<A> node) {
     A constructorArg = node.getConstructorArg();
     if (node.getDescription() instanceof TargetTranslatorOverridingDescription) {
@@ -264,16 +265,18 @@ public abstract class TargetNodeTranslator {
           .translateConstructorArg(
               node.getBuildTarget(), node.getCellNames(), this, constructorArg);
     } else {
-      Pair<Object, Function<Object, A>> newArgAndBuild =
+      ConstructorArgBuilder<A> newArgAndBuild =
           CoercedTypeCache.instantiateSkeleton(
-              node.getDescription().getConstructorArgType(), node.getBuildTarget());
+              typeCoercerFactory,
+              node.getDescription().getConstructorArgType(),
+              node.getBuildTarget());
       boolean modified =
           translateConstructorArg(
-              cellPathResolver, targetBaseName, constructorArg, newArgAndBuild.getFirst());
+              cellPathResolver, targetBaseName, constructorArg, newArgAndBuild.getBuilder());
       if (!modified) {
         return Optional.empty();
       }
-      return Optional.of(newArgAndBuild.getSecond().apply(newArgAndBuild.getFirst()));
+      return Optional.of(newArgAndBuild.build());
     }
   }
 
@@ -281,7 +284,7 @@ public abstract class TargetNodeTranslator {
    * @return a copy of the given {@link TargetNode} with all found {@link BuildTarget}s translated,
    *     or {@link Optional#empty()} if the node requires no translation.
    */
-  public <A> Optional<TargetNode<A>> translateNode(TargetNode<A> node) {
+  public <A extends ConstructorArg> Optional<TargetNode<A>> translateNode(TargetNode<A> node) {
     CellPathResolver cellPathResolver = node.getCellNames();
     String targetBaseName = node.getBuildTarget().getBaseName();
 

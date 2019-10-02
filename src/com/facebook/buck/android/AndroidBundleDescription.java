@@ -29,6 +29,7 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -38,6 +39,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -48,7 +50,6 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.step.fs.XzStep;
-import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -149,8 +150,8 @@ public class AndroidBundleDescription
 
     DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
-    ImmutableSet<JavaLibrary> rulesToExcludeFromDex =
-        NoDxArgsHelper.findRulesToExcludeFromDex(graphBuilder, buildTarget, args.getNoDx());
+    Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex =
+        NoDxArgsHelper.createSupplierForRulesToExclude(graphBuilder, buildTarget, args.getNoDx());
 
     CellPathResolver cellRoots = context.getCellPathResolver();
 
@@ -178,7 +179,8 @@ public class AndroidBundleDescription
             args,
             true,
             javaOptions.get(),
-            javacFactory);
+            javacFactory,
+            context.getConfigurationRuleRegistry());
     AndroidBundle androidBundle =
         androidBundleFactory.create(
             toolchainProvider,
@@ -255,6 +257,12 @@ public class AndroidBundleDescription
           androidBuckConfig.getRedexTarget(buildTarget.getTargetConfiguration());
       redexTarget.ifPresent(extraDepsBuilder::add);
     }
+  }
+
+  @Override
+  public ImmutableSet<BuildTarget> getConfigurationDeps(AndroidBundleDescriptionArg arg) {
+    return ImmutableSet.copyOf(
+        ConfigurationBuildTargets.convertValues(arg.getTargetCpuTypeConstraints()).values());
   }
 
   @BuckStyleImmutable

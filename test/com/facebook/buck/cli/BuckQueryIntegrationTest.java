@@ -16,15 +16,18 @@
 
 package com.facebook.buck.cli;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CreateSymlinksForTests;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,31 +65,52 @@ public class BuckQueryIntegrationTest {
   @Test
   public void testDependencyCycles() {
     ProcessResult processResult = workspace.runBuckCommand("query", "deps(//cycles:a)");
-    processResult.assertFailure();
-    assertThat(processResult.getStderr(), containsString("//cycles:a -> //cycles:a"));
+    assertContainsCycle(processResult, ImmutableList.of("//cycles:a"));
 
     processResult = workspace.runBuckCommand("query", "deps(//cycles:b)");
-    processResult.assertFailure();
-    assertThat(processResult.getStderr(), containsString("//cycles:a -> //cycles:a"));
+    assertContainsCycle(processResult, ImmutableList.of("//cycles:a"));
 
     processResult = workspace.runBuckCommand("query", "deps(//cycles:c)");
-    processResult.assertFailure();
-
-    assertThat(processResult.getStderr(), containsString("//cycles:c -> //cycles:d -> //cycles:c"));
+    assertContainsCycle(processResult, ImmutableList.of("//cycles:c", "//cycles:d"));
 
     processResult = workspace.runBuckCommand("query", "deps(//cycles:d)");
-    processResult.assertFailure();
-    assertThat(processResult.getStderr(), containsString("//cycles:d -> //cycles:c -> //cycles:d"));
+    assertContainsCycle(processResult, ImmutableList.of("//cycles:c", "//cycles:d"));
 
     processResult = workspace.runBuckCommand("query", "deps(//cycles:e)");
-    processResult.assertFailure();
-    assertThat(processResult.getStderr(), containsString("//cycles:c -> //cycles:d -> //cycles:c"));
+    assertContainsCycle(processResult, ImmutableList.of("//cycles:c", "//cycles:d"));
 
     processResult = workspace.runBuckCommand("query", "deps(set(//cycles:f //cycles/dir:g))");
+    assertContainsCycle(
+        processResult,
+        ImmutableList.of("//cycles:f", "//cycles/dir:g", "//cycles:h", "//cycles/dir:i"));
+  }
+
+  /**
+   * Assert that the command failed and that the stderr message complains about a cycle with links
+   * in the order specified by {@code chain}.
+   */
+  private static void assertContainsCycle(ProcessResult processResult, List<String> chain) {
+    // Should have failed because graph contains a cycle.
     processResult.assertFailure();
-    assertThat(
-        processResult.getStderr(),
-        containsString(
-            "//cycles:f -> //cycles/dir:g -> //cycles:h -> " + "//cycles/dir:i -> //cycles:f"));
+
+    String stderr = processResult.getStderr();
+    List<String> cycleCandidates = new ArrayList<>(chain.size());
+    int chainSize = chain.size();
+    Joiner joiner = Joiner.on(" -> ");
+    for (int i = 0; i < chainSize; i++) {
+      List<String> elements = new ArrayList<>(chain.size() + 1);
+      for (int j = 0; j < chainSize; j++) {
+        int index = (i + j) % chainSize;
+        elements.add(chain.get(index));
+      }
+      elements.add(chain.get(i));
+      String cycle = joiner.join(elements);
+      if (stderr.contains(cycle)) {
+        // Expected cycle string found!
+        return;
+      }
+      cycleCandidates.add(cycle);
+    }
+    fail(stderr + " contained none of " + Joiner.on('\n').join(cycleCandidates));
   }
 }

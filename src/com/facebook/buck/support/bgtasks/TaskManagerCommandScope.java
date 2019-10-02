@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
 import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -84,7 +85,7 @@ public class TaskManagerCommandScope implements Scope {
     return manager;
   }
 
-  ImmutableMap<BackgroundTask<?>, Future<Void>> getScheduledTasksResults() {
+  ImmutableMap<BackgroundTask<?>, Future<Unit>> getScheduledTasksResults() {
     return scheduledTasks.stream()
         .collect(
             ImmutableMap.toImmutableMap(

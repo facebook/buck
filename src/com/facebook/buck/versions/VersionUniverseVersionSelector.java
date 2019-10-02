@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -47,7 +48,7 @@ public class VersionUniverseVersionSelector implements VersionSelector {
     this.universes = universes;
   }
 
-  private <A> Optional<String> getVersionUniverseName(TargetNode<A> root) {
+  private <A extends ConstructorArg> Optional<String> getVersionUniverseName(TargetNode<A> root) {
     A arg = root.getConstructorArg();
     if (arg instanceof HasVersionUniverse) {
       return ((HasVersionUniverse) arg).getVersionUniverse();

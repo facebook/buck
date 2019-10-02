@@ -46,6 +46,7 @@ public class HaskellLibraryIntegrationTest {
         });
   }
 
+  private HaskellVersion version;
   private ProjectWorkspace workspace;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -64,7 +65,7 @@ public class HaskellLibraryIntegrationTest {
     assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
 
     // Verify that the system contains a compiler.
-    HaskellVersion version = HaskellTestUtils.assumeSystemCompiler();
+    version = HaskellTestUtils.assumeSystemCompiler();
 
     // Setup the workspace.
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "library_test", tmp);
@@ -82,6 +83,13 @@ public class HaskellLibraryIntegrationTest {
   @Test
   public void dependency() {
     workspace.runBuckBuild("//:dependent#default," + getLinkFlavor()).assertSuccess();
+  }
+
+  @Test
+  public void mutuallyRecursive() {
+    // .hs-boot doesn't work well with -i (empty import directory list) for ghc <8
+    assumeThat(version.getMajorVersion(), Matchers.greaterThanOrEqualTo(8));
+    workspace.runBuckBuild("//:mutually_recursive#default," + getLinkFlavor()).assertSuccess();
   }
 
   @Test

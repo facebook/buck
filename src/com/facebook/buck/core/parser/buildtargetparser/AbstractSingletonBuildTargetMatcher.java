@@ -16,11 +16,11 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import java.nio.file.Path;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 /** A pattern that matches only one build target. */
@@ -37,10 +37,12 @@ abstract class AbstractSingletonBuildTargetMatcher implements BuildTargetMatcher
   public static SingletonBuildTargetMatcher of(Path cellPath, String fullyQualifiedName) {
     int buildTarget = fullyQualifiedName.indexOf("//");
     int colon = fullyQualifiedName.lastIndexOf(':');
+    // TODO(buck_team): This could allow us to create inconsistent targets where the cell path
+    // doesn't match the cell name.
     return SingletonBuildTargetMatcher.of(
         ImmutableUnflavoredBuildTargetView.of(
             cellPath,
-            Optional.empty(),
+            CanonicalCellName.unsafeRootCell(),
             fullyQualifiedName.substring(buildTarget, colon),
             fullyQualifiedName.substring(colon + 1)));
   }
@@ -52,6 +54,7 @@ abstract class AbstractSingletonBuildTargetMatcher implements BuildTargetMatcher
   @Override
   public boolean matches(BuildTarget target) {
     // No need to check the cell name.
+    // TODO(T47190884): Check the name instead of the path.
     return this.getTarget().getCellPath().equals(target.getCellPath())
         && this.getTarget().getBaseName().equals(target.getBaseName())
         && this.getTarget().getShortName().equals(target.getShortName());

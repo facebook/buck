@@ -36,12 +36,7 @@
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the sh_test.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'test' /}
@@ -78,6 +73,8 @@
   If provided, this will be sent to any configured {call buckconfig.entry_link}{param section: 'test' /}{param entry: 'external_runner' /}{param link_text: 'external runner' /}{/call}
   {/param}
 {/call}
+
+{call test_common.contacts_arg /}
 
 {/param} // args
 

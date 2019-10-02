@@ -19,28 +19,29 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
-class OmnibusNode implements NativeLinkableGroup {
+class OmnibusNode implements NativeLinkable {
 
   private final BuildTarget target;
-  private final Iterable<? extends NativeLinkableGroup> deps;
-  private final Iterable<? extends NativeLinkableGroup> exportedDeps;
-  private final Linkage linkage;
+  private final Iterable<? extends NativeLinkable> deps;
+  private final Iterable<? extends NativeLinkable> exportedDeps;
+  private final NativeLinkableGroup.Linkage linkage;
 
   public OmnibusNode(
       String target,
-      Iterable<? extends NativeLinkableGroup> deps,
-      Iterable<? extends NativeLinkableGroup> exportedDeps,
+      Iterable<? extends NativeLinkable> deps,
+      Iterable<? extends NativeLinkable> exportedDeps,
       NativeLinkableGroup.Linkage linkage) {
     this.target = BuildTargetFactory.newInstance(target);
     this.deps = deps;
@@ -50,12 +51,12 @@ class OmnibusNode implements NativeLinkableGroup {
 
   public OmnibusNode(
       String target,
-      Iterable<? extends NativeLinkableGroup> deps,
-      Iterable<? extends NativeLinkableGroup> exportedDeps) {
-    this(target, deps, exportedDeps, Linkage.ANY);
+      Iterable<? extends NativeLinkable> deps,
+      Iterable<? extends NativeLinkable> exportedDeps) {
+    this(target, deps, exportedDeps, NativeLinkableGroup.Linkage.ANY);
   }
 
-  public OmnibusNode(String target, Iterable<? extends NativeLinkableGroup> deps) {
+  public OmnibusNode(String target, Iterable<? extends NativeLinkable> deps) {
     this(target, deps, ImmutableList.of());
   }
 
@@ -69,20 +70,18 @@ class OmnibusNode implements NativeLinkableGroup {
   }
 
   @Override
-  public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
-      BuildRuleResolver ruleResolver) {
+  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(ActionGraphBuilder graphBuilder) {
     return deps;
   }
 
   @Override
-  public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
-      BuildRuleResolver ruleResolver) {
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+      ActionGraphBuilder graphBuilder) {
     return exportedDeps;
   }
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ActionGraphBuilder graphBuilder,
@@ -91,14 +90,23 @@ class OmnibusNode implements NativeLinkableGroup {
   }
 
   @Override
-  public NativeLinkableGroup.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  public Optional<NativeLinkTarget> getNativeLinkTarget(ActionGraphBuilder graphBuilder) {
+    return Optional.empty();
+  }
+
+  @Override
+  public NativeLinkableGroup.Linkage getPreferredLinkage() {
     return linkage;
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(ActionGraphBuilder graphBuilder) {
     return ImmutableMap.of(
         getBuildTarget().toString(), FakeSourcePath.of(getBuildTarget().toString()));
+  }
+
+  @Override
+  public boolean shouldBeLinkedInAppleTestAndHost() {
+    return false;
   }
 }

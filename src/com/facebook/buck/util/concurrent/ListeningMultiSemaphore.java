@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.util.concurrent;
 
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
@@ -52,14 +53,14 @@ public class ListeningMultiSemaphore {
    *     amounts, they will be capped to them.
    * @return Future that will be completed once resource will be acquired.
    */
-  public synchronized ListenableFuture<Void> acquire(ResourceAmounts resources) {
+  public synchronized ListenableFuture<Unit> acquire(ResourceAmounts resources) {
     if (resources.equals(ResourceAmounts.zero())) {
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
     resources = capResourceAmounts(resources);
     if (!checkIfResourcesAvailable(resources)) {
-      SettableFuture<Void> pendingFuture = SettableFuture.create();
+      SettableFuture<Unit> pendingFuture = SettableFuture.create();
       pending.add(ListeningSemaphoreArrayPendingItem.of(pendingFuture, resources));
       return pendingFuture;
     }

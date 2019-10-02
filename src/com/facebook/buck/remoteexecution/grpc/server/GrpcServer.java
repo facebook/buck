@@ -16,10 +16,13 @@
 
 package com.facebook.buck.remoteexecution.grpc.server;
 
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.remoteexecution.grpc.GrpcRemoteExecutionClients;
 import com.facebook.buck.remoteexecution.grpc.GrpcRemoteExecutionServiceServer;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.io.Closer;
 import io.grpc.Server;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
@@ -38,7 +41,9 @@ public class GrpcServer implements Closeable {
     GrpcRemoteExecutionServiceServer remoteExecution =
         new GrpcRemoteExecutionServiceServer(
             new LocalContentAddressedStorage(
-                workDir.getPath().resolve("__cache__"), GrpcRemoteExecutionClients.PROTOCOL),
+                workDir.getPath().resolve("__cache__"),
+                GrpcRemoteExecutionClients.PROTOCOL,
+                new DefaultBuckEventBus(new DefaultClock(true), new BuildId())),
             workDir.getPath().resolve("__work__"));
     NettyServerBuilder builder = NettyServerBuilder.forPort(port);
 

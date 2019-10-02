@@ -40,6 +40,7 @@ abstract class AbstractSubdirectoryBuildTargetMatcher implements BuildTargetMatc
    */
   @Override
   public boolean matches(BuildTarget target) {
+    // TODO(T47190884): Figure out how to do this based on cell name.
     if (!getCellPath().equals(target.getCellPath())) {
       return false;
     }

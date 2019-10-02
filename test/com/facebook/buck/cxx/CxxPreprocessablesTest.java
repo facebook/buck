@@ -170,7 +170,7 @@ public class CxxPreprocessablesTest {
     ImmutableList<CxxPreprocessorInput> actual =
         ImmutableList.copyOf(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                cxxPlatform, new TestActionGraphBuilder(), ImmutableList.<BuildRule>of(dep3)));
+                cxxPlatform, new TestActionGraphBuilder(), ImmutableList.of(dep3)));
     assertEquals(expected, actual);
   }
 
@@ -204,7 +204,7 @@ public class CxxPreprocessablesTest {
     // Build our symlink tree rule using the helper method.
     HeaderSymlinkTree symlinkTree =
         CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-            target, filesystem, graphBuilder, root, links, HeaderMode.SYMLINK_TREE_ONLY);
+            target, filesystem, root, links, HeaderMode.SYMLINK_TREE_ONLY);
 
     // Verify that the symlink tree has no deps.  This is by design, since setting symlinks can
     // be done completely independently from building the source that the links point to and
@@ -229,7 +229,7 @@ public class CxxPreprocessablesTest {
 
     // Create a native linkable that sits at the top of the dep chain.
     CxxPreprocessorInput topInput = CxxPreprocessorInput.of();
-    BuildRule top = createFakeCxxPreprocessorDep("//:top", topInput, middle);
+    CxxPreprocessorDep top = createFakeCxxPreprocessorDep("//:top", topInput, middle);
 
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling
     // in the bottom input.

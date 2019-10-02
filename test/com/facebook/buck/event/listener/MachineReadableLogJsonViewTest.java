@@ -49,6 +49,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -211,10 +212,16 @@ public class MachineReadableLogJsonViewTest {
                 new AtomicInteger(1),
                 ArtifactCacheMode.dir,
                 new AtomicInteger(2)),
+            ImmutableMap.of(
+                ArtifactCacheMode.http,
+                new AtomicLong(1),
+                ArtifactCacheMode.dir,
+                new AtomicLong(2)),
             3,
             3,
             0,
             5,
+            3L,
             0,
             new AtomicInteger(2),
             new AtomicInteger(0));
@@ -223,8 +230,9 @@ public class MachineReadableLogJsonViewTest {
         WRITER.writeValueAsString(summary),
         "{\"cacheHitsPerMode\":{\"dir\":2,\"http\":1},"
             + "\"cacheErrorsPerMode\":{\"dir\":2,\"http\":1},"
+            + "\"cacheBytesPerMode\":{\"dir\":2,\"http\":1},"
             + "\"totalCacheHits\":3,\"totalCacheErrors\":3,"
-            + "\"totalCacheMisses\":0,\"totalCacheIgnores\":5,\""
+            + "\"totalCacheMisses\":0,\"totalCacheIgnores\":5,\"totalCacheBytes\":3,\""
             + "totalCacheLocalKeyUnchangedHits\":0,"
             + "\"successUploadCount\":2,\"failureUploadCount\":0}");
   }

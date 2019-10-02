@@ -23,6 +23,7 @@ import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
@@ -34,6 +35,10 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.infer.ImmutableInferConfig;
+import com.facebook.buck.infer.InferNullsafe;
+import com.facebook.buck.infer.UnresolvedInferPlatform;
+import com.facebook.buck.infer.toolchain.InferToolchain;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasSources;
@@ -59,6 +64,7 @@ public class JavaLibraryDescription
 
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(
+          InferNullsafe.INFER_NULLSAFE,
           Javadoc.DOC_JAR,
           JavaLibrary.SRC_JAR,
           JavaLibrary.MAVEN_JAR,
@@ -69,11 +75,19 @@ public class JavaLibraryDescription
 
   private final JavaBuckConfig javaBuckConfig;
   private final JavacFactory javacFactory;
+  private final JavaConfiguredCompilerFactory defaultJavaCompilerFactory;
+  private final Optional<UnresolvedInferPlatform> unresolvedInferPlatform;
 
   public JavaLibraryDescription(
       ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
     this.javaBuckConfig = javaBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.defaultJavaCompilerFactory =
+        new JavaConfiguredCompilerFactory(this.javaBuckConfig, this.javacFactory);
+    this.unresolvedInferPlatform =
+        toolchainProvider
+            .getByNameIfPresent(InferToolchain.DEFAULT_NAME, InferToolchain.class)
+            .map(InferToolchain::getDefaultPlatform);
   }
 
   @Override
@@ -98,6 +112,30 @@ public class JavaLibraryDescription
 
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    ToolchainProvider toolchainProvider = context.getToolchainProvider();
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(
+            context
+                .getToolchainProvider()
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            graphBuilder,
+            args);
+
+    if (flavors.contains(InferNullsafe.INFER_NULLSAFE)) {
+      return InferNullsafe.create(
+          buildTarget,
+          projectFilesystem,
+          graphBuilder,
+          javacOptions,
+          defaultJavaCompilerFactory.getExtraClasspathProvider(toolchainProvider),
+          unresolvedInferPlatform.orElseThrow(
+              () ->
+                  new HumanReadableException(
+                      "Cannot use #nullsafe flavor: infer platform not configured")),
+          new ImmutableInferConfig(javaBuckConfig.getDelegate()));
+    }
 
     if (flavors.contains(Javadoc.DOC_JAR)) {
       BuildTarget unflavored = buildTarget.withoutFlavors();
@@ -170,16 +208,6 @@ public class JavaLibraryDescription
       }
     }
 
-    JavacOptions javacOptions =
-        JavacOptionsFactory.create(
-            context
-                .getToolchainProvider()
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
-                .getJavacOptions(),
-            buildTarget,
-            graphBuilder,
-            args);
-
     DefaultJavaLibraryRules defaultJavaLibraryRules =
         DefaultJavaLibrary.rulesBuilder(
                 buildTarget,
@@ -188,7 +216,7 @@ public class JavaLibraryDescription
                 params,
                 graphBuilder,
                 context.getCellPathResolver(),
-                new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
+                defaultJavaCompilerFactory,
                 javaBuckConfig,
                 args)
             .setJavacOptions(javacOptions)
@@ -223,6 +251,11 @@ public class JavaLibraryDescription
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+
+    unresolvedInferPlatform.ifPresent(
+        p ->
+            UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
+                targetGraphOnlyDepsBuilder, buildTarget, p));
   }
 
   public interface CoreArg
@@ -250,6 +283,9 @@ public class JavaLibraryDescription
 
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getSourceOnlyAbiDeps();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getRuntimeDeps();
   }
 
   @BuckStyleImmutable

@@ -35,12 +35,7 @@ code contained in other rules. The tests can be executed by running <code>buck t
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call apple_common.info_plist_arg /}
 
@@ -92,6 +87,8 @@ code contained in other rules. The tests can be executed by running <code>buck t
 {call apple_common.extra_xcode_sources /}
 
 {call apple_common.extra_xcode_files /}
+
+{call test_common.contacts_arg /}
 
 {/param} // args
 

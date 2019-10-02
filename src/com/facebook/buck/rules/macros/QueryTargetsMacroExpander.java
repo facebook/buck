@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -54,7 +53,6 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
   @Override
   public Arg expandFrom(
       BuildTarget target,
-      CellPathResolver cellNames,
       ActionGraphBuilder graphBuilder,
       QueryTargetsMacro input,
       QueryResults precomputedQueryResults) {
@@ -71,7 +69,7 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
             .collect(ImmutableList.toImmutableList()));
   }
 
-  private class QueriedTargetsArg implements Arg {
+  private static class QueriedTargetsArg implements Arg {
     @AddToRuleKey private final ImmutableList<BuildTarget> queriedTargets;
 
     public QueriedTargetsArg(ImmutableList<BuildTarget> queriedTargets) {

@@ -24,7 +24,7 @@ import com.facebook.buck.util.MoreMaps;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -131,7 +131,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
    */
   public <T> TargetGraph getSubgraph(Iterable<? extends TargetNode<? extends T>> roots) {
     MutableDirectedGraph<TargetNode<?>> subgraph = new MutableDirectedGraph<>();
-    Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
+    Map<BuildTarget, TargetNode<?>> index = new LinkedHashMap<>();
 
     new AbstractBreadthFirstTraversal<TargetNode<?>>(roots) {
       @Override

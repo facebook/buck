@@ -61,11 +61,10 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput input =
-        library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.STATIC,
-            graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+        library
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getNativeLinkableInput(
+                Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE);
     assertThat(
         RichStream.from(input.getArgs())
             .flatMap(
@@ -90,11 +89,10 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput input =
-        library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.SHARED,
-            graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+        library
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getNativeLinkableInput(
+                Linker.LinkableDepType.SHARED, graphBuilder, EmptyTargetConfiguration.INSTANCE);
     assertThat(
         RichStream.from(input.getArgs())
             .flatMap(
@@ -121,7 +119,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     HaskellCompileInput input =
         library.getCompileInput(
             HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
-    assertThat(input.getPackages().get(0).getInterfaces(), Matchers.contains(interfaces));
+    assertThat(input.getPackage().getInterfaces(), Matchers.contains(interfaces));
   }
 
   @Test
@@ -137,7 +135,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     HaskellCompileInput input =
         library.getCompileInput(
             HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
-    assertThat(input.getPackages().get(0).getPackageDb(), Matchers.equalTo(db));
+    assertThat(input.getPackage().getPackageDb(), Matchers.equalTo(db));
   }
 
   @Test
@@ -156,7 +154,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
         library.getCompileInput(
             HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
     assertThat(
-        input.getPackages().get(0).getInfo(),
+        input.getPackage().getInfo(),
         Matchers.equalTo(HaskellPackageInfo.of("rule", "1.0.0", "id")));
   }
 
@@ -175,18 +173,16 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     PrebuiltHaskellLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput staticInput =
-        library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.STATIC,
-            graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+        library
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getNativeLinkableInput(
+                Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE);
     assertThat(Arg.stringify(staticInput.getArgs(), pathResolver), Matchers.contains(flag));
     NativeLinkableInput sharedInput =
-        library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.SHARED,
-            graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+        library
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getNativeLinkableInput(
+                Linker.LinkableDepType.SHARED, graphBuilder, EmptyTargetConfiguration.INSTANCE);
     assertThat(Arg.stringify(sharedInput.getArgs(), pathResolver), Matchers.contains(flag));
   }
 

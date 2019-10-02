@@ -160,7 +160,7 @@ public class NativeExoHelper {
                     input -> {
                       String hash = input.getKey();
                       String filename = input.getValue().getFileName().toString();
-                      int index = filename.indexOf('.');
+                      int index = filename.lastIndexOf('.');
                       String libname = index == -1 ? filename : filename.substring(0, index);
                       return String.format("%s native-%s.so", libname, hash);
                     }));

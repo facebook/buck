@@ -29,6 +29,7 @@ import com.facebook.buck.distributed.thrift.LogRequestType;
 import com.facebook.buck.distributed.thrift.ScribeData;
 import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.slb.ThriftService;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
@@ -133,7 +134,7 @@ public class ThriftScribeLoggerTest {
       throws IOException, ExecutionException, InterruptedException {
     logger = new ThriftScribeLogger(createDefaultListener(), executorService);
     logger.close();
-    ListenableFuture<Void> future = logger.log("topspin", Lists.newArrayList("down the line"));
+    ListenableFuture<Unit> future = logger.log("topspin", Lists.newArrayList("down the line"));
     assertTrue(future.isDone());
     future.get();
   }
@@ -164,10 +165,10 @@ public class ThriftScribeLoggerTest {
     };
   }
 
-  private FutureCallback<Void> getCallback(boolean shouldSucceed) {
-    return new FutureCallback<Void>() {
+  private FutureCallback<Unit> getCallback(boolean shouldSucceed) {
+    return new FutureCallback<Unit>() {
       @Override
-      public void onSuccess(@Nullable Void result) {
+      public void onSuccess(@Nullable Unit result) {
         assertTrue(shouldSucceed);
       }
 

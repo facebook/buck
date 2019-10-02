@@ -18,26 +18,28 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.function.BuckPyFunction;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.ParamInfoException;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -48,8 +50,7 @@ import java.util.function.Function;
  * Creates {@link TargetNode} instances from raw data coming in form the {@link
  * ProjectBuildFileParser}.
  */
-public class DefaultParserTargetNodeFactory
-    implements ParserTargetNodeFactory<Map<String, Object>> {
+public class DefaultParserTargetNodeFactory implements ParserTargetNodeFromAttrMapFactory {
 
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final ConstructorArgMarshaller marshaller;
@@ -57,50 +58,22 @@ public class DefaultParserTargetNodeFactory
   private final TargetNodeListener<TargetNode<?>> nodeListener;
   private final TargetNodeFactory targetNodeFactory;
   private final BuiltTargetVerifier builtTargetVerifier;
+  private final TypeCoercerFactory typeCoercerFactory;
 
-  private DefaultParserTargetNodeFactory(
+  public DefaultParserTargetNodeFactory(
+      TypeCoercerFactory typeCoercerFactory,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       PackageBoundaryChecker packageBoundaryChecker,
       TargetNodeListener<TargetNode<?>> nodeListener,
-      TargetNodeFactory targetNodeFactory,
-      BuiltTargetVerifier builtTargetVerifier) {
+      TargetNodeFactory targetNodeFactory) {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
     this.packageBoundaryChecker = packageBoundaryChecker;
     this.nodeListener = nodeListener;
     this.targetNodeFactory = targetNodeFactory;
-    this.builtTargetVerifier = builtTargetVerifier;
-  }
-
-  public static ParserTargetNodeFactory<Map<String, Object>> createForParser(
-      KnownRuleTypesProvider knownRuleTypesProvider,
-      ConstructorArgMarshaller marshaller,
-      LoadingCache<Cell, BuildFileTree> buildFileTrees,
-      TargetNodeListener<TargetNode<?>> nodeListener,
-      TargetNodeFactory targetNodeFactory) {
-    return new DefaultParserTargetNodeFactory(
-        knownRuleTypesProvider,
-        marshaller,
-        new ThrowingPackageBoundaryChecker(buildFileTrees),
-        nodeListener,
-        targetNodeFactory,
-        new BuiltTargetVerifier());
-  }
-
-  public static ParserTargetNodeFactory<Map<String, Object>> createForDistributedBuild(
-      KnownRuleTypesProvider knownRuleTypesProvider,
-      ConstructorArgMarshaller marshaller,
-      TargetNodeFactory targetNodeFactory) {
-    return new DefaultParserTargetNodeFactory(
-        knownRuleTypesProvider,
-        marshaller,
-        new NoopPackageBoundaryChecker(),
-        (buildFile, node) -> {
-          // No-op.
-        },
-        targetNodeFactory,
-        new BuiltTargetVerifier());
+    this.builtTargetVerifier = new BuiltTargetVerifier();
+    this.typeCoercerFactory = typeCoercerFactory;
   }
 
   @Override
@@ -132,12 +105,15 @@ public class DefaultParserTargetNodeFactory
       ImmutableSet<VisibilityPattern> withinViewPatterns;
       try (SimplePerfEvent.Scope scope =
           perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
+        ConstructorArgBuilder<?> builder =
+            knownRuleTypes.getConstructorArgBuilder(
+                typeCoercerFactory, buildRuleType, description.getConstructorArgType(), target);
         constructorArg =
             marshaller.populate(
                 cell.getCellPathResolver(),
                 cell.getFilesystem(),
                 target,
-                description.getConstructorArgType(),
+                builder,
                 declaredDeps,
                 rawNode);
         visibilityPatterns =
@@ -173,11 +149,11 @@ public class DefaultParserTargetNodeFactory
     }
   }
 
-  private TargetNode<?> createTargetNodeFromObject(
+  private <T extends ConstructorArg> TargetNode<?> createTargetNodeFromObject(
       Cell cell,
       Path buildFile,
       BuildTarget target,
-      BaseDescription<?> description,
+      BaseDescription<T> description,
       Object constructorArg,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
@@ -192,6 +168,7 @@ public class DefaultParserTargetNodeFactory
               cell.getFilesystem(),
               target,
               declaredDeps,
+              ImmutableSortedSet.of(),
               visibilityPatterns,
               withinViewPatterns,
               cell.getCellPathResolver());

@@ -50,14 +50,17 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.args.ToolArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
@@ -85,7 +88,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -339,8 +341,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    public Arg expandFrom(
-        BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
+    public Arg expandFrom(BuildTarget target, BuildRuleResolver resolver) {
       return ToolArg.of(tool);
     }
   }
@@ -368,8 +369,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         Optional<Pattern> filter);
 
     @Override
-    public Arg expandFrom(
-        BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, M input)
+    public Arg expandFrom(BuildTarget target, ActionGraphBuilder graphBuilder, M input)
         throws MacroException {
       return expand(
           graphBuilder,
@@ -413,7 +413,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     /** Get the transitive C/C++ preprocessor input rooted at the given rules. */
     private Collection<CxxPreprocessorInput> getCxxPreprocessorInput(
         ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules) {
-      return CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, rules);
+      return CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
+          cxxPlatform, graphBuilder, rules);
     }
 
     /**
@@ -448,35 +449,48 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       return new CxxPreprocessorFlagsArg(
           getPreprocessorFlags(getCxxPreprocessorInput(graphBuilder, rules)),
           CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType)
-              .resolve(graphBuilder, targetConfiguration));
+              .resolve(graphBuilder, targetConfiguration),
+          CxxDescriptionEnhancer.frameworkPathToSearchPath(
+              cxxPlatform, graphBuilder.getSourcePathResolver()));
+    }
+  }
+
+  /**
+   * Argument type for C++ compiler preprocessor args. In addition to holding the flags themselves,
+   * this type also holds a rule-keyable function mapping framework paths to search paths.
+   */
+  private static class CxxPreprocessorFlagsArg implements Arg {
+    @AddToRuleKey private final PreprocessorFlags ppFlags;
+    @AddToRuleKey private final Preprocessor preprocessor;
+
+    @AddToRuleKey
+    private final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath;
+
+    CxxPreprocessorFlagsArg(
+        PreprocessorFlags ppFlags,
+        Preprocessor preprocessor,
+        AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath) {
+      this.ppFlags = ppFlags;
+      this.preprocessor = preprocessor;
+      this.frameworkPathToSearchPath = frameworkPathToSearchPath;
     }
 
-    private class CxxPreprocessorFlagsArg implements Arg {
-      @AddToRuleKey private final PreprocessorFlags ppFlags;
-      @AddToRuleKey private final Preprocessor preprocessor;
-
-      CxxPreprocessorFlagsArg(PreprocessorFlags ppFlags, Preprocessor preprocessor) {
-        this.ppFlags = ppFlags;
-        this.preprocessor = preprocessor;
-      }
-
-      @Override
-      public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
-        consumer.accept(
-            Arg.stringify(
-                    ppFlags
-                        .toToolFlags(
-                            resolver,
-                            PathShortener.identity(),
-                            CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver),
-                            preprocessor,
-                            /* pch */ Optional.empty())
-                        .getAllFlags(),
-                    resolver)
-                .stream()
-                .map(Escaper.SHELL_ESCAPER)
-                .collect(Collectors.joining(" ")));
-      }
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+      consumer.accept(
+          Arg.stringify(
+                  ppFlags
+                      .toToolFlags(
+                          resolver,
+                          PathShortener.identity(),
+                          frameworkPathToSearchPath,
+                          preprocessor,
+                          /* pch */ Optional.empty())
+                      .getAllFlags(),
+                  resolver)
+              .stream()
+              .map(Escaper.SHELL_ESCAPER)
+              .collect(Collectors.joining(" ")));
     }
   }
 
@@ -534,7 +548,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
       Path linkOutput = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(out);
-      Path absLinkOut = buildTarget.getCellPath().resolve(linkOutput);
+      Path absLinkOut = filesystem.resolve(linkOutput);
       SymlinkTree symlinkTree = requireSymlinkTree(graphBuilder, rules);
       return RichStream.from(
               StringArg.from(
@@ -560,31 +574,26 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     private NativeLinkableInput getNativeLinkableInput(
         ActionGraphBuilder graphBuilder, Iterable<BuildRule> rules, Optional<Pattern> filter) {
-      ImmutableList<NativeLinkableGroup> nativeLinkableGroups =
+      ImmutableList<? extends NativeLinkable> nativeLinkables =
           NativeLinkables.getNativeLinkables(
-              cxxPlatform,
               graphBuilder,
-              FluentIterable.from(rules).filter(NativeLinkableGroup.class),
+              FluentIterable.from(rules)
+                  .filter(NativeLinkableGroup.class)
+                  .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
               depType,
               !filter.isPresent()
                   ? x -> true
-                  : input -> {
-                    Preconditions.checkArgument(input instanceof BuildRule);
-                    BuildRule rule = (BuildRule) input;
-                    return filter
-                        .get()
-                        .matcher(String.format("%s(%s)", rule.getType(), rule.getBuildTarget()))
-                        .find();
-                  });
+                  : input ->
+                      filter
+                          .get()
+                          .matcher(
+                              String.format("%s(%s)", input.getRuleType(), input.getBuildTarget()))
+                          .find());
       ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
-      for (NativeLinkableGroup nativeLinkableGroup : nativeLinkableGroups) {
+      for (NativeLinkable nativeLinkable : nativeLinkables) {
         nativeLinkableInputs.add(
             NativeLinkables.getNativeLinkableInput(
-                cxxPlatform,
-                depType,
-                nativeLinkableGroup,
-                graphBuilder,
-                buildTarget.getTargetConfiguration()));
+                depType, nativeLinkable, graphBuilder, buildTarget.getTargetConfiguration()));
       }
       return NativeLinkableInput.concat(nativeLinkableInputs.build());
     }

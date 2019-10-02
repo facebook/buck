@@ -23,9 +23,11 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -42,6 +44,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,11 +67,12 @@ public class AndroidBinaryGraphEnhancerFactory {
       ResourceFilter resourceFilter,
       DexSplitMode dexSplitMode,
       EnumSet<ExopackageMode> exopackageModes,
-      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
+      Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,
       AndroidGraphEnhancerArgs args,
       boolean useProtoFormat,
       JavaOptions javaOptions,
-      JavacFactory javacFactory) {
+      JavacFactory javacFactory,
+      ConfigurationRuleRegistry configurationRuleRegistry) {
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
@@ -129,6 +133,7 @@ public class AndroidBinaryGraphEnhancerFactory {
                     graphBuilder, buildTarget.getTargetConfiguration()))
             .setProguardConfigPath(args.getProguardConfig())
             .setShouldProguard(shouldProguard)
+            .setMinSdkVersion(args.getManifestEntries().getMinSdkVersion())
             .build();
 
     return new AndroidBinaryGraphEnhancer(
@@ -194,7 +199,12 @@ public class AndroidBinaryGraphEnhancerFactory {
         getPostFilterResourcesArgs(args, buildTarget, graphBuilder, cellPathResolver),
         nonPreDexedDexBuildableArgs,
         rulesToExcludeFromDex,
-        useProtoFormat);
+        useProtoFormat,
+        AndroidNativeTargetConfigurationMatcherFactory.create(
+            configurationRuleRegistry,
+            buildTarget,
+            args.getCpuFilters(),
+            ConfigurationBuildTargets.convertValues(args.getTargetCpuTypeConstraints())));
   }
 
   private ImmutableSet<String> addFallbackLocales(ImmutableSet<String> locales) {

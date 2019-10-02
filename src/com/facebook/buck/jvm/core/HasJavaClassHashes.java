@@ -32,4 +32,6 @@ public interface HasJavaClassHashes extends BuildRule {
    *     SHA-1 hashes of their contents.
    */
   ImmutableSortedMap<String, HashCode> getClassNamesToHashes();
+
+  JavaClassHashesProvider getClassHashesProvider();
 }

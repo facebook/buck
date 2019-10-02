@@ -16,12 +16,13 @@
 
 package com.facebook.buck.util;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -170,36 +171,36 @@ public class DefaultProcessExecutor implements ProcessExecutor {
     }
     Process process = BgProcessKiller.startProcess(pb);
     processRegistry.registerProcess(process, params, context);
-    return new LaunchedProcessImpl(process);
+    return new LaunchedProcessImpl(process, pb.command());
   }
 
   @Override
   public void destroyLaunchedProcess(LaunchedProcess launchedProcess) {
-    Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
+    checkState(launchedProcess instanceof LaunchedProcessImpl);
     ((LaunchedProcessImpl) launchedProcess).process.destroy();
   }
 
   @Override
   public Result waitForLaunchedProcess(LaunchedProcess launchedProcess)
       throws InterruptedException {
-    Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
-    Preconditions.checkState(
-        !waitForInternal(
-            ((LaunchedProcessImpl) launchedProcess).process, Optional.empty(), Optional.empty()));
-    int exitCode = ((LaunchedProcessImpl) launchedProcess).process.exitValue();
-
-    return new Result(exitCode, false, Optional.empty(), Optional.empty());
+    checkState(launchedProcess instanceof LaunchedProcessImpl);
+    LaunchedProcessImpl launchedProcessImpl = (LaunchedProcessImpl) launchedProcess;
+    checkState(!waitForInternal(launchedProcessImpl.process, Optional.empty(), Optional.empty()));
+    int exitCode = launchedProcessImpl.process.exitValue();
+    return new Result(
+        exitCode, false, Optional.empty(), Optional.empty(), launchedProcess.getCommand());
   }
 
   @Override
   public Result waitForLaunchedProcessWithTimeout(
       LaunchedProcess launchedProcess, long millis, Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
-    Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
+    checkState(launchedProcess instanceof LaunchedProcessImpl);
     Process process = ((LaunchedProcessImpl) launchedProcess).process;
     boolean timedOut = waitForInternal(process, Optional.of(millis), timeOutHandler);
     int exitCode = !timedOut ? process.exitValue() : 1;
-    return new Result(exitCode, timedOut, Optional.empty(), Optional.empty());
+    return new Result(
+        exitCode, timedOut, Optional.empty(), Optional.empty(), launchedProcess.getCommand());
   }
 
   /**
@@ -247,7 +248,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
-    Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
+    checkState(launchedProcess instanceof LaunchedProcessImpl);
     Process process = ((LaunchedProcessImpl) launchedProcess).process;
     // Read stdout/stderr asynchronously while running a Process.
     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
@@ -274,8 +275,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
                 ansi));
 
     // Consume the streams so they do not deadlock.
-    Future<Void> stdOutTerminationFuture = THREAD_POOL.submit(stdOut);
-    Future<Void> stdErrTerminationFuture = THREAD_POOL.submit(stdErr);
+    Future<Unit> stdOutTerminationFuture = THREAD_POOL.submit(stdOut);
+    Future<Unit> stdErrTerminationFuture = THREAD_POOL.submit(stdErr);
 
     boolean timedOut = false;
 
@@ -304,7 +305,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       // causing us to kill all other running steps. Neither of these is an exceptional
       // situation.
       LOG.warn(e, "Process threw exception when being executed.");
-      return new Result(1);
+      return new Result(1, launchedProcess.getCommand());
     } finally {
       process.destroy();
       process.waitFor();
@@ -329,7 +330,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       }
     }
 
-    return new Result(exitCode, timedOut, stdoutText, stderrText);
+    return new Result(exitCode, timedOut, stdoutText, stderrText, launchedProcess.getCommand());
   }
 
   private static Optional<String> getDataIfNotPrinted(

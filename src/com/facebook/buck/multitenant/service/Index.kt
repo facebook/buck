@@ -17,10 +17,11 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.collect.Generation
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.google.common.collect.ImmutableSet
-import java.util.ArrayDeque
-import kotlin.collections.HashSet
+import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue
+import it.unimi.dsi.fastutil.ints.IntArrayList
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 
 /**
  * View of build graph data across a range of generations. Because this is a "view," it is not
@@ -45,7 +46,10 @@ class Index internal constructor(
      * methods to eliminate the possibility of the caller invoking one of its methods with an
      * unsupported generation.
      */
-    fun createIndexForGenerationWithLocalChanges(generation: Generation, changes: BuildPackageChanges): Index {
+    fun createIndexForGenerationWithLocalChanges(
+        generation: Generation,
+        changes: BuildPackageChanges
+    ): Index {
         if (changes.isEmpty()) {
             return this
         }
@@ -56,33 +60,37 @@ class Index internal constructor(
         }
 
         val buildPackageMap: Map<FsAgnosticPath, BuildRuleNames?> =
-                deltas.buildPackageDeltas.asSequence().map { delta ->
-                    when (delta) {
-                        is BuildPackageDelta.Updated -> {
-                            delta.directory to delta.rules
-                        }
-                        is BuildPackageDelta.Removed -> {
-                            delta.directory to null
-                        }
+            deltas.buildPackageDeltas.asSequence().map { delta ->
+                when (delta) {
+                    is BuildPackageDelta.Updated -> {
+                        delta.directory to delta.rules
                     }
-                }.toMap()
+                    is BuildPackageDelta.Removed -> {
+                        delta.directory to null
+                    }
+                }
+            }.toMap()
         val ruleMap: Map<BuildTargetId, InternalRawBuildRule?> =
-                deltas.ruleDeltas.asSequence().map { delta ->
-                    val (buildTarget, newNodeAndDeps) = when (delta) {
-                        is RuleDelta.Added -> {
-                            Pair(delta.rule.targetNode.buildTarget, delta.rule)
-                        }
-                        is RuleDelta.Modified -> {
-                            Pair(delta.newRule.targetNode.buildTarget, delta.newRule)
-                        }
-                        is RuleDelta.Removed -> {
-                            Pair(delta.rule.targetNode.buildTarget, null)
-                        }
+            deltas.ruleDeltas.asSequence().map { delta ->
+                val (buildTarget, newNodeAndDeps) = when (delta) {
+                    is RuleDelta.Added -> {
+                        Pair(delta.rule.targetNode.buildTarget, delta.rule)
                     }
-                    buildTargetCache.get(buildTarget) to newNodeAndDeps
-                }.toMap()
-        val indexData = indexGenerationData.createForwardingIndexGenerationData(
-                generation, buildPackageMap, ruleMap, deltas.rdepsDeltas)
+                    is RuleDelta.Modified -> {
+                        Pair(delta.newRule.targetNode.buildTarget, delta.newRule)
+                    }
+                    is RuleDelta.Removed -> {
+                        Pair(delta.rule.targetNode.buildTarget, null)
+                    }
+                }
+                buildTargetCache.get(buildTarget) to newNodeAndDeps
+            }.toMap()
+        val indexData =
+            indexGenerationData.createForwardingIndexGenerationData(
+                generation = generation,
+                localBuildPackageChanges = buildPackageMap,
+                localRuleMapChanges = ruleMap,
+                localRdepsRuleMapChanges = deltas.rdepsDeltas)
         return Index(indexData, buildTargetCache)
     }
 
@@ -110,7 +118,10 @@ class Index internal constructor(
      *     the output is the corresponding target node for the build target at the commit or `null`
      *     if no rule existed for that target at that commit.
      */
-    fun getTargetNodes(generation: Generation, targets: List<UnconfiguredBuildTarget>): List<RawBuildRule?> {
+    fun getTargetNodes(
+        generation: Generation,
+        targets: List<UnconfiguredBuildTarget>
+    ): List<RawBuildRule?> {
         val targetIds = targets.map { buildTargetCache.get(it) }
 
         // internalRules is a List rather than a Sequence because sequences are lazy and we need to
@@ -122,7 +133,7 @@ class Index internal constructor(
         // not need to be guarded by rwLock.
         return internalRules.map {
             if (it != null) {
-                val deps = it.deps.asSequence().map { buildTargetCache.getByIndex(it) }.toSet()
+                val deps = buildTargetCache.resolveIndexes(IntArrayList.wrap(it.deps))
                 RawBuildRule(it.targetNode, deps)
             } else {
                 null
@@ -133,24 +144,26 @@ class Index internal constructor(
     /**
      * @return the transitive deps of the specified targets (includes targets)
      */
-    fun getTransitiveDeps(generation: Generation, targets: Sequence<UnconfiguredBuildTarget>): Set<UnconfiguredBuildTarget> {
-        val queue = ArrayDeque<BuildTargetId>()
+    fun getTransitiveDeps(
+        generation: Generation,
+        targets: Sequence<UnconfiguredBuildTarget>
+    ): Set<UnconfiguredBuildTarget> {
+        val queue = IntArrayFIFOQueue()
 
-        val visited: HashSet<BuildTargetId> = if (targets is Collection<*>) {
-            HashSet(targets.size)
+        val visited: IntOpenHashSet = if (targets is Collection<*>) {
+            IntOpenHashSet(targets.size)
         } else {
-            hashSetOf()
+            IntOpenHashSet()
         }
 
         indexGenerationData.withRuleMap { ruleMap ->
-
             val visitDeps: (BuildTargetId) -> Unit = { targetId ->
                 val node = ruleMap.getVersion(targetId, generation)
 
                 node?.deps?.forEach { dep ->
                     if (visited.add(dep)) {
                         // only traverse node if it was not seen before
-                        queue.add(dep)
+                        queue.enqueue(dep)
                     }
                 }
             }
@@ -165,22 +178,19 @@ class Index internal constructor(
             }
 
             // now traverse all deps recursively
-            while (queue.isNotEmpty()) {
-                val targetId = queue.pop()
+            while (!queue.isEmpty) {
+                val targetId = queue.dequeueInt()
                 visitDeps(targetId)
             }
         }
 
-        // We use a HashSet instead of a Kotlin Set so we can specify the initialCapacity.
-        val out = HashSet<UnconfiguredBuildTarget>(visited.size)
-        return visited.mapTo(out) { buildTargetCache.getByIndex(it) }
+        return buildTargetCache.resolveIndexes(visited)
     }
 
     fun getFwdDeps(
         generation: Generation,
-        targets: Iterable<UnconfiguredBuildTarget>,
-        out: ImmutableSet.Builder<UnconfiguredBuildTarget>
-    ) {
+        targets: Iterable<UnconfiguredBuildTarget>
+    ): Set<UnconfiguredBuildTarget> {
         val targetIds = targets.map { buildTargetCache.get(it) }
         val rules: List<InternalRawBuildRule> = indexGenerationData.withRuleMap { ruleMap ->
             targetIds.mapNotNull { targetId ->
@@ -188,11 +198,14 @@ class Index internal constructor(
             }
         }
 
+        // Take the union of all of the deps across all of the rules so we can make one call to
+        // addAllByIndex().
+        val union = IntOpenHashSet()
         rules.forEach { rule ->
-            rule.deps.forEach { dep ->
-                out.add(buildTargetCache.getByIndex(dep))
-            }
+            addBuildTargetSetToCollection(rule.deps, union)
         }
+
+        return buildTargetCache.resolveIndexes(union)
     }
 
     /**
@@ -200,7 +213,10 @@ class Index internal constructor(
      * <em>immediate</em> reverse dependencies. Note that unless one target is an immediate
      * reverse dependency of another, none of the targets is included in the output.
      */
-    fun getReverseDeps(generation: Generation, targets: Iterable<UnconfiguredBuildTarget>): Set<UnconfiguredBuildTarget> {
+    fun getReverseDeps(
+        generation: Generation,
+        targets: Iterable<UnconfiguredBuildTarget>
+    ): Set<UnconfiguredBuildTarget> {
         val targetIds = targets.map { buildTargetCache.get(it) }
         val rdepsSets = indexGenerationData.withRdepsMap { rdepsMap ->
             targetIds.mapNotNull { targetId ->
@@ -208,12 +224,43 @@ class Index internal constructor(
             }
         }
 
-        val out = mutableSetOf<UnconfiguredBuildTarget>()
-        rdepsSets.forEach { rdepsSet ->
-            rdepsSet.forEach { dep ->
-                out.add(buildTargetCache.getByIndex(dep))
+        // Try to be clever depending on the number of sets there are.
+        return when (rdepsSets.size) {
+            0 -> {
+                setOf()
+            }
+            1 -> {
+                val onlySet = rdepsSets.single()
+                buildTargetCache.resolveIndexes(onlySet)
+            }
+            else -> {
+                // Take the union of all of the deps across all of the rules so we can make one call to
+                // addAllByIndex().
+                val union = IntOpenHashSet()
+                for (set in rdepsSets) {
+                    set.addAllTo(union)
+                }
+                buildTargetCache.resolveIndexes(union)
             }
         }
+    }
+
+    /**
+     * Get all references for `target` at the specified `generation`. This is almost the same thing
+     * as `rdeps(//..., target, 1)` except that `//...` is a universe that would exclude rdeps
+     * outside of the current cell whereas this method is designed for the "Show References in an
+     * IDE" use case, so it returns <em>all</em> references without considering cell boundaries.
+     */
+    fun getRefs(
+        generation: Generation,
+        target: UnconfiguredBuildTarget
+    ): List<UnconfiguredBuildTarget> {
+        val targetId = buildTargetCache.get(target)
+        val rdeps = indexGenerationData.withRdepsMap { rDepsMap ->
+            rDepsMap.getVersion(targetId, generation)
+        } ?: return listOf()
+        val out = ArrayList<UnconfiguredBuildTarget>(rdeps.size)
+        buildTargetCache.resolveIndexes(rdeps, out)
         return out
     }
 
@@ -222,15 +269,17 @@ class Index internal constructor(
      */
     fun getTargets(generation: Generation): List<UnconfiguredBuildTarget> {
         val pairs = indexGenerationData.withRuleMap { ruleMap ->
-            ruleMap.getEntries(generation)
+            ruleMap.getEntries(generation).toList()
         }
 
         // Note that we release the read lock before making a bunch of requests to the
-        // buildTargetCache. As this is going to do a LOT of lookups to the buildTargetCache, we
-        // should probably see whether we can do some sort of "multi-get" operation that requires
-        // less locking, or potentially change the locking strategy for AppendOnlyBidirectionalCache
-        // completely so that it is not thread-safe internally, but is guarded by its own lock.
-        return pairs.map { buildTargetCache.getByIndex(it.first) }.toList()
+        // buildTargetCache.
+        val out = ArrayList<UnconfiguredBuildTarget>(pairs.size)
+        val iterable = object : Iterable<Int> {
+            override fun iterator(): Iterator<Int> = pairs.asSequence().map { it.first }.iterator()
+        }
+        buildTargetCache.resolveIndexes(iterable, out)
+        return out
     }
 
     /**
@@ -242,7 +291,10 @@ class Index internal constructor(
      *     the empty string. If the query is for `//foo/bar:`, then `basePath` would be
      *     `foo/bar`.
      */
-    fun getTargetsInBasePath(generation: Generation, basePath: FsAgnosticPath): List<UnconfiguredBuildTarget>? {
+    fun getTargetsInBasePath(
+        generation: Generation,
+        basePath: FsAgnosticPath
+    ): List<UnconfiguredBuildTarget>? {
         val targetNames = indexGenerationData.withBuildPackageMap { buildPackageMap ->
             buildPackageMap.getVersion(basePath, generation)
         } ?: return null
@@ -253,12 +305,77 @@ class Index internal constructor(
     }
 
     /**
+     * Return true if package exists in [basePath] for the specified [generation]
+     */
+    fun packageExists(generation: Generation, basePath: FsAgnosticPath): Boolean {
+        return indexGenerationData.withBuildPackageMap { buildPackageMap ->
+            buildPackageMap.getVersion(basePath, generation) != null
+        }
+    }
+
+    /**
+     * Return true if index contains the specified (equality-wise) [BuildPackage] at specified
+     * generation.
+     */
+    fun containsBuildPackage(generation: Generation, buildPackage: BuildPackage): Boolean {
+        val existingRuleNames = indexGenerationData.withBuildPackageMap {
+            it.getVersion(buildPackage.buildFileDirectory, generation)
+        } ?: return false
+
+        if (existingRuleNames.size() != buildPackage.rules.size) {
+            return false
+        }
+
+        // TODO: check for errors sizes to be equal
+
+        if (buildPackage.rules.isNotEmpty()) {
+            val rulesEquals = indexGenerationData.withRuleMap { ruleMap ->
+                buildPackage.rules.all { rule ->
+                    val buildTargetId = buildTargetCache.get(rule.targetNode.buildTarget)
+                    val existingRule =
+                        ruleMap.getVersion(buildTargetId, generation) ?: return@all false
+                    if (existingRule.targetNode != rule.targetNode) {
+                        return@all false
+                    }
+
+                    // check size before resolving build target ids to optimize perf a bit
+                    if (existingRule.deps.size != rule.deps.size) {
+                        return@all false
+                    }
+
+                    val ruleDeps = rule.deps.map(buildTargetCache::get)
+
+                    // should we mind the order? May be use a set?
+                    if (!existingRule.deps.contentEquals(ruleDeps.toIntArray())) {
+                        return@all false
+                    }
+
+                    true
+                }
+            }
+
+            if (!rulesEquals) {
+                return false
+            }
+        }
+
+        if (buildPackage.errors.isNotEmpty()) {
+            // TODO: compare errors
+        }
+
+        return true
+    }
+
+    /**
      * This is similar to [getTargetsInBasePath], except when there is no build file under
      * `basePath`, it will recursively check the parent directory until it finds a build file and
      * returns  all of the build targets defined in that build package. In the unlikely event
      * that it reaches the root of the tree and still has not found a build file, it returns null.
      */
-    fun getTargetsInOwningBuildPackage(generation: Generation, basePath: FsAgnosticPath): Pair<FsAgnosticPath, List<UnconfiguredBuildTarget>>? {
+    fun getTargetsInOwningBuildPackage(
+        generation: Generation,
+        basePath: FsAgnosticPath
+    ): Pair<FsAgnosticPath, List<UnconfiguredBuildTarget>>? {
         var candidateBasePath = basePath
         val targetNames = indexGenerationData.withBuildPackageMap { buildPackageMap ->
             do {
@@ -286,7 +403,10 @@ class Index internal constructor(
      *     the empty string. If the query is for `//foo/bar/...`, then `basePath` would be
      *     `foo/bar`.
      */
-    fun getTargetsUnderBasePath(generation: Generation, basePath: FsAgnosticPath): List<UnconfiguredBuildTarget> {
+    fun getTargetsUnderBasePath(
+        generation: Generation,
+        basePath: FsAgnosticPath
+    ): List<UnconfiguredBuildTarget> {
         if (basePath.isEmpty()) {
             return getTargets(generation)
         }

@@ -230,7 +230,7 @@ public class ConfigSettingIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            "//:osx_config is used as a target platform, but not declared using `platform` rule"));
+            "//:osx_config is used as a target platform, but not declared using a platform rule"));
   }
 
   @Test

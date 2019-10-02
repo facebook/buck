@@ -26,6 +26,7 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.DirectoryCleanerArgs;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ComparisonChain;
@@ -147,10 +148,10 @@ public class DirArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+  public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
 
     if (!getCacheReadMode().isWritable()) {
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
     return storeExecutorService.submit(

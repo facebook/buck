@@ -61,7 +61,7 @@ public class ShBinaryRuleIntegrationTest {
   }
 
   @Test
-  public void testExecutableFromCache() throws IOException {
+  public void testExecutableOnRebuild() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace =
@@ -89,8 +89,9 @@ public class ShBinaryRuleIntegrationTest {
     buildResult = workspace.runBuckCommand("build", "//:run_example", "-v", "2");
     buildResult.assertSuccess("Build failed when rerunning sh_binary from cache.");
 
-    // verify it's actually fetched from cache
-    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:example_sh");
+    // Note that previously we used to verify that the //:example_sh rule was
+    // fetched from the cache here.  However, caching for sh_binary() rules has
+    // since been disabled.
 
     // In addition to running the build, explicitly check that the output file is still executable.
     assertTrue(
@@ -146,6 +147,26 @@ public class ShBinaryRuleIntegrationTest {
 
     // Verify contents of output.txt
     return Files.readAllLines(outputFile, UTF_8);
+  }
+
+  @Test
+  public void testShBinaryWithMappedResourcesFromCache() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_mapped_resources", temporaryFolder);
+    workspace.setUp();
+    workspace.enableDirCache();
+
+    ProcessResult result = workspace.runBuckCommand("run", "//node:node1");
+    result.assertSuccess();
+    assertThat(result.getStdout(), containsString("stuff\nfluff\n"));
+
+    workspace.runBuckCommand("clean", "--keep-cache");
+    ProcessResult result2 = workspace.runBuckCommand("run", "//node:node1");
+    result2.assertSuccess();
+    assertThat(result2.getStdout(), containsString("stuff\nfluff\n"));
   }
 
   @Test
@@ -241,5 +262,18 @@ public class ShBinaryRuleIntegrationTest {
     Files.createSymbolicLink(temporaryFolder.getRoot().resolve("buck-out"), tempBuckOut);
 
     workspace.buildAndReturnOutput("//:run_example");
+  }
+
+  @Test
+  public void testShBinaryWithTest() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_test", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult buildResult = workspace.runBuckCommand("test", "//:hello");
+    buildResult.assertSuccess();
   }
 }

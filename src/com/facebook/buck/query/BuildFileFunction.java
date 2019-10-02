@@ -20,7 +20,6 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
 /**
@@ -51,7 +50,7 @@ public class BuildFileFunction<T extends QueryTarget> implements QueryFunction<Q
   }
 
   @Override
-  public ImmutableSet<QueryFileTarget> eval(
+  public Set<QueryFileTarget> eval(
       QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
     Set<T> argumentSet = evaluator.eval(args.get(0).getExpression(), env);

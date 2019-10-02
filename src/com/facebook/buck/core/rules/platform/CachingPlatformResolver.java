@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.google.common.cache.CacheBuilder;
@@ -29,12 +29,12 @@ public class CachingPlatformResolver implements PlatformResolver {
 
   private final PlatformResolver delegate;
 
-  private final LoadingCache<UnconfiguredBuildTargetView, Platform> platformCache =
+  private final LoadingCache<BuildTarget, Platform> platformCache =
       CacheBuilder.newBuilder()
           .build(
-              new CacheLoader<UnconfiguredBuildTargetView, Platform>() {
+              new CacheLoader<BuildTarget, Platform>() {
                 @Override
-                public Platform load(UnconfiguredBuildTargetView buildTarget) {
+                public Platform load(BuildTarget buildTarget) {
                   return delegate.getPlatform(buildTarget);
                 }
               });
@@ -44,7 +44,7 @@ public class CachingPlatformResolver implements PlatformResolver {
   }
 
   @Override
-  public Platform getPlatform(UnconfiguredBuildTargetView buildTarget) {
+  public Platform getPlatform(BuildTarget buildTarget) {
     return platformCache.getUnchecked(buildTarget);
   }
 }

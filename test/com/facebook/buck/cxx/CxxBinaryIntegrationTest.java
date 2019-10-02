@@ -22,6 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.oneOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -52,6 +53,7 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
@@ -1526,7 +1528,7 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
-        Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
+        not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
 
     // Clear for new build.
     workspace.resetBuildLogFile();
@@ -1614,7 +1616,7 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
-        Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
+        not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
   }
 
   @Test
@@ -1741,7 +1743,7 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
-        Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
+        not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
 
     // Clear for new build.
     workspace.resetBuildLogFile();
@@ -1784,29 +1786,49 @@ public class CxxBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "incremental_thinlto", tmp);
 
     workspace.setUp();
-    Path result = workspace.buildAndReturnOutput("//:bin#incremental-thinlto");
+    workspace.runBuckBuild("//:bin#incremental-thinlto");
 
-    assertThat(Files.exists(result.resolve("main.cpp.o.thinlto.bc")), Matchers.equalTo(true));
-    assertThat(Files.exists(result.resolve("main.cpp.o.imports")), Matchers.equalTo(true));
+    Path indexResult =
+        tmp.getRoot().resolve("buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices/");
 
-    String contents =
+    assertThat(Files.exists(indexResult.resolve("main.cpp.o.thinlto.bc")), Matchers.equalTo(true));
+    assertThat(Files.exists(indexResult.resolve("main.cpp.o.imports")), Matchers.equalTo(true));
+
+    String indexContents =
         new String(
-            Files.readAllBytes(result.resolve("main.cpp.o.thinlto.bc")), StandardCharsets.UTF_8);
+            Files.readAllBytes(indexResult.resolve("main.cpp.o.thinlto.bc")),
+            StandardCharsets.UTF_8);
     if (Platform.detect() == Platform.MACOS) {
-      assertThat(contents, containsString("-Wl,-thinlto_emit_indexes"));
-      assertThat(contents, containsString("-Wl,-thinlto_emit_imports"));
+      assertThat(indexContents, containsString("-Wl,-thinlto_emit_indexes"));
+      assertThat(indexContents, containsString("-Wl,-thinlto_emit_imports"));
       assertThat(
-          contents,
+          indexContents,
           containsString(
-              "-Xlinker -thinlto_new_prefix -Xlinker buck-out/gen/bin#incremental-thinlto/thinlto.indices"));
+              "-Xlinker -thinlto_new_prefix -Xlinker buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices"));
     } else if (Platform.detect() == Platform.LINUX) {
-      assertThat(contents, containsString("-Wl,-plugin-opt,thinlto-index-only=thinlto.objects"));
-      assertThat(contents, containsString("-Wl,-plugin-opt,thinlto-emit-imports-files"));
       assertThat(
-          contents,
+          indexContents, containsString("-Wl,-plugin-opt,thinlto-index-only=thinlto.objects"));
+      assertThat(indexContents, containsString("-Wl,-plugin-opt,thinlto-emit-imports-files"));
+      assertThat(
+          indexContents,
           containsString(
-              "-Xlinker -plugin-opt -Xlinker 'thinlto-prefix-replace=;buck-out/gen/bin#incremental-thinlto/thinlto.indices'"));
+              "-Xlinker -plugin-opt -Xlinker 'thinlto-prefix-replace=;buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices'"));
     }
+
+    // Since we don't have the full thinLTO toolchain, we're just going to verify that the
+    // -fthinlto-index
+    // parameter is populated correctly.
+    Path optResult =
+        tmp.getRoot()
+            .resolve("buck-out/bin/bin#default,incremental-thinlto,optimize-main.cpp.o.o55eba575/");
+    String optContents =
+        new String(
+            Files.readAllBytes(optResult.resolve("ppandcompile.argsfile")), StandardCharsets.UTF_8);
+    assertThat(Files.exists(optResult.resolve("ppandcompile.argsfile")), Matchers.equalTo(true));
+    assertThat(
+        optContents,
+        containsString(
+            "-fthinlto-index=buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices/buck-out/gen/bin#compile-main.cpp.oa5b6a1ba,default,incremental-thinlto/main.cpp.o.thinlto.bc"));
   }
 
   @Test
@@ -1901,10 +1923,9 @@ public class CxxBinaryIntegrationTest {
     // Verify that the preprocessed source contains no references to the symlink tree used to
     // setup the headers.
     String error = result.getStderr();
-    assertThat(
-        error, Matchers.not(containsString(filesystem.getBuckPaths().getScratchDir().toString())));
-    assertThat(
-        error, Matchers.not(containsString(filesystem.getBuckPaths().getGenDir().toString())));
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    assertThat(error, not(containsString(buckPaths.getScratchDir().toAbsolutePath().toString())));
+    assertThat(error, not(containsString(buckPaths.getGenDir().toString())));
     assertThat(error, containsString("In file included from lib1.h:1"));
     assertThat(error, containsString("from bin.h:1"));
     assertThat(error, containsString("from bin.cpp:1:"));
@@ -2203,7 +2224,7 @@ public class CxxBinaryIntegrationTest {
     assertThat(strippedOut, Matchers.containsStringIgnoringCase("dyld_stub_binder"));
     assertThat(unstrippedOut, Matchers.containsStringIgnoringCase("dyld_stub_binder"));
 
-    assertThat(strippedOut, Matchers.not(Matchers.containsStringIgnoringCase("test.cpp")));
+    assertThat(strippedOut, not(Matchers.containsStringIgnoringCase("test.cpp")));
     assertThat(unstrippedOut, Matchers.containsStringIgnoringCase("test.cpp"));
   }
 
@@ -2317,7 +2338,7 @@ public class CxxBinaryIntegrationTest {
 
     String strippedOutput = strippedResult.getStdout().split(" ")[1];
     String unstrippedOutput = unstrippedResult.getStdout().split(" ")[1];
-    assertThat(strippedOutput, Matchers.not(Matchers.equalTo(unstrippedOutput)));
+    assertThat(strippedOutput, not(Matchers.equalTo(unstrippedOutput)));
   }
 
   @Test
@@ -2531,7 +2552,7 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testRunFlavors() throws IOException {
-    assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_flavors", tmp);

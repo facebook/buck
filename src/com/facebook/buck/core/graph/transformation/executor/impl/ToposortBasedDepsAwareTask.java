@@ -18,7 +18,6 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
@@ -42,7 +41,7 @@ class ToposortBasedDepsAwareTask<T>
   }
 
   public static <T> ToposortBasedDepsAwareTask<T> of(Callable<T> callable) {
-    return of(callable, DepsAwareTask.DepsSupplier.of(ImmutableSet::of));
+    return of(callable, DepsAwareTask.DepsSupplier.of());
   }
 
   public static <T> ToposortBasedDepsAwareTask<T> of(

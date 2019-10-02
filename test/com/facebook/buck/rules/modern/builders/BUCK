@@ -41,6 +41,7 @@ java_test(
         "//test/com/facebook/buck/io/file:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//test/com/facebook/buck/rules/modern:testutil",
         "//test/com/facebook/buck/rules/modern/impl:testutil",
         "//test/com/facebook/buck/step:testutil",
         "//test/com/facebook/buck/testutil:testutil",

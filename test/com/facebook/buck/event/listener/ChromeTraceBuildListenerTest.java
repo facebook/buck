@@ -134,6 +134,8 @@ public class ChromeTraceBuildListenerTest {
             .setUnexpandedCommandArgs(ImmutableList.of("@mode/arglist", "--foo", "--bar"))
             .setCommandArgs(ImmutableList.of("--config", "configvalue", "--foo", "--bar"))
             .setIsRemoteExecution(false)
+            .setRepository("repository")
+            .setWatchmanVersion("3.1.0")
             .build();
     durationTracker = new BuildRuleDurationTracker();
     eventBus = new DefaultBuckEventBus(FAKE_CLOCK, BUILD_ID);
@@ -468,13 +470,14 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(artifactCacheEventStarted);
     eventBus.post(
         ArtifactCacheTestUtils.newFetchFinishedEvent(
-            artifactCacheEventStarted, CacheResult.hit("http", ArtifactCacheMode.http)));
+            artifactCacheEventStarted,
+            CacheResult.hit("http", ArtifactCacheMode.http, ImmutableMap.of(), 42)));
 
     ArtifactCompressionEvent.Started artifactCompressionStartedEvent =
         ArtifactCompressionEvent.started(
             ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of(ruleKey));
     eventBus.post(artifactCompressionStartedEvent);
-    eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent));
+    eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent, 0, 0));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
     eventBus.post(started);
@@ -628,7 +631,8 @@ public class ChromeTraceBuildListenerTest {
             "rule_key", "abc123",
             "rule", "//fake:rule",
             "success", "true",
-            "cache_result", "HTTP_HIT"));
+            "cache_result", "HTTP_HIT",
+            "artifact_size", "42"));
 
     assertNextResult(
         resultListCopy,
@@ -640,7 +644,7 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "artifact_compress",
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.of("rule_key", "abc123"));
+        ImmutableMap.of("rule_key", "abc123", "full_size", "0", "compressed_size", "0"));
 
     // BuildRuleEvent.Started
     assertNextResult(
@@ -672,7 +676,8 @@ public class ChromeTraceBuildListenerTest {
         ImmutableMap.of(
             "success", "true",
             "rule_key", "abc123",
-            "rule", "//target:one"));
+            "rule", "//target:one",
+            "artifact_size", "unknown"));
 
     assertNextResult(resultListCopy, "processingPartOne", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
 

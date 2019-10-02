@@ -304,11 +304,15 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       OutputPathResolver outputPathResolver) {
     // TODO(cjhopman): This should probably actually be handled by the build engine.
     for (Path output : outputs) {
-      stepBuilder.add(
-          RmStep.of(
-                  BuildCellRelativePath.fromCellRelativePath(
-                      context.getBuildCellRootPath(), filesystem, output))
-              .withRecursive(true));
+      // Don't bother deleting the root path or anything under it, we're about to delete it and
+      // re-create it.
+      if (!output.startsWith(outputPathResolver.getRootPath())) {
+        stepBuilder.add(
+            RmStep.of(
+                    BuildCellRelativePath.fromCellRelativePath(
+                        context.getBuildCellRootPath(), filesystem, output))
+                .withRecursive(true));
+      }
     }
 
     stepBuilder.addAll(

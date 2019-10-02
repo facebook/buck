@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.multitenant.fs
 
+import com.facebook.buck.util.json.ObjectMappers
 import org.hamcrest.Matchers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,7 +27,7 @@ import org.junit.rules.ExpectedException
 
 class FsAgnosticPathTest {
     @get:Rule
-    val thrown = ExpectedException.none()
+    val thrown: ExpectedException = ExpectedException.none()
 
     @Test
     fun emptyPathIsOk() {
@@ -202,5 +203,44 @@ class FsAgnosticPathTest {
     fun dirnameFileBelowRoot() {
         assertEquals(FsAgnosticPath.of("foo"), FsAgnosticPath.of("foo/bar").dirname())
         assertEquals(FsAgnosticPath.of("foo/bar"), FsAgnosticPath.of("foo/bar/baz").dirname())
+    }
+
+    @Test
+    fun nameEmptyPath() {
+        assertEquals(FsAgnosticPath.of(""), FsAgnosticPath.of("").name())
+    }
+
+    @Test
+    fun nameFileInRoot() {
+        assertEquals(FsAgnosticPath.of("foo"), FsAgnosticPath.of("foo").name())
+    }
+
+    @Test
+    fun nameFileBelowRoot() {
+        assertEquals(FsAgnosticPath.of("bar"), FsAgnosticPath.of("foo/bar").name())
+        assertEquals(FsAgnosticPath.of("baz"), FsAgnosticPath.of("foo/bar/baz").name())
+    }
+
+    @Test
+    fun canSerializeToJsonAsString() {
+        val path = FsAgnosticPath.of("bar/baz")
+        val data = ObjectMappers.WRITER.writeValueAsString(path)
+        assertEquals("\"bar/baz\"", data)
+    }
+
+    @Test
+    fun canDeserializeFromJsonString() {
+        val data = "\"bar/baz\""
+        val path =
+            ObjectMappers.READER.forType(FsAgnosticPath::class.java).readValue<FsAgnosticPath>(data)
+        assertEquals(FsAgnosticPath.of("bar/baz"), path)
+    }
+
+    @Test
+    fun canDeserializeFromEmptyString() {
+        val data = "\"\""
+        val path =
+            ObjectMappers.READER.forType(FsAgnosticPath::class.java).readValue<FsAgnosticPath>(data)
+        assertEquals(FsAgnosticPath.of(""), path)
     }
 }

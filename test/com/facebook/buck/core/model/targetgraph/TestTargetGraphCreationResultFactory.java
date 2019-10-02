@@ -15,12 +15,18 @@
  */
 package com.facebook.buck.core.model.targetgraph;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.collect.ImmutableSet;
 
 public class TestTargetGraphCreationResultFactory {
   private TestTargetGraphCreationResultFactory() {}
 
   public static TargetGraphCreationResult create(TargetGraph targetGraph) {
-    return new ImmutableTargetGraphCreationResult(targetGraph, ImmutableSet.of());
+    return create(targetGraph, ImmutableSet.of());
+  }
+
+  public static TargetGraphCreationResult create(
+      TargetGraph targetGraph, ImmutableSet<BuildTarget> buildTargets) {
+    return new ImmutableTargetGraphCreationResult(targetGraph, buildTargets);
   }
 }

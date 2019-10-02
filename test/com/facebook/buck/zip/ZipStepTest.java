@@ -250,7 +250,7 @@ public class ZipStepTest {
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     try (ZipArchive zipArchive = new ZipArchive(out, false)) {
-      assertEquals(ImmutableSet.of("", "foo/", "bar/"), zipArchive.getDirNames());
+      assertEquals(ImmutableSet.of("", "foo", "bar"), zipArchive.getDirNames());
     }
 
     // Directories should be stored, not deflated as this sometimes causes issues

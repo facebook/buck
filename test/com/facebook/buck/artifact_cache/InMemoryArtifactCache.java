@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -86,7 +87,7 @@ public class InMemoryArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+  public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
     try (InputStream inputStream = Files.newInputStream(output.getPath())) {
       store(info, ByteStreams.toByteArray(inputStream));
       if (output.canBorrow()) {
@@ -96,7 +97,7 @@ public class InMemoryArtifactCache implements ArtifactCache {
       throw new RuntimeException(e);
     }
 
-    return Futures.immediateFuture(null);
+    return Futures.immediateFuture(Unit.UNIT);
   }
 
   @Override

@@ -1,4 +1,4 @@
-#!python -Es
+#!<PYTHON> <PYTHON_INTERPRETER_FLAGS>
 
 # Wrap everything in a private function to prevent globals being captured by
 # the `runpy._run_module_as_main` below.

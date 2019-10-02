@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.AbstractCxxLibrary;
+import com.facebook.buck.cxx.AbstractCxxLibraryGroup;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import java.nio.file.Paths;
@@ -67,13 +67,13 @@ abstract class AbstractLuaPlatform implements FlavorConvertible {
 
   public abstract CxxPlatform getCxxPlatform();
 
-  public AbstractCxxLibrary getLuaCxxLibrary(
+  public AbstractCxxLibraryGroup getLuaCxxLibrary(
       BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     return getLuaCxxLibraryTarget()
         .map(
             target ->
                 resolver
-                    .getRuleOptionalWithType(target, AbstractCxxLibrary.class)
+                    .getRuleOptionalWithType(target, AbstractCxxLibraryGroup.class)
                     .<RuntimeException>orElseThrow(
                         () ->
                             new HumanReadableException(

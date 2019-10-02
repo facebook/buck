@@ -19,10 +19,11 @@ package com.facebook.buck.query;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
+import com.facebook.buck.util.string.StringMatcher;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -56,7 +57,7 @@ public class AttrFilterFunction implements QueryFunction<QueryBuildTarget, Query
   }
 
   @Override
-  public ImmutableSet<QueryBuildTarget> eval(
+  public Set<QueryBuildTarget> eval(
       QueryEvaluator<QueryBuildTarget> evaluator,
       QueryEnvironment<QueryBuildTarget> env,
       ImmutableList<Argument<QueryBuildTarget>> args)
@@ -65,23 +66,38 @@ public class AttrFilterFunction implements QueryFunction<QueryBuildTarget, Query
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
 
     String attrValue = args.get(1).getWord();
-    // filterAttributeContents() below will traverse the entire type hierarchy of each attr (see the
-    // various type coercers). Collection types are (1) very common (2) expensive to convert to
-    // string and (3) we shouldn't apply the filter to the stringified form, and so we have a fast
-    // path to ignore them.
     Predicate<Object> predicate =
-        input ->
-            !(input instanceof Collection || input instanceof Map)
-                && attrValue.equals(input.toString());
+        input -> {
+          if (input instanceof Collection) {
+            Collection<?> collection = (Collection<?>) input;
+            for (Object item : collection) {
+              if (matches(item, attrValue)) {
+                return true;
+              }
+            }
+          }
 
-    ImmutableSet.Builder<QueryBuildTarget> result = new ImmutableSet.Builder<>();
+          return matches(input, attrValue);
+        };
+
     Set<QueryBuildTarget> targets = evaluator.eval(argument, env);
+    HashSet<QueryBuildTarget> result = new HashSet<>(targets.size());
     for (QueryBuildTarget target : targets) {
-      ImmutableSet<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
+      Set<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);
       }
     }
-    return result.build();
+    return result;
+  }
+
+  private boolean matches(Object value, String expectedValue) {
+    if (value instanceof StringMatcher) {
+      return ((StringMatcher) value).matches(expectedValue);
+    }
+    if (value instanceof Collection || value instanceof Map) {
+      return false;
+    }
+    return expectedValue.equals(value.toString());
   }
 }

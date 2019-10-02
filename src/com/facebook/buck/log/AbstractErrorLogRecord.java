@@ -77,6 +77,7 @@ abstract class AbstractErrorLogRecord {
         .put("commandId", getBuildUuid().orElse("null"))
         .put("isRemoteExecution", getIsRemoteExecution().map(Object::toString).orElse("null"))
         .put("initialError", initialError.orElse("null"))
+        .put("repository", GlobalStateManager.singleton().getRepository())
         .build();
   }
 

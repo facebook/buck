@@ -16,9 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -90,11 +88,9 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         apk.getSourcePathToOutput(),
         args.getIsCacheable(),
         args.getEnvironmentExpansionSeparator(),
-        toolchainProvider.getByNameIfPresent(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
-        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
-        toolchainProvider.getByNameIfPresent(
-            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
+        args.isNeedAndroidTools()
+            ? Optional.of(AndroidTools.getAndroidTools(toolchainProvider))
+            : Optional.empty());
   }
 
   @BuckStyleImmutable

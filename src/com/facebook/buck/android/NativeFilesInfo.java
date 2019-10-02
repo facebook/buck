@@ -26,11 +26,14 @@ import java.util.Optional;
 public class NativeFilesInfo implements AddsToRuleKey {
   @AddToRuleKey Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsDirs;
   @AddToRuleKey Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs;
+  @AddToRuleKey Optional<SourcePath> nativeLibsDirForSystemLoader;
 
   public NativeFilesInfo(
       Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsDirs,
-      Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs) {
+      Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs,
+      Optional<SourcePath> nativeLibsDirForSystemLoader) {
     this.nativeLibsDirs = nativeLibsDirs;
     this.nativeLibsAssetsDirs = nativeLibsAssetsDirs;
+    this.nativeLibsDirForSystemLoader = nativeLibsDirForSystemLoader;
   }
 }

@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
@@ -44,7 +44,7 @@ public class RuleBasedTargetPlatformResolver implements TargetPlatformResolver {
         targetConfiguration instanceof DefaultTargetConfiguration,
         "Wrong target configuration type: " + targetConfiguration);
 
-    UnconfiguredBuildTargetView buildTarget =
+    BuildTarget buildTarget =
         ((DefaultTargetConfiguration) targetConfiguration).getTargetPlatform();
 
     return platformResolver.getPlatform(buildTarget);

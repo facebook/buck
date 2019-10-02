@@ -27,6 +27,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.util.Scope;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import java.util.Map;
 import java.util.Optional;
 
 /** Tracks events related to Remote Execution Actions. */
@@ -40,10 +41,11 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
   /** The current state of a Remote Execution Actions. */
   public enum State {
     WAITING("wait"),
-    DELETING_STALE_OUTPUTS("del"),
     COMPUTING_ACTION("comp"),
-    UPLOADING_INPUTS("upl"),
+    UPLOADING_INPUTS("upl_in"),
+    UPLOADING_ACTION("upl_act"),
     EXECUTING("exec"),
+    DELETING_STALE_OUTPUTS("del"),
     MATERIALIZING_OUTPUTS("dwl"),
     ACTION_SUCCEEDED("suc"),
     ACTION_FAILED("fail"),
@@ -79,8 +81,17 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       State state,
       BuildTarget buildTarget,
       Optional<Digest> actionDigest,
-      Optional<ExecutedActionMetadata> executedActionMetadata) {
-    final Terminal event = new Terminal(state, buildTarget, actionDigest, executedActionMetadata);
+      Optional<ExecutedActionMetadata> executedActionMetadata,
+      Optional<Map<State, Long>> stateMetadata,
+      Optional<Map<State, Long>> stateWaitingMetadata) {
+    final Terminal event =
+        new Terminal(
+            state,
+            buildTarget,
+            actionDigest,
+            executedActionMetadata,
+            stateMetadata,
+            stateWaitingMetadata);
     eventBus.post(event);
   }
 
@@ -100,13 +111,17 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     private final BuildTarget buildTarget;
     private final Optional<Digest> actionDigest;
     private final Optional<ExecutedActionMetadata> executedActionMetadata;
+    private final Optional<Map<State, Long>> stateMetadata;
+    private final Optional<Map<State, Long>> stateWaitingMetadata;
 
     @VisibleForTesting
     Terminal(
         State state,
         BuildTarget buildTarget,
         Optional<Digest> actionDigest,
-        Optional<ExecutedActionMetadata> executedActionMetadata) {
+        Optional<ExecutedActionMetadata> executedActionMetadata,
+        Optional<Map<State, Long>> stateMetadata,
+        Optional<Map<State, Long>> stateWaitingMetadata) {
       super(EventKey.unique());
       Preconditions.checkArgument(
           RemoteExecutionActionEvent.isTerminalState(state),
@@ -116,6 +131,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       this.buildTarget = buildTarget;
       this.actionDigest = actionDigest;
       this.executedActionMetadata = executedActionMetadata;
+      this.stateMetadata = stateMetadata;
+      this.stateWaitingMetadata = stateWaitingMetadata;
     }
 
     public State getState() {
@@ -132,6 +149,14 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
     public Optional<ExecutedActionMetadata> getExecutedActionMetadata() {
       return executedActionMetadata;
+    }
+
+    public Optional<Map<State, Long>> getStateMetadata() {
+      return stateMetadata;
+    }
+
+    public Optional<Map<State, Long>> getStateWaitingMetadata() {
+      return stateWaitingMetadata;
     }
 
     @Override

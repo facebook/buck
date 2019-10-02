@@ -40,6 +40,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
+import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
@@ -59,6 +60,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements AndroidPackageable,
@@ -85,6 +87,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
   private final BuildOutputInitializer<JavaLibrary.Data> buildOutputInitializer;
+  private JavaClassHashesProvider javaClassHashesProvider;
 
   public PrebuiltJar(
       BuildTarget buildTarget,
@@ -107,7 +110,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.provided = provided;
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
 
-    transitiveClasspathsSupplier =
+    this.transitiveClasspathsSupplier =
         MoreSuppliers.memoize(
             () ->
                 JavaLibraryClasspathProvider.getClasspathsFromLibraries(
@@ -131,12 +134,16 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Path fileName = resolver.getRelativePath(binaryJar).getFileName();
     String fileNameWithJarExtension =
         String.format("%s.jar", MorePaths.getNameWithoutExtension(fileName));
-    copiedBinaryJar =
+    this.copiedBinaryJar =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), getBuildTarget(), "__%s__/" + fileNameWithJarExtension);
+            getProjectFilesystem(), buildTarget, "__%s__/" + fileNameWithJarExtension);
     this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
 
-    buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+
+    this.javaClassHashesProvider =
+        new DefaultJavaClassHashesProvider(
+            ExplicitBuildTargetSourcePath.of(buildTarget, getPathToClassHashes()));
   }
 
   @Override
@@ -170,6 +177,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public void invalidateInitializeFromDiskState() {
     javaAbiInfo.invalidate();
+    javaClassHashesProvider.invalidate();
   }
 
   @Override
@@ -254,6 +262,19 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
+    Stream<BuildTarget> transitiveRuntimeDeps = Stream.of();
+    for (JavaLibrary lib : getTransitiveClasspathDeps()) {
+      // Skip ourself to avoid infinite recursion.
+      if (lib == this) continue;
+
+      transitiveRuntimeDeps =
+          Stream.concat(transitiveRuntimeDeps, lib.getRuntimeDeps(buildRuleResolver));
+    }
+    return transitiveRuntimeDeps;
+  }
+
+  @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -305,8 +326,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     buildableContext.recordArtifact(copiedBinaryJar);
 
-    Path pathToClassHashes =
-        JavaLibraryRules.getPathToClassHashes(getBuildTarget(), getProjectFilesystem());
+    Path pathToClassHashes = getPathToClassHashes();
     buildableContext.recordArtifact(pathToClassHashes);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
@@ -318,6 +338,10 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         pathToClassHashes);
 
     return steps.build();
+  }
+
+  private Path getPathToClassHashes() {
+    return JavaLibraryRules.getPathToClassHashes(getBuildTarget(), getProjectFilesystem());
   }
 
   @Override
@@ -346,5 +370,10 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Optional<String> getMavenCoords() {
     return mavenCoords;
+  }
+
+  @Override
+  public JavaClassHashesProvider getClassHashesProvider() {
+    return javaClassHashesProvider;
   }
 }

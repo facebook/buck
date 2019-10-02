@@ -17,6 +17,7 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -36,7 +37,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /** An immutable implementation of {@link UnconfiguredBuildTargetView}. */
@@ -141,11 +141,14 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
     return of(unflavoredBuildTargetView, ImmutableSortedSet.of());
   }
 
-  /** Helper for creating a build target with no flavors and no cell name. */
+  /** Helper for creating a build target in the root cell with no flavors. */
   public static ImmutableUnconfiguredBuildTargetView of(
       Path cellPath, String baseName, String shortName) {
+    // TODO(buck_team): this is unsafe. It allows us to potentially create an inconsistent build
+    // target where the cell name doesn't match the cell path.
     return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(cellPath, Optional.empty(), baseName, shortName));
+        ImmutableUnflavoredBuildTargetView.of(
+            cellPath, CanonicalCellName.unsafeRootCell(), baseName, shortName));
   }
 
   @JsonIgnore
@@ -162,9 +165,8 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
 
   @JsonProperty("cell")
   @Override
-  public Optional<String> getCell() {
-    String cell = data.getCell();
-    return cell == "" ? Optional.empty() : Optional.of(cell);
+  public CanonicalCellName getCell() {
+    return data.getCell();
   }
 
   @JsonIgnore
@@ -220,6 +222,12 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
 
   @JsonIgnore
   @Override
+  public String getCellRelativeName() {
+    return data.getCellRelativeName();
+  }
+
+  @JsonIgnore
+  @Override
   public boolean isFlavored() {
     return !getFlavors().isEmpty();
   }
@@ -265,14 +273,6 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   @Override
   public UnconfiguredBuildTargetView withUnflavoredBuildTarget(UnflavoredBuildTargetView target) {
     return ImmutableUnconfiguredBuildTargetView.of(target, getFlavors());
-  }
-
-  @Override
-  public UnconfiguredBuildTargetView withoutCell() {
-    return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(
-            getCellPath(), Optional.empty(), getBaseName(), getShortName()),
-        getFlavors());
   }
 
   @Override

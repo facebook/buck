@@ -29,7 +29,7 @@ public interface HasTargetCompatibleWith {
   @Hint(isDep = false)
   ImmutableList<BuildTarget> getTargetCompatibleWith();
 
-  /** A list of platforms a target is compatible with. */
+  /** A list of {@code config_setting} a target is compatible with. */
   @Hint(isDep = false, isConfigurable = false)
-  ImmutableList<UnconfiguredBuildTargetView> getTargetCompatiblePlatforms();
+  ImmutableList<UnconfiguredBuildTargetView> getCompatibleWith();
 }

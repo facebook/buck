@@ -16,8 +16,11 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
 import com.google.common.collect.ImmutableMap;
 
 /** A specification used by the parser to match {@link TargetNode} objects. */
@@ -42,4 +45,21 @@ public interface TargetNodeSpec {
    *     build target.
    */
   BuildFileSpec getBuildFileSpec();
+
+  /**
+   * Convert from a legacy {@link TargetNodeSpec} to a new-hotness {@link BuildTargetPattern}.
+   *
+   * <p>This conversion is imperfect and best-effort. If possible, use {@link
+   * BuildTargetPatternParser#parse(String)} to create a {@link BuildTargetPattern} instead.
+   *
+   * <p>This conversion is lossy. Some attributes, such as whether test targets should be included,
+   * are not reflected in the result.
+   *
+   * @param cell this {@link TargetNodeSpec}'s cell. Some implementations of {@link TargetNodeSpec}
+   *     do not store a cell name, so {@code cell} provides the name.
+   * @return a pattern matching the same targets as this pattern.
+   * @throws IllegalArgumentException {@code cell} refers to a cell different from this {@link
+   *     TargetNodeSpec}'s cell. This exception is best-effort.
+   */
+  BuildTargetPattern getBuildTargetPattern(Cell cell);
 }

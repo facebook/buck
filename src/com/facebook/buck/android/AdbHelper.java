@@ -534,6 +534,22 @@ public class AdbHelper implements AndroidDevicesHelper {
       throw new RuntimeException(e);
     }
     if (adb == null) {
+      // Try resetting state and reconnecting
+      printError("Unable to reconnect to existing server, starting a new one");
+      try {
+        AndroidDebugBridge.disconnectBridge();
+        AndroidDebugBridge.terminate();
+        adb =
+            createAdb(
+                toolchainProvider.getByName(
+                    AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+                contextSupplier.get(),
+                options.getAdbTimeout());
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    if (adb == null) {
       printError("Failed to create adb connection.");
       return ImmutableList.of();
     }
@@ -554,6 +570,26 @@ public class AdbHelper implements AndroidDevicesHelper {
       printError("No devices found with adb, restarting adb-server.");
       adb.restart();
       devices = filterDevices(adb.getDevices());
+    }
+    if (devices == null && restartAdbOnFailure) {
+      printError("No devices found with adb after restart, terminating and restarting adb-server.");
+      AndroidDebugBridge.disconnectBridge();
+      AndroidDebugBridge.terminate();
+      try {
+        adb =
+            createAdb(
+                toolchainProvider.getByName(
+                    AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+                contextSupplier.get(),
+                options.getAdbTimeout());
+        if (adb == null) {
+          printError("Failed to re-create adb connection.");
+          return ImmutableList.of();
+        }
+        devices = filterDevices(adb.getDevices());
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
     if (devices == null) {
       return ImmutableList.of();

@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Pair;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializable;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.google.common.collect.ImmutableList;
@@ -39,43 +38,43 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
+abstract class AbstractExternalTestRunnerTestSpec implements ExternalTestSpec {
 
   /** @return the build target of this rule. */
-  public abstract BuildTarget getTarget();
+  protected abstract BuildTarget getTarget();
 
   /**
    * @return a test-specific type string which classifies the test class, so the external runner
    *     knows how to parse the output.
    */
-  public abstract String getType();
+  protected abstract String getType();
 
   /** @return the command the external test runner must invoke to run the test. */
-  public abstract ImmutableList<String> getCommand();
+  protected abstract ImmutableList<String> getCommand();
 
   /** @return the directory from which the external runner should invoke the command. */
-  public abstract Path getCwd();
+  protected abstract Path getCwd();
 
   /**
    * @return coverage threshold and list of source path to be passed the test command for test
    *     coverage.
    */
-  public abstract ImmutableList<Pair<Float, ImmutableSet<Path>>> getNeededCoverage();
+  protected abstract ImmutableList<Pair<Float, ImmutableSet<Path>>> getNeededCoverage();
 
   /**
    * @return a list of source path to be passed the test command for calculating additional test
    *     coverage.
    */
-  public abstract ImmutableSet<Path> getAdditionalCoverageTargets();
+  protected abstract ImmutableSet<Path> getAdditionalCoverageTargets();
 
   /** @return environment variables the external test runner should provide for the test command. */
-  public abstract ImmutableMap<String, String> getEnv();
+  protected abstract ImmutableMap<String, String> getEnv();
 
   /** @return test labels. */
-  public abstract ImmutableList<String> getLabels();
+  protected abstract ImmutableList<String> getLabels();
 
   /** @return test contacts. */
-  public abstract ImmutableList<String> getContacts();
+  protected abstract ImmutableList<String> getContacts();
 
   /**
    * @return the set of files and directories (may include symlinks or symlink-trees) which *must*
@@ -84,7 +83,7 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
    *     java_tests: runtime classpath, android_instrumentation_test: test_apk and apk_under_test
    *     paths, python_tests: location of python files if style=inplace
    */
-  public abstract ImmutableSet<Path> getRequiredPaths();
+  protected abstract ImmutableSet<Path> getRequiredPaths();
 
   @Override
   public void serialize(JsonGenerator jsonGenerator, SerializerProvider serializerProvider)

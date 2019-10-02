@@ -17,28 +17,29 @@
 package com.facebook.buck.features.d;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+/** A {@link NativeLinkableGroup} for d libraries. */
 public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements NativeLinkableGroup {
 
   private final ActionGraphBuilder graphBuilder;
   private final DIncludes includes;
+  private final PlatformMappedCache<NativeLinkableInfo> linkableCache = new PlatformMappedCache<>();
 
   public DLibrary(
       BuildTarget buildTarget,
@@ -52,42 +53,34 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
   }
 
   @Override
-  public Iterable<NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public Iterable<NativeLinkableGroup> getNativeLinkableExportedDeps(
-      BuildRuleResolver ruleResolver) {
-    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkableGroup.class);
-  }
-
-  @Override
-  public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type,
-      boolean forceLinkWhole,
-      ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
-    Archive archive =
-        (Archive)
-            this.graphBuilder.requireRule(
-                getBuildTarget()
-                    .withAppendedFlavors(
-                        cxxPlatform.getFlavor(), CxxDescriptionEnhancer.STATIC_FLAVOR));
-    return NativeLinkableInput.of(
-        ImmutableList.of(archive.toArg()), ImmutableSet.of(), ImmutableSet.of());
-  }
-
-  @Override
-  public NativeLinkableGroup.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.STATIC;
-  }
-
-  @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(
+  public NativeLinkableInfo getNativeLinkable(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return ImmutableMap.of();
+    return linkableCache.get(
+        cxxPlatform,
+        () -> {
+          ImmutableList<NativeLinkable> exportedDeps =
+              FluentIterable.from(getDeclaredDeps())
+                  .filter(NativeLinkableGroup.class)
+                  .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                  .toList();
+          Archive archive =
+              (Archive)
+                  DLibrary.this.graphBuilder.requireRule(
+                      getBuildTarget()
+                          .withAppendedFlavors(
+                              cxxPlatform.getFlavor(), CxxDescriptionEnhancer.STATIC_FLAVOR));
+          NativeLinkableInput linkableInput =
+              NativeLinkableInput.of(
+                  ImmutableList.of(archive.toArg()), ImmutableSet.of(), ImmutableSet.of());
+          return new NativeLinkableInfo(
+              getBuildTarget(),
+              getType(),
+              ImmutableList.of(),
+              exportedDeps,
+              Linkage.STATIC,
+              NativeLinkableInfo.fixedDelegate(linkableInput, ImmutableMap.of()),
+              NativeLinkableInfo.defaults());
+        });
   }
 
   public DIncludes getIncludes() {

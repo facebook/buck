@@ -50,6 +50,7 @@ import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
+
   public static Builder builder(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -87,10 +88,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps,
+      ImmutableSortedSet<BuildRule> runtimeDeps,
       @Nullable BuildTarget abiJar,
       @Nullable BuildTarget sourceOnlyAbiJar,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
+      Optional<AndroidLibraryDescription.JvmLanguage> jvmLanguage,
       ImmutableSortedSet<BuildTarget> tests,
       boolean requiredForSourceOnlyAbi,
       UnusedDependenciesAction unusedDependenciesAction,
@@ -108,6 +111,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         fullJarExportedDeps,
         fullJarProvidedDeps,
         fullJarExportedProvidedDeps,
+        runtimeDeps,
         abiJar,
         sourceOnlyAbiJar,
         mavenCoords,
@@ -119,6 +123,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         isDesugarEnabled,
         isInterfaceMethodsDesugarEnabled);
     this.manifestFile = manifestFile;
+    this.type = jvmLanguage.isPresent() ? evalType(jvmLanguage.get()) : super.getType();
   }
 
   /**
@@ -127,8 +132,22 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
    */
   private final Optional<SourcePath> manifestFile;
 
+  private final String type;
+
   public Optional<SourcePath> getManifestFile() {
     return manifestFile;
+  }
+
+  private String evalType(AndroidLibraryDescription.JvmLanguage jvmLanguage) {
+    if (!jvmLanguage.equals(AndroidLibraryDescription.JvmLanguage.JAVA)) {
+      return super.getType();
+    }
+    return jvmLanguage.toString().toLowerCase() + "_" + super.getType();
+  }
+
+  @Override
+  public String getType() {
+    return type;
   }
 
   @Override
@@ -181,6 +200,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 ImmutableSortedSet<BuildRule> fullJarExportedDeps,
                 ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
                 ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps,
+                ImmutableSortedSet<BuildRule> runtimeDeps,
                 @Nullable BuildTarget abiJar,
                 @Nullable BuildTarget sourceOnlyAbiJar,
                 Optional<String> mavenCoords,
@@ -201,10 +221,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   fullJarExportedDeps,
                   fullJarProvidedDeps,
                   fullJarExportedProvidedDeps,
+                  runtimeDeps,
                   abiJar,
                   sourceOnlyAbiJar,
                   mavenCoords,
                   args.getManifest(),
+                  args.getLanguage(),
                   tests,
                   requiredForSourceOnlyAbi,
                   unusedDependenciesAction,

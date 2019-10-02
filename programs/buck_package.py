@@ -14,7 +14,6 @@
 
 from __future__ import print_function
 
-import contextlib
 import errno
 import json
 import os
@@ -22,10 +21,10 @@ import shutil
 import stat
 import tempfile
 
-import pkg_resources
-
 import file_locks
-from buck_tool import BuckTool, Resource
+import pkg_resources
+from buck_tool import BuckTool, MovableTemporaryFile, Resource
+
 
 SERVER = Resource("buck_server")
 BOOTSTRAPPER = Resource("bootstrapper_jar")
@@ -36,27 +35,6 @@ PEX_ONLY_EXPORTED_RESOURCES = [Resource("external_executor_jar")]
 
 MODULES_DIR = "buck-modules"
 MODULES_RESOURCES_DIR = "buck-modules-resources"
-
-
-@contextlib.contextmanager
-def closable_named_temporary_file(*args, **kwargs):
-    """
-    Due to a bug in python (https://bugs.python.org/issue14243), we need to be able to close() the
-    temporary file without deleting it.
-    """
-    fp = tempfile.NamedTemporaryFile(*args, delete=False, **kwargs)
-    try:
-        with fp:
-            yield fp
-    finally:
-        try:
-            os.remove(fp.name)
-        except OSError as e:
-            # It's possible this fails because of a race with another buck
-            # instance has removed the entire resource_path, so ignore
-            # 'file not found' errors.
-            if e.errno != errno.ENOENT:
-                raise
 
 
 class BuckPackage(BuckTool):
@@ -146,9 +124,8 @@ class BuckPackage(BuckTool):
                     False,
                 )
         else:
-            with closable_named_temporary_file(
-                prefix=resource_path + os.extsep
-            ) as outf:
+            with MovableTemporaryFile(prefix=resource_path + os.extsep) as f:
+                outf = f.file
                 outf.write(pkg_resources.resource_string(__name__, resource_name))
                 if resource_executable and hasattr(os, "fchmod"):
                     st = os.fstat(outf.fileno())

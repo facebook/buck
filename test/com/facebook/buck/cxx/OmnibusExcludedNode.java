@@ -15,13 +15,12 @@
  */
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 
 /** A node that is always excluded from omnibus linking. */
 class OmnibusExcludedNode extends OmnibusNode {
 
-  public OmnibusExcludedNode(String target, Iterable<? extends NativeLinkableGroup> deps) {
+  public OmnibusExcludedNode(String target, Iterable<? extends NativeLinkable> deps) {
     super(target, deps);
   }
 
@@ -30,7 +29,7 @@ class OmnibusExcludedNode extends OmnibusNode {
   }
 
   @Override
-  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
+  public boolean supportsOmnibusLinking() {
     return false;
   }
 }

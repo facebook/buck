@@ -34,8 +34,6 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxToolFlags;
-import com.facebook.buck.cxx.PreprocessorFlags;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -55,10 +53,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -66,10 +62,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
@@ -77,14 +71,9 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @AddToRuleKey private final Tool compiler;
 
-  private final HaskellVersion haskellVersion;
+  @AddToRuleKey private final HaskellCompilerFlags flags;
 
-  private final boolean useArgsfile;
-
-  @AddToRuleKey private final ImmutableList<String> flags;
-
-  @AddToRuleKey private final PreprocessorFlags ppFlags;
-  private final CxxPlatform cxxPlatform;
+  private final HaskellPlatform platform;
 
   @AddToRuleKey private final Linker.LinkableDepType depType;
 
@@ -92,20 +81,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @AddToRuleKey private final Optional<String> main;
 
-  /**
-   * Optional package info. If specified, the package name and version are baked into the
-   * compilation.
-   */
   @AddToRuleKey private final Optional<HaskellPackageInfo> packageInfo;
-
-  /** Packages providing modules that modules from this compilation can directly import. */
-  @AddToRuleKey private final ImmutableSortedMap<String, HaskellPackage> exposedPackages;
-
-  /**
-   * Packages that are transitively used by the exposed packages. Modules in this compilation cannot
-   * import modules from these.
-   */
-  @AddToRuleKey private final ImmutableSortedMap<String, HaskellPackage> packages;
 
   @AddToRuleKey private final HaskellSources sources;
 
@@ -116,32 +92,22 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool compiler,
-      HaskellVersion haskellVersion,
-      boolean useArgsfile,
-      ImmutableList<String> flags,
-      PreprocessorFlags ppFlags,
-      CxxPlatform cxxPlatform,
+      HaskellCompilerFlags flags,
+      HaskellPlatform platform,
       Linker.LinkableDepType depType,
       boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
-      ImmutableSortedMap<String, HaskellPackage> exposedPackages,
-      ImmutableSortedMap<String, HaskellPackage> packages,
       HaskellSources sources,
       Preprocessor preprocessor) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.compiler = compiler;
-    this.haskellVersion = haskellVersion;
-    this.useArgsfile = useArgsfile;
     this.flags = flags;
-    this.ppFlags = ppFlags;
-    this.cxxPlatform = cxxPlatform;
+    this.platform = platform;
     this.depType = depType;
     this.hsProfile = hsProfile;
     this.main = main;
     this.packageInfo = packageInfo;
-    this.exposedPackages = exposedPackages;
-    this.packages = packages;
     this.sources = sources;
     this.preprocessor = preprocessor;
   }
@@ -152,17 +118,12 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       BuildRuleParams baseParams,
       SourcePathRuleFinder ruleFinder,
       Tool compiler,
-      HaskellVersion haskellVersion,
-      boolean useArgsfile,
-      ImmutableList<String> flags,
-      PreprocessorFlags ppFlags,
-      CxxPlatform cxxPlatform,
+      HaskellCompilerFlags flags,
+      HaskellPlatform platform,
       Linker.LinkableDepType depType,
       boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
-      ImmutableSortedMap<String, HaskellPackage> exposedPackages,
-      ImmutableSortedMap<String, HaskellPackage> packages,
       HaskellSources sources,
       Preprocessor preprocessor) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
@@ -170,30 +131,20 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(BuildableSupport.getDepsCollection(compiler, ruleFinder))
-                    .addAll(ppFlags.getDeps(ruleFinder))
+                    .addAll(flags.getDeps(ruleFinder))
                     .addAll(sources.getDeps(ruleFinder))
-                    .addAll(
-                        Stream.of(exposedPackages, packages)
-                            .flatMap(packageMap -> packageMap.values().stream())
-                            .flatMap(pkg -> pkg.getDeps(ruleFinder))
-                            .iterator())
                     .build());
     return new HaskellCompileRule(
         target,
         projectFilesystem,
         baseParams.withDeclaredDeps(declaredDeps).withoutExtraDeps(),
         compiler,
-        haskellVersion,
-        useArgsfile,
         flags,
-        ppFlags,
-        cxxPlatform,
+        platform,
         depType,
         hsProfile,
         main,
         packageInfo,
-        exposedPackages,
-        packages,
         sources,
         preprocessor);
   }
@@ -225,7 +176,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   private Iterable<String> getPackageNameArgs() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     if (packageInfo.isPresent()) {
-      if (haskellVersion.getMajorVersion() >= 8) {
+      if (platform.getHaskellVersion().getMajorVersion() >= 8) {
         builder.add("-package-name", packageInfo.get().getName());
       } else {
         builder.add(
@@ -235,44 +186,17 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     return builder.build();
   }
 
-  /** @return the arguments to pass to the compiler to build against package dependencies. */
-  private Iterable<String> getPackageArgs(SourcePathResolver resolver) {
-    Set<String> packageDbs = new TreeSet<>();
-    Set<String> hidden = new TreeSet<>();
-    Set<String> exposed = new TreeSet<>();
-
-    for (HaskellPackage haskellPackage : packages.values()) {
-      packageDbs.add(resolver.getAbsolutePath(haskellPackage.getPackageDb()).toString());
-      hidden.add(
-          String.format(
-              "%s-%s", haskellPackage.getInfo().getName(), haskellPackage.getInfo().getVersion()));
-    }
-
-    for (HaskellPackage haskellPackage : exposedPackages.values()) {
-      packageDbs.add(resolver.getAbsolutePath(haskellPackage.getPackageDb()).toString());
-      exposed.add(
-          String.format(
-              "%s-%s", haskellPackage.getInfo().getName(), haskellPackage.getInfo().getVersion()));
-    }
-
-    // We add all package DBs, and explicit expose or hide packages depending on whether they are
-    // exposed or not.  This allows us to support setups that either add `-hide-all-packages` or
-    // not.
-    return ImmutableList.<String>builder()
-        .addAll(MoreIterables.zipAndConcat(Iterables.cycle("-package-db"), packageDbs))
-        .addAll(MoreIterables.zipAndConcat(Iterables.cycle("-package"), exposed))
-        .addAll(MoreIterables.zipAndConcat(Iterables.cycle("-hide-package"), hidden))
-        .build();
-  }
-
   private Iterable<String> getPreprocessorFlags(SourcePathResolver resolver) {
     CxxToolFlags cxxToolFlags =
-        ppFlags.toToolFlags(
-            resolver,
-            PathShortener.identity(),
-            CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver),
-            preprocessor,
-            /* pch */ Optional.empty());
+        flags
+            .getPreprocessorFlags()
+            .toToolFlags(
+                resolver,
+                PathShortener.identity(),
+                CxxDescriptionEnhancer.frameworkPathToSearchPath(
+                    platform.getCxxPlatform(), resolver),
+                preprocessor,
+                /* pch */ Optional.empty());
     return MoreIterables.zipAndConcat(
         Iterables.cycle("-optP"), Arg.stringify(cxxToolFlags.getAllFlags(), resolver));
   }
@@ -287,7 +211,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   private Iterable<String> getCompilerArguments(SourcePathResolver resolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    builder.addAll(flags).add("-no-link");
+    builder.addAll(flags.getAdditionalFlags()).add("-no-link");
 
     if (depType == Linker.LinkableDepType.SHARED) {
       builder.addAll(HaskellDescriptionUtils.DYNAMIC_FLAGS);
@@ -315,9 +239,9 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
         .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
         .add("-i")
-        .addAll(getPackageArgs(resolver));
+        .addAll(flags.getPackageFlags(platform, resolver));
 
-    if (useArgsfile) {
+    if (platform.shouldUseArgsfile()) {
       builder.add("@" + getArgsfile());
     } else {
       builder.addAll(getSourceArguments(resolver));
@@ -419,7 +343,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public boolean isCacheable() {
-    return haskellVersion.getMajorVersion() >= 8;
+    return platform.getHaskellVersion().getMajorVersion() >= 8;
   }
 
   @Override
@@ -448,14 +372,15 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   public ImmutableList<SourcePath> getObjects() {
-    String suffix = "." + getObjectSuffix();
-
     ImmutableList.Builder<SourcePath> objects = ImmutableList.builder();
-    for (String module : sources.getModuleNames()) {
-      objects.add(
-          ExplicitBuildTargetSourcePath.of(
-              getBuildTarget(),
-              getObjectDir().resolve(module.replace('.', File.separatorChar) + suffix)));
+    for (HaskellSourceModule module : sources.getModuleMap().keySet()) {
+      // We should not link the .o-boot files, they are empty stub files for
+      // incremental compilation.
+      if (module.getSourceType() == HaskellSourceModule.SourceType.HsSrcFile) {
+        objects.add(
+            ExplicitBuildTargetSourcePath.of(
+                getBuildTarget(), getObjectDir().resolve(module.getOutputPath(getObjectSuffix()))));
+      }
     }
     return objects.build();
   }
@@ -478,7 +403,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @VisibleForTesting
   protected ImmutableList<String> getFlags() {
-    return flags;
+    return flags.getAdditionalFlags();
   }
 
   /**
@@ -498,8 +423,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
                   // Only leave paths which would be overwritten when invoking the compiler.
                   private final Set<Path> allowedPaths =
-                      RichStream.from(sources.getModuleNames())
-                          .map(s -> root.resolve(s.replace('.', File.separatorChar) + "." + suffix))
+                      RichStream.from(sources.getOutputPaths(suffix))
+                          .map(path -> root.resolve(path))
                           .toImmutableSet();
 
                   @Override

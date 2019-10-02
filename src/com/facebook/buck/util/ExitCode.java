@@ -70,6 +70,9 @@ public enum ExitCode {
   /** Identifies that build failed due to Stampede infra error */
   STAMPEDE_INFRA_ERROR(15),
 
+  /** Indicates that the buck fix script returned a non-zero exit */
+  FIX_FAILED(16),
+
   // Other non-fatal errors 20 - 127
 
   /** Test run had user-specific test errors */

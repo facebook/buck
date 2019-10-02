@@ -204,13 +204,15 @@ public class AppleBinaryDescription
       AppleBinaryDescriptionArg args) {
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
         getAppleCxxPlatformsFlavorDomain();
+    ActionGraphBuilder actionGraphBuilder = context.getActionGraphBuilder();
+    args.checkDuplicateSources(actionGraphBuilder.getSourcePathResolver());
     if (buildTarget.getFlavors().contains(APP_FLAVOR)) {
       return createBundleBuildRule(
           context.getTargetGraph(),
           buildTarget,
           context.getProjectFilesystem(),
           params,
-          context.getActionGraphBuilder(),
+          actionGraphBuilder,
           appleCxxPlatformsFlavorDomain,
           args);
     } else {
@@ -219,7 +221,7 @@ public class AppleBinaryDescription
           buildTarget,
           context.getProjectFilesystem(),
           params,
-          context.getActionGraphBuilder(),
+          actionGraphBuilder,
           context.getCellPathResolver(),
           appleCxxPlatformsFlavorDomain,
           args);
@@ -253,6 +255,7 @@ public class AppleBinaryDescription
       CellPathResolver cellRoots,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain,
       AppleBinaryDescriptionArg args) {
+    args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
     // remove some flavors so binary will have the same output regardless their values
     BuildTarget unstrippedBinaryBuildTarget =
         buildTarget
@@ -403,7 +406,8 @@ public class AppleBinaryDescription
         Optional.empty(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
-        cxxBuckConfig.shouldCacheStrip());
+        cxxBuckConfig.shouldCacheStrip(),
+        appleConfig.useEntitlementsWhenAdhocCodeSigning());
   }
 
   private BuildRule createBinary(
@@ -546,6 +550,7 @@ public class AppleBinaryDescription
             }
 
             return cxxBinaryFactory.createBuildRule(
+                context.getTargetGraph(),
                 buildTarget,
                 projectFilesystem,
                 graphBuilder,

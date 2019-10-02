@@ -1,0 +1,21 @@
+{
+  "compression": {},
+  "optimizations": {
+    "splits_config": {
+      "split_dimension": [
+        {
+          "value": "ABI",
+          "negate": false
+        },
+        {
+          "value": "SCREEN_DENSITY",
+          "negate": true
+        },
+        {
+          "value": "LANGUAGE",
+          "negate": true
+        }
+      ]
+    }
+  }
+}

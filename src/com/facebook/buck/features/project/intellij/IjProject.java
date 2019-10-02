@@ -17,7 +17,7 @@
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.features.project.intellij.aggregation.DefaultAggregationModuleFactory;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
@@ -36,7 +36,7 @@ import java.util.Set;
 /** Top-level class for IntelliJ project generation. */
 public class IjProject {
 
-  private final TargetGraphAndTargets targetGraphAndTargets;
+  private final TargetGraph targetGraph;
   private final JavaPackageFinder javaPackageFinder;
   private final JavaFileParser javaFileParser;
   private final ActionGraphBuilder graphBuilder;
@@ -46,14 +46,14 @@ public class IjProject {
   private final IJProjectCleaner cleaner;
 
   public IjProject(
-      TargetGraphAndTargets targetGraphAndTargets,
+      TargetGraph targetGraph,
       JavaPackageFinder javaPackageFinder,
       JavaFileParser javaFileParser,
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
       IjProjectConfig projectConfig,
       ProjectFilesystem outFilesystem) {
-    this.targetGraphAndTargets = targetGraphAndTargets;
+    this.targetGraph = targetGraph;
     this.javaPackageFinder = javaPackageFinder;
     this.javaFileParser = javaFileParser;
     this.graphBuilder = graphBuilder;
@@ -112,7 +112,7 @@ public class IjProject {
         IjModuleGraphFactory.from(
             projectFilesystem,
             projectConfig,
-            targetGraphAndTargets.getTargetGraph(),
+            targetGraph,
             libraryFactory,
             new DefaultIjModuleFactory(projectFilesystem, typeRegistry),
             new DefaultAggregationModuleFactory(typeRegistry));
@@ -132,7 +132,7 @@ public class IjProject {
     IntellijModulesListParser modulesParser = new IntellijModulesListParser();
     IjProjectWriter writer =
         new IjProjectWriter(
-            targetGraphAndTargets.getTargetGraph(),
+            targetGraph,
             templateDataPreparer,
             projectConfig,
             projectFilesystem,

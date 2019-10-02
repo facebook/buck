@@ -18,8 +18,11 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidTools;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -32,10 +35,11 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -44,8 +48,8 @@ import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -59,11 +63,14 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
+import java.util.Map.Entry;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 public class AndroidResourceDescription
-    implements DescriptionWithTargetGraph<AndroidResourceDescriptionArg>, Flavored {
+    implements DescriptionWithTargetGraph<AndroidResourceDescriptionArg>,
+        Flavored,
+        ImplicitDepsInferringDescription<AndroidResourceDescriptionArg> {
 
   private static final ImmutableSet<String> NON_ASSET_FILENAMES =
       ImmutableSet.of(
@@ -82,7 +89,11 @@ public class AndroidResourceDescription
 
   public static final Flavor AAPT2_COMPILE_FLAVOR = InternalFlavor.of("aapt2_compile");
 
-  public AndroidResourceDescription(AndroidBuckConfig androidBuckConfig) {
+  private final ToolchainProvider toolchainProvider;
+
+  public AndroidResourceDescription(
+      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.androidBuckConfig = androidBuckConfig;
   }
 
@@ -102,10 +113,9 @@ public class AndroidResourceDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
     if (flavors.contains(RESOURCES_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(buildTarget, projectFilesystem, graphBuilder, args.getRes(), "res");
+      return createSymlinkTree(buildTarget, projectFilesystem, args.getRes(), "res");
     } else if (flavors.contains(ASSETS_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(
-          buildTarget, projectFilesystem, graphBuilder, args.getAssets(), "assets");
+      return createSymlinkTree(buildTarget, projectFilesystem, args.getAssets(), "assets");
     }
 
     // Only allow android resource and library rules as dependencies.
@@ -144,11 +154,12 @@ public class AndroidResourceDescription
           context
               .getToolchainProvider()
               .getByName(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+      ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
-          androidPlatformTarget,
-          ImmutableSortedSet.copyOf(graphBuilder.filterBuildRuleInputs(resDir.get())),
+          graphBuilder,
+          aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           resDir.get());
     }
 
@@ -197,7 +208,6 @@ public class AndroidResourceDescription
   private SymlinkTree createSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> symlinkAttribute,
       String outputDirName) {
     ImmutableMap<Path, SourcePath> links = ImmutableMap.of();
@@ -211,7 +221,9 @@ public class AndroidResourceDescription
         // not cached or tracked in any way.
         Preconditions.checkArgument(
             symlinkAttribute.get().getLeft() instanceof PathSourcePath,
-            "Resource or asset symlink tree can only be built for a PathSourcePath");
+            "Resource or asset symlink tree can only be built for a PathSourcePath (%s for %s)",
+            symlinkAttribute.get().getLeft(),
+            buildTarget);
         PathSourcePath path = (PathSourcePath) symlinkAttribute.get().getLeft();
         links = collectInputFiles(path.getFilesystem(), path.getRelativePath());
       } else {
@@ -219,19 +231,12 @@ public class AndroidResourceDescription
             RichStream.from(symlinkAttribute.get().getRight().entrySet())
                 .map(e -> new AbstractMap.SimpleEntry<>(Paths.get(e.getKey()), e.getValue()))
                 .filter(e -> isPossibleResourcePath(e.getKey()))
-                .collect(ImmutableMap.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
+                .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue));
       }
     }
     Path symlinkTreeRoot =
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").resolve(outputDirName);
-    return new SymlinkTree(
-        "android_res",
-        buildTarget,
-        projectFilesystem,
-        symlinkTreeRoot,
-        links,
-        ImmutableMultimap.of(),
-        ruleFinder);
+    return new SymlinkTree("android_res", buildTarget, projectFilesystem, symlinkTreeRoot, links);
   }
 
   public static Optional<SourcePath> getResDirectoryForProject(
@@ -388,6 +393,17 @@ public class AndroidResourceDescription
     }
 
     return false;
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      AndroidResourceDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    AndroidTools.addParseTimeDepsToAndroidTools(
+        toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }
 
   @BuckStyleImmutable

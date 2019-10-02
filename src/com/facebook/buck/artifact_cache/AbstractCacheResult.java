@@ -118,7 +118,7 @@ abstract class AbstractCacheResult {
 
   public long getArtifactSizeBytes() {
     Preconditions.checkState(getType() == CacheResultType.HIT);
-    return artifactSizeBytes().get();
+    return artifactSizeBytes().orElse(0L);
   }
 
   public String name() {
@@ -159,6 +159,18 @@ abstract class AbstractCacheResult {
       String cacheSource, ArtifactCacheMode cacheMode, String cacheError) {
     return CacheResult.of(
         CacheResultType.ERROR,
+        Optional.of(cacheSource),
+        Optional.of(cacheMode),
+        Optional.of(cacheError),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
+  }
+
+  public static CacheResult softError(
+      String cacheSource, ArtifactCacheMode cacheMode, String cacheError) {
+    return CacheResult.of(
+        CacheResultType.SOFT_ERROR,
         Optional.of(cacheSource),
         Optional.of(cacheMode),
         Optional.of(cacheError),

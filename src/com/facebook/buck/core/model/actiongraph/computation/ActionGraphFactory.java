@@ -17,20 +17,26 @@ package com.facebook.buck.core.model.actiongraph.computation;
 
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactoryDelegate.ActionGraphBuilderDecorator;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.cache.RuleAnalysisCache;
-import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation;
+import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisComputationMode;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisConfig;
+import com.facebook.buck.core.rules.analysis.impl.LegacyCompatibleRuleAnalysisComputation;
 import com.facebook.buck.core.rules.analysis.impl.RuleAnalysisCacheImpl;
-import com.facebook.buck.core.rules.analysis.impl.RuleAnalysisComputationImpl;
+import com.facebook.buck.core.rules.analysis.impl.RuleAnalysisComputation;
+import com.facebook.buck.core.rules.analysis.impl.RuleAnalysisGraphImpl;
 import com.facebook.buck.core.rules.resolver.impl.RuleAnalysisCompatibleDelegatingActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
+import com.facebook.buck.core.rules.transformer.impl.LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
@@ -103,15 +109,38 @@ public class ActionGraphFactory {
     }
 
     ActionGraphBuilderDecorator graphBuilderDecorator;
+    eventBus.post(
+        new ExperimentEvent(
+            "rule_analysis", ruleAnalysisComputationMode.toString(), "", null, null));
     if (ruleAnalysisComputationMode == RuleAnalysisComputationMode.COMPATIBLE) {
       graphBuilderDecorator =
           builderConstructor -> {
             RuleAnalysisCache ruleAnalysisCache = new RuleAnalysisCacheImpl();
-            RuleAnalysisComputation ruleAnalysisComputation =
-                RuleAnalysisComputationImpl.of(
-                    targetGraph, depsAwareExecutor.get(), ruleAnalysisCache);
+            RuleAnalysisGraph ruleAnalysisComputation =
+                RuleAnalysisGraphImpl.of(
+                    targetGraph, depsAwareExecutor.get(), ruleAnalysisCache, eventBus);
             return new RuleAnalysisCompatibleDelegatingActionGraphBuilder(
                 transformer, builderConstructor, ruleAnalysisComputation);
+          };
+    } else if (ruleAnalysisComputationMode == RuleAnalysisComputationMode.PROVIDER_COMPATIBLE) {
+      graphBuilderDecorator =
+          builderConstructor -> {
+            RuleAnalysisCache ruleAnalysisCache = new RuleAnalysisCacheImpl();
+            GraphComputation<RuleAnalysisKey, RuleAnalysisResult> ruleAnalysisComputation;
+            ruleAnalysisComputation =
+                new LegacyCompatibleRuleAnalysisComputation(
+                    new RuleAnalysisComputation(targetGraph, eventBus), targetGraph);
+
+            RuleAnalysisGraph ruleAnalysisGraph =
+                RuleAnalysisGraphImpl.of(
+                    ruleAnalysisComputation,
+                    targetGraph,
+                    depsAwareExecutor.get(),
+                    ruleAnalysisCache);
+
+            return builderConstructor.apply(
+                new LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransformer(
+                    ruleAnalysisGraph, transformer));
           };
     } else {
       graphBuilderDecorator = builderConstructor -> builderConstructor.apply(transformer);

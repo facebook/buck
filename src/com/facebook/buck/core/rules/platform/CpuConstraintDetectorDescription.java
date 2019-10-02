@@ -15,7 +15,8 @@
  */
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.impl.CpuConstraintDetector;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -30,7 +31,7 @@ public class CpuConstraintDetectorDescription
   @Override
   public ConfigurationRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
-      UnconfiguredBuildTargetView buildTarget,
+      BuildTarget buildTarget,
       CpuConstraintDetectorArg arg) {
     return new CpuConstraintDetectorRule(buildTarget, new CpuConstraintDetector());
   }
@@ -42,7 +43,7 @@ public class CpuConstraintDetectorDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractCpuConstraintDetectorArg {
+  interface AbstractCpuConstraintDetectorArg extends ConstructorArg {
     String getName();
   }
 }

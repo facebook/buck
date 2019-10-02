@@ -42,17 +42,28 @@ class BuckStarlarkCallable implements SkylarkCallable {
    * @param method the method as a MethodHandle that we want to expose
    * @param namedParams a list of the named parameters, in order, that maps to the end of the list
    *     of parameters for the method
+   * @param defaultSkylarkValues a list of default values for each of the parameters. This will be
+   *     interpreted by the skylark framework, and should correspond to {@link
+   *     BuckStarlarkParam#defaultValue()}
    * @return an instance of the annotation to expose the function to skylark
    */
   static BuckStarlarkCallable fromMethod(
-      String name, MethodHandle method, List<String> namedParams) {
+      String name,
+      MethodHandle method,
+      List<String> namedParams,
+      List<String> defaultSkylarkValues) {
     Class<?>[] parameters = method.type().parameterArray();
     Param[] skylarkParams = new Param[parameters.length];
     int namedParamsIndex = namedParams.size() - 1;
     for (int i = parameters.length - 1; i >= 0; i--) {
-      skylarkParams[i] =
-          BuckStarlarkParam.fromParam(
-              parameters[i], namedParamsIndex >= 0 ? namedParams.get(namedParamsIndex--) : null);
+      String namedParam = namedParamsIndex >= 0 ? namedParams.get(namedParamsIndex) : null;
+      String defaultValue =
+          namedParamsIndex >= 0 ? defaultSkylarkValues.get(namedParamsIndex) : null;
+      if (namedParamsIndex >= 0) {
+        namedParamsIndex--;
+      }
+
+      skylarkParams[i] = BuckStarlarkParam.fromParam(parameters[i], namedParam, defaultValue);
     }
     return new BuckStarlarkCallable(name, skylarkParams);
   }
@@ -123,7 +134,7 @@ class BuckStarlarkCallable implements SkylarkCallable {
   }
 
   @Override
-  public boolean useSkylarkSemantics() {
+  public boolean useStarlarkSemantics() {
     return false;
   }
 

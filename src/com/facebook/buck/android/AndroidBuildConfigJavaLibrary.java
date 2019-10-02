@@ -79,6 +79,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
+        /* runtimeDeps */ ImmutableSortedSet.of(),
         JavaAbis.getClassAbiJar(buildTarget),
         /* sourceOnlyAbiJar */ null,
         /* mavenCoords */ Optional.empty(),
@@ -101,7 +102,9 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
     collector.addBuildConfig(
-        androidBuildConfig.getJavaPackage(), androidBuildConfig.getBuildConfigFields());
+        getBuildTarget(),
+        androidBuildConfig.getJavaPackage(),
+        androidBuildConfig.getBuildConfigFields());
   }
 
   public AndroidBuildConfig getAndroidBuildConfig() {

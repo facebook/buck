@@ -34,7 +34,7 @@ import java.util.concurrent.Future;
  */
 public interface GraphTransformationEngine extends AutoCloseable {
 
-  /** Shuts down the engine and the backing executor */
+  /** Shuts down the engine and rejects any future computations */
   @Override
   void close();
 

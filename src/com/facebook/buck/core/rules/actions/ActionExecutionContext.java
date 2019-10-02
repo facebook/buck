@@ -15,10 +15,13 @@
  */
 package com.facebook.buck.core.rules.actions;
 
+import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
-import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.facebook.buck.util.ProcessExecutor;
+import java.nio.file.Path;
+import java.util.Map;
 import org.immutables.value.Value;
 
 /**
@@ -38,12 +41,12 @@ public abstract class ActionExecutionContext {
   public abstract boolean getShouldDeleteTemporaries();
 
   /**
-   * @return the view of the filesystem that the {@link Action} can access for it's execution. This
-   *     is a view situated at the gen output location based on the build target of the current
-   *     action
+   * @return an {@link ArtifactFilesystem} the {@link Action} can access for it's execution. This is
+   *     a filesystem that operates on {@link com.facebook.buck.core.artifact.Artifact}s without
+   *     requiring actions to be aware of the actual underlying paths.
    */
   @Value.Parameter
-  public abstract ProjectFilesystemView getGenOutputFilesystem();
+  public abstract ArtifactFilesystem getArtifactFilesystem();
 
   /** Logs an error */
   public void logError(Throwable e, String msg, Object... formatArgs) {
@@ -54,4 +57,16 @@ public abstract class ActionExecutionContext {
   public void postEvent(BuckEvent event) {
     getBuckEventBus().post(event);
   }
+
+  /** @return The executor to run processes in */
+  @Value.Parameter
+  public abstract ProcessExecutor getProcessExecutor();
+
+  /** @return The environment of the current context */
+  @Value.Parameter
+  public abstract Map<String, String> getEnvironment();
+
+  /** @return The working directory for the current context */
+  @Value.Parameter
+  public abstract Path getWorkingDirectory();
 }

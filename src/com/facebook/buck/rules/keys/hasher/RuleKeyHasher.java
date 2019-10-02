@@ -65,6 +65,7 @@ public interface RuleKeyHasher<HASH> {
     OPTIONAL,
     EITHER_LEFT,
     EITHER_RIGHT,
+    ACTION,
     BUILD_RULE,
     APPENDABLE,
   }

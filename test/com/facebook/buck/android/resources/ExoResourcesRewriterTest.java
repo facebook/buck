@@ -27,7 +27,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -60,7 +60,7 @@ public class ExoResourcesRewriterTest {
 
     ZipInspector primaryApkInspector = new ZipInspector(primaryOutput);
     assertEquals(
-        ImmutableSet.of(
+        ImmutableList.of(
             "resources.arsc",
             "AndroidManifest.xml",
             "res/drawable-nodpi-v4/exo_icon.png",

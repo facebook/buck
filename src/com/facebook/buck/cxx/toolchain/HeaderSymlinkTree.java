@@ -17,13 +17,11 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -33,9 +31,8 @@ public class HeaderSymlinkTree extends SymlinkTree {
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
-      ImmutableMap<Path, SourcePath> links,
-      SourcePathRuleFinder ruleFinder) {
-    super("cxx_header", target, filesystem, root, links, ImmutableMultimap.of(), ruleFinder);
+      ImmutableMap<Path, SourcePath> links) {
+    super("cxx_header", target, filesystem, root, links);
   }
 
   /**

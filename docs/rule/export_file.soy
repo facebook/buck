@@ -40,10 +40,9 @@
 {call buck.arg}
   {param name: 'name' /}
   {param desc}
-    A descriptive name for the rule.  If this is the only parameter to the{sp}
-    <code>export_file()</code> code, this must be the path to the file.
-  {/param}
-{/call}
+    The <em>short name</em> for this {call buck.build_target /}.  If
+    this is the only parameter, this must also be the path to the file.
+    {/param} {/call}
 
 {call buck.arg}
   {param name: 'src' /}

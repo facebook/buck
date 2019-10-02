@@ -24,7 +24,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.android.TestAndroidPlatformTargetFactory;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -90,8 +89,6 @@ public class ExternallyBuiltApplePackageTest {
             FakeSourcePath.of(bundleLocation),
             true,
             Optional.empty(),
-            Optional.of(TestAndroidPlatformTargetFactory.create()),
-            Optional.empty(),
             Optional.empty());
     graphBuilder.addToIndex(rule);
     ShellStep step =
@@ -124,8 +121,6 @@ public class ExternallyBuiltApplePackageTest {
             FakeSourcePath.of("Fake/Bundle/Location"),
             true,
             Optional.empty(),
-            Optional.of(TestAndroidPlatformTargetFactory.create()),
-            Optional.empty(),
             Optional.empty());
     graphBuilder.addToIndex(rule);
     assertThat(
@@ -148,8 +143,6 @@ public class ExternallyBuiltApplePackageTest {
             config,
             FakeSourcePath.of("Fake/Bundle/Location"),
             true,
-            Optional.empty(),
-            Optional.of(TestAndroidPlatformTargetFactory.create()),
             Optional.empty(),
             Optional.empty());
     graphBuilder.addToIndex(rule);
@@ -179,8 +172,6 @@ public class ExternallyBuiltApplePackageTest {
                 FakeSourcePath.of("Fake/Bundle/Location"),
                 true,
                 Optional.empty(),
-                Optional.of(TestAndroidPlatformTargetFactory.create()),
-                Optional.empty(),
                 Optional.empty());
     assertNotEquals(
         newRuleKeyFactory().build(packageWithVersion.apply("real")),
@@ -203,8 +194,6 @@ public class ExternallyBuiltApplePackageTest {
                         .withAppleSdk(config.getPlatform().getAppleSdk().withVersion(input))),
                 FakeSourcePath.of("Fake/Bundle/Location"),
                 true,
-                Optional.empty(),
-                Optional.of(TestAndroidPlatformTargetFactory.create()),
                 Optional.empty(),
                 Optional.empty());
     assertNotEquals(

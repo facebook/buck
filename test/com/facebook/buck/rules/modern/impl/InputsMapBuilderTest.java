@@ -246,8 +246,8 @@ public class InputsMapBuilderTest extends AbstractValueVisitorTest {
 
   @Test
   @Override
-  public void buildTargetWithHostConfiguration() {
-    apply(new WithBuildTargetWithHostConfiguration());
+  public void buildTargetWithConfigurationForConfigurationTargets() {
+    apply(new WithBuildTargetWithConfigurationForConfigurationTargets());
   }
 
   private static final PathSourcePath otherPath = FakeSourcePath.of("some.path");

@@ -13,6 +13,17 @@ java_library(
     ],
 )
 
+java_annotation_processor(
+    name = "jmh-generator-annprocess-plugin",
+    processor_class = "org.openjdk.jmh.generators.BenchmarkProcessor",
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        ":jmh-generator-annprocess",
+    ],
+)
+
 prebuilt_jar(
     name = "jmh-core",
     binary_jar = "jmh-core-1.19.jar",
@@ -35,4 +46,5 @@ prebuilt_jar(
     visibility = [
         "//test/...",
     ],
+    deps = [":jmh-core"],
 )

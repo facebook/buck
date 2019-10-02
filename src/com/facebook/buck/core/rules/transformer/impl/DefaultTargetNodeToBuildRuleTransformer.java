@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.rules.transformer.impl;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -25,6 +27,8 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.rules.query.QueryCache;
@@ -42,56 +46,65 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
   }
 
   @Override
-  public <T> BuildRule transform(
+  public <T extends ConstructorArg> BuildRule transform(
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
+      ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
-      TargetNode<T> targetNode) {
-    Preconditions.checkState(
-        targetNode.getDescription() instanceof DescriptionWithTargetGraph,
-        "Invalid type of target node description: %s",
-        targetNode.getDescription().getClass());
-    DescriptionWithTargetGraph<T> description =
-        (DescriptionWithTargetGraph<T>) targetNode.getDescription();
-    T arg = targetNode.getConstructorArg();
+      TargetNode<T> targetNode,
+      ProviderInfoCollection providerInfoCollection) {
+    try {
+      Preconditions.checkState(
+          targetNode.getDescription() instanceof DescriptionWithTargetGraph,
+          "Invalid type of target node description: %s",
+          targetNode.getDescription().getClass());
+      DescriptionWithTargetGraph<T> description =
+          (DescriptionWithTargetGraph<T>) targetNode.getDescription();
+      T arg = targetNode.getConstructorArg();
 
-    Set<BuildTarget> extraDeps = targetNode.getExtraDeps();
-    Set<BuildTarget> targetGraphOnlyDeps = targetNode.getTargetGraphOnlyDeps();
+      Set<BuildTarget> extraDeps = targetNode.getExtraDeps();
+      Set<BuildTarget> targetGraphOnlyDeps = targetNode.getTargetGraphOnlyDeps();
 
-    arg =
-        QueryUtils.withDepsQuery(
-            arg,
-            targetNode.getBuildTarget(),
-            cache,
-            graphBuilder,
-            targetNode.getCellNames(),
-            targetGraph);
-    arg =
-        QueryUtils.withProvidedDepsQuery(
-            arg,
-            targetNode.getBuildTarget(),
-            cache,
-            graphBuilder,
-            targetNode.getCellNames(),
-            targetGraph);
+      arg =
+          QueryUtils.withDepsQuery(
+              arg,
+              targetNode.getBuildTarget(),
+              cache,
+              graphBuilder,
+              targetNode.getCellNames(),
+              targetGraph);
+      arg =
+          QueryUtils.withProvidedDepsQuery(
+              arg,
+              targetNode.getBuildTarget(),
+              cache,
+              graphBuilder,
+              targetNode.getCellNames(),
+              targetGraph);
 
-    // The params used for the Buildable only contain the declared parameters. However, the deps of
-    // the rule include not only those, but also any that were picked up through the deps declared
-    // via a SourcePath.
-    BuildRuleParams params =
-        new BuildRuleParams(
-            Suppliers.ofInstance(graphBuilder.requireAllRules(targetNode.getDeclaredDeps())),
-            Suppliers.ofInstance(graphBuilder.requireAllRules(extraDeps)),
-            graphBuilder.requireAllRules(targetGraphOnlyDeps));
+      // The params used for the Buildable only contain the declared parameters. However, the deps
+      // of the rule include not only those, but also any that were picked up through the deps
+      // declared via a SourcePath.
+      BuildRuleParams params =
+          new BuildRuleParams(
+              Suppliers.ofInstance(graphBuilder.requireAllRules(targetNode.getDeclaredDeps())),
+              Suppliers.ofInstance(graphBuilder.requireAllRules(extraDeps)),
+              graphBuilder.requireAllRules(targetGraphOnlyDeps));
 
-    BuildRuleCreationContextWithTargetGraph context =
-        ImmutableBuildRuleCreationContextWithTargetGraph.of(
-            targetGraph,
-            graphBuilder,
-            targetNode.getFilesystem(),
-            targetNode.getCellNames(),
-            toolchainProvider);
+      BuildRuleCreationContextWithTargetGraph context =
+          ImmutableBuildRuleCreationContextWithTargetGraph.of(
+              targetGraph,
+              graphBuilder,
+              targetNode.getFilesystem(),
+              targetNode.getCellNames(),
+              toolchainProvider,
+              configurationRuleRegistry,
+              providerInfoCollection);
 
-    return description.createBuildRule(context, targetNode.getBuildTarget(), params, arg);
+      return description.createBuildRule(context, targetNode.getBuildTarget(), params, arg);
+    } catch (Exception e) {
+      throw new BuckUncheckedExecutionException(
+          e, "When creating rule %s.", targetNode.getBuildTarget());
+    }
   }
 }

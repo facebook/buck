@@ -59,4 +59,36 @@ public class CodeSigning {
         && result.getStderr().isPresent()
         && result.getStderr().get().contains(": satisfies its Designated Requirement");
   }
+
+  /**
+   * Checks whether a binary or bundle contains specific entitlement.
+   *
+   * @param path Resolved path to the binary or bundle.
+   * @param entitlementKey Entitlement key to check.
+   * @return Whether the binary or bundle contains the entitlement.
+   */
+  public static boolean hasEntitlement(
+      ProcessExecutor processExecutor, Path path, String entitlementKey)
+      throws InterruptedException, IOException {
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder()
+            .setCommand(ImmutableList.of("codesign", "-d", "--entitlements", ":-", path.toString()))
+            .build();
+
+    // Specify that stdout is expected, or else output may be wrapped in Ansi escape chars.
+    Set<ProcessExecutor.Option> options =
+        EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.IS_SILENT);
+
+    ProcessExecutor.Result result =
+        processExecutor.launchAndExecute(
+            processExecutorParams,
+            options,
+            /* stdin */ Optional.empty(),
+            /* timeOutMs */ Optional.empty(),
+            /* timeOutHandler */ Optional.empty());
+
+    return result.getExitCode() == 0
+        && result.getStdout().isPresent()
+        && result.getStdout().get().contains(entitlementKey);
+  }
 }

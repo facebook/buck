@@ -20,6 +20,8 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
+import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -56,6 +58,8 @@ public class TestBuildRuleCreationContextFactory {
         graphBuilder,
         projectFilesystem,
         TestCellBuilder.createCellRoots(projectFilesystem),
-        toolchainProvider);
+        toolchainProvider,
+        ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
+        LegacyProviderInfoCollectionImpl.of());
   }
 }

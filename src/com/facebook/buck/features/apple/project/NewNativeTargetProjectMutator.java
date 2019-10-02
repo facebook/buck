@@ -20,6 +20,7 @@ import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
+import com.facebook.buck.apple.AppleBundleDestination;
 import com.facebook.buck.apple.AppleHeaderVisibilities;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
@@ -28,8 +29,10 @@ import com.facebook.buck.apple.RuleUtils;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeScriptDescriptionArg;
+import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
@@ -70,7 +73,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -300,6 +305,7 @@ class NewNativeTargetProjectMutator {
       addPhasesAndGroupsForSources(target, targetGroup);
       addFrameworksBuildPhase(project, target);
       addResourcesFileReference(targetGroup);
+      addCopyResourcesToNonStdDestinationPhases(target, targetGroup);
       addResourcesBuildPhase(target, targetGroup);
       target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
       addRunScriptBuildPhases(target, postBuildRunScriptPhases);
@@ -559,20 +565,100 @@ class NewNativeTargetProjectMutator {
         ignored -> {});
   }
 
-  private PBXBuildPhase addResourcesBuildPhase(PBXNativeTarget target, PBXGroup targetGroup) {
+  private void addCopyResourcesToNonStdDestinationPhases(
+      PBXNativeTarget target, PBXGroup targetGroup) {
+    List<AppleBundleDestination> allNonStandardDestinations =
+        recursiveResources.stream()
+            .map(AppleResourceDescriptionArg::getDestination)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .distinct()
+            .filter(e -> e != AppleBundleDestination.RESOURCES)
+            .sorted(Comparator.naturalOrder())
+            .collect(Collectors.toList());
+    for (AppleBundleDestination destination : allNonStandardDestinations) {
+      addCopyResourcesToNonStdDestinationPhase(target, targetGroup, destination);
+    }
+  }
+
+  private void addCopyResourcesToNonStdDestinationPhase(
+      PBXNativeTarget target, PBXGroup targetGroup, AppleBundleDestination destination) {
+    CopyFilePhaseDestinationSpec destinationSpec =
+        CopyFilePhaseDestinationSpec.of(pbxCopyPhaseDestination(destination));
+    PBXCopyFilesBuildPhase phase = new PBXCopyFilesBuildPhase(destinationSpec);
+    Set<AppleResourceDescriptionArg> resourceDescriptionArgsForDestination =
+        recursiveResources.stream()
+            .filter(
+                e ->
+                    e.getDestination().orElse(AppleBundleDestination.defaultValue()) == destination)
+            .collect(Collectors.toSet());
+    addResourcePathsToBuildPhase(
+        phase,
+        targetGroup,
+        resourceDescriptionArgsForDestination,
+        new HashSet<>(),
+        new HashSet<>());
+    if (!phase.getFiles().isEmpty()) {
+      target.getBuildPhases().add(phase);
+      LOG.debug(
+          "Added copy resources to non standard destination %s as build phase %s",
+          destination, phase);
+    }
+  }
+
+  private PBXCopyFilesBuildPhase.Destination pbxCopyPhaseDestination(
+      AppleBundleDestination destination) {
+    switch (destination) {
+      case FRAMEWORKS:
+        return PBXCopyFilesBuildPhase.Destination.FRAMEWORKS;
+      case EXECUTABLES:
+        return PBXCopyFilesBuildPhase.Destination.EXECUTABLES;
+      case RESOURCES:
+        return PBXCopyFilesBuildPhase.Destination.RESOURCES;
+      case PLUGINS:
+        return PBXCopyFilesBuildPhase.Destination.PLUGINS;
+      case XPCSERVICES:
+        return PBXCopyFilesBuildPhase.Destination.XPC;
+      default:
+        throw new IllegalStateException("Unhandled AppleBundleDestination " + destination);
+    }
+  }
+
+  private void addResourcesBuildPhase(PBXNativeTarget target, PBXGroup targetGroup) {
+    PBXBuildPhase phase = new PBXResourcesBuildPhase();
+    Set<AppleResourceDescriptionArg> standardDestinationResources =
+        recursiveResources.stream()
+            .filter(
+                e ->
+                    e.getDestination().orElse(AppleBundleDestination.defaultValue())
+                        == AppleBundleDestination.RESOURCES)
+            .collect(Collectors.toSet());
+    addResourcePathsToBuildPhase(
+        phase, targetGroup, standardDestinationResources, recursiveAssetCatalogs, wrapperResources);
+    if (!phase.getFiles().isEmpty()) {
+      target.getBuildPhases().add(phase);
+      LOG.debug("Added resources build phase %s", phase);
+    }
+  }
+
+  private void addResourcePathsToBuildPhase(
+      PBXBuildPhase phase,
+      PBXGroup targetGroup,
+      Set<AppleResourceDescriptionArg> resourceArgs,
+      Set<AppleAssetCatalogDescriptionArg> assetCatalogArgs,
+      Set<AppleWrapperResourceArg> resourcePathArgs) {
     ImmutableSet.Builder<Path> resourceFiles = ImmutableSet.builder();
     ImmutableSet.Builder<Path> resourceDirs = ImmutableSet.builder();
     ImmutableSet.Builder<Path> variantResourceFiles = ImmutableSet.builder();
 
     collectResourcePathsFromConstructorArgs(
-        recursiveResources,
-        recursiveAssetCatalogs,
-        wrapperResources,
+        resourceArgs,
+        assetCatalogArgs,
+        resourcePathArgs,
         resourceFiles,
         resourceDirs,
         variantResourceFiles);
 
-    PBXBuildPhase phase = new PBXResourcesBuildPhase();
     addResourcesFileReference(
         targetGroup,
         resourceFiles.build(),
@@ -586,11 +672,6 @@ class NewNativeTargetProjectMutator {
           PBXBuildFile buildFile = new PBXBuildFile(input);
           phase.getFiles().add(buildFile);
         });
-    if (!phase.getFiles().isEmpty()) {
-      target.getBuildPhases().add(phase);
-      LOG.debug("Added resources build phase %s", phase);
-    }
-    return phase;
   }
 
   private void collectResourcePathsFromConstructorArgs(

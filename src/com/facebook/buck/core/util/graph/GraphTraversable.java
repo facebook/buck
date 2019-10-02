@@ -18,5 +18,5 @@ package com.facebook.buck.core.util.graph;
 import java.util.Iterator;
 
 public interface GraphTraversable<T> {
-  Iterator<T> findChildren(T node);
+  Iterator<? extends T> findChildren(T node);
 }

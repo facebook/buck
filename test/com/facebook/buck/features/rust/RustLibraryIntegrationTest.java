@@ -282,4 +282,13 @@ public class RustLibraryIntegrationTest {
         Matchers.allOf(
             containsString("Hello, world!"), containsString("I have a message to deliver to you")));
   }
+
+  @Test
+  public void rustLibraryEnv() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "env_test", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:env-library#rlib").assertSuccess();
+  }
 }

@@ -41,7 +41,6 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreStringsForTests;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
-import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -331,34 +330,48 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
-  public void testTargetsInFileFilteredByTargetPlatform() throws IOException {
+  public void targetsInFileFilteredByConstraints() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_target_filtering", tmp);
     workspace.setUp();
 
     workspace
         .runBuckCommand(
-            "build",
-            "--target-platforms",
-            "//config:osx_x86_64",
-            "--exclude-incompatible-targets",
-            "//:")
+            "build", "--target-platforms", "//config:osx_x86_64", "//target_compatible_with:")
         .assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally("//:cat_on_osx");
-    workspace.getBuildLog().assertTargetIsAbsent("//:cat_on_linux");
+    workspace.getBuildLog().assertTargetBuiltLocally("//target_compatible_with:cat_on_osx");
+    workspace.getBuildLog().assertTargetIsAbsent("//target_compatible_with:cat_on_linux");
 
     workspace
         .runBuckCommand(
-            "build",
-            "--target-platforms",
-            "//config:linux_x86_64",
-            "--exclude-incompatible-targets",
-            "//:")
+            "build", "--target-platforms", "//config:linux_x86_64", "//target_compatible_with:")
         .assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally("//:cat_on_linux");
-    workspace.getBuildLog().assertTargetIsAbsent("//:cat_on_osx");
+    workspace.getBuildLog().assertTargetBuiltLocally("//target_compatible_with:cat_on_linux");
+    workspace.getBuildLog().assertTargetIsAbsent("//target_compatible_with:cat_on_osx");
+  }
+
+  @Test
+  public void targetsInFileFilteredByConfigs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_target_filtering", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand("build", "--target-platforms", "//config:osx_x86_64", "//compatible_with:")
+        .assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//compatible_with:cat_on_osx");
+    workspace.getBuildLog().assertTargetIsAbsent("//compatible_with:cat_on_linux");
+
+    workspace
+        .runBuckCommand(
+            "build", "--target-platforms", "//config:linux_x86_64", "//compatible_with:")
+        .assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//compatible_with:cat_on_linux");
+    workspace.getBuildLog().assertTargetIsAbsent("//compatible_with:cat_on_osx");
   }
 
   @Test
@@ -406,7 +419,7 @@ public class BuildCommandIntegrationTest {
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Build target //:dep is restricted to constraints "
-                + "in \"target_compatible_with\" and \"target_compatible_platforms\" "
+                + "in \"target_compatible_with\" and \"compatible_with\" "
                 + "that do not match the target platform //config:osx_x86-64.\n"
                 + "Target constraints:\nbuck//config/constraints:linux"));
   }
@@ -420,18 +433,30 @@ public class BuildCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "build",
-            "--target-platforms",
-            "//config:osx_x86-64",
-            "//:lib_with_compatible_platform");
+            "build", "--target-platforms", "//config:osx_x86-64", "//:lib_with_compatible_with");
     result.assertFailure();
     MatcherAssert.assertThat(
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
-            "Build target //:dep_with_compatible_platform is restricted to constraints "
-                + "in \"target_compatible_with\" and \"target_compatible_platforms\" "
+            "Build target //:dep_with_compatible_with is restricted to constraints "
+                + "in \"target_compatible_with\" and \"compatible_with\" "
                 + "that do not match the target platform //config:osx_x86-64.\n"
-                + "Target compatible with platforms:\n//config:linux_x86-64"));
+                + "Target compatible with configurations:\n//config:linux_config"));
+  }
+
+  @Test
+  public void testSelectWithoutTargetPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "select_without_target_platform", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("build", "//:test-library");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        MoreStringsForTests.containsIgnoringPlatformNewlines(
+            "//:test-library: Cannot use select() expression when target platform is not specified"));
   }
 
   @Test
@@ -445,7 +470,7 @@ public class BuildCommandIntegrationTest {
     MatcherAssert.assertThat(
         result.getStderr(),
         Matchers.containsString(
-            "//invalid:lib: attribute 'targetCompatiblePlatforms' cannot be configured using select"));
+            "//invalid:lib: attribute 'compatibleWith' cannot be configured using select"));
   }
 
   @Test
@@ -495,29 +520,6 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
-  public void hostOsConstraintsAreResolved() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
-    workspace.setUp();
-
-    Path output = workspace.buildAndReturnOutput("//:platform_dependent_genrule");
-
-    workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
-
-    String expected;
-    Platform platform = Platform.detect();
-    if (platform == Platform.LINUX) {
-      expected = "linux";
-    } else if (platform == Platform.MACOS) {
-      expected = "osx";
-    } else {
-      expected = "unknown";
-    }
-
-    assertEquals(expected, workspace.getFileContents(output).trim());
-  }
-
-  @Test
   public void hostOsConstraintsAreResolvedWithCustomPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
@@ -534,27 +536,6 @@ public class BuildCommandIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
 
     String expected = (platform == Platform.LINUX) ? "osx" : "linux";
-    assertEquals(expected, workspace.getFileContents(output).trim());
-  }
-
-  @Test
-  public void hostCpuConstraintsAreResolved() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
-    workspace.setUp();
-
-    Path output = workspace.buildAndReturnOutput("//:cpu_dependent_genrule");
-
-    workspace.getBuildLog().assertTargetBuiltLocally("//:cpu_dependent_genrule");
-
-    String expected;
-    Architecture architecture = Architecture.detect();
-    if (architecture == Architecture.X86_64) {
-      expected = "x86_64";
-    } else {
-      expected = "unknown";
-    }
-
     assertEquals(expected, workspace.getFileContents(output).trim());
   }
 
@@ -609,6 +590,7 @@ public class BuildCommandIntegrationTest {
               + "    constraint_values = [\n"
               + "        \"buck//config/constraints:osx\",\n"
               + "    ],\n"
+              + "    visibility = [\"PUBLIC\"],\n"
               + ")\n",
           "config-change/platform-dep/BUCK");
 

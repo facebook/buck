@@ -53,7 +53,9 @@ public class BuckEventsQueue implements BuckEventsQueueInterface {
             String eventName = event.getEventName();
             BuckEventHandler buckEventHandler = mBuckEventsAdapter.get(eventName);
             if (buckEventHandler == null) {
+              // Log the first time, then ignore to avoid spamming logs with unhandled events
               LOG.warn("Unhandled event '" + eventName + "': " + rawMessage);
+              mBuckEventsAdapter.put(eventName, BuckEventHandler.IGNORE);
             } else {
               buckEventHandler.handleEvent(rawMessage, event, mFactory, mObjectMapper);
             }

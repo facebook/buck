@@ -22,6 +22,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ProcessExecutor;
 import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -172,5 +173,60 @@ public class RustTestIntegrationTest {
     workspace
         .runBuckCommand("test", "-c", "rust.default_edition=2018", "//:test2018-default")
         .assertSuccess();
+  }
+
+  @Test
+  public void rustTestEnv() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "env_test", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:env-test").assertSuccess();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace.resolve("buck-out/gen/env-test#binary,default,unittest/env_test").toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void testWithGeneratedModule() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:gen_submod-test").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:gen_submod-test");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve("buck-out/gen/gen_submod-test#binary,default,unittest/gen_submod_test")
+                .toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void testWithSubdirGeneratedModule() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//subdir:subbin-test").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//subdir:subbin-test");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve("buck-out/gen/subdir/subbin-test#binary,default,unittest/subbin_test")
+                .toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStderr().get(), Matchers.blankString());
   }
 }

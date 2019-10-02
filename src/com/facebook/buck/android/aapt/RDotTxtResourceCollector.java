@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.aapt;
 
+import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.util.xml.DocumentLocation;
@@ -58,22 +59,15 @@ public class RDotTxtResourceCollector implements ResourceCollector {
 
   @Override
   public void addCustomDrawableResourceIfNotPresent(
-      RType rType, String name, Path path, DocumentLocation documentLocation) {
-    RDotTxtEntry entry =
-        new FakeRDotTxtEntry(IdType.INT, rType, name, RDotTxtEntry.CustomDrawableType.CUSTOM);
+      RType rType,
+      String name,
+      Path path,
+      DocumentLocation documentLocation,
+      CustomDrawableType drawableType) {
+    RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name);
     if (!resources.contains(entry)) {
-      addCustomResource(rType, IdType.INT, name, getNextCustomIdValue(rType));
-    }
-  }
-
-  @Override
-  public void addGrayscaleImageResourceIfNotPresent(
-      RType rType, String name, Path path, DocumentLocation documentLocation) {
-    RDotTxtEntry entry =
-        new FakeRDotTxtEntry(
-            IdType.INT, rType, name, RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE);
-    if (!resources.contains(entry)) {
-      addGrayscaleImageResource(rType, IdType.INT, name, getNextGrayscaleImageIdValue(rType));
+      String idValue = getNextCustomIdValue(rType, drawableType);
+      resources.add(new RDotTxtEntry(IdType.INT, rType, name, idValue, drawableType));
     }
   }
 
@@ -102,24 +96,6 @@ public class RDotTxtResourceCollector implements ResourceCollector {
     resources.add(new RDotTxtEntry(idType, rType, name, idValue, parent));
   }
 
-  @Override
-  public void addResourceIfNotPresent(RDotTxtEntry rDotTxtEntry) {
-    if (!resources.contains(rDotTxtEntry)) {
-      resources.add(rDotTxtEntry.copyWithNewIdValue(getNextIdValue(rDotTxtEntry)));
-    }
-  }
-
-  public void addCustomResource(RType rType, IdType idType, String name, String idValue) {
-    resources.add(
-        new RDotTxtEntry(idType, rType, name, idValue, RDotTxtEntry.CustomDrawableType.CUSTOM));
-  }
-
-  public void addGrayscaleImageResource(RType rType, IdType idType, String name, String idValue) {
-    resources.add(
-        new RDotTxtEntry(
-            idType, rType, name, idValue, RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE));
-  }
-
   public Set<RDotTxtEntry> getResources() {
     return Collections.unmodifiableSet(resources);
   }
@@ -131,34 +107,12 @@ public class RDotTxtResourceCollector implements ResourceCollector {
     return Objects.requireNonNull(enumerators.get(rType));
   }
 
-  String getNextIdValue(RDotTxtEntry rDotTxtEntry) {
-    if (rDotTxtEntry.idType == IdType.INT_ARRAY) {
-      return getNextArrayIdValue(rDotTxtEntry.type, rDotTxtEntry.getNumArrayValues());
-    } else if (rDotTxtEntry.type == RType.STYLEABLE) {
-      // styleable int entries are just incremented ints that receive a value when created as
-      // siblings of a style (non unique within R.txt)
-      return rDotTxtEntry.idValue;
-    } else if (rDotTxtEntry.customType == RDotTxtEntry.CustomDrawableType.CUSTOM) {
-      return getNextCustomIdValue(rDotTxtEntry.type);
-    } else if (rDotTxtEntry.customType == RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE) {
-      return getNextGrayscaleImageIdValue(rDotTxtEntry.type);
-    } else {
-      return getNextIdValue(rDotTxtEntry.type);
-    }
-  }
-
   String getNextIdValue(RType rType) {
     return String.format("0x%08x", getEnumerator(rType).next());
   }
 
-  String getNextCustomIdValue(RType rType) {
-    return String.format(
-        "0x%08x %s", getEnumerator(rType).next(), RDotTxtEntry.CUSTOM_DRAWABLE_IDENTIFIER);
-  }
-
-  String getNextGrayscaleImageIdValue(RType rType) {
-    return String.format(
-        "0x%08x %s", getEnumerator(rType).next(), RDotTxtEntry.GRAYSCALE_IMAGE_IDENTIFIER);
+  String getNextCustomIdValue(RType rType, CustomDrawableType drawableType) {
+    return String.format("0x%08x %s", getEnumerator(rType).next(), drawableType.getIdentifier());
   }
 
   String getNextArrayIdValue(RType rType, int numValues) {

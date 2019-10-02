@@ -45,6 +45,7 @@ import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -58,7 +59,7 @@ import java.util.function.Predicate;
 
 /** A build rule which preprocesses and/or compiles a C/C++ source in a single step. */
 public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCompile.Impl>
-    implements SupportsDependencyFileRuleKey {
+    implements SupportsDependencyFileRuleKey, CxxIntermediateBuildProduct {
   private static final Logger LOG = Logger.get(CxxPreprocessAndCompile.class);
 
   private final Path output;
@@ -168,6 +169,11 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     return getProjectFilesystem().getRootPath().relativize(resolver.getAbsolutePath(getInput()));
   }
 
+  /** Returns the original path of the source file relative to its own project root */
+  public String getSourceInputPath(SourcePathResolver resolver) {
+    return resolver.getSourcePathName(getBuildable().targetName, getBuildable().input);
+  }
+
   @VisibleForTesting
   static Path getGcnoPath(Path output) {
     String basename = MorePaths.getNameWithoutExtension(output);
@@ -230,6 +236,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
             Depfiles.parseAndVerifyDependencies(
                 context.getEventBus(),
                 getProjectFilesystem(),
+                context.getSourcePathResolver(),
                 preprocessorDelegate.getHeaderPathNormalizer(context),
                 preprocessorDelegate.getHeaderVerification(),
                 getDepFilePath(),
@@ -258,6 +265,11 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     inputs.add(getInput());
 
     return inputs.build();
+  }
+
+  @Override
+  public final boolean shouldRespectInputSizeLimitForRemoteExecution() {
+    return false;
   }
 
   public CxxPreprocessAndCompileStep makeMainStep(BuildContext context, boolean useArgFile) {
@@ -308,7 +320,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
       HeaderPathNormalizer headerPathNormalizer =
           preprocessDelegate
               .map(x -> x.getHeaderPathNormalizer(context))
-              .orElseGet(() -> HeaderPathNormalizer.empty(resolver));
+              .orElseGet(() -> HeaderPathNormalizer.empty());
 
       CxxToolFlags preprocessorDelegateFlags =
           preprocessDelegate
@@ -338,6 +350,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
               compilerDelegate.getCommandPrefix(resolver),
               Arg.stringify(arguments, resolver),
               compilerDelegate.getEnvironment(resolver)),
+          context.getSourcePathResolver(),
           headerPathNormalizer,
           sanitizer,
           outputPathResolver.getTempPath(),
@@ -387,7 +400,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
                             + outputPath.toString()
                             + " does not exist.");
                   }
-                  return StepExecutionResult.of(0, Optional.empty());
+                  return StepExecutionResults.SUCCESS;
                 }
               })
           .build();

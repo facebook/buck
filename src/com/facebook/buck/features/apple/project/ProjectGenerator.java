@@ -76,7 +76,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -88,12 +87,12 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -125,6 +124,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.features.apple.common.Utils;
 import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.features.halide.HalideCompile;
 import com.facebook.buck.features.halide.HalideLibraryDescription;
@@ -1040,10 +1040,7 @@ public class ProjectGenerator {
         new LocationMacroExpander() {
           @Override
           public Arg expandFrom(
-              BuildTarget target,
-              CellPathResolver cellNames,
-              ActionGraphBuilder graphBuilder,
-              LocationMacro input)
+              BuildTarget target, ActionGraphBuilder graphBuilder, LocationMacro input)
               throws MacroException {
             BuildTarget locationMacroTarget = input.getTarget();
 
@@ -1061,7 +1058,7 @@ public class ProjectGenerator {
             requiredBuildTargetsBuilder.add(locationMacroTarget);
             return StringArg.of(
                 Arg.stringify(
-                    super.expandFrom(target, cellNames, builderFromNode, input),
+                    super.expandFrom(target, builderFromNode, input),
                     builderFromNode.getSourcePathResolver()));
           }
         };
@@ -1070,6 +1067,7 @@ public class ProjectGenerator {
         new MultiThreadedActionGraphBuilder(
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
             TargetGraph.EMPTY,
+            ConfigurationRuleRegistryFactory.createRegistry(TargetGraph.EMPTY),
             new DefaultTargetNodeToBuildRuleTransformer(),
             projectCell.getCellProvider());
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
@@ -1766,11 +1764,11 @@ public class ProjectGenerator {
       }
 
       if (isFocusedOnTarget) {
-        Iterable<Path> recursivePublicSystemIncludeDirectories =
+        Set<Path> recursivePublicSystemIncludeDirectories =
             collectRecursivePublicSystemIncludeDirectories(targetNode);
-        Iterable<Path> recursivePublicIncludeDirectories =
+        Set<Path> recursivePublicIncludeDirectories =
             collectRecursivePublicIncludeDirectories(targetNode);
-        Iterable<Path> includeDirectories = extractIncludeDirectories(targetNode);
+        Set<Path> includeDirectories = extractIncludeDirectories(targetNode);
 
         // Explicitly add system include directories to compile flags to mute warnings,
         // XCode seems to not support system include directories directly.
@@ -1799,7 +1797,7 @@ public class ProjectGenerator {
                         recursivePublicSystemIncludeDirectories,
                         recursivePublicIncludeDirectories,
                         includeDirectories)));
-        if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
+        if (hasSwiftVersionArg && isFocusedOnTarget) {
           ImmutableSet<Path> swiftIncludePaths = collectRecursiveSwiftIncludePaths(targetNode);
           Stream<String> allValues =
               Streams.concat(
@@ -1828,44 +1826,47 @@ public class ProjectGenerator {
 
         ImmutableList<String> testingOverlay = getFlagsForExcludesForModulesUnderTests(targetNode);
         Iterable<String> otherSwiftFlags =
-            Iterables.concat(
-                swiftBuckConfig.getCompilerFlags().orElse(DEFAULT_SWIFTFLAGS),
-                targetSpecificSwiftFlags.build());
+            Utils.distinctUntilChanged(
+                Iterables.concat(
+                    swiftBuckConfig.getCompilerFlags().orElse(DEFAULT_SWIFTFLAGS),
+                    targetSpecificSwiftFlags.build()));
 
         Iterable<String> targetCFlags =
-            ImmutableList.<String>builder()
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, targetNode.getConstructorArg().getCompilerFlags()))
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
-                .addAll(systemIncludeDirectoryFlags)
-                .addAll(testingOverlay)
-                .build();
+            Utils.distinctUntilChanged(
+                ImmutableList.<String>builder()
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, targetNode.getConstructorArg().getCompilerFlags()))
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
+                    .addAll(systemIncludeDirectoryFlags)
+                    .addAll(testingOverlay)
+                    .build());
         Iterable<String> targetCxxFlags =
-            ImmutableList.<String>builder()
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, targetNode.getConstructorArg().getCompilerFlags()))
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
-                .addAll(systemIncludeDirectoryFlags)
-                .addAll(testingOverlay)
-                .build();
+            Utils.distinctUntilChanged(
+                ImmutableList.<String>builder()
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, targetNode.getConstructorArg().getCompilerFlags()))
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
+                    .addAll(systemIncludeDirectoryFlags)
+                    .addAll(testingOverlay)
+                    .build());
 
         appendConfigsBuilder
             .put(
@@ -1926,36 +1927,38 @@ public class ProjectGenerator {
               .put(
                   generateConfigKey("OTHER_CFLAGS", platform),
                   Streams.stream(
-                          Iterables.transform(
-                              Iterables.concat(
-                                  cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS),
-                                  platformConfig
-                                      .flatMap(CxxBuckConfig::getCflags)
-                                      .orElse(DEFAULT_CFLAGS),
-                                  cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS),
-                                  platformConfig
-                                      .flatMap(CxxBuckConfig::getCppflags)
-                                      .orElse(DEFAULT_CPPFLAGS),
-                                  targetCFlags,
-                                  Iterables.concat(platformFlags.get(platform))),
-                              Escaper.BASH_ESCAPER::apply))
+                          Utils.distinctUntilChanged(
+                              Iterables.transform(
+                                  Iterables.concat(
+                                      cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS),
+                                      platformConfig
+                                          .flatMap(CxxBuckConfig::getCflags)
+                                          .orElse(DEFAULT_CFLAGS),
+                                      cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS),
+                                      platformConfig
+                                          .flatMap(CxxBuckConfig::getCppflags)
+                                          .orElse(DEFAULT_CPPFLAGS),
+                                      targetCFlags,
+                                      Iterables.concat(platformFlags.get(platform))),
+                                  Escaper.BASH_ESCAPER::apply)))
                       .collect(Collectors.joining(" ")))
               .put(
                   generateConfigKey("OTHER_CPLUSPLUSFLAGS", platform),
                   Streams.stream(
-                          Iterables.transform(
-                              Iterables.concat(
-                                  cxxBuckConfig.getCxxflags().orElse(DEFAULT_CPPFLAGS),
-                                  platformConfig
-                                      .flatMap(CxxBuckConfig::getCxxflags)
-                                      .orElse(DEFAULT_CXXFLAGS),
-                                  cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS),
-                                  platformConfig
-                                      .flatMap(CxxBuckConfig::getCxxppflags)
-                                      .orElse(DEFAULT_CXXPPFLAGS),
-                                  targetCxxFlags,
-                                  Iterables.concat(platformFlags.get(platform))),
-                              Escaper.BASH_ESCAPER::apply))
+                          Utils.distinctUntilChanged(
+                              Iterables.transform(
+                                  Iterables.concat(
+                                      cxxBuckConfig.getCxxflags().orElse(DEFAULT_CPPFLAGS),
+                                      platformConfig
+                                          .flatMap(CxxBuckConfig::getCxxflags)
+                                          .orElse(DEFAULT_CXXFLAGS),
+                                      cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS),
+                                      platformConfig
+                                          .flatMap(CxxBuckConfig::getCxxppflags)
+                                          .orElse(DEFAULT_CXXPPFLAGS),
+                                      targetCxxFlags,
+                                      Iterables.concat(platformFlags.get(platform))),
+                                  Escaper.BASH_ESCAPER::apply)))
                       .collect(Collectors.joining(" ")));
         }
 
@@ -2039,7 +2042,7 @@ public class ProjectGenerator {
 
   /** Generate a mapping from libraries to the framework bundles that include them. */
   public static ImmutableMap<BuildTarget, TargetNode<?>> computeSharedLibrariesToBundles(
-      ImmutableSet<TargetNode<?>> targetNodes, TargetGraphAndTargets targetGraphAndTargets)
+      ImmutableSet<TargetNode<?>> targetNodes, TargetGraph targetGraph)
       throws HumanReadableException {
 
     Map<BuildTarget, TargetNode<?>> sharedLibraryToBundle = new HashMap<>();
@@ -2047,7 +2050,7 @@ public class ProjectGenerator {
       Optional<TargetNode<CxxLibraryDescription.CommonArg>> binaryNode =
           TargetNodes.castArg(targetNode, AppleBundleDescriptionArg.class)
               .flatMap(bundleNode -> bundleNode.getConstructorArg().getBinary())
-              .map(target -> targetGraphAndTargets.getTargetGraph().get(target))
+              .map(target -> targetGraph.get(target))
               .flatMap(node -> TargetNodes.castArg(node, CxxLibraryDescription.CommonArg.class));
       if (!binaryNode.isPresent()) {
         continue;
@@ -2476,11 +2479,15 @@ public class ProjectGenerator {
                         if (prebuilt.getConstructorArg().getPreferredLinkage()
                             != NativeLinkableGroup.Linkage.STATIC) {
                           // Frameworks that are copied into the binary.
-                          iOSLdRunpathSearchPaths.add("/usr/lib/swift");
-                          iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");
-                          iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
-                          macOSLdRunpathSearchPaths.add("/usr/lib/swift");
+                          if (options.shouldLinkSystemSwift()) {
+                            iOSLdRunpathSearchPaths.add("/usr/lib/swift");
+                            macOSLdRunpathSearchPaths.add("/usr/lib/swift");
+                          }
+
                           macOSLdRunpathSearchPaths.add("@loader_path/../Frameworks");
+                          iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");
+
+                          iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
                           macOSLdRunpathSearchPaths.add("@executable_path/../Frameworks");
                         }
                       });
@@ -2495,15 +2502,26 @@ public class ProjectGenerator {
       // we have a plain apple_binary that has Swift deps. So we're manually doing exactly what
       // Xcode does to make sure binaries link successfully if they use Swift directly or
       // transitively.
+
+      // I'm not sure how to look for the correct folder here, so just adding both for now, if the
+      // folder changes in a future release this can be revisited.
+
       librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME");
+      if (options.shouldLinkSystemSwift()) {
+        librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift-5.0/$PLATFORM_NAME");
+      }
     }
 
     if (swiftDeps.size() > 0 || projGenerationStateCache.targetContainsSwiftSourceCode(node)) {
-      iOSLdRunpathSearchPaths.add("/usr/lib/swift");
+      if (options.shouldLinkSystemSwift()) {
+        iOSLdRunpathSearchPaths.add("/usr/lib/swift");
+        macOSLdRunpathSearchPaths.add("/usr/lib/swift");
+      }
+
       iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
-      iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");
-      macOSLdRunpathSearchPaths.add("/usr/lib/swift");
       macOSLdRunpathSearchPaths.add("@executable_path/../Frameworks");
+
+      iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");
       macOSLdRunpathSearchPaths.add("@loader_path/../Frameworks");
     }
 
@@ -2935,11 +2953,7 @@ public class ProjectGenerator {
 
     Path basePath;
     if (shouldCreateHeadersSymlinks) {
-      basePath =
-          projectFilesystem
-              .getRootPath()
-              .resolve(targetNode.getBuildTarget().getCellPath())
-              .resolve(headerSymlinkTreeRoot);
+      basePath = getCellPathForTarget(targetNode.getBuildTarget()).resolve(headerSymlinkTreeRoot);
     } else {
       basePath = projectFilesystem.getRootPath();
     }
@@ -2958,6 +2972,10 @@ public class ProjectGenerator {
     for (Map.Entry<Path, Path> entry : swiftHeaderMapEntries.entrySet()) {
       headerMapBuilder.add(entry.getKey().toString(), entry.getValue());
     }
+  }
+
+  private Path getCellPathForTarget(BuildTarget buildTarget) {
+    return projectCell.getNewCellPathResolver().getCellPath(buildTarget.getCell());
   }
 
   /** Generates the merged header maps and write it to the public header symlink tree location. */
@@ -3573,7 +3591,8 @@ public class ProjectGenerator {
   private Path getRelativePathToMergedHeaderMap() {
     Path treeRoot = getPathToMergedHeaderMap();
     Path cellRoot =
-        MorePaths.relativize(projectFilesystem.getRootPath(), workspaceTarget.get().getCellPath());
+        MorePaths.relativize(
+            projectFilesystem.getRootPath(), getCellPathForTarget(workspaceTarget.get()));
     return pathRelativizer.outputDirToRootRelative(cellRoot.resolve(treeRoot));
   }
 
@@ -3993,7 +4012,7 @@ public class ProjectGenerator {
             });
   }
 
-  private Iterable<Path> collectRecursivePublicIncludeDirectories(TargetNode<?> targetNode) {
+  private Set<Path> collectRecursivePublicIncludeDirectories(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 xcodeDescriptions,
@@ -4003,10 +4022,11 @@ public class ProjectGenerator {
                 targetNode,
                 ImmutableSet.of(CxxLibraryDescription.class, AppleLibraryDescription.class)))
         .append(targetNode)
-        .transformAndConcat(this::extractPublicIncludeDirectories);
+        .transformAndConcat(this::extractPublicIncludeDirectories)
+        .toSet();
   }
 
-  private Iterable<Path> collectRecursivePublicSystemIncludeDirectories(TargetNode<?> targetNode) {
+  private Set<Path> collectRecursivePublicSystemIncludeDirectories(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 xcodeDescriptions,
@@ -4016,10 +4036,11 @@ public class ProjectGenerator {
                 targetNode,
                 ImmutableSet.of(CxxLibraryDescription.class, AppleLibraryDescription.class)))
         .append(targetNode)
-        .transformAndConcat(this::extractPublicSystemIncludeDirectories);
+        .transformAndConcat(this::extractPublicSystemIncludeDirectories)
+        .toSet();
   }
 
-  private Iterable<Path> extractIncludeDirectories(TargetNode<?> targetNode) {
+  private Set<Path> extractIncludeDirectories(TargetNode<?> targetNode) {
     Path basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getBasePath());
@@ -4028,10 +4049,11 @@ public class ProjectGenerator {
             .map(input -> input.getConstructorArg().getIncludeDirectories())
             .orElse(ImmutableSortedSet.of());
     return FluentIterable.from(includeDirectories)
-        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize());
+        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize())
+        .toSet();
   }
 
-  private Iterable<Path> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
+  private Set<Path> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
     Path basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getBasePath());
@@ -4040,10 +4062,11 @@ public class ProjectGenerator {
             .map(input -> input.getConstructorArg().getPublicIncludeDirectories())
             .orElse(ImmutableSortedSet.of());
     return FluentIterable.from(includeDirectories)
-        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize());
+        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize())
+        .toSet();
   }
 
-  private Iterable<Path> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
+  private Set<Path> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
     Path basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getBasePath());
@@ -4052,7 +4075,8 @@ public class ProjectGenerator {
             .map(input -> input.getConstructorArg().getPublicSystemIncludeDirectories())
             .orElse(ImmutableSortedSet.of());
     return FluentIterable.from(includeDirectories)
-        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize());
+        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize())
+        .toSet();
   }
 
   private ImmutableList<StringWithMacros> collectRecursiveExportedLinkerFlags(
@@ -4667,8 +4691,7 @@ public class ProjectGenerator {
     Optional<SourcePath> src = exportFileNode.get().getConstructorArg().getSrc();
     if (!src.isPresent()) {
       Path output =
-          buildTarget
-              .getCellPath()
+          getCellPathForTarget(buildTarget)
               .resolve(buildTarget.getBasePath())
               .resolve(buildTarget.getShortNameAndFlavorPostfix());
       return projectFilesystem.relativize(output);
@@ -4768,6 +4791,7 @@ public class ProjectGenerator {
 
   private ProjectFilesystem getFilesystemForTarget(Optional<BuildTarget> target) {
     if (target.isPresent()) {
+      // TODO(T47190884): Look the path up with the cell name.
       Path cellPath = target.get().getCellPath();
       Cell cell = projectCell.getCellProvider().getCellByPath(cellPath);
       return cell.getFilesystem();

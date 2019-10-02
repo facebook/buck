@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.SortedSet;
-import java.util.TreeSet;
 
 public class SortedSetTypeCoercer<T extends Comparable<? super T>>
     extends CollectionTypeCoercer<ImmutableSortedSet<T>, T> {
@@ -76,10 +75,9 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
-    SortedSet<T> builder = new TreeSet<>();
-    fillSortedSet(
-        cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, builder, object);
-    return ImmutableSortedSet.copyOf(builder);
+    ImmutableSortedSet.Builder<T> builder = ImmutableSortedSet.naturalOrder();
+    fill(cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, builder, object);
+    return builder.build();
   }
 
   @Override

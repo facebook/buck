@@ -7,6 +7,7 @@ java_immutables_library(
     ]),
     exported_deps = [
         "//src/com/facebook/buck/core/graph/transformation:transformation",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/skylark/io:io",
     ],
     tests = [
@@ -17,7 +18,6 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
-        "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",

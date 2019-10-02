@@ -26,7 +26,7 @@ import org.immutables.value.Value;
 @Value.Immutable(copy = false, intern = true)
 @BuckStyleImmutable
 @JsonDeserialize
-abstract class AbstractRuleType {
+public abstract class AbstractRuleType {
 
   /** The kind of a rule type. */
   public enum Kind {
@@ -50,6 +50,16 @@ abstract class AbstractRuleType {
   @JsonIgnore
   public boolean isTestRule() {
     return getName().endsWith("_test");
+  }
+
+  /**
+   * @return {@code true} if this rule type is a build rule, {@code false} otherwise (for example,
+   *     for configuration rule types).
+   */
+  @Value.Derived
+  @JsonIgnore
+  public boolean isBuildRule() {
+    return getKind() == Kind.BUILD;
   }
 
   @Value.Check

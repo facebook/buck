@@ -1,0 +1,23 @@
+cxx_library(
+    name = "lib",
+    exported_header_style = "system",
+    exported_headers = [
+        "lib.h",
+    ],
+)
+
+cxx_binary(
+    name = "bin",
+    srcs = [
+        "bin.cpp",
+    ],
+    compiler_flags = [
+        # This would cause a build error if `lib.h` wasn't `#include` as
+        # a system header.
+        "-Werror",
+        "-Wshadow",
+    ],
+    deps = [
+        ":lib",
+    ],
+)

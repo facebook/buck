@@ -112,6 +112,31 @@ public class ExopackageInstallerTest {
   }
 
   @Test
+  public void testParsePathAndPackageInfoHandlesErrorLines() {
+    String lines =
+        "/system/csc/customer.xml can't open file\n"
+            + "package:/data/app/com.facebook.buck.android.agent-1/base.apk\n"
+            + "Key Set Manager:\n"
+            + "  [com.facebook.buck.android.agent]\n"
+            + "      Signing KeySets: 148\n"
+            + "\n"
+            + "/thislineisahunkofjunk\n"
+            + "Packages:\n"
+            + "  Package [com.facebook.buck.android.agent] (1d1d165b):\n"
+            + "    pkg=Package{bdd64f0 com.facebook.buck.android.agent}\n"
+            + "    codePath=/data/app/com.facebook.buck.android.agent-1\n"
+            + "    resourcePath=/data/app/com.facebook.buck.android.agent-1\n"
+            + "    legacyNativeLibraryDir=/data/app/com.facebook.buck.android.agent-1/lib\n"
+            + "    nativeLibraryRootDir=/data/app/com.facebook.buck.android.agent-1/lib\n"
+            + "    nativeLibraryDir=/data/app/com.facebook.buck.android.agent-1/lib/arm\n"
+            + "    versionCode=9 targetSdk=19\n"
+            + "    versionName=9\n";
+    Optional<PackageInfo> optionalPackageInfo =
+        RealAndroidDevice.parsePathAndPackageInfo("com.facebook.buck.android.agent", lines);
+    assertTrue(optionalPackageInfo.isPresent());
+  }
+
+  @Test
   public void testChunkArgs() {
     assertEquals(ImmutableList.of(), RealAndroidDevice.chunkArgs(ImmutableList.of(), 8));
 

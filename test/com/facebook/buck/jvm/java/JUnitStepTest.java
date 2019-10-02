@@ -33,6 +33,7 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -41,9 +42,8 @@ import java.util.Set;
 import org.junit.Test;
 
 public class JUnitStepTest {
-
   @Test
-  public void testGetShellCommand() {
+  public void testGetShellCommandForJava8() {
     String testClass1 = "com.facebook.buck.shell.JUnitCommandTest";
     String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
     Set<String> testClassNames = ImmutableSet.of(testClass1, testClass2);
@@ -63,10 +63,12 @@ public class JUnitStepTest {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path classpathFile = filesystem.resolve("foo");
 
+    int javaVersion = 8;
     JUnitJvmArgs args =
         JUnitJvmArgs.builder()
             .setBuildId(pretendBuildId)
             .setBuckModuleBaseSourceCodePath(modulePath)
+            .setTargetJavaVersion(javaVersion)
             .setClasspathFile(classpathFile)
             .setTestRunnerClasspath(testRunnerClasspath)
             .setExtraJvmArgs(vmArgs)
@@ -119,6 +121,83 @@ public class JUnitStepTest {
   }
 
   @Test
+  public void testGetShellCommandForJava11() throws IOException {
+    String testClass1 = "com.facebook.buck.shell.JUnitCommandTest";
+    String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
+    Set<String> testClassNames = ImmutableSet.of(testClass1, testClass2);
+
+    String vmArg1 = "-Dname1=value1";
+    String vmArg2 = "-Dname1=value2";
+    ImmutableList<String> vmArgs = ImmutableList.of(vmArg1, vmArg2);
+
+    BuildId pretendBuildId = new BuildId("pretend-build-id");
+    String buildIdArg = String.format("-Dcom.facebook.buck.buildId=%s", pretendBuildId);
+
+    Path modulePath = Paths.get("module/submodule");
+    String modulePathArg = String.format("-Dcom.facebook.buck.moduleBasePath=%s", modulePath);
+
+    Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
+    Path testRunnerClasspath = Paths.get("ant-out/classes/junit");
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    Path classpathFile = filesystem.resolve("foo");
+
+    int javaVersion = 11;
+    JUnitJvmArgs args =
+        JUnitJvmArgs.builder()
+            .setBuildId(pretendBuildId)
+            .setBuckModuleBaseSourceCodePath(modulePath)
+            .setTargetJavaVersion(javaVersion)
+            .setClasspathFile(classpathFile)
+            .setTestRunnerClasspath(testRunnerClasspath)
+            .setExtraJvmArgs(vmArgs)
+            .setTestType(TestType.JUNIT)
+            .setDirectoryForTestResults(directoryForTestResults)
+            .addAllTestClasses(testClassNames)
+            .build();
+
+    JUnitStep junit =
+        new JUnitStep(
+            filesystem,
+            /* nativeLibsEnvironment */ ImmutableMap.of(),
+            /* testRuleTimeoutMs */ Optional.empty(),
+            /* testCaseTimeoutMs */ Optional.empty(),
+            ImmutableMap.of(),
+            ImmutableList.of("/foo/bar/custom/java"),
+            args);
+
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setConsole(new TestConsole(Verbosity.ALL))
+            .setDefaultTestTimeoutMillis(5000L)
+            .build();
+    assertEquals(executionContext.getVerbosity(), Verbosity.ALL);
+    assertEquals(executionContext.getDefaultTestTimeoutMillis(), 5000L);
+
+    Path classpathArgfile = filesystem.resolve(junit.getClasspathArgfile());
+
+    List<String> observedArgs = junit.getShellCommand(executionContext);
+    MoreAsserts.assertListEquals(
+        ImmutableList.of(
+            "/foo/bar/custom/java",
+            buildIdArg,
+            modulePathArg,
+            "-Dapple.awt.UIElement=true",
+            vmArg1,
+            vmArg2,
+            "-verbose",
+            "@" + classpathArgfile,
+            FileClassPathRunner.class.getName(),
+            "com.facebook.buck.testrunner.JUnitMain",
+            "--output",
+            directoryForTestResults.toString(),
+            "--default-test-timeout",
+            "5000",
+            testClass1,
+            testClass2),
+        observedArgs);
+  }
+
+  @Test
   public void testGetEnvironmentVariables() {
     BuildId pretendBuildId = new BuildId("pretend-build-id");
     Path modulePath = Paths.get("module/submodule");
@@ -132,6 +211,7 @@ public class JUnitStepTest {
         JUnitJvmArgs.builder()
             .setBuildId(pretendBuildId)
             .setBuckModuleBaseSourceCodePath(modulePath)
+            .setTargetJavaVersion(8)
             .setClasspathFile(classpathFile)
             .setTestRunnerClasspath(testRunnerClasspath)
             .setExtraJvmArgs(ImmutableList.of())
@@ -177,11 +257,13 @@ public class JUnitStepTest {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path classpathFile = filesystem.resolve("foo");
 
+    int javaVersion = 8;
     JUnitJvmArgs args =
         JUnitJvmArgs.builder()
             .setClasspathFile(classpathFile)
             .setBuildId(pretendBuildId)
             .setBuckModuleBaseSourceCodePath(modulePath)
+            .setTargetJavaVersion(javaVersion)
             .setTestRunnerClasspath(testRunnerClasspath)
             .setDebugEnabled(true)
             .setExtraJvmArgs(vmArgs)

@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -40,8 +41,11 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkType;
+import com.facebook.buck.cxx.toolchain.nativelink.LinkableListFilter;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -82,6 +86,7 @@ public class CxxLibraryFactory {
   }
 
   public BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams metadataRuleParams,
@@ -94,7 +99,7 @@ public class CxxLibraryFactory {
       ImmutableSortedSet<BuildTarget> extraDeps,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
           transitiveCxxPreprocessorInputFunction,
-      Optional<CxxLibraryDescriptionDelegate> delegate) {
+      CxxLibraryDescriptionDelegate delegate) {
 
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
     FlavorDomain<CxxPlatform> cxxPlatforms =
@@ -113,8 +118,12 @@ public class CxxLibraryFactory {
         () ->
             platform.orElse(
                 cxxPlatforms.getValue(args.getDefaultPlatform().orElse(defaultCxxFlavor)));
+
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       CxxPlatform cxxPlatformOrDefault = cxxPlatformOrDefaultSupplier.get();
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> configuredDelegate =
+          delegate.requireDelegate(buildTarget, cxxPlatformOrDefault, graphBuilder);
+
       // XXX: This needs bundleLoader for tests..
       // TODO(T21900763): We should be using `requireObjects` instead but those would not
       // necessarily be `CxxPreprocessAndCompile` rules (e.g., Swift in `apple_library`).
@@ -130,7 +139,7 @@ public class CxxLibraryFactory {
               args,
               cxxDeps.get(graphBuilder, cxxPlatformOrDefault),
               transitiveCxxPreprocessorInputFunction,
-              delegate);
+              configuredDelegate);
       return CxxCompilationDatabase.createCompilationDatabase(
           buildTarget, projectFilesystem, objects.keySet());
     } else if (buildTarget
@@ -167,6 +176,9 @@ public class CxxLibraryFactory {
       }
 
     } else if (type.isPresent() && platform.isPresent()) {
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> configuredDelegate =
+          delegate.requireDelegate(buildTarget, platform.get(), graphBuilder);
+
       // If we *are* building a specific type of this lib, call into the type specific
       // rule builder methods.
 
@@ -190,10 +202,11 @@ public class CxxLibraryFactory {
               cxxDeps.get(graphBuilder, platform.get()),
               Linker.LinkType.SHARED,
               linkableDepType.orElse(Linker.LinkableDepType.SHARED),
+              makeLinkableListFilter(args, targetGraph),
               Optional.empty(),
               blacklist,
               transitiveCxxPreprocessorInputFunction,
-              delegate);
+              configuredDelegate);
         case SHARED_INTERFACE:
           return createSharedLibraryInterface(
               untypedBuildTarget,
@@ -213,10 +226,11 @@ public class CxxLibraryFactory {
               cxxDeps.get(graphBuilder, platform.get()),
               Linker.LinkType.MACH_O_BUNDLE,
               linkableDepType.orElse(Linker.LinkableDepType.SHARED),
+              makeLinkableListFilter(args, targetGraph),
               bundleLoader,
               blacklist,
               transitiveCxxPreprocessorInputFunction,
-              delegate);
+              configuredDelegate);
         case STATIC:
           return createStaticLibraryBuildRule(
               untypedBuildTarget,
@@ -229,7 +243,7 @@ public class CxxLibraryFactory {
               cxxDeps.get(graphBuilder, platform.get()),
               PicType.PDC,
               transitiveCxxPreprocessorInputFunction,
-              delegate);
+              configuredDelegate);
         case STATIC_PIC:
           return createStaticLibraryBuildRule(
               untypedBuildTarget,
@@ -242,7 +256,7 @@ public class CxxLibraryFactory {
               cxxDeps.get(graphBuilder, platform.get()),
               PicType.PIC,
               transitiveCxxPreprocessorInputFunction,
-              delegate);
+              configuredDelegate);
       }
       throw new RuntimeException("unhandled library build type");
     }
@@ -259,7 +273,7 @@ public class CxxLibraryFactory {
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    return new CxxLibrary(
+    return new CxxLibraryGroup(
         buildTarget,
         projectFilesystem,
         metadataRuleParams,
@@ -269,9 +283,8 @@ public class CxxLibraryFactory {
         (input, graphBuilderInner) -> {
           ImmutableList<Arg> delegateExportedLinkerFlags =
               delegate
-                  .map(
-                      d ->
-                          d.getAdditionalExportedLinkerFlags(buildTarget, graphBuilderInner, input))
+                  .requireDelegate(buildTarget, input, graphBuilderInner)
+                  .map(d -> d.getAdditionalExportedLinkerFlags())
                   .orElse(ImmutableList.of());
 
           ImmutableList<StringWithMacros> flags =
@@ -286,14 +299,7 @@ public class CxxLibraryFactory {
               .toImmutableList();
         },
         (input, graphBuilderInner) -> {
-          ImmutableList<Arg> delegatePostExportedLinkerFlags =
-              delegate
-                  .map(
-                      d ->
-                          d.getAdditionalPostExportedLinkerFlags(
-                              buildTarget, graphBuilderInner, input))
-                  .orElse(ImmutableList.of());
-
+          ImmutableList<Arg> delegatePostExportedLinkerFlags = ImmutableList.of();
           ImmutableList<StringWithMacros> flags =
               CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                   args.getExportedPostLinkerFlags(),
@@ -332,7 +338,7 @@ public class CxxLibraryFactory {
                 args.getFrameworks(),
                 args.getLibraries(),
                 transitiveCxxPreprocessorInputFunction,
-                delegate),
+                delegate.requireDelegate(buildTarget, cxxPlatform, ruleResolverInner)),
         args.getSupportedPlatformsRegex(),
         args.getFrameworks(),
         args.getLibraries(),
@@ -350,6 +356,11 @@ public class CxxLibraryFactory {
             .orElse(cxxBuckConfig.getDefaultReexportAllHeaderDependencies()),
         args.getSupportsMergedLinking().orElse(true),
         delegate);
+  }
+
+  private Optional<LinkableListFilter> makeLinkableListFilter(
+      CxxLibraryDescriptionArg args, TargetGraph targetGraph) {
+    return LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph);
   }
 
   /**
@@ -375,7 +386,7 @@ public class CxxLibraryFactory {
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
-      Optional<CxxLibraryDescriptionDelegate> delegate) {
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate) {
 
     // TODO(T21900747): Fix dependence on order of object paths
     ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
@@ -396,7 +407,7 @@ public class CxxLibraryFactory {
     builder.addAll(cxxObjects.values());
 
     Optional<ImmutableList<SourcePath>> pluginObjectPaths =
-        delegate.flatMap(p -> p.getObjectFilePaths(buildTarget, graphBuilder, cxxPlatform));
+        delegate.map(p -> p.getObjectFilePaths());
     pluginObjectPaths.ifPresent(builder::addAll);
 
     return builder.build();
@@ -413,7 +424,7 @@ public class CxxLibraryFactory {
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
-      Optional<CxxLibraryDescriptionDelegate> delegate) {
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate) {
 
     boolean shouldCreatePrivateHeadersSymlinks =
         args.getXcodePrivateHeadersSymlinks()
@@ -433,9 +444,7 @@ public class CxxLibraryFactory {
     ImmutableList.Builder<HeaderSymlinkTree> privateHeaderSymlinkTrees = ImmutableList.builder();
     privateHeaderSymlinkTrees.add(headerSymlinkTree);
     delegate.ifPresent(
-        d ->
-            d.getPrivateHeaderSymlinkTree(buildTarget, graphBuilder, cxxPlatform)
-                .ifPresent(privateHeaderSymlinkTrees::add));
+        d -> d.getPrivateHeaderSymlinkTree().ifPresent(privateHeaderSymlinkTrees::add));
 
     // Create rule to build the object files.
     ImmutableMultimap<CxxSource.Type, Arg> compilerFlags =
@@ -493,7 +502,7 @@ public class CxxLibraryFactory {
       ImmutableSet<FrameworkPath> libraries,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
           transitiveCxxPreprocessorInputFunction,
-      Optional<CxxLibraryDescriptionDelegate> delegate) {
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate) {
 
     StringWithMacrosConverter macrosConverter =
         CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
@@ -554,11 +563,12 @@ public class CxxLibraryFactory {
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
+      Optional<LinkableListFilter> linkableListFilter,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
           transitiveCxxPreprocessorInputFunction,
-      Optional<CxxLibraryDescriptionDelegate> delegate) {
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate) {
     BuildTarget buildTargetWithoutLinkerMapMode =
         LinkerMapMode.removeLinkerMapModeFlavorInTarget(
             buildTargetMaybeWithLinkerMapMode,
@@ -595,14 +605,13 @@ public class CxxLibraryFactory {
             projectFilesystem, sharedTarget, sharedLibrarySoname);
 
     ImmutableList<NativeLinkableGroup> delegateNativeLinkableGroups =
-        delegate
-            .flatMap(d -> d.getNativeLinkableExportedDeps(sharedTarget, graphBuilder, cxxPlatform))
-            .orElse(ImmutableList.of());
+        delegate.flatMap(d -> d.getNativeLinkableExportedDeps()).orElse(ImmutableList.of());
 
-    ImmutableList<NativeLinkableGroup> allNativeLinkableGroups =
+    ImmutableList<NativeLinkable> allNativeLinkables =
         RichStream.from(deps)
             .filter(NativeLinkableGroup.class)
             .concat(RichStream.from(delegateNativeLinkableGroups))
+            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
             .toImmutableList();
 
     CxxLinkOptions linkOptions =
@@ -621,8 +630,9 @@ public class CxxLibraryFactory {
         sharedLibraryPath,
         args.getLinkerExtraOutputs(),
         linkableDepType,
+        linkableListFilter,
         linkOptions,
-        allNativeLinkableGroups,
+        allNativeLinkables,
         cxxRuntimeType,
         bundleLoader,
         blacklist,
@@ -671,7 +681,6 @@ public class CxxLibraryFactory {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        graphBuilder,
         mode,
         CxxDescriptionEnhancer.parseExportedHeaders(
             buildTarget, graphBuilder, Optional.empty(), args),
@@ -715,7 +724,7 @@ public class CxxLibraryFactory {
       PicType pic,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
           transitiveCxxPreprocessorInputFunction,
-      Optional<CxxLibraryDescriptionDelegate> delegate) {
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate) {
     // Create rules for compiling the object files.
     ImmutableList<SourcePath> objects =
         requireObjects(
@@ -766,13 +775,14 @@ public class CxxLibraryFactory {
       CxxPlatform cxxPlatform,
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
-      Linker.LinkType linkType,
+      LinkType linkType,
       Linker.LinkableDepType linkableDepType,
+      Optional<LinkableListFilter> linkableListFilter,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
           transitiveCxxPreprocessorInputFunction,
-      Optional<CxxLibraryDescriptionDelegate> delegate) {
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate) {
     ImmutableList.Builder<StringWithMacros> linkerFlags = ImmutableList.builder();
 
     linkerFlags.addAll(
@@ -812,6 +822,7 @@ public class CxxLibraryFactory {
         args.getCxxRuntimeType(),
         linkType,
         linkableDepType,
+        linkableListFilter,
         bundleLoader,
         blacklist,
         transitiveCxxPreprocessorInputFunction,
@@ -853,10 +864,11 @@ public class CxxLibraryFactory {
       SharedLibraryInterfaceParams params) {
 
     NativeLinkTarget linkTarget =
-        (NativeLinkTarget)
-            graphBuilder.requireRule(baseTarget.withoutFlavors(cxxPlatform.getFlavor()));
+        ((NativeLinkTargetGroup)
+                graphBuilder.requireRule(baseTarget.withoutFlavors(cxxPlatform.getFlavor())))
+            .getTargetForPlatform(cxxPlatform);
 
-    NativeLinkTargetMode linkTargetMode = linkTarget.getNativeLinkTargetMode(cxxPlatform);
+    NativeLinkTargetMode linkTargetMode = linkTarget.getNativeLinkTargetMode();
     Preconditions.checkArgument(linkTargetMode.getType().equals(LinkType.SHARED));
 
     Linker linker = cxxPlatform.getLd().resolve(graphBuilder, baseTarget.getTargetConfiguration());
@@ -876,15 +888,14 @@ public class CxxLibraryFactory {
     // Add flag to embed an SONAME.
     String soname =
         linkTarget
-            .getNativeLinkTargetMode(cxxPlatform)
+            .getNativeLinkTargetMode()
             .getLibraryName()
             .orElse(CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(baseTarget, cxxPlatform));
     argsBuilder.addAll(StringArg.from(linker.soname(soname)));
 
     // Add the args for the root link target first.
     NativeLinkableInput input =
-        linkTarget.getNativeLinkTargetInput(
-            cxxPlatform, graphBuilder, graphBuilder.getSourcePathResolver());
+        linkTarget.getNativeLinkTargetInput(graphBuilder, graphBuilder.getSourcePathResolver());
     argsBuilder.addAll(input.getArgs());
 
     // Since we're linking against a dummy libomnibus, ignore undefined symbols.  Put this at the

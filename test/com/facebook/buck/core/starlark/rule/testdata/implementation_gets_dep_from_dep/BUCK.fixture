@@ -1,0 +1,8 @@
+load("//:defs.bzl", "dep_rule", "write_file")
+
+write_file(name = "file")
+
+dep_rule(
+    name = "with_dep",
+    dep = ":file",
+)

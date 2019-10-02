@@ -142,6 +142,15 @@ public class MavenUrlDecoder {
       case "zip":
         return ".zip";
 
+      case "so":
+        return ".so";
+
+      case "dll":
+        return ".dll";
+
+      case "dylib":
+        return ".dylib";
+
       case "src":
         return "-sources.jar";
 

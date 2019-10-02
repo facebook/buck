@@ -162,6 +162,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
@@ -450,14 +451,14 @@ public class CachingBuildEngineTest {
           this.buildContext.withArtifactCache(
               new NoopArtifactCache() {
                 @Override
-                public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+                public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
                   try {
                     Thread.sleep(500);
                   } catch (InterruptedException e) {
                     Throwables.throwIfUnchecked(e);
                     throw new RuntimeException(e);
                   }
-                  return Futures.immediateFuture(null);
+                  return Futures.immediateFuture(Unit.UNIT);
                 }
               });
 
@@ -4269,12 +4270,12 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+    public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public ListenableFuture<Void> store(
+    public ListenableFuture<Unit> store(
         ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
       throw new UnsupportedOperationException();
     }

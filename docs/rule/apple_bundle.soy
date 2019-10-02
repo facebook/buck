@@ -61,12 +61,7 @@ non-expired profile that matches the bundle id and entitlements.
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name : 'deps' /}

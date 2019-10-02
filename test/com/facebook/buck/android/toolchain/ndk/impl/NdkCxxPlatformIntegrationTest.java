@@ -23,10 +23,12 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.android.AndroidTestUtils;
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
@@ -120,12 +122,10 @@ public class NdkCxxPlatformIntegrationTest {
                 + "  compiler = %s\n"
                 + "  gcc_version = 4.9\n"
                 + "  cxx_runtime = %s\n"
-                + "  cpu_abis = "
-                + architectures
-                + "\n"
-                + "  app_platform = android-21\n",
-            compiler,
-            cxxRuntime),
+                + "  cpu_abis = %s\n"
+                + "  app_platform = android-21\n"
+                + "   ndk_version = %s\n",
+            compiler, cxxRuntime, architectures, AndroidTestUtils.TARGET_NDK_VERSION),
         ".buckconfig");
     return workspace;
   }
@@ -154,6 +154,7 @@ public class NdkCxxPlatformIntegrationTest {
 
   @Test
   public void runtimeSupportsStl() throws IOException {
+    assumeFalse(AssumeAndroidPlatform.isUnifiedHeadersAvailable());
     assumeTrue(
         "libcxx is unsupported with this ndk",
         NdkCxxPlatforms.isSupportedConfiguration(getNdkRoot(), cxxRuntime));
@@ -184,7 +185,11 @@ public class NdkCxxPlatformIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally(linkTarget);
 
     // Change the app platform and verify that our rulekey has changed.
-    workspace.writeContentsToPath("[ndk]\n  app_platform = android-17", ".buckconfig");
+    workspace.writeContentsToPath(
+        String.format(
+            "[ndk]\n  app_platform = android-17\n   ndk_version = %s\n",
+            AndroidTestUtils.TARGET_NDK_VERSION),
+        ".buckconfig");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(linkTarget);
   }

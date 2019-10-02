@@ -32,6 +32,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -47,6 +48,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -57,6 +59,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -89,9 +92,7 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
 
-    ProcessResult resultAll =
-        workspace.runBuckCommand(
-            "targets", "-c", "parser.enable_configurable_attributes=true", "//:");
+    ProcessResult resultAll = workspace.runBuckCommand("targets", "//:");
     resultAll.assertSuccess();
     assertEquals(
         ImmutableSet.of("//:A", "//:B", "//:C", "//:test-library"),
@@ -118,20 +119,40 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
-  public void testConfigurationRulesNotIncludedInOutputPath() throws IOException {
+  public void testConfigurationRulesIncludedInOutputPath() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-output", "//:");
+    result.assertSuccess();
+    assertEquals(
+        linesToText(
+            "//:A " + MorePaths.pathWithPlatformSeparators("buck-out/gen/A/A.txt"),
+            "//:B " + MorePaths.pathWithPlatformSeparators("buck-out/gen/B/B.txt"),
+            "//:C",
+            "//:test-library"),
+        result.getStdout().trim());
+  }
+
+  @Test
+  public void outputPathShownWithTargetPlatform() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "targets", "-c", "parser.enable_configurable_attributes=true", "--show-output", "//:");
+            "targets",
+            "--target-platforms",
+            "//android:linux_platform",
+            "--show-output",
+            "//android:D");
     result.assertSuccess();
     assertEquals(
         linesToText(
-            "//:A " + MorePaths.pathWithPlatformSeparators("buck-out/gen/A/A.txt"),
-            "//:B " + MorePaths.pathWithPlatformSeparators("buck-out/gen/B/B.txt"),
-            "//:test-library"),
+            "//android:D " + MorePaths.pathWithPlatformSeparators("buck-out/gen/android/D.apk")),
         result.getStdout().trim());
   }
 
@@ -215,11 +236,10 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
 
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "targets", "-c", "parser.enable_configurable_attributes=true", "--show-rulekey", "//:");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-rulekey", "//:");
     result.assertSuccess();
-    parseAndVerifyTargetsAndHashes(result.getStdout(), "//:A", "//:B", "//:test-library");
+    parseAndVerifyTargetsAndHashesWithEmptyHashes(
+        result.getStdout(), ImmutableSet.of("//:C"), "//:A", "//:B", "//:C", "//:test-library");
   }
 
   @Test
@@ -301,13 +321,7 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
 
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "targets",
-            "-c",
-            "parser.enable_configurable_attributes=true",
-            "--show-cell-path",
-            "//:");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-cell-path", "//:");
     result.assertSuccess();
     assertEquals(
         linesToText(
@@ -349,6 +363,31 @@ public class TargetsCommandIntegrationTest {
       hashes.add(parseAndVerifyTargetAndHash(line, target));
     }
     return hashes.build();
+  }
+
+  private ImmutableList<String> parseAndVerifyTargetsAndHashesWithEmptyHashes(
+      String outputLine, Set<String> targetsWithEmptyHashes, String... targets) {
+    List<String> lines =
+        Splitter.on(System.lineSeparator())
+            .splitToList(CharMatcher.whitespace().trimFrom(outputLine));
+    assertEquals(targets.length, lines.size());
+    ImmutableList.Builder<String> hashes = ImmutableList.builder();
+    for (int i = 0; i < targets.length; ++i) {
+      String line = lines.get(i);
+      String target = targets[i];
+      if (targetsWithEmptyHashes.contains(target)) {
+        hashes.add(parseAndVerifyTargetAndEmptyHash(line, target));
+      } else {
+        hashes.add(parseAndVerifyTargetAndHash(line, target));
+      }
+    }
+    return hashes.build();
+  }
+
+  private String parseAndVerifyTargetAndEmptyHash(String outputLine, String target) {
+    Preconditions.checkState(!outputLine.contains(" "));
+    assertEquals(target, outputLine);
+    return "";
   }
 
   private String parseAndVerifyTargetAndHash(String outputLine, String target) {
@@ -416,13 +455,7 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
 
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "targets",
-            "-c",
-            "parser.enable_configurable_attributes=true",
-            "--show-target-hash",
-            "//:");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-target-hash", "//:");
     result.assertSuccess();
     parseAndVerifyTargetsAndHashes(result.getStdout(), "//:A", "//:B", "//:C", "//:test-library");
   }
@@ -729,9 +762,7 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
 
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "targets", "-c", "parser.enable_configurable_attributes=true", "--json", "//:");
+    ProcessResult result = workspace.runBuckCommand("targets", "--json", "//:");
     result.assertSuccess();
 
     assertJsonMatches(workspace.getFileContents("output_path_json.js"), result.getStdout());
@@ -993,13 +1024,7 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "targets",
-            "-c",
-            "parser.enable_configurable_attributes=true",
-            "--dot",
-            "--show-rulekey",
-            "--show-transitive-rulekeys",
-            "//:");
+            "targets", "--dot", "--show-rulekey", "--show-transitive-rulekeys", "//:");
     result.assertSuccess();
     String output = result.getStdout().trim();
 

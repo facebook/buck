@@ -46,7 +46,8 @@ public class DefaultDepsAwareTaskTest {
                 () -> {
                   longAdder.increment();
                   return ImmutableSet.of();
-                }));
+                },
+                ImmutableSet::of));
     assertEquals(ImmutableSet.of(), task1.getPrereqs());
 
     assertEquals(1, longAdder.intValue());
@@ -57,7 +58,8 @@ public class DefaultDepsAwareTaskTest {
                 () -> {
                   longAdder.increment();
                   return ImmutableSet.of(task1);
-                }));
+                },
+                ImmutableSet::of));
 
     assertEquals(ImmutableSet.of(task1), ImmutableSet.copyOf(task2.getPrereqs()));
     assertEquals(2, longAdder.intValue());

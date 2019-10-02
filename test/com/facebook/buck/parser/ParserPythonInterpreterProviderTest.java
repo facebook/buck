@@ -23,6 +23,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;

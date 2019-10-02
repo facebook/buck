@@ -4,6 +4,8 @@ java_library(
     exported_deps = [
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/kotlin:kotlin-reflect",
+        "//third-party/java/kotlin:kotlin-stdlib",
     ],
     tests = [
         "//test/com/facebook/buck/util/json:json",
@@ -19,5 +21,6 @@ java_library(
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-datatype-guava",
         "//third-party/java/jackson:jackson-datatype-jdk8",
+        "//third-party/java/jackson:jackson-module-kotlin",
     ],
 )

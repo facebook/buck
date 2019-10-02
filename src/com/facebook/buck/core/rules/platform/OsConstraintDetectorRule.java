@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.HostConstraintDetector;
 import com.facebook.buck.core.model.platform.ProvidesHostConstraintDetector;
 import com.facebook.buck.core.model.platform.impl.OsConstraintDetector;
@@ -24,17 +24,17 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 /** A configuration rule that represents {@code os_constraint_detector} target. */
 public class OsConstraintDetectorRule implements ConfigurationRule, ProvidesHostConstraintDetector {
 
-  private final UnconfiguredBuildTargetView buildTarget;
+  private final BuildTarget buildTarget;
   private final OsConstraintDetector osConstraintDetector;
 
   public OsConstraintDetectorRule(
-      UnconfiguredBuildTargetView buildTarget, OsConstraintDetector osConstraintDetector) {
+      BuildTarget buildTarget, OsConstraintDetector osConstraintDetector) {
     this.buildTarget = buildTarget;
     this.osConstraintDetector = osConstraintDetector;
   }
 
   @Override
-  public UnconfiguredBuildTargetView getBuildTarget() {
+  public BuildTarget getBuildTarget() {
     return buildTarget;
   }
 

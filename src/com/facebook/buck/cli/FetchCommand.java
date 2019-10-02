@@ -38,8 +38,8 @@ import com.facebook.buck.file.HttpArchive;
 import com.facebook.buck.file.HttpFile;
 import com.facebook.buck.file.RemoteFile;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -80,7 +80,7 @@ public class FetchCommand extends BuildCommand {
         TargetGraphCreationResult result =
             params
                 .getParser()
-                .buildTargetGraphWithoutConfigurationTargets(
+                .buildTargetGraphWithoutTopLevelConfigurationTargets(
                     createParsingContext(params.getCell(), pool.getListeningExecutorService())
                         .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),

@@ -17,6 +17,7 @@
 package com.facebook.buck.manifestservice;
 
 import com.facebook.buck.artifact_cache.thrift.Manifest;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 
@@ -24,14 +25,14 @@ import java.io.Closeable;
 public interface ManifestService extends Closeable {
 
   /** Appends one more entry to the manifest. Creates a new one if it does not already exist. */
-  ListenableFuture<Void> appendToManifest(Manifest manifest);
+  ListenableFuture<Unit> appendToManifest(Manifest manifest);
 
   /** Fetch the current value of the Manifest. An empty list is returned if no value is present. */
   ListenableFuture<Manifest> fetchManifest(String manifestKey);
 
   /** Deletes an existing Manifest. */
-  ListenableFuture<Void> deleteManifest(String manifestKey);
+  ListenableFuture<Unit> deleteManifest(String manifestKey);
 
   /** Sets the Manifest for key. Overwrites existing one if it already exists. */
-  ListenableFuture<Void> setManifest(Manifest manifest);
+  ListenableFuture<Unit> setManifest(Manifest manifest);
 }

@@ -24,7 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.AbstractParserConfig.AllowSymlinks;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -57,6 +57,7 @@ class SymlinkCache {
    */
   private final Map<Path, Optional<Path>> symlinkExistenceCache = new ConcurrentHashMap<>();
 
+  // TODO(T47190884): This should use CanonicalCellName
   private final Map<Path, ParserConfig.AllowSymlinks> cellSymlinkAllowability =
       new ConcurrentHashMap<>();
 
@@ -96,7 +97,7 @@ class SymlinkCache {
       return;
     }
 
-    AllowSymlinks allowSymlinks =
+    ParserConfig.AllowSymlinks allowSymlinks =
         Objects.requireNonNull(cellSymlinkAllowability.get(node.getBuildTarget().getCellPath()));
     if (allowSymlinks == ParserConfig.AllowSymlinks.FORBID) {
       throw new HumanReadableException(

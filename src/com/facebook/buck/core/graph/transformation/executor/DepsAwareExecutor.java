@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import java.util.function.Supplier;
 
 /**
  * A specialized Executor that executes {@link DepsAwareTask}. This executor will attempt to
@@ -53,16 +52,13 @@ public interface DepsAwareExecutor<ResultType, TaskType extends DepsAwareTask<Re
   /** @return true iff {@link #close()} has been called */
   boolean isShutdown();
 
-  /** @return a new {@link DepsAwareTask} that can be executed in this executor */
-  TaskType createTask(Callable<ResultType> callable, Supplier<ImmutableSet<TaskType>> depsSupplier);
-
   /** @return a new {@link DepsAwareTask} with two stages of dependency computation */
   TaskType createThrowingTask(
       Callable<ResultType> callable,
       ThrowingSupplier<ImmutableSet<TaskType>, Exception> prereqSupplier,
       ThrowingSupplier<ImmutableSet<TaskType>, Exception> depsSupplier);
 
-  /** @see #createTask(Callable, Supplier) */
+  /** @return a new {@link DepsAwareTask} that can be executed in this executor */
   TaskType createTask(Callable<ResultType> callable);
 
   /**

@@ -16,15 +16,16 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -83,6 +84,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
   private static final Logger LOG = Logger.get(AbstractCxxSourceRuleFactory.class);
   private static final String COMPILE_FLAVOR_PREFIX = "compile-";
+  private static final String OPTIMIZE_FLAVOR_PREFIX = "optimize-";
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       InternalFlavor.of("preprocessor-deps");
 
@@ -264,11 +266,17 @@ abstract class AbstractCxxSourceRuleFactory {
     return getOutputName(name) + "." + getCxxPlatform().getObjectFileExtension();
   }
 
-  /** @return the output path for an object file compiled from the source with the given name. */
-  @VisibleForTesting
-  Path getCompileOutputPath(BuildTarget target, String name) {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), target, "%s")
-        .resolve(getCompileOutputName(name));
+  /** @return a build target for a {@link CxxThinLTOOpt} rule for the source with the given name. */
+  public BuildTarget createOptimizeBuildTarget(String name) {
+    String outputName = CxxFlavorSanitizer.sanitize(getCompileFlavorSuffix(name));
+    return getBaseBuildTarget()
+        .withAppendedFlavors(
+            getCxxPlatform().getFlavor(),
+            InternalFlavor.of(
+                String.format(
+                    OPTIMIZE_FLAVOR_PREFIX + "%s%s",
+                    getPicType() == PicType.PIC ? "pic-" : "",
+                    outputName)));
   }
 
   /**
@@ -341,6 +349,54 @@ abstract class AbstractCxxSourceRuleFactory {
 
   private Iterable<Arg> getRuleCompileFlags(CxxSource.Type type) {
     return getCompilerFlags().get(type);
+  }
+
+  /**
+   * @return a {@link CxxThinLTOOpt} rule that handles the opt phase of ThinLTO with the given
+   *     {@link CxxSource}. thinIndicesRoot points to the root of the thin index artifacts generated
+   *     in the ThinLTO indexing step. See {@link CxxThinLTOIndex}.
+   */
+  private CxxThinLTOOpt createThinOptBuildRule(
+      String name, CxxSource source, SourcePath thinIndicesRoot) {
+
+    Preconditions.checkArgument(CxxSourceTypes.isOptimizableType(source.getType()));
+
+    BuildTarget target = createOptimizeBuildTarget(name);
+
+    Compiler compiler =
+        CxxSourceTypes.getCompiler(getCxxPlatform(), source.getType())
+            .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
+
+    CxxToolFlags flags =
+        CxxToolFlags.explicitBuilder()
+            // If we're using pic, add in the appropriate flag.
+            .addAllPlatformFlags(StringArg.from(getPicType().getFlags(compiler)))
+            // Add in the platform specific compiler flags.
+            .addAllPlatformFlags(getPlatformCompileFlags(source.getType()))
+            // Add custom compiler flags.
+            .addAllRuleFlags(getRuleCompileFlags(source.getType()))
+            // Add custom per-file flags.
+            .addAllRuleFlags(sanitizedArgs(source.getFlags()))
+            .addRuleFlags(new CxxThinLTOIndexArg(thinIndicesRoot, source.getPath()))
+            .build();
+
+    CompilerDelegate compilerDelegate =
+        new CompilerDelegate(
+            getCxxPlatform().getCompilerDebugPathSanitizer(),
+            compiler,
+            flags,
+            getCxxPlatform().getUseArgFile());
+
+    return CxxThinLTOOpt.optimize(
+        target,
+        getProjectFilesystem(),
+        getActionGraphBuilder(),
+        compilerDelegate,
+        getCompileOutputName(name),
+        source.getPath(),
+        thinIndicesRoot,
+        source.getType(),
+        getSanitizer());
   }
 
   /**
@@ -482,6 +538,37 @@ abstract class AbstractCxxSourceRuleFactory {
                       preprocessorDelegateValue.getPreprocessorDelegate(),
                       inferConfig);
                 });
+  }
+
+  public ImmutableMap<CxxThinLTOOpt, SourcePath> requireThinOptRules(
+      ImmutableMap<String, CxxSource> sources, SourcePath thinIndicesRoot) {
+
+    ImmutableMap.Builder<BuildTarget, Function<BuildTarget, BuildRule>> mappings =
+        ImmutableMap.builder();
+
+    sources.forEach(
+        (name, source) -> {
+          BuildTarget target = createOptimizeBuildTarget(name);
+          mappings.put(
+              target,
+              ignored -> {
+                Preconditions.checkState(CxxSourceTypes.isOptimizableType(source.getType()));
+                CxxThinLTOOpt rule = createThinOptBuildRule(name, source, thinIndicesRoot);
+                Preconditions.checkState(
+                    rule.getInput().equals(source.getPath()),
+                    "Hash collision for %s; a build rule would have been ignored.",
+                    name);
+                return rule;
+              });
+        });
+
+    ImmutableSortedMap<BuildTarget, BuildRule> computedRules =
+        getActionGraphBuilder().computeAllIfAbsent(mappings.build());
+
+    return computedRules.values().stream()
+        .map(CxxThinLTOOpt.class::cast)
+        .collect(
+            ImmutableMap.toImmutableMap(Function.identity(), CxxThinLTOOpt::getSourcePathToOutput));
   }
 
   /**
@@ -810,10 +897,17 @@ abstract class AbstractCxxSourceRuleFactory {
         hasher.putPattern((Pattern) val);
       } else if (val instanceof byte[]) {
         hasher.putBytes((byte[]) val);
+      } else if (val instanceof BuildTarget) {
+        hasher.putBuildTarget((BuildTarget) val);
       } else {
         throw new RuntimeException("Unsupported value type: " + val.getClass());
       }
       return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<String> setAction(Action action) {
+      throw new IllegalStateException();
     }
 
     @Override
@@ -825,6 +919,11 @@ abstract class AbstractCxxSourceRuleFactory {
     protected HashBuilder setAddsToRuleKey(AddsToRuleKey appendable) {
       hasher.putString(commandHashCache.apply(appendable));
       return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<String> setArtifact(Artifact artifact) {
+      return setSourcePath(artifact.asBound().getSourcePath());
     }
 
     @Override

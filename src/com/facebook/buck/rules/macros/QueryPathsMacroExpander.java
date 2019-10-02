@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -50,7 +49,6 @@ public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro>
   @Override
   public Arg expandFrom(
       BuildTarget target,
-      CellPathResolver cellNames,
       ActionGraphBuilder graphBuilder,
       QueryPathsMacro input,
       QueryResults precomputedWork) {
@@ -72,7 +70,7 @@ public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro>
             .filter(Objects::nonNull));
   }
 
-  private class QueriedPathsArg implements Arg {
+  private static class QueriedPathsArg implements Arg {
     @AddToRuleKey private final ImmutableList<SourcePath> queriedPaths;
 
     public QueriedPathsArg(Stream<SourcePath> queriedPaths) {

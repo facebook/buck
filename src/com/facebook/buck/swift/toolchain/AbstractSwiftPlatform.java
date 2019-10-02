@@ -35,9 +35,17 @@ interface AbstractSwiftPlatform {
 
   /**
    * @return A set of directories which contain the Swift runtime as dynamic libraries. On macOS,
-   *     the directory will contain libs like libswiftCore.dylib and others.
+   *     the directory will contain libs like libswiftCore.dylib and others. The libs will be passed
+   *     to swift-stdlib-tool for inclusion in the app bundle.
    */
-  Set<Path> getSwiftRuntimePaths();
+  Set<Path> getSwiftRuntimePathsForBundling();
+
+  /**
+   * @return A set of directories which contain the Swift runtime as dynamic libraries. On macOS,
+   *     the directory will contain the .tbd libs like libSwiftCore.tbd and others. The libs will be
+   *     passed during the link step.
+   */
+  Set<Path> getSwiftRuntimePathsForLinking();
 
   /**
    * @return A set of directories which contain the Swift runtime as static libraries. On macOS, the

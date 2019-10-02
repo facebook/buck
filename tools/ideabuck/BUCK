@@ -54,7 +54,6 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/event/external:external_lib",
-        "//third-party/java/android:ddmlib",
         "//third-party/java/gson:gson",
         "//third-party/java/ini4j:ini4j",
         "//third-party/java/jackson:jackson-annotations",

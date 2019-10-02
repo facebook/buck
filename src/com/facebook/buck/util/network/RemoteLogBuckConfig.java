@@ -61,6 +61,6 @@ public class RemoteLogBuckConfig {
   }
 
   public String getRepository() {
-    return buckConfig.getValue("cache", "repository").orElse("unknown");
+    return buckConfig.getValue("log", "repository").orElse("unknown");
   }
 }

@@ -263,6 +263,11 @@ public class DoctorCommandIntegrationTest {
 
   @Test
   public void testJsonUpload() throws Exception {
+
+    String reportId = "123456789";
+    String rageUrl = "https://www.webpage.com/buck/rage/" + reportId;
+    String rageMsg = "This is supposed to be JSON.";
+
     try (HttpdForTests httpd = new HttpdForTests()) {
       httpd.addHandler(
           new AbstractHandler() {
@@ -284,8 +289,8 @@ public class DoctorCommandIntegrationTest {
                   new ImmutableDoctorJsonResponse(
                       /* isRequestSuccessful */ true,
                       /* errorMessage */ Optional.empty(),
-                      /* rageUrl */ Optional.of("http://remoteUrlToVisit"),
-                      /* message */ Optional.of("This is supposed to be JSON."));
+                      /* rageUrl */ Optional.of(rageUrl),
+                      /* message */ Optional.of(rageMsg));
               try (DataOutputStream out = new DataOutputStream(httpResponse.getOutputStream())) {
                 ObjectMappers.WRITER.writeValue((DataOutput) out, json);
               }
@@ -294,7 +299,7 @@ public class DoctorCommandIntegrationTest {
       httpd.start();
 
       DoctorConfig doctorConfig =
-          createDoctorConfig(httpd.getRootUri().getPort(), "", DoctorProtocolVersion.SIMPLE);
+          createDoctorConfig(httpd.getRootUri().getPort(), "", DoctorProtocolVersion.JSON);
       DoctorReportHelper helper =
           createDoctorHelper(workspace, userInputFixture.getUserInput(), doctorConfig);
       BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
@@ -307,10 +312,10 @@ public class DoctorCommandIntegrationTest {
               userInputFixture.getUserInput(),
               doctorConfig);
 
-      String response =
-          "{\"requestSuccessful\":true,\"rageUrl\":\"http://remoteUrlToVisit\",\"message\":\"This is supposed to be JSON.\"}";
-      assertEquals(response, report.getReportSubmitLocation().get());
-      assertEquals(response, report.getReportSubmitMessage().get());
+      assertTrue(report.getIsRequestSuccessful().get());
+      assertEquals(rageUrl, report.getReportSubmitLocation().get());
+      assertEquals(rageMsg, report.getReportSubmitMessage().get());
+      assertEquals(reportId, report.getReportId().get());
     }
   }
 
@@ -352,7 +357,12 @@ public class DoctorCommandIntegrationTest {
             .collect(Collectors.toList()),
         Matchers.hasItem(Matchers.endsWith("extra.txt")));
     assertThat(
-        reporter.getDefectReport().getUserLocalConfiguration().getConfigOverrides().get("foo.bar"),
+        reporter
+            .getDefectReport()
+            .getUserLocalConfiguration()
+            .get()
+            .getConfigOverrides()
+            .get("foo.bar"),
         Matchers.equalTo("baz"));
   }
 
@@ -438,5 +448,52 @@ public class DoctorCommandIntegrationTest {
         }
       }
     };
+  }
+
+  @Test
+  public void testRedundantConfigArgs() throws Exception {
+    DoctorConfig doctorConfig =
+        createDoctorConfig(httpd.getRootUri().getPort(), "", DoctorProtocolVersion.SIMPLE);
+    DoctorReportHelper helper =
+        createDoctorHelper(workspace, userInputFixture.getUserInput(), doctorConfig);
+    BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
+
+    Path machineLog =
+        filesystem.resolve(BUILD_COMMAND_DIR_PATH + BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
+    Path logDir = machineLog.getParent();
+
+    filesystem.deleteFileAtPathIfExists(machineLog);
+    filesystem.move(logDir.resolve("buck-machine-log_duplicate_cmd_args"), machineLog);
+
+    Optional<BuildLogEntry> entry =
+        helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
+
+    Console console = new TestConsole();
+    DoctorTestUtils.CapturingDefectReporter reporter =
+        new DoctorTestUtils.CapturingDefectReporter();
+    DoctorInteractiveReport report =
+        new DoctorInteractiveReport(
+            reporter,
+            filesystem,
+            console,
+            userInputFixture.getUserInput(),
+            Optional.empty(),
+            TestBuildEnvironmentDescription.INSTANCE,
+            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+            doctorConfig,
+            new DefaultExtraInfoCollector(
+                doctorConfig, filesystem, new DefaultProcessExecutor(console)),
+            ImmutableSet.of(entry.get()),
+            Optional.empty());
+    report.collectAndSubmitResult();
+
+    assertThat(
+        reporter
+            .getDefectReport()
+            .getUserLocalConfiguration()
+            .get()
+            .getConfigOverrides()
+            .get("foo.bar"),
+        Matchers.equalTo("baz2"));
   }
 }

@@ -31,6 +31,7 @@ import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -68,6 +69,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 public class KotlincToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
 
@@ -81,9 +83,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
   private final ImmutableSortedSet<Path> kotlinHomeLibraries;
+  @Nullable private final Path abiGenerationPlugin;
 
-  private static final String COMPILER_BUILTINS = "-Xadd-compiler-builtins";
-  private static final String LOAD_BUILTINS_FROM = "-Xload-builtins-from-dependencies";
   private static final String PLUGIN = "-P";
   private static final String APT_MODE = "aptMode=";
   private static final String X_PLUGIN_ARG = "-Xplugin=";
@@ -112,6 +113,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   KotlincToJarStepFactory(
       Kotlinc kotlinc,
       ImmutableSortedSet<Path> kotlinHomeLibraries,
+      @Nullable Path abiGenerationPlugin,
       ImmutableList<String> extraKotlincArguments,
       ImmutableList<SourcePath> kotlincPlugins,
       ImmutableList<SourcePath> friendPaths,
@@ -122,6 +124,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       JavacOptions javacOptions) {
     this.kotlinc = kotlinc;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
+    this.abiGenerationPlugin = abiGenerationPlugin;
     this.extraKotlincArguments = extraKotlincArguments;
     this.kotlincPlugins = kotlincPlugins;
     this.friendPaths = friendPaths;
@@ -240,6 +243,23 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               ZipCompressionLevel.DEFAULT,
               tmpFolder));
 
+      ImmutableList.Builder<String> extraArguments =
+          ImmutableList.<String>builder()
+              .addAll(extraKotlincArguments)
+              .add(friendPathsArg)
+              .addAll(getKotlincPluginsArgs(resolver))
+              .add(NO_STDLIB)
+              .add(NO_REFLECT)
+              .add(VERBOSE);
+
+      Path tmpSourceAbiFolder;
+      if (abiGenerationPlugin != null) {
+        tmpSourceAbiFolder = JavaAbis.getTmpGenPathForSourceAbi(projectFilesystem, invokingRule);
+        extraArguments.add("-Xplugin=" + abiGenerationPlugin);
+        extraArguments.add(
+            "-P", "plugin:org.jetbrains.kotlin.jvm.abi:outputDir=" + tmpSourceAbiFolder);
+      }
+
       steps.add(
           new KotlincStep(
               invokingRule,
@@ -248,17 +268,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               pathToSrcsList,
               allClasspaths,
               kotlinc,
-              ImmutableList.<String>builder()
-                  .addAll(extraKotlincArguments)
-                  .add(friendPathsArg)
-                  .addAll(getKotlincPluginsArgs(resolver))
-                  .add(NO_STDLIB)
-                  .add(NO_REFLECT)
-                  .add(COMPILER_BUILTINS)
-                  .add(LOAD_BUILTINS_FROM)
-                  .add(VERBOSE)
-                  .add()
-                  .build(),
+              extraArguments.build(),
               projectFilesystem,
               Optional.of(parameters.getOutputPaths().getWorkingDirectory())));
 
@@ -402,8 +412,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .add(friendPathsArg)
                 .add(MODULE_NAME)
                 .add(invokingRule.getShortNameAndFlavorPostfix())
-                .add(COMPILER_BUILTINS)
-                .add(LOAD_BUILTINS_FROM)
                 .add(PLUGIN)
                 .add(KAPT3_PLUGIN + APT_MODE + "stubs," + join)
                 .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath(resolver))
@@ -431,8 +439,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .add(friendPathsArg)
                 .add(MODULE_NAME)
                 .add(invokingRule.getShortNameAndFlavorPostfix())
-                .add(COMPILER_BUILTINS)
-                .add(LOAD_BUILTINS_FROM)
                 .add(PLUGIN)
                 .add(KAPT3_PLUGIN + APT_MODE + "apt," + join)
                 .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath(resolver))

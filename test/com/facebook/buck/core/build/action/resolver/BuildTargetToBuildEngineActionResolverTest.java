@@ -17,6 +17,7 @@ package com.facebook.buck.core.build.action.resolver;
 
 import static org.junit.Assert.assertSame;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
@@ -25,7 +26,9 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -42,11 +45,13 @@ public class BuildTargetToBuildEngineActionResolverTest {
             TargetGraphFactory.newInstance(FakeTargetNodeBuilder.newBuilder(target).build()),
             new TargetNodeToBuildRuleTransformer() {
               @Override
-              public <T> BuildRule transform(
+              public <T extends ConstructorArg> BuildRule transform(
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
+                  ConfigurationRuleRegistry configurationRuleRegistry,
                   ActionGraphBuilder graphBuilder,
-                  TargetNode<T> targetNode) {
+                  TargetNode<T> targetNode,
+                  ProviderInfoCollection providerInfoCollection) {
                 return rule;
               }
             });

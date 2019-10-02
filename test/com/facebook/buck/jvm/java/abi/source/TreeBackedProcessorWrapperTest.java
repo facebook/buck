@@ -147,8 +147,10 @@ public class TreeBackedProcessorWrapperTest {
     testCompiler.setAllowCompilationErrors(true);
     runTestProcessor(
         (annotations, roundEnv) -> {
-          messager.printMessage(
-              Diagnostic.Kind.ERROR, "Foo", elements.getTypeElement("com.example.buck.Foo"));
+          if (!roundEnv.processingOver()) {
+            messager.printMessage(
+                Diagnostic.Kind.ERROR, "Foo", elements.getTypeElement("com.example.buck.Foo"));
+          }
           return false;
         });
 
@@ -186,7 +188,7 @@ public class TreeBackedProcessorWrapperTest {
 
               @Override
               public SourceVersion getSupportedSourceVersion() {
-                return SourceVersion.RELEASE_8;
+                return SourceVersion.latestSupported();
               }
 
               @Override

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.concurrent.Callable;
@@ -76,13 +77,13 @@ public class WeightedListeningExecutorServiceTest {
         new WeightedListeningExecutorService(
             semaphore, ResourceAmounts.of(1, 0, 0, 0), wrappedService);
     AtomicBoolean flag = new AtomicBoolean(false);
-    ListenableFuture<Void> future =
+    ListenableFuture<Unit> future =
         service.submit(
-            new Callable<Void>() {
+            new Callable<Unit>() {
               @Override
-              public Void call() {
+              public Unit call() {
                 flag.set(true);
-                return null;
+                return Unit.UNIT;
               }
             });
     assertFalse(future.isDone());
@@ -98,11 +99,11 @@ public class WeightedListeningExecutorServiceTest {
       WeightedListeningExecutorService service, ResourceAmounts amounts) {
     AtomicBoolean bool = new AtomicBoolean(false);
     service.submit(
-        new Callable<Void>() {
+        new Callable<Unit>() {
           @Override
-          public Void call() {
+          public Unit call() {
             bool.set(true);
-            return null;
+            return Unit.UNIT;
           }
         },
         amounts);

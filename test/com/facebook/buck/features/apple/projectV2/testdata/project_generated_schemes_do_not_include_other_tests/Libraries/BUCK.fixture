@@ -1,0 +1,92 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+apple_binary(
+    name = "TestDepBinary",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    deps = [
+        ":Dep1",
+        ":Dep2",
+        ":Dep3",
+    ],
+)
+
+apple_bundle(
+    name = "TestDep",
+    binary = ":TestDepBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [":TestDepBinary"],
+)
+
+apple_library(
+    name = "Dep1",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    tests = [":Dep1Tests"],
+    visibility = ["PUBLIC"],
+    deps = [],
+)
+
+apple_library(
+    name = "Dep2",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    tests = [":Dep2Tests"],
+    visibility = ["PUBLIC"],
+    deps = [],
+)
+
+apple_library(
+    name = "Dep3",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    tests = [":Dep3Tests"],
+    visibility = ["PUBLIC"],
+    deps = [],
+)
+
+apple_test(
+    name = "Dep1Tests",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    info_plist = "Test.plist",
+    deps = [
+        ":Dep1",
+    ],
+)
+
+apple_test(
+    name = "Dep2Tests",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    info_plist = "Test.plist",
+    deps = [
+        ":Dep2",
+    ],
+)
+
+apple_test(
+    name = "Dep3Tests",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    info_plist = "Test.plist",
+    deps = [
+        ":Dep3",
+    ],
+)
+
+xcode_workspace_config(
+    name = "workspace",
+    src_target = ":TestDep",
+)

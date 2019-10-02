@@ -35,12 +35,7 @@ A <code>java_test()</code> rule is used to define a set of
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'srcs' /}
@@ -150,6 +145,8 @@ A <code>java_test()</code> rule is used to define a set of
   This can be useful if some dependencies are Android-only and won't build on the default platform.
   {/param}
 {/call}
+
+{call test_common.contacts_arg /}
 
 {call buck.arg}
   {param name: 'vm_args' /}

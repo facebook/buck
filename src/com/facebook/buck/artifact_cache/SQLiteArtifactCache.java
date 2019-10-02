@@ -32,6 +32,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.sqlite.RetryBusyHandler;
 import com.facebook.buck.util.sqlite.SQLiteUtils;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
@@ -236,17 +237,17 @@ public class SQLiteArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath content) {
+  public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath content) {
     if (!getCacheReadMode().isWritable()) {
       return Futures.immediateFuture(null);
     }
 
-    ListenableFuture<Void> metadataResult = Futures.immediateFuture(null);
+    ListenableFuture<Unit> metadataResult = Futures.immediateFuture(null);
     if (!info.getMetadata().isEmpty()) {
       metadataResult = storeMetadata(info);
     }
 
-    ListenableFuture<Void> contentResult = Futures.immediateFuture(null);
+    ListenableFuture<Unit> contentResult = Futures.immediateFuture(null);
     if (!info.getMetadata().containsKey(TwoLevelArtifactCacheDecorator.METADATA_KEY)) {
       contentResult = storeContent(info.getRuleKeys(), content);
     }
@@ -268,7 +269,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
     throw new RuntimeException("Delete operation is not yet supported");
   }
 
-  private ListenableFuture<Void> storeMetadata(ArtifactInfo info) {
+  private ListenableFuture<Unit> storeMetadata(ArtifactInfo info) {
     ImmutableMap<String, String> metadata = info.getMetadata();
 
     // verify that all metadata keys are valid
@@ -288,7 +289,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
     return Futures.immediateFuture(null);
   }
 
-  private ListenableFuture<Void> storeContent(
+  private ListenableFuture<Unit> storeContent(
       ImmutableSet<RuleKey> contentHashes, BorrowablePath content) {
     try {
       ImmutableSet<RuleKey> toStore = notPreexisting(contentHashes);
@@ -400,7 +401,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
 
   /** Removes metadata older than a computed eviction time. */
   @VisibleForTesting
-  ListenableFuture<Void> removeOldMetadata() {
+  ListenableFuture<Unit> removeOldMetadata() {
     Timestamp evictionTime = Timestamp.from(Instant.now().minus(DEFAULT_EVICTION_TIME));
     try {
       int deleted = db.deleteMetadata(evictionTime);
@@ -414,7 +415,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
 
   /** Deletes files that haven't been accessed recently from the directory cache. */
   @VisibleForTesting
-  ListenableFuture<Void> removeOldContent() {
+  ListenableFuture<Unit> removeOldContent() {
     if (!maxCacheSizeBytes.isPresent()) {
       return Futures.immediateFuture(null);
     }

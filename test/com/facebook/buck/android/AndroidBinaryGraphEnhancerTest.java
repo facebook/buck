@@ -21,6 +21,12 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA8_
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -82,7 +88,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class AndroidBinaryGraphEnhancerTest {
@@ -195,8 +200,9 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.D8,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
-            false);
+            ImmutableSortedSet::of,
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -241,36 +247,31 @@ public class AndroidBinaryGraphEnhancerTest {
         (DexProducedFromJavaLibrary)
             graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep2#d8"));
     assertNotNull(javaDep2DexRule);
-    assertThat(javaDep2DexRule.getDesugarDeps(), Matchers.empty());
+    assertThat(javaDep2DexRule.getDesugarDeps(), empty());
     assertThat(
         javaDep2DexRule.getBuildDeps(),
-        Matchers.allOf(
-            Matchers.not(Matchers.hasItem(javaDep2Abi)),
-            Matchers.not(Matchers.hasItem(javaDep1Abi))));
+        allOf(not(hasItem(javaDep2Abi)), not(hasItem(javaDep1Abi))));
 
     // dep1 should have only dep1 abi dependency
     DexProducedFromJavaLibrary javaDep1DexRule =
         (DexProducedFromJavaLibrary)
             graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep1#d8"));
     assertNotNull(javaDep1DexRule);
-    assertThat(javaDep1DexRule.getDesugarDeps(), Matchers.hasSize(1));
+    assertThat(javaDep1DexRule.getDesugarDeps(), hasSize(1));
+    assertThat(javaDep1DexRule.getDesugarDeps(), hasItem(javaDep2Abi.getSourcePathToOutput()));
     assertThat(
-        javaDep1DexRule.getDesugarDeps(), Matchers.hasItem(javaDep2Abi.getSourcePathToOutput()));
-    assertThat(
-        javaDep1DexRule.getBuildDeps(),
-        Matchers.allOf(Matchers.hasItem(javaDep2Abi), Matchers.not(Matchers.hasItem(javaDep1Abi))));
+        javaDep1DexRule.getBuildDeps(), allOf(hasItem(javaDep2Abi), not(hasItem(javaDep1Abi))));
 
     // lib should have both dep1 and dep2 abi dependencies
     DexProducedFromJavaLibrary javaLibDexRule =
         (DexProducedFromJavaLibrary)
             graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:lib#d8"));
     assertNotNull(javaLibDexRule);
-    assertThat(javaLibDexRule.getDesugarDeps(), Matchers.hasSize(2));
+    assertThat(javaLibDexRule.getDesugarDeps(), hasSize(2));
     assertThat(
         javaLibDexRule.getDesugarDeps(),
-        Matchers.hasItems(
-            javaDep1Abi.getSourcePathToOutput(), javaDep2Abi.getSourcePathToOutput()));
-    assertThat(javaLibDexRule.getBuildDeps(), Matchers.hasItems(javaDep1Abi, javaDep2Abi));
+        hasItems(javaDep1Abi.getSourcePathToOutput(), javaDep2Abi.getSourcePathToOutput()));
+    assertThat(javaLibDexRule.getBuildDeps(), hasItems(javaDep1Abi, javaDep2Abi));
   }
 
   /**
@@ -381,8 +382,9 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.D8,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
-            false);
+            ImmutableSortedSet::of,
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -427,36 +429,29 @@ public class AndroidBinaryGraphEnhancerTest {
         (DexProducedFromJavaLibrary)
             graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep2#d8"));
     assertNotNull(javaDep2DexRule);
-    assertThat(javaDep2DexRule.getDesugarDeps(), Matchers.nullValue());
+    assertThat(javaDep2DexRule.getDesugarDeps(), empty());
     assertThat(
         javaDep2DexRule.getBuildDeps(),
-        Matchers.allOf(
-            Matchers.not(Matchers.hasItem(javaDep2Abi)),
-            Matchers.not(Matchers.hasItem(javaDep1Abi))));
+        allOf(not(hasItem(javaDep2Abi)), not(hasItem(javaDep1Abi))));
 
     // dep1 should have only dep1 abi dependency
     DexProducedFromJavaLibrary javaDep1DexRule =
         (DexProducedFromJavaLibrary)
             graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep1#d8"));
     assertNotNull(javaDep1DexRule);
-    assertThat(javaDep1DexRule.getDesugarDeps(), Matchers.nullValue());
+    assertThat(javaDep1DexRule.getDesugarDeps(), empty());
     assertThat(
         javaDep1DexRule.getBuildDeps(),
-        Matchers.allOf(
-            Matchers.not(Matchers.hasItem(javaDep2Abi)),
-            Matchers.not(Matchers.hasItem(javaDep1Abi))));
+        allOf(not(hasItem(javaDep2Abi)), not(hasItem(javaDep1Abi))));
 
     // lib should have both dep1 and dep2 abi dependencies
     DexProducedFromJavaLibrary javaLibDexRule =
         (DexProducedFromJavaLibrary)
             graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:lib#d8"));
     assertNotNull(javaLibDexRule);
-    assertThat(javaLibDexRule.getDesugarDeps(), Matchers.nullValue());
+    assertThat(javaLibDexRule.getDesugarDeps(), empty());
     assertThat(
-        javaLibDexRule.getBuildDeps(),
-        Matchers.allOf(
-            Matchers.not(Matchers.hasItem(javaDep2Abi)),
-            Matchers.not(Matchers.hasItem(javaDep1Abi))));
+        javaLibDexRule.getBuildDeps(), allOf(not(hasItem(javaDep2Abi)), not(hasItem(javaDep1Abi))));
   }
 
   public static ToolchainProvider createToolchainProviderForAndroidWithJava8() {
@@ -589,8 +584,9 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
-            false);
+            ImmutableSortedSet::of,
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -641,12 +637,12 @@ public class AndroidBinaryGraphEnhancerTest {
         "There should be a #dex rule for dep1 and lib, but not dep2 because it is in the no_dx "
             + "list.  And we should depend on uber_r_dot_java",
         Iterables.transform(dexMergeRule.getBuildDeps(), BuildRule::getBuildTarget),
-        Matchers.allOf(
-            Matchers.not(Matchers.hasItem(javaDep1BuildTarget)),
-            Matchers.hasItem(javaDep1DexBuildTarget),
-            Matchers.not(Matchers.hasItem(javaDep2BuildTarget)),
-            Matchers.not(Matchers.hasItem(javaDep2DexBuildTarget)),
-            Matchers.hasItem(javaLibDexBuildTarget)));
+        allOf(
+            not(hasItem(javaDep1BuildTarget)),
+            hasItem(javaDep1DexBuildTarget),
+            not(hasItem(javaDep2BuildTarget)),
+            not(hasItem(javaDep2DexBuildTarget)),
+            hasItem(javaLibDexBuildTarget)));
   }
 
   @Test
@@ -740,8 +736,9 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
-            false);
+            ImmutableSortedSet::of,
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     // Verify that android_build_config() was processed correctly.
@@ -875,8 +872,9 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
-            false);
+            ImmutableSortedSet::of,
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
     graphEnhancer.createAdditionalBuildables();
 
     BuildRule aaptPackageResourcesRule = findRuleOfType(graphBuilder, AaptPackageResources.class);
@@ -957,8 +955,9 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
-            false);
+            ImmutableSortedSet::of,
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(graphBuilder, ResourcesFilter.class);
@@ -1067,8 +1066,9 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
-            false);
+            ImmutableSortedSet::of,
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(graphBuilder, ResourcesFilter.class);

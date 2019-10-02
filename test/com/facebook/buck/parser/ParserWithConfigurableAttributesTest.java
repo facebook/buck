@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser;
 
-import static com.facebook.buck.parser.ParserConfig.DEFAULT_BUILD_FILE_NAME;
+import static com.facebook.buck.parser.config.AbstractParserConfig.DEFAULT_BUILD_FILE_NAME;
 import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -63,8 +63,8 @@ import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildT
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -83,7 +83,8 @@ import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.manifestservice.ManifestService;
-import com.facebook.buck.parser.AbstractParserConfig.ApplyDefaultFlavorsMode;
+import com.facebook.buck.parser.config.AbstractParserConfig.ApplyDefaultFlavorsMode;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
@@ -515,7 +516,7 @@ public class ParserWithConfigurableAttributesTest {
         containsString(
             "android-unknown: Please make sure you have the Android SDK/NDK "
                 + "installed and set up. "
-                + "See https://buck.build/setup/install.html#locate-android-sdk"));
+                + "See https://buck.build/setup/getting-started.html#locate-android-sdk"));
     parser.buildTargetGraph(parsingContext, ImmutableSortedSet.of(flavored));
   }
 
@@ -2056,7 +2057,7 @@ public class ParserWithConfigurableAttributesTest {
     for (BuildTarget target : buildTargets) {
       assertTrue(
           permState
-              .getOrCreateNodeCache(TargetNode.class)
+              .getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE)
               .lookupComputedNode(cell, target, eventBus)
               .isPresent());
     }
@@ -2157,7 +2158,7 @@ public class ParserWithConfigurableAttributesTest {
 
     ImmutableSet<BuildTarget> result =
         parser
-            .buildTargetGraphWithConfigurationTargets(
+            .buildTargetGraphWithTopLevelConfigurationTargets(
                 ParsingContext.builder(cell, executorService)
                     .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
                     .build(),
@@ -2204,7 +2205,7 @@ public class ParserWithConfigurableAttributesTest {
 
     ImmutableSet<BuildTarget> result =
         parser
-            .buildTargetGraphWithConfigurationTargets(
+            .buildTargetGraphWithTopLevelConfigurationTargets(
                 ParsingContext.builder(cell, executorService)
                     .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
                     .build(),
@@ -2255,7 +2256,7 @@ public class ParserWithConfigurableAttributesTest {
 
     ImmutableSet<BuildTarget> result =
         parser
-            .buildTargetGraphWithConfigurationTargets(
+            .buildTargetGraphWithTopLevelConfigurationTargets(
                 ParsingContext.builder(cell, executorService)
                     .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
                     .build(),
@@ -2299,7 +2300,7 @@ public class ParserWithConfigurableAttributesTest {
 
     ParsingContext parsingContext = ParsingContext.builder(cell, executorService).build();
 
-    parser.buildTargetGraphWithConfigurationTargets(
+    parser.buildTargetGraphWithTopLevelConfigurationTargets(
         parsingContext,
         ImmutableList.of(
             BuildTargetSpec.from(
@@ -2315,7 +2316,7 @@ public class ParserWithConfigurableAttributesTest {
 
     // The value should be cached, so no bytes are read when re-computing.
     events.clear();
-    parser.buildTargetGraphWithConfigurationTargets(
+    parser.buildTargetGraphWithTopLevelConfigurationTargets(
         parsingContext,
         ImmutableList.of(
             BuildTargetSpec.from(
@@ -2327,11 +2328,11 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void testGetCacheReturnsSame() {
     assertEquals(
-        parser.getPermState().getOrCreateNodeCache(TargetNode.class),
-        parser.getPermState().getOrCreateNodeCache(TargetNode.class));
+        parser.getPermState().getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
+        parser.getPermState().getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE));
     assertNotEquals(
-        parser.getPermState().getOrCreateNodeCache(TargetNode.class),
-        parser.getPermState().getOrCreateNodeCache(Map.class));
+        parser.getPermState().getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
+        parser.getPermState().getOrCreateNodeCache(DaemonicParserState.RAW_TARGET_NODE_CACHE_TYPE));
   }
 
   @Test
@@ -2604,7 +2605,7 @@ public class ParserWithConfigurableAttributesTest {
       throws BuildFileParseException, IOException, InterruptedException {
     return FluentIterable.from(
             parser
-                .buildTargetGraphWithConfigurationTargets(
+                .buildTargetGraphWithTopLevelConfigurationTargets(
                     parsingContext,
                     ImmutableList.of(
                         ImmutableTargetNodePredicateSpec.of(

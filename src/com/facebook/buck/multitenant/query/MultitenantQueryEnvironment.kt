@@ -21,10 +21,11 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser
+import com.facebook.buck.multitenant.collect.Generation
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildTargets
-import com.facebook.buck.multitenant.service.Generation
 import com.facebook.buck.multitenant.service.Index
+import com.facebook.buck.multitenant.service.RawBuildRule
 import com.facebook.buck.query.AllPathsFunction
 import com.facebook.buck.query.BuildFileFunction
 import com.facebook.buck.query.DepsFunction
@@ -40,19 +41,15 @@ import com.facebook.buck.query.RdepsFunction
 import com.facebook.buck.query.TestsOfFunction
 import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableSet
 import java.util.function.Predicate
 import java.util.function.Supplier
 
-val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, UnconfiguredBuildTarget>> = listOf(
-        AllPathsFunction<UnconfiguredBuildTarget>(),
-        BuildFileFunction<UnconfiguredBuildTarget>(),
-        DepsFunction<UnconfiguredBuildTarget>(),
+val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, UnconfiguredBuildTarget>> =
+    listOf(AllPathsFunction<UnconfiguredBuildTarget>(),
+        BuildFileFunction<UnconfiguredBuildTarget>(), DepsFunction<UnconfiguredBuildTarget>(),
         DepsFunction.FirstOrderDepsFunction<UnconfiguredBuildTarget>(),
-        InputsFunction<UnconfiguredBuildTarget>(),
-        KindFunction<UnconfiguredBuildTarget>(),
-        OwnerFunction<UnconfiguredBuildTarget>(),
-        RdepsFunction<UnconfiguredBuildTarget>(),
+        InputsFunction<UnconfiguredBuildTarget>(), KindFunction<UnconfiguredBuildTarget>(),
+        OwnerFunction<UnconfiguredBuildTarget>(), RdepsFunction<UnconfiguredBuildTarget>(),
         TestsOfFunction<UnconfiguredBuildTarget>())
 
 /**
@@ -63,8 +60,10 @@ val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, Unconf
 class MultitenantQueryEnvironment(
     private val index: Index,
     private val generation: Generation,
+    // TODO(cjhopman, sergeyb): I think this should be Map<CanonicalCellName, String>.
     private val cellToBuildFileName: Map<String, String>
-) : QueryEnvironment<UnconfiguredBuildTarget> {
+) :
+    QueryEnvironment<UnconfiguredBuildTarget> {
     private val targetEvaluator: Supplier<TargetEvaluator> = Suppliers.memoize {
         TargetEvaluator(index, generation)
     }
@@ -87,22 +86,24 @@ class MultitenantQueryEnvironment(
         return targetEvaluator.get()
     }
 
-    override fun getFwdDeps(targets: Iterable<UnconfiguredBuildTarget>): ImmutableSet<UnconfiguredBuildTarget> {
-        val fwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-        index.getFwdDeps(generation, targets, fwdDeps)
-        return fwdDeps.build()
-    }
+    override fun getFwdDeps(
+        targets: Iterable<UnconfiguredBuildTarget>
+    ): Set<UnconfiguredBuildTarget> =
+        index.getFwdDeps(generation, targets)
 
     override fun getReverseDeps(
         targets: Iterable<UnconfiguredBuildTarget>
-    ): Set<UnconfiguredBuildTarget> = index.getReverseDeps(generation, targets)
+    ): Set<UnconfiguredBuildTarget> =
+        index.getReverseDeps(generation, targets)
 
     override fun getInputs(target: UnconfiguredBuildTarget): Set<QueryFileTarget> {
         val targetNode = index.getTargetNodeUnsafe(generation, target).targetNode
         return extractInputs(targetNode)
     }
 
-    override fun getTransitiveClosure(targets: Set<UnconfiguredBuildTarget>): Set<UnconfiguredBuildTarget> {
+    override fun getTransitiveClosure(
+        targets: Set<UnconfiguredBuildTarget>
+    ): Set<UnconfiguredBuildTarget> {
         return index.getTransitiveDeps(generation, targets.asSequence())
     }
 
@@ -119,27 +120,22 @@ class MultitenantQueryEnvironment(
         return rawBuildRule.targetNode.ruleType.toString()
     }
 
-    override fun getTestsForTarget(
-        target: UnconfiguredBuildTarget
-    ): ImmutableSet<UnconfiguredBuildTarget> {
+    override fun getTestsForTarget(target: UnconfiguredBuildTarget): Set<UnconfiguredBuildTarget> {
         val targetNode = index.getTargetNodeUnsafe(generation, target).targetNode
         return extractTests(targetNode)
     }
 
-    override fun getBuildFiles(targets: Set<UnconfiguredBuildTarget>): ImmutableSet<QueryFileTarget> {
-        val out = ImmutableSet.builder<QueryFileTarget>()
-        targets.asSequence().forEach { target ->
+    override fun getBuildFiles(targets: Set<UnconfiguredBuildTarget>): Set<QueryFileTarget> =
+        targets.map { target ->
             val path = FsAgnosticSourcePath(FsAgnosticPath.of(
-                    "${target.baseName.substring(2)}/${cellToBuildFileName[target.cell]!!}"))
-            out.add(QueryFileTarget.of(path))
-        }
-        return out.build()
-    }
+                "${target.baseName.substring(2)}/${cellToBuildFileName[target.cell.name]!!}"))
+            QueryFileTarget.of(path)
+        }.toSet()
 
     /**
      * @param files are assumed to be paths relative to the root cell
      */
-    override fun getFileOwners(files: ImmutableList<String>): ImmutableSet<UnconfiguredBuildTarget> {
+    override fun getFileOwners(files: ImmutableList<String>): Set<UnconfiguredBuildTarget> {
         val relativePaths = files.asSequence().map { FsAgnosticPath.of(it) }
         val relativePathToTrueBasePath = mutableMapOf<FsAgnosticPath, FsAgnosticPath>()
         val basePathToTargets = mutableMapOf<FsAgnosticPath, List<UnconfiguredBuildTarget>>()
@@ -154,7 +150,7 @@ class MultitenantQueryEnvironment(
             }
         }
 
-        val out = ImmutableSet.builder<UnconfiguredBuildTarget>()
+        val out = mutableSetOf<UnconfiguredBuildTarget>()
         relativePaths.forEach { relativePath ->
             // Note it is possible that there are no owner candidates for the relative path, in
             // which case it will have no entry in the relativePathToTrueBasePath map.
@@ -168,10 +164,13 @@ class MultitenantQueryEnvironment(
                 }
             }
         }
-        return out.build()
+        return out
     }
 
-    override fun getTargetsInAttribute(target: UnconfiguredBuildTarget?, attribute: String?): ImmutableSet<out QueryTarget> {
+    override fun getTargetsInAttribute(
+        target: UnconfiguredBuildTarget?,
+        attribute: String?
+    ): Set<QueryTarget> {
         TODO("getTargetsInAttribute() not implemented")
     }
 
@@ -179,15 +178,28 @@ class MultitenantQueryEnvironment(
         target: UnconfiguredBuildTarget?,
         attribute: String?,
         predicate: Predicate<Any>?
-    ): ImmutableSet<Any> {
+    ): Set<Any> {
         TODO("filterAttributeContents() not implemented")
+    }
+
+    /** @see Index.getRefs */
+    fun getRefs(target: UnconfiguredBuildTarget): List<UnconfiguredBuildTarget> =
+        index.getRefs(generation, target)
+
+    /** Get the rules defined in the build file in the specified directory. */
+    fun getRulesInBasePath(basePath: FsAgnosticPath): List<RawBuildRule> {
+        val targets = index.getTargetsInBasePath(generation, basePath) ?: listOf()
+        val rules = index.getTargetNodes(generation, targets)
+        return rules.mapNotNull { it }
     }
 }
 
-private class TargetEvaluator(private val index: Index, private val generation: Generation) : QueryEnvironment.TargetEvaluator {
-    override fun getType(): QueryEnvironment.TargetEvaluator.Type = QueryEnvironment.TargetEvaluator.Type.IMMEDIATE
+private class TargetEvaluator(private val index: Index, private val generation: Generation) :
+    QueryEnvironment.TargetEvaluator {
+    override fun getType(): QueryEnvironment.TargetEvaluator.Type =
+        QueryEnvironment.TargetEvaluator.Type.IMMEDIATE
 
-    override fun evaluateTarget(target: String): ImmutableSet<QueryTarget> {
+    override fun evaluateTarget(target: String): Set<QueryTarget> {
         // TODO: We should probably also support aliases specified via .buckconfig here?
         val buildTargetPattern = try {
             BuildTargetPatternParser.parse(target)
@@ -198,21 +210,19 @@ private class TargetEvaluator(private val index: Index, private val generation: 
         // TODO: Cells (and flavors?) need to be supported.
         return when (buildTargetPattern.kind!!) {
             Kind.SINGLE -> {
-                val buildTarget = BuildTargets.createBuildTargetFromParts(
-                        buildTargetPattern.cell,
-                        FsAgnosticPath.of(buildTargetPattern.basePath),
-                        buildTargetPattern.targetName)
-                ImmutableSet.of(buildTarget)
+                val buildTarget = BuildTargets.createBuildTargetFromParts(buildTargetPattern.cell,
+                    FsAgnosticPath.of(buildTargetPattern.basePath), buildTargetPattern.targetName)
+                setOf(buildTarget)
             }
             Kind.PACKAGE -> {
                 val basePath = buildTargetPattern.basePath
                 val targets = index.getTargetsInBasePath(generation, FsAgnosticPath.of(basePath))
-                        ?: return ImmutableSet.of()
-                ImmutableSet.copyOf(targets)
+                    ?: return setOf()
+                targets.toSet()
             }
             Kind.RECURSIVE -> {
                 val basePath = buildTargetPattern.basePath
-                ImmutableSet.copyOf(index.getTargetsUnderBasePath(generation, FsAgnosticPath.of(basePath)))
+                index.getTargetsUnderBasePath(generation, FsAgnosticPath.of(basePath)).toSet()
             }
         }
     }
@@ -256,9 +266,9 @@ private fun toBasePath(target: UnconfiguredBuildTarget): FsAgnosticPath {
     return FsAgnosticPath.of(target.baseName.substring(2))
 }
 
-private fun extractTests(targetNode: RawTargetNode): ImmutableSet<UnconfiguredBuildTarget> {
-    val testsAttr = targetNode.attributes["tests"] as? List<*> ?: return ImmutableSet.of()
-    val out = ImmutableSet.Builder<UnconfiguredBuildTarget>()
+private fun extractTests(targetNode: RawTargetNode): Set<UnconfiguredBuildTarget> {
+    val testsAttr = targetNode.attributes["tests"] as? List<*> ?: return setOf()
+    val out = HashSet<UnconfiguredBuildTarget>(testsAttr.size)
     val basePath = toBasePath(targetNode.buildTarget)
     testsAttr.forEach { value ->
         val test = value as? String ?: return@forEach
@@ -274,5 +284,5 @@ private fun extractTests(targetNode: RawTargetNode): ImmutableSet<UnconfiguredBu
             }
         }
     }
-    return out.build()
+    return out
 }

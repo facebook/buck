@@ -19,6 +19,7 @@ package com.facebook.buck.features.project.intellij;
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidPrebuiltAarDescriptionArg;
 import com.facebook.buck.android.UnzipAar;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
@@ -55,7 +56,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
    *
    * @param <T> the type of the TargetNode.
    */
-  abstract class TypedIjLibraryRule<T> implements IjLibraryRule {
+  abstract class TypedIjLibraryRule<T extends CommonDescriptionArg> implements IjLibraryRule {
     abstract Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass();
 
     abstract void apply(TargetNode<T> targetNode, IjLibrary.Builder library);

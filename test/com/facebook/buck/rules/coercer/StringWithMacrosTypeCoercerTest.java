@@ -384,7 +384,7 @@ public class StringWithMacrosTypeCoercerTest {
     assertEquals(result, coercer.concat(Arrays.asList(string1, string2, string3)));
   }
 
-  private static class TestMacro implements Macro {
+  static class TestMacro implements Macro {
 
     private final ImmutableList<String> args;
 
@@ -412,7 +412,7 @@ public class StringWithMacrosTypeCoercerTest {
     }
   }
 
-  private static class TestMacroTypeCoercer implements MacroTypeCoercer<TestMacro> {
+  static class TestMacroTypeCoercer implements MacroTypeCoercer<TestMacro> {
 
     @Override
     public boolean hasElementClass(Class<?>[] types) {

@@ -23,7 +23,8 @@
   {param name: 'name' /}
   {param example : 'guava-23.0.jar' /}
   {param desc}
-    The name of the rule. This is used in the filename on disk if &nbsp;
+    The <em>short name</em> for this {call buck.build_target /}.
+    This is also used for the name of the file on disk if &nbsp;
     {call buck.ruleLink}{param name: $rule /} {param section: 'out' /}{/call}&nbsp;
     is not provided.
   {/param}

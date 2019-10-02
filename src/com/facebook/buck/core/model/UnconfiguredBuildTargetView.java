@@ -18,7 +18,6 @@ package com.facebook.buck.core.model;
 
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -46,7 +45,7 @@ public interface UnconfiguredBuildTargetView extends Comparable<UnconfiguredBuil
    * <p>Note that this name can be different from the name specified on the name. See {@link
    * com.facebook.buck.core.cell.CellPathResolver#getCanonicalCellName} for more information.
    */
-  Optional<String> getCell();
+  CanonicalCellName getCell();
 
   /**
    * The path to the root of the cell where this build target is used.
@@ -73,7 +72,7 @@ public interface UnconfiguredBuildTargetView extends Comparable<UnconfiguredBuil
   /**
    * The path of the directory where this target is located.
    *
-   * <p>For example, for {@code //third_party/java/guava:guava} this returns {@link Path} {@code
+   * <p>For example, for {@code cell//third_party/java/guava:guava} this returns {@link Path} {@code
    * third_party/java/guava}.
    */
   Path getBasePath();
@@ -81,7 +80,7 @@ public interface UnconfiguredBuildTargetView extends Comparable<UnconfiguredBuil
   /**
    * The part of the build target name after the colon.
    *
-   * <p>For example, for {@code //third_party/java/guava:guava-latest} this returns {@code
+   * <p>For example, for {@code cell//third_party/java/guava:guava-latest} this returns {@code
    * guava-latest}.
    */
   String getShortName();
@@ -89,8 +88,8 @@ public interface UnconfiguredBuildTargetView extends Comparable<UnconfiguredBuil
   /**
    * The short name with flavors.
    *
-   * <p>For example, for {@code //third_party/java/guava:guava-latest#flavor} this returns {@code
-   * guava-latest#flavor}.
+   * <p>For example, for {@code cell//third_party/java/guava:guava-latest#flavor} this returns
+   * {@code guava-latest#flavor}.
    */
   String getShortNameAndFlavorPostfix();
 
@@ -101,6 +100,14 @@ public interface UnconfiguredBuildTargetView extends Comparable<UnconfiguredBuil
    * {@code cell//third_party/java/guava:guava-latest#flavor}.
    */
   String getFullyQualifiedName();
+
+  /**
+   * The name of the build target including flavors but excluding the cell.
+   *
+   * <p>For example, for {@code cell//third_party/java/guava:guava-latest#flavor} this returns
+   * {@code //third_party/java/guava:guava-latest#flavor}.
+   */
+  String getCellRelativeName();
 
   /** Whether this target contains flavors. */
   boolean isFlavored();
@@ -142,12 +149,6 @@ public interface UnconfiguredBuildTargetView extends Comparable<UnconfiguredBuil
    * from this build target.
    */
   UnconfiguredBuildTargetView withUnflavoredBuildTarget(UnflavoredBuildTargetView target);
-
-  /**
-   * Creates a new build target by copying all of the information from this build target and
-   * removing the name of the cell.
-   */
-  UnconfiguredBuildTargetView withoutCell();
 
   /**
    * Creates {@link BuildTarget} by attaching {@link TargetConfiguration} to this unconfigured build

@@ -27,6 +27,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 import org.junit.Test;
 
 public class StepRunnerTest {
@@ -42,9 +43,9 @@ public class StepRunnerTest {
     eventBus.register(listener);
 
     ExecutionContext context = TestExecutionContext.newBuilder().setBuckEventBus(eventBus).build();
-    StepRunner.runStep(context, passingStep);
+    StepRunner.runStep(context, passingStep, Optional.empty());
     try {
-      StepRunner.runStep(context, failingStep);
+      StepRunner.runStep(context, failingStep, Optional.empty());
       fail("Failing step should have thrown an exception");
     } catch (StepFailedException e) {
       assertEquals(e.getStep(), failingStep);
@@ -84,7 +85,7 @@ public class StepRunnerTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     try {
-      StepRunner.runStep(context, new ExplosionStep());
+      StepRunner.runStep(context, new ExplosionStep(), Optional.empty());
       fail("Should have thrown a StepFailedException!");
     } catch (StepFailedException e) {
       assertTrue(

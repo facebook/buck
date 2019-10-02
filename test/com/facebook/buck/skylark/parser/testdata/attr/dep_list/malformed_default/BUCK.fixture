@@ -1,0 +1,3 @@
+load("//dep_list:defs.bzl", "malformed_default")
+
+malformed_default()

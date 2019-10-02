@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
@@ -39,7 +39,6 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -58,7 +57,7 @@ public class GraphEnhancementQueryEnvironmentTest {
 
   @Before
   public void setUp() {
-    cellRoots = DefaultCellPathResolver.of(ROOT, ImmutableMap.of());
+    cellRoots = TestCellPathResolver.create(ROOT);
   }
 
   @Test

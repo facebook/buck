@@ -16,44 +16,22 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
-import com.facebook.buck.core.model.impl.HostTargetConfiguration;
-import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuildTarget;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
-import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.ParserTargetNodeFactory;
-import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -63,19 +41,13 @@ public class DistBuildTargetGraphCodec {
   private static final Logger LOG = Logger.get(DistBuildTargetGraphCodec.class);
 
   private ListeningExecutorService cpuExecutor;
-  private final ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory;
   private final Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
-  private Set<String> topLevelTargets;
 
   public DistBuildTargetGraphCodec(
       ListeningExecutorService cpuExecutor,
-      ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory,
-      Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode,
-      Set<String> topLevelTargets) {
+      Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode) {
     this.cpuExecutor = cpuExecutor;
-    this.parserTargetNodeFactory = parserTargetNodeFactory;
     this.nodeToRawNode = nodeToRawNode;
-    this.topLevelTargets = topLevelTargets;
   }
 
   public BuildJobStateTargetGraph dump(
@@ -124,133 +96,11 @@ public class DistBuildTargetGraphCodec {
     BuildJobStateBuildTarget remoteTarget = new BuildJobStateBuildTarget();
     remoteTarget.setShortName(buildTarget.getShortName());
     remoteTarget.setBaseName(buildTarget.getBaseName());
-    if (buildTarget.getCell().isPresent()) {
-      remoteTarget.setCellName(buildTarget.getCell().get());
+    if (buildTarget.getCell().getLegacyName().isPresent()) {
+      remoteTarget.setCellName(buildTarget.getCell().getLegacyName().get());
     }
     remoteTarget.setFlavors(
         buildTarget.getFlavors().stream().map(Object::toString).collect(Collectors.toSet()));
     return remoteTarget;
-  }
-
-  public static BuildTarget decodeBuildTarget(BuildJobStateBuildTarget remoteTarget, Cell cell) {
-
-    UnflavoredBuildTargetView unflavoredBuildTargetView =
-        ImmutableUnflavoredBuildTargetView.of(
-            cell.getRoot(),
-            Optional.ofNullable(remoteTarget.getCellName()),
-            remoteTarget.getBaseName(),
-            remoteTarget.getShortName());
-
-    return ImmutableUnconfiguredBuildTargetView.of(
-            unflavoredBuildTargetView, remoteTarget.flavors.stream().map(InternalFlavor::of))
-        .configure(HostTargetConfiguration.INSTANCE);
-  }
-
-  public TargetGraphCreationResult createTargetGraph(
-      BuildJobStateTargetGraph remoteTargetGraph, Function<Integer, Cell> cellLookup)
-      throws InterruptedException {
-
-    ConcurrentMap<BuildTarget, TargetNode<?>> index = new ConcurrentHashMap<>();
-    ConcurrentMap<BuildTarget, TargetNode<?>> graphNodes = new ConcurrentHashMap<>();
-    ConcurrentMap<BuildTarget, Boolean> buildTargets = new ConcurrentHashMap<>();
-
-    List<ListenableFuture<Void>> processRemoteBuildTargetFutures = new LinkedList<>();
-
-    for (BuildJobStateTargetNode remoteNode : remoteTargetGraph.getNodes()) {
-      processRemoteBuildTargetFutures.add(
-          asyncProcessRemoteBuildTarget(cellLookup, index, graphNodes, buildTargets, remoteNode));
-    }
-
-    try {
-      Futures.allAsList(processRemoteBuildTargetFutures).get();
-    } catch (ExecutionException e) {
-      LOG.error(e, "Failed to deserialize target graph nodes");
-      throw new RuntimeException(e);
-    }
-
-    Preconditions.checkArgument(topLevelTargets.size() == buildTargets.size());
-
-    ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex = ImmutableMap.copyOf(index);
-
-    MutableDirectedGraph<TargetNode<?>> mutableTargetGraph = new MutableDirectedGraph<>();
-    for (TargetNode<?> targetNode : graphNodes.values()) {
-      mutableTargetGraph.addNode(targetNode);
-      for (BuildTarget dep : targetNode.getParseDeps()) {
-        mutableTargetGraph.addEdge(
-            targetNode,
-            Preconditions.checkNotNull(
-                graphNodes.get(dep),
-                "Dependency [%s] of target [%s] was not found in the client-side target graph.",
-                dep.getFullyQualifiedName(),
-                targetNode.getBuildTarget().getFullyQualifiedName()));
-      }
-    }
-
-    TargetGraph targetGraph = new TargetGraph(mutableTargetGraph, targetNodeIndex);
-
-    return new ImmutableTargetGraphCreationResult(targetGraph, buildTargets.keySet());
-  }
-
-  private ListenableFuture<Void> asyncProcessRemoteBuildTarget(
-      Function<Integer, Cell> cellLookup,
-      ConcurrentMap<BuildTarget, TargetNode<?>> index,
-      ConcurrentMap<BuildTarget, TargetNode<?>> graphNodes,
-      ConcurrentMap<BuildTarget, Boolean> buildTargets,
-      BuildJobStateTargetNode remoteNode) {
-    return cpuExecutor.submit(
-        () -> {
-          Cell cell = cellLookup.apply(remoteNode.getCellIndex());
-          if (remoteNode.getCellIndex() == DistBuildCellIndexer.ROOT_CELL_INDEX) {
-            cell = cell.withCanonicalName(Optional.empty());
-          }
-
-          ProjectFilesystem projectFilesystem = cell.getFilesystem();
-          BuildTarget target = decodeBuildTarget(remoteNode.getBuildTarget(), cell);
-          if (topLevelTargets.contains(target.getFullyQualifiedName())) {
-            buildTargets.put(target, true);
-          }
-
-          Map<String, Object> rawNode = getRawNode(remoteNode);
-
-          Path buildFilePath =
-              projectFilesystem
-                  .resolve(target.getBasePath())
-                  .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
-
-          TargetNode<?> targetNode =
-              parserTargetNodeFactory.createTargetNode(
-                  cell,
-                  buildFilePath,
-                  target,
-                  rawNode,
-                  input -> SimplePerfEvent.scope(Optional.empty(), input));
-
-          MoreMaps.putIfAbsentCheckEquals(index, target, targetNode);
-          MoreMaps.putIfAbsentCheckEquals(graphNodes, target, targetNode);
-
-          if (target.isFlavored()) {
-            BuildTarget unflavoredTarget = target.withoutFlavors();
-            TargetNode<?> unflavoredTargetNode =
-                parserTargetNodeFactory.createTargetNode(
-                    cell,
-                    buildFilePath,
-                    unflavoredTarget,
-                    rawNode,
-                    input -> SimplePerfEvent.scope(Optional.empty(), input));
-
-            MoreMaps.putCheckEquals(index, unflavoredTarget, unflavoredTargetNode);
-          }
-
-          return null;
-        });
-  }
-
-  @SuppressWarnings("unchecked")
-  private static Map<String, Object> getRawNode(BuildJobStateTargetNode remoteNode) {
-    try {
-      return ObjectMappers.readValue(remoteNode.getRawNode(), Map.class);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
   }
 }

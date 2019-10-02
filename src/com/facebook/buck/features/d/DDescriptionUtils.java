@@ -53,7 +53,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
@@ -148,8 +147,11 @@ abstract class DDescriptionUtils {
             projectFilesystem, buildTarget, "%s/" + buildTarget.getShortName()),
         ImmutableList.of(),
         Linker.LinkableDepType.STATIC,
+        Optional.empty(),
         CxxLinkOptions.of(),
-        FluentIterable.from(params.getBuildDeps()).filter(NativeLinkableGroup.class),
+        FluentIterable.from(params.getBuildDeps())
+            .filter(NativeLinkableGroup.class)
+            .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
         /* cxxRuntimeType */ Optional.empty(),
         /* bundleLoader */ Optional.empty(),
         ImmutableSet.of(),
@@ -200,9 +202,7 @@ abstract class DDescriptionUtils {
         BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
         MoreMaps.transformKeys(
             sources.toNameMap(target, ruleFinder.getSourcePathResolver(), "srcs"),
-            MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())),
-        ImmutableMultimap.of(),
-        ruleFinder);
+            MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())));
   }
 
   private static ImmutableMap<BuildTarget, DLibrary> getTransitiveDLibraryRules(

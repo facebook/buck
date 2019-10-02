@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
@@ -81,7 +82,14 @@ public class AndroidBuckConfig {
     this.platform = platform;
   }
 
-  public Optional<String> getAndroidTarget() {
+  public Optional<String> getAndroidCompileSdkVersion() {
+    Optional<String> compileSdkVersion = delegate.getValue("android", "compile_sdk_version");
+    return compileSdkVersion.isPresent() ? compileSdkVersion : getAndroidTarget();
+  }
+
+  /** @deprecated Renamed to {@link #getAndroidCompileSdkVersion()} to make the purpose clearer. */
+  @Deprecated
+  private Optional<String> getAndroidTarget() {
     return delegate.getValue("android", "target");
   }
 
@@ -263,11 +271,11 @@ public class AndroidBuckConfig {
   }
 
   /**
-   * Returns the path to the platform specific aapt2 executable that is overridden by the current
-   * project. If not specified, the Android platform aapt will be used.
+   * Returns the tool provider to the platform specific aapt2 executable that is overridden by the
+   * current project. If not specified, the Android platform aapt will be used.
    */
-  public Optional<Supplier<Tool>> getAapt2Override() {
-    return getToolOverride("aapt2");
+  public Optional<ToolProvider> getAapt2Override() {
+    return getToolProvider("aapt2");
   }
 
   public Optional<BuildTarget> getRedexTarget(TargetConfiguration targetConfiguration) {
@@ -289,20 +297,25 @@ public class AndroidBuckConfig {
     return redexBinary.get();
   }
 
+  private Optional<ToolProvider> getToolProvider(String tool) {
+    String platformDir = getPlatformDir();
+    if (platformDir == null) {
+      return Optional.empty();
+    }
+
+    return delegate
+        .getView(ToolConfig.class)
+        .getToolProvider("tools", tool, value -> Paths.get(value, platformDir, tool));
+  }
+
   private Optional<Supplier<Tool>> getToolOverride(String tool) {
     Optional<String> pathString = delegate.getValue("tools", tool);
     if (!pathString.isPresent()) {
       return Optional.empty();
     }
 
-    String platformDir;
-    if (platform == Platform.LINUX) {
-      platformDir = "linux";
-    } else if (platform == Platform.MACOS) {
-      platformDir = "mac";
-    } else if (platform == Platform.WINDOWS) {
-      platformDir = "windows";
-    } else {
+    String platformDir = getPlatformDir();
+    if (platformDir == null) {
       return Optional.empty();
     }
 
@@ -316,5 +329,16 @@ public class AndroidBuckConfig {
           Preconditions.checkState(optionalTool.isPresent());
           return optionalTool.get();
         });
+  }
+
+  private String getPlatformDir() {
+    if (platform == Platform.LINUX) {
+      return "linux";
+    } else if (platform == Platform.MACOS) {
+      return "mac";
+    } else if (platform == Platform.WINDOWS) {
+      return "windows";
+    }
+    return null;
   }
 }

@@ -3,6 +3,9 @@ config_setting(
     values = {
         "java.target_level": "8",
     },
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 config_setting(
@@ -10,4 +13,7 @@ config_setting(
     values = {
         "java.target_level": "11",
     },
+    visibility = [
+        "PUBLIC",
+    ],
 )

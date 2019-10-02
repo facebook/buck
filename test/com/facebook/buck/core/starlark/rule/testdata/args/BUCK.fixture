@@ -1,0 +1,13 @@
+load("//:defs.bzl", "add", "add_all", "add_failure", "add_all_failure", "add_args_failure", "add_all_args_failure")
+
+add(name = "add")
+
+add_all(name = "add_all")
+
+add_failure(name = "add_failure")
+
+add_all_failure(name = "add_all_failure")
+
+add_args_failure(name = "add_args_failure")
+
+add_all_args_failure(name = "add_all_args_failure")

@@ -16,12 +16,27 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 public interface LinkableCxxConstructorArg extends CxxConstructorArg {
   Optional<Linker.LinkableDepType> getLinkStyle();
+
+  /**
+   * Defines the list of link group mappings. Targets' membership in a group is defined by the order
+   * of the list, so if more than one mapping matches a single target, the group would be the one
+   * defined by the first match.
+   */
+  Optional<ImmutableList<CxxLinkGroupMapping>> getLinkGroupMap();
+
+  /**
+   * Defines the link group. When linking executable code, only static libraries which belong to the
+   * same group would be linked into the executable.
+   */
+  Optional<String> getLinkGroup();
 
   @Value.Default
   default boolean getThinLto() {

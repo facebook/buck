@@ -29,7 +29,7 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
   private final TypeCoercer<Path> pathTypeCoercer;
 
-  SourcePathTypeCoercer(
+  public SourcePathTypeCoercer(
       TypeCoercer<BuildTarget> buildTargetTypeCoercer, TypeCoercer<Path> pathTypeCoercer) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.pathTypeCoercer = pathTypeCoercer;

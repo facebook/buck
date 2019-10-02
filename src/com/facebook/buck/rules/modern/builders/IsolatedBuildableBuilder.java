@@ -74,6 +74,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -103,12 +104,13 @@ public abstract class IsolatedBuildableBuilder {
   private final Path dataRoot;
   private final BuckEventBus eventBus;
   private final Function<Optional<String>, ToolchainProvider> toolchainProviderFunction;
+  private final Path metadataPath;
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  IsolatedBuildableBuilder(Path workRoot, Path projectRoot) throws IOException {
+  IsolatedBuildableBuilder(Path workRoot, Path projectRoot, Path metadataPath) throws IOException {
     Path canonicalWorkRoot = workRoot.toRealPath().normalize();
     Path canonicalProjectRoot = canonicalWorkRoot.resolve(projectRoot).normalize();
-
+    this.metadataPath = metadataPath;
     this.dataRoot = workRoot.resolve("__data__");
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -143,7 +145,7 @@ public abstract class IsolatedBuildableBuilder {
     ImmutableMap<String, String> clientEnvironment = EnvVariablesProvider.getSystemEnv();
 
     DefaultCellPathResolver cellPathResolver =
-        DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+        DefaultCellPathResolver.create(filesystem.getRootPath(), config);
     UnconfiguredBuildTargetViewFactory buildTargetFactory =
         new ParsingUnconfiguredBuildTargetViewFactory();
 
@@ -219,7 +221,7 @@ public abstract class IsolatedBuildableBuilder {
                       BuildTargetSourcePath sourcePath) {
                     Preconditions.checkState(sourcePath instanceof ExplicitBuildTargetSourcePath);
                     BuildTarget target = sourcePath.getTarget();
-                    return filesystemFunction.apply(target.getCell());
+                    return filesystemFunction.apply(target.getCell().getLegacyName());
                   }
 
                   @Override
@@ -249,7 +251,7 @@ public abstract class IsolatedBuildableBuilder {
                 .getCellByPath(cellPathResolver.getCellPath(cellName).get())
                 .getToolchainProvider();
 
-    RichStream.from(cellPathResolver.getCellPaths().keySet())
+    RichStream.from(cellPathResolver.getCellPathsByRootCellExternalName().keySet())
         .forEachThrowing(
             name -> {
               // Sadly, some things assume this exists and writes to it.
@@ -314,7 +316,8 @@ public abstract class IsolatedBuildableBuilder {
 
     try (Scope ignored = LeafEvents.scope(eventBus, "steps");
         CloseableWrapper<BuckEventBus> eventBusWrapper = getWaitEventsWrapper(eventBus)) {
-      ProjectFilesystem filesystem = filesystemFunction.apply(reconstructed.target.getCell());
+      ProjectFilesystem filesystem =
+          filesystemFunction.apply(reconstructed.target.getCell().getLegacyName());
       ModernBuildRule.injectFieldsIfNecessary(
           filesystem,
           reconstructed.target,
@@ -336,14 +339,24 @@ public abstract class IsolatedBuildableBuilder {
       for (Step step :
           ModernBuildRule.stepsForBuildable(
               buildContext, reconstructed.buildable, filesystem, reconstructed.target)) {
-        StepRunner.runStep(executionContext, step);
+        StepRunner.runStep(executionContext, step, Optional.of(reconstructed.target));
       }
 
+      long duration =
+          Instant.now().minusMillis(deserializationComplete.toEpochMilli()).toEpochMilli();
+      writeDurationToFile(duration);
       LOG.info(
           String.format(
               "Finished running the build at [%s], took %d ms. Exiting buck now.",
-              new java.util.Date(),
-              Instant.now().minusMillis(deserializationComplete.toEpochMilli()).toEpochMilli()));
+              new java.util.Date(), duration));
+    }
+  }
+
+  private void writeDurationToFile(long duration) {
+    try (BufferedWriter writer = Files.newBufferedWriter(metadataPath)) {
+      writer.write(Long.toString(duration));
+    } catch (IOException e) {
+      LOG.error(e);
     }
   }
 

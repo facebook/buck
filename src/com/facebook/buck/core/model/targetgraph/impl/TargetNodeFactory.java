@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -28,6 +29,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
@@ -35,6 +37,7 @@ import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.PathTypeCoercer.PathExistenceVerificationMode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -79,12 +82,13 @@ public class TargetNodeFactory implements NodeCopier {
    * Capture and Helper Methods</a>.
    */
   @SuppressWarnings("unchecked")
-  public <T, U extends BaseDescription<T>> TargetNode<T> createFromObject(
+  public <T extends ConstructorArg, U extends BaseDescription<T>> TargetNode<T> createFromObject(
       U description,
       Object constructorArg,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
+      ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       CellPathResolver cellRoots)
@@ -95,18 +99,20 @@ public class TargetNodeFactory implements NodeCopier {
         filesystem,
         buildTarget,
         declaredDeps,
+        configurationDeps,
         visibilityPatterns,
         withinViewPatterns,
         cellRoots);
   }
 
   @SuppressWarnings("unchecked")
-  private <T, U extends BaseDescription<T>> TargetNode<T> create(
+  private <T extends ConstructorArg, U extends BaseDescription<T>> TargetNode<T> create(
       U description,
       T constructorArg,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
+      ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       CellPathResolver cellRoots)
@@ -117,11 +123,17 @@ public class TargetNodeFactory implements NodeCopier {
         ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<Path> pathsBuilder = ImmutableSet.builder();
 
+    ImmutableMap<String, ParamInfo> paramInfos;
+    if (constructorArg instanceof SkylarkDescriptionArg) {
+      paramInfos = ((SkylarkDescriptionArg) constructorArg).getRule().getAllParamInfo();
+    } else {
+      paramInfos =
+          CoercedTypeCache.INSTANCE.getAllParamInfo(
+              typeCoercerFactory, description.getConstructorArgType());
+    }
+
     // Scan the input to find possible BuildTargetPaths, necessary for loading dependent rules.
-    for (ParamInfo info :
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(typeCoercerFactory, description.getConstructorArgType())
-            .values()) {
+    for (ParamInfo info : paramInfos.values()) {
       if (info.isDep()
           && info.isInput()
           && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)
@@ -149,6 +161,16 @@ public class TargetNodeFactory implements NodeCopier {
                   buildTarget.getUnflavoredBuildTarget(), constructorArg));
     }
 
+    ImmutableSet<BuildTarget> configurationDepsFromArg =
+        description.getConfigurationDeps(constructorArg);
+    if (!configurationDepsFromArg.isEmpty()) {
+      configurationDeps =
+          ImmutableSortedSet.<BuildTarget>naturalOrder()
+              .addAll(configurationDeps)
+              .addAll(configurationDepsFromArg)
+              .build();
+    }
+
     ImmutableSet<Path> paths = pathsBuilder.build();
     pathsChecker.checkPaths(filesystem, buildTarget, paths);
 
@@ -167,6 +189,7 @@ public class TargetNodeFactory implements NodeCopier {
         declaredDeps,
         extraDepsBuilder.build(),
         targetGraphOnlyDepsBuilder.build(),
+        configurationDeps,
         cellRoots,
         visibilityPatterns,
         withinViewPatterns,
@@ -179,7 +202,7 @@ public class TargetNodeFactory implements NodeCopier {
       ImmutableSet.Builder<BuildTarget> depsBuilder,
       ImmutableSet.Builder<Path> pathsBuilder,
       ParamInfo info,
-      Object constructorArg)
+      ConstructorArg constructorArg)
       throws NoSuchBuildTargetException {
     // We'll make no test for optionality here. Let's assume it's done elsewhere.
 
@@ -208,7 +231,7 @@ public class TargetNodeFactory implements NodeCopier {
   }
 
   @Override
-  public <T> TargetNode<T> copyNodeWithFlavors(
+  public <T extends ConstructorArg> TargetNode<T> copyNodeWithFlavors(
       TargetNode<T> originalNode, ImmutableSet<Flavor> flavors) {
     try {
       return create(
@@ -217,6 +240,7 @@ public class TargetNodeFactory implements NodeCopier {
           originalNode.getFilesystem(),
           originalNode.getBuildTarget().withFlavors(flavors),
           originalNode.getDeclaredDeps(),
+          originalNode.getConfigurationDeps(),
           originalNode.getVisibilityPatterns(),
           originalNode.getWithinViewPatterns(),
           originalNode.getCellNames());

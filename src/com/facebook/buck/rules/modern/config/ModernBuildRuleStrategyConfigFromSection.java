@@ -34,27 +34,27 @@ public class ModernBuildRuleStrategyConfigFromSection implements ModernBuildRule
   }
 
   @Override
-  public ModernBuildRuleBuildStrategy getBuildStrategy(boolean whitelistedForRemoteExecution) {
+  public ModernBuildRuleBuildStrategy getBuildStrategy(
+      boolean remoteExecutionAutoEnabled, boolean forceDisableRemoteExecution) {
+    if (forceDisableRemoteExecution) {
+      return ModernBuildRuleBuildStrategy.NONE;
+    }
+
     return delegate
         .getEnum(section, "strategy", ModernBuildRuleBuildStrategy.class)
+        // If Remote Execution was auto enabled, and no explicit strategy was set, then use the
+        // experimental_strategy setting as the ModernBuildRuleBuildStrategy for this build.
         .orElse(
-            shouldUseExperimentalStrategy(whitelistedForRemoteExecution)
+            (section.equals(AbstractModernBuildRuleConfig.SECTION) && remoteExecutionAutoEnabled)
                 ? delegate
                     .getEnum(section, "experimental_strategy", ModernBuildRuleBuildStrategy.class)
                     .orElse(ModernBuildRuleBuildStrategy.DEFAULT)
                 : ModernBuildRuleBuildStrategy.DEFAULT);
   }
 
-  private boolean shouldUseExperimentalStrategy(boolean whitelistedForRemoteExecution) {
-    if (section.equals(AbstractModernBuildRuleConfig.SECTION)) {
-      return whitelistedForRemoteExecution
-          || delegate.getBooleanValue("experiments", "remote_execution_beta_test", false);
-    }
-    return false;
-  }
-
   @Override
   public HybridLocalBuildStrategyConfig getHybridLocalConfig() {
+    int localDelegateJobs;
     int localJobs = delegate.getView(BuildBuckConfig.class).getNumThreads();
     OptionalInt localJobsConfig = delegate.getInteger(section, "local_jobs");
     Optional<Float> localJobsRatioConfig = delegate.getFloat(section, "local_jobs_ratio");
@@ -63,12 +63,20 @@ public class ModernBuildRuleStrategyConfigFromSection implements ModernBuildRule
     } else if (localJobsConfig.isPresent()) {
       localJobs = localJobsConfig.getAsInt();
     }
+    Optional<Float> localDelegateJobsRatioConfig =
+        delegate.getFloat(section, "local_delegate_jobs_ratio");
+    if (localDelegateJobsRatioConfig.isPresent()) {
+      localDelegateJobs = (int) Math.ceil(localJobs * localDelegateJobsRatioConfig.get());
+    } else {
+      localDelegateJobs = localJobs;
+    }
+
     int remoteJobs =
         delegate.getInteger(section, "delegate_jobs").orElseThrow(requires("delegate_jobs"));
     String delegateFlavor =
         delegate.getValue(section, "delegate").orElseThrow(requires("delegate"));
     ModernBuildRuleStrategyConfig delegate = getFlavoredStrategyConfig(delegateFlavor);
-    return new HybridLocalBuildStrategyConfig(localJobs, remoteJobs, delegate);
+    return new HybridLocalBuildStrategyConfig(localJobs, localDelegateJobs, remoteJobs, delegate);
   }
 
   private Supplier<HumanReadableException> requires(String key) {

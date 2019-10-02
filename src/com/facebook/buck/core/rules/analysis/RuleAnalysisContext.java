@@ -15,8 +15,10 @@
  */
 package com.facebook.buck.core.rules.analysis;
 
-import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
-import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -43,13 +45,16 @@ public interface RuleAnalysisContext {
    *     as a map with key of the {@link RuleAnalysisKey} that correspond to the {@link
    *     ProviderInfoCollection}.
    */
-  ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> deps();
+  ImmutableMap<BuildTarget, ProviderInfoCollection> deps();
 
   /**
-   * @return the factory for creating and registering {@link
-   *     com.facebook.buck.core.rules.actions.Action}s
+   * @return the factory for creating {@link com.facebook.buck.core.artifact.Artifact}s and
+   *     registering {@link com.facebook.buck.core.rules.actions.Action}s
    */
-  ActionWrapperDataFactory actionFactory();
+  ActionRegistry actionRegistry();
+
+  /** @return an {@link BuckEventBus} for sending stats and printing */
+  BuckEventBus getEventBus();
 
   // TODO(bobyf): Fill as needed. This will probably contain most of {@link
   // BuildRuleCreationContext}

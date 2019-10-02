@@ -16,9 +16,6 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -62,14 +59,6 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
-    Optional<AndroidPlatformTarget> androidPlatformTarget =
-        toolchainProvider.getByNameIfPresent(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
-    Optional<AndroidNdk> androidNdk =
-        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
-    Optional<AndroidSdkLocation> androidSdkLocation =
-        toolchainProvider.getByNameIfPresent(
-            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
 
     if (!args.getExecutable().orElse(false)) {
       SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
@@ -89,9 +78,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
               && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
-          androidPlatformTarget,
-          androidNdk,
-          androidSdkLocation,
+          getAndroidToolsOptional(args),
           args.getNoRemote().orElse(false));
     } else {
       return new GenruleBinary(
@@ -108,9 +95,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getOut(),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
-          androidPlatformTarget,
-          androidNdk,
-          androidSdkLocation,
+          getAndroidToolsOptional(args),
           args.getNoRemote().orElse(false));
     }
   }

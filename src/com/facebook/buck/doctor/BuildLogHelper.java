@@ -67,7 +67,7 @@ public class BuildLogHelper {
       BuildLogEntry entry = newBuildLogEntry(logFile);
       if (entry.getCommandArgs().isPresent()
           && entry.getCommandArgs().get().size() > 0
-          && !entry.getCommandArgs().get().get(0).matches("^(rage|doctor|server|launch)$")) {
+          && !entry.getCommandArgs().get().get(0).matches("^(rage|doctor|server|launch|fix)$")) {
         logEntries.add(newBuildLogEntry(logFile));
       }
     }
@@ -79,7 +79,7 @@ public class BuildLogHelper {
   private BuildLogEntry newBuildLogEntry(Path logFile) throws IOException {
 
     Optional<Path> machineReadableLogFile =
-        Optional.of(logFile.getParent().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME))
+        Optional.of(logFile.resolveSibling(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME))
             .filter(path -> projectFilesystem.isFile(path));
 
     Optional<Integer> exitCode =
@@ -96,6 +96,8 @@ public class BuildLogHelper {
 
     Optional<List<String>> commandArgs =
         invocationInfo.flatMap(iInfo -> Optional.ofNullable(iInfo.getUnexpandedCommandArgs()));
+    Optional<List<String>> expandedCommandArgs =
+        invocationInfo.flatMap(iInfo -> Optional.ofNullable(iInfo.getCommandArgs()));
 
     Optional<BuildId> buildId =
         machineReadableLogFile.map(
@@ -132,10 +134,19 @@ public class BuildLogHelper {
             .filter(input -> input.toString().endsWith(".trace"))
             .findFirst();
 
+    Optional<Path> configJsonFile =
+        Optional.of(logFile.resolveSibling(BuckConstant.CONFIG_JSON_FILE_NAME))
+            .filter(projectFilesystem::isFile);
+
+    Optional<Path> fixSpecFile =
+        Optional.of(logFile.resolveSibling(BuckConstant.BUCK_FIX_SPEC_FILE_NAME))
+            .filter(projectFilesystem::isFile);
+
     return ImmutableBuildLogEntry.of(
         logFile,
         buildId,
         commandArgs,
+        expandedCommandArgs,
         exitCode.map(OptionalInt::of).orElseGet(OptionalInt::empty),
         buildTimeMs,
         ruleKeyLoggerFile,
@@ -143,6 +154,8 @@ public class BuildLogHelper {
         ruleKeyDiagKeysFile,
         ruleKeyDiagGraphFile,
         traceFile,
+        configJsonFile,
+        fixSpecFile,
         projectFilesystem.getFileSize(logFile),
         Date.from(projectFilesystem.getLastModifiedTime(logFile).toInstant()));
   }
@@ -219,5 +232,18 @@ public class BuildLogHelper {
         false);
 
     return logfiles;
+  }
+
+  /**
+   * Given a build id, return the corresponding {@link BuildLogEntry} of that build
+   *
+   * @param buildId the buildId corresponding to the {@link BuildLogEntry} to retrieve
+   * @return An optional BuildLogEntry
+   * @throws IOException If interacting with the filesystem fails
+   */
+  public Optional<BuildLogEntry> getBuildLogEntryFromId(BuildId buildId) throws IOException {
+    return getBuildLogs().stream()
+        .filter(e -> e.getBuildId().map(id -> id.equals(buildId)).orElse(false))
+        .findFirst();
   }
 }

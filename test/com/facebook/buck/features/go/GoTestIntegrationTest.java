@@ -22,10 +22,20 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -49,6 +59,45 @@ public class GoTestIntegrationTest {
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "go_test", tmp);
     workspace.setUp();
+  }
+
+  @Test
+  public void testProtocolGoTestRuleShouldBuildAndGenerateSpec()
+      throws IOException, InterruptedException {
+    // This test should pass.
+    ProcessResult result =
+        workspace.runBuckCommand("test", "--config", "test.external_runner=echo", "//:testx");
+    result.assertSuccess();
+
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0).get("specs");
+
+    assertEquals("spec", spec.get("my").textValue());
+
+    JsonNode other = spec.get("other");
+    assertTrue(other.isArray());
+    assertTrue(other.has(0));
+    assertEquals("stuff", other.get(0).get("complicated").textValue());
+    assertEquals(1, other.get(0).get("integer").intValue());
+    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
+
+    String cmd = spec.get("cmd").textValue();
+
+    Path script = Files.createTempFile("bash", "script");
+    Files.write(script, cmd.getBytes(Charsets.UTF_8));
+    MostFiles.makeExecutable(script);
+
+    DefaultProcessExecutor processExecutor =
+        new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.Result processResult =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder().addCommand(script.toString()).build());
+    assertEquals(0, processResult.getExitCode());
   }
 
   @Test
@@ -252,6 +301,12 @@ public class GoTestIntegrationTest {
   public void testGoTestWithEnv() {
     ProcessResult result = workspace.runBuckCommand("test", "//:test-with-env");
     result.assertSuccess();
+  }
+
+  @Test
+  public void showOutputOfTestBinary() {
+    Path output = workspace.buildAndReturnOutput("//:test-success");
+    assertTrue(Files.isExecutable(output));
   }
 
   @Test

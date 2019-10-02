@@ -18,11 +18,13 @@ package com.facebook.buck.remoteexecution.util;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.remoteexecution.CasBlobUploader;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.util.concurrent.MoreFutures;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -32,7 +34,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
@@ -56,10 +57,12 @@ import java.util.stream.Stream;
  * will be fulfilled.
  */
 public class MultiThreadedBlobUploader {
+  private static final Logger LOG = Logger.get(MultiThreadedBlobUploader.class);
+
   private final int missingCheckLimit;
   private final int uploadSizeLimit;
 
-  private final ConcurrentHashMap<String, ListenableFuture<Void>> pendingUploads =
+  private final ConcurrentHashMap<String, ListenableFuture<Unit>> pendingUploads =
       new ConcurrentHashMap<>();
 
   private final Set<String> containedHashes = Sets.newConcurrentHashSet();
@@ -72,9 +75,9 @@ public class MultiThreadedBlobUploader {
 
   private static class PendingUpload {
     private final UploadDataSupplier uploadData;
-    private final SettableFuture<Void> future;
+    private final SettableFuture<Unit> future;
 
-    PendingUpload(UploadDataSupplier uploadData, SettableFuture<Void> future) {
+    PendingUpload(UploadDataSupplier uploadData, SettableFuture<Unit> future) {
       this.uploadData = uploadData;
       this.future = future;
     }
@@ -108,7 +111,7 @@ public class MultiThreadedBlobUploader {
   }
 
   /** Uploads missing items to the CAS. */
-  public ListenableFuture<Void> addMissing(Stream<UploadDataSupplier> dataSupplier) {
+  public ListenableFuture<Unit> addMissing(Stream<UploadDataSupplier> dataSupplier) {
     ImmutableList<UploadDataSupplier> data =
         dataSupplier
             // We don't trust the caller to have applied filtering. This means that
@@ -122,37 +125,35 @@ public class MultiThreadedBlobUploader {
     return enqueue(data);
   }
 
-  private ListenableFuture<Void> enqueue(ImmutableList<UploadDataSupplier> dataSupplier) {
-    Builder<ListenableFuture<Void>> futures = ImmutableList.builder();
+  private ListenableFuture<Unit> enqueue(ImmutableList<UploadDataSupplier> dataSupplier) {
+    Builder<ListenableFuture<Unit>> futures = ImmutableList.builder();
     for (UploadDataSupplier data : dataSupplier) {
       Digest digest = data.getDigest();
-      ListenableFuture<Void> resultFuture =
-          pendingUploads.computeIfAbsent(
-              digest.getHash(),
-              ignored -> {
-                if (containsDigest(digest)) {
-                  return Futures.immediateFuture(null);
-                }
-                SettableFuture<Void> future = SettableFuture.create();
-                waitingMissingCheck.add(new PendingUpload(data, future));
-                return Futures.transform(
-                    future,
-                    ignore -> {
-                      // If the upload was successful short circuit for future requests.
-                      addContainedHash(digest);
-                      return null;
-                    },
-                    directExecutor());
-              });
-      Futures.addCallback(
-          resultFuture,
-          MoreFutures.finallyCallback(
-              () -> {
-                pendingUploads.remove(digest.getHash());
-              }),
-          directExecutor());
-      futures.add(resultFuture);
-      uploadService.submit(this::processUploads);
+      SettableFuture<Unit> future = SettableFuture.create();
+      ListenableFuture<Unit> pendingFuture = pendingUploads.putIfAbsent(digest.getHash(), future);
+      if (pendingFuture == null) {
+        pendingFuture = future;
+        if (containsDigest(digest)) {
+          future.set(null);
+        } else {
+          SettableFuture<Unit> innerFuture = SettableFuture.create();
+          waitingMissingCheck.add(new PendingUpload(data, innerFuture));
+          future.setFuture(
+              Futures.transform(
+                  innerFuture,
+                  ignored -> {
+                    addContainedHash(digest);
+                    return null;
+                  },
+                  directExecutor()));
+          Futures.addCallback(
+              future,
+              MoreFutures.finallyCallback(() -> pendingUploads.remove(digest.getHash())),
+              directExecutor());
+          uploadService.submit(this::processUploads);
+        }
+      }
+      futures.add(pendingFuture);
     }
     return Futures.whenAllSucceed(futures.build()).call(() -> null, directExecutor());
   }
@@ -176,9 +177,15 @@ public class MultiThreadedBlobUploader {
     ImmutableList<PendingUpload> data = dataBuilder.build();
 
     try {
-      List<Digest> requiredDigests =
-          data.stream().map(entry -> entry.uploadData.getDigest()).collect(Collectors.toList());
-
+      Set<Digest> requiredDigests =
+          data.stream().map(entry -> entry.uploadData.getDigest()).collect(Collectors.toSet());
+      if (requiredDigests.size() != data.size()) {
+        LOG.warn(
+            "Request size doesn't match pending process missing list. Request size: "
+                + requiredDigests.size()
+                + " Pending Process Missing List size: "
+                + data.size());
+      }
       Set<String> missing = asyncBlobUploader.getMissingHashes(requiredDigests);
 
       for (PendingUpload entry : data) {
@@ -217,6 +224,13 @@ public class MultiThreadedBlobUploader {
 
     if (!data.isEmpty()) {
       try {
+        LOG.debug(
+            "Starting Uploading: "
+                + data.size()
+                + " requests, size: "
+                + size
+                + ". "
+                + String.join(", ", data.keySet()));
         if (size > uploadSizeLimit) {
           // This should only happen when we're trying to upload a single large object
           Preconditions.checkState(data.size() == 1);
@@ -240,6 +254,7 @@ public class MultiThreadedBlobUploader {
               });
           data.forEach((k, pending) -> pending.future.setException(new RuntimeException("idk")));
         }
+        LOG.debug("Finished Uploading: " + data.size() + " requests, size: " + size);
       } catch (Exception e) {
         data.forEach((k, pending) -> pending.future.setException(e));
       }

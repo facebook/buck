@@ -17,7 +17,6 @@
 package com.facebook.buck.core.model;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Optional;
 
 /**
@@ -27,8 +26,6 @@ import java.util.Optional;
  * <p>foo/BUCK is the parent of foo/bar/baz/BUCK and foo/bar/qux/BUCK.
  */
 public interface BuildFileTree {
-  /** @return paths relative to BuildTarget that contain their own build files. E.g. */
-  Collection<Path> getChildPaths(BuildTarget target);
 
   /**
    * Returns the base path for a given path. The base path is the nearest directory at or above

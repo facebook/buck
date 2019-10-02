@@ -1,0 +1,13 @@
+load("//:defs.bzl", "dep_list_rule", "write_file")
+
+write_file(name = "file1")
+
+write_file(name = "file2")
+
+dep_list_rule(
+    name = "with_deps",
+    deps = [
+        ":file1",
+        ":file2",
+    ],
+)

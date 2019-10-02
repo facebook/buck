@@ -16,8 +16,13 @@
 
 package com.facebook.buck.features.go;
 
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.core.AllOf.allOf;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
+import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -28,12 +33,15 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -43,7 +51,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -226,5 +236,65 @@ public class GoDescriptorsTest {
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableList.toImmutableList())
             .contains(srcTarget));
+  }
+
+  @Test
+  public void testBuildRuleWithLinkModeArg() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+
+    GoPlatform goPlatform = GoTestUtils.CUSTOM_PLATFORM_WITH_LINKER_ARGS;
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot());
+
+    BuildRuleParams params = TestBuildRuleParams.create();
+    GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.builder().build());
+
+    ImmutableMap<Optional<GoLinkStep.LinkMode>, Matcher> modes =
+        ImmutableMap.of(
+            Optional.empty(),
+            allOf(hasItems("-linkmode", "internal"), not(hasItems("-extld"))),
+            Optional.of(GoLinkStep.LinkMode.INTERNAL),
+            allOf(hasItems("-linkmode", "internal"), not(hasItems("-extld"))),
+            Optional.of(GoLinkStep.LinkMode.EXTERNAL),
+            hasItems("-linkmode", "external", "-extld"));
+
+    int i = 0;
+    for (Map.Entry<Optional<GoLinkStep.LinkMode>, Matcher> entry : modes.entrySet()) {
+      i++;
+      BuildTarget target =
+          BuildTargetFactory.newInstance("//:go_library_" + i).withFlavors(goPlatform.getFlavor());
+      GoBinary binary =
+          GoDescriptors.createGoBinaryRule(
+              target,
+              filesystem,
+              params,
+              graphBuilder,
+              goBuckConfig,
+              Linker.LinkableDepType.STATIC_PIC,
+              entry.getKey(),
+              ImmutableSet.of(),
+              ImmutableSortedSet.of(),
+              ImmutableList.of(),
+              ImmutableList.of(),
+              ImmutableList.of(),
+              ImmutableList.of(),
+              goPlatform);
+
+      ImmutableList<Step> buildSteps =
+          binary.getBuildSteps(
+              FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
+      GoLinkStep linkStep =
+          buildSteps.stream()
+              .filter(GoLinkStep.class::isInstance)
+              .map(GoLinkStep.class::cast)
+              .collect(ImmutableList.toImmutableList())
+              .get(0);
+
+      ImmutableList<String> shellCommand =
+          linkStep.getShellCommandInternal(TestExecutionContext.newInstance());
+
+      assertThat(shellCommand, entry.getValue());
+    }
   }
 }

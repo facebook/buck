@@ -18,7 +18,7 @@ package com.facebook.buck.query;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.QueryTarget;
@@ -27,7 +27,6 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,7 +43,7 @@ public class QueryTargetCollectorTest {
           Optional.empty(),
           Optional.empty(),
           new DefaultTypeCoercerFactory(),
-          DefaultCellPathResolver.of(ROOT, ImmutableMap.of()),
+          TestCellPathResolver.create(ROOT),
           new ParsingUnconfiguredBuildTargetViewFactory(),
           baseName,
           ImmutableSet.of(),
@@ -91,9 +90,9 @@ public class QueryTargetCollectorTest {
                 Argument.of(SetExpression.of(ImmutableList.of(literal("foo"), literal("bar")))),
             (Argument<QueryBuildTarget>) Argument.of(2));
     BinaryOperatorExpression.of(
-            AbstractBinaryOperatorExpression.Operator.UNION,
+            BinaryOperatorExpression.Operator.UNION,
             ImmutableList.of(
-                new ImmutableFunctionExpression<>(new DepsFunction(), args),
+                new FunctionExpression<>(new DepsFunction(), args),
                 TargetSetExpression.of(ImmutableSet.of(target("bar"), target("baz")))))
         .traverse(collector);
     assertThat(

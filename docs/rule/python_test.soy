@@ -45,12 +45,7 @@
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call python_common.srcs_arg /}
 
@@ -120,6 +115,8 @@
 {/call}
 
 {call buck.test_rule_timeout_ms /}
+
+{call test_common.contacts_arg /}
 
 {call python_common.package_style_arg /}
 

@@ -35,12 +35,14 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -153,6 +155,28 @@ public class TargetNodeTest {
     }
   }
 
+  @Test
+  public void configurationDepsAreCopiedToTargetNode() {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ExampleDescription description = new ExampleDescription();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    BuildTarget configurationBuildTarget = BuildTargetFactory.newInstance("//config:bar");
+    TargetNode<?> targetNode =
+        new TargetNodeFactory(new DefaultTypeCoercerFactory())
+            .createFromObject(
+                description,
+                createPopulatedConstructorArg(buildTarget, ImmutableMap.of("name", "bar")),
+                filesystem,
+                buildTarget,
+                ImmutableSet.of(),
+                ImmutableSortedSet.of(configurationBuildTarget),
+                ImmutableSet.of(),
+                ImmutableSet.of(),
+                createCellRoots(filesystem));
+
+    assertEquals(ImmutableSet.of(configurationBuildTarget), targetNode.getConfigurationDeps());
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractExampleDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
@@ -224,6 +248,7 @@ public class TargetNodeTest {
             filesystem,
             buildTarget,
             declaredDeps,
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             createCellRoots(filesystem));
@@ -231,15 +256,23 @@ public class TargetNodeTest {
 
   private static ExampleDescriptionArg createPopulatedConstructorArg(
       BuildTarget buildTarget, Map<String, Object> instance) throws NoSuchBuildTargetException {
-    ConstructorArgMarshaller marshaller =
-        new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
+    DefaultTypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
+    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(coercerFactory);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    KnownNativeRuleTypes knownRuleTypes =
+        KnownNativeRuleTypes.of(ImmutableList.of(new ExampleDescription()), ImmutableList.of());
+    ConstructorArgBuilder<ExampleDescriptionArg> builder =
+        knownRuleTypes.getConstructorArgBuilder(
+            coercerFactory,
+            knownRuleTypes.getRuleType("example"),
+            ExampleDescriptionArg.class,
+            buildTarget);
     try {
       return marshaller.populate(
           createCellRoots(projectFilesystem),
           projectFilesystem,
           buildTarget,
-          ExampleDescriptionArg.class,
+          builder,
           ImmutableSet.builder(),
           instance);
     } catch (ParamInfoException e) {

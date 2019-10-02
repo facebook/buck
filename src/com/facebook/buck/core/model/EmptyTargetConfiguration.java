@@ -15,11 +15,15 @@
  */
 package com.facebook.buck.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableSet;
+import java.util.Objects;
+
 /** Configuration that doesn't have any options */
 public class EmptyTargetConfiguration implements TargetConfiguration {
   public static final EmptyTargetConfiguration INSTANCE = new EmptyTargetConfiguration();
 
-  private final int hashCode = EmptyTargetConfiguration.class.getName().hashCode();
+  private final int hashCode = Objects.hash(EmptyTargetConfiguration.class.getName());
 
   private EmptyTargetConfiguration() {}
 
@@ -31,5 +35,11 @@ public class EmptyTargetConfiguration implements TargetConfiguration {
   @Override
   public boolean equals(Object obj) {
     return obj instanceof EmptyTargetConfiguration;
+  }
+
+  @JsonIgnore
+  @Override
+  public ImmutableSet<BuildTarget> getConfigurationTargets() {
+    return ImmutableSet.of();
   }
 }

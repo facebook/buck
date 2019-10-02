@@ -318,8 +318,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               bundleConfigPath,
               buildTarget,
               false,
-              modulesInfo.build(),
-              moduleNames));
+              modulesInfo.build()));
     }
 
     // The `ApkBuilderStep` delegates to android tools to build a ZIP with timestamps in it, making
@@ -420,6 +419,16 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           pathResolver,
           nativeLibraryDirectoriesBuilder,
           nativeLibraryDirectoriesBuilderForThisModule);
+    }
+
+    // Package prebuilt libs which need to be loaded by `System.loadLibrary` in the standard dir,
+    // even in exopackage builds.
+    if (nativeFilesInfo.nativeLibsDirForSystemLoader.isPresent() && module.isRootModule()) {
+      addThisModule = true;
+      Path relativePath =
+          pathResolver.getRelativePath(nativeFilesInfo.nativeLibsDirForSystemLoader.get());
+      nativeLibraryDirectoriesBuilder.add(relativePath);
+      nativeLibraryDirectoriesBuilderForThisModule.add(relativePath);
     }
 
     if (shouldPackageAssetLibraries) {

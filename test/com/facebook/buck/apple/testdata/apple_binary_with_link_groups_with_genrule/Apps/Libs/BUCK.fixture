@@ -1,0 +1,35 @@
+apple_library(
+    name = "Root",
+    visibility = ["//Apps/..."],
+    deps = [
+        ":A",
+        ":B",
+    ],
+)
+
+apple_library(
+    name = "A",
+    srcs = ["A/A.c"] + [":C"],
+    exported_headers = ["A/A.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    visibility = ["//Apps/..."],
+)
+
+apple_library(
+    name = "B",
+    srcs = ["B/B.c"],
+    exported_headers = ["B/B.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    visibility = ["//Apps/..."],
+)
+
+genrule(
+    name = "C",
+    out = "dummy.m",
+    cmd = "echo \"$(query_targets 'deps(:B, 0)')\" > $OUT",
+    visibility = ["//Apps/..."],
+)

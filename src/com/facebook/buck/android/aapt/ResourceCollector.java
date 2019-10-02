@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.aapt;
 
+import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.util.xml.DocumentLocation;
 import java.nio.file.Path;
@@ -26,10 +27,11 @@ interface ResourceCollector {
       RType rType, String name, Path path, DocumentLocation documentLocation);
 
   void addCustomDrawableResourceIfNotPresent(
-      RType rType, String name, Path path, DocumentLocation documentLocation);
-
-  void addGrayscaleImageResourceIfNotPresent(
-      RType rType, String name, Path path, DocumentLocation documentLocation);
+      RType rType,
+      String name,
+      Path path,
+      DocumentLocation documentLocation,
+      CustomDrawableType drawableType);
 
   void addIntArrayResourceIfNotPresent(
       RType rType, String name, int numValues, Path path, DocumentLocation documentLocation);
@@ -42,6 +44,4 @@ interface ResourceCollector {
       @Nullable String parent,
       Path path,
       DocumentLocation documentLocation);
-
-  void addResourceIfNotPresent(RDotTxtEntry rDotTxtEntry);
 }

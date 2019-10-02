@@ -17,6 +17,7 @@
 package com.facebook.buck.util.concurrent;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -117,9 +118,10 @@ public class MoreFutures {
     }
   }
 
-  public static <V> ListenableFuture<Void> addListenableCallback(
+  /** Add a callback to a listenable future */
+  public static <V> ListenableFuture<Unit> addListenableCallback(
       ListenableFuture<V> future, FutureCallback<? super V> callback, Executor executor) {
-    SettableFuture<Void> waiter = SettableFuture.create();
+    SettableFuture<Unit> waiter = SettableFuture.create();
     Futures.addCallback(
         future,
         new FutureCallback<V>() {
@@ -130,7 +132,7 @@ public class MoreFutures {
             } catch (Throwable thrown) {
               waiter.setException(thrown);
             } finally {
-              waiter.set(null);
+              waiter.set(Unit.UNIT);
             }
           }
 
@@ -141,7 +143,7 @@ public class MoreFutures {
             } catch (Throwable thrown) {
               waiter.setException(thrown);
             } finally {
-              waiter.set(null);
+              waiter.set(Unit.UNIT);
             }
           }
         },

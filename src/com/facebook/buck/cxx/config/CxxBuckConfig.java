@@ -81,6 +81,9 @@ public class CxxBuckConfig {
   private static final String ARCHIVER_TYPE = "archiver_type";
   private static final String MAX_TEST_OUTPUT_SIZE = "max_test_output_size";
   private static final String LINKER_PLATFORM = "linker_platform";
+  private static final String LINK_GROUPS_ENABLED = "link_groups_enabled";
+  private static final String LINK_GROUPS_CUTTING_GENRULE_BRANCH_ENABLED =
+      "link_groups_cutting_genrule_branch_enabled";
   private static final String UNTRACKED_HEADERS = "untracked_headers";
   private static final String UNTRACKED_HEADERS_WHITELIST = "untracked_headers_whitelist";
   private static final String EXPORTED_HEADERS_SYMLINKS_ENABLED =
@@ -115,6 +118,8 @@ public class CxxBuckConfig {
   private static final String USE_ARG_FILE = "use_arg_file";
   private static final String TOOLCHAIN_TARGET = "toolchain_target";
   private static final String FILEPATH_LENGTH_LIMITED = "filepath_length_limited";
+
+  private static final String CHECK_GTEST_TEST_LIST = "check_gtest_test_list";
 
   private static final String OBJCOPY = "objcopy";
   private static final String NM = "nm";
@@ -426,6 +431,22 @@ public class CxxBuckConfig {
         .build();
   }
 
+  public Optional<Boolean> getLinkGroupsEnabledSetting() {
+    return delegate.getBoolean(cxxSection, LINK_GROUPS_ENABLED);
+  }
+
+  public boolean getLinkGroupsEnabled() {
+    return getLinkGroupsEnabledSetting().orElse(false);
+  }
+
+  public Optional<Boolean> getLinkGroupCuttingGenruleBranchEnabledSetting() {
+    return delegate.getBoolean(cxxSection, LINK_GROUPS_CUTTING_GENRULE_BRANCH_ENABLED);
+  }
+
+  public boolean getLinkGroupCuttingGenruleBranchEnabled() {
+    return getLinkGroupCuttingGenruleBranchEnabledSetting().orElse(false);
+  }
+
   public Optional<Boolean> getPublicHeadersSymlinksSetting() {
     return delegate.getBoolean(cxxSection, EXPORTED_HEADERS_SYMLINKS_ENABLED);
   }
@@ -458,6 +479,10 @@ public class CxxBuckConfig {
 
   public boolean shouldCacheBinaries() {
     return delegate.getBooleanValue(cxxSection, CACHE_BINARIES, false);
+  }
+
+  public boolean checkGTestTestList() {
+    return delegate.getBooleanValue(cxxSection, CHECK_GTEST_TEST_LIST, false);
   }
 
   public boolean isPCHEnabled() {

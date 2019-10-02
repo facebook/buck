@@ -16,10 +16,22 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -70,5 +82,93 @@ public class RobolectricTestRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
     workspace.runBuckTest("//java/com/sample/lib:test_robolectric_runtime_dep").assertSuccess();
+  }
+
+  @Test
+  public void robolectricTestXWithExternalRunner() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    workspace.runBuckTest("//java/com/sample/runner:robolectric_with_runner").assertSuccess();
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0).get("specs");
+
+    assertEquals("spec", spec.get("my").textValue());
+
+    String cmd = spec.get("cmd").textValue();
+    DefaultProcessExecutor processExecutor =
+        new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.Result processResult =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
+    assertEquals(0, processResult.getExitCode());
+  }
+
+  @Test
+  public void robolectricTestXWithExternalRunnerWithRobolectricRuntimeDependencyArgument()
+      throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    workspace.runBuckTest("//java/com/sample/runner:robolectric_with_runner_runtime_dep");
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0).get("specs");
+
+    assertEquals("spec", spec.get("my").textValue());
+
+    String cmd = spec.get("cmd").textValue();
+    DefaultProcessExecutor processExecutor =
+        new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.Result processResult =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
+    assertEquals(0, processResult.getExitCode());
+  }
+
+  @Test
+  public void robolectricTestXWithExternalRunnerWithoutRobolectricRuntimeDependencyArgument()
+      throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    workspace.runBuckTest("//java/com/sample/runner:robolectric_without_runner_runtime_dep_failed");
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0).get("specs");
+
+    assertEquals("spec", spec.get("my").textValue());
+
+    String cmd = spec.get("cmd").textValue();
+    DefaultProcessExecutor processExecutor =
+        new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.Result processResult =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
+    assertEquals(1, processResult.getExitCode());
+    assertTrue(processResult.getStderr().isPresent());
+    assertTrue(processResult.getStderr().get().contains("java.lang.ClassNotFoundException"));
   }
 }

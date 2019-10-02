@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -62,7 +63,7 @@ class UntrackedHeaderReporterWithFallback implements UntrackedHeaderReporter {
   }
 
   @Override
-  public String getErrorReport(Path header) throws IOException {
-    return headerReporter.getErrorReport(header);
+  public String getErrorReport(SourcePathResolver pathResolver, Path header) throws IOException {
+    return headerReporter.getErrorReport(pathResolver, header);
   }
 }

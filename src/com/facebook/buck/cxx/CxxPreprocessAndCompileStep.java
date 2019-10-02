@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
@@ -62,6 +63,7 @@ class CxxPreprocessAndCompileStep implements Step {
   private final Path input;
   private final CxxSource.Type inputType;
   private final ToolCommand command;
+  private final SourcePathResolver pathResolver;
   private final HeaderPathNormalizer headerPathNormalizer;
   private final DebugPathSanitizer sanitizer;
   private final Compiler compiler;
@@ -89,6 +91,7 @@ class CxxPreprocessAndCompileStep implements Step {
       Path input,
       CxxSource.Type inputType,
       ToolCommand command,
+      SourcePathResolver pathResolver,
       HeaderPathNormalizer headerPathNormalizer,
       DebugPathSanitizer sanitizer,
       Path scratchDir,
@@ -103,6 +106,7 @@ class CxxPreprocessAndCompileStep implements Step {
     this.input = input;
     this.inputType = inputType;
     this.command = command;
+    this.pathResolver = pathResolver;
     this.headerPathNormalizer = headerPathNormalizer;
     this.sanitizer = sanitizer;
     this.scratchDir = scratchDir;
@@ -223,7 +227,11 @@ class CxxPreprocessAndCompileStep implements Step {
     String err = getSanitizedStderr(result, context);
     result =
         new ProcessExecutor.Result(
-            result.getExitCode(), result.isTimedOut(), result.getStdout(), Optional.of(err));
+            result.getExitCode(),
+            result.isTimedOut(),
+            result.getStdout(),
+            Optional.of(err),
+            result.getCommand());
     processResult(result, context);
     return result;
   }
@@ -316,7 +324,7 @@ class CxxPreprocessAndCompileStep implements Step {
         new CxxErrorTransformer(
             filesystem, context.shouldReportAbsolutePaths(), headerPathNormalizer);
     return errorLines
-        .map(cxxErrorTransformer::transformLine)
+        .map((line) -> cxxErrorTransformer.transformLine(pathResolver, line))
         .collect(Collectors.joining(System.lineSeparator()));
   }
 

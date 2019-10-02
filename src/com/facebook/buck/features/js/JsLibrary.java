@@ -16,98 +16,137 @@
 
 package com.facebook.buck.features.js;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
+import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.json.JsonBuilder;
 import com.facebook.buck.util.json.JsonBuilder.ObjectBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+/** JsLibrary rule */
+public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
 
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraryDependencies;
-
-  @AddToRuleKey private final BuildTargetSourcePath filesDependency;
-
-  @AddToRuleKey private final WorkerTool worker;
-
-  protected JsLibrary(
+  JsLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
       BuildTargetSourcePath filesDependency,
       ImmutableSortedSet<SourcePath> libraryDependencies,
       WorkerTool worker) {
-    super(buildTarget, projectFilesystem, params);
-    this.filesDependency = filesDependency;
-    this.libraryDependencies = libraryDependencies;
-    this.worker = worker;
+    super(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        new JsLibraryImpl(
+            libraryDependencies, filesDependency, worker, buildTarget, projectFilesystem));
   }
 
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    return getBuildSteps(
-        context,
-        buildableContext,
-        getSourcePathToOutput(),
-        getProjectFilesystem(),
-        worker,
-        this::getJobArgs);
+  /** Abstract buildable implementation that is used by JsLibrary and JsLibrary.Files rules */
+  abstract static class AbstractJsLibraryBuildable implements Buildable {
+    @AddToRuleKey final WorkerTool worker;
+    @AddToRuleKey final BuildTarget buildTarget;
+    @AddToRuleKey final OutputPath output;
+
+    protected AbstractJsLibraryBuildable(
+        WorkerTool worker, BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+      this.worker = worker;
+      this.buildTarget = buildTarget;
+      this.output =
+          new PublicOutputPath(
+              BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.jslib"));
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      SourcePathResolver resolver = buildContext.getSourcePathResolver();
+      Path outputPath = filesystem.resolve(outputPathResolver.resolvePath(output));
+      return ImmutableList.of(
+          JsUtil.jsonWorkerShellStepAddingFlavors(
+              worker,
+              getJobArgs(resolver, outputPath, filesystem),
+              buildTarget,
+              resolver,
+              filesystem));
+    }
+
+    abstract ObjectBuilder getJobArgs(
+        SourcePathResolver resolver, Path outputPath, ProjectFilesystem filesystem);
   }
 
-  private ObjectBuilder getJobArgs(SourcePathResolver resolver, Path outputPath) {
-    ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
+  /** JsLibrary buildable implementation */
+  static class JsLibraryImpl extends AbstractJsLibraryBuildable {
 
-    return JsonBuilder.object()
-        .addString("command", "library-dependencies")
-        .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
-        .addString("rootPath", getProjectFilesystem().getRootPath().toString())
-        .addString("platform", JsUtil.getPlatformString(flavors))
-        .addString("outputPath", outputPath.toString())
-        .addArray(
-            "dependencyLibraryFilePaths",
-            libraryDependencies.stream()
-                .map(resolver::getAbsolutePath)
-                .map(Path::toString)
-                .collect(JsonBuilder.toArrayOfStrings()))
-        .addString(
-            "aggregatedSourceFilesFilePath", resolver.getAbsolutePath(filesDependency).toString());
+    @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraryDependencies;
+    @AddToRuleKey private final BuildTargetSourcePath filesDependency;
+
+    JsLibraryImpl(
+        ImmutableSortedSet<SourcePath> libraryDependencies,
+        BuildTargetSourcePath filesDependency,
+        WorkerTool worker,
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem) {
+      super(worker, buildTarget, projectFilesystem);
+      this.libraryDependencies = libraryDependencies;
+      this.filesDependency = filesDependency;
+    }
+
+    @Override
+    ObjectBuilder getJobArgs(
+        SourcePathResolver resolver, Path outputPath, ProjectFilesystem filesystem) {
+      ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+
+      return JsonBuilder.object()
+          .addString("command", "library-dependencies")
+          .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
+          .addString("rootPath", filesystem.getRootPath().toString())
+          .addString("platform", JsUtil.getPlatformString(flavors))
+          .addString("outputPath", outputPath.toString())
+          .addArray(
+              "dependencyLibraryFilePaths",
+              libraryDependencies.stream()
+                  .map(resolver::getAbsolutePath)
+                  .map(Path::toString)
+                  .collect(JsonBuilder.toArrayOfStrings()))
+          .addString(
+              "aggregatedSourceFilesFilePath",
+              resolver.getAbsolutePath(filesDependency).toString());
+    }
   }
 
   @Override
   public BuildTargetSourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(
-        getBuildTarget(),
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jslib"));
+    return getSourcePath(getBuildable().output);
   }
 
-  public ImmutableSortedSet<SourcePath> getLibraryDependencies() {
-    return libraryDependencies;
+  ImmutableSortedSet<SourcePath> getLibraryDependencies() {
+    return getBuildable().libraryDependencies;
   }
 
   Stream<JsFile<?>> getJsFiles(SourcePathRuleFinder ruleFinder) {
-    BuildRule fileRule = ruleFinder.getRule(filesDependency);
+    BuildRule fileRule = ruleFinder.getRule(getBuildable().filesDependency);
     if (fileRule instanceof Files) {
       return ((Files) fileRule).getJsFiles(ruleFinder);
     }
@@ -118,64 +157,27 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   /**
-   * An internal rule type to make he aggregation result of {@link JsFile} dependencies cacheable
+   * An internal rule type to make the aggregation result of {@link JsFile} dependencies cacheable
    * independently of {@link JsLibrary} dependencies.
    */
-  public static class Files extends AbstractBuildRuleWithDeclaredAndExtraDeps {
-
-    @AddToRuleKey private final ImmutableSortedSet<BuildTargetSourcePath> sources;
-
-    @AddToRuleKey private final WorkerTool worker;
+  static class Files extends ModernBuildRule<FilesImpl> {
 
     Files(
         BuildTarget target,
         ProjectFilesystem filesystem,
-        BuildRuleParams params,
+        SourcePathRuleFinder ruleFinder,
         ImmutableSortedSet<BuildTargetSourcePath> sources,
         WorkerTool worker) {
-      super(target, filesystem, params);
-      this.sources = sources;
-      this.worker = worker;
-    }
-
-    @Override
-    public ImmutableList<? extends Step> getBuildSteps(
-        BuildContext context, BuildableContext buildableContext) {
-      return JsLibrary.getBuildSteps(
-          context,
-          buildableContext,
-          getSourcePathToOutput(),
-          getProjectFilesystem(),
-          worker,
-          this::getJobArgs);
-    }
-
-    private ObjectBuilder getJobArgs(SourcePathResolver resolver, Path outputPath) {
-      ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
-
-      return JsonBuilder.object()
-          .addString("command", "library-files")
-          .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
-          .addString("rootPath", getProjectFilesystem().getRootPath().toString())
-          .addString("platform", JsUtil.getPlatformString(flavors))
-          .addString("outputFilePath", outputPath.toString())
-          .addArray(
-              "sourceFilePaths",
-              sources.stream()
-                  .map(resolver::getAbsolutePath)
-                  .map(Path::toString)
-                  .collect(JsonBuilder.toArrayOfStrings()));
+      super(target, filesystem, ruleFinder, new FilesImpl(sources, worker, target, filesystem));
     }
 
     @Override
     public BuildTargetSourcePath getSourcePathToOutput() {
-      return ExplicitBuildTargetSourcePath.of(
-          getBuildTarget(),
-          BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jslib"));
+      return getSourcePath(getBuildable().output);
     }
 
     Stream<JsFile<?>> getJsFiles(SourcePathRuleFinder ruleFinder) {
-      return sources.stream().map(ruleFinder::getRule).map(this::buildRuleAsJsFile);
+      return getBuildable().sources.stream().map(ruleFinder::getRule).map(this::buildRuleAsJsFile);
     }
 
     private JsFile<?> buildRuleAsJsFile(BuildRule x) {
@@ -189,21 +191,37 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     }
   }
 
-  private static ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext,
-      BuildTargetSourcePath output,
-      ProjectFilesystem filesystem,
-      WorkerTool worker,
-      BiFunction<SourcePathResolver, Path, ObjectBuilder> jobArgs) {
-    SourcePathResolver resolver = context.getSourcePathResolver();
-    Path outputPath = resolver.getAbsolutePath(output);
-    buildableContext.recordArtifact(resolver.getRelativePath(output));
-    return ImmutableList.of(
-        RmStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, outputPath)),
-        JsUtil.jsonWorkerShellStepAddingFlavors(
-            worker, jobArgs.apply(resolver, outputPath), output.getTarget(), resolver, filesystem));
+  /** JsLibrary.Files buildable implementation */
+  static class FilesImpl extends AbstractJsLibraryBuildable {
+
+    @AddToRuleKey private final ImmutableSortedSet<BuildTargetSourcePath> sources;
+
+    FilesImpl(
+        ImmutableSortedSet<BuildTargetSourcePath> sources,
+        WorkerTool worker,
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem) {
+      super(worker, buildTarget, projectFilesystem);
+      this.sources = sources;
+    }
+
+    @Override
+    ObjectBuilder getJobArgs(
+        SourcePathResolver resolver, Path outputPath, ProjectFilesystem filesystem) {
+      ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+
+      return JsonBuilder.object()
+          .addString("command", "library-files")
+          .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
+          .addString("rootPath", filesystem.getRootPath().toString())
+          .addString("platform", JsUtil.getPlatformString(flavors))
+          .addString("outputFilePath", outputPath.toString())
+          .addArray(
+              "sourceFilePaths",
+              sources.stream()
+                  .map(resolver::getAbsolutePath)
+                  .map(Path::toString)
+                  .collect(JsonBuilder.toArrayOfStrings()));
+    }
   }
 }

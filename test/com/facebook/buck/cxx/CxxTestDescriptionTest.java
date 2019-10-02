@@ -59,7 +59,6 @@ import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -143,7 +142,7 @@ public class CxxTestDescriptionTest {
             options,
             FakeBuildContext.withSourcePathResolver(pathResolver),
             TestRule.NOOP_REPORTING_CALLBACK);
-    CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
+    CxxTestStep testStep = getTestStep(steps);
     assertThat(
         testStep.getEnv(),
         Matchers.equalTo(
@@ -183,7 +182,7 @@ public class CxxTestDescriptionTest {
             testOptions,
             FakeBuildContext.withSourcePathResolver(pathResolver),
             TestRule.NOOP_REPORTING_CALLBACK);
-    CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
+    CxxTestStep testStep = getTestStep(steps);
     assertThat(
         testStep.getCommand(),
         hasItem(
@@ -402,5 +401,14 @@ public class CxxTestDescriptionTest {
                     rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
     DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashLoader, resolver);
     return factory.build(rule);
+  }
+
+  private CxxTestStep getTestStep(Iterable<? extends Step> steps) {
+    for (Step s : steps) {
+      if (s instanceof CxxTestStep) {
+        return (CxxTestStep) s;
+      }
+    }
+    throw new IllegalStateException("Can't find CxxTestStep");
   }
 }

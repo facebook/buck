@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.HasDefaultFlavors;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -34,8 +35,13 @@ import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 public interface CxxConstructorArg
@@ -51,6 +57,37 @@ public interface CxxConstructorArg
   @Value.Default
   default PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> getPlatformSrcs() {
     return PatternMatchedCollection.of();
+  }
+
+  /** Checks that there are no files that appear both in srcs and platform_srcs */
+  default void checkDuplicateSources(SourcePathResolver sourcePathResolver) {
+    ImmutableSet.Builder<SourcePath> platformSrcsBuilder =
+        ImmutableSet.builderWithExpectedSize(
+            getPlatformSrcs().getValues().stream().mapToInt(Set::size).sum());
+
+    getPlatformSrcs().getValues().stream()
+        .flatMap(Collection::stream)
+        .map(SourceWithFlags::getSourcePath)
+        .forEach(platformSrcsBuilder::add);
+
+    ImmutableSet.Builder<SourcePath> srcsBuilder =
+        ImmutableSet.builderWithExpectedSize(getSrcs().size());
+
+    getSrcs().stream().map(SourceWithFlags::getSourcePath).forEach(srcsBuilder::add);
+
+    Set<SourcePath> intersect = Sets.intersection(platformSrcsBuilder.build(), srcsBuilder.build());
+
+    if (!intersect.isEmpty()) {
+      throw new HumanReadableException(
+          String.format(
+                  "Files may be listed in srcs or platform_srcs, but not both. The following %s both in srcs and platform_srcs: \n\n\t%s\n",
+                  intersect.size() > 1 ? "files are listed" : "file is listed",
+                  intersect.stream()
+                      .map(sourcePathResolver::getRelativePath)
+                      .map(Object::toString)
+                      .collect(Collectors.joining("\n\t")))
+              .replace("\n", System.lineSeparator()));
+    }
   }
 
   @Value.Default

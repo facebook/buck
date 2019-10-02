@@ -1,0 +1,6 @@
+[rule_analysis]
+mode = compatible
+
+[parser]
+enable_user_defined_rules = true
+default_build_file_syntax = SKYLARK

@@ -30,7 +30,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.function.Supplier;
 
 /**
  * A specialized Executor that executes {@link DepsAwareTask}. This executor will attempt to
@@ -69,13 +68,6 @@ public class JavaExecutorBackedDefaultDepsAwareExecutor<T>
   @Override
   public boolean isShutdown() {
     return isShutdown;
-  }
-
-  @Override
-  public DefaultDepsAwareTask<T> createTask(
-      Callable<T> callable, Supplier<ImmutableSet<DefaultDepsAwareTask<T>>> depsSupplier) {
-    return DefaultDepsAwareTask.of(
-        callable, DepsSupplier.of(ThrowingSupplier.fromSupplier(depsSupplier)));
   }
 
   @Override

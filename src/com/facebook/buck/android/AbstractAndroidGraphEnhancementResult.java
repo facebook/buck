@@ -59,6 +59,8 @@ interface AbstractAndroidGraphEnhancementResult {
 
   APKModuleGraph getAPKModuleGraph();
 
+  Optional<CopyNativeLibraries> getCopyNativeLibrariesForSystemLibraryLoader();
+
   @Value.Derived
   default Optional<PreDexMerge> getPreDexMerge() {
     return getDexMergeRule().transform(left -> Optional.of(left), right -> Optional.empty());

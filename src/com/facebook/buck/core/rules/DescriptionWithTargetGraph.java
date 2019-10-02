@@ -17,8 +17,11 @@
 package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.description.Description;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 
 /**
  * The Source of Truth about a {@link BuildRule}, providing mechanisms to expose the arguments that
@@ -29,7 +32,7 @@ import com.facebook.buck.core.model.Flavor;
  *     is processed is described in the class level javadoc of {@link
  *     com.facebook.buck.rules.coercer.ConstructorArgMarshaller}.
  */
-public interface DescriptionWithTargetGraph<T> extends Description<T> {
+public interface DescriptionWithTargetGraph<T extends ConstructorArg> extends Description<T> {
 
   /**
    * Create a {@link BuildRule} for the given {@link BuildRuleParams}. Note that the {@link
@@ -44,6 +47,17 @@ public interface DescriptionWithTargetGraph<T> extends Description<T> {
       BuildTarget buildTarget,
       BuildRuleParams params,
       T args);
+
+  /**
+   * @param context the {@link ProviderCreationContext} that the implementation has access to
+   * @param buildTarget the current {@link BuildTarget}, with flavours
+   * @param args A constructor argument, of type as returned by {@link #getConstructorArgType()}
+   * @return the {@link ProviderInfoCollection} of this rule.
+   */
+  default ProviderInfoCollection createProviders(
+      ProviderCreationContext context, BuildTarget buildTarget, T args) {
+    return LegacyProviderInfoCollectionImpl.of();
+  }
 
   /**
    * Whether or not the build rule subgraph produced by this {@code Description} is safe to cache in

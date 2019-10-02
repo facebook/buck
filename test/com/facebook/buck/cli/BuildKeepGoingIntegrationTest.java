@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -27,7 +26,6 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -125,9 +123,7 @@ public class BuildKeepGoingIntegrationTest {
             "//:failing_rule")
         .assertFailure();
 
-    assertTrue(Files.exists(buildReport));
-    String buildReportContents = new String(Files.readAllBytes(buildReport), Charsets.UTF_8);
-    assertEquals(workspace.getFileContents("expected_build_report.json"), buildReportContents);
+    TestUtils.assertBuildReport(workspace, tmp, buildReport, "expected_build_report.json");
   }
 
   private static ProcessResult buildTwoGoodRulesAndAssertSuccess(ProjectWorkspace workspace) {

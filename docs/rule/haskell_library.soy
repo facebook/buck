@@ -35,18 +35,15 @@ Haskell sources.
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call haskell_common.srcs_arg /}
 
 {call haskell_common.compiler_flags_arg /}
 
 {call haskell_common.deps_arg /}
+
+{call buck.platform_deps_arg /}
 
 {call native_common.link_whole /}
 

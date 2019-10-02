@@ -17,17 +17,23 @@ package com.facebook.buck.core.rules.analysis.config;
 
 /**
  * Indicates what mode of {@link
- * com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation} should be ran.
+ * com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph} should be ran.
  */
 public enum RuleAnalysisComputationMode {
-  /** don't run {@link com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation} */
+  /** don't run {@link com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph} */
   DISABLED,
 
   /**
    * run in combination with existing {@link com.facebook.buck.core.rules.ActionGraphBuilder} for
    * compatibility
    */
-  COMPATIBLE;
+  COMPATIBLE,
+
+  /**
+   * same as {@link #COMPATIBLE}, but also with the ability for rule analysis to depend on providers
+   * from action graph
+   */
+  PROVIDER_COMPATIBLE;
 
   public static final RuleAnalysisComputationMode DEFAULT = DISABLED;
 }

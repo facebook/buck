@@ -17,13 +17,17 @@ package com.facebook.buck.skylark.parser;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
+import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
@@ -33,6 +37,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventHandler;
@@ -75,7 +80,9 @@ public class SkylarkUserDefinedRulesParserTest {
         eventHandler,
         SkylarkProjectBuildFileParserTestUtils.getDefaultParserOptions(cell, knownRuleTypesProvider)
             .setEnableUserDefinedRules(true)
-            .build());
+            .build(),
+        knownRuleTypesProvider,
+        cell);
   }
 
   private Map<String, Object> getSingleRule(Path buildFile)
@@ -115,8 +122,8 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void enablesAttrsModuleIfConfigured() throws IOException, InterruptedException {
-    setupWorkspace("attr_exported");
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("exported").resolve("BUCK");
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
@@ -125,8 +132,8 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void enablesAttrsIntIfConfigured() throws IOException, InterruptedException {
-    setupWorkspace("attr_int_exported");
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("int").resolve("well_formed").resolve("BUCK");
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
     parser.getBuildFileManifest(buildFile);
@@ -135,10 +142,10 @@ public class SkylarkUserDefinedRulesParserTest {
   @Test
   public void attrsIntThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
 
-    setupWorkspace("attr_int_throws_on_invalid");
+    setupWorkspace("attr");
 
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve("int").resolve("malformed").resolve("BUCK");
 
     parser = createParser(eventCollector);
 
@@ -147,9 +154,31 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
+  public void enablesAttrsBoolIfConfigured() throws IOException, InterruptedException {
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("bool").resolve("well_formed").resolve("BUCK");
+
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void attrsBoolThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("bool").resolve("malformed").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(eventCollector, parser, buildFile, "expected value of type 'bool'");
+  }
+
+  @Test
   public void enablesAttrsStringIfConfigured() throws IOException, InterruptedException {
-    setupWorkspace("attr_int_exported");
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("string").resolve("well_formed").resolve("BUCK");
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
@@ -159,15 +188,197 @@ public class SkylarkUserDefinedRulesParserTest {
   @Test
   public void attrsStringThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
 
-    setupWorkspace("attr_string_throws_on_invalid");
+    setupWorkspace("attr");
 
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve("string").resolve("malformed").resolve("BUCK");
 
     parser = createParser(eventCollector);
 
     assertParserFails(
         eventCollector, parser, buildFile, "expected type 'string' but got type 'int' instead");
+  }
+
+  @Test
+  public void enablesAttrsSourceListIfConfigured() throws IOException, InterruptedException {
+    setupWorkspace("attr");
+    Path buildFile =
+        projectFilesystem.resolve("source_list").resolve("well_formed").resolve("BUCK");
+
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void attrsSourceListThrowsExceptionOnInvalidDefaultValueType()
+      throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile =
+        projectFilesystem.resolve("source_list").resolve("malformed_default").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector, parser, buildFile, "expected value of type 'sequence of strings'");
+  }
+
+  @Test
+  public void enablesAttrsSourceIfConfigured() throws IOException, InterruptedException {
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("source").resolve("well_formed").resolve("BUCK");
+
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void enablesAttrsDepIfConfigured() throws IOException, InterruptedException {
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("dep").resolve("well_formed").resolve("BUCK");
+
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void attrsSourceThrowsExceptionOnInvalidDefaultValueType()
+      throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile =
+        projectFilesystem.resolve("source").resolve("malformed_default").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(eventCollector, parser, buildFile, "expected value of type 'string");
+  }
+
+  @Test
+  public void attrsDepThrowsExceptionOnInvalidDefaultValueType()
+      throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("dep").resolve("malformed_default").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(eventCollector, parser, buildFile, "expected value of type 'string");
+  }
+
+  @Test
+  public void attrsDepThrowsExceptionOnInvalidProvidersType()
+      throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile =
+        projectFilesystem.resolve("dep").resolve("malformed_providers").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(eventCollector, parser, buildFile, "expected type 'Provider'");
+  }
+
+  @Test
+  public void enablesAttrsDepListIfConfigured() throws IOException, InterruptedException {
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("dep_list").resolve("well_formed").resolve("BUCK");
+
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void attrsDepListThrowsExceptionOnInvalidDefaultValueType()
+      throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile =
+        projectFilesystem.resolve("dep_list").resolve("malformed_default").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector, parser, buildFile, "expected value of type 'sequence of strings'");
+  }
+
+  @Test
+  public void attrsDepListThrowsExceptionOnInvalidProvidersType()
+      throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile =
+        projectFilesystem.resolve("dep_list").resolve("malformed_providers").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(eventCollector, parser, buildFile, "expected type 'Provider'");
+  }
+
+  @Test
+  public void enablesAttrsStringListIfConfigured() throws IOException, InterruptedException {
+    setupWorkspace("attr");
+    Path buildFile =
+        projectFilesystem.resolve("string_list").resolve("well_formed").resolve("BUCK");
+
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void attrsStringListThrowsExceptionOnInvalidTypes()
+      throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("string_list").resolve("malformed").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector, parser, buildFile, "expected value of type 'sequence of strings'");
+  }
+
+  @Test
+  public void enablesAttrsIntListIfConfigured() throws IOException, InterruptedException {
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("int_list").resolve("well_formed").resolve("BUCK");
+
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void attrsIntListThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("int_list").resolve("malformed").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector, parser, buildFile, "expected value of type 'sequence of ints'");
   }
 
   @Test
@@ -310,7 +521,7 @@ public class SkylarkUserDefinedRulesParserTest {
                 "buck.base_path",
                 "subdir",
                 "buck.type",
-                "@//subdir:foo.bzl:some_rule",
+                "//subdir:foo.bzl:some_rule",
                 "attr1",
                 3,
                 "attr2",
@@ -340,7 +551,7 @@ public class SkylarkUserDefinedRulesParserTest {
                 "buck.base_path",
                 "subdir",
                 "buck.type",
-                "@//subdir:foo.bzl:some_rule",
+                "//subdir:foo.bzl:some_rule",
                 "attr1",
                 3,
                 "attr2",
@@ -352,7 +563,7 @@ public class SkylarkUserDefinedRulesParserTest {
                 "buck.base_path",
                 "subdir",
                 "buck.type",
-                "@//subdir:foo.bzl:some_rule",
+                "//subdir:foo.bzl:some_rule",
                 "attr1",
                 4,
                 "attr2",
@@ -363,5 +574,172 @@ public class SkylarkUserDefinedRulesParserTest {
     BuildFileManifest rules = parser.getBuildFileManifest(buildFile);
 
     assertEquals(expected, rules.getTargets());
+  }
+
+  @Test
+  public void clearsKnownUserDefinedRuleTypesWhenExtensionChanges()
+      throws IOException, InterruptedException {
+    setupWorkspace("basic_rule");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+    String replacement =
+        workspace.getFileContents(projectFilesystem.resolve("subdir").resolve("new_defs.bzl"));
+
+    parser = createParser(eventCollector);
+
+    String rule1Identifier = "//subdir:defs.bzl:some_rule";
+    String rule2Identifier = "//subdir:defs.bzl:some_other_rule";
+
+    KnownUserDefinedRuleTypes knownUserDefinedRuleTypes =
+        knownRuleTypesProvider.getUserDefinedRuleTypes(cell);
+
+    assertNull(knownUserDefinedRuleTypes.getRule(rule1Identifier));
+    assertNull(knownUserDefinedRuleTypes.getRule(rule2Identifier));
+
+    BuildFileManifest rules = parser.getBuildFileManifest(buildFile);
+    assertEquals(2, rules.getTargets().size());
+
+    SkylarkUserDefinedRule rule1 = knownUserDefinedRuleTypes.getRule(rule1Identifier);
+    SkylarkUserDefinedRule rule2 = knownUserDefinedRuleTypes.getRule(rule2Identifier);
+
+    assertNotNull(rule1);
+    assertNotNull(rule2);
+    assertEquals(rule1Identifier, rule1.getName());
+    assertEquals(rule2Identifier, rule2.getName());
+
+    // write 'new_defs.bzl' (which doesn't have `some_other_rule`) to 'defs.bzl' so that
+    // we properly test invalidation logic when defs.bzl changes
+    workspace.writeContentsToPath(
+        replacement, projectFilesystem.resolve("subdir").resolve("defs.bzl"));
+    parser = createParser(eventCollector);
+    rules = parser.getBuildFileManifest(buildFile);
+    assertEquals(2, rules.getTargets().size());
+
+    rule1 = knownUserDefinedRuleTypes.getRule(rule1Identifier);
+    rule2 = knownUserDefinedRuleTypes.getRule(rule2Identifier);
+
+    assertNotNull(rule1);
+    assertNull(rule2);
+    assertEquals(rule1Identifier, rule1.getName());
+  }
+
+  @Test
+  public void addsKnownUserDefinedRuleTypesWhenRuleIsExported()
+      throws IOException, InterruptedException {
+    setupWorkspace("basic_rule");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+    parser = createParser(eventCollector);
+
+    String rule1Identifier = "//subdir:defs.bzl:some_rule";
+    String rule2Identifier = "//subdir:defs.bzl:some_other_rule";
+
+    KnownUserDefinedRuleTypes knownUserDefinedRuleTypes =
+        knownRuleTypesProvider.getUserDefinedRuleTypes(cell);
+    assertNull(knownUserDefinedRuleTypes.getRule(rule1Identifier));
+    assertNull(knownUserDefinedRuleTypes.getRule(rule2Identifier));
+
+    BuildFileManifest rules = parser.getBuildFileManifest(buildFile);
+    assertEquals(2, rules.getTargets().size());
+
+    SkylarkUserDefinedRule rule1 = knownUserDefinedRuleTypes.getRule(rule1Identifier);
+    SkylarkUserDefinedRule rule2 = knownUserDefinedRuleTypes.getRule(rule2Identifier);
+
+    assertNotNull(rule1);
+    assertNotNull(rule2);
+    assertEquals(rule1Identifier, rule1.getName());
+    assertEquals(rule2Identifier, rule2.getName());
+    assertEquals(Integer.class, rule1.getAllParamInfo().get("attr1").getResultClass());
+    assertEquals(Integer.class, rule2.getAllParamInfo().get("attr2").getResultClass());
+  }
+
+  @Test
+  public void builtInProvidersAreExportedWhenEnabled() throws IOException, InterruptedException {
+    setupWorkspace("builtin_providers_exported");
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    assertEquals("target1", getSingleRule(buildFile).get("name"));
+    Iterables.find(
+        collector,
+        e -> e.getKind() == EventKind.DEBUG && e.getMessage().contains("in bzl: DefaultInfo("));
+  }
+
+  @Test
+  public void providerFunctionFailsIfInvalidFieldNameProvided()
+      throws IOException, InterruptedException {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("invalid_field").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    thrown.expect(BuildFileParseException.class);
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void providerFunctionFailsIfInvalidTypeProvidedForFields()
+      throws IOException, InterruptedException {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("invalid_type").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    thrown.expect(BuildFileParseException.class);
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void providerFunctionFailsIfInvalidListType() throws IOException, InterruptedException {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("invalid_list_type").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    thrown.expect(BuildFileParseException.class);
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void providerFunctionFailsIfInvalidDictType() throws IOException, InterruptedException {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("invalid_dict_type").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    thrown.expect(BuildFileParseException.class);
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void providerInfoFromProviderFunctionHasCorrectFields()
+      throws IOException, InterruptedException {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("valid_provider").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void providerCannotBeUsedIfNotAssigned() throws IOException, InterruptedException {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("not_assigned").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    // TODO(T48080142): When we wrap up all of these validation errors into something human
+    // friendly, this will become a build file error
+    thrown.expect(NullPointerException.class);
+    parser.getBuildFileManifest(buildFile);
   }
 }

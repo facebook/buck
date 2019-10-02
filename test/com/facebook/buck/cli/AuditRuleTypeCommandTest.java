@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -54,7 +55,7 @@ public class AuditRuleTypeCommandTest {
 
     @BuckStyleImmutable
     @Value.Immutable
-    interface AbstractBuildRuleDescriptionArg {
+    interface AbstractBuildRuleDescriptionArg extends ConstructorArg {
       String getName();
 
       ImmutableSet<SourcePath> getLicenses();

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Scope;
@@ -364,7 +365,8 @@ class TreeBackedTypeResolutionSimulator {
       if (lastDot > 0) {
         String enclosingPackageQualifiedName = qualifiedName.substring(0, lastDot);
         PackageElement enclosingPackage =
-            Objects.requireNonNull(elements.getPackageElement(enclosingPackageQualifiedName));
+            Objects.requireNonNull(
+                MoreElements.getPackageElementEvenIfEmpty(elements, enclosingPackageQualifiedName));
         enclosingElement = resolveEnclosingElement(enclosingPackage);
       }
 

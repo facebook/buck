@@ -87,7 +87,9 @@ public class HttpDownloader implements Downloader, AuthAwareDownloader {
       }
 
       if (HttpURLConnection.HTTP_OK != connection.getResponseCode()) {
-        LOG.info("Unable to download %s: %s", uri, connection.getResponseMessage());
+        LOG.info(
+            "Unable to download url: '%s', response code: %d, response message: '%s'",
+            uri, connection.getResponseCode(), connection.getResponseMessage());
         return false;
       }
       long contentLength = connection.getContentLengthLong();

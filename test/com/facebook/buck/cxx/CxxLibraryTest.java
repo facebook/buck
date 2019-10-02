@@ -192,8 +192,8 @@ public class CxxLibraryTest {
             DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//foo:baz")));
 
     // Construct a CxxLibrary object to test.
-    CxxLibrary cxxLibrary =
-        new CxxLibrary(
+    CxxLibraryGroup cxxLibrary =
+        new CxxLibraryGroup(
             target,
             projectFilesystem,
             params,
@@ -214,7 +214,7 @@ public class CxxLibraryTest {
             true,
             true,
             true,
-            Optional.empty());
+            CxxLibraryDescriptionDelegate.noop());
 
     NativeLinkableInput expectedSharedNativeLinkableInput =
         NativeLinkableInput.of(
@@ -251,8 +251,8 @@ public class CxxLibraryTest {
             DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//foo:baz")));
 
     // Construct a CxxLibrary object to test.
-    CxxLibrary cxxLibrary =
-        new CxxLibrary(
+    CxxLibraryGroup cxxLibrary =
+        new CxxLibraryGroup(
             target,
             projectFilesystem,
             params,
@@ -273,7 +273,7 @@ public class CxxLibraryTest {
             true,
             true,
             true,
-            Optional.empty());
+            CxxLibraryDescriptionDelegate.noop());
 
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.add(StringArg.of("-ldl"));

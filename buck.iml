@@ -89,6 +89,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/testutil/integration/testlibs" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/testutil/packaged_resource/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/util/versioncontrol/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/util/zip/collect/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/zip/testdata" />
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
@@ -137,13 +138,17 @@
     <orderEntry type="library" name="opencensus-api-0.18.0" level="project" />
     <orderEntry type="library" name="remote-apis" level="project" />
     <orderEntry type="library" name="guava-20.0" level="project" />
-    <orderEntry type="library" name="bundletool-0.7.1" level="project" />
-    <orderEntry type="library" name="aapt2-proto-0.3.1" level="project" />
+    <orderEntry type="library" name="bundletool-0.10.3-fb" level="project" />
+    <orderEntry type="library" name="aapt2-proto-0.4.0" level="project" />
     <orderEntry type="library" name="commons-compress-1.18" level="project" />
     <orderEntry type="library" name="apksig" level="project" />
     <orderEntry type="library" name="zstd-jni-1.4.0-1" level="project" />
     <orderEntry type="library" name="a2api" level="project" />
     <orderEntry type="library" name="devspeed.logging" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="library" name="kotlin-annotations" level="project" />
+    <orderEntry type="library" name="kotlin-compiler" level="project" />
+    <orderEntry type="library" name="kotlinx-metadata" level="project" />
+    <orderEntry type="library" name="jackson-module-kotlin-2.9.9" level="project" />
   </component>
 </module>

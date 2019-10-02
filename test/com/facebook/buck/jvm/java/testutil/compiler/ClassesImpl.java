@@ -31,7 +31,7 @@ import org.junit.rules.TemporaryFolder;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 
-class ClassesImpl implements Classes {
+public class ClassesImpl implements Classes {
   private final TemporaryFolder root;
 
   public ClassesImpl(TemporaryFolder root) {

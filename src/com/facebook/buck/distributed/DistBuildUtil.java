@@ -33,6 +33,7 @@ import com.facebook.buck.distributed.thrift.SchedulingEnvironmentType;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.support.cli.config.AliasConfig;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.net.InetAddress;
@@ -43,9 +44,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
 
 public class DistBuildUtil {
 
@@ -172,6 +175,61 @@ public class DistBuildUtil {
   /** Checks whether the given target command line arguments match the Stampede project whitelist */
   public static boolean doTargetsMatchProjectWhitelist(
       List<String> commandArgs, ImmutableSet<String> projectWhitelist, BuckConfig buckConfig) {
+    ImmutableSet<String> buildTargets = getBuildTargets(commandArgs, buckConfig);
+    return doTargetsMatchProjectWhitelist(buildTargets, projectWhitelist);
+  }
+
+  /**
+   * Given a list of targets, determines if they all share a common prefix, and if they do then
+   * returns it. E.g. for targets '//project_one:a', '//project_one:b', should return
+   * '//project_one'
+   */
+  public static Optional<String> getCommonProjectPrefix(
+      List<String> commandArgs, BuckConfig buckConfig) {
+    ImmutableSet<String> buildTargets = getBuildTargets(commandArgs, buckConfig);
+
+    return getCommonProjectPrefix(buildTargets);
+  }
+
+  @VisibleForTesting
+  static Optional<String> getCommonProjectPrefix(ImmutableSet<String> buildTargets) {
+    Optional<String> commonPrefix = Optional.empty();
+
+    for (String buildTarget : buildTargets) {
+      Optional<String> prefix = getTargetPrefix(buildTarget);
+      if (!prefix.isPresent()) {
+        // This target did not have a prefix, so there is no common prefix
+        return Optional.empty();
+      }
+      if (!commonPrefix.isPresent()) {
+        // This is the first target, all others should match
+        commonPrefix = prefix;
+      } else if (!commonPrefix.equals(prefix)) {
+        // Mismatch was found
+        return Optional.empty();
+      }
+    }
+
+    // There was a common prefix (or buildTargets Set was empty).
+    return commonPrefix;
+  }
+
+  private static Optional<String> getTargetPrefix(String target) {
+    Pattern pattern = Pattern.compile(TARGET_TO_PROJECT_REGREX);
+    Matcher matcher = pattern.matcher(target);
+
+    if (matcher.find()) {
+      // Check the project for the given target is whitelisted
+      return Optional.of(matcher.group(1));
+    }
+
+    // TODO(alisdair): can this ever happen? Throw an exception if not.
+    return Optional.empty();
+  }
+
+  @Nonnull
+  private static ImmutableSet<String> getBuildTargets(
+      List<String> commandArgs, BuckConfig buckConfig) {
     ImmutableSet.Builder<String> buildTargets = new ImmutableSet.Builder<>();
     for (String commandArg : commandArgs) {
       ImmutableSet<String> buildTargetForAliasAsString =
@@ -187,8 +245,7 @@ public class DistBuildUtil {
         buildTargets.add(commandArg);
       }
     }
-
-    return doTargetsMatchProjectWhitelist(buildTargets.build(), projectWhitelist);
+    return buildTargets.build();
   }
 
   /** Checks whether the given targets match the Stampede project whitelist */

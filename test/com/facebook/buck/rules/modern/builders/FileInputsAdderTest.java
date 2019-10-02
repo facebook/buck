@@ -98,6 +98,11 @@ public class FileInputsAdderTest {
               }
 
               @Override
+              public void addEmptyDirectory(Path path) {
+                computeDirectory(path);
+              }
+
+              @Override
               public void addSymlink(Path path, Path fixedTarget) {
                 computeDirectory(path).symlinks.put(path.getFileName().toString(), fixedTarget);
               }

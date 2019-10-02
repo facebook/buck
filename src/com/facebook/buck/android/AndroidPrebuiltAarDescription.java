@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
@@ -33,6 +34,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
@@ -167,12 +169,13 @@ public class AndroidPrebuiltAarDescription
       AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
               AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+      ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
 
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
-          androidPlatformTarget,
-          ImmutableSortedSet.of(unzipAarRule),
+          graphBuilder,
+          aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           unzipAar.getResDirectory());
     }
 
@@ -215,7 +218,8 @@ public class AndroidPrebuiltAarDescription
             ExtraClasspathProvider.EMPTY),
         /* exportedDeps */ javaDeps,
         args.getRequiredForSourceOnlyAbi(),
-        args.getMavenCoords());
+        args.getMavenCoords(),
+        args.isUseSystemLibraryLoader());
   }
 
   @Override
@@ -226,6 +230,8 @@ public class AndroidPrebuiltAarDescription
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    AndroidTools.addParseTimeDepsToAndroidTools(
+        toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }
 
   @BuckStyleImmutable
@@ -247,6 +253,16 @@ public class AndroidPrebuiltAarDescription
       // often a source of annotations and constants. To ease migration to ABI generation from
       // source without deps, we have them present during ABI gen by default.
       return true;
+    }
+
+    /**
+     * If an AAR bundles a native .so as well as java code that uses System.loadLibrary() to
+     * dynamically link this so, then we need to disable some optimizations for these libraries,
+     * namely native exopackage code, SoMerge, and ReLinker
+     */
+    @Value.Default
+    default boolean isUseSystemLibraryLoader() {
+      return false;
     }
   }
 }

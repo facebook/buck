@@ -17,6 +17,35 @@ go_library(
     deps = [":base"],
 )
 
+go_test_runner(
+    name = "runner",
+    test_runner_generator = "test_runner_generator.go",
+)
+
+go_test(
+    name = "testx",
+    package_name = "lib",
+    srcs = [
+        "lib.go",
+        "lib_test.go",
+        "resources_test.go",
+    ],
+    resources = ["testdata/input"],
+    runner = ":runner",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+            },
+        ],
+        "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && $out",
+    },
+    deps = [":base"],
+)
+
 go_test(
     name = "test-success",
     package_name = "lib",

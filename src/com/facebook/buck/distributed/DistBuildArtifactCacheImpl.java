@@ -30,6 +30,7 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.util.CloseableHolder;
 import com.facebook.buck.util.NamedTemporaryFile;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
@@ -175,7 +176,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
       releasedFile = tempFile.release();
     }
 
-    ListenableFuture<Void> uploadFuture =
+    ListenableFuture<Unit> uploadFuture =
         Futures.transformAsync(
             asyncfetchResult,
             fetchResult -> {

@@ -18,9 +18,10 @@ package com.facebook.buck.multitenant.query
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.facebook.buck.multitenant.importer.populateIndexFromStream
 import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.IndexFactory
+import com.facebook.buck.multitenant.service.buckJsonToBuildPackageParser
+import com.facebook.buck.multitenant.service.populateIndexFromStream
 import com.facebook.buck.query.QueryFileTarget
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -313,6 +314,23 @@ class MultitenantQueryTest {
                 env.evaluateQuery("testsof(//java/com/example:D)")
         )
     }
+
+    @Test fun getRulesInBasePath() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        val rules = env.getRulesInBasePath(FsAgnosticPath.of("java/com/example"))
+        val ruleMap =
+            rules.map { rule -> rule.targetNode.buildTarget.fullyQualifiedName to rule }.toMap()
+        assertEquals(setOf("//java/com/example:A", "//java/com/example:B", "//java/com/example:C",
+            "//java/com/example:D"), ruleMap.keys)
+        assertEquals(ruleMap.getValue("//java/com/example:A").targetNode.ruleType.name,
+            "java_library")
+        assertEquals(ruleMap.getValue("//java/com/example:B").targetNode.ruleType.name,
+            "java_library")
+        assertEquals(ruleMap.getValue("//java/com/example:C").targetNode.ruleType.name,
+            "cxx_library")
+        assertEquals(ruleMap.getValue("//java/com/example:D").targetNode.ruleType.name,
+            "java_library")
+    }
 }
 
 private fun asOutput(vararg target: String): Set<UnconfiguredBuildTarget> {
@@ -325,7 +343,9 @@ private fun asFileTargets(vararg path: String): Set<QueryFileTarget> {
 
 private fun loadIndex(resource: String, commitIndex: Int): MultitenantQueryEnvironment {
     val (index, indexAppender) = IndexFactory.createIndex()
-    val commits = populateIndexFromStream(indexAppender, MultitenantQueryTest::class.java.getResourceAsStream(resource))
+    val commits = populateIndexFromStream(indexAppender,
+        MultitenantQueryTest::class.java.getResourceAsStream("data/$resource"),
+        ::buckJsonToBuildPackageParser)
     val generation = indexAppender.getGeneration(commits[commitIndex])
     requireNotNull(generation)
     val cellToBuildFileName = mapOf("" to "BUCK")

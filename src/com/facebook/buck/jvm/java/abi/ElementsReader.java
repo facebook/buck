@@ -78,7 +78,7 @@ class ElementsReader implements LibraryReader {
   }
 
   @Override
-  public void visitClass(Path relativePath, ClassVisitor cv) {
+  public void visitClass(Path relativePath, ClassVisitor cv, boolean skipCodeUnused) {
     Element element = Objects.requireNonNull(allElements.get().get(relativePath));
     new ClassVisitorDriverFromElement(
             targetVersion, elements, messager, types, includeParameterMetadata)

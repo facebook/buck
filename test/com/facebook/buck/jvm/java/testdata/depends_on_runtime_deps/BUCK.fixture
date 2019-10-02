@@ -1,0 +1,30 @@
+cxx_library(
+    name = "b",
+    srcs = [
+        "B.cpp",
+    ],
+)
+
+cxx_binary(
+    name = "binary_b",
+    deps = [
+        ":b",
+    ],
+)
+
+java_library(
+    name = "a",
+    srcs = [
+        "A.java",
+    ],
+    runtime_deps = [
+        ":binary_b",
+    ],
+)
+
+java_binary(
+    name = "binary_a",
+    deps = [
+        ":a",
+    ],
+)

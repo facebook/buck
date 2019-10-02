@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -30,6 +31,8 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
+import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -54,7 +57,7 @@ import java.util.Optional;
  */
 public abstract class AbstractNodeBuilder<
     TArgBuilder,
-    TArg,
+    TArg extends ConstructorArg,
     TDescription extends DescriptionWithTargetGraph<TArg>,
     TBuildRule extends BuildRule> {
   protected static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
@@ -138,7 +141,13 @@ public abstract class AbstractNodeBuilder<
         (TBuildRule)
             description.createBuildRule(
                 ImmutableBuildRuleCreationContextWithTargetGraph.of(
-                    targetGraph, graphBuilder, filesystem, cellRoots, toolchainProvider),
+                    targetGraph,
+                    graphBuilder,
+                    filesystem,
+                    cellRoots,
+                    toolchainProvider,
+                    ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
+                    LegacyProviderInfoCollectionImpl.of()),
                 target,
                 params,
                 builtArg);
@@ -158,6 +167,7 @@ public abstract class AbstractNodeBuilder<
               filesystem,
               target,
               getDepsFromArg(populatedArg),
+              ImmutableSortedSet.of(),
               ImmutableSet.of(
                   VisibilityPatternParser.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
               ImmutableSet.of(),

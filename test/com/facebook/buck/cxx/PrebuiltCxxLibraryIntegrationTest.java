@@ -61,7 +61,7 @@ public class PrebuiltCxxLibraryIntegrationTest {
     assertThat(result.getStdout(), Matchers.equalTo("5\n"));
 
     // Make sure that deps are pulled from the cache.
-    workspace.replaceFileContents("test_lib/bar.cpp", "return 5;", "return 6;");
+    workspace.replaceFileContents("test_lib/bar.cpp", "2;", "3;");
 
     result = workspace.runBuckCommand("run", binaryTargetString);
     result.assertSuccess();

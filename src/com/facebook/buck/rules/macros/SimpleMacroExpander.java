@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -27,11 +26,9 @@ public abstract class SimpleMacroExpander<M extends Macro>
     extends AbstractMacroExpanderWithoutPrecomputedWork<M> {
 
   @Override
-  public final Arg expandFrom(
-      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, M input) {
-    return expandFrom(target, cellNames, graphBuilder);
+  public final Arg expandFrom(BuildTarget target, ActionGraphBuilder graphBuilder, M input) {
+    return expandFrom(target, graphBuilder);
   }
 
-  public abstract Arg expandFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver);
+  public abstract Arg expandFrom(BuildTarget target, BuildRuleResolver resolver);
 }

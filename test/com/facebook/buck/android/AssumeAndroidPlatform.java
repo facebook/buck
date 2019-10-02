@@ -35,13 +35,15 @@ import java.util.Optional;
 
 public class AssumeAndroidPlatform {
 
+  private static final VersionStringComparator VERSION_STRING_COMPARATOR =
+      new VersionStringComparator();
+
   private AssumeAndroidPlatform() {}
 
   public static void assumeNdkIsAvailable() {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
-
     assumeTrue(androidNdk.isPresent());
   }
 
@@ -53,14 +55,10 @@ public class AssumeAndroidPlatform {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
-
     if (!androidNdk.isPresent()) {
       return false;
     }
-
-    VersionStringComparator comparator = new VersionStringComparator();
-
-    return comparator.compare(androidNdk.get().getNdkVersion(), "17") < 0;
+    return VERSION_STRING_COMPARATOR.compare(androidNdk.get().getNdkVersion(), "17") < 0;
   }
 
   public static void assumeGnuStlIsAvailable() {
@@ -75,26 +73,23 @@ public class AssumeAndroidPlatform {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
-
     if (!androidNdk.isPresent()) {
       return false;
     }
 
-    VersionStringComparator comparator = new VersionStringComparator();
-
-    return comparator.compare(androidNdk.get().getNdkVersion(), "18") < 0;
+    return VERSION_STRING_COMPARATOR.compare(androidNdk.get().getNdkVersion(), "18") < 0;
   }
 
   public static void assumeUnifiedHeadersAvailable() {
+    assumeTrue(isUnifiedHeadersAvailable());
+  }
+
+  public static boolean isUnifiedHeadersAvailable() {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
-
     assumeTrue(androidNdk.isPresent());
-
-    VersionStringComparator comparator = new VersionStringComparator();
-
-    assumeTrue(comparator.compare(androidNdk.get().getNdkVersion(), "14") >= 0);
+    return VERSION_STRING_COMPARATOR.compare(androidNdk.get().getNdkVersion(), "14") >= 0;
   }
 
   public static void assumeSdkIsAvailable() {
@@ -112,20 +107,18 @@ public class AssumeAndroidPlatform {
   }
 
   /**
-   * Checks that Android SDK has build tools with aapt that supports `--output-test-symbols`.
+   * Checks that Android SDK has build tools with aapt2 that supports `--output-test-symbols`.
    *
    * <p>It seems that this option appeared in build-tools 26.0.2 and the check only verifies the
    * version of build tools, it doesn't run aapt2 to verify it actually supports the option.
    */
   public static void assumeAapt2WithOutputTextSymbolsIsAvailable() {
-    AndroidSdkLocation androidSdkLocation = getAndroidSdkLocation();
-
-    assumeBuildToolsIsNewer(androidSdkLocation, "26.0.2");
-
-    assumeAapt2IsAvailable(androidSdkLocation);
+    verifyAndroidSkdVersionIsAboveSpecified("26.0.2");
+    assumeAapt2IsAvailable();
   }
 
-  private static void assumeAapt2IsAvailable(AndroidSdkLocation androidSdkLocation) {
+  private static void assumeAapt2IsAvailable() {
+    AndroidSdkLocation androidSdkLocation = getAndroidSdkLocation();
     AndroidBuildToolsResolver buildToolsResolver =
         new AndroidBuildToolsResolver(
             AndroidNdkHelper.DEFAULT_CONFIG,
@@ -146,6 +139,10 @@ public class AssumeAndroidPlatform {
    *
    * <p>Versions are expected to be in format like "25.0.2".
    */
+  public static void assumeBuildToolsIsNewer(String expectedBuildToolsVersion) {
+    assumeBuildToolsIsNewer(getAndroidSdkLocation(), expectedBuildToolsVersion);
+  }
+
   private static void assumeBuildToolsIsNewer(
       AndroidSdkLocation androidSdkLocation, String expectedBuildToolsVersion) {
     AndroidBuildToolsResolver buildToolsResolver =
@@ -188,10 +185,11 @@ public class AssumeAndroidPlatform {
   }
 
   public static void assumeBundleBuildIsSupported() {
-    AndroidSdkLocation androidSdkLocation = getAndroidSdkLocation();
+    verifyAndroidSkdVersionIsAboveSpecified("28.0.0");
+    assumeAapt2IsAvailable();
+  }
 
-    assumeBuildToolsIsNewer(androidSdkLocation, "28.0.0");
-
-    assumeAapt2IsAvailable(androidSdkLocation);
+  public static void verifyAndroidSkdVersionIsAboveSpecified(String expectedBuildToolsVersion) {
+    assumeBuildToolsIsNewer(getAndroidSdkLocation(), expectedBuildToolsVersion);
   }
 }

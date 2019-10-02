@@ -22,6 +22,7 @@ import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -154,6 +155,22 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
     }
 
     return options;
+  }
+
+  /**
+   * @return a list of {@code SourcePaths} for a particular source level extracted from {@link
+   *     #getSourceToBootclasspath } or empty list if bootclasspath for a this source level is not
+   *     defined.
+   */
+  public ImmutableList<SourcePath> getSourceLevelBootclasspath() {
+    ImmutableList<PathSourcePath> bootclasspath =
+        getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevel());
+
+    if (bootclasspath != null) {
+      return ImmutableList.copyOf(bootclasspath); // upcast to ImmutableList<SourcePath>
+    } else {
+      return ImmutableList.of();
+    }
   }
 
   public void appendOptionsTo(

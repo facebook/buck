@@ -16,30 +16,22 @@
 
 package com.facebook.buck.io.watchman;
 
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ListeningProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.ProcessListeners.CapturingListener;
-import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Assert;
@@ -58,104 +50,39 @@ public class WatchmanClientIntegrationTest {
 
   @Rule public TemporaryPaths watchmanBaseDir = new TemporaryPaths();
 
-  private Path watchmanSockFile;
   private ListeningProcessExecutor executor;
-  private ListeningProcessExecutor.LaunchedProcess watchmanProcess;
+  private WatchmanTestDaemon watchmanDaemon;
 
   private void startWatchman() throws IOException, InterruptedException {
-    Optional<Path> watchmanExe =
-        new ExecutableFinder()
-            .getOptionalExecutable(WatchmanFactory.WATCHMAN, EnvVariablesProvider.getSystemEnv());
-
-    if (!isSupportedPlatform() || !watchmanExe.isPresent()) {
-      return;
-    }
-
-    Path watchmanCfgFile = watchmanBaseDir.getRoot().resolve("config.json");
-    // default config
-    Files.write(watchmanCfgFile, "{}".getBytes());
-
-    Path watchmanLogFile = watchmanBaseDir.getRoot().resolve("log");
-    Path watchmanPidFile = watchmanBaseDir.getRoot().resolve("pid");
-
-    if (Platform.detect() == Platform.WINDOWS) {
-      Random random = new Random(0);
-      UUID uuid = new UUID(random.nextLong(), random.nextLong());
-      watchmanSockFile = Paths.get("\\\\.\\pipe\\watchman-test-" + uuid);
-    } else {
-      watchmanSockFile = watchmanBaseDir.getRoot().resolve("sock");
-    }
-
-    Path watchmanStateFile = watchmanBaseDir.getRoot().resolve("state");
-
-    ProcessExecutorParams params =
-        ProcessExecutorParams.builder()
-            .addCommand(
-                watchmanExe.get().toString(),
-                "--foreground",
-                "--log-level=2",
-                "--sockname=" + watchmanSockFile,
-                "--logfile=" + watchmanLogFile,
-                "--statefile=" + watchmanStateFile,
-                "--pidfile=" + watchmanPidFile)
-            .setEnvironment(
-                ImmutableMap.of(
-                    "WATCHMAN_CONFIG_FILE", watchmanCfgFile.toString(),
-                    "TMP", watchmanBaseDir.toString()))
-            .build();
     executor = new ListeningProcessExecutor();
-
-    watchmanProcess = executor.launchProcess(params, new CapturingListener());
-
-    waitForWatchman();
-  }
-
-  private void waitForWatchman() throws InterruptedException {
-    long deadline = System.currentTimeMillis() + timeoutMillis;
-    while (System.currentTimeMillis() < deadline) {
-      try {
-        Optional<WatchmanClient> optClient =
-            WatchmanFactory.tryCreateWatchmanClient(
-                watchmanSockFile, new TestConsole(), new DefaultClock());
-        try {
-          if (optClient.isPresent()) {
-            optClient.get().queryWithTimeout(timeoutNanos, "get-pid");
-            break;
-          }
-        } finally {
-          if (optClient.isPresent()) {
-            optClient.get().close();
-          }
-        }
-      } catch (IOException e) {
-        Thread.sleep(100L);
-      }
+    try {
+      watchmanDaemon = WatchmanTestDaemon.start(watchmanBaseDir.getRoot(), executor);
+    } catch (WatchmanNotFoundException e) {
+      Assume.assumeNoException(e);
     }
   }
 
   @Before
   public void setUp() throws IOException, InterruptedException {
+    Assume.assumeTrue("Platform should be supported", isSupportedPlatform());
     startWatchman();
-    Assume.assumeTrue(watchmanProcess != null);
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "watchman", tmp);
     workspace.setUp();
   }
 
   @After
-  public void tearDown() {
-    if (watchmanProcess != null && executor != null) {
-      executor.destroyProcess(watchmanProcess, true);
+  public void tearDown() throws IOException {
+    if (watchmanDaemon != null) {
+      watchmanDaemon.close();
     }
   }
 
   @Test
   public void testWatchmanGlob() throws InterruptedException, IOException {
-    Optional<WatchmanClient> clientOpt =
-        WatchmanFactory.tryCreateWatchmanClient(
-            watchmanSockFile, new TestConsole(), new DefaultClock());
-    Assert.assertTrue(clientOpt.isPresent());
+    WatchmanClient client =
+        WatchmanFactory.createWatchmanClient(
+            watchmanDaemon.getTransportPath(), new TestConsole(), new DefaultClock());
 
-    WatchmanClient client = clientOpt.get();
     Optional<? extends Map<String, ?>> versionResponse =
         client.queryWithTimeout(
             timeoutNanos,

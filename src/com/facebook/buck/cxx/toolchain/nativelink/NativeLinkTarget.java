@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,29 +13,30 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public interface NativeLinkTarget {
+// TODO(cjhopman): This needs a more descriptive documentation.
 
+/** Interface for an object that can be the target of a native link. */
+public interface NativeLinkTarget {
+  /** A representative {@link BuildTarget} for this object. */
   BuildTarget getBuildTarget();
 
-  NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform);
+  /** The {@link NativeLinkTargetMode} for this target. */
+  NativeLinkTargetMode getNativeLinkTargetMode();
 
-  /** @return the {@link NativeLinkableGroup} dependencies used to link this target. */
-  Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
+  /** @return the {@link NativeLinkable} dependencies used to link this target. */
+  Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(ActionGraphBuilder graphBuilder);
 
   /** @return the {@link NativeLinkableInput} used to link this target. */
   NativeLinkableInput getNativeLinkTargetInput(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver);
+      ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver);
 
   /** @return an explicit {@link Path} to use for the output location. */
   Optional<Path> getNativeLinkTargetOutputPath();

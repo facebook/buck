@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.skylark.function.attr;
 
+import com.facebook.buck.core.rules.providers.Provider;
+import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
@@ -74,6 +76,47 @@ public interface AttrModuleApi extends SkylarkValue {
       throws EvalException;
 
   @SkylarkCallable(
+      name = "int_list",
+      doc = "Create a parameter for user defined rules that is a list of ints",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "[]",
+            noneable = false,
+            positional = false,
+            named = true,
+            type = SkylarkList.class,
+            generic1 = Integer.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = "allow_empty",
+            doc = "Whether the list may be empty",
+            defaultValue = "False",
+            positional = false,
+            named = true,
+            type = Boolean.class)
+      })
+  AttributeHolder intListAttribute(
+      SkylarkList<Integer> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      throws EvalException;
+
+  @SkylarkCallable(
       name = "string",
       doc = "Create a parameter for user defined rules that is a string",
       parameters = {
@@ -113,5 +156,268 @@ public interface AttrModuleApi extends SkylarkValue {
       })
   AttributeHolder stringAttribute(
       String defaultValue, String doc, Boolean mandatory, SkylarkList<String> values)
+      throws EvalException;
+
+  @SkylarkCallable(
+      name = "string_list",
+      doc = "Create a parameter for user defined rules that is a list of strings",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "[]",
+            noneable = false,
+            positional = false,
+            named = true,
+            type = SkylarkList.class,
+            generic1 = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = "allow_empty",
+            doc = "Whether the list may be empty",
+            defaultValue = "False",
+            positional = false,
+            named = true,
+            type = Boolean.class)
+      })
+  AttributeHolder stringListAttribute(
+      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      throws EvalException;
+
+  @SkylarkCallable(
+      name = "bool",
+      doc = "Create a parameter for user defined rules that is a boolean",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "False",
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+      })
+  AttributeHolder boolAttribute(boolean defaultValue, String doc, boolean mandatory)
+      throws EvalException;
+
+  @SkylarkCallable(
+      name = "source_list",
+      doc =
+          "Create a parameter for user defined rules that is a list of sources, both source files "
+              + "on disk, and build targets.\nThis is exposed to rule implementations via "
+              + "ctx.attr.{@code name}  as a list of artifacts, not as a list of ProviderInfo "
+              + "objects.\nIf only a list of dependencies is required, or ProviderInfo objects "
+              + "are needed, this is not the correct attribute to use.",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "[]",
+            noneable = false,
+            positional = false,
+            named = true,
+            type = SkylarkList.class,
+            generic1 = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = "allow_empty",
+            doc = "Whether the source list may be empty",
+            defaultValue = "False",
+            positional = false,
+            named = true,
+            type = Boolean.class)
+      })
+  AttributeHolder sourceListAttribute(
+      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      throws EvalException;
+
+  @SkylarkCallable(
+      name = "source",
+      doc =
+          "Create a parameter for user defined rules that is a source file on disk "
+              + "or a build target.\nThis is exposed to rule implementations via "
+              + "ctx.attr.{@code name}  as a single artifact, not as a ProviderInfoCollection "
+              + "object.\nIf only a dependency is required, or ProviderInfo objects "
+              + "are needed, this is not the correct attribute to use.",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "None",
+            noneable = true,
+            positional = false,
+            named = true,
+            type = String.class,
+            generic1 = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc =
+                "The default value for this parameter. Note that `None` is not valid and is "
+                    + "only used as there is no universal default value that is applicable.",
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class)
+      })
+  AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory)
+      throws EvalException;
+
+  @SkylarkCallable(
+      name = "dep",
+      doc =
+          "Create a parameter for user defined rules that is a build target.\nThis is exposed to "
+              + "rule implementations via ctx.attr.{@code name} as a single ProviderInfoCollection "
+              + "object.",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "None",
+            noneable = true,
+            positional = false,
+            named = true,
+            type = String.class,
+            generic1 = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc =
+                "The default value for this parameter. Note that `None` is not valid and is "
+                    + "only used as there is no universal default value that is applicable.",
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = "providers",
+            doc = "If non-empty, all specified build targets must have these providers",
+            defaultValue = "[]",
+            positional = false,
+            named = true,
+            type = SkylarkList.class,
+            generic1 = Provider.class)
+      })
+  AttributeHolder depAttribute(
+      Object defaultValue, String doc, boolean mandatory, SkylarkList<Provider<?>> providers)
+      throws EvalException;
+
+  @SkylarkCallable(
+      name = "dep_list",
+      doc =
+          "Create a parameter for user defined rules that is a list of build targets that are "
+              + "dependencies of this target\nThis is exposed to rule implementations via "
+              + "ctx.attr.{@code name} as a list of ProviderInfoCollection objects, that provide "
+              + "access to various metadata about the dependency.",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "[]",
+            noneable = false,
+            positional = false,
+            named = true,
+            type = SkylarkList.class,
+            generic1 = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = "allow_empty",
+            doc = "Whether the dep list may be empty",
+            defaultValue = "False",
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = "providers",
+            doc = "If non-empty, all specified build targets must have these providers",
+            defaultValue = "[]",
+            positional = false,
+            named = true,
+            type = SkylarkList.class,
+            generic1 = Provider.class)
+      })
+  AttributeHolder depListAttribute(
+      SkylarkList<String> defaultValue,
+      String doc,
+      boolean mandatory,
+      boolean allowEmpty,
+      SkylarkList<Provider<?>> providers)
       throws EvalException;
 }

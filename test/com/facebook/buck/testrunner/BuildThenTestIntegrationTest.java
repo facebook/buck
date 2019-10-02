@@ -89,4 +89,14 @@ public class BuildThenTestIntegrationTest {
     ProcessResult testResult = workspace.runBuckCommand("test", "//:abstractclass");
     testResult.assertSuccess("Abstract class with test methods should exit with 0.");
   }
+
+  @Test
+  public void failingTestReportsErrors() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_then_test", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult testResult = workspace.runBuckCommand("test", "//:failingtest");
+    testResult.assertTestFailure("Throw some <error> &#");
+  }
 }

@@ -38,6 +38,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.network.FakeFailingScribeLogger;
 import com.facebook.buck.util.network.ScribeLogger;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.fasterxml.jackson.core.JsonParser;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -182,7 +183,7 @@ public class OfflineScribeLoggerTest {
     ScribeLogger succeeddingLogger =
         new ScribeLogger() {
           @Override
-          public ListenableFuture<Void> log(
+          public ListenableFuture<Unit> log(
               String category, Iterable<String> lines, Optional<Integer> bucket) {
             if (!category.equals(testCategory)) {
               sentData.add(new Pair<>(category, lines));
@@ -287,14 +288,14 @@ public class OfflineScribeLoggerTest {
     }
 
     @Override
-    public ListenableFuture<Void> log(
+    public ListenableFuture<Unit> log(
         String category, Iterable<String> lines, Optional<Integer> bucket) {
-      ListenableFuture<Void> upload = offlineScribeLogger.log(category, lines);
+      ListenableFuture<Unit> upload = offlineScribeLogger.log(category, lines);
       Futures.addCallback(
           upload,
-          new FutureCallback<Void>() {
+          new FutureCallback<Unit>() {
             @Override
-            public void onSuccess(Void result) {}
+            public void onSuccess(Unit result) {}
 
             @Override
             @ParametersAreNonnullByDefault

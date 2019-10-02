@@ -20,12 +20,12 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /** Interface used to upload inputs/outputs to the CAS. */
 public interface CasBlobUploader {
-  ImmutableSet<String> getMissingHashes(List<Digest> requiredDigests) throws IOException;
+  ImmutableSet<String> getMissingHashes(Set<Digest> requiredDigests) throws IOException;
 
   ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadDataSupplier> build)
       throws IOException;

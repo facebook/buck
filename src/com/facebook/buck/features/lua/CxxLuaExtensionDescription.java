@@ -29,8 +29,8 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -50,14 +50,17 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
@@ -161,7 +164,7 @@ public class CxxLuaExtensionDescription
                             macrosConverter::convert)),
                     ImmutableList.of(headerSymlinkTree),
                     ImmutableSet.of(),
-                    CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                    CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
                         cxxPlatform, graphBuilder, deps),
                     args.getRawHeaders(),
                     args.getIncludeDirectories(),
@@ -228,6 +231,7 @@ public class CxxLuaExtensionDescription
         extensionPath,
         args.getLinkerExtraOutputs(),
         Linker.LinkableDepType.SHARED,
+        Optional.empty(),
         CxxLinkOptions.of(),
         RichStream.from(args.getCxxDeps().get(graphBuilder, cxxPlatform))
             .filter(NativeLinkableGroup.class)
@@ -235,6 +239,7 @@ public class CxxLuaExtensionDescription
                 Stream.of(
                     luaPlatform.getLuaCxxLibrary(
                         graphBuilder, buildTarget.getTargetConfiguration())))
+            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
             .toImmutableList(),
         args.getCxxRuntimeType(),
         Optional.empty(),
@@ -269,7 +274,7 @@ public class CxxLuaExtensionDescription
     FlavorDomain<LuaPlatform> luaPlatforms = getLuaPlatformsProvider().getLuaPlatforms();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
-
+    args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
     Optional<Map.Entry<Flavor, LuaPlatform>> platform = luaPlatforms.getFlavorAndValue(buildTarget);
@@ -283,6 +288,8 @@ public class CxxLuaExtensionDescription
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     return new CxxLuaExtension(buildTarget, projectFilesystem, params) {
+      private final PlatformMappedCache<NativeLinkTarget> targetsCache =
+          new PlatformMappedCache<>();
 
       @Override
       public String getModule(CxxPlatform cxxPlatform) {
@@ -299,39 +306,35 @@ public class CxxLuaExtensionDescription
       }
 
       @Override
-      public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
-        return NativeLinkTargetMode.library();
-      }
-
-      @Override
-      public Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
-          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-        return RichStream.from(args.getCxxDeps().get(graphBuilder, cxxPlatform))
-            .filter(NativeLinkableGroup.class)
-            .toImmutableList();
-      }
-
-      @Override
-      public NativeLinkableInput getNativeLinkTargetInput(
-          CxxPlatform cxxPlatform,
-          ActionGraphBuilder graphBuilder,
-          SourcePathResolver pathResolver) {
-        return NativeLinkableInput.builder()
-            .addAllArgs(
-                getExtensionArgs(
-                    buildTarget,
-                    projectFilesystem,
-                    graphBuilder,
-                    cellRoots,
-                    luaPlatforms.getValue(cxxPlatform.getFlavor()),
-                    args))
-            .addAllFrameworks(args.getFrameworks())
-            .build();
-      }
-
-      @Override
-      public Optional<Path> getNativeLinkTargetOutputPath() {
-        return Optional.empty();
+      public NativeLinkTarget getTargetForPlatform(CxxPlatform cxxPlatform) {
+        return targetsCache.get(
+            cxxPlatform,
+            () -> {
+              ImmutableList<NativeLinkable> nativeLinkables =
+                  RichStream.from(args.getCxxDeps().get(graphBuilder, cxxPlatform))
+                      .filter(NativeLinkableGroup.class)
+                      .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                      .toImmutableList();
+              ImmutableList<Arg> extensionArgs =
+                  getExtensionArgs(
+                      buildTarget,
+                      projectFilesystem,
+                      graphBuilder,
+                      cellRoots,
+                      luaPlatforms.getValue(cxxPlatform.getFlavor()),
+                      args);
+              NativeLinkableInput linkableInput =
+                  NativeLinkableInput.builder()
+                      .addAllArgs(extensionArgs)
+                      .addAllFrameworks(args.getFrameworks())
+                      .build();
+              return new NativeLinkTargetInfo(
+                  getBuildTarget(),
+                  NativeLinkTargetMode.library(),
+                  nativeLinkables,
+                  linkableInput,
+                  Optional.empty());
+            });
       }
     };
   }

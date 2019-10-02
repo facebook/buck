@@ -74,7 +74,9 @@ public class RuleKeyLoggerListenerTest {
             ImmutableList.of(),
             ImmutableList.of(),
             tempDirectory.getRoot().toPath(),
-            false);
+            false,
+            "repository",
+            "");
     durationTracker = new BuildRuleDurationTracker();
     managerScope = TestBackgroundTaskManager.of().getNewScope(info.getBuildId());
   }
@@ -152,6 +154,11 @@ public class RuleKeyLoggerListenerTest {
   private RuleKeyLoggerListener newInstance(
       TaskManagerCommandScope managerScope, int minLinesForAutoFlush) {
     return new RuleKeyLoggerListener(
-        projectFilesystem, info, outputExecutor, managerScope, minLinesForAutoFlush);
+        projectFilesystem,
+        info,
+        outputExecutor,
+        managerScope,
+        Optional.empty(),
+        minLinesForAutoFlush);
   }
 }

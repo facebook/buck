@@ -17,14 +17,19 @@
 package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
@@ -77,28 +82,46 @@ public class DaemonicCellStateTest {
     childState = new DaemonicCellState(childCell, 1);
   }
 
+  private RawTargetNode rawTargetNode(String name) {
+    return ImmutableRawTargetNode.of(
+        UnconfiguredBuildTargetParser.parse("//" + name + ":" + name),
+        RuleType.of("j_l", AbstractRuleType.Kind.BUILD),
+        ImmutableMap.of(),
+        ImmutableSet.of(),
+        ImmutableSet.of());
+  }
+
   @Test
   public void testPutComputedNodeIfNotPresent() throws BuildTargetException {
-    Cache<Boolean> cache = state.getOrCreateCache(Boolean.class);
+    Cache<UnconfiguredBuildTargetView, RawTargetNode> cache =
+        state.getCache(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
     BuildTarget target =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//path/to:target");
 
     // Make sure the cache has a raw node for this target.
     populateDummyRawNode(state, target);
 
-    cache.putComputedNodeIfNotPresent(target, false);
-    assertEquals("Cached node was not found", Optional.of(false), cache.lookupComputedNode(target));
+    RawTargetNode n1 = rawTargetNode("n1");
+    RawTargetNode n2 = rawTargetNode("n2");
 
-    assertFalse(cache.putComputedNodeIfNotPresent(target, true));
+    cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTargetView(), n1);
+    assertEquals(
+        "Cached node was not found",
+        Optional.of(n1),
+        cache.lookupComputedNode(target.getUnconfiguredBuildTargetView()));
+
+    assertEquals(
+        n1, cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTargetView(), n2));
     assertEquals(
         "Previously cached node should not be updated",
-        Optional.of(false),
-        cache.lookupComputedNode(target));
+        Optional.of(n1),
+        cache.lookupComputedNode(target.getUnconfiguredBuildTargetView()));
   }
 
   @Test
   public void testCellNameDoesNotAffectInvalidation() throws BuildTargetException {
-    Cache<Boolean> cache = childState.getOrCreateCache(Boolean.class);
+    Cache<UnconfiguredBuildTargetView, RawTargetNode> cache =
+        childState.getCache(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
     Path targetPath = childCell.getRoot().resolve("path/to/BUCK");
     BuildTarget target =
@@ -108,8 +131,11 @@ public class DaemonicCellStateTest {
     // Make sure the cache has a raw node for this target.
     populateDummyRawNode(childState, target);
 
-    cache.putComputedNodeIfNotPresent(target, true);
-    assertEquals(Optional.of(true), cache.lookupComputedNode(target));
+    RawTargetNode n1 = rawTargetNode("n1");
+
+    cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTargetView(), n1);
+    assertEquals(
+        Optional.of(n1), cache.lookupComputedNode(target.getUnconfiguredBuildTargetView()));
 
     childState.putBuildFileManifestIfNotPresent(
         targetPath,
@@ -126,6 +152,6 @@ public class DaemonicCellStateTest {
     assertEquals(
         "Cell-named target should still be invalidated",
         Optional.empty(),
-        cache.lookupComputedNode(target));
+        cache.lookupComputedNode(target.getUnconfiguredBuildTargetView()));
   }
 }

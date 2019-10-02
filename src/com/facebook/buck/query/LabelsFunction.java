@@ -36,7 +36,6 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
 /**
@@ -68,17 +67,16 @@ public class LabelsFunction implements QueryFunction<QueryTarget, QueryBuildTarg
   }
 
   @Override
-  public ImmutableSet<QueryTarget> eval(
+  @SuppressWarnings("unchecked")
+  public Set<QueryTarget> eval(
       QueryEvaluator<QueryBuildTarget> evaluator,
       QueryEnvironment<QueryBuildTarget> env,
       ImmutableList<Argument<QueryBuildTarget>> args)
       throws QueryException {
-    String label = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
+    final String label =
+        CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
     Set<QueryBuildTarget> inputs = evaluator.eval(args.get(1).getExpression(), env);
-    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
-    for (QueryBuildTarget input : inputs) {
-      result.addAll(env.getTargetsInAttribute(input, label));
-    }
-    return result.build();
+    return (Set<QueryTarget>)
+        Unions.of((QueryBuildTarget input) -> env.getTargetsInAttribute(input, label), inputs);
   }
 }

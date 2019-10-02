@@ -3,12 +3,18 @@ platform(
     constraint_values = [
         "buck//config/constraints:x86_64",
     ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 platform(
     name = "osx_x86-64",
     constraint_values = [
         "buck//config/constraints:osx",
+    ],
+    visibility = [
+        "PUBLIC",
     ],
     deps = [
         ":x86_64-platform",
@@ -20,6 +26,9 @@ platform(
     constraint_values = [
         "buck//config/constraints:linux",
     ],
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":x86_64-platform",
     ],
@@ -30,12 +39,18 @@ config_setting(
     constraint_values = [
         "buck//config/constraints:osx",
     ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 config_setting(
     name = "linux_config",
     constraint_values = [
         "buck//config/constraints:linux",
+    ],
+    visibility = [
+        "PUBLIC",
     ],
 )
 
@@ -44,12 +59,18 @@ config_setting(
     constraint_values = [
         "buck//config/constraints:x86_64",
     ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 platform(
     name = "platform-with-circular-dep",
     constraint_values = [
         "buck//config/constraints:osx",
+    ],
+    visibility = [
+        "PUBLIC",
     ],
     deps = [
         ":platform-with-circular-dep",

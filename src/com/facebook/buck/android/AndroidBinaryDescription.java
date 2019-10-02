@@ -21,17 +21,21 @@ import static com.facebook.buck.android.AndroidBinaryResourcesGraphEnhancer.PACK
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -39,6 +43,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -49,13 +54,13 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.step.fs.XzStep;
-import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
@@ -145,8 +150,8 @@ public class AndroidBinaryDescription
 
     DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
-    ImmutableSet<JavaLibrary> rulesToExcludeFromDex =
-        NoDxArgsHelper.findRulesToExcludeFromDex(graphBuilder, buildTarget, args.getNoDx());
+    Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex =
+        NoDxArgsHelper.createSupplierForRulesToExclude(graphBuilder, buildTarget, args.getNoDx());
 
     CellPathResolver cellRoots = context.getCellPathResolver();
 
@@ -174,7 +179,8 @@ public class AndroidBinaryDescription
             args,
             false,
             javaOptions.get(),
-            javacFactory);
+            javacFactory,
+            context.getConfigurationRuleRegistry());
     AndroidBinary androidBinary =
         androidBinaryFactory.create(
             toolchainProvider,
@@ -239,31 +245,32 @@ public class AndroidBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
-    javaOptions
-        .get()
-        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
+    TargetConfiguration targetConfiguration = buildTarget.getTargetConfiguration();
+    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder, targetConfiguration);
 
-    Optionals.addIfPresent(
-        proGuardConfig.getProguardTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
+    Optionals.addIfPresent(proGuardConfig.getProguardTarget(targetConfiguration), extraDepsBuilder);
 
     if (constructorArg.getRedex()) {
       // If specified, this option may point to either a BuildTarget or a file.
-      Optional<BuildTarget> redexTarget =
-          androidBuckConfig.getRedexTarget(buildTarget.getTargetConfiguration());
+      Optional<BuildTarget> redexTarget = androidBuckConfig.getRedexTarget(targetConfiguration);
       redexTarget.ifPresent(extraDepsBuilder::add);
     }
     // TODO(cjhopman): we could filter this by the abis that this binary supports.
     toolchainProvider
         .getByNameIfPresent(NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class)
-        .ifPresent(
-            ndkCxxPlatformsProvider ->
-                ndkCxxPlatformsProvider
-                    .getNdkCxxPlatforms()
-                    .values()
-                    .forEach(
-                        platform ->
-                            extraDepsBuilder.addAll(
-                                platform.getParseTimeDeps(buildTarget.getTargetConfiguration()))));
+        .map(NdkCxxPlatformsProvider::getNdkCxxPlatforms).map(Map::values)
+        .orElse(ImmutableList.of()).stream()
+        .map(platform -> platform.getParseTimeDeps(targetConfiguration))
+        .forEach(extraDepsBuilder::addAll);
+
+    AndroidTools.addParseTimeDepsToAndroidTools(
+        toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
+  }
+
+  @Override
+  public ImmutableSet<BuildTarget> getConfigurationDeps(AndroidBinaryDescriptionArg arg) {
+    return ImmutableSet.copyOf(
+        ConfigurationBuildTargets.convertValues(arg.getTargetCpuTypeConstraints()).values());
   }
 
   @BuckStyleImmutable
@@ -340,5 +347,10 @@ public class AndroidBinaryDescription
     abstract Optional<SourcePath> getRedexConfig();
 
     abstract ImmutableList<StringWithMacros> getRedexExtraArgs();
+
+    @Hint(splitConfiguration = true)
+    @Override
+    @Value.NaturalOrder
+    public abstract ImmutableSortedSet<BuildTarget> getDeps();
   }
 }

@@ -91,8 +91,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     ImmutableSet.Builder<Path> cellPaths = ImmutableSet.builder();
     cellPaths.add(MorePaths.normalize(projectFilesystem.getRootPath()));
     cellPathResolver.ifPresent(
-        resolver ->
-            resolver.getCellPaths().values().forEach(p -> cellPaths.add(MorePaths.normalize(p))));
+        resolver -> resolver.getKnownRoots().forEach(p -> cellPaths.add(MorePaths.normalize(p))));
     this.cellPaths = cellPaths.build();
 
     // TODO(alisdair,ruibm): Capture all .buckconfig dependencies automatically.

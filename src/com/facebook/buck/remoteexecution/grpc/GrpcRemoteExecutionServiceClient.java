@@ -62,16 +62,19 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
   private final ByteStreamStub byteStreamStub;
   private final String instanceName;
   private final Protocol protocol;
+  private final int casDeadline;
 
   public GrpcRemoteExecutionServiceClient(
       ExecutionStub executionStub,
       ByteStreamStub byteStreamStub,
       String instanceName,
-      Protocol protocol) {
+      Protocol protocol,
+      int casDeadline) {
     this.executionStub = executionStub;
     this.byteStreamStub = byteStreamStub;
     this.instanceName = instanceName;
     this.protocol = protocol;
+    this.casDeadline = casDeadline;
   }
 
   private class ExecutionState {
@@ -287,7 +290,7 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
         Data data = new Data();
         try {
           GrpcRemoteExecutionClients.readByteStream(
-                  instanceName, digest, byteStreamStub, data::concat)
+                  instanceName, digest, byteStreamStub, data::concat, casDeadline)
               .get();
         } catch (InterruptedException | ExecutionException e) {
           throw new RuntimeException(e);

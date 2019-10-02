@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 
 public class GoTestUtils {
@@ -36,5 +37,20 @@ public class GoTestUtils {
           .setLinker(new CommandTool.Builder().build())
           .setCover(new CommandTool.Builder().build())
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+          .build();
+
+  public static final GoPlatform CUSTOM_PLATFORM_WITH_LINKER_ARGS =
+      GoPlatform.builder()
+          .setFlavor(CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR)
+          .setGoOs(GoOs.LINUX)
+          .setGoArch(GoArch.AMD64)
+          .setGoRoot(Paths.get("/root"))
+          .setCompiler(new CommandTool.Builder().build())
+          .setAssembler(new CommandTool.Builder().build())
+          .setLinker(new CommandTool.Builder().build())
+          .setCGo(new CommandTool.Builder().build())
+          .setPacker(new CommandTool.Builder().build())
+          .setCover(new CommandTool.Builder().build())
+          .setCxxPlatform(CxxPlatformUtils.buildPlatformWithLdArgs(ImmutableList.of("foo")))
           .build();
 }

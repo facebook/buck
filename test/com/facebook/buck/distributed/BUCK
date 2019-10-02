@@ -22,6 +22,7 @@ standard_java_test(
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/config/impl:impl",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/rules/knowntypes/provider:provider",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/core/util/immutables:immutables",

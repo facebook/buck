@@ -17,19 +17,18 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 
-class OmnibusRootNode extends OmnibusNode implements NativeLinkTarget, NativeLinkableGroup {
+class OmnibusRootNode extends OmnibusNode implements NativeLinkTarget, NativeLinkable {
 
-  public OmnibusRootNode(String target, Iterable<? extends NativeLinkableGroup> deps) {
+  public OmnibusRootNode(String target, Iterable<? extends NativeLinkable> deps) {
     super(target, deps);
   }
 
@@ -38,21 +37,20 @@ class OmnibusRootNode extends OmnibusNode implements NativeLinkTarget, NativeLin
   }
 
   @Override
-  public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
+  public NativeLinkTargetMode getNativeLinkTargetMode() {
     return NativeLinkTargetMode.library(getBuildTarget().getShortName());
   }
 
   @Override
-  public Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+  public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
+      ActionGraphBuilder graphBuilder) {
     return Iterables.concat(
-        getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
-        getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder));
+        getNativeLinkableDeps(graphBuilder), getNativeLinkableExportedDeps(graphBuilder));
   }
 
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver) {
+      ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver) {
     return NativeLinkableInput.builder().addArgs(StringArg.of(getBuildTarget().toString())).build();
   }
 

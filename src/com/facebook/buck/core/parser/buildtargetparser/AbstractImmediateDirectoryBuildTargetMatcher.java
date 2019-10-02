@@ -41,6 +41,7 @@ abstract class AbstractImmediateDirectoryBuildTargetMatcher implements BuildTarg
    */
   @Override
   public boolean matches(BuildTarget target) {
+    // TODO(T47190884): Check the name instead of the path.
     return Objects.equal(getCellPath(), target.getCellPath())
         && Objects.equal(getPathWithinCell(), target.getBasePath());
   }

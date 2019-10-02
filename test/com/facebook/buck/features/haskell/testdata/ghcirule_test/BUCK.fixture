@@ -18,3 +18,38 @@ haskell_ghci(
         "extra_scripts/foo_ghc",
     ],
 )
+
+haskell_ghci(
+    name = "mutually_recursive",
+    srcs = [
+        "Boot/Bar.hs",
+        "Boot/Foo.hs",
+        "Boot/Foo.hs-boot",
+    ],
+)
+
+haskell_ghci(
+    name = "prebuilt_foreign",
+    srcs = [
+        "Foreign.hs",
+    ],
+    extra_script_templates = [
+        "extra_scripts/foo_ghc",
+    ],
+    deps = [
+        ":prebuilt_c",
+    ],
+)
+
+prebuilt_cxx_library(
+    name = "prebuilt_c",
+    static_lib = ":c#static-pic,default",
+    visibility = ["PUBLIC"],
+)
+
+cxx_library(
+    name = "c",
+    srcs = [
+        "foreign.c",
+    ],
+)

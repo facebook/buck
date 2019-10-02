@@ -83,4 +83,32 @@ public class AndroidBuckConfigTest {
     // Make sure we default to fallback.
     assertEquals(androidBuckConfig.getNdkAppPlatformForCpuAbi("fake"), Optional.of("fallback"));
   }
+
+  @Test
+  public void compileSdkVersionDefersToTargetIfNotPresent() {
+    AndroidBuckConfig buckConfig =
+        new AndroidBuckConfig(
+            FakeBuckConfig.builder()
+                .setSections(ImmutableMap.of("android", ImmutableMap.of("target", "android-23")))
+                .build(),
+            Platform.detect());
+
+    assertEquals("android-23", buckConfig.getAndroidCompileSdkVersion().get());
+  }
+
+  @Test
+  public void compileSdkVersionTakesPrecendenceOverTarget() {
+    AndroidBuckConfig buckConfig =
+        new AndroidBuckConfig(
+            FakeBuckConfig.builder()
+                .setSections(
+                    ImmutableMap.of(
+                        "android",
+                        ImmutableMap.of(
+                            "target", "android-23", "compile_sdk_version", "android-24")))
+                .build(),
+            Platform.detect());
+
+    assertEquals("android-24", buckConfig.getAndroidCompileSdkVersion().get());
+  }
 }

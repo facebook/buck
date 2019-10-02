@@ -20,9 +20,14 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.WrapsException;
+import com.facebook.buck.util.string.MoreStrings;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 public class StepFailedException extends Exception implements WrapsException, ExceptionWithContext {
+
+  private static final int KEEP_FIRST_CHARS = 4 * 80;
+
   private final Step step;
   private final String description;
 
@@ -44,13 +49,26 @@ public class StepFailedException extends Exception implements WrapsException, Ex
     int exitCode = executionResult.getExitCode();
     StringBuilder messageBuilder = new StringBuilder();
     messageBuilder.append(String.format("Command failed with exit code %d.", exitCode));
+    ImmutableList<String> executedCommand = executionResult.getExecutedCommand();
+    if (!executedCommand.isEmpty()) {
+      appendToErrorMessage(messageBuilder, "command", executedCommand.toString(), true);
+    }
     executionResult
         .getStderr()
-        .ifPresent(
-            stderr ->
-                messageBuilder.append(System.lineSeparator()).append("stderr: ").append(stderr));
+        .ifPresent(stderr -> appendToErrorMessage(messageBuilder, "stderr", stderr, false));
+
     return createForFailingStepWithException(
         step, context, new HumanReadableException(messageBuilder.toString()));
+  }
+
+  private static StringBuilder appendToErrorMessage(
+      StringBuilder messageBuilder, String name, String value, boolean truncate) {
+    return messageBuilder
+        .append(System.lineSeparator())
+        .append(System.lineSeparator())
+        .append(name)
+        .append(": ")
+        .append(truncate ? MoreStrings.truncateTail(value, KEEP_FIRST_CHARS) : value);
   }
 
   static StepFailedException createForFailingStepWithException(

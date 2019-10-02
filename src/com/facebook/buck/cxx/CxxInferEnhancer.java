@@ -43,7 +43,7 @@ import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/** Handles infer flavors for {@link CxxLibrary} and {@link CxxBinary}. */
+/** Handles infer flavors for {@link CxxLibraryGroup} and {@link CxxBinary}. */
 public final class CxxInferEnhancer {
 
   /** Flavor adorning the individual inter capture rules. */
@@ -257,8 +257,8 @@ public final class CxxInferEnhancer {
     new AbstractBreadthFirstTraversal<BuildRule>(deps) {
       @Override
       public Iterable<BuildRule> visit(BuildRule buildRule) {
-        if (buildRule instanceof CxxLibrary) {
-          CxxLibrary library = (CxxLibrary) buildRule;
+        if (buildRule instanceof CxxLibraryGroup) {
+          CxxLibraryGroup library = (CxxLibraryGroup) buildRule;
           depsBuilder.add(
               (ruleClass.cast(
                   library.requireBuildRule(
@@ -297,7 +297,7 @@ public final class CxxInferEnhancer {
                     ::convert)),
         ImmutableList.of(headerSymlinkTree),
         args.getFrameworks(),
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+        CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
             cxxPlatform,
             graphBuilder,
             RichStream.from(deps).filter(CxxPreprocessorDep.class::isInstance).toImmutableList()),

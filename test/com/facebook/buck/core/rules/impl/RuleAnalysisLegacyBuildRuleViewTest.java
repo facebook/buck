@@ -20,10 +20,10 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.artifact.BuildArtifact;
-import com.facebook.buck.core.artifact.DeclaredArtifact;
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -33,10 +33,10 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
-import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
+import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
@@ -45,8 +45,9 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResultImpl;
-import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -65,6 +66,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.hamcrest.Matchers;
@@ -92,11 +94,13 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
             targetGraph,
             new TargetNodeToBuildRuleTransformer() {
               @Override
-              public <T> BuildRule transform(
+              public <T extends ConstructorArg> BuildRule transform(
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
+                  ConfigurationRuleRegistry configurationRuleRegistry,
                   ActionGraphBuilder graphBuilder,
-                  TargetNode<T> targetNode) {
+                  TargetNode<T> targetNode,
+                  ProviderInfoCollection providerInfoCollection) {
                 assertSame(depNode, targetNode);
                 return fakeDepRule;
               }
@@ -105,46 +109,46 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
 
     FakeActionAnalysisRegistry actionAnalysisRegistry = new FakeActionAnalysisRegistry();
 
-    FakeActionConstructorArgs depActionFunction =
-        (ins, outs, ctx) -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+    FakeAction.FakeActionExecuteLambda depActionFunction =
+        (ins, outs, ctx) ->
+            ImmutableActionExecutionSuccess.of(
+                Optional.empty(), Optional.empty(), ImmutableList.of());
 
-    ActionWrapperDataFactory actionWrapperDataFactory =
-        new ActionWrapperDataFactory(depTarget, actionAnalysisRegistry, filesystem);
-    DeclaredArtifact depArtifact =
-        actionWrapperDataFactory.declareArtifact(Paths.get("bar.output"));
-    ImmutableMap<DeclaredArtifact, BuildArtifact> materializedDepArtifacts =
-        actionWrapperDataFactory.createActionAnalysisData(
-            FakeAction.class, ImmutableSet.of(), ImmutableSet.of(depArtifact), depActionFunction);
+    ActionRegistry actionRegistry =
+        new DefaultActionRegistry(depTarget, actionAnalysisRegistry, filesystem);
+    Artifact depArtifact = actionRegistry.declareArtifact(Paths.get("bar.output"));
+
+    new FakeAction(
+        actionRegistry, ImmutableSet.of(), ImmutableSet.of(depArtifact), depActionFunction);
 
     Path outpath = Paths.get("foo.output");
     Path packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
 
     AtomicBoolean functionCalled = new AtomicBoolean();
-    FakeActionConstructorArgs actionFunction =
+    FakeAction.FakeActionExecuteLambda actionFunction =
         (ins, outs, ctx) -> {
-          assertEquals(ImmutableSet.of(materializedDepArtifacts.get(depArtifact)), ins);
+          assertEquals(ImmutableSet.of(depArtifact), ins);
           assertEquals(
-              buildTarget, Iterables.getOnlyElement(outs).getActionDataKey().getBuildTarget());
-          assertEquals(buildTarget, Iterables.getOnlyElement(outs).getPath().getTarget());
+              buildTarget,
+              Objects.requireNonNull(Iterables.getOnlyElement(outs).asBound().asBuildArtifact())
+                  .getActionDataKey()
+                  .getBuildTarget());
           assertEquals(
-              packagePath.resolve(outpath),
-              Iterables.getOnlyElement(outs).getPath().getResolvedPath());
+              ExplicitBuildTargetSourcePath.of(buildTarget, packagePath.resolve(outpath)),
+              Iterables.getOnlyElement(outs).asBound().getSourcePath());
           functionCalled.set(true);
-          return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+          return ImmutableActionExecutionSuccess.of(
+              Optional.empty(), Optional.empty(), ImmutableList.of());
         };
 
-    actionWrapperDataFactory =
-        new ActionWrapperDataFactory(buildTarget, actionAnalysisRegistry, filesystem);
-    DeclaredArtifact artifact = actionWrapperDataFactory.declareArtifact(outpath);
-    ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifacts =
-        actionWrapperDataFactory.createActionAnalysisData(
-            FakeAction.class,
-            ImmutableSet.of(materializedDepArtifacts.get(depArtifact)),
-            ImmutableSet.of(artifact),
-            actionFunction);
+    actionRegistry = new DefaultActionRegistry(buildTarget, actionAnalysisRegistry, filesystem);
+    Artifact artifact = actionRegistry.declareArtifact(outpath);
+
+    new FakeAction(
+        actionRegistry, ImmutableSet.of(depArtifact), ImmutableSet.of(artifact), actionFunction);
 
     ProviderInfoCollection providerInfoCollection =
-        ProviderInfoCollectionImpl.builder()
+        TestProviderInfoCollectionImpl.builder()
             .put(new FakeInfo(new FakeBuiltInProvider("foo")))
             .build();
 
@@ -160,18 +164,22 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     ActionWrapperData actionWrapperData =
         (ActionWrapperData)
             actionAnalysisDataMap.get(
-                materializedArtifacts.get(artifact).getActionDataKey().getID());
+                Objects.requireNonNull(artifact.asBound().asBuildArtifact())
+                    .getActionDataKey()
+                    .getID());
 
-    BuildRule buildRule =
+    RuleAnalysisLegacyBuildRuleView buildRule =
         new RuleAnalysisLegacyBuildRuleView(
             "my_type",
             ruleAnalysisResult.getBuildTarget(),
             actionWrapperData.getAction(),
             actionGraphBuilder,
-            projectFilesystem);
+            projectFilesystem,
+            providerInfoCollection);
 
     assertSame(buildTarget, buildRule.getBuildTarget());
     assertSame(projectFilesystem, buildRule.getProjectFilesystem());
+    assertSame(providerInfoCollection, buildRule.getProviderInfos());
     assertEquals("my_type", buildRule.getType());
     assertEquals(
         ExplicitBuildTargetSourcePath.of(buildTarget, packagePath.resolve("foo.output")),

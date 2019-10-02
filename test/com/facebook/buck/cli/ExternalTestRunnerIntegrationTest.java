@@ -171,7 +171,7 @@ public class ExternalTestRunnerIntegrationTest {
         Joiner.on(System.lineSeparator())
                 .join(
                     "(?s).*<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
-                    "<testcase name=\"SimpleTest\" runner_capabilities=\"simple_test_selector\">",
+                    "<testcase name=\"SimpleTest\" runner_capabilities=\"simple_test_selector\" testprotocol=\"1.0\">",
                     "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest\" "
                         + "time=\"\\d*\" type=\"SUCCESS\">",
                     "    <stdout>passed!",
@@ -179,7 +179,7 @@ public class ExternalTestRunnerIntegrationTest {
                     "  </test>",
                     "</testcase>",
                     "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
-                    "<testcase name=\"SimpleTest2\" runner_capabilities=\"simple_test_selector\">",
+                    "<testcase name=\"SimpleTest2\" runner_capabilities=\"simple_test_selector\" testprotocol=\"1.0\">",
                     "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest2\" "
                         + "time=\"\\d*\" type=\"SUCCESS\">",
                     "    <stdout>passed!",

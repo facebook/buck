@@ -56,7 +56,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -210,11 +212,14 @@ public class CxxLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       CxxLibraryDescriptionArg args) {
+    ActionGraphBuilder actionGraphBuilder = context.getActionGraphBuilder();
+    args.checkDuplicateSources(actionGraphBuilder.getSourcePathResolver());
     return cxxLibraryFactory.createBuildRule(
+        context.getTargetGraph(),
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        context.getActionGraphBuilder(),
+        actionGraphBuilder,
         context.getCellPathResolver(),
         args,
         args.getLinkStyle(),
@@ -222,7 +227,7 @@ public class CxxLibraryDescription
         ImmutableSet.of(),
         ImmutableSortedSet.of(),
         TransitiveCxxPreprocessorInputFunction.fromLibraryRule(),
-        Optional.empty());
+        CxxLibraryDescriptionDelegate.noop());
   }
 
   public static Optional<Map.Entry<Flavor, Type>> getLibType(BuildTarget buildTarget) {
@@ -325,7 +330,7 @@ public class CxxLibraryDescription
                     .add(cxxPlatform.getFlavor())
                     .build());
         BuildRule rawRule = graphBuilder.requireRule(rawTarget);
-        CxxLibrary rule = (CxxLibrary) rawRule;
+        CxxLibraryGroup rule = (CxxLibraryGroup) rawRule;
         ImmutableMap<BuildTarget, CxxPreprocessorInput> inputs =
             rule.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder);
 
@@ -353,20 +358,15 @@ public class CxxLibraryDescription
      */
     static TransitiveCxxPreprocessorInputFunction fromDeps() {
       return (target, ruleResolver, cxxPlatform, deps, privateDeps) -> {
-        Map<BuildTarget, CxxPreprocessorInput> input = new LinkedHashMap<>();
-        input.put(
-            target,
+        List<CxxPreprocessorInput> input = new ArrayList<>();
+        input.add(
             queryMetadataCxxPreprocessorInput(
                     ruleResolver, target, cxxPlatform, HeaderVisibility.PUBLIC)
                 .orElseThrow(IllegalStateException::new));
-        for (BuildRule rule : deps) {
-          if (rule instanceof CxxPreprocessorDep) {
-            input.putAll(
-                ((CxxPreprocessorDep) rule)
-                    .getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver));
-          }
-        }
-        return input.values().stream();
+        input.addAll(
+            CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
+                cxxPlatform, ruleResolver, deps));
+        return input.stream();
       };
     }
   }
@@ -524,6 +524,12 @@ public class CxxLibraryDescription
     @Value.Derived
     default CxxDeps getCxxDeps() {
       return CxxDeps.concat(getPrivateCxxDeps(), getExportedCxxDeps());
+    }
+
+    /** @return how exported headers from this rule should be included by dependents. */
+    @Value.Default
+    default CxxPreprocessables.IncludeType getExportedHeaderStyle() {
+      return CxxPreprocessables.IncludeType.LOCAL;
     }
 
     Optional<Boolean> getSupportsMergedLinking();

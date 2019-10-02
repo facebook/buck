@@ -16,23 +16,28 @@
 
 package com.facebook.buck.core.select;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.platform.ConstraintResolver;
+import com.facebook.buck.core.model.platform.Platform;
 
 /**
  * A condition in <code>select</code> statements.
  *
  * <p>Such condition is referenced from keys in a <code>select</code> statement by a {@link
- * UnconfiguredBuildTargetView} which should point to an instance that implements {@link
- * ProvidesSelectable} which is used to obtain the {@link Selectable}.
+ * BuildTarget} which should point to an instance that implements {@link ProvidesSelectable} which
+ * is used to obtain the {@link Selectable}.
  */
 public interface Selectable {
 
   /** @return <code>true</code> if this condition matches the configuration */
   boolean matches(SelectableConfigurationContext configurationContext);
 
+  /** @return <code>true</code> if this condition matches the platform */
+  boolean matchesPlatform(Platform platform, ConstraintResolver constraintResolver);
+
   /** @return <code>true</code> if this condition is more specialized than the given one */
   boolean refines(Selectable other);
 
   /** @return build target of this condition */
-  UnconfiguredBuildTargetView getBuildTarget();
+  BuildTarget getBuildTarget();
 }

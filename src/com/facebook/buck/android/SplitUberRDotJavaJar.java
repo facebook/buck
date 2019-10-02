@@ -34,6 +34,7 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.zip.DeterministicZipBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -167,7 +168,7 @@ public class SplitUberRDotJavaJar extends ModernBuildRule<SplitUberRDotJavaJar>
                 });
       }
 
-      return StepExecutionResult.of(0);
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override

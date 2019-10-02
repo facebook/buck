@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -33,5 +34,5 @@ public interface UntrackedHeaderReporter {
    * @throws Exception in case there is some error while generating the report. Some reporters
    *     access the disk, which can fail.
    */
-  String getErrorReport(Path header) throws IOException;
+  String getErrorReport(SourcePathResolver pathResolver, Path header) throws IOException;
 }

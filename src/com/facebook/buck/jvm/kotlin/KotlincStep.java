@@ -20,8 +20,10 @@ import static com.google.common.collect.Iterables.transform;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
@@ -101,12 +103,15 @@ public class KotlincStep implements Step {
 
       String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
       Optional<String> returnedStderr;
-      if (declaredDepsBuildResult != 0) {
+      if (declaredDepsBuildResult != StepExecutionResults.SUCCESS_EXIT_CODE) {
         returnedStderr = Optional.of(firstOrderStderr);
       } else {
         returnedStderr = Optional.empty();
       }
-      return StepExecutionResult.of(declaredDepsBuildResult, returnedStderr);
+      return ImmutableStepExecutionResult.builder()
+          .setExitCode(declaredDepsBuildResult)
+          .setStderr(returnedStderr)
+          .build();
     }
   }
 

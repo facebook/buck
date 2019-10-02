@@ -19,6 +19,7 @@ package com.facebook.buck.json;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.util.hashing.StringHashing;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
 import java.util.Collection;
@@ -104,7 +105,7 @@ public class JsonObjectHashing {
         hasher.putInt(HashedObjectType.DOUBLE.ordinal());
         hasher.putDouble(number.doubleValue());
       }
-    } else if (obj instanceof Void || obj == null) {
+    } else if (obj instanceof Void || obj instanceof Unit || obj == null) {
       hasher.putInt(HashedObjectType.NULL.ordinal());
     } else if (obj instanceof ListWithSelects) {
       ListWithSelects listWithSelects = (ListWithSelects) obj;

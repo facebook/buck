@@ -54,6 +54,9 @@ public interface DefectReporter {
 
     /** @return if an error occurred it will have the error. */
     Optional<String> getReportSubmitErrorMessage();
+
+    /** @return The id of the generated report object by the server */
+    Optional<String> getReportId();
   }
 
   /** Information helpful when diagnosing 'buck is not picking up changes' reports. */
@@ -80,6 +83,6 @@ public interface DefectReporter {
 
     Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport();
 
-    UserLocalConfiguration getUserLocalConfiguration();
+    Optional<UserLocalConfiguration> getUserLocalConfiguration();
   }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -40,7 +41,7 @@ import java.util.Set;
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */
-public interface TargetNode<T>
+public interface TargetNode<T extends ConstructorArg>
     extends Comparable<TargetNode<?>>, ObeysVisibility, HasBuildTarget, ComputeResult {
 
   @Override
@@ -71,6 +72,15 @@ public interface TargetNode<T>
    */
   ImmutableSortedSet<BuildTarget> getTargetGraphOnlyDeps();
 
+  /**
+   * Provides a set of configuration targets that were used during the construction of this node.
+   *
+   * <p>For example, this set would include configuration targets specified as keys in {@code
+   * select} statements.
+   */
+  ImmutableSortedSet<BuildTarget> getConfigurationDeps();
+
+  // TODO(cjhopman): This should be a CellNameResolver.
   CellPathResolver getCellNames();
 
   ImmutableSet<VisibilityPattern> getVisibilityPatterns();
@@ -87,6 +97,12 @@ public interface TargetNode<T>
    *     into a BuildRule.
    */
   Set<BuildTarget> getParseDeps();
+
+  /**
+   * Dependencies that include build targets as well as configuration targets that this node depends
+   * on.
+   */
+  Set<BuildTarget> getTotalDeps();
 
   boolean isVisibleTo(TargetNode<?> viewer);
 

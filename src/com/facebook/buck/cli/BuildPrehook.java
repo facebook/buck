@@ -83,6 +83,8 @@ class BuildPrehook implements AutoCloseable {
         ImmutableMap.<String, String>builder().putAll(environment);
     ImmutableMap<String, ImmutableMap<String, String>> values =
         buckConfig.getConfig().getRawConfig().getValues();
+    // TODO(T45094593): Make this use the buckconfig.json that we already write out in each build's
+    // logs
     Path tempFile = serializeIntoJsonFile("buckconfig_", values);
     Path argumentsFile = serializeIntoJsonFile("arguments_", arguments);
     environmentBuilder.put("BUCKCONFIG_FILE", tempFile.toString());

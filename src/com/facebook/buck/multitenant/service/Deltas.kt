@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.collect.Generation
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
 /**
@@ -48,24 +49,23 @@ internal fun determineDeltas(
     val internalChanges = toInternalChanges(changes, buildTargetCache)
     // Perform lookupBuildPackages() before processing addedBuildPackages below because
     // lookupBuildPackages() performs some sanity checks on addedBuildPackages.
-    val (modifiedPackageInfo, removedPackageInfo) = lookupBuildPackages(
-            generation, internalChanges, indexGenerationData, buildTargetCache)
+    val (modifiedPackageInfo, removedPackageInfo) = lookupBuildPackages(generation, internalChanges,
+        indexGenerationData, buildTargetCache)
 
     val ruleDeltas = mutableListOf<RuleDelta>()
     val rdepsUpdates = mutableListOf<Pair<BuildTargetId, BuildTargetSetDelta>>()
     val buildPackageDeltas = mutableListOf<BuildPackageDelta>()
-    for (added in internalChanges.addedBuildPackages) {
+    internalChanges.addedBuildPackages.forEach { added ->
         val ruleNames = ArrayList<String>(added.rules.size)
-        for (rule in added.rules) {
+        added.rules.forEach { rule ->
             val buildTarget = rule.targetNode.buildTarget
             ruleNames.add(buildTarget.name)
             ruleDeltas.add(RuleDelta.Added(rule))
             val add = BuildTargetSetDelta.Add(buildTargetCache.get(buildTarget))
             rule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, add) }
         }
-        buildPackageDeltas.add(BuildPackageDelta.Updated(
-                added.buildFileDirectory,
-                ruleNames.asSequence().toBuildRuleNames()))
+        buildPackageDeltas.add(BuildPackageDelta.Updated(added.buildFileDirectory,
+            ruleNames.asSequence().toBuildRuleNames()))
     }
 
     val buildTargetsOfRemovedRules = mutableListOf<UnconfiguredBuildTarget>()
@@ -125,15 +125,17 @@ internal fun determineDeltas(
                 }
             }
 
-            buildPackageDeltas.add(BuildPackageDelta.Updated(
-                    internalBuildPackage.buildFileDirectory,
-                    newRuleNames))
+            buildPackageDeltas.add(
+                BuildPackageDelta.Updated(internalBuildPackage.buildFileDirectory, newRuleNames))
             ruleDeltas.addAll(ruleChanges)
         }
     }
 
-    val localRdepsRuleMapChanges = deriveRdepsDeltas(rdepsUpdates, generation, indexGenerationData)
-    return Deltas(buildPackageDeltas, ruleDeltas, localRdepsRuleMapChanges)
+    return Deltas(
+        buildPackageDeltas = buildPackageDeltas,
+        ruleDeltas = ruleDeltas,
+        rdepsDeltas = deriveRdepsDeltas(rdepsUpdates, generation, indexGenerationData)
+    )
 }
 
 /**
@@ -155,18 +157,15 @@ private fun lookupBuildPackages(
         // As a sanity check, make sure there are no oldRules for any of the "added" packages.
         internalChanges.addedBuildPackages.forEach { added ->
             val oldRuleNames = buildPackageMap.getVersion(added.buildFileDirectory, generation)
-            if (oldRuleNames != null) {
-                throw IllegalArgumentException("Build package to add already existed at ${added
-                        .buildFileDirectory} for generation $generation")
+            require(oldRuleNames == null) {
+                "Build package to add already existed at ${added.buildFileDirectory} for generation $generation"
             }
         }
 
         internalChanges.modifiedBuildPackages.mapTo(modified) { modified ->
-            val oldRuleNames = requireNotNull(buildPackageMap.getVersion(
-                    modified.buildFileDirectory,
-                    generation)) {
-                "No version found for build file in ${modified.buildFileDirectory} for " +
-                        "generation $generation"
+            val oldRuleNames = requireNotNull(
+                buildPackageMap.getVersion(modified.buildFileDirectory, generation)) {
+                "No version found for build file in ${modified.buildFileDirectory} for generation $generation"
             }
             Pair(modified, oldRuleNames)
         }
@@ -184,9 +183,14 @@ private fun lookupBuildPackages(
             val buildTarget = BuildTargets.createBuildTargetFromParts(buildPackage.buildFileDirectory, name)
             requireNotNull(buildTargetCache.get(buildTarget))
         }.toList()
-        ModifiedPackageByIds(buildPackage, buildRuleNames, buildTargetIds)
+        ModifiedPackageByIds(
+            internalBuildPackage = buildPackage,
+            oldRuleNames = buildRuleNames,
+            oldBuildTargetIds = buildTargetIds)
     }
-    return BuildPackagesLookup(modifiedWithTargetIds, removed)
+    return BuildPackagesLookup(
+        modifiedPackageInfo = modifiedWithTargetIds,
+        removedPackageInfo = removed)
 }
 
 private fun lookupBuildRules(
@@ -204,8 +208,7 @@ private fun lookupBuildRules(
         modified.mapTo(modifiedRulesToProcess) { (internalBuildPackage, oldRuleNames, oldBuildTargetIds) ->
             val oldRules = oldBuildTargetIds.map { oldBuildTargetId ->
                 requireNotNull(ruleMap.getVersion(oldBuildTargetId, generation)) {
-                    "Missing deps for '${buildTargetCache.getByIndex(oldBuildTargetId)}' "
-                    "at generation $generation"
+                    "Missing deps for '${buildTargetCache.getByIndex(oldBuildTargetId)}' at generation $generation"
                 }
             }
             ModifiedPackageByRules(internalBuildPackage, oldRuleNames, oldRules)
@@ -213,8 +216,7 @@ private fun lookupBuildRules(
 
         buildTargetIdsOfRemovedRules.mapTo(removedRulesToProcess) { buildTargetId ->
             val removedRule = requireNotNull(ruleMap.getVersion(buildTargetId, generation)) {
-                "No rule found for '${buildTargetCache.getByIndex(buildTargetId)}' " +
-                        "at generation $generation"
+                "No rule found for '${buildTargetCache.getByIndex(buildTargetId)}' at generation $generation"
             }
             Pair(buildTargetId, removedRule)
         }
@@ -269,26 +271,33 @@ private fun diffDeps(
 private fun toInternalChanges(
     changes: BuildPackageChanges,
     buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
-): InternalChanges {
-    return InternalChanges(changes.addedBuildPackages.map { toInternalBuildPackage(it, buildTargetCache) }.toList(),
-            changes.modifiedBuildPackages.map { toInternalBuildPackage(it, buildTargetCache) }.toList(),
-            changes.removedBuildPackages
+): InternalChanges =
+    InternalChanges(
+        addedBuildPackages = changes.addedBuildPackages.asSequence().map {
+        toInternalBuildPackage(it, buildTargetCache)
+    }.toList(),
+        modifiedBuildPackages = changes.modifiedBuildPackages.asSequence().map {
+        toInternalBuildPackage(it, buildTargetCache)
+    }.toList(),
+        removedBuildPackages = changes.removedBuildPackages
     )
-}
 
 private fun toInternalBuildPackage(
     buildPackage: BuildPackage,
     buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
-): InternalBuildPackage {
-    return InternalBuildPackage(buildPackage.buildFileDirectory, buildPackage.rules.map { toInternalRawBuildRule(it, buildTargetCache) }.toSet())
-}
+): InternalBuildPackage =
+    InternalBuildPackage(
+        buildFileDirectory = buildPackage.buildFileDirectory,
+        rules = buildPackage.rules.asSequence().map {
+            toInternalRawBuildRule(it, buildTargetCache)
+        }.toSet())
 
 private fun toInternalRawBuildRule(
     rawBuildRule: RawBuildRule,
     buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
-): InternalRawBuildRule {
-    return InternalRawBuildRule(rawBuildRule.targetNode, toBuildTargetSet(rawBuildRule.deps, buildTargetCache))
-}
+): InternalRawBuildRule =
+    InternalRawBuildRule(rawBuildRule.targetNode,
+        toBuildTargetSet(rawBuildRule.deps, buildTargetCache))
 
 private fun toBuildTargetSet(
     targets: Set<UnconfiguredBuildTarget>,

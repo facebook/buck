@@ -17,6 +17,7 @@
 package com.facebook.buck.remoteexecution.util;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
@@ -33,14 +34,17 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.SymlinkNode;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.MoreFiles;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.devtools.build.lib.concurrent.KeyedLocker.AutoUnlocker;
 import com.google.devtools.build.lib.concurrent.StripedKeyedLocker;
 import java.io.BufferedInputStream;
@@ -59,6 +63,8 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -69,21 +75,22 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
   private final StripedKeyedLocker<String> fileLock = new StripedKeyedLocker<>(8);
 
   private static final int MISSING_CHECK_LIMIT = 1000;
-  private static final int UPLOAD_SIZE_LIMIT = 10 * 1024 * 1024;
+  private static final int SIZE_LIMIT = 10 * 1024 * 1024;
 
   private final MultiThreadedBlobUploader uploader;
   private final OutputsMaterializer outputsMaterializer;
   private final InputsMaterializer inputsMaterializer;
   private final Protocol protocol;
+  private final AsyncBlobFetcher fetcher;
 
-  public LocalContentAddressedStorage(Path cacheDir, Protocol protocol) {
+  public LocalContentAddressedStorage(Path cacheDir, Protocol protocol, BuckEventBus buckEventBus) {
     this.cacheDir = cacheDir;
     this.protocol = protocol;
     ExecutorService uploadService = MostExecutors.newMultiThreadExecutor("local-cas-write", 4);
     this.uploader =
         new MultiThreadedBlobUploader(
             MISSING_CHECK_LIMIT,
-            UPLOAD_SIZE_LIMIT,
+            SIZE_LIMIT,
             uploadService,
             new CasBlobUploader() {
               @Override
@@ -100,13 +107,13 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
               }
 
               @Override
-              public ImmutableSet<String> getMissingHashes(List<Protocol.Digest> requiredDigests) {
+              public ImmutableSet<String> getMissingHashes(Set<Digest> requiredDigests) {
                 return findMissing(requiredDigests)
                     .map(Protocol.Digest::getHash)
                     .collect(ImmutableSet.toImmutableSet());
               }
             });
-    AsyncBlobFetcher fetcher =
+    this.fetcher =
         new AsyncBlobFetcher() {
           @Override
           public ListenableFuture<ByteBuffer> fetch(Protocol.Digest digest) {
@@ -118,7 +125,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
           }
 
           @Override
-          public ListenableFuture<Void> fetchToStream(Digest digest, WritableByteChannel channel) {
+          public ListenableFuture<Unit> fetchToStream(Digest digest, WritableByteChannel channel) {
             try (FileInputStream stream = getFileInputStream(digest)) {
               FileChannel input = stream.getChannel();
               input.transferTo(0, input.size(), channel);
@@ -127,8 +134,35 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
               return Futures.immediateFailedFuture(e);
             }
           }
+
+          @Override
+          public ListenableFuture<Unit> batchFetchBlobs(
+              ImmutableMultimap<Digest, Callable<WritableByteChannel>> requests,
+              ImmutableMultimap<Digest, SettableFuture<Unit>> futures)
+              throws IOException {
+            for (Digest digest : requests.keySet()) {
+              FileInputStream stream = getFileInputStream(digest);
+              FileChannel input = stream.getChannel();
+              for (Callable<WritableByteChannel> callable : requests.get(digest)) {
+                try (WritableByteChannel channel = callable.call()) {
+                  input.transferTo(0, input.size(), channel);
+                } catch (Exception e) {
+                  throw new BuckUncheckedExecutionException(
+                      "Unable to write " + digest + " to channel");
+                }
+              }
+              futures.get(digest).forEach(future -> future.set(null));
+            }
+            return Futures.immediateFuture(null);
+          }
         };
-    this.outputsMaterializer = new OutputsMaterializer(fetcher, protocol);
+    this.outputsMaterializer =
+        new OutputsMaterializer(
+            SIZE_LIMIT,
+            MostExecutors.newMultiThreadExecutor("output-materializer", 4),
+            fetcher,
+            protocol,
+            buckEventBus);
     this.inputsMaterializer =
         new InputsMaterializer(
             protocol,
@@ -196,7 +230,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
   }
 
   @Override
-  public ListenableFuture<Void> addMissing(Collection<UploadDataSupplier> data) throws IOException {
+  public ListenableFuture<Unit> addMissing(Collection<UploadDataSupplier> data) throws IOException {
     return uploader.addMissing(data.stream());
   }
 
@@ -205,11 +239,16 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
     return uploader.containsDigest(digest);
   }
 
+  @Override
+  public ListenableFuture<ByteBuffer> fetch(Digest digest) {
+    return fetcher.fetch(digest);
+  }
+
   /**
    * Materializes the outputs into the build root. All required data must be present (or inlined).
    */
   @Override
-  public ListenableFuture<Void> materializeOutputs(
+  public ListenableFuture<Unit> materializeOutputs(
       List<OutputDirectory> outputDirectories,
       List<OutputFile> outputFiles,
       FileMaterializer materializer)

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -31,11 +32,12 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.testutil.ProcessResult;
@@ -81,7 +83,7 @@ public class BuildCommandErrorsIntegrationTest {
             sandboxExecutionStrategyFactory,
             knownConfigurationDescriptions) ->
             cell ->
-                KnownRuleTypes.of(
+                KnownNativeRuleTypes.of(
                     ImmutableList.of(mockDescription), knownConfigurationDescriptions));
   }
 
@@ -491,7 +493,10 @@ public class BuildCommandErrorsIntegrationTest {
           new AbstractExecutionStep("step_with_exit_code_" + exitCode) {
             @Override
             public StepExecutionResult execute(ExecutionContext context) {
-              return StepExecutionResult.of(exitCode, Optional.of(message));
+              return ImmutableStepExecutionResult.builder()
+                  .setExitCode(exitCode)
+                  .setStderr(Optional.of(message))
+                  .build();
             }
           });
     }
@@ -505,7 +510,7 @@ public class BuildCommandErrorsIntegrationTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractMockArg {}
+  interface AbstractMockArg extends ConstructorArg {}
 
   private class MockDescription implements DescriptionWithTargetGraph<MockArg> {
     private BuildRuleFactory buildRuleFactory = null;

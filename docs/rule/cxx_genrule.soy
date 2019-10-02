@@ -89,12 +89,7 @@ buck build :cxx_gr_name#default
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call genrule_common.srcs_arg /}
 
@@ -189,10 +184,13 @@ buck build :cxx_gr_name#default
 
     <p>
     It is also possible to expand references to other rules within the
-    shell command, using a subset of the builtin {call buck.string_parameter_macros /}.  
+    shell command, using the following subset of the 
+    builtin {call buck.string_parameter_macros /}.  
     Note that all build rules expanded in the command are automatically 
     considered to be dependencies of the <code>genrule()</code>.
     </p>
+
+   {call genrule_common.abs_path_note /}
 
     <dl>
 

@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.FakeTestRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -67,6 +68,7 @@ public class CxxTestTest {
           buildTarget,
           new FakeProjectFilesystem(),
           createBuildParams(),
+          new FakeBuildRule("//:target"),
           new CommandTool.Builder().build(),
           ImmutableMap.of(),
           ImmutableList.of(),
@@ -76,7 +78,8 @@ public class CxxTestTest {
           ImmutableSet.of(),
           ImmutableSet.of(),
           /* runTestSeparately */ false,
-          TEST_TIMEOUT_MS);
+          TEST_TIMEOUT_MS,
+          CxxTestType.GTEST);
     }
 
     @Override

@@ -17,18 +17,16 @@
 package com.facebook.buck.features.zip.rules;
 
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
-import com.facebook.buck.core.description.arg.HasDeclaredDeps;
-import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.zip.collect.OnDuplicateEntry;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
@@ -49,11 +47,6 @@ public class ZipFileDescription
       ZipFileDescriptionArg args) {
 
     ImmutableList<SourcePath> zipSources = args.getZipSrcs();
-    Optional<Boolean> mergeSourceZips = args.getMergeSourceZips();
-
-    if (!zipSources.isEmpty() && mergeSourceZips.isPresent())
-      throw new IllegalArgumentException(
-          "Illegal to define merge_source_zips when zip_srcs is present in " + buildTarget);
 
     return new Zip(
         context.getActionGraphBuilder(),
@@ -62,9 +55,8 @@ public class ZipFileDescription
         args.getOut(),
         args.getSrcs(),
         zipSources,
-        args.getFlatten(),
-        mergeSourceZips,
-        args.getEntriesToExclude());
+        args.getEntriesToExclude(),
+        args.getOnDuplicateEntry());
   }
 
   @Override
@@ -74,21 +66,21 @@ public class ZipFileDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractZipFileDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+  interface AbstractZipFileDescriptionArg extends CommonDescriptionArg {
     @Value.Default
     default String getOut() {
       return getName() + ".zip";
     }
 
-    @Value.Default
-    default boolean getFlatten() {
-      return false;
-    }
-
-    Optional<Boolean> getMergeSourceZips();
+    ImmutableSet<SourcePath> getSrcs();
 
     ImmutableSet<Pattern> getEntriesToExclude();
 
     ImmutableList<SourcePath> getZipSrcs();
+
+    @Value.Default
+    default OnDuplicateEntry getOnDuplicateEntry() {
+      return OnDuplicateEntry.OVERWRITE;
+    }
   }
 }

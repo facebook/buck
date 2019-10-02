@@ -290,17 +290,35 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
       String[] templates,
       String... args)
       throws Exception {
+    return runBuckCommand(buckdEnabled, environmentOverrides, Optional.empty(), templates, args);
+  }
+
+  /**
+   * Runs Buck with the specified list of command-line arguments with the given map of environment
+   * variables as overrides of the current system environment. This command is blocking.
+   *
+   * @param buckdEnabled determines whether the command is run with buckdEnabled or not
+   * @param environmentOverrides set of environment variables to override
+   * @param templates is an array of premade templates to add to the workspace before running the
+   *     command.
+   * @param args to pass to {@code buck}, so that could be {@code ["build", "//path/to:target"]},
+   *     {@code ["project"]}, etc.
+   * @return the result of running Buck, which includes the exit code, stdout, and stderr.
+   */
+  public ProcessResult runBuckCommand(
+      boolean buckdEnabled,
+      ImmutableMap<String, String> environmentOverrides,
+      Optional<String> stdin,
+      String[] templates,
+      String... args)
+      throws Exception {
     System.out.println("Running buck command: " + String.join(" ", args));
     for (String template : templates) {
       this.addPremadeTemplate(template);
     }
-    ImmutableList.Builder<String> commandBuilder = platformUtils.getBuckCommandBuilder();
-    List<String> command =
-        commandBuilder
-            .addAll(ImmutableList.copyOf(args))
-            .build();
+    List<String> command = platformUtils.getBuckCommandBuilder().add(args).build();
     ranWithBuckd = ranWithBuckd || buckdEnabled;
-    return runCommand(buckdEnabled, environmentOverrides, command, Optional.empty());
+    return runCommand(buckdEnabled, environmentOverrides, stdin, command, Optional.empty());
   }
 
   /**
@@ -360,6 +378,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   private ProcessResult runCommand(
       boolean buckdEnabled,
       ImmutableMap<String, String> environmentOverrides,
+      Optional<String> stdin,
       List<String> command,
       Optional<Long> timeoutMS)
       throws Exception {
@@ -376,7 +395,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
             params,
             /* context */ ImmutableMap.of(),
             /* options */ ImmutableSet.of(),
-            /* stdin */ Optional.empty(),
+            stdin,
             timeoutMS,
             /* timeoutHandler */ Optional.empty());
     ExitCode exitCode =
@@ -439,6 +458,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
     return runCommand(
         ranWithBuckd,
         ImmutableMap.<String, String>builder().build(),
+        Optional.empty(),
         command,
         Optional.of(buildResultTimeoutMS));
   }

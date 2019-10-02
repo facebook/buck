@@ -127,7 +127,7 @@ public class ParserBenchmark {
 
   @Benchmark
   public void parseMultipleTargets() throws Exception {
-    parser.buildTargetGraphWithConfigurationTargets(
+    parser.buildTargetGraphWithTopLevelConfigurationTargets(
         ParsingContext.builder(cell, executorService)
             .setSpeculativeParsing(SpeculativeParsing.ENABLED)
             .build(),

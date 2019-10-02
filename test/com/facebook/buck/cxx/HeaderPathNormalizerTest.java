@@ -38,7 +38,7 @@ public class HeaderPathNormalizerTest {
     Path header = filesystem.getPath("foo/bar.h");
     HeaderPathNormalizer normalizer = new HeaderPathNormalizer.Builder(pathResolver).build();
     assertThat(
-        normalizer.getAbsolutePathForUnnormalizedPath(filesystem.resolve(header)),
+        normalizer.getAbsolutePathForUnnormalizedPath(pathResolver, filesystem.resolve(header)),
         Matchers.equalTo(Optional.empty()));
   }
 
@@ -50,7 +50,8 @@ public class HeaderPathNormalizerTest {
     HeaderPathNormalizer normalizer =
         new HeaderPathNormalizer.Builder(pathResolver).addHeader(headerPath).build();
     assertThat(
-        normalizer.getAbsolutePathForUnnormalizedPath(pathResolver.getAbsolutePath(headerPath)),
+        normalizer.getAbsolutePathForUnnormalizedPath(
+            pathResolver, pathResolver.getAbsolutePath(headerPath)),
         Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerPath))));
     assertThat(
         normalizer.getSourcePathForAbsolutePath(pathResolver.getAbsolutePath(headerPath)),
@@ -65,10 +66,11 @@ public class HeaderPathNormalizerTest {
     HeaderPathNormalizer normalizer =
         new HeaderPathNormalizer.Builder(pathResolver).addHeader(headerPath).build();
     assertThat(
-        normalizer.getAbsolutePathForUnnormalizedPath(filesystem.resolve(header)),
+        normalizer.getAbsolutePathForUnnormalizedPath(pathResolver, filesystem.resolve(header)),
         Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerPath))));
     assertThat(
-        normalizer.getAbsolutePathForUnnormalizedPath(pathResolver.getAbsolutePath(headerPath)),
+        normalizer.getAbsolutePathForUnnormalizedPath(
+            pathResolver, pathResolver.getAbsolutePath(headerPath)),
         Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerPath))));
     assertThat(
         normalizer.getSourcePathForAbsolutePath(pathResolver.getAbsolutePath(headerPath)),
@@ -83,10 +85,11 @@ public class HeaderPathNormalizerTest {
     HeaderPathNormalizer normalizer =
         new HeaderPathNormalizer.Builder(pathResolver).addHeaderDir(headerDirPath).build();
     assertThat(
-        normalizer.getAbsolutePathForUnnormalizedPath(pathResolver.getAbsolutePath(headerDirPath)),
+        normalizer.getAbsolutePathForUnnormalizedPath(
+            pathResolver, pathResolver.getAbsolutePath(headerDirPath)),
         Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerDirPath))));
     assertThat(
-        normalizer.getAbsolutePathForUnnormalizedPath(filesystem.resolve(header)),
+        normalizer.getAbsolutePathForUnnormalizedPath(pathResolver, filesystem.resolve(header)),
         Matchers.equalTo(Optional.of(filesystem.resolve(header))));
     assertThat(
         normalizer.getSourcePathForAbsolutePath(pathResolver.getAbsolutePath(headerDirPath)),
@@ -104,7 +107,8 @@ public class HeaderPathNormalizerTest {
     HeaderPathNormalizer normalizer =
         new HeaderPathNormalizer.Builder(pathResolver).addPrefixHeader(headerPath).build();
     assertThat(
-        normalizer.getAbsolutePathForUnnormalizedPath(pathResolver.getAbsolutePath(headerPath)),
+        normalizer.getAbsolutePathForUnnormalizedPath(
+            pathResolver, pathResolver.getAbsolutePath(headerPath)),
         Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerPath))));
     assertThat(
         normalizer.getSourcePathForAbsolutePath(pathResolver.getAbsolutePath(headerPath)),

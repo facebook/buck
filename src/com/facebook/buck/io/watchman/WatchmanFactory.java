@@ -51,7 +51,8 @@ public class WatchmanFactory {
           /* projectWatches */ ImmutableMap.of(),
           /* capabilities */ ImmutableSet.of(),
           /* clockIds */ ImmutableMap.of(),
-          /* transportPath */ Optional.empty()) {
+          /* transportPath */ Optional.empty(),
+          /* version */ "") {
         @Override
         public WatchmanClient createClient() throws IOException {
           throw new IOException("NULL_WATCHMAN cannot create a WatchmanClient.");
@@ -193,7 +194,9 @@ public class WatchmanFactory {
     return Optional.of(transportPath);
   }
 
-  private static Watchman getWatchman(
+  /** Query Watchman's capabilities and watch the given directories. */
+  @VisibleForTesting
+  public static Watchman getWatchman(
       WatchmanClient client,
       Path transportPath,
       ImmutableSet<Path> projectWatchList,
@@ -218,7 +221,12 @@ public class WatchmanFactory {
       LOG.warn("Could not get version response from Watchman, disabling Watchman");
       return NULL_WATCHMAN;
     }
-
+    Object versionRaw = result.get().get("version");
+    if (!(versionRaw instanceof String)) {
+      LOG.warn("Unexpected version format, disabling Watchman");
+      return NULL_WATCHMAN;
+    }
+    String version = (String) versionRaw;
     ImmutableSet.Builder<Capability> capabilitiesBuilder = ImmutableSet.builder();
     if (!extractCapabilities(result.get(), capabilitiesBuilder)) {
       LOG.warn("Could not extract capabilities, disabling Watchman");
@@ -253,7 +261,11 @@ public class WatchmanFactory {
     }
 
     return new Watchman(
-        projectWatches, capabilities, clockIdsBuilder.build(), Optional.of(transportPath)) {
+        projectWatches,
+        capabilities,
+        clockIdsBuilder.build(),
+        Optional.of(transportPath),
+        version) {
       @Override
       public WatchmanClient createClient() throws IOException {
         return createWatchmanClient(transportPath, console, clock);
@@ -262,17 +274,7 @@ public class WatchmanFactory {
   }
 
   @VisibleForTesting
-  static Optional<WatchmanClient> tryCreateWatchmanClient(
-      Path transportPath, Console console, Clock clock) {
-    try {
-      return Optional.of(createWatchmanClient(transportPath, console, clock));
-    } catch (IOException e) {
-      LOG.warn(e, "Could not connect to Watchman at path %s", transportPath);
-      return Optional.empty();
-    }
-  }
-
-  private static WatchmanClient createWatchmanClient(
+  public static WatchmanClient createWatchmanClient(
       Path transportPath, Console console, Clock clock) throws IOException {
     return new WatchmanTransportClient(console, clock, createLocalWatchmanTransport(transportPath));
   }

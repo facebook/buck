@@ -33,6 +33,7 @@ import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -40,6 +41,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.EmptyJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
+import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.rules.modern.PipelinedModernBuildRule;
@@ -58,6 +60,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -102,6 +105,7 @@ public class DefaultJavaLibrary
   private final ImmutableSortedSet<BuildRule> fullJarExportedDeps;
   private final ImmutableSortedSet<BuildRule> fullJarProvidedDeps;
   private final ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps;
+  private final ImmutableSortedSet<BuildRule> runtimeDeps;
 
   private final Supplier<ImmutableSet<SourcePath>> outputClasspathEntriesSupplier;
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
@@ -117,6 +121,8 @@ public class DefaultJavaLibrary
   private SourcePathRuleFinder ruleFinder;
   private final Optional<SourcePath> sourcePathForOutputJar;
   private final Optional<SourcePath> sourcePathForGeneratedAnnotationPath;
+
+  private JavaClassHashesProvider javaClassHashesProvider;
 
   public static DefaultJavaLibraryRules.Builder rulesBuilder(
       BuildTarget buildTarget,
@@ -155,6 +161,7 @@ public class DefaultJavaLibrary
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps,
+      ImmutableSortedSet<BuildRule> runtimeDeps,
       @Nullable BuildTarget abiJar,
       @Nullable BuildTarget sourceOnlyAbiJar,
       Optional<String> mavenCoords,
@@ -179,11 +186,11 @@ public class DefaultJavaLibrary
     this.ruleFinder = ruleFinder;
     this.sourcePathForOutputJar =
         Optional.ofNullable(
-            jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget(), getProjectFilesystem()));
+            jarBuildStepsFactory.getSourcePathToOutput(buildTarget, projectFilesystem));
     this.sourcePathForGeneratedAnnotationPath =
         Optional.ofNullable(
             jarBuildStepsFactory.getSourcePathToGeneratedAnnotationPath(
-                getBuildTarget(), getProjectFilesystem()));
+                buildTarget, projectFilesystem));
 
     this.sourceAbi = sourceAbi;
     this.isDesugarEnabled = isDesugarEnabled;
@@ -204,13 +211,14 @@ public class DefaultJavaLibrary
     this.fullJarExportedDeps = fullJarExportedDeps;
     this.fullJarProvidedDeps = fullJarProvidedDeps;
     this.fullJarExportedProvidedDeps = fullJarExportedProvidedDeps;
+    this.runtimeDeps = runtimeDeps;
     this.mavenCoords = mavenCoords;
     this.tests = tests;
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
 
     this.javaAbiInfo =
         getSourcePathToOutput() == null
-            ? new EmptyJavaAbiInfo(getBuildTarget())
+            ? new EmptyJavaAbiInfo(buildTarget)
             : new DefaultJavaAbiInfo(getSourcePathToOutput());
     this.abiJar = abiJar;
     this.sourceOnlyAbiJar = sourceOnlyAbiJar;
@@ -232,6 +240,10 @@ public class DefaultJavaLibrary
             () -> JavaLibraryClasspathProvider.getTransitiveClasspathDeps(DefaultJavaLibrary.this));
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.javaClassHashesProvider =
+        new DefaultJavaClassHashesProvider(
+            ExplicitBuildTargetSourcePath.of(
+                buildTarget, getBuildable().getPathToClassHashes(projectFilesystem)));
   }
 
   private static void validateExportedDepsType(
@@ -357,6 +369,7 @@ public class DefaultJavaLibrary
   @Override
   public void invalidateInitializeFromDiskState() {
     javaAbiInfo.invalidate();
+    javaClassHashesProvider.invalidate();
   }
 
   /**
@@ -417,6 +430,11 @@ public class DefaultJavaLibrary
   }
 
   @Override
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
+    return runtimeDeps.stream().map(BuildRule::getBuildTarget);
+  }
+
+  @Override
   public Optional<String> getMavenCoords() {
     return mavenCoords;
   }
@@ -469,5 +487,14 @@ public class DefaultJavaLibrary
   @Override
   public SupportsPipelining<JavacPipelineState> getPreviousRuleInPipeline() {
     return sourceAbi;
+  }
+
+  @Override
+  public JavaClassHashesProvider getClassHashesProvider() {
+    return javaClassHashesProvider;
+  }
+
+  public void setJavaClassHashesProvider(JavaClassHashesProvider javaClassHashesProvider) {
+    this.javaClassHashesProvider = javaClassHashesProvider;
   }
 }

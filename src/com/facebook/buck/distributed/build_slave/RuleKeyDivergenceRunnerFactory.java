@@ -19,7 +19,7 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.HostTargetConfiguration;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
@@ -198,7 +198,7 @@ public class RuleKeyDivergenceRunnerFactory {
             target ->
                 unconfiguredBuildTargetFactory
                     .create(rootCell.getCellPathResolver(), target)
-                    .configure(HostTargetConfiguration.INSTANCE))
+                    .configure(EmptyTargetConfiguration.INSTANCE))
         .collect(Collectors.toList());
   }
 }

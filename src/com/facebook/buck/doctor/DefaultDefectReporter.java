@@ -135,7 +135,7 @@ public class DefaultDefectReporter implements DefectReporter {
           frontendConfig.get().tryCreatingClientSideSlb(clock, buckEventBus);
       if (slb.isPresent()) {
         try {
-          return uploadReport(defectReport, defectSubmitResult, slb.get());
+          return uploadReport(defectReport, slb.get());
         } catch (IOException e) {
           LOG.debug(e, "Failed uploading report to server.");
           defectSubmitResult.setIsRequestSuccessful(false);
@@ -183,9 +183,7 @@ public class DefaultDefectReporter implements DefectReporter {
     }
   }
 
-  private DefectSubmitResult uploadReport(
-      DefectReport defectReport, DefectSubmitResult.Builder defectSubmitResult, ClientSideSlb slb)
-      throws IOException {
+  private String uploadReportHttp(DefectReport defectReport, ClientSideSlb slb) throws IOException {
     long timeout = doctorConfig.getReportTimeoutMs();
     OkHttpClient httpClient =
         new OkHttpClient.Builder()
@@ -193,14 +191,13 @@ public class DefaultDefectReporter implements DefectReporter {
             .readTimeout(timeout, TimeUnit.MILLISECONDS)
             .writeTimeout(timeout, TimeUnit.MILLISECONDS)
             .build();
-    HttpService httpService =
+
+    try (HttpService httpService =
         new RetryingHttpService(
             buckEventBus,
             new LoadBalancedService(slb, httpClient, buckEventBus),
             "buck_defect_reporter_http_retries",
-            doctorConfig.getReportMaxUploadRetries());
-
-    try {
+            doctorConfig.getReportMaxUploadRetries())) {
       Request.Builder requestBuilder = new Request.Builder();
       requestBuilder.addHeader(
           REQUEST_PROTOCOL_VERSION, doctorConfig.getProtocolVersion().name().toLowerCase());
@@ -223,41 +220,58 @@ public class DefaultDefectReporter implements DefectReporter {
 
       HttpResponse response =
           httpService.makeRequest(doctorConfig.getReportUploadPath(), requestBuilder);
-      String responseBody;
-      try (InputStream inputStream = response.getBody()) {
-        responseBody = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
-      }
 
-      if (response.statusCode() == HTTP_SUCCESS_CODE) {
-        defectSubmitResult.setIsRequestSuccessful(true);
-        if (doctorConfig.getProtocolVersion().equals(DoctorProtocolVersion.SIMPLE)) {
-          return defectSubmitResult
-              .setReportSubmitMessage(responseBody)
-              .setReportSubmitLocation(responseBody)
-              .build();
-        } else {
-          // Decode Json response.
-          DoctorJsonResponse json =
-              ObjectMappers.READER.readValue(
-                  ObjectMappers.createParser(responseBody.getBytes(Charsets.UTF_8)),
-                  ImmutableDoctorJsonResponse.class);
-          return defectSubmitResult
-              .setIsRequestSuccessful(json.getRequestSuccessful())
-              .setReportSubmitErrorMessage(json.getErrorMessage())
-              .setReportSubmitMessage(json.getMessage())
-              .setReportSubmitLocation(json.getRageUrl())
-              .build();
-        }
-      } else {
+      if (response.statusCode() != HTTP_SUCCESS_CODE) {
         throw new IOException(
             String.format(
-                "Connection to %s returned code %d and message: %s",
-                response.requestUrl(), response.statusCode(), responseBody));
+                "Connection to %s returned code %d", response.requestUrl(), response.statusCode()));
+      }
+
+      try (InputStream inputStream = response.getBody()) {
+        return CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
       }
     } catch (IOException e) {
       throw new IOException(String.format("Failed uploading report because [%s].", e.getMessage()));
-    } finally {
-      httpService.close();
     }
+  }
+
+  private DefectSubmitResult uploadReport(DefectReport defectReport, ClientSideSlb slb)
+      throws IOException {
+    if (doctorConfig.getProtocolVersion().equals(DoctorProtocolVersion.SIMPLE)) {
+      return uploadReportSimple(defectReport, slb);
+    }
+
+    return uploadReportJson(defectReport, slb);
+  }
+
+  private DefectSubmitResult uploadReportSimple(DefectReport defectReport, ClientSideSlb slb)
+      throws IOException {
+    String responseBody = uploadReportHttp(defectReport, slb);
+
+    return DefectSubmitResult.builder()
+        .setIsRequestSuccessful(true)
+        .setReportSubmitMessage(responseBody)
+        .setReportSubmitLocation(responseBody)
+        .setRequestProtocol(DoctorProtocolVersion.SIMPLE)
+        .build();
+  }
+
+  private DefectSubmitResult uploadReportJson(DefectReport defectReport, ClientSideSlb slb)
+      throws IOException {
+    String responseBody = uploadReportHttp(defectReport, slb);
+
+    DoctorJsonResponse json =
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(responseBody.getBytes(Charsets.UTF_8)),
+            ImmutableDoctorJsonResponse.class);
+
+    return DefectSubmitResult.builder()
+        .setIsRequestSuccessful(json.getRequestSuccessful())
+        .setReportSubmitErrorMessage(json.getErrorMessage())
+        .setReportSubmitMessage(json.getMessage())
+        .setReportSubmitLocation(json.getRageUrl())
+        .setRequestProtocol(DoctorProtocolVersion.JSON)
+        .setReportId(json.getReportId())
+        .build();
   }
 }

@@ -16,31 +16,22 @@
 package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
-import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /**
- * The {@link DeclaredArtifact} is the promise during the rule implementation that an {@link
- * com.facebook.buck.core.rules.actions.Action} will be created to generate an output at the
- * corresponding path.
+ * Represents an {@link Artifact} that is just declared by a rule implemention, with no {@link
+ * com.facebook.buck.core.rules.actions.Action}s attached to build it.
  *
- * <p>This is not an {@link Artifact} in itself, and cannot be used as such for any {@link
- * com.facebook.buck.core.rules.actions.Action} lookup, since it is not fully materialized with a
- * corresponding {@link com.facebook.buck.core.rules.actions.Action}.
- *
- * <p>This {@link DeclaredArtifact} becomes materialized once a corresponding {@link
- * com.facebook.buck.core.rules.actions.Action} has been created.
+ * <p>This is not intended to be used by users, but only by the build engine.
  */
-@Value.Immutable(builder = false, copy = false)
-public abstract class DeclaredArtifact {
+interface DeclaredArtifact extends Artifact {
 
-  @Value.Parameter
-  public abstract Path getPackagePath();
-
-  @Value.Parameter
-  public abstract Path getOutputPath();
-
-  public BuildArtifact materialize(ActionAnalysisDataKey key) {
-    return ImmutableBuildArtifact.of(key, key.getBuildTarget(), getPackagePath(), getOutputPath());
-  }
+  /**
+   * Binds an corresponding {@link com.facebook.buck.core.rules.actions.Action} as represented by
+   * the {@link ActionAnalysisDataKey} to this {@link Artifact}.
+   *
+   * @param key the {@link ActionAnalysisDataKey} to attach to this {@link Artifact}
+   * @return the {@link BuildArtifact} of this instance after attaching the {@link
+   *     ActionAnalysisDataKey}.
+   */
+  BuildArtifact materialize(ActionAnalysisDataKey key);
 }

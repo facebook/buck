@@ -19,21 +19,33 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
-import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
+import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
+import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.config.registry.ImmutableConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -48,27 +60,27 @@ import org.junit.Test;
 
 public class TargetCompatibilityCheckerTest {
 
-  private final ConstraintSetting cs1 =
-      ConstraintSetting.of(
-          UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:cs1"), Optional.empty());
-  private final ConstraintValue cs1v1 =
-      ConstraintValue.of(UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:cs1v1"), cs1);
-  private final ConstraintValue cs1v2 =
-      ConstraintValue.of(UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:cs1v2"), cs1);
+  private final BuildTarget cs1target =
+      ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1");
+  private final ConstraintSetting cs1 = ConstraintSetting.of(cs1target, Optional.empty());
+  private final BuildTarget cs1v1target =
+      ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1v1");
+  private final ConstraintValue cs1v1 = ConstraintValue.of(cs1v1target, cs1);
+  private final BuildTarget cs1v2target =
+      ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1v2");
+  private final ConstraintValue cs1v2 = ConstraintValue.of(cs1v2target, cs1);
 
   private Platform platform;
-  private ConstraintResolver constraintResolver;
-  private PlatformResolver platformResolver;
-  private ConstraintBasedPlatform compatiblePlatform;
-  private ConstraintBasedPlatform nonCompatiblePlatform;
+  private ConfigurationRuleRegistry configurationRuleRegistry;
+  private ConfigSettingRule compatibleConfigSetting;
+  private ConfigSettingRule nonCompatibleConfigSetting;
 
   @Before
   public void setUp() {
     platform =
         new ConstraintBasedPlatform(
-            UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform"),
-            ImmutableSet.of(cs1v1));
-    constraintResolver =
+            BuildTargetFactory.newInstance("//platform:platform"), ImmutableSet.of(cs1v1));
+    ConstraintResolver constraintResolver =
         new RuleBasedConstraintResolver(
             buildTarget -> {
               if (buildTarget.equals(cs1.getBuildTarget())) {
@@ -79,152 +91,196 @@ public class TargetCompatibilityCheckerTest {
                     buildTarget, buildTarget.getShortName(), cs1.getBuildTarget());
               }
             });
-    compatiblePlatform =
-        new ConstraintBasedPlatform(
-            UnconfiguredBuildTargetFactoryForTests.newInstance("//platforms:p1"),
-            ImmutableSet.of(cs1v1));
-    nonCompatiblePlatform =
-        new ConstraintBasedPlatform(
-            UnconfiguredBuildTargetFactoryForTests.newInstance("//platforms:p2"),
-            ImmutableSet.of(cs1v2));
-    platformResolver =
+    compatibleConfigSetting =
+        new ConfigSettingRule(
+            BuildTargetFactory.newInstance("//configs:c1"),
+            ImmutableMap.of(),
+            ImmutableSet.of(cs1v1.getBuildTarget()));
+    nonCompatibleConfigSetting =
+        new ConfigSettingRule(
+            BuildTargetFactory.newInstance("//configs:c2"),
+            ImmutableMap.of(),
+            ImmutableSet.of(cs1v2.getBuildTarget()));
+    ConfigurationRuleResolver configurationRuleResolver =
         buildTarget -> {
-          if (buildTarget.toString().equals(compatiblePlatform.toString())) {
-            return compatiblePlatform;
+          if (buildTarget.toString().equals(compatibleConfigSetting.getBuildTarget().toString())) {
+            return compatibleConfigSetting;
           }
-          if (buildTarget.toString().equals(nonCompatiblePlatform.toString())) {
-            return nonCompatiblePlatform;
+          if (buildTarget
+              .toString()
+              .equals(nonCompatibleConfigSetting.getBuildTarget().toString())) {
+            return nonCompatibleConfigSetting;
           }
-          throw new IllegalArgumentException("Unknown platform: " + buildTarget);
+          throw new RuntimeException("Unknown configuration rule: " + buildTarget);
         };
+    configurationRuleRegistry =
+        new ImmutableConfigurationRuleRegistry(
+            configurationRuleResolver,
+            constraintResolver,
+            configuration -> DefaultPlatform.INSTANCE);
   }
 
   @Test
   public void testTargetNodeIsCompatibleWithEmptyConstraintList() throws Exception {
-    Object targetNodeArg = createTargetNodeArg(ImmutableMap.of());
+    ConstructorArg targetNodeArg = createTargetNodeArg(ImmutableMap.of());
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            constraintResolver, platformResolver, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform));
   }
 
   @Test
   public void testTargetNodeIsCompatibleWithMatchingConstraintList() throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
                 "targetCompatibleWith",
                 ImmutableList.of(cs1v1.getBuildTarget().getFullyQualifiedName())));
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            constraintResolver, platformResolver, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform));
   }
 
   @Test
   public void testTargetNodeIsNotCompatibleWithNonMatchingConstraintList() throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
                 "targetCompatibleWith",
                 ImmutableList.of(cs1v2.getBuildTarget().getFullyQualifiedName())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            constraintResolver, platformResolver, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform));
   }
 
   @Test
   public void testTargetNodeIsNotCompatibleWithNonMatchingPlatformAndNonMatchingConstraintList()
       throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "targetCompatiblePlatforms",
-                ImmutableList.of(nonCompatiblePlatform.toString()),
+                "compatibleWith",
+                ImmutableList.of(nonCompatibleConfigSetting.getBuildTarget().toString()),
                 "targetCompatibleWith",
                 ImmutableList.of(cs1v2.getBuildTarget().getFullyQualifiedName())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            constraintResolver, platformResolver, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform));
   }
 
   @Test
   public void testTargetNodeIsNotCompatibleWithNonMatchingPlatformListAndMatchingConstraintList()
       throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "targetCompatiblePlatforms",
-                ImmutableList.of(nonCompatiblePlatform.toString()),
+                "compatibleWith",
+                ImmutableList.of(nonCompatibleConfigSetting.getBuildTarget().toString()),
                 "targetCompatibleWith",
                 ImmutableList.of(cs1v1.getBuildTarget().getFullyQualifiedName())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            constraintResolver, platformResolver, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform));
   }
 
   @Test
   public void testTargetNodeIsNotCompatibleWithMatchingPlatformListAndNonMatchingConstraintList()
       throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "targetCompatiblePlatforms",
-                ImmutableList.of(compatiblePlatform.toString()),
+                "compatibleWith",
+                ImmutableList.of(compatibleConfigSetting.getBuildTarget().toString()),
                 "targetCompatibleWith",
                 ImmutableList.of(cs1v2.getBuildTarget().getFullyQualifiedName())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            constraintResolver, platformResolver, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform));
   }
 
   @Test
   public void testTargetNodeIsNotCompatibleWithNonMatchingPlatformList() throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "targetCompatiblePlatforms", ImmutableList.of(nonCompatiblePlatform.toString())));
+                "compatibleWith",
+                ImmutableList.of(nonCompatibleConfigSetting.getBuildTarget().toString())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            constraintResolver, platformResolver, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform));
   }
 
   @Test
   public void testTargetNodeIsCompatibleWithMatchingPlatformList() throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "targetCompatiblePlatforms",
-                ImmutableList.of(compatiblePlatform.toString(), nonCompatiblePlatform.toString())));
+                "compatibleWith",
+                ImmutableList.of(
+                    compatibleConfigSetting.getBuildTarget().toString(),
+                    nonCompatibleConfigSetting.getBuildTarget().toString())));
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            constraintResolver, platformResolver, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform));
   }
 
   @Test
   public void testTargetNodeIsCompatibleWithMatchingPlatformListAndMatchingConstraintList()
       throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "targetCompatiblePlatforms",
-                ImmutableList.of(compatiblePlatform.toString()),
+                "compatibleWith",
+                ImmutableList.of(compatibleConfigSetting.getBuildTarget().toString()),
                 "targetCompatibleWith",
                 ImmutableList.of(cs1v1.getBuildTarget().getFullyQualifiedName())));
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            constraintResolver, platformResolver, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform));
   }
 
-  private Object createTargetNodeArg(Map<String, Object> rawNode) throws Exception {
+  private ConstructorArg createTargetNodeArg(Map<String, Object> rawNode) throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    ConstructorArgMarshaller marshaller =
-        new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
+    KnownNativeRuleTypes knownRuleTypes =
+        KnownNativeRuleTypes.of(ImmutableList.of(new TestRuleDescription()), ImmutableList.of());
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(projectFilesystem, "//:target");
+
+    ConstructorArgBuilder<TestDescriptionArg> builder =
+        knownRuleTypes.getConstructorArgBuilder(
+            typeCoercerFactory,
+            knownRuleTypes.getRuleType("test_rule"),
+            TestDescriptionArg.class,
+            buildTarget);
+
     return marshaller.populate(
         TestCellPathResolver.get(projectFilesystem),
         projectFilesystem,
-        BuildTargetFactory.newInstance(projectFilesystem, "//:target"),
-        TestDescriptionArg.class,
+        buildTarget,
+        builder,
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>builder().putAll(rawNode).put("name", "target").build());
+  }
+
+  static class TestRuleDescription implements RuleDescription<AbstractTestDescriptionArg> {
+
+    @Override
+    public boolean producesCacheableSubgraph() {
+      return false;
+    }
+
+    @Override
+    public ProviderInfoCollection ruleImpl(
+        RuleAnalysisContext context, BuildTarget target, AbstractTestDescriptionArg args)
+        throws ActionCreationException {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Class<AbstractTestDescriptionArg> getConstructorArgType() {
+      return AbstractTestDescriptionArg.class;
+    }
   }
 
   @BuckStyleImmutable

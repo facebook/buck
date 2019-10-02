@@ -31,8 +31,8 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxConstructorArg;
@@ -56,7 +56,9 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
@@ -66,7 +68,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.annotations.VisibleForTesting;
@@ -200,7 +201,8 @@ public class CxxPythonExtensionDescription
                     macrosConverter::convert)),
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.of(),
-            CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, deps),
+            CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
+                cxxPlatform, graphBuilder, deps),
             args.getRawHeaders(),
             args.getIncludeDirectories(),
             projectFilesystem);
@@ -326,8 +328,12 @@ public class CxxPythonExtensionDescription
         extensionPath,
         args.getLinkerExtraOutputs(),
         Linker.LinkableDepType.SHARED,
+        Optional.empty(),
         CxxLinkOptions.of(),
-        RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
+        RichStream.from(deps)
+            .filter(NativeLinkableGroup.class)
+            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+            .toImmutableList(),
         args.getCxxRuntimeType(),
         Optional.empty(),
         ImmutableSet.of(),
@@ -374,6 +380,7 @@ public class CxxPythonExtensionDescription
     ActionGraphBuilder graphBuilderLocal = context.getActionGraphBuilder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
+    args.checkDuplicateSources(graphBuilderLocal.getSourcePathResolver());
 
     // See if we're building a particular "type" of this library, and if so, extract it as an enum.
     Optional<Type> type = LIBRARY_TYPE.getValue(buildTarget);
@@ -480,33 +487,16 @@ public class CxxPythonExtensionDescription
       }
 
       @Override
-      public NativeLinkTarget getNativeLinkTarget(PythonPlatform pythonPlatform) {
-        return new NativeLinkTarget() {
-
-          @Override
-          public BuildTarget getBuildTarget() {
-            return buildTarget.withAppendedFlavors(pythonPlatform.getFlavor());
-          }
-
-          @Override
-          public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
-            return NativeLinkTargetMode.library();
-          }
-
-          @Override
-          public Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
-              CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-            return RichStream.from(getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args))
+      public NativeLinkTarget getNativeLinkTarget(
+          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+        ImmutableList<NativeLinkable> linkTargetDeps =
+            RichStream.from(getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args))
                 .filter(NativeLinkableGroup.class)
+                .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
                 .toImmutableList();
-          }
 
-          @Override
-          public NativeLinkableInput getNativeLinkTargetInput(
-              CxxPlatform cxxPlatform,
-              ActionGraphBuilder graphBuilder,
-              SourcePathResolver pathResolver) {
-            return NativeLinkableInput.builder()
+        NativeLinkableInput linkableInput =
+            NativeLinkableInput.builder()
                 .addAllArgs(
                     getExtensionArgs(
                         buildTarget.withAppendedFlavors(
@@ -519,13 +509,12 @@ public class CxxPythonExtensionDescription
                         getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args)))
                 .addAllFrameworks(args.getFrameworks())
                 .build();
-          }
-
-          @Override
-          public Optional<Path> getNativeLinkTargetOutputPath() {
-            return Optional.empty();
-          }
-        };
+        return new NativeLinkTargetInfo(
+            buildTarget.withAppendedFlavors(pythonPlatform.getFlavor()),
+            NativeLinkTargetMode.library(),
+            linkTargetDeps,
+            linkableInput,
+            Optional.empty());
       }
 
       @Override

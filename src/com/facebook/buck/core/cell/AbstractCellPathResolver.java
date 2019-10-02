@@ -28,7 +28,7 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
   @Override
   public ImmutableSortedSet<Path> getKnownRoots() {
     return ImmutableSortedSet.<Path>reverseOrder()
-        .addAll(getCellPaths().values())
+        .addAll(getCellPathsByRootCellExternalName().values())
         .add(getCellPathOrThrow(Optional.empty()))
         .build();
   }
@@ -36,11 +36,13 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
   @Override
   public Path getCellPathOrThrow(Optional<String> cellName) {
     return getCellPath(cellName)
-        .orElseThrow(() -> new UnknownCellException(cellName, getCellPaths().keySet()));
+        .orElseThrow(
+            () ->
+                new UnknownCellException(cellName, getCellPathsByRootCellExternalName().keySet()));
   }
 
   @Override
   public Path getCellPathOrThrow(UnflavoredBuildTargetView buildTarget) {
-    return getCellPathOrThrow(buildTarget.getCell());
+    return getNewCellPathResolver().getCellPath(buildTarget.getCell());
   }
 }

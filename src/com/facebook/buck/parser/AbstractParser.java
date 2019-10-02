@@ -38,16 +38,13 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 
@@ -120,56 +117,6 @@ abstract class AbstractParser implements Parser {
     return perBuildState.getTargetNodeJob(target);
   }
 
-  @Nullable
-  @Override
-  public SortedMap<String, Object> getTargetNodeRawAttributes(
-      PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException {
-    Cell owningCell = cell.getCell(targetNode.getBuildTarget());
-    BuildFileManifest buildFileManifest =
-        getTargetNodeRawAttributes(
-            state,
-            owningCell,
-            cell.getBuckConfigView(ParserConfig.class)
-                .getAbsolutePathToBuildFile(
-                    cell, targetNode.getBuildTarget().getUnconfiguredBuildTargetView()));
-    return getTargetFromManifest(targetNode, buildFileManifest);
-  }
-
-  @Override
-  public ListenableFuture<SortedMap<String, Object>> getTargetNodeRawAttributesJob(
-      PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException {
-    Cell owningCell = cell.getCell(targetNode.getBuildTarget());
-    ListenableFuture<BuildFileManifest> buildFileManifestFuture =
-        state.getBuildFileManifestJob(
-            owningCell,
-            cell.getBuckConfigView(ParserConfig.class)
-                .getAbsolutePathToBuildFile(
-                    cell, targetNode.getBuildTarget().getUnconfiguredBuildTargetView()));
-    return Futures.transform(
-        buildFileManifestFuture,
-        buildFileManifest -> getTargetFromManifest(targetNode, buildFileManifest),
-        MoreExecutors.directExecutor());
-  }
-
-  @Nullable
-  private static SortedMap<String, Object> getTargetFromManifest(
-      TargetNode<?> targetNode, BuildFileManifest buildFileManifest) {
-    String shortName = targetNode.getBuildTarget().getShortName();
-
-    if (!buildFileManifest.getTargets().containsKey(shortName)) {
-      return null;
-    }
-
-    SortedMap<String, Object> attributes =
-        new TreeMap<>(buildFileManifest.getTargets().get(shortName));
-    attributes.put(
-        InternalTargetAttributeNames.DIRECT_DEPENDENCIES,
-        targetNode.getParseDeps().stream()
-            .map(Object::toString)
-            .collect(ImmutableList.toImmutableList()));
-    return attributes;
-  }
-
   /**
    * @deprecated Prefer {@link #getTargetNodeRawAttributes(PerBuildState, Cell, TargetNode)} and
    *     reusing a PerBuildState instance, especially when calling in a loop.
@@ -238,7 +185,7 @@ abstract class AbstractParser implements Parser {
           // visitor pattern otherwise.
           // it's also work we need to do anyways. the getTargetNode() result is cached, so that
           // when we come around and re-visit that node there won't actually be any work performed.
-          for (BuildTarget dep : node.getParseDeps()) {
+          for (BuildTarget dep : node.getTotalDeps()) {
             try {
               state.getTargetNode(dep);
             } catch (BuildFileParseException e) {
@@ -247,7 +194,7 @@ abstract class AbstractParser implements Parser {
               throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
             }
           }
-          return node.getParseDeps().iterator();
+          return node.getTotalDeps().iterator();
         };
 
     AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetNodeTraversal =
@@ -285,7 +232,7 @@ abstract class AbstractParser implements Parser {
   }
 
   @Override
-  public synchronized TargetGraphCreationResult buildTargetGraphWithoutConfigurationTargets(
+  public synchronized TargetGraphCreationResult buildTargetGraphWithoutTopLevelConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration)
@@ -295,7 +242,7 @@ abstract class AbstractParser implements Parser {
   }
 
   @Override
-  public synchronized TargetGraphCreationResult buildTargetGraphWithConfigurationTargets(
+  public synchronized TargetGraphCreationResult buildTargetGraphWithTopLevelConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration)

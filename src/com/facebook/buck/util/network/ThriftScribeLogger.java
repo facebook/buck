@@ -23,6 +23,7 @@ import com.facebook.buck.distributed.thrift.LogRequest;
 import com.facebook.buck.distributed.thrift.LogRequestType;
 import com.facebook.buck.distributed.thrift.ScribeData;
 import com.facebook.buck.slb.ThriftService;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -43,13 +44,13 @@ public class ThriftScribeLogger extends ScribeLogger {
   }
 
   @Override
-  public ListenableFuture<Void> log(
+  public ListenableFuture<Unit> log(
       final String category, final Iterable<String> lines, Optional<Integer> bucket) {
     synchronized (executorService) {
       if (executorService.isShutdown()) {
         // If executor is shut down, we do nothing. We can't throw here because Buck may want to
         // log the exception potentially using this logger causing infinite loop
-        return Futures.immediateFuture(null);
+        return Futures.immediateFuture(Unit.UNIT);
       }
     }
 

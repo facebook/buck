@@ -30,6 +30,7 @@ import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.network.BatchingLogger;
 import com.facebook.buck.util.network.HiveRowFormatter;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -126,7 +127,7 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
       implements TaskAction<HttpArtifactCacheEventListenerCloseArgs> {
     @Override
     public void run(HttpArtifactCacheEventListenerCloseArgs args) {
-      List<ListenableFuture<Void>> futures = new ArrayList<>();
+      List<ListenableFuture<Unit>> futures = new ArrayList<>();
       futures.add(args.getFetchRequestLogger().forceFlush());
       futures.add(args.getStoreRequestLogger().forceFlush());
       try {

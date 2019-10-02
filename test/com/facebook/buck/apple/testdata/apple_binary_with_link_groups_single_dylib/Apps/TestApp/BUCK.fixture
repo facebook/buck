@@ -1,0 +1,96 @@
+# Exhaustive Link Group
+
+apple_binary(
+    name = "ExhaustiveApp",
+    srcs = ["main.c"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    link_group = "app",
+    link_group_map = [
+        # //Apps/Libs:B and all of it's transitive deps would be marked as belonging to "dynamic"
+        (
+            "dynamic",
+            [("//Apps/Libs:B", "tree")],
+        ),
+        # This is effectively a named catch-all group as it's last and of "tree" style,
+        # so would collect all ungrouped static libs reachable from Root.
+        (
+            "app",
+            [("//Apps/Libs:Root", "tree")],
+        ),
+    ],
+    deps = [
+        ":ExhaustiveDylib",
+        "//Apps/Libs:Root",
+    ],
+)
+
+apple_library(
+    name = "ExhaustiveDylib",
+    srcs = ["dummy.c"],
+    link_group = "dynamic",
+    # In the real world, the link group definition must be the same
+    # across the binary and the dylibs. This would be achieved by
+    # a single definition in a .bzl file.
+    link_group_map = [
+        (
+            "dynamic",
+            [("//Apps/Libs:B", "tree")],
+        ),
+        (
+            "app",
+            [("//Apps/Libs:Root", "tree")],
+        ),
+    ],
+    link_style = "static",
+    # To make the binary runnable, an rpath must be added via exported_linker_flags.
+    linker_flags = ["-Wl,-all_load"],
+    preferred_linkage = "shared",
+    soname = "ExhaustiveDylib.dylib",
+    deps = [
+        "//Apps/Libs:Root",
+    ],
+)
+
+# Catch All Link Group
+
+apple_binary(
+    name = "CatchAllApp",
+    srcs = ["main.c"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    # Specifying just a link group map means that this binary will
+    # link against all ungrouped static libs reachable from its deps.
+    link_group_map = [
+        # //Apps/Libs:B and all of it's transitive deps would be marked as belonging to "dynamic"
+        (
+            "dynamic",
+            [("//Apps/Libs:B", "tree")],
+        ),
+    ],
+    deps = [
+        ":CatchAllDylib",
+        "//Apps/Libs:Root",
+    ],
+)
+
+apple_library(
+    name = "CatchAllDylib",
+    srcs = ["dummy.c"],
+    link_group = "dynamic",
+    link_group_map = [
+        (
+            "dynamic",
+            [("//Apps/Libs:B", "tree")],
+        ),
+    ],
+    link_style = "static",
+    linker_flags = ["-Wl,-all_load"],
+    preferred_linkage = "shared",
+    soname = "CatchAllDylib.dylib",
+    deps = [
+        "//Apps/Libs:Root",
+    ],
+)

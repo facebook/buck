@@ -207,7 +207,14 @@ IDENTIFIER_TOKEN=[a-zA-Z_]([a-zA-Z0-9_])*
 <INDENTED> {
   [ ]                         { currentIndent++; }
   [\t]                        { currentIndent += 8 - currentIndent % 8; }
-  {EOL}                       { currentIndent = 0; }
+  {EOL}                       {
+                                if (currentIndent > 0) {
+                                  yypushback(yylength());
+                                  currentIndent = 0;
+                                  return INDENT;
+                                }
+                                return DEDENT;
+                              }
   [^]                         {
                                 yypushback(1);
                                 int top = stack.isEmpty() ? 0 : stack.peek();
@@ -225,6 +232,10 @@ IDENTIFIER_TOKEN=[a-zA-Z_]([a-zA-Z0-9_])*
                               }
   <<EOF>>                     {
                                 yybegin(YYINITIAL);
+                                if (currentIndent > 0) {
+                                  currentIndent = 0;
+                                  return INDENT;
+                                }
                               }
 }
 

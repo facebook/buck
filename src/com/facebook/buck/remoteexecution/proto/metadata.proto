@@ -45,6 +45,11 @@ message BuckInfo {
   string rule_name = 2;
   // Auxiliary tag set for builds with non-standard configurations.
   string auxiliary_build_tag = 3;
+  // Prefix for the top level target that was passed to 'buck build'
+  // If multiple targets were passed, this is the common prefix (if there is one)
+  // Note: project_prefix is not necessarily the same as the prefix for the specific action
+  // that is being executed right now
+  string project_prefix = 4;
 }
 
 // Data about the client that wants to start the session - may be ignored if
@@ -73,6 +78,10 @@ message CasClientInfo {
   string name = 1;
 }
 
+message CapabilityValue {
+  string value = 1;
+}
+
 // minimal worker requirements which should be satisfied to execute a given action
 message WorkerRequirements {
   enum WorkerPlatformType {
@@ -85,12 +94,16 @@ message WorkerRequirements {
     MEDIUM = 1;
     LARGE = 2;
     XLARGE = 3;
+    XXLARGE = 4;
   }
 
   WorkerSize worker_size = 1;
   WorkerPlatformType platform_type = 2;
   // Indicates if execution engine should try to execute current action with more powerful requirements
   bool should_try_larger_worker_on_oom = 3;
+
+  // Needed when aiming for a testing/canaried worker
+  CapabilityValue testing = 4;
 }
 
 // Optional context for an Action. May change between Actions from same RE Session if multiple jobs

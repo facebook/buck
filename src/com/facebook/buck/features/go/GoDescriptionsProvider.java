@@ -38,6 +38,7 @@ public class GoDescriptionsProvider implements DescriptionProvider {
         new GoBinaryDescription(goBuckConfig, toolchainProvider),
         new GoLibraryDescription(goBuckConfig, toolchainProvider),
         new CgoLibraryDescription(goBuckConfig, cxxBuckConfig, toolchainProvider),
+        new GoTestRunnerDescription(),
         new GoTestDescription(goBuckConfig, toolchainProvider),
         new PrebuiltGoLibraryDescription(goBuckConfig, toolchainProvider));
   }

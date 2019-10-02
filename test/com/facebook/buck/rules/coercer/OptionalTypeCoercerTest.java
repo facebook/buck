@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,9 +46,9 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void nullIsAbsent() throws CoerceFailedException {
-    OptionalTypeCoercer<Void> coercer =
-        new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Void.class));
-    Optional<Void> result =
+    OptionalTypeCoercer<Unit> coercer =
+        new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Unit.class));
+    Optional<Unit> result =
         coercer.coerce(
             TestCellBuilder.createCellRoots(FILESYSTEM),
             FILESYSTEM,

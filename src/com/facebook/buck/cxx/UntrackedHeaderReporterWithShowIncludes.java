@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ListMultimap;
@@ -60,19 +61,21 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
     this.treeParents = null;
   }
 
-  private List<Path> getPathToUntrackedHeader(Path header) throws IOException {
+  private List<Path> getPathToUntrackedHeader(SourcePathResolver pathResolver, Path header)
+      throws IOException {
     // An intermediate depfile in `show_include` mode contains a source file + used headers
     // (see CxxPreprocessAndCompileStep for details).
     // So, we "strip" the the source file first.
     List<String> srcAndIncludes = filesystem.readLines(sourceDepFile);
     List<String> includes = srcAndIncludes.subList(1, srcAndIncludes.size());
-    return getPathToUntrackedHeader(includes, header);
+    return getPathToUntrackedHeader(pathResolver, includes, header);
   }
 
   /**
    * @return a list of headers that represents a chain of includes ending in a particular header.
    */
-  private List<Path> getPathToUntrackedHeader(List<String> includeLines, Path header) {
+  private List<Path> getPathToUntrackedHeader(
+      SourcePathResolver pathResolver, List<String> includeLines, Path header) {
     // We parse the tree structure linearly by maintaining a stack of the current active parents.
     Stack<Path> active_parents = new Stack<Path>();
     for (String line : includeLines) {
@@ -87,7 +90,7 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
       Path currentHeader = filesystem.resolve(line.trim()).normalize();
       currentHeader =
           headerPathNormalizer
-              .getAbsolutePathForUnnormalizedPath(currentHeader)
+              .getAbsolutePathForUnnormalizedPath(pathResolver, currentHeader)
               .orElse(currentHeader);
       active_parents.push(currentHeader);
       if (currentHeader.equals(header)) {
@@ -103,10 +106,12 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
   }
 
   @Override
-  public String getErrorReport(Path header) throws IOException {
+  public String getErrorReport(SourcePathResolver pathResolver, Path header) throws IOException {
     Path absolutePath =
-        headerPathNormalizer.getAbsolutePathForUnnormalizedPath(header).orElse(header);
-    List<Path> chain = getPathToUntrackedHeader(absolutePath);
+        headerPathNormalizer
+            .getAbsolutePathForUnnormalizedPath(pathResolver, header)
+            .orElse(header);
+    List<Path> chain = getPathToUntrackedHeader(pathResolver, absolutePath);
     String errorMessage =
         String.format(
             "%s: included an untracked header: %n%s",

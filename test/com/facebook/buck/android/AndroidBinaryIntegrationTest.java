@@ -20,6 +20,9 @@ import static com.facebook.buck.testutil.RegexMatcher.containsPattern;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -28,6 +31,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.android.apksig.ApkVerifier;
+import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.TestAndroidSdkLocationFactory;
+import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -41,9 +49,13 @@ import com.facebook.buck.testutil.integration.DexInspector;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -225,17 +237,29 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testEditingPrimaryDexClassForcesRebuildForSimplePackage() throws IOException {
-    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(SIMPLE_TARGET);
+    Path outputPath = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.apk");
+    HashFunction hashFunction = Hashing.sha1();
+    String dexFileName = "classes.dex";
+
+    workspace.runBuckdCommand("build", SIMPLE_TARGET).assertSuccess();
+    ZipInspector zipInspector = new ZipInspector(workspace.getPath(outputPath));
+    HashCode originalHash = hashFunction.hashBytes(zipInspector.getFileContents(dexFileName));
 
     workspace.replaceFileContents(
-        "java/com/sample/app/MyApplication.java", "package com", "package\ncom");
+        "java/com/sample/app/MyApplication.java", "MyReplaceableName", "ChangedValue");
 
     workspace.resetBuildLogFile();
-    ProcessResult result = workspace.runBuckCommand("build", SIMPLE_TARGET);
+    ProcessResult result = workspace.runBuckdCommand("build", SIMPLE_TARGET);
     result.assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-
     buildLog.assertTargetBuiltLocally(SIMPLE_TARGET);
+
+    HashCode hashAfterChange = hashFunction.hashBytes(zipInspector.getFileContents(dexFileName));
+    assertThat(
+        "MyApplication.java file has been edited. Final artifact hash must change as well",
+        originalHash,
+        is(not(equalTo(hashAfterChange))));
   }
 
   @Test
@@ -307,8 +331,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     Optional<String> resourcesFromMetadata =
-        DexProducedFromJavaLibrary.readMetadataValue(
-            filesystem, dexTarget, DexProducedFromJavaLibrary.REFERENCED_RESOURCES);
+        DexProducedFromJavaLibrary.getMetadataResources(filesystem, dexTarget);
     assertTrue(resourcesFromMetadata.isPresent());
     assertEquals("[\"com.sample.top_layout\",\"com.sample2.title\"]", resourcesFromMetadata.get());
   }
@@ -320,8 +343,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     Optional<String> resourcesFromMetadata =
-        DexProducedFromJavaLibrary.readMetadataValue(
-            filesystem, dexTarget, DexProducedFromJavaLibrary.REFERENCED_RESOURCES);
+        DexProducedFromJavaLibrary.getMetadataResources(filesystem, dexTarget);
     assertTrue(resourcesFromMetadata.isPresent());
     assertEquals("[\"com.sample.top_layout\",\"com.sample2.title\"]", resourcesFromMetadata.get());
   }
@@ -384,7 +406,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
     try (ZipInputStream is = new ZipInputStream(Files.newInputStream(apk))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
-        assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
+        assertThat(entry.getName(), new Date(entry.getTime()), equalTo(dosEpoch));
       }
     }
   }
@@ -460,9 +482,29 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testD8AppWithMultidexContainsCanaryClasses() throws IOException {
     workspace.runBuckBuild("//apps/multidex:app_with_d8").assertSuccess();
-    final Path path = workspace.buildAndReturnOutput("//apps/multidex:disassemble_app_with_d8");
+    final Path path =
+        workspace.buildAndReturnOutput("//apps/multidex:disassemble_app_with_d8_for_canary");
     final List<String> smali = filesystem.readLines(path);
     assertFalse(smali.isEmpty());
+  }
+
+  @Test
+  public void testD8AppWithMultidexJumboString() throws IOException {
+    // FORCE_JUMBO should be set and D8 should respect that.
+    // FORCE_JUMBO is used when PreDexMerging is enabled (the default).
+    workspace.runBuckBuild("//apps/multidex:app_with_d8").assertSuccess();
+    final Path path =
+        workspace.buildAndReturnOutput("//apps/multidex:disassemble_app_with_d8_for_jumbo_string");
+    final List<String> smali = filesystem.readLines(path);
+    assertFalse(smali.isEmpty());
+    boolean foundString = false;
+    for (String line : smali) {
+      if (line.contains("const-string")) {
+        foundString = true;
+        assertTrue(line.contains("const-string/jumbo"));
+      }
+    }
+    assertTrue(foundString);
   }
 
   @Test
@@ -739,5 +781,29 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         Matchers.array(
             Matchers.containsString("//apps/sample:app"),
             Matchers.containsString("//java/com/sample/lib:lib")));
+  }
+
+  @Test
+  public void testMinApiDrivesDxToProduceHigherVersionedBytecode() throws Exception {
+    AssumeAndroidPlatform.assumeBuildToolsIsNewer("28.0.0");
+    Path outputApk = workspace.buildAndReturnOutput("//apps/sample:app_with_min_28");
+    workspace
+        .getBuildLog()
+        .assertTargetBuiltLocally("//apps/sample:app_with_min_28#class_file_to_dex_processing");
+    AndroidSdkLocation androidSdkLocation = TestAndroidSdkLocationFactory.create(filesystem);
+    AndroidBuildToolsResolver buildToolsResolver =
+        new AndroidBuildToolsResolver(
+            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
+            androidSdkLocation);
+    AndroidBuildToolsLocation buildToolsLocation =
+        AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath());
+    Path dexdumpLocation = buildToolsLocation.getBuildToolsPath().resolve("dexdump");
+    ProcessExecutor.Result result =
+        workspace.runCommand(dexdumpLocation.toString(), "-f", outputApk.toString());
+    assertTrue("dexdump did not produce output", result.getStdout().isPresent());
+    Matcher matcher = Pattern.compile("DEX version\\s*'(\\d+)'").matcher(result.getStdout().get());
+    assertTrue("Unable to find a match for the DEX version message", matcher.find());
+    int dexVersion = Integer.parseInt(matcher.group(1));
+    assertThat(dexVersion, Matchers.greaterThanOrEqualTo(38));
   }
 }

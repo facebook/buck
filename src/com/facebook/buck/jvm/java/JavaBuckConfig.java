@@ -250,10 +250,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getValue(SECTION, "default_cxx_platform");
   }
 
-  public UnusedDependenciesAction getUnusedDependenciesAction() {
+  public UnusedDependenciesConfig getUnusedDependenciesAction() {
     return delegate
-        .getEnum(SECTION, "unused_dependencies_action", UnusedDependenciesAction.class)
-        .orElse(UnusedDependenciesAction.IGNORE);
+        .getEnum(SECTION, "unused_dependencies_action", UnusedDependenciesConfig.class)
+        .orElse(UnusedDependenciesConfig.IGNORE);
   }
 
   public Optional<String> getJavaTempDir() {
@@ -280,7 +280,21 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public enum UnusedDependenciesAction {
     FAIL,
     WARN,
-    IGNORE
+    IGNORE,
+  }
+
+  /**
+   * The same as {@link UnusedDependenciesAction} with a couple of extra options to give greater
+   * flexibility.
+   */
+  public enum UnusedDependenciesConfig {
+    FAIL,
+    WARN,
+    IGNORE,
+    // This means that every target will be ignored, even if they are marked as WARN or FAIL
+    IGNORE_ALWAYS,
+    // This means that an individual target marked as FAIL will actually be WARN.
+    WARN_IF_FAIL,
   }
 
   /** Logging level duplicates are reported at */

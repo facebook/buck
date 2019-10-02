@@ -23,6 +23,7 @@ import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -194,7 +195,8 @@ public class AppleBundleDescription
         args.getIbtoolFlags(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
-        cxxBuckConfig.shouldCacheStrip());
+        cxxBuckConfig.shouldCacheStrip(),
+        appleConfig.useEntitlementsWhenAdhocCodeSigning());
   }
 
   /**
@@ -357,6 +359,7 @@ public class AppleBundleDescription
       extends CommonDescriptionArg,
           HasAppleBundleFields,
           HasAppleCodesignFields,
+          HasContacts,
           HasDefaultPlatform,
           HasDeclaredDeps,
           HasTests {

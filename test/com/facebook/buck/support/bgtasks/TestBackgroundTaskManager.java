@@ -17,6 +17,7 @@
 package com.facebook.buck.support.bgtasks;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +30,7 @@ import java.util.concurrent.Future;
  */
 public class TestBackgroundTaskManager extends AsyncBackgroundTaskManager {
 
-  private final Map<BackgroundTask<?>, Future<Void>> tasks;
+  private final Map<BackgroundTask<?>, Future<Unit>> tasks;
 
   public static TestBackgroundTaskManager of() {
     TestBackgroundTaskManager manager = new TestBackgroundTaskManager();
@@ -47,8 +48,8 @@ public class TestBackgroundTaskManager extends AsyncBackgroundTaskManager {
   }
 
   @Override
-  Future<Void> schedule(ManagedBackgroundTask<?> task) {
-    Future<Void> f = super.schedule(task);
+  Future<Unit> schedule(ManagedBackgroundTask<?> task) {
+    Future<Unit> f = super.schedule(task);
     tasks.put(task.getTask(), f);
     return f;
   }
@@ -58,7 +59,7 @@ public class TestBackgroundTaskManager extends AsyncBackgroundTaskManager {
    *
    * @return Task list
    */
-  public ImmutableMap<BackgroundTask<?>, Future<Void>> getScheduledTasksToTest() {
+  public ImmutableMap<BackgroundTask<?>, Future<Unit>> getScheduledTasksToTest() {
     return ImmutableMap.copyOf(tasks);
   }
 }

@@ -461,19 +461,19 @@
 
 
 /***/
-{template .android_sdk_path}
+{template .android_compile_sdk_version}
 {call .entry_link}
   {param section: 'android' /}
-  {param entry: 'sdk_path' /}
+  {param entry: 'compile_sdk_version' /}
 {/call}
 {/template}
 
 
 /***/
-{template .android_target}
+{template .android_sdk_path}
 {call .entry_link}
   {param section: 'android' /}
-  {param entry: 'target' /}
+  {param entry: 'sdk_path' /}
 {/call}
 {/template}
 
@@ -2544,6 +2544,15 @@
 {call .entry_link}
   {param section: 'project' /}
   {param entry: 'watchman_query_timeout_ms' /}
+{/call}
+{/template}
+
+
+/***/
+{template .python_inplace_interpreter_flags}
+{call .entry_link}
+  {param section: 'python' /}
+  {param entry: 'inplace_interpreter_flags' /}
 {/call}
 {/template}
 

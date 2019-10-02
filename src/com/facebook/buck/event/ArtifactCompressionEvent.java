@@ -65,8 +65,8 @@ public abstract class ArtifactCompressionEvent extends AbstractBuckEvent
   }
 
   /** Create a new Finished event for corresponding Started event */
-  public static Finished finished(Started started) {
-    return new Finished(started);
+  public static Finished finished(Started started, long fullSize, long compressedSize) {
+    return new Finished(started, fullSize, compressedSize);
   }
 
   /** Event for when a artifact starts compression/decompression */
@@ -85,12 +85,16 @@ public abstract class ArtifactCompressionEvent extends AbstractBuckEvent
 
   /** Event for when a artifact finishes compression/decompression */
   public static class Finished extends ArtifactCompressionEvent {
-    protected Finished(Started started) {
+    protected Finished(Started started, long fullSize, long compressedSize) {
       super(started.getEventKey(), started.getOperation(), started.getRuleKeys());
       startedTimeStamp = started.getTimestampMillis();
+      this.fullSize = fullSize;
+      this.compressedSize = compressedSize;
     }
 
     private final long startedTimeStamp;
+    public final long fullSize;
+    public final long compressedSize;
 
     /** Returns the timestamp of corresponding started event */
     public long getStartedTimeStamp() {

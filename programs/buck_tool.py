@@ -14,6 +14,7 @@
 
 from __future__ import print_function
 
+import contextlib
 import errno
 import glob
 import json
@@ -29,6 +30,7 @@ import textwrap
 import time
 import traceback
 import uuid
+from collections import namedtuple
 from subprocess import CalledProcessError, check_output
 
 from ng import NailgunConnection, NailgunException
@@ -36,11 +38,75 @@ from subprocutils import which
 from timing import monotonic_time_nanos
 from tracing import Tracing
 
+
 BUCKD_CLIENT_TIMEOUT_MILLIS = 180000
 BUCKD_STARTUP_TIMEOUT_MILLIS = 10000
 GC_MAX_PAUSE_TARGET = 15000
 
 JAVA_MAX_HEAP_SIZE_MB = 1000
+
+# Files that are used to invoke programs after running buck. Used for buck run, and
+# to automatically invoke buck fix scripts
+PostRunFiles = namedtuple("PostRunFiles", ["command_args_file"])
+
+
+class MovableTemporaryFile(object):
+    def __init__(self, *args, **kwargs):
+        self.file = None
+        self._temp_file = None
+        self._should_delete = True
+        self._named_temporary_args = args
+        self._named_temporary_kwargs = kwargs
+
+    @property
+    def name(self):
+        if self.file:
+            return self.file.name
+        else:
+            raise AttributeError(
+                "`file` is not set. You cannot call name on a moved file"
+            )
+
+    def close(self):
+        if self.file:
+            self.file.close()
+
+    def move(self):
+        new_wrapper = MovableTemporaryFile(
+            self._named_temporary_args, self._named_temporary_kwargs
+        )
+        new_wrapper.file = self.file
+        new_wrapper._temp_file = self._temp_file
+        self.file = None
+        self._temp_file = None
+        return new_wrapper
+
+    def __enter__(self):
+        if not self._temp_file:
+            # Due to a bug in python (https://bugs.python.org/issue14243), we need to
+            # be able to close() the temporary file without deleting it. So, set
+            # delete=False, and cleanup manually on __exit__() rather than using
+            # NamedTemproaryFile's built in delete logic
+            self._temp_file = tempfile.NamedTemporaryFile(
+                *self._named_temporary_args,
+                delete=False,
+                **self._named_temporary_kwargs
+            )
+            self.file = self._temp_file.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._temp_file:
+            self._temp_file.__exit__(exc_type, exc_value, traceback)
+        if self.file:
+            try:
+                os.remove(self.file.name)
+            except OSError as e:
+                # It's possible this fails because of a race with another buck
+                # instance has removed the entire resource_path, so ignore
+                # 'file not found' errors.
+                if e.errno != errno.ENOENT:
+                    raise
 
 
 class Resource(object):
@@ -59,7 +125,7 @@ class Resource(object):
 
 # Resource that get propagated to buck via system properties.
 EXPORTED_RESOURCES = [
-    Resource("fix_script", executable=True),
+    Resource("legacy_fix_script", executable=True),
     Resource("testrunner_classes"),
     Resource("logging_config_file"),
     Resource("path_to_python_dsl"),
@@ -100,12 +166,31 @@ class CommandLineArgs:
     # n.b. 'buck --help clean' is *not* currently a help command
     # n.b. 'buck --version' *is* a help command
     def is_help(self):
-        return self.command is None or "--help" in self.command_options
+        # --help or -h can be anywhere except after ""--"
+        return (
+            self.command is None
+            or any(v in self.command_options for v in ["--help", "-h"])
+            or any(v in self.buck_options for v in ["--help", "-h"])
+        )
 
     def is_version(self):
         return self.command is None and any(
             v in self.buck_options for v in ["--version", "-V"]
         )
+
+
+class ExitCode(object):
+    """Python equivalent of com.facebook.buck.util.ExitCode"""
+
+    SUCCESS = 0
+    COMMANDLINE_ERROR = 3
+    FATAL_GENERIC = 10
+    FATAL_BOOTSTRAP = 11
+    FATAL_IO = 13
+    FATAL_DISK_FULL = 14
+    FIX_FAILED = 16
+    SIGNAL_INTERRUPT = 130
+    SIGNAL_PIPE = 141
 
 
 class BuckToolException(Exception):
@@ -116,22 +201,92 @@ class BuckDaemonErrorException(BuckToolException):
     pass
 
 
-class ExecuteTarget(Exception):
-    def __init__(self, path, argv, envp, cwd):
+class ExitCodeCallable(object):
+    """ Simple callable class that just returns a given exit code """
+
+    def __init__(self, exit_code):
+        self.exit_code = exit_code
+
+    def __call__(self):
+        return self.exit_code
+
+
+class ExecuteTarget(ExitCodeCallable):
+    """ Callable that executes a given target after the build finishes """
+
+    def __init__(self, exit_code, path, argv, envp, cwd):
+        super(ExecuteTarget, self).__init__(exit_code)
         self._path = path
         self._argv = argv
         self._envp = envp
         self._cwd = cwd
 
-    def execve(self):
+    def __call__(self):
+        if self.exit_code != ExitCode.SUCCESS:
+            return self.exit_code
+
         # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
         if os.name != "nt":
             signal.signal(signal.SIGPIPE, signal.SIG_DFL)
             os.execvpe(self._path, self._argv, self._envp)
         else:
-            child = subprocess.Popen(self._argv, env=self._envp, cwd=self._cwd)
+            args = [self._path]
+            args.extend(self._argv[1:])
+            child = subprocess.Popen(args, env=self._envp, cwd=self._cwd)
             child.wait()
             sys.exit(child.returncode)
+
+
+class ExecuteFixScript(ExitCodeCallable):
+    """
+    Callable that tries to execute a "fix" script, returning a different error
+    if the fix script fails
+    """
+
+    def __init__(self, exit_code, path, argv, envp, cwd):
+        super(ExecuteFixScript, self).__init__(exit_code)
+        self._path = path
+        self._argv = argv
+        self._envp = envp
+        self._cwd = cwd
+
+    @contextlib.contextmanager
+    def _disable_signal_handlers(self):
+        if os.name == "nt":
+            yield
+        else:
+            original_signal = signal.getsignal(signal.SIGINT)
+            try:
+                signal.signal(signal.SIGINT, signal.SIG_IGN)
+                yield
+            finally:
+                signal.signal(signal.SIGINT, original_signal)
+
+    def __call__(self):
+        exit_code = self.exit_code
+
+        extra_kwargs = {}
+        if os.name != "nt":
+            # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
+            extra_kwargs["preexec_fn"] = lambda: signal.signal(
+                signal.SIGPIPE, signal.SIG_DFL
+            )
+
+        # Do not respond to ctrl-c while this is running. Users will expect this to go
+        # to the fix script. Make sure we restore the signal handler afterward
+        # We could have done this with tcsetpgrp and the like, but it also leads to
+        # weird behavior with ctrl-z when the processes are in different pgroups
+        # (to set the foreground job) and both processes don't suspend.
+        with self._disable_signal_handlers():
+            args = [self._path]
+            args.extend(self._argv[1:])
+            proc = subprocess.Popen(args, env=self._envp, cwd=self._cwd, **extra_kwargs)
+            proc.wait()
+
+        # If the script failed, return a different code to indicate that
+        if proc.returncode != ExitCode.SUCCESS:
+            exit_code = ExitCode.FIX_FAILED
+        return exit_code
 
 
 class BuckStatusReporter(object):
@@ -324,13 +479,29 @@ class BuckTool(object):
         except ValueError:
             return args
 
-    def _add_args(self, argv, args):
+    def _handle_buck_fix_args(self, argv, post_run_files):
+        additional_args = ["--command-args-file", post_run_files.command_args_file]
+        insert_idx = 1
+        # Cover the case where someone runs `buck --isolation_prefix foo`, which would
+        # make the first arg `--config`, not a subcommand
+        if len(argv) and argv[0].startswith("--"):
+            insert_idx = 0
+
+        ret = argv[:insert_idx] + additional_args + argv[insert_idx:]
+        return ret
+
+    def _add_args(self, argv, args, post_run_files):
+
+        self._adjust_help_args(argv, args)
+
         """
         Add new arguments to the end of arguments string
         But before optional arguments to test runner ("--")
         """
         if len(args) == 0:
-            return self._handle_isolation_args(argv)
+            return self._handle_buck_fix_args(
+                self._handle_isolation_args(argv), post_run_files
+            )
 
         try:
             pos = argv.index("--")
@@ -338,9 +509,33 @@ class BuckTool(object):
             # "--" not found, just add to the end of the list
             pos = len(argv)
 
-        return self._handle_isolation_args(argv[:pos] + args + argv[pos:])
+        return self._handle_buck_fix_args(
+            self._handle_isolation_args(argv[:pos] + args + argv[pos:]), post_run_files
+        )
 
-    def _add_args_from_env(self, argv):
+    def _adjust_help_args(self, argv, args):
+        # allow --help right after "buck" then followed by subcommand, in order for java code
+        # to process this as help, move --help to after subcommand
+        if len(argv) and argv[0] == "--help":
+            del argv[0]
+            args.append("--help")
+        else:
+            # '-h' need to be replaced by '--help' for java code to process as help
+            try:
+                pos_h = argv.index("-h")
+            except ValueError:
+                pos_h = -1
+            if pos_h >= 0:
+                try:
+                    # don't do the replacement if '-h' is after '--', it's for external runner
+                    pos_ex = argv.index("--")
+                except ValueError:
+                    pos_ex = -1
+                if pos_ex < 0 or pos_h < pos_ex:
+                    del argv[pos_h]
+                    args.append("--help")
+
+    def _add_args_from_env(self, argv, post_run_files):
         """
         Implicitly add command line arguments based on environmental variables. This is a bad
         practice and should be considered for infrastructure / debugging purposes only
@@ -352,9 +547,9 @@ class BuckTool(object):
         if os.environ.get("BUCK_CACHE_READONLY") == "1":
             args.append("-c")
             args.append("cache.http_mode=readonly")
-        return self._add_args(argv, args)
+        return self._add_args(argv, args, post_run_files)
 
-    def _run_with_nailgun(self, java_path, argv, env):
+    def _run_with_nailgun(self, java_path, argv, env, post_run_files):
         """
         Run the command using nailgun.  If the daemon is busy, block until it becomes free.
         """
@@ -370,7 +565,7 @@ class BuckTool(object):
                     env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
                     exit_code = c.send_command(
                         "com.facebook.buck.cli.MainWithNailgun",
-                        self._add_args_from_env(argv),
+                        self._add_args_from_env(argv, post_run_files),
                         env=env,
                         cwd=self._buck_project.root,
                     )
@@ -415,7 +610,7 @@ class BuckTool(object):
 
         return exit_code
 
-    def _run_without_nailgun(self, java_path, argv, env):
+    def _run_without_nailgun(self, java_path, argv, env, post_run_files):
         """
         Run the command by directly invoking `java` (rather than by sending a command via nailgun)
         """
@@ -432,7 +627,7 @@ class BuckTool(object):
         )
         command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
         command.append("com.facebook.buck.cli.MainWithoutNailgun")
-        command.extend(self._add_args_from_env(argv))
+        command.extend(self._add_args_from_env(argv, post_run_files))
         now = int(round(time.time() * 1000))
         env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
         with Tracing("buck", args={"command": command}):
@@ -442,8 +637,9 @@ class BuckTool(object):
 
     def _execute_command_and_maybe_run_target(self, run_fn, java_path, env, argv):
         """
-        Run a buck command using the specified `run_fn`.  If the command is "run", get the path,
-        args, etc. from the daemon, and raise an exception that tells __main__ to run that binary
+        Run a buck command using the specified `run_fn`.
+        If the command writes out to --command-args-file, return a callable that
+        executes the program in the --command-args-file
         """
         with Tracing("buck", args={"command": sys.argv[1:]}):
             if os.name == "nt":
@@ -469,25 +665,33 @@ class BuckTool(object):
                     )
 
             argv = argv[1:]
-            if len(argv) == 0 or argv[0] != "run":
-                return run_fn(java_path, argv, env)
-            else:
-                with tempfile.NamedTemporaryFile(dir=self._tmp_dir) as argsfile:
-                    # Splice in location of command file to run outside buckd
-                    argv = [argv[0]] + ["--command-args-file", argsfile.name] + argv[1:]
-                    exit_code = run_fn(java_path, argv, env)
-                    if exit_code != 0 or os.path.getsize(argsfile.name) == 0:
-                        # Build failed, so there's nothing to run.  Exit normally.
-                        return exit_code
-                    cmd = json.load(argsfile)
-                    path = cmd["path"].encode("utf8")
-                    argv = [arg.encode("utf8") for arg in cmd["argv"]]
-                    envp = {
-                        k.encode("utf8"): v.encode("utf8")
-                        for k, v in cmd["envp"].iteritems()
-                    }
-                    cwd = cmd["cwd"].encode("utf8")
-                    raise ExecuteTarget(path, argv, envp, cwd)
+
+            # The argsfile can go in the project tmpdir as we read it back immediately,
+            # the fix spec file needs to be somewhere else, as we cleanup the tmpdir
+            # before we run the actual fix script, and we need to make sure that the
+            # build details are not deleted before that.
+            with MovableTemporaryFile(dir=self._tmp_dir) as argsfile:
+                argsfile.close()
+
+                post_run_files = PostRunFiles(command_args_file=argsfile.name)
+                exit_code = run_fn(java_path, argv, env, post_run_files)
+                if os.path.getsize(argsfile.name) == 0:
+                    # No file was requested to be run by the daemon. Exit normally.
+                    return ExitCodeCallable(exit_code)
+
+                with open(argsfile.name, "r") as reopened_argsfile:
+                    cmd = json.load(reopened_argsfile)
+                path = cmd["path"].encode("utf8")
+                argv = [arg.encode("utf8") for arg in cmd["argv"]]
+                envp = {
+                    k.encode("utf8"): v.encode("utf8")
+                    for k, v in cmd["envp"].iteritems()
+                }
+                cwd = cmd["cwd"].encode("utf8")
+                if cmd["is_fix_script"]:
+                    return ExecuteFixScript(exit_code, path, argv, envp, cwd)
+                else:
+                    return ExecuteTarget(exit_code, path, argv, envp, cwd)
 
     def launch_buck(self, build_id, java_path, argv):
         with Tracing("BuckTool.launch_buck"):
@@ -513,7 +717,7 @@ class BuckTool(object):
 
                 if self._command_line.is_version():
                     print("buck version {}".format(buck_version_uid))
-                    return 0
+                    return ExitCodeCallable(ExitCode.SUCCESS)
 
                 use_buckd = self._use_buckd
                 if not use_buckd:
@@ -576,7 +780,7 @@ class BuckTool(object):
 
                 self._unpack_modules()
 
-                exit_code = self._execute_command_and_maybe_run_target(
+                exit_code_callable = self._execute_command_and_maybe_run_target(
                     run_fn, java_path, env, argv
                 )
 
@@ -584,9 +788,11 @@ class BuckTool(object):
                 # 128 + N, where N is the signal. However Python's subprocess
                 # call returns them as negative numbers. Buck binary protocol
                 # uses shell's convention, so convert
-                if exit_code < 0:
-                    exit_code = 128 + (-1 * exit_code)
-                return exit_code
+                if exit_code_callable.exit_code < 0:
+                    exit_code_callable.exit_code = 128 + (
+                        -1 * exit_code_callable.exit_code
+                    )
+                return exit_code_callable
 
 
     def launch_buckd(self, java_path, jvm_args, buck_version_uid=None):
@@ -594,6 +800,7 @@ class BuckTool(object):
             setup_watchman_watch()
             if buck_version_uid is None:
                 buck_version_uid = self._get_buck_version_uid()
+            self._buck_project.create_buckd_dir()
             # Override self._tmp_dir to a long lived directory.
             buckd_tmp_dir = self._buck_project.create_buckd_tmp_dir()
             ngserver_output_path = os.path.join(buckd_tmp_dir, "ngserver-out")
@@ -905,15 +1112,36 @@ class BuckTool(object):
             # simplify the transition while we need to support multiple versions of the JVM.
             # TODO: Remove once Java 11 upgrade is done.
             if self.get_buck_compiled_java_version() >= 9:
-                unsupported_args = set(["-XX:+UseParNewGC"])
+                unsupported_args = set(
+                    [
+                        # `-verbose:gc` and `-XX:+PrintGCDetails` are technically supported, but log
+                        # to stdout, which is problematic when Buck's output needs to be
+                        # programmatically parsed. So we disallow them. `-Xlog:gc:/path/to/gc.log`
+                        # should be used in Java 11 instead.
+                        "-verbose:gc",
+                        "-XX:+PrintGCDetails",
+                        "-XX:+PrintGCDateStamps",
+                        "-XX:+PrintGCTimeStamps",
+                        "-XX:+UseParNewGC",
+                    ]
+                )
                 stripped_args = []
                 for arg in java_args:
                     if arg in unsupported_args:
                         logging.warning(
-                            "Removing JVM arg %s, which is not supported in Java %d.",
+                            "Warning: Removing JVM arg `%s`, which is not supported in Java %d.",
                             arg,
                             self.get_buck_compiled_java_version(),
                         )
+                    elif arg.startswith("-Xloggc"):
+                        logging.warning(
+                            "Warning: JVM arg `-Xloggc` is deprecated in Java %d. Replacing with `-Xlog:gc`.",
+                            self.get_buck_compiled_java_version(),
+                        )
+                        # Though the JVM will make this replacement itself, it stupidly logs the
+                        # deprecation warning to stdout, which will break programmatic parsing of
+                        # Buck's output.
+                        stripped_args.append(arg.replace("-Xloggc", "-Xlog:gc"))
                     else:
                         stripped_args.append(arg)
                 java_args = stripped_args

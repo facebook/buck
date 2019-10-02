@@ -56,12 +56,13 @@ public class ModernBuildRuleBuilderFactory {
       FileHashLoader hashLoader,
       BuckEventBus eventBus,
       MetadataProvider metadataProvider,
-      boolean whitelistedForRemoteExecution) {
+      boolean remoteExecutionAutoEnabled,
+      boolean forceDisableRemoteExecution) {
     ModernBuildRuleBuildStrategy strategy;
     try {
       RemoteExecutionClientsFactory remoteExecutionFactory =
           new RemoteExecutionClientsFactory(remoteExecutionConfig);
-      strategy = config.getBuildStrategy(whitelistedForRemoteExecution);
+      strategy = config.getBuildStrategy(remoteExecutionAutoEnabled, forceDisableRemoteExecution);
       WorkerRequirementsProvider workerRequirementsProvider =
           new FileBasedWorkerRequirementsProvider(
               remoteExecutionConfig.getStrategyConfig().getWorkerRequirementsFilename(),
@@ -85,13 +86,14 @@ public class ModernBuildRuleBuilderFactory {
                   hashLoader,
                   eventBus,
                   metadataProvider,
-                  whitelistedForRemoteExecution,
+                  remoteExecutionAutoEnabled,
+                  forceDisableRemoteExecution,
                   workerRequirementsProvider));
         case REMOTE:
           return Optional.of(
               RemoteExecutionStrategy.createRemoteExecutionStrategy(
                   eventBus,
-                  remoteExecutionConfig.getStrategyConfig(),
+                  remoteExecutionConfig,
                   remoteExecutionFactory.create(eventBus, metadataProvider),
                   resolver,
                   rootCell,
@@ -114,7 +116,8 @@ public class ModernBuildRuleBuilderFactory {
       FileHashLoader hashLoader,
       BuckEventBus eventBus,
       MetadataProvider metadataProvider,
-      boolean whitelistedForRemoteExecution,
+      boolean remoteExecutionAutoEnabled,
+      boolean forceDisableRemoteExecution,
       WorkerRequirementsProvider workerRequirementsProvider) {
     BuildRuleStrategy delegate =
         getBuildStrategy(
@@ -126,15 +129,18 @@ public class ModernBuildRuleBuilderFactory {
                 hashLoader,
                 eventBus,
                 metadataProvider,
-                whitelistedForRemoteExecution)
+                remoteExecutionAutoEnabled,
+                forceDisableRemoteExecution)
             .orElseThrow(
                 () -> new HumanReadableException("Delegate config configured incorrectly."));
     return new HybridLocalStrategy(
         hybridLocalConfig.getLocalJobs(),
+        hybridLocalConfig.getLocalDelegateJobs(),
         hybridLocalConfig.getDelegateJobs(),
         delegate,
         workerRequirementsProvider,
-        remoteExecutionConfig.getMaxWorkerSizeToStealFrom());
+        remoteExecutionConfig.getMaxWorkerSizeToStealFrom(),
+        remoteExecutionConfig.getAuxiliaryBuildTag());
   }
 
   /** The passthrough strategy just forwards to executorRunner.runWithDefaultExecutor. */
