@@ -21,8 +21,8 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.apple.clang.ModuleMap;
-import com.facebook.buck.apple.clang.ModuleMap.SwiftMode;
+import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
+import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap.SwiftMode;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
@@ -133,7 +133,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                     projectFilesystem,
                     BuildTargetPaths.getGenPath(
                         projectFilesystem, buildTarget, "%s/SomeModule/module.modulemap"),
-                    new ModuleMap("SomeModule", SwiftMode.NO_SWIFT)))
+                    new UmbrellaHeaderModuleMap("SomeModule", SwiftMode.NO_SWIFT)))
             .build();
     ImmutableList<Step> actualBuildSteps =
         symlinkTreeBuildRule.getBuildSteps(buildContext, buildableContext);
@@ -161,7 +161,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             projectFilesystem,
             BuildTargetPaths.getGenPath(
                 projectFilesystem, buildTarget, "%s/SomeModule/module.modulemap"),
-            new ModuleMap("SomeModule", SwiftMode.INCLUDE_SWIFT_HEADER));
+            new UmbrellaHeaderModuleMap("SomeModule", SwiftMode.INCLUDE_SWIFT_HEADER));
     assertThat(actualBuildSteps, hasItem(moduleMapStep));
   }
 

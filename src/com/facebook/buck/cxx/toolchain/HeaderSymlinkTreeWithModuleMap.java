@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.apple.clang.ModuleMap;
 import com.facebook.buck.apple.clang.UmbrellaHeader;
+import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -81,11 +81,11 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
               new ModuleMapStep(
                   getProjectFilesystem(),
                   moduleMapPath(getProjectFilesystem(), getBuildTarget(), moduleName),
-                  new ModuleMap(
+                  new UmbrellaHeaderModuleMap(
                       moduleName,
                       containsSwiftHeader(paths, moduleName)
-                          ? ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER
-                          : ModuleMap.SwiftMode.NO_SWIFT)));
+                          ? UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER
+                          : UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT)));
 
           Path umbrellaHeaderPath = Paths.get(moduleName, moduleName + ".h");
           if (!paths.contains(umbrellaHeaderPath)) {

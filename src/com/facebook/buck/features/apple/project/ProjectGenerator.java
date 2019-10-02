@@ -52,8 +52,8 @@ import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
-import com.facebook.buck.apple.clang.ModuleMap;
 import com.facebook.buck.apple.clang.UmbrellaHeader;
+import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
 import com.facebook.buck.apple.clang.VFSOverlay;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
@@ -3101,10 +3101,14 @@ public class ProjectGenerator {
         boolean containsSwift = !nonSourcePaths.isEmpty();
         if (containsSwift) {
           projectFilesystem.writeContentsToPath(
-              new ModuleMap(moduleName.get(), ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER).render(),
+              new UmbrellaHeaderModuleMap(
+                      moduleName.get(), UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER)
+                  .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
           projectFilesystem.writeContentsToPath(
-              new ModuleMap(moduleName.get(), ModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER).render(),
+              new UmbrellaHeaderModuleMap(
+                      moduleName.get(), UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER)
+                  .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
 
           Path absoluteModuleRoot =
@@ -3122,7 +3126,9 @@ public class ProjectGenerator {
               getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
         } else {
           projectFilesystem.writeContentsToPath(
-              new ModuleMap(moduleName.get(), ModuleMap.SwiftMode.NO_SWIFT).render(),
+              new UmbrellaHeaderModuleMap(
+                      moduleName.get(), UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT)
+                  .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
         }
         Path absoluteModuleRoot =

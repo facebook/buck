@@ -21,11 +21,12 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-public class ModuleMapTest {
+public class UmbrellaHeaderModuleMapTest {
 
   @Test
   public void testNoSwift() {
-    ModuleMap testMap = new ModuleMap("TestModule", ModuleMap.SwiftMode.NO_SWIFT);
+    UmbrellaHeaderModuleMap testMap =
+        new UmbrellaHeaderModuleMap("TestModule", UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT);
     assertThat(
         "module TestModule {\n"
             + "    umbrella header \"TestModule.h\"\n"
@@ -39,7 +40,9 @@ public class ModuleMapTest {
 
   @Test
   public void testIncludeSwift() {
-    ModuleMap testMap = new ModuleMap("TestModule", ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER);
+    UmbrellaHeaderModuleMap testMap =
+        new UmbrellaHeaderModuleMap(
+            "TestModule", UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER);
     assertThat(
         "module TestModule {\n"
             + "    umbrella header \"TestModule.h\"\n"
@@ -58,7 +61,9 @@ public class ModuleMapTest {
 
   @Test
   public void testExcludeSwift() {
-    ModuleMap testMap = new ModuleMap("TestModule", ModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER);
+    UmbrellaHeaderModuleMap testMap =
+        new UmbrellaHeaderModuleMap(
+            "TestModule", UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER);
     assertThat(
         "module TestModule {\n"
             + "    umbrella header \"TestModule.h\"\n"
