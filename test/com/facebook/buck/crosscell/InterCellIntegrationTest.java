@@ -278,7 +278,7 @@ public class InterCellIntegrationTest {
         prepare("inter-cell/java/primary", "inter-cell/java/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
-    String systemBootclasspath = Bootclasspath.getSystemBootclasspath();
+    String systemBootclasspath = Bootclasspath.getJdk8StubJarPath();
     ProcessResult result =
         primary.runBuckBuild(
             "//:java-binary",

@@ -126,9 +126,17 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     setUpProjectWorkspaceForScenario("bootclasspath");
     workspace.addBuckConfigLocalOption(
         "java",
-        "bootclasspath-7",
-        Joiner.on(":").join("boot.jar", "other.jar", Bootclasspath.getSystemBootclasspath()));
-    ProcessResult processResult = workspace.runBuckBuild("-v", "5", "//:lib");
+        "bootclasspath-8",
+        Joiner.on(":").join("boot.jar", "other.jar", Bootclasspath.getJdk8StubJarPath()));
+    ProcessResult processResult =
+        workspace.runBuckBuild(
+            "--config",
+            "java.source_level=8",
+            "--config",
+            "java.target_level=8",
+            "-v",
+            "5",
+            "//:lib");
     processResult.assertSuccess();
     assertThat(
         processResult.getStderr(), allOf(containsString("boot.jar"), containsString("other.jar")));

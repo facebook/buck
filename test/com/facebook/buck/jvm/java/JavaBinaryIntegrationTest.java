@@ -208,7 +208,7 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testBootclasspathPathResolution() throws IOException {
-    String systemBootclasspath = Bootclasspath.getSystemBootclasspath();
+    String systemBootclasspath = Bootclasspath.getJdk8StubJarPath();
     setUpProjectWorkspaceForScenario("fat_jar");
 
     ProcessResult result =

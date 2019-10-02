@@ -16,16 +16,10 @@
 
 package com.facebook.buck.jvm.java.testutil;
 
-import java.io.File;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 public class Bootclasspath {
-  public static String getSystemBootclasspath() {
-    String[] paths = System.getProperty("sun.boot.class.path").split(File.pathSeparator);
-    return Arrays.stream(paths)
-        .filter(p -> Paths.get(p).toFile().exists())
-        .collect(Collectors.joining(File.pathSeparator));
+  public static String getJdk8StubJarPath() {
+    return Paths.get("third-party", "java", "jdk", "jdk8-rt-stub.jar").toAbsolutePath().toString();
   }
 }
