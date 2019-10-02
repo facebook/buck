@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.apple.clang.ModuleMapFactory;
+import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.apple.clang.UmbrellaHeader;
 import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
@@ -38,24 +40,29 @@ import java.util.Optional;
 public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
 
   @AddToRuleKey private final Optional<String> moduleName;
+  @AddToRuleKey private final ModuleMapMode moduleMapMode;
 
   private HeaderSymlinkTreeWithModuleMap(
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
-      Optional<String> moduleName) {
+      Optional<String> moduleName,
+      ModuleMapMode moduleMapMode) {
     super(target, filesystem, root, links);
     this.moduleName = moduleName;
+    this.moduleMapMode = moduleMapMode;
   }
 
   public static HeaderSymlinkTreeWithModuleMap create(
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
-      ImmutableMap<Path, SourcePath> links) {
+      ImmutableMap<Path, SourcePath> links,
+      ModuleMapMode moduleMapMode) {
     Optional<String> moduleName = getModuleName(links);
-    return new HeaderSymlinkTreeWithModuleMap(target, filesystem, root, links, moduleName);
+    return new HeaderSymlinkTreeWithModuleMap(
+        target, filesystem, root, links, moduleName, moduleMapMode);
   }
 
   @Override
@@ -81,8 +88,9 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
               new ModuleMapStep(
                   getProjectFilesystem(),
                   moduleMapPath(getProjectFilesystem(), getBuildTarget(), moduleName),
-                  new UmbrellaHeaderModuleMap(
+                  ModuleMapFactory.createModuleMap(
                       moduleName,
+                      moduleMapMode,
                       containsSwiftHeader(paths, moduleName)
                           ? UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER
                           : UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT)));

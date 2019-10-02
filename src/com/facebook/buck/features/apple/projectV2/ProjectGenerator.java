@@ -45,6 +45,8 @@ import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescriptionArg;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.apple.clang.ModuleMapFactory;
+import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.apple.clang.UmbrellaHeader;
 import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
 import com.facebook.buck.apple.clang.VFSOverlay;
@@ -2964,15 +2966,20 @@ public class ProjectGenerator {
               moduleName.get(), resolvedContents.keySet(), headerSymlinkTreeRoot);
         }
         boolean containsSwift = !nonSourcePaths.isEmpty();
+        ModuleMapMode moduleMapMode = appleConfig.moduleMapMode();
         if (containsSwift) {
           projectFilesystem.writeContentsToPath(
-              new UmbrellaHeaderModuleMap(
-                      moduleName.get(), UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER)
+              ModuleMapFactory.createModuleMap(
+                      moduleName.get(),
+                      moduleMapMode,
+                      UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
           projectFilesystem.writeContentsToPath(
-              new UmbrellaHeaderModuleMap(
-                      moduleName.get(), UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER)
+              ModuleMapFactory.createModuleMap(
+                      moduleName.get(),
+                      moduleMapMode,
+                      UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
 
@@ -2991,8 +2998,8 @@ public class ProjectGenerator {
               getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
         } else {
           projectFilesystem.writeContentsToPath(
-              new UmbrellaHeaderModuleMap(
-                      moduleName.get(), UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT)
+              ModuleMapFactory.createModuleMap(
+                      moduleName.get(), moduleMapMode, UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
         }

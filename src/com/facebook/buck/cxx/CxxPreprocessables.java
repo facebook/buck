@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -138,8 +139,12 @@ public class CxxPreprocessables {
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:
         return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links);
-      case SYMLINK_TREE_WITH_MODULEMAP:
-        return HeaderSymlinkTreeWithModuleMap.create(target, filesystem, root, links);
+      case SYMLINK_TREE_WITH_UMBRELLA_HEADER_MODULEMAP:
+        return HeaderSymlinkTreeWithModuleMap.create(
+            target, filesystem, root, links, ModuleMapMode.UMBRELLA_HEADER);
+      case SYMLINK_TREE_WITH_UMBRELLA_DIRECTORY_MODULEMAP:
+        return HeaderSymlinkTreeWithModuleMap.create(
+            target, filesystem, root, links, ModuleMapMode.UMBRELLA_DIRECTORY);
       case HEADER_MAP_ONLY:
         return new DirectHeaderMap(target, filesystem, root, links);
       default:

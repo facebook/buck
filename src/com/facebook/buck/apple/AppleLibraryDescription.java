@@ -635,7 +635,7 @@ public class AppleLibraryDescription
         && libType.isPresent()
         && libType.get().equals(Type.EXPORTED_HEADERS)
         && headerMode.isPresent()
-        && headerMode.get().equals(HeaderMode.SYMLINK_TREE_WITH_MODULEMAP)) {
+        && headerMode.get().includesModuleMap()) {
       return createExportedModuleSymlinkTreeBuildRule(
           buildTarget,
           context.getProjectFilesystem(),
@@ -711,7 +711,7 @@ public class AppleLibraryDescription
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
+        HeaderMode.forModuleMapMode(appleConfig.moduleMapMode()),
         headers.build(),
         HeaderVisibility.PUBLIC);
   }
@@ -733,7 +733,11 @@ public class AppleLibraryDescription
 
     Path root = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-        buildTarget, projectFilesystem, root, headers, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP);
+        buildTarget,
+        projectFilesystem,
+        root,
+        headers,
+        HeaderMode.forModuleMapMode(appleConfig.moduleMapMode()));
   }
 
   <U> Optional<U> createMetadataForLibrary(
@@ -910,7 +914,7 @@ public class AppleLibraryDescription
                     .withAppendedFlavors(
                         CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
                         platformEntry.getKey(),
-                        HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor()));
+                        HeaderMode.forModuleMapMode(appleConfig.moduleMapMode()).getFlavor()));
     cxxPreprocessorInputBuilder.addIncludes(
         CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
     CxxPreprocessorInput cxxPreprocessorInput = cxxPreprocessorInputBuilder.build();
