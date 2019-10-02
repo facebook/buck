@@ -134,6 +134,10 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext buildContext, BuildableContext buildableContext) {
+    buildableContext.recordArtifact(classPathOutput.getResolvedPath());
+    buildableContext.recordArtifact(getClassPathFile());
+    buildableContext.recordArtifact(jvmArgsOutput.getResolvedPath());
+
     return ImmutableList.of(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
