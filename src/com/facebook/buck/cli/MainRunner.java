@@ -170,6 +170,7 @@ import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager.LifecycleStatus;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
+import com.facebook.buck.util.AbstractCloseableWrapper;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CloseableWrapper;
@@ -281,8 +282,6 @@ public final class MainRunner {
   /**
    * Force JNA to be initialized early to avoid deadlock race condition.
    *
-   * <p>
-   *
    * <p>See: https://github.com/java-native-access/jna/issues/652
    */
   public static final int JNA_POINTER_SIZE = Pointer.SIZE;
@@ -310,7 +309,8 @@ public final class MainRunner {
   private final Architecture architecture;
 
   private static final Semaphore commandSemaphore = new Semaphore(1);
-  private static AtomicReference<ImmutableList<String>> activeCommandArgs = new AtomicReference<>();
+  private static final AtomicReference<ImmutableList<String>> activeCommandArgs =
+      new AtomicReference<>();
 
   private static volatile Optional<NGContext> commandSemaphoreNgClient = Optional.empty();
 
@@ -1138,9 +1138,7 @@ public final class MainRunner {
                 CloseableWrapper.of(
                     Optional.ofNullable(semaphore),
                     s -> {
-                      if (s.isPresent()) {
-                        s.get().close();
-                      }
+                      s.ifPresent(AbstractCloseableWrapper::close);
                     });
             CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
                 depsAwareExecutorSupplier =
@@ -1197,9 +1195,7 @@ public final class MainRunner {
 
           if (isRemoteExecutionBuild) {
             List<BuckEventListener> remoteExecutionsListeners = Lists.newArrayList();
-            if (remoteExecutionListener.isPresent()) {
-              remoteExecutionsListeners.add(remoteExecutionListener.get());
-            }
+            remoteExecutionListener.ifPresent(remoteExecutionsListeners::add);
 
 
             commandEventListeners =
@@ -1221,7 +1217,7 @@ public final class MainRunner {
                   counterRegistry,
                   commandEventListeners,
                   remoteExecutionListener.isPresent()
-                      ? Optional.of((RemoteExecutionStatsProvider) remoteExecutionListener.get())
+                      ? Optional.of(remoteExecutionListener.get())
                       : Optional.empty(),
                   managerScope);
           consoleListener.register(buildEventBus);
@@ -1878,7 +1874,7 @@ public final class MainRunner {
     }
   }
 
-  private static final Watchman buildWatchman(
+  private static Watchman buildWatchman(
       Optional<NGContext> context,
       ParserConfig parserConfig,
       ImmutableSet<Path> projectWatchList,
@@ -2035,17 +2031,15 @@ public final class MainRunner {
     // Keep track of command that is in progress
     activeCommandArgs.set(currentArgs);
 
-    CloseableWrapper<Semaphore> semaphore =
-        CloseableWrapper.of(
-            commandSemaphore,
-            commandSemaphore -> {
-              activeCommandArgs.set(null);
-              commandSemaphoreNgClient = Optional.empty();
-              // TODO(buck_team): have background process killer have its own lifetime management
-              BgProcessKiller.disarm();
-              commandSemaphore.release();
-            });
-    return semaphore;
+    return CloseableWrapper.of(
+        commandSemaphore,
+        commandSemaphore -> {
+          activeCommandArgs.set(null);
+          commandSemaphoreNgClient = Optional.empty();
+          // TODO(buck_team): have background process killer have its own lifetime management
+          BgProcessKiller.disarm();
+          commandSemaphore.release();
+        });
   }
 
 
@@ -2233,21 +2227,19 @@ public final class MainRunner {
       Optional<String> reSessionIDInfo) {
     RenderingConsole renderingConsole = new RenderingConsole(clock, console);
     if (config.isEnabled(console.getAnsi(), console.getVerbosity())) {
-      SuperConsoleEventBusListener superConsole =
-          new SuperConsoleEventBusListener(
-              config,
-              renderingConsole,
-              clock,
-              testResultSummaryVerbosity,
-              executionEnvironment,
-              locale,
-              testLogPath,
-              buildId,
-              printBuildId,
-              buildDetailsTemplate,
-              buildDetailsCommands,
-              additionalConsoleLineProviders);
-      return superConsole;
+      return new SuperConsoleEventBusListener(
+          config,
+          renderingConsole,
+          clock,
+          testResultSummaryVerbosity,
+          executionEnvironment,
+          locale,
+          testLogPath,
+          buildId,
+          printBuildId,
+          buildDetailsTemplate,
+          buildDetailsCommands,
+          additionalConsoleLineProviders);
     }
     if (renderingConsole.getVerbosity().isSilent()) {
       return new SilentConsoleEventBusListener(
@@ -2341,10 +2333,8 @@ public final class MainRunner {
             LOG.error(e, "Uncaught exception from thread %s", t);
           }
 
-          if (context.isPresent()) {
-            // Shut down the Nailgun server and make sure it stops trapping System.exit().
-            context.get().getNGServer().shutdown();
-          }
+          // Shut down the Nailgun server and make sure it stops trapping System.exit().
+          context.ifPresent(ngContext -> ngContext.getNGServer().shutdown());
 
           NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(exitCode.getCode());
         });
