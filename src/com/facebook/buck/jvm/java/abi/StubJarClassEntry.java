@@ -40,6 +40,7 @@ class StubJarClassEntry extends StubJarEntry {
   private final List<String> methodBodiesToRetain;
   private final Path path;
   private final ClassNode stub;
+  private final boolean retainEverything;
 
   @Nullable
   public static StubJarClassEntry of(
@@ -61,6 +62,13 @@ class StubJarClassEntry extends StubJarEntry {
       AnnotationNode kotlinMetadataAnnotation = findKotlinMetadataAnnotation(input, path);
       if (kotlinMetadataAnnotation != null) {
         isKotlinClass = true;
+        if (path.toString().contains("$sam$i")) {
+          // These classes are created when we have a Single Abstract Method (SAM) interface that is
+          // used within an inline function, and in these cases we need to retain the whole class.
+          input.visitClass(path, stub, false);
+          return new StubJarClassEntry(
+              path, stub, Collections.emptySet(), Collections.emptyList(), true);
+        }
         ClassNode dummyStub = new ClassNode(Opcodes.ASM7);
         input.visitClass(path, dummyStub, true);
         retainAllMethodBodies =
@@ -99,7 +107,7 @@ class StubJarClassEntry extends StubJarEntry {
         || retainAllMethodBodies
         || stub.name.endsWith("/package-info")) {
       return new StubJarClassEntry(
-          path, stub, referenceTracker.getReferencedClassNames(), methodBodiesToRetain);
+          path, stub, referenceTracker.getReferencedClassNames(), methodBodiesToRetain, false);
     }
 
     return null;
@@ -109,11 +117,13 @@ class StubJarClassEntry extends StubJarEntry {
       Path path,
       ClassNode stub,
       Set<String> referencedClassNames,
-      List<String> methodBodiesToRetain) {
+      List<String> methodBodiesToRetain,
+      boolean retainEverything) {
     this.path = path;
     this.stub = stub;
     this.referencedClassNames = referencedClassNames;
     this.methodBodiesToRetain = methodBodiesToRetain;
+    this.retainEverything = retainEverything;
   }
 
   @Override
@@ -129,8 +139,11 @@ class StubJarClassEntry extends StubJarEntry {
   private InputStream openInputStream() {
     ClassWriter writer = new ClassWriter(0);
     ClassVisitor visitor = writer;
-    visitor = new InnerClassSortingClassVisitor(stub.name, visitor);
-    visitor = new AbiFilteringClassVisitor(visitor, methodBodiesToRetain, referencedClassNames);
+    if (!retainEverything) {
+      visitor = new InnerClassSortingClassVisitor(stub.name, visitor);
+      visitor = new AbiFilteringClassVisitor(visitor, methodBodiesToRetain, referencedClassNames);
+    }
+
     stub.accept(visitor);
 
     return new ByteArrayInputStream(writer.toByteArray());
@@ -164,12 +177,6 @@ class StubJarClassEntry extends StubJarEntry {
     if (path.toString().contains("$$inlined$")) {
       // These classes are created when a function calls an inline function with a crossinline
       // parameter.
-      return true;
-    }
-
-    if (path.toString().contains("$sam$i")) {
-      // These classes are created when we have a Single Abstract Method (SAM) interface that is
-      // used within an inline function.
       return true;
     }
 
