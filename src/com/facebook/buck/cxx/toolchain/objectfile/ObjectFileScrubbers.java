@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.io.file.FileContentsScrubber;
+import com.facebook.buck.util.ObjectFileCommonModificationDate;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

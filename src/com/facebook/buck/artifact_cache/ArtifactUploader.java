@@ -29,8 +29,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.CloseableHolder;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.NamedTemporaryFile;
+import com.facebook.buck.util.ObjectFileCommonModificationDate;
 import com.facebook.buck.util.types.Unit;
-import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
@@ -205,7 +205,7 @@ public class ArtifactUploader {
         int mode = (int) projectFilesystem.getPosixFileMode(path);
         // If permissions don't allow for owner to r or w, update to u+=rw and g+=r
         e.setMode((mode & 384) == 0 ? (mode | 416) : mode);
-        e.setModTime(ZipConstants.getFakeTime());
+        e.setModTime((long) ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP * 1000);
 
         if (isRegularFile) {
           long pathSize = projectFilesystem.getFileSize(path);
