@@ -45,6 +45,7 @@ public class PythonDescriptionsProvider implements DescriptionProvider {
         new PythonLibraryDescription(toolchainProvider),
         new PythonTestDescription(
             toolchainProvider, pythonBinaryDescription, pyConfig, cxxBuckConfig),
+        new PythonTestRunnerDescription(),
         new CxxPythonExtensionDescription(toolchainProvider, cxxBuckConfig));
   }
 }

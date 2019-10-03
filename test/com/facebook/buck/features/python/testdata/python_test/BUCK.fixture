@@ -88,3 +88,25 @@ python_test(
         "TESTING_BINARIES": "$(location :sh_binary1) -- $(location :sh_binary2)",
     },
 )
+
+python_test_runner(
+    name = "runner",
+    src = "binary_main.py",
+)
+
+python_test(
+    name = "testx",
+    srcs = [
+        "test_success.py",
+    ],
+    runner = ":runner",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+            },
+        ],
+        "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && python $out",
+    },
+)

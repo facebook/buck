@@ -39,6 +39,8 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.test.rule.HasTestRunner;
+import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -223,7 +225,7 @@ public class PythonTestDescription
   }
 
   @Override
-  public PythonTest createBuildRule(
+  public BuildRule createBuildRule(
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
@@ -368,6 +370,17 @@ public class PythonTestDescription
             PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, args.getPreloadDeps()));
     graphBuilder.addToIndex(binary);
 
+    if (args.getSpecs().isPresent()) {
+      return PythonTestX.from(
+          buildTarget,
+          projectFilesystem,
+          params,
+          binary,
+          args.getLabels(),
+          args.getContacts(),
+          TestRunnerSpecCoercer.coerce(args.getSpecs().get(), macrosConverter));
+    }
+
     ImmutableList.Builder<Pair<Float, ImmutableSet<Path>>> neededCoverageBuilder =
         ImmutableList.builder();
     for (NeededCoverageSpec coverageSpec : args.getNeededCoverage()) {
@@ -476,7 +489,11 @@ public class PythonTestDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPythonTestDescriptionArg
-      extends HasContacts, HasTestTimeout, PythonLibraryDescription.CoreArg, HasVersionUniverse {
+      extends HasContacts,
+          HasTestRunner,
+          HasTestTimeout,
+          PythonLibraryDescription.CoreArg,
+          HasVersionUniverse {
     Optional<String> getMainModule();
 
     Optional<String> getPlatform();
@@ -497,7 +514,7 @@ public class PythonTestDescription
 
     ImmutableMap<String, StringWithMacros> getEnv();
 
-    // Addidtional CxxLibrary Targets for coverage check
+    // Additional CxxLibrary Targets for coverage check
     // When we use python to drive cxx modules (loaded as foo.so), we would like
     // to collect code coverage of foo.so as well. In this case, we to path
     // targets that builds foo.so so that buck can resolve its binary path and
