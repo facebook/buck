@@ -98,8 +98,7 @@ public class OcamlUtil {
     ImmutableList<String> immutableFlags;
 
     try {
-      String content = Joiner.on(' ').join(flagList);
-      LOG.verbose("The flags file content is %s", content);
+      LOG.verbose("The flags file content is %s", flagList);
       LOG.info("The temporary flags file is %s", argFile.toString());
 
       Path parent = argFile.getParent();
@@ -112,7 +111,7 @@ public class OcamlUtil {
 
       argFile = filesystem.createTempFile(parent, fileName.toString(), ".flags");
 
-      filesystem.writeContentsToPath(content, argFile);
+      filesystem.writeLinesToPath(flagList, argFile);
       LOG.info("Wrote the flags to path %s", argFile.toString());
 
       immutableFlags = ImmutableList.of("-" + flag, "@" + argFile.toString());
