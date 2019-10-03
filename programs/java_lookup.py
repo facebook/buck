@@ -21,6 +21,7 @@ import textwrap
 from buck_tool import BuckToolException
 from subprocutils import which
 
+
 JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRING = r"jdk(1\.(\d+)(\.\d+(_\d+)?)?)(\.jdk)?"
 JDK_9_AND_OVER_PATH_VERSION_REGEX_STRING = r"jdk-((\d+)(\.\d+(\.\d+(_\d+)?)?)?)(\.jdk)?"
 
@@ -36,22 +37,22 @@ JDK_PATH_REGEXES = [
     re.compile(
         r"^/Library/Java/JavaVirtualMachines/"
         + JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRING
-        + "/Contents/Home$"
+        + "/Contents/Home/*$"
     ),
     re.compile(
         r"^/Library/Java/JavaVirtualMachines/"
         + JDK_9_AND_OVER_PATH_VERSION_REGEX_STRING
-        + "/Contents/Home$"
+        + "/Contents/Home/*$"
     ),
     re.compile(
         "^C:\\\\Program Files\\\\Java\\\\"
         + JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRING
-        + "$"
+        + "(\\\\)*$"
     ),
     re.compile(
         "^C:\\\\Program Files\\\\Java\\\\"
         + JDK_9_AND_OVER_PATH_VERSION_REGEX_STRING
-        + "$"
+        + "(\\\\)*$"
     ),
 ]
 
