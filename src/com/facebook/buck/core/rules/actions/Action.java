@@ -72,16 +72,6 @@ public interface Action extends BuildEngineAction {
   boolean isCacheable();
 
   /**
-   * @return true if this rule, and all rules which that depend on it, should be built locally i.e.
-   *     on the machine that initiated a build instead of one of the remote workers taking part in
-   *     the distributed build.
-   */
-  @Override
-  default boolean shouldBuildLocally() {
-    return false;
-  }
-
-  /**
    * @return true if this rule should only be allowed to be executed via Remote Execution if it
    *     satisfies input size limits.
    */
