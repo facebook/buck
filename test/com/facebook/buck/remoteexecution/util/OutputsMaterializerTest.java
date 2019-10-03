@@ -412,6 +412,8 @@ public class OutputsMaterializerTest {
           buf -> {
             try {
               channel.write(buf);
+              /* Close just as in batchFetchBlobs try() to fix isClosed test in testMaterializeFiles */
+              channel.close();
               return null;
             } catch (IOException e) {
               throw new RuntimeException(e);
