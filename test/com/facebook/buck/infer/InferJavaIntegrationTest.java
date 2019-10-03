@@ -50,6 +50,15 @@ public class InferJavaIntegrationTest {
   }
 
   @Test
+  public void inferJavaEmptySourcesBuild() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:empty#nullsafe").assertSuccess();
+  }
+
+  @Test
   @Ignore(
       "TODO: `buck test` fails with unknown android-platform-target toolchain (but works in Idea)")
   public void inferAndroidLibraryBuild() throws IOException {

@@ -22,3 +22,10 @@ android_library(
     srcs = ["A.java"],
     deps = [":l2"],
 )
+
+java_library(
+    name = "empty",
+    srcs = [],
+    resources = ["resources/resource.txt"],
+    deps = [":j"],
+)

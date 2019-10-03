@@ -305,7 +305,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     }
 
     public boolean producesOutput() {
-      return generatedClasses != null;
+      return generatedClasses != null && !sources.isEmpty();
     }
 
     private static void addNotEmpty(
