@@ -58,7 +58,7 @@ class DefaultFsToBuildPackageChangeTranslator(
         val depToPackageIndex: Map<FsAgnosticPath, Set<FsAgnosticPath>> = mapOf()
 
         val affectedPackagePaths =
-            getPotentiallyAffectedBuildPackages(fsChanges, buildFileName, depToPackageIndex,
+            getPotentiallyAffectedBuildPackages(fsChanges, buildFileName, depToPackageIndex, { it },
                 existenceChecker)
 
         val parser = BuckShellBuildPackageParser(projectRoot)

@@ -27,6 +27,7 @@ class PotentiallyAffectedBuildPackagesTest {
         val changes = getPotentiallyAffectedBuildPackages(
             fsChanges = FsChanges(commit = commit, added = listOf(), modified = listOf(),
                 removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { it },
             depToPackageIndex = mapOf()) { false }
         assertEquals(commit, changes.commit)
         assertEquals(0, changes.added.size)
@@ -38,6 +39,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("BUCK"), null)), modified = listOf(),
             removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { it },
             depToPackageIndex = mapOf()) { false }.let { changes ->
             assertEquals(1, changes.added.size)
             assertEquals(FsAgnosticPath.of(""), changes.added[0])
@@ -48,6 +50,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("a/b/BUCK"), null)),
             modified = listOf(), removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { it },
             depToPackageIndex = mapOf()) { false }.let { changes ->
             assertEquals(1, changes.added.size)
             assertEquals(FsAgnosticPath.of("a/b"), changes.added[0])
@@ -60,6 +63,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("a/b/BUCK"), null)),
             modified = listOf(), removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { it },
             depToPackageIndex = mapOf()) { it == FsAgnosticPath.of("a") }.let { changes ->
             assertEquals(1, changes.added.size)
             assertEquals(FsAgnosticPath.of("a/b"), changes.added[0])
@@ -71,6 +75,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("a/BUCK"), null)), modified = listOf(),
             removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { it },
             depToPackageIndex = mapOf()) { it == FsAgnosticPath.of("") }.let { changes ->
             assertEquals(1, changes.added.size)
             assertEquals(FsAgnosticPath.of("a"), changes.added[0])
@@ -85,6 +90,7 @@ class PotentiallyAffectedBuildPackagesTest {
             fsChanges = FsChanges(commit = "123", added = listOf(), modified = listOf(),
                 removed = listOf(FsChange.Removed(FsAgnosticPath.of("BUCK")))),
             buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { it },
             depToPackageIndex = mapOf()) { it == FsAgnosticPath.of("") }.let { changes ->
             assertEquals(0, changes.added.size)
             assertEquals(0, changes.modified.size)
@@ -95,7 +101,8 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(
             fsChanges = FsChanges(commit = "123", added = listOf(), modified = listOf(),
                 removed = listOf(FsChange.Removed(FsAgnosticPath.of("a/b/c/d/BUCK")))),
-            buildFileName = FsAgnosticPath.of("BUCK"), depToPackageIndex = mapOf()) {
+            buildFileName = FsAgnosticPath.of("BUCK"), cellPathNormalizer = { it },
+            depToPackageIndex = mapOf()) {
             setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a/b/c/d")).contains(it)
         }.let { changes ->
             assertEquals(0, changes.added.size)
@@ -110,6 +117,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("a/file.cpp"), null)),
             modified = listOf(), removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { it },
             depToPackageIndex = mapOf()) {
             setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
                 it)
@@ -123,6 +131,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("d/c/b/a/file.cpp"), null)),
             modified = listOf(), removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { it },
             depToPackageIndex = mapOf()) {
             setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
                 it)
@@ -138,7 +147,8 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(
             fsChanges = FsChanges(commit = "123", added = listOf(), modified = listOf(),
                 removed = listOf(FsChange.Removed(FsAgnosticPath.of("a/file.cpp")))),
-            buildFileName = FsAgnosticPath.of("BUCK"), depToPackageIndex = mapOf()) {
+            buildFileName = FsAgnosticPath.of("BUCK"), cellPathNormalizer = { it },
+            depToPackageIndex = mapOf()) {
             setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
                 it)
         }.let { changes ->
@@ -151,7 +161,8 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(
             fsChanges = FsChanges(commit = "123", added = listOf(), modified = listOf(),
                 removed = listOf(FsChange.Removed(FsAgnosticPath.of("d/c/b/a/file.cpp")))),
-            buildFileName = FsAgnosticPath.of("BUCK"), depToPackageIndex = mapOf()) {
+            buildFileName = FsAgnosticPath.of("BUCK"), cellPathNormalizer = { it },
+            depToPackageIndex = mapOf()) {
             setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
                 it)
         }.let { changes ->
@@ -166,6 +177,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123", added = listOf(),
             modified = listOf(FsChange.Modified(FsAgnosticPath.of("a/file.cpp"), null)),
             removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { it },
             depToPackageIndex = mapOf()) {
             setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
                 it)
@@ -180,6 +192,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123", added = listOf(),
             modified = listOf(FsChange.Modified(FsAgnosticPath.of("defs.bzl"), null)),
             removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { it },
             depToPackageIndex = mapOf(FsAgnosticPath.of("defs.bzl") to setOf(FsAgnosticPath.of(""),
                 FsAgnosticPath.of("a")))) {
             setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
@@ -197,7 +210,8 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(
             fsChanges = FsChanges(commit = "123", added = listOf(), modified = listOf(),
                 removed = listOf(FsChange.Removed(FsAgnosticPath.of("defs.bzl")))),
-            buildFileName = FsAgnosticPath.of("BUCK"), depToPackageIndex = mapOf(
+            buildFileName = FsAgnosticPath.of("BUCK"), cellPathNormalizer = { it },
+            depToPackageIndex = mapOf(
                 FsAgnosticPath.of("defs.bzl") to setOf(FsAgnosticPath.of(""),
                     FsAgnosticPath.of("a")))) {
             setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
@@ -215,6 +229,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("d/defs.bzl"), null)),
             modified = listOf(), removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { it },
             depToPackageIndex = mapOf(FsAgnosticPath.of("defs.bzl") to setOf(FsAgnosticPath.of("a"),
                 FsAgnosticPath.of("b")))) {
             setOf(FsAgnosticPath.of("a"), FsAgnosticPath.of("b"), FsAgnosticPath.of("c")).contains(
@@ -223,6 +238,47 @@ class PotentiallyAffectedBuildPackagesTest {
             assertEquals(0, changes.added.size)
             assertEquals(0, changes.modified.size)
             assertEquals(0, changes.removed.size)
+        }
+    }
+
+    @Test fun whenFilesFromAnotherCellsArePresentTheyAreIgnored() {
+        getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
+            added = listOf(FsChange.Added(FsAgnosticPath.of("root.cpp"), null)),
+            modified = listOf(FsChange.Modified(FsAgnosticPath.of("cell2/BUCK"), null)),
+            removed = listOf(FsChange.Removed(FsAgnosticPath.of("cell1/somefile.cpp")))),
+            buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { normalizeCellPath("cell1", it) }, depToPackageIndex = mapOf()) {
+            setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
+                it)
+        }.let { changes ->
+            assertEquals(0, changes.added.size)
+            assertEquals(1, changes.modified.size)
+            assertEquals(0, changes.removed.size)
+        }
+    }
+
+    @Test fun whenParseDependencyFromAnotherCellThenItIsHonored() {
+        getPotentiallyAffectedBuildPackages(
+            fsChanges = FsChanges(commit = "123", added = listOf(), modified = listOf(),
+                removed = listOf(FsChange.Removed(FsAgnosticPath.of("cell1/bar.bzl")))),
+            buildFileName = FsAgnosticPath.of("BUCK"),
+            cellPathNormalizer = { normalizeCellPath("cell2", it) }, depToPackageIndex = mapOf(
+                FsAgnosticPath.of("cell1/bar.bzl") to setOf(FsAgnosticPath.of("a"),
+                    FsAgnosticPath.of("b")))) {
+            setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
+                it)
+        }.let { changes ->
+            assertEquals(0, changes.added.size)
+            assertEquals(2, changes.modified.size)
+            assertEquals(0, changes.removed.size)
+        }
+    }
+
+    private fun normalizeCellPath(cellPrefix: String, path: FsAgnosticPath): FsAgnosticPath? {
+        return if (path.startsWith(FsAgnosticPath.of(cellPrefix))) {
+            FsAgnosticPath.of(path.toString().removePrefix("$cellPrefix/"))
+        } else {
+            null
         }
     }
 }
