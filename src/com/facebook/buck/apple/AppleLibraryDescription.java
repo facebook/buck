@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
 
+import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
@@ -711,7 +712,7 @@ public class AppleLibraryDescription
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        HeaderMode.forModuleMapMode(appleConfig.moduleMapMode()),
+        getModularHeaderMode(args),
         headers.build(),
         HeaderVisibility.PUBLIC);
   }
@@ -733,11 +734,7 @@ public class AppleLibraryDescription
 
     Path root = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-        buildTarget,
-        projectFilesystem,
-        root,
-        headers,
-        HeaderMode.forModuleMapMode(appleConfig.moduleMapMode()));
+        buildTarget, projectFilesystem, root, headers, getModularHeaderMode(args));
   }
 
   <U> Optional<U> createMetadataForLibrary(
@@ -914,7 +911,7 @@ public class AppleLibraryDescription
                     .withAppendedFlavors(
                         CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
                         platformEntry.getKey(),
-                        HeaderMode.forModuleMapMode(appleConfig.moduleMapMode()).getFlavor()));
+                        getModularHeaderMode(args).getFlavor()));
     cxxPreprocessorInputBuilder.addIncludes(
         CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
     CxxPreprocessorInput cxxPreprocessorInput = cxxPreprocessorInputBuilder.build();
@@ -1095,5 +1092,13 @@ public class AppleLibraryDescription
   private CxxPlatformsProvider getCxxPlatformsProvider() {
     return toolchainProvider.getByName(
         CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+  }
+
+  private ModuleMapMode getModuleMapMode(AppleNativeTargetDescriptionArg args) {
+    return args.getModulemapMode().orElse(appleConfig.moduleMapMode());
+  }
+
+  private HeaderMode getModularHeaderMode(AppleNativeTargetDescriptionArg args) {
+    return HeaderMode.forModuleMapMode(getModuleMapMode(args));
   }
 }

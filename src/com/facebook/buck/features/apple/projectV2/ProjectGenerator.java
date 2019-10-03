@@ -2094,12 +2094,14 @@ public class ProjectGenerator {
 
     Optional<String> moduleName =
         isModularAppleLibrary ? Optional.of(getModuleName(targetNode)) : Optional.empty();
+    ModuleMapMode moduleMapMode = getModuleMapMode(targetNode);
     // -- phases
     createHeaderSymlinkTree(
         publicCxxHeaders,
         requiredBuildTargetsBuilder,
         getSwiftPublicHeaderMapEntriesForTarget(targetNode),
         moduleName,
+        moduleMapMode,
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
             || isModularAppleLibrary,
@@ -2117,6 +2119,7 @@ public class ProjectGenerator {
         requiredBuildTargetsBuilder,
         ImmutableMap.of(), // private interfaces never have a modulemap
         Optional.empty(),
+        moduleMapMode,
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
         arg.getXcodePrivateHeadersSymlinks()
             .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled()),
@@ -2755,6 +2758,16 @@ public class ProjectGenerator {
     }
   }
 
+  private ModuleMapMode getModuleMapMode(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
+    Optional<ModuleMapMode> moduleMapMode =
+        (targetNode instanceof AppleNativeTargetDescriptionArg)
+            ? ((AppleNativeTargetDescriptionArg) targetNode).getModulemapMode()
+            : Optional.empty();
+
+    return moduleMapMode.orElse(appleConfig.moduleMapMode());
+  }
+
   private ImmutableSortedMap<Path, SourcePath> convertMapKeysToPaths(
       ImmutableSortedMap<String, SourcePath> input) {
     ImmutableSortedMap.Builder<Path, SourcePath> output = ImmutableSortedMap.naturalOrder();
@@ -2882,6 +2895,7 @@ public class ProjectGenerator {
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableMap<Path, Path> nonSourcePaths,
       Optional<String> moduleName,
+      ModuleMapMode moduleMapMode,
       Path headerSymlinkTreeRoot,
       boolean shouldCreateHeadersSymlinks,
       boolean shouldCreateHeaderMap,
@@ -2966,7 +2980,6 @@ public class ProjectGenerator {
               moduleName.get(), resolvedContents.keySet(), headerSymlinkTreeRoot);
         }
         boolean containsSwift = !nonSourcePaths.isEmpty();
-        ModuleMapMode moduleMapMode = appleConfig.moduleMapMode();
         if (containsSwift) {
           projectFilesystem.writeContentsToPath(
               ModuleMapFactory.createModuleMap(
