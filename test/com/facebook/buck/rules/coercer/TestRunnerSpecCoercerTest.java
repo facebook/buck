@@ -135,6 +135,26 @@ public class TestRunnerSpecCoercerTest {
   }
 
   @Test
+  public void coerceBooleans() throws CoerceFailedException {
+    TestRunnerSpec spec =
+        coercer.coerce(
+            cellPathResolver,
+            filesystem,
+            basePath,
+            EmptyTargetConfiguration.INSTANCE,
+            ImmutableMap.of("bb", true, "bby", false));
+
+    assertEquals(
+        ImmutableTestRunnerSpec.of(
+            ImmutableMap.of(
+                StringWithMacrosUtils.format("bb"),
+                ImmutableTestRunnerSpec.of(true),
+                StringWithMacrosUtils.format("bby"),
+                ImmutableTestRunnerSpec.of(false))),
+        spec);
+  }
+
+  @Test
   public void coerceFailsWhenMapKeysNotStringWithMacros() throws CoerceFailedException {
     expectedException.expect(CoerceFailedException.class);
 

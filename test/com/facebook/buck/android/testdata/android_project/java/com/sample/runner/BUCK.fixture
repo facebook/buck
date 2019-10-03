@@ -12,6 +12,14 @@ robolectric_test(
     runner = ":test_runner",
     specs = {
         "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
+            },
+        ],
         "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
     },
     deps = [
@@ -38,6 +46,14 @@ robolectric_test(
     runner = ":test_runner_with_runtime_dep",
     specs = {
         "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": False,
+            },
+        ],
         "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
     },
     deps = [
@@ -57,6 +73,14 @@ robolectric_test(
     runner = ":test_runner_with_runtime_dep",
     specs = {
         "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
+            },
+        ],
         "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
     },
     deps = [

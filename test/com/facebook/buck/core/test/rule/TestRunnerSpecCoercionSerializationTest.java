@@ -81,7 +81,9 @@ public class TestRunnerSpecCoercionSerializationTest {
                 StringWithMacrosUtils.format("int"),
                 ImmutableTestRunnerSpec.of(1),
                 StringWithMacrosUtils.format("double"),
-                ImmutableTestRunnerSpec.of(2.4)));
+                ImmutableTestRunnerSpec.of(2.4),
+                StringWithMacrosUtils.format("boolean"),
+                ImmutableTestRunnerSpec.of(true)));
 
     CoercedTestRunnerSpec coercedSpec =
         TestRunnerSpecCoercer.coerce(spec, getConverter(graphBuilder, rule));
@@ -104,7 +106,9 @@ public class TestRunnerSpecCoercionSerializationTest {
             "int",
             1,
             "double",
-            2.4);
+            2.4,
+            "boolean",
+            true);
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     JsonGenerator generator = ObjectMappers.createGenerator(outputStream).useDefaultPrettyPrinter();

@@ -36,13 +36,14 @@ public abstract class CoercedTestRunnerSpec {
 
   @Value.Check
   protected void check() {
-    // the json should be a map, iterable, a single Arg, or a Number
+    // the json should be a map, iterable, a single Arg, a Number, or a Boolean
     Object object = getData();
     Preconditions.checkState(
         object instanceof Map
             || object instanceof Iterable
             || object instanceof Arg
-            || object instanceof Number);
+            || object instanceof Number
+            || object instanceof Boolean);
   }
 
   /**
@@ -56,26 +57,48 @@ public abstract class CoercedTestRunnerSpec {
   public void serialize(JsonGenerator jsonGenerator, SourcePathResolver sourcePathResolver)
       throws IOException {
     if (getData() instanceof Map) {
-
-      jsonGenerator.writeStartObject();
-      for (Map.Entry<Arg, CoercedTestRunnerSpec> entry :
-          ((Map<Arg, CoercedTestRunnerSpec>) getData()).entrySet()) {
-        jsonGenerator.writeFieldName(Arg.stringify(entry.getKey(), sourcePathResolver));
-        entry.getValue().serialize(jsonGenerator, sourcePathResolver);
-      }
-      jsonGenerator.writeEndObject();
+      writeMap(jsonGenerator, (Map<Arg, CoercedTestRunnerSpec>) getData(), sourcePathResolver);
     } else if (getData() instanceof Iterable) {
-      jsonGenerator.writeStartArray();
-      for (CoercedTestRunnerSpec item : (Iterable<CoercedTestRunnerSpec>) getData()) {
-        item.serialize(jsonGenerator, sourcePathResolver);
-      }
-      jsonGenerator.writeEndArray();
+      writeArray(jsonGenerator, (Iterable<CoercedTestRunnerSpec>) getData(), sourcePathResolver);
     } else if (getData() instanceof Arg) {
-      jsonGenerator.writeString(Arg.stringify((Arg) getData(), sourcePathResolver));
-    } else if (getData() instanceof Number) {
-      jsonGenerator.writeObject(getData());
+      writeArg(jsonGenerator, Arg.stringify((Arg) getData(), sourcePathResolver));
+    } else if (getData() instanceof Number || getData() instanceof Boolean) {
+      writeObject(jsonGenerator, getData());
     } else {
       throw new IllegalStateException("Unexpected data type");
     }
+  }
+
+  private void writeMap(
+      JsonGenerator jsonGenerator,
+      Map<Arg, CoercedTestRunnerSpec> data,
+      SourcePathResolver sourcePathResolver)
+      throws IOException {
+    jsonGenerator.writeStartObject();
+    for (Map.Entry<Arg, CoercedTestRunnerSpec> entry : data.entrySet()) {
+      jsonGenerator.writeFieldName(Arg.stringify(entry.getKey(), sourcePathResolver));
+      entry.getValue().serialize(jsonGenerator, sourcePathResolver);
+    }
+    jsonGenerator.writeEndObject();
+  }
+
+  private void writeArray(
+      JsonGenerator jsonGenerator,
+      Iterable<CoercedTestRunnerSpec> data,
+      SourcePathResolver sourcePathResolver)
+      throws IOException {
+    jsonGenerator.writeStartArray();
+    for (CoercedTestRunnerSpec item : data) {
+      item.serialize(jsonGenerator, sourcePathResolver);
+    }
+    jsonGenerator.writeEndArray();
+  }
+
+  private void writeArg(JsonGenerator jsonGenerator, String data) throws IOException {
+    jsonGenerator.writeString(data);
+  }
+
+  private void writeObject(JsonGenerator jsonGenerator, Object data) throws IOException {
+    jsonGenerator.writeObject(data);
   }
 }

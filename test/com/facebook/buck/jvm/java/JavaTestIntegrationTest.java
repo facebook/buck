@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -409,6 +410,7 @@ public class JavaTestIntegrationTest {
     assertEquals("stuff", other.get(0).get("complicated").textValue());
     assertEquals(1, other.get(0).get("integer").intValue());
     assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
+    assertTrue(other.get(0).get("boolean").booleanValue());
 
     String cmd = spec.get("cmd").textValue();
     DefaultProcessExecutor processExecutor =
@@ -443,6 +445,7 @@ public class JavaTestIntegrationTest {
     assertEquals("stuff", other.get(0).get("complicated").textValue());
     assertEquals(1, other.get(0).get("integer").intValue());
     assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
+    assertFalse(other.get(0).get("boolean").booleanValue());
 
     String cmd = spec.get("cmd").textValue();
     DefaultProcessExecutor processExecutor =

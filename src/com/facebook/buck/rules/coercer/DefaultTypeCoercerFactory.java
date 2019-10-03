@@ -131,6 +131,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
             sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
     TypeCoercer<Integer> intTypeCoercer = new NumberTypeCoercer<>(Integer.class);
     TypeCoercer<Double> doubleTypeCoercer = new NumberTypeCoercer<>(Double.class);
+    TypeCoercer<Boolean> booleanTypeCoercer = new IdentityTypeCoercer<>(Boolean.class);
     TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
             intTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
@@ -260,7 +261,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
           // identity
           stringTypeCoercer,
-          new IdentityTypeCoercer<>(Boolean.class),
+          booleanTypeCoercer,
 
           // numeric
           intTypeCoercer,

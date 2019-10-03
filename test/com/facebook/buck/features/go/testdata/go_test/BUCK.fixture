@@ -39,6 +39,7 @@ go_test(
                 "complicated": "stuff",
                 "integer": 1,
                 "double": 1.2,
+                "boolean": True,
             },
         ],
         "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && $out",
