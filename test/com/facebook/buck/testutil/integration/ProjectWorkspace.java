@@ -317,7 +317,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     for (String line : lines) {
       List<String> fields = lineSplitter.splitToList(line);
-      assertThat(fields, Matchers.hasSize(2));
+      assertThat(
+          String.format("Target %s has no outputs.", fields.isEmpty() ? "" : fields.get(0)),
+          fields,
+          Matchers.hasSize(2));
       builder.put(fields.get(0), fields.get(1));
     }
 

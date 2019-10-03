@@ -59,8 +59,7 @@ public class ExternalTestRunnerTest {
             this, "test_with_external_runner", temporaryFolder);
     workspace.setUp();
     expectedException.expect(AssertionError.class);
-    expectedException.expectMessage(
-        "Expected: a collection with size <2>\n     but: collection size was <1>");
+    expectedException.expectMessage("Target //:external_runner has no outputs.");
 
     workspace.buildAndReturnOutput("//:external_runner");
   }
