@@ -107,53 +107,47 @@ public class CommonThreadStateRenderer {
       Optional<? extends LeafEvent> runningStep,
       Optional<String> stepCategory,
       Optional<String> placeholderStepInformation,
-      long elapsedTimeMs,
-      StringBuilder lineBuilder) {
+      long elapsedTimeMs) {
     if (!startEvent.isPresent() || !buildTarget.isPresent()) {
       return ansi.asSubtleText(
           formatWithTruncatable(outputMaxColumns, LINE_PREFIX, IDLE_STRING, "", ""));
     }
     String buildTargetStr = buildTarget.get().toString();
     String elapsedTimeStr = formatElapsedTime(elapsedTimeMs);
-
-    String lineWithoutStep =
+    String line =
         formatWithTruncatable(
             outputMaxColumns, LINE_PREFIX, ELLIPSIS + elapsedTimeStr, buildTargetStr, "");
-
-    lineBuilder.append(lineWithoutStep);
-    if (lineWithoutStep.length()
-        < outputMaxColumns
-            - (STEP_INFO_PREFIX.length() + STEP_INFO_SUFFIX.length() + ELLIPSIS.length())) {
-      if (runningStep.isPresent() && stepCategory.isPresent()) {
-        String stepTimeString =
-            String.format(
-                "[%s]%s",
-                formatElapsedTime(currentTimeMs - runningStep.get().getTimestampMillis()),
-                STEP_INFO_SUFFIX);
-        lineBuilder.append(
-            formatWithTruncatable(
-                outputMaxColumns - lineWithoutStep.length(),
-                STEP_INFO_PREFIX,
-                stepTimeString,
-                stepCategory.get(),
-                ELLIPSIS));
-      } else if (placeholderStepInformation.isPresent()) {
-        lineBuilder.append(
-            formatWithTruncatable(
-                outputMaxColumns - lineWithoutStep.length(),
-                " (",
-                ")",
-                placeholderStepInformation.get(),
-                ELLIPSIS));
-      }
+    String step = maybeRenderStep(runningStep, stepCategory, placeholderStepInformation, line);
+    if (!step.isEmpty()) {
+      line += step;
     }
     if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
-      return ansi.asErrorText(lineBuilder.toString());
+      return ansi.asErrorText(line);
     }
     if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
-      return ansi.asWarningText(lineBuilder.toString());
+      return ansi.asWarningText(line);
     }
-    return lineBuilder.toString();
+    return line;
+  }
+
+  /** Returns a compressed version of {@code renderLine}. */
+  public String renderShortStatus(boolean isActive, boolean renderSubtle, long elapsedTimeMs) {
+    if (!isActive) {
+      return ansi.asSubtleText(THREAD_SHORT_IDLE_STATUS);
+    }
+    int offset = (int) ((currentTimeMs / 400) % THREAD_SHORT_STATUS_ANIMATION.length());
+    String status =
+        String.format(THREAD_SHORT_STATUS_FORMAT, THREAD_SHORT_STATUS_ANIMATION.charAt(offset));
+    if (renderSubtle) {
+      return ansi.asSubtleText(status);
+    }
+    if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
+      return ansi.asErrorText(status);
+    }
+    if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
+      return ansi.asWarningText(status);
+    }
+    return status;
   }
 
   private static String formatWithTruncatable(
@@ -174,26 +168,43 @@ public class CommonThreadStateRenderer {
     return String.format("%s%s%s", prefix, truncatable, suffix);
   }
 
-  public String renderShortStatus(boolean isActive, boolean renderSubtle, long elapsedTimeMs) {
-    if (!isActive) {
-      return ansi.asSubtleText(THREAD_SHORT_IDLE_STATUS);
-    }
-    int offset = (int) ((currentTimeMs / 400) % THREAD_SHORT_STATUS_ANIMATION.length());
-    String status =
-        String.format(THREAD_SHORT_STATUS_FORMAT, THREAD_SHORT_STATUS_ANIMATION.charAt(offset));
-    if (renderSubtle) {
-      return ansi.asSubtleText(status);
-    }
-    if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
-      return ansi.asErrorText(status);
-    }
-    if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
-      return ansi.asWarningText(status);
-    }
-    return status;
-  }
-
   private String formatElapsedTime(long elapsedTimeMs) {
     return formatTimeFunction.apply(elapsedTimeMs);
+  }
+
+  private String maybeRenderStep(
+      Optional<? extends LeafEvent> runningStep,
+      Optional<String> stepCategory,
+      Optional<String> placeholderStepInformation,
+      String lineWithoutStep) {
+    if (shouldRenderStep(lineWithoutStep)) {
+      if (runningStep.isPresent() && stepCategory.isPresent()) {
+        String stepTimeString =
+            String.format(
+                "[%s]%s",
+                formatElapsedTime(currentTimeMs - runningStep.get().getTimestampMillis()),
+                STEP_INFO_SUFFIX);
+        return formatWithTruncatable(
+            outputMaxColumns - lineWithoutStep.length(),
+            STEP_INFO_PREFIX,
+            stepTimeString,
+            stepCategory.get(),
+            ELLIPSIS);
+      } else if (placeholderStepInformation.isPresent()) {
+        return formatWithTruncatable(
+            outputMaxColumns - lineWithoutStep.length(),
+            " (",
+            ")",
+            placeholderStepInformation.get(),
+            ELLIPSIS);
+      }
+    }
+    return "";
+  }
+
+  private boolean shouldRenderStep(String lineWithoutStep) {
+    return lineWithoutStep.length()
+        < outputMaxColumns
+            - (STEP_INFO_PREFIX.length() + STEP_INFO_SUFFIX.length() + ELLIPSIS.length());
   }
 }

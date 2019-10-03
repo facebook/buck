@@ -126,8 +126,7 @@ public class CommonThreadStateRendererTest {
             Optional.of(fakeEvent),
             Optional.of("some step"),
             Optional.empty(),
-            5000,
-            new StringBuilder()));
+            5000));
 
     renderer =
         new CommonThreadStateRenderer(
@@ -141,8 +140,7 @@ public class CommonThreadStateRendererTest {
             Optional.of(fakeEvent),
             Optional.empty(),
             Optional.empty(),
-            5000,
-            new StringBuilder()));
+            5000));
 
     renderer =
         new CommonThreadStateRenderer(
@@ -156,8 +154,7 @@ public class CommonThreadStateRendererTest {
             Optional.of(fakeEvent),
             Optional.of("some step"),
             Optional.empty(),
-            5000,
-            new StringBuilder()));
+            5000));
 
     renderer =
         new CommonThreadStateRenderer(
@@ -171,8 +168,7 @@ public class CommonThreadStateRendererTest {
             Optional.of(fakeEvent),
             Optional.empty(),
             Optional.of("some placeholder"),
-            5000,
-            new StringBuilder()));
+            5000));
 
     renderer =
         new CommonThreadStateRenderer(
@@ -186,7 +182,6 @@ public class CommonThreadStateRendererTest {
             Optional.of(fakeEvent),
             Optional.empty(),
             Optional.of("some placeholder"),
-            5000,
-            new StringBuilder()));
+            5000));
   }
 }

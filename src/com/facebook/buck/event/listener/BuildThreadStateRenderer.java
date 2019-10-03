@@ -105,7 +105,7 @@ public class BuildThreadStateRenderer implements MultiStateRenderer {
   }
 
   @Override
-  public String renderStatusLine(long threadId, StringBuilder lineBuilder) {
+  public String renderStatusLine(long threadId) {
     ThreadRenderingInformation threadInformation =
         Objects.requireNonNull(threadInformationMap.get(threadId));
     return commonThreadStateRenderer.renderLine(
@@ -114,8 +114,7 @@ public class BuildThreadStateRenderer implements MultiStateRenderer {
         threadInformation.getRunningStep(),
         threadInformation.getRunningStep().map(LeafEvent::getCategory),
         Optional.of("preparing"),
-        threadInformation.getElapsedTimeMs(),
-        lineBuilder);
+        threadInformation.getElapsedTimeMs());
   }
 
   @Override

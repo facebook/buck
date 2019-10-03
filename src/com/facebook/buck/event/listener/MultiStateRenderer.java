@@ -25,7 +25,7 @@ public interface MultiStateRenderer {
 
   ImmutableList<Long> getSortedIds(boolean sortByTime);
 
-  String renderStatusLine(long executorID, StringBuilder lineBuilder);
+  String renderStatusLine(long executorID);
 
   String renderShortStatus(long executorID);
 }

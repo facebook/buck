@@ -88,7 +88,7 @@ public class RemoteExecutionStateRenderer implements MultiStateRenderer {
   }
 
   @Override
-  public String renderStatusLine(long targetId, StringBuilder lineBuilder) {
+  public String renderStatusLine(long targetId) {
     RemoteExecutionActionEvent.Started event = getEventByTargetId(targetId);
     return REMOTE_EXECUTION_PREFIX
         + commonThreadStateRenderer.renderLine(
@@ -97,8 +97,7 @@ public class RemoteExecutionStateRenderer implements MultiStateRenderer {
             /* runningStep= */ Optional.empty(),
             /* stepCategory= */ Optional.empty(),
             /* placeholderStepInformation= */ Optional.empty(),
-            getElapsedTimeMsForEvent(event),
-            lineBuilder);
+            getElapsedTimeMsForEvent(event));
   }
 
   @Override

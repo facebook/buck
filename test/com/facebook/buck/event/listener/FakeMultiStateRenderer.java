@@ -43,7 +43,7 @@ public class FakeMultiStateRenderer implements MultiStateRenderer {
   }
 
   @Override
-  public String renderStatusLine(long executorID, StringBuilder lineBuilder) {
+  public String renderStatusLine(long executorID) {
     return " - Status of thread " + executorID;
   }
 

@@ -616,8 +616,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     ImmutableList<Long> threadIds = renderer.getSortedIds(sortByTime);
     for (int i = 0; i < fullLines; ++i) {
       long threadId = threadIds.get(i);
-      LINE_BUILDER.setLength(0);
-      lines.add(renderer.renderStatusLine(threadId, LINE_BUILDER));
+      lines.add(renderer.renderStatusLine(threadId));
       numLinesRendered++;
     }
     if (useCompressedLine) {
@@ -662,8 +661,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       if (numLinesAlreadyRendered + numNewLinesRendered >= maxLines) {
         return numNewLinesRendered;
       }
-      LINE_BUILDER.setLength(0);
-      lines.add(renderer.renderStatusLine(id, LINE_BUILDER));
+      lines.add(renderer.renderStatusLine(id));
       numNewLinesRendered++;
     }
 

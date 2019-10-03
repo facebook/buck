@@ -254,7 +254,7 @@ public class TestThreadStateRendererTest {
     StringBuilder lineBuilder = new StringBuilder();
     for (long threadId : renderer.getSortedIds(sortByTime)) {
       lineBuilder.delete(0, lineBuilder.length());
-      lines.add(renderer.renderStatusLine(threadId, lineBuilder));
+      lines.add(renderer.renderStatusLine(threadId));
     }
     return lines.build();
   }

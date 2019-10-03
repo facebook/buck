@@ -108,7 +108,7 @@ public class TestThreadStateRenderer implements MultiStateRenderer {
   }
 
   @Override
-  public String renderStatusLine(long threadID, StringBuilder lineBuilder) {
+  public String renderStatusLine(long threadID) {
     ThreadRenderingInformation threadInformation =
         Objects.requireNonNull(threadInformationMap.get(threadID));
     Optional<String> stepCategory = Optional.empty();
@@ -138,8 +138,7 @@ public class TestThreadStateRenderer implements MultiStateRenderer {
         runningStep,
         stepCategory,
         Optional.empty(),
-        threadInformation.getElapsedTimeMs(),
-        lineBuilder);
+        threadInformation.getElapsedTimeMs());
   }
 
   @Override

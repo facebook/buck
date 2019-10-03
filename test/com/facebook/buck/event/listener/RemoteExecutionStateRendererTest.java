@@ -73,7 +73,7 @@ public class RemoteExecutionStateRendererTest {
       // e.g. [RE]  - //:target0... 0.9s
       assertEquals(
           "[RE]  - //:target" + i + "... 0." + (9 - i) + "s",
-          testRenderer.renderStatusLine(Long.valueOf(i), new StringBuilder()));
+          testRenderer.renderStatusLine(Long.valueOf(i)));
     }
   }
 
@@ -83,7 +83,7 @@ public class RemoteExecutionStateRendererTest {
     expectedException.expectMessage("Received invalid targetId.");
     testRenderer = createTestRenderer(createBuildTargets(4));
 
-    testRenderer.renderStatusLine(4L, new StringBuilder());
+    testRenderer.renderStatusLine(4L);
   }
 
   @Test
@@ -92,7 +92,7 @@ public class RemoteExecutionStateRendererTest {
     expectedException.expectMessage("Received invalid targetId.");
     testRenderer = createTestRenderer(createBuildTargets(4));
 
-    testRenderer.renderStatusLine(-1L, new StringBuilder());
+    testRenderer.renderStatusLine(-1L);
   }
 
   @Test
