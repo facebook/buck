@@ -113,7 +113,8 @@ fun serializePathsToStream(paths: List<FsAgnosticPath>, stream: OutputStream) {
 }
 
 private fun createParser(stream: InputStream): JsonParser {
-    return ObjectMappers.createParser(stream).enable(JsonParser.Feature.ALLOW_COMMENTS)
+    return ObjectMappers.createParser(stream)
+        .enable(JsonParser.Feature.ALLOW_COMMENTS)
         .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA)
 }
 
@@ -182,10 +183,15 @@ fun buckJsonToBuildPackageParser(nodes: JsonNode): BuildPackage {
             error.mapIterable("stacktrace") { it.asText() }?.toList() ?: listOf())
     }?.toList() ?: listOf()
 
+    val includes = nodes.mapIterable("includes") {
+        FsAgnosticPath.of(it.asText())
+    }?.toSortedSet() ?: sortedSetOf()
+
     return BuildPackage(
         buildFileDirectory = path,
         rules = rules,
-        errors = errors
+        errors = errors,
+        includes = includes
     )
 }
 

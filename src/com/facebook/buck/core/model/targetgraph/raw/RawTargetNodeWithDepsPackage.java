@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 
 /** Represents all {@link RawTargetNodeWithDeps} that result from parsing a single build file */
@@ -48,4 +49,8 @@ public abstract class RawTargetNodeWithDepsPackage implements ComputeResult {
    */
   @JsonProperty("errors")
   public abstract ImmutableList<ParsingError> getErrors();
+
+  /** Set of extension files read during parsing. */
+  @JsonProperty("includes")
+  public abstract ImmutableSet<Path> getIncludes();
 }

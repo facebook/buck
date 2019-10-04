@@ -45,6 +45,7 @@ import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileMan
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -59,6 +60,7 @@ public class BuildPackagePathToRawTargetNodePackageComputation
 
   private final RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory;
   private final Cell cell;
+  private final Path superRootPath;
   private final boolean throwOnValidationError;
 
   private BuildPackagePathToRawTargetNodePackageComputation(
@@ -67,6 +69,7 @@ public class BuildPackagePathToRawTargetNodePackageComputation
       boolean throwOnValidationError) {
     this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
     this.cell = cell;
+    this.superRootPath = cell.getSuperRootPath();
     this.throwOnValidationError = throwOnValidationError;
   }
 
@@ -100,9 +103,10 @@ public class BuildPackagePathToRawTargetNodePackageComputation
     ImmutableMap<BuildTargetToRawTargetNodeKey, RawTargetNode> rawTargetNodes =
         env.getDeps(BuildTargetToRawTargetNodeKey.IDENTIFIER);
 
+    Path packagePath = key.getPath();
     Path buildFileAbsolutePath =
         cell.getRoot()
-            .resolve(key.getPath())
+            .resolve(packagePath)
             .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName());
 
     ImmutableMap.Builder<String, RawTargetNodeWithDeps> builder =
@@ -129,25 +133,34 @@ public class BuildPackagePathToRawTargetNodePackageComputation
       // END TEMPORARY
     }
 
-    ImmutableList<ParsingError> translateErrors = errorsBuilder.build();
-
     BuildFileManifest buildFileManifest =
-        env.getDep(ImmutableBuildPackagePathToBuildFileManifestKey.of(key.getPath()));
+        env.getDep(ImmutableBuildPackagePathToBuildFileManifestKey.of(packagePath));
+    FileSystem fileSystem = superRootPath.getFileSystem();
+    ImmutableMap<String, RawTargetNodeWithDeps> rawTargetNodesWithDeps = builder.build();
+    ImmutableList<ParsingError> errors =
+        getParsingErrors(errorsBuilder.build(), buildFileManifest.getErrors());
+    /**
+     * Note: Parser returns absolute paths for includes. Processing includes in way to be
+     * relativized to the repo root (superroot) which might be different from cell root!
+     */
+    ImmutableSet<Path> includes =
+        buildFileManifest.getIncludes().stream()
+            .map(include -> superRootPath.relativize(fileSystem.getPath(include)))
+            .collect(ImmutableSet.toImmutableSet());
+    return new ImmutableRawTargetNodeWithDepsPackage(
+        packagePath, rawTargetNodesWithDeps, errors, includes);
+  }
 
-    ImmutableList<ParsingError> allErrors;
-    if (translateErrors.isEmpty()) {
-      allErrors = buildFileManifest.getErrors();
-    } else if (buildFileManifest.getErrors().isEmpty()) {
-      allErrors = translateErrors;
-    } else {
-      ImmutableList.Builder<ParsingError> allErrorsBuilder =
-          ImmutableList.builderWithExpectedSize(
-              translateErrors.size() + buildFileManifest.getErrors().size());
-      allErrors =
-          allErrorsBuilder.addAll(buildFileManifest.getErrors()).addAll(translateErrors).build();
+  private ImmutableList<ParsingError> getParsingErrors(
+      ImmutableList<ParsingError> translateErrors, ImmutableList<ParsingError> errors) {
+    if (translateErrors.isEmpty() || errors.isEmpty()) {
+      return translateErrors.isEmpty() ? errors : translateErrors;
     }
-
-    return new ImmutableRawTargetNodeWithDepsPackage(key.getPath(), builder.build(), allErrors);
+    return ImmutableList.<ParsingError>builderWithExpectedSize(
+            translateErrors.size() + errors.size())
+        .addAll(errors)
+        .addAll(translateErrors)
+        .build();
   }
 
   private ImmutableSet<UnconfiguredBuildTarget> getTargetDeps(

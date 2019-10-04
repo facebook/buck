@@ -28,7 +28,6 @@ data class PotentiallyAffectedBuildPackages(
     val modified: List<FsAgnosticPath> = emptyList(),
     val removed: List<FsAgnosticPath> = emptyList()
 ) {
-
     /**
      * True if no packages are affected by commit
      */
@@ -38,6 +37,11 @@ data class PotentiallyAffectedBuildPackages(
      * True if at least one package is affected by commit
      */
     fun isNotEmpty() = !isEmpty()
+
+    /**
+     * Size of potentially affected packages
+     */
+    fun size() = added.size + modified.size + removed.size
 }
 
 /**
@@ -48,10 +52,7 @@ data class PotentiallyAffectedBuildPackages(
  * @param fsChanges Changes in files relative to the root of the repo
  * @param buildFileName Name of the build file (like 'BUCK'), expressed as [FsAgnosticPath], for
  * current cell being parsed
- * @param depToPackageIndex An index from all files which are parse-time dependencies, including
- * transitive ones, to packages (expressed as [FsAgnosticPath]s) which load or otherwise use
- * those dependencies during parsing for that specific universe. Parse-time dependencies are usually
- * extension (.bzl) files. This should not include configuration files.
+ * @param includesProvider returns paths to build packages that transitively includes passed include path
  * TODO: change to a function
  * @param cellPathNormalizer Function that transforms a path relative to the root of repo, to the
  * path relative to the root of the cell. Returns null if path does not belong to the cell.
@@ -62,7 +63,7 @@ data class PotentiallyAffectedBuildPackages(
 fun getPotentiallyAffectedBuildPackages(
     fsChanges: FsChanges,
     buildFileName: FsAgnosticPath,
-    depToPackageIndex: Map<FsAgnosticPath, Set<FsAgnosticPath>>,
+    includesProvider: (includePath: Include) -> Set<FsAgnosticPath>,
     cellPathNormalizer: (path: FsAgnosticPath) -> FsAgnosticPath?,
     packageExists: (path: FsAgnosticPath) -> Boolean
 ): PotentiallyAffectedBuildPackages {
@@ -96,9 +97,7 @@ fun getPotentiallyAffectedBuildPackages(
     fsChanges.modified.forEach { modified ->
         // Modifying a parse-time dependency: detect and reparse affected packages only
         // Modified file may belong to a different cell!
-        depToPackageIndex.get(modified.path)?.let {
-            changedPackages.addAll(it)
-        }
+        changedPackages.addAll(includesProvider(modified.path))
 
         // Only if modified file belongs to the cell
         cellPathNormalizer(modified.path)?.let { path ->
@@ -116,9 +115,7 @@ fun getPotentiallyAffectedBuildPackages(
     fsChanges.removed.forEach { removed ->
         // Removing a parse-time dependency: detect and reparse affected packages only
         // Removed file may belong to a different cell!
-        depToPackageIndex.get(removed.path)?.let {
-            changedPackages.addAll(it)
-        }
+        changedPackages.addAll(includesProvider(removed.path))
 
         // Only if removed file belongs to the cell
         cellPathNormalizer(removed.path)?.let { path ->
@@ -150,7 +147,7 @@ fun getPotentiallyAffectedBuildPackages(
  * @param dir Path to a folder that might belong to some package; this folder
  * will be either directly a package root folder (folder that has build file) or some folder below
  * package root it in a directory tree
- * @param allKnownPackages All packages in the universe for the same base commit
+ * @param packageExists Predicate used to check if some package exists in the universe
  */
 private fun getContainingPackage(
     dir: FsAgnosticPath,

@@ -55,14 +55,12 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.EventBus;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 /** Factory for {@link BuckGlobalState}. */
 public class BuckGlobalStateFactory {
@@ -104,7 +102,7 @@ public class BuckGlobalStateFactory {
         createFileTreeCachePerCellMap(fileEventBus);
     LoadingCache<Path, BuildFileManifestCache> buildFileManifestCachePerRoot =
         createBuildFileManifestCachePerCellMap(
-            fileEventBus, rootCell.getCellProvider(), getSuperRootPath(rootCell));
+            fileEventBus, rootCell.getCellProvider(), rootCell.getSuperRootPath());
     ActionGraphCache actionGraphCache =
         new ActionGraphCache(buildBuckConfig.getMaxActionGraphCacheEntries());
     VersionedTargetGraphCache versionedTargetGraphCache = new VersionedTargetGraphCache();
@@ -170,34 +168,6 @@ public class BuckGlobalStateFactory {
         knownRuleTypesProvider,
         clock,
         watchman != WatchmanFactory.NULL_WATCHMAN);
-  }
-
-  /** @return Path of the topmost cell's path that roots all other cells */
-  private static Path getSuperRootPath(Cell cell) {
-    Path cellRoot = cell.getRoot();
-    ImmutableSortedSet<Path> allRoots = cell.getKnownRootsOfAllCells();
-    Path path = cellRoot.getRoot();
-
-    // check if supercell is a root folder, like '/' or 'C:\'
-    if (allRoots.contains(path)) {
-      return path;
-    }
-
-    // There is an assumption that there is exactly one cell with a path that prefixes all other
-    // cell paths. So just try to find the cell with the shortest common path.
-
-    for (Path next : cellRoot) {
-      path = path.resolve(next);
-      if (allRoots.contains(path)) {
-        return path;
-      }
-    }
-    throw new IllegalStateException(
-        "Unreachable: at least one path should be in getKnownRoots(), including root cell '"
-            + cellRoot.toString()
-            + "'; known roots = ["
-            + allRoots.stream().map(p -> p.toString()).collect(Collectors.joining(", "))
-            + "]");
   }
 
   /** Create a number of instances of {@link DirectoryListCache}, one per each cell */

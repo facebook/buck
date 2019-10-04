@@ -27,9 +27,10 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 internal data class Deltas(
     val buildPackageDeltas: List<BuildPackageDelta>,
     val ruleDeltas: List<RuleDelta>,
-    val rdepsDeltas: Map<BuildTargetId, RdepsSet?>
+    val rdepsDeltas: Map<BuildTargetId, RdepsSet?>,
+    val includesDeltas: IncludesMapChange
 ) {
-    fun isEmpty(): Boolean = buildPackageDeltas.isEmpty() && ruleDeltas.isEmpty() && rdepsDeltas.isEmpty()
+    fun isEmpty(): Boolean = buildPackageDeltas.isEmpty() && ruleDeltas.isEmpty() && rdepsDeltas.isEmpty() && includesDeltas.isEmpty()
 }
 
 /**
@@ -125,16 +126,18 @@ internal fun determineDeltas(
                 }
             }
 
-            buildPackageDeltas.add(
-                BuildPackageDelta.Updated(internalBuildPackage.buildFileDirectory, newRuleNames))
+            buildPackageDeltas.add(BuildPackageDelta.Updated(internalBuildPackage.buildFileDirectory, newRuleNames))
             ruleDeltas.addAll(ruleChanges)
         }
     }
 
+    val includesMapChange = processIncludes(generation, internalChanges, indexGenerationData)
+
     return Deltas(
         buildPackageDeltas = buildPackageDeltas,
         ruleDeltas = ruleDeltas,
-        rdepsDeltas = deriveRdepsDeltas(rdepsUpdates, generation, indexGenerationData)
+        rdepsDeltas = deriveRdepsDeltas(rdepsUpdates, generation, indexGenerationData),
+        includesDeltas = includesMapChange
     )
 }
 
@@ -290,7 +293,9 @@ private fun toInternalBuildPackage(
         buildFileDirectory = buildPackage.buildFileDirectory,
         rules = buildPackage.rules.asSequence().map {
             toInternalRawBuildRule(it, buildTargetCache)
-        }.toSet())
+        }.toSet(),
+        includes = buildPackage.includes
+    )
 
 private fun toInternalRawBuildRule(
     rawBuildRule: RawBuildRule,

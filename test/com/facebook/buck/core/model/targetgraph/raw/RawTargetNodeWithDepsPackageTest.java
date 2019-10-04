@@ -83,13 +83,11 @@ public class RawTargetNodeWithDepsPackageTest {
 
     ParsingError error = ImmutableParsingError.of("error1", ImmutableList.of("stacktrace1"));
 
-    RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackage =
-        new ImmutableRawTargetNodeWithDepsPackage(
-            Paths.get("base"),
-            ImmutableMap.of("target1", rawTargetNodeWithDeps1, "target2", rawTargetNodeWithDeps2),
-            ImmutableList.of(error));
-
-    return rawTargetNodeWithDepsPackage;
+    return new ImmutableRawTargetNodeWithDepsPackage(
+        Paths.get("base"),
+        ImmutableMap.of("target1", rawTargetNodeWithDeps1, "target2", rawTargetNodeWithDeps2),
+        ImmutableList.of(error),
+        ImmutableSet.of(Paths.get("test1.bzl"), Paths.get("test2.bzl")));
   }
 
   @Test

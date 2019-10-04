@@ -69,7 +69,7 @@ fun main(args: Array<String>) {
         }.toList().map { loader -> loader.await() }.toMap()
     }
 
-    msg("Loading all indexes completed in ${nanosToNowInSec(start)} sec.")
+    msg("Loading all indices completed in ${nanosToNowInSec(start)} sec.")
 
     msg("Collecting garbage...")
 
@@ -84,21 +84,16 @@ fun main(args: Array<String>) {
 
     mainloop@ while (true) {
         System.err.print("> ")
-        val line = readLine()
-
-        if (line == null) {
-            // this happens if stdin sends eof
-            break@mainloop
-        }
+        val line = readLine() ?: break@mainloop // this happens if stdin sends eof
 
         try {
-            val parts = (line ?: "").split(" ", limit = 2)
+            val parts = line.split(" ", limit = 2)
             val cmd = parts.getOrElse(0) { "" }
             val data = parts.getOrElse(1) { "" }.trim()
             when (cmd) {
                 "basecommit" -> basecommit = data
                 "corpus" -> {
-                    val index = requireNotNull(corpusToIndex.get(data)) {
+                    val index = requireNotNull(corpusToIndex[data]) {
                         "corpus '$data' is not found, available corpuses are '${corpusToIndex.keys.joinToString(
                             ", ")}'"
                     }

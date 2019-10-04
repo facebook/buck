@@ -78,18 +78,25 @@ private fun hashCodeBuildTargetSet(set: BuildTargetSet): Int {
 }
 
 /**
- * By construction, the name for each rule in rules should be distinct across all of the rules in
- * the set.
+ * Data class for a build package.
+ * Build package is everything that defined by a specific build file.
+ *
+ * @param buildFileDirectory path to the file directory that contain the build file
+ * @param rules collection of build rules. ( By construction, the name for each rule in rules should be distinct across all of the rules in the set)
+ * @param errors collection of errors happened during parsing the package
+ * @param includes collection of all includes for this build package (all transitive includes from a build file)
  */
 data class BuildPackage(
     val buildFileDirectory: FsAgnosticPath,
     val rules: Set<RawBuildRule>,
-    val errors: List<BuildPackageParsingError> = emptyList()
+    val errors: List<BuildPackageParsingError> = emptyList(),
+    val includes: Set<FsAgnosticPath> = setOf()
 )
 
 internal data class InternalBuildPackage(
     val buildFileDirectory: FsAgnosticPath,
-    val rules: Set<InternalRawBuildRule>
+    val rules: Set<InternalRawBuildRule>,
+    val includes: Set<FsAgnosticPath>
 )
 
 /**

@@ -86,11 +86,10 @@ class Index internal constructor(
                 buildTargetCache.get(buildTarget) to newNodeAndDeps
             }.toMap()
         val indexData =
-            indexGenerationData.createForwardingIndexGenerationData(
-                generation = generation,
-                localBuildPackageChanges = buildPackageMap,
-                localRuleMapChanges = ruleMap,
-                localRdepsRuleMapChanges = deltas.rdepsDeltas)
+            indexGenerationData.createForwardingIndexGenerationData(generation = generation,
+                localBuildPackageChanges = buildPackageMap, localRuleMapChanges = ruleMap,
+                localRdepsRuleMapChanges = deltas.rdepsDeltas,
+                localIncludesMapChange = deltas.includesDeltas)
         return Index(indexData, buildTargetCache)
     }
 
@@ -311,6 +310,18 @@ class Index internal constructor(
         return indexGenerationData.withBuildPackageMap { buildPackageMap ->
             buildPackageMap.getVersion(basePath, generation) != null
         }
+    }
+
+    /**
+     * Return set of [FsAgnosticPath] (relative to the cell path) that includes [includePath] file (relative to the repo) for the specified [generation]
+     *
+     * @param includePath is relative to the repo path to an include file
+     * @param generation [Generation] that defines a current state of [Index]
+     */
+    fun getReverseIncludes(generation: Generation, includePath: Include): Set<FsAgnosticPath> {
+        return indexGenerationData.withIncludesMap { (_, reverseMap) ->
+            reverseMap.getVersion(includePath, generation)
+        } ?: setOf()
     }
 
     /**

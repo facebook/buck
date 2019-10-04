@@ -28,7 +28,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Represents a single checkout of a code base. Two cells model the same code base if their
@@ -97,4 +99,31 @@ public interface Cell {
    * to resolve user-provided cell aliases to their canonical names.
    */
   CellNameResolver getCellNameResolver();
+
+  /** @return Path of the topmost cell's path that roots all other cells */
+  default Path getSuperRootPath() {
+    Path cellRoot = getRoot();
+    ImmutableSortedSet<Path> allRoots = getKnownRootsOfAllCells();
+    Path path = cellRoot.getRoot();
+
+    // check if supercell is a root folder, like '/' or 'C:\'
+    if (allRoots.contains(path)) {
+      return path;
+    }
+
+    // There is an assumption that there is exactly one cell with a path that prefixes all other
+    // cell paths. So just try to find the cell with the shortest common path.
+    for (Path next : cellRoot) {
+      path = path.resolve(next);
+      if (allRoots.contains(path)) {
+        return path;
+      }
+    }
+    throw new IllegalStateException(
+        "Unreachable: at least one path should be in getKnownRoots(), including root cell '"
+            + cellRoot.toString()
+            + "'; known roots = ["
+            + allRoots.stream().map(Objects::toString).collect(Collectors.joining(", "))
+            + "]");
+  }
 }

@@ -158,6 +158,18 @@ class DefaultIndexAppender internal constructor(
             }
         }
 
+        if (!deltas.includesDeltas.isEmpty()) {
+            indexGenerationData.withMutableIncludesMap { (forwardIncludes, reverseIncludes) ->
+                val (forwardDeltas, reverseDeltas) = deltas.includesDeltas
+                forwardDeltas.forEach {
+                    forwardIncludes.addVersion(it.key, it.value, nextGeneration)
+                }
+                reverseDeltas.forEach {
+                    reverseIncludes.addVersion(it.key, it.value, nextGeneration)
+                }
+            }
+        }
+
         addMapping(commit = commit, nextGeneration = nextGeneration, updateGeneration = true)
     }
 

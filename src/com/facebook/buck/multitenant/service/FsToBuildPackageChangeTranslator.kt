@@ -42,24 +42,25 @@ interface FsToBuildPackageChangeTranslator {
  * @param existenceChecker Should return true if a package with the same base path exists on base
  *   revision
  * @param equalityChecker Should return true if exactly same package exists on base revision
+ * @param includesProvider returns paths to build packages that transitively includes passed include path
  */
 class DefaultFsToBuildPackageChangeTranslator(
     private val buildFileName: FsAgnosticPath,
     private val projectRoot: Path,
     private val existenceChecker: (packagePath: FsAgnosticPath) -> Boolean,
-    private val equalityChecker: (buildPackage: BuildPackage) -> Boolean
-
+    private val equalityChecker: (buildPackage: BuildPackage) -> Boolean,
+    private val includesProvider: (includePath: Include) -> Set<FsAgnosticPath>
 ) : FsToBuildPackageChangeTranslator {
-    override fun translateChanges(
-        fsChanges: FsChanges
-    ): BuildPackageChanges {
-
-        // TODO: implement parse dependency index
-        val depToPackageIndex: Map<FsAgnosticPath, Set<FsAgnosticPath>> = mapOf()
+    override fun translateChanges(fsChanges: FsChanges): BuildPackageChanges {
 
         val affectedPackagePaths =
-            getPotentiallyAffectedBuildPackages(fsChanges, buildFileName, depToPackageIndex, { it },
-                existenceChecker)
+            getPotentiallyAffectedBuildPackages(
+                fsChanges = fsChanges,
+                buildFileName = buildFileName,
+                includesProvider = includesProvider,
+                cellPathNormalizer = { it },
+                packageExists = existenceChecker
+            )
 
         val parser = BuckShellBuildPackageParser(projectRoot)
         val addedPackages = parser.parsePackages(affectedPackagePaths.added)

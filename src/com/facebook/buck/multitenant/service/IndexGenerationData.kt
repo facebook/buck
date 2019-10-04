@@ -34,6 +34,36 @@ internal typealias MutableRuleMap = MutableGenerationMap<BuildTargetId, Internal
 internal typealias RdepsMap = GenerationMap<BuildTargetId, RdepsSet, BuildTargetId>
 internal typealias MutableRdepsMap = MutableGenerationMap<BuildTargetId, RdepsSet, BuildTargetId>
 
+internal typealias IncludesMap = GenerationMap<FsAgnosticPath, Includes, FsAgnosticPath>
+internal typealias ReverseIncludesMap = GenerationMap<Include, Set<FsAgnosticPath>, Include>
+internal typealias MutableIncludesMap = MutableGenerationMap<FsAgnosticPath, Includes, FsAgnosticPath>
+internal typealias ReverseMutableIncludesMap = MutableGenerationMap<Include, Set<FsAgnosticPath>, Include>
+
+fun GenerationMap<FsAgnosticPath, Set<FsAgnosticPath>, FsAgnosticPath>.toMutableMap(
+    generation: Generation
+) =
+    getEntries(generation).map { p -> p.first to p.second.toMutableSet() }.toMap(mutableMapOf())
+
+data class IncludesMapsHolder(val forwardMap: IncludesMap, val reverseMap: ReverseIncludesMap)
+data class MutableIncludesMapHolder(
+    val forwardMap: MutableIncludesMap,
+    val reverseMap: ReverseMutableIncludesMap
+)
+
+/**
+ * Includes Map Changes - represents a read-only state for include maps.
+ *
+ * Contains two maps:
+ * @param forwardMap from build file to set of includes
+ * @param reverseMap from include file to set of build files
+ */
+data class IncludesMapChange(
+    val forwardMap: Map<FsAgnosticPath, Includes>,
+    val reverseMap: Map<Include, Set<FsAgnosticPath>>
+) {
+    fun isEmpty(): Boolean = forwardMap.isEmpty() && reverseMap.isEmpty()
+}
+
 /**
  * Facilitates thread-safe, read-only access to the underlying data in an [Index].
  */
@@ -54,6 +84,11 @@ internal interface IndexGenerationData {
     fun <T> withRdepsMap(action: (RdepsMap) -> T): T
 
     /**
+     * @param action will be performed will the read lock is held for the [GenerationMap]
+     */
+    fun <T> withIncludesMap(action: (IncludesMapsHolder) -> T): T
+
+    /**
      * @return new IndexGenerationData based on this one with [GenerationMap]s that reflect the
      *     specified local changes
      */
@@ -61,7 +96,8 @@ internal interface IndexGenerationData {
         generation: Generation,
         localBuildPackageChanges: Map<FsAgnosticPath, BuildRuleNames?>,
         localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>,
-        localRdepsRuleMapChanges: Map<BuildTargetId, RdepsSet?>
+        localRdepsRuleMapChanges: Map<BuildTargetId, RdepsSet?>,
+        localIncludesMapChange: IncludesMapChange
     ): IndexGenerationData
 }
 
@@ -83,21 +119,30 @@ internal interface MutableIndexGenerationData : IndexGenerationData {
      * @param action will be performed will the write lock is held for the [GenerationMap]
      */
     fun <T> withMutableRdepsMap(action: (MutableRdepsMap) -> T): T
+
+    /**
+     * @param action will be performed will the write lock is held for the [GenerationMap]
+     */
+    fun <T> withMutableIncludesMap(action: (MutableIncludesMapHolder) -> T): T
 }
 
 /**
  * Fair locks should be used throughout to prioritize writer threads.
  *
- * @param buildPackageMap the key is the path for the directory relative to the Buck root that contains the build file
+ * @param buildPackageMapWithLock the key is the path for the directory relative to the Buck root that contains the build file
  *     for the corresponding build package.
- * @param ruleMap captures the value of a build rule at a specific generation, indexed by BuildTarget.
+ * @param ruleMapWithLock captures the value of a build rule at a specific generation, indexed by BuildTarget.
  *     We also specify the key as the keyInfo so that we get it back when we use `getAllInfoValuePairsForGeneration()`.
+ * @param rdepsMapWithLock stores the reverse dependencies at a specific generation with a read-write lock.
+ * @param includesMapPairWithLock stores the includes maps at a specific generation with a read-write lock.
  */
 internal open class DefaultIndexGenerationData(
     val buildPackageMapWithLock: Pair<BuildPackageMap, ReentrantReadWriteLock> = createGenerationMapWithLock(),
     val ruleMapWithLock: Pair<RuleMap, ReentrantReadWriteLock> = createGenerationMapWithLock(),
-    val rdepsMapWithLock: Pair<RdepsMap, ReentrantReadWriteLock> = createGenerationMapWithLock()
-) : IndexGenerationData {
+    val rdepsMapWithLock: Pair<RdepsMap, ReentrantReadWriteLock> = createGenerationMapWithLock(),
+    val includesMapPairWithLock: Pair<IncludesMapsHolder, ReentrantReadWriteLock> = createGenerationMapPairWithLock()
+) :
+    IndexGenerationData {
 
     final override inline fun <T> withBuildPackageMap(action: (BuildPackageMap) -> T): T =
         buildPackageMapWithLock.readAction(action)
@@ -108,17 +153,23 @@ internal open class DefaultIndexGenerationData(
     final override inline fun <T> withRdepsMap(action: (RdepsMap) -> T): T =
         rdepsMapWithLock.readAction(action)
 
+    final override fun <T> withIncludesMap(action: (IncludesMapsHolder) -> T): T =
+        includesMapPairWithLock.readAction(action)
+
     override fun createForwardingIndexGenerationData(
         generation: Generation,
         localBuildPackageChanges: Map<FsAgnosticPath, BuildRuleNames?>,
         localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>,
-        localRdepsRuleMapChanges: Map<BuildTargetId, RdepsSet?>
+        localRdepsRuleMapChanges: Map<BuildTargetId, RdepsSet?>,
+        localIncludesMapChange: IncludesMapChange
     ): IndexGenerationData =
         DefaultIndexGenerationData(
             buildPackageMapWithLock = of(generation, localBuildPackageChanges,
                 buildPackageMapWithLock),
             ruleMapWithLock = of(generation, localRuleMapChanges, ruleMapWithLock),
-            rdepsMapWithLock = of(generation, localRdepsRuleMapChanges, rdepsMapWithLock))
+            rdepsMapWithLock = of(generation, localRdepsRuleMapChanges, rdepsMapWithLock),
+            includesMapPairWithLock = of(generation, localIncludesMapChange,
+                includesMapPairWithLock))
 
     private inline fun <K : Any, V : Any> of(
         generation: Generation,
@@ -126,6 +177,19 @@ internal open class DefaultIndexGenerationData(
         delegate: Pair<GenerationMap<K, V, K>, ReentrantReadWriteLock>
     ) =
         forwardingGenerationMap(generation, localChanges, delegate.first) to delegate.second
+
+    private inline fun of(
+        generation: Generation,
+        localChanges: IncludesMapChange,
+        delegate: Pair<IncludesMapsHolder, ReentrantReadWriteLock>
+    ): Pair<IncludesMapsHolder, ReentrantReadWriteLock> {
+        val (includesMapsHolder, lock) = delegate
+        val forwardMap = forwardingGenerationMap(generation, localChanges.forwardMap,
+            includesMapsHolder.forwardMap)
+        val reverseMap = forwardingGenerationMap(generation, localChanges.reverseMap,
+            includesMapsHolder.reverseMap)
+        return IncludesMapsHolder(forwardMap, reverseMap) to lock
+    }
 
     private fun <K : Any, V : Any> forwardingGenerationMap(
         generation: Generation,
@@ -147,7 +211,21 @@ internal class DefaultMutableIndexGenerationData : DefaultIndexGenerationData(),
 
     override inline fun <T> withMutableRdepsMap(action: (MutableRdepsMap) -> T): T =
         rdepsMapWithLock.writeAction(action)
+
+    @SuppressWarnings("UnsafeCast") override fun <T> withMutableIncludesMap(
+        action: (MutableIncludesMapHolder) -> T
+    ): T {
+        val lock = includesMapPairWithLock.second
+        val (forwardMap: IncludesMap, reverseMap: ReverseIncludesMap) = includesMapPairWithLock.first
+        return lock.write {
+            action(MutableIncludesMapHolder(forwardMap = forwardMap as MutableIncludesMap,
+                reverseMap = reverseMap as ReverseMutableIncludesMap))
+        }
+    }
 }
+
+private inline fun createGenerationMapPairWithLock() =
+    IncludesMapsHolder(defaultGenerationMap(), defaultGenerationMap()) to createFairLock()
 
 private inline fun <K : Any, V : Any> createGenerationMapWithLock() =
     defaultGenerationMap<K, V>() to createFairLock()
