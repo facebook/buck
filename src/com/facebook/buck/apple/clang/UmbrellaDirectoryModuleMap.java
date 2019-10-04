@@ -33,6 +33,7 @@ public class UmbrellaDirectoryModuleMap implements ModuleMap {
       "module <module_name> {\n"
           + "    umbrella \".\"\n"
           + "\n"
+          + "    export *\n"
           + "    module * { export * }\n"
           + "}\n"
           + "\n";
