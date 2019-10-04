@@ -1563,14 +1563,14 @@ public final class MainRunner {
             subcommand.getCommandArgsFile(),
             invocationInfo);
 
-    Optional<BuckFixSpec> fixSpec =
-        fixCommandHandler.writeFixSpec(buildId, exitCode, exceptionForFix);
-
     if (!config.shouldRunAutofix(
         console.getAnsi().isAnsiTerminal(), command.getDeclaredSubCommandName())) {
       LOG.info("Auto fixing is not enabled for command %s", command.getDeclaredSubCommandName());
       return;
     }
+
+    Optional<BuckFixSpec> fixSpec =
+        fixCommandHandler.writeFixSpec(buildId, exitCode, exceptionForFix);
 
     // Only log here so that we still return with the correct top level exit code
     try {
