@@ -118,12 +118,14 @@ def _try_to_verify_java_version(
     try:
         java_version = _get_java_version(java_path)
         if java_version and java_version != required_java_version:
-            warning = "You're using Java {}, but Buck requires Java {}.\nPlease follow \
-https://buck.build/setup/getting_started.html \
-to properly setup your local environment and avoid build issues.".format(
+            warning = "You're using Java {}, but Buck requires Java {}.".format(
                 java_version, required_java_version
             )
-
+            # warning += (
+            #     " Please update JAVA_HOME if it's pointing at the wrong version of Java."
+            #     + "\nPlease follow https://buck.build/setup/getting_started.html"
+            #     + " to properly setup your local environment and avoid build issues."
+            # )
     except:
         # checking Java version is brittle and as such is best effort
         warning = "Cannot verify that installed Java version at '{}' \
