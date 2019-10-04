@@ -25,8 +25,6 @@ import com.facebook.buck.jvm.java.classes.FileLikes;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -53,9 +51,6 @@ public class AccumulateClassNamesStep implements Step {
    * file (without its suffix) and the SHA-1 hash of its contents, separated by this separator.
    */
   static final String CLASS_NAME_HASH_CODE_SEPARATOR = " ";
-
-  private static final Splitter CLASS_NAME_AND_HASH_SPLITTER =
-      Splitter.on(CLASS_NAME_HASH_CODE_SEPARATOR);
 
   private final ProjectFilesystem filesystem;
   private final Optional<Path> pathToJarOrClassesDirectory;
@@ -163,10 +158,9 @@ public class AccumulateClassNamesStep implements Step {
     Map<String, HashCode> classNames = new HashMap<>();
 
     for (String line : lines) {
-      List<String> parts = CLASS_NAME_AND_HASH_SPLITTER.splitToList(line);
-      Preconditions.checkState(parts.size() == 2);
-      String key = parts.get(0);
-      HashCode value = HashCode.fromString(parts.get(1));
+      int lastSeparator = line.lastIndexOf(CLASS_NAME_HASH_CODE_SEPARATOR);
+      String key = line.substring(0, lastSeparator);
+      HashCode value = HashCode.fromString(line.substring(lastSeparator + 1));
       HashCode existing = classNames.putIfAbsent(key, value);
       if (existing != null && !existing.equals(value)) {
         throw new IllegalArgumentException(

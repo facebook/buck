@@ -25,12 +25,15 @@ import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
@@ -41,6 +44,8 @@ import org.junit.rules.TemporaryFolder;
 public class AccumulateClassNamesStepTest {
 
   private static final String SHA1_FOR_EMPTY_STRING = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
+  private static final HashCode SHA1_HASHCODE_FOR_EMPTY_STRING =
+      HashCode.fromString(SHA1_FOR_EMPTY_STRING);
 
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
@@ -124,5 +129,38 @@ public class AccumulateClassNamesStepTest {
                         + SHA1_FOR_EMPTY_STRING)
             + '\n',
         contents);
+  }
+
+  @Test
+  public void testParseClassHashesWithSpaces() throws IOException {
+    // Create a JAR file.
+    String name = "example.jar";
+    File jarFile = tmp.newFile(name);
+    try (JarOutputStream out =
+        new JarOutputStream(new BufferedOutputStream(new FileOutputStream(jarFile)))) {
+      out.putNextEntry(new ZipEntry("com/example/Foo.class"));
+      out.closeEntry();
+      out.putNextEntry(new ZipEntry("com/example/Foo$something with spaces$1.class"));
+      out.closeEntry();
+    }
+
+    // Create the AccumulateClassNamesStep and execute it.
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
+    AccumulateClassNamesStep accumulateClassNamesStep =
+        new AccumulateClassNamesStep(
+            filesystem, Optional.of(Paths.get(name)), Paths.get("output.txt"));
+    ExecutionContext context = TestExecutionContext.newInstance();
+    accumulateClassNamesStep.execute(context);
+
+    List<String> lines = filesystem.readLines(Paths.get("output.txt"));
+    ImmutableSortedMap<String, HashCode> parsedClassHashes =
+        AccumulateClassNamesStep.parseClassHashes(lines);
+
+    assertEquals(2, parsedClassHashes.size());
+    assertEquals(SHA1_HASHCODE_FOR_EMPTY_STRING, parsedClassHashes.get("com/example/Foo"));
+    assertEquals(
+        SHA1_HASHCODE_FOR_EMPTY_STRING,
+        parsedClassHashes.get("com/example/Foo$something with spaces$1"));
   }
 }
