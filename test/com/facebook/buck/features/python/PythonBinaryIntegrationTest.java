@@ -163,24 +163,6 @@ public class PythonBinaryIntegrationTest {
   }
 
   @Test
-  public void inplaceBinariesWriteCorrectInterpreter() throws IOException {
-    assumeThat(
-        packageStyle,
-        Matchers.in(ImmutableList.of(PackageStyle.INPLACE, PackageStyle.INPLACE_LITE)));
-
-    String expectedPythonPath =
-        new PythonInterpreterFromConfig(getPythonBuckConfig(), new ExecutableFinder())
-            .getPythonInterpreterPath()
-            .toString();
-
-    Path binPath = workspace.buildAndReturnOutput("//:bin");
-    workspace.runBuckCommand("run", "//:bin").assertSuccess();
-
-    String firstLine = workspace.getProjectFileSystem().readLines(binPath).get(0);
-    assertTrue(firstLine.startsWith(String.format("#!%s", expectedPythonPath)));
-  }
-
-  @Test
   public void commandLineArgs() {
     ProcessResult result = workspace.runBuckCommand("run", ":bin", "HELLO WORLD").assertSuccess();
     assertThat(result.getStdout(), containsString("HELLO WORLD"));
