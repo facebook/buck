@@ -4328,15 +4328,6 @@ $ buck build app#py3
 
 {call buckconfig.entry}
   {param section: 'python' /}
-  {param name: 'inplace_interpreter_flags' /}
-  {param example_value: '-EBs' /}
-  {param description}
-    Flags to pass to the python interpreter when running a .pex file that is configured to run 'inplace'. Defaults to <code>-Es</code>
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'python' /}
   {param name: 'library' /}
   {param example_value: '//third-party/python:python' /}
   {param description}
