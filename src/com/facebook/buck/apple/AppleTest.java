@@ -296,8 +296,10 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     Path resolvedTestOutputPath = getProjectFilesystem().resolve(testOutputPath);
 
-    Optional<Path> testHostAppPath = extractBundlePathForBundle(testHostApp, buildContext);
-    Optional<Path> uiTestTargetAppPath = extractBundlePathForBundle(uiTestTargetApp, buildContext);
+    Optional<Path> testHostAppPath =
+        extractBundlePathForBundle(testHostApp, buildContext.getSourcePathResolver());
+    Optional<Path> uiTestTargetAppPath =
+        extractBundlePathForBundle(uiTestTargetApp, buildContext.getSourcePathResolver());
 
     ImmutableMap<String, String> testEnvironmentOverrides =
         ImmutableMap.<String, String>builder()
@@ -455,14 +457,13 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private Optional<Path> extractBundlePathForBundle(
-      Optional<AppleBundle> bundle, BuildContext buildContext) {
+      Optional<AppleBundle> bundle, SourcePathResolver sourcePathResolver) {
     if (!bundle.isPresent()) {
       return Optional.empty();
     }
     Path resolvedBundleDirectory =
-        buildContext
-            .getSourcePathResolver()
-            .getAbsolutePath(Objects.requireNonNull(bundle.get().getSourcePathToOutput()));
+        sourcePathResolver.getAbsolutePath(
+            Objects.requireNonNull(bundle.get().getSourcePathToOutput()));
     return Optional.of(
         resolvedBundleDirectory.resolve(bundle.get().getUnzippedOutputFilePathToBinary()));
   }
