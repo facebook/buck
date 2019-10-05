@@ -16,6 +16,8 @@
 
 package com.facebook.buck.remoteexecution.config;
 
+import static com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig.getEnvVarFieldNameForField;
+
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
@@ -462,7 +464,14 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   private Optional<String> getErrorOnInvalidFile(String configName, Optional<Path> certPath) {
     if (!certPath.isPresent()) {
       return Optional.of(
-          String.format("Config [%s.%s] must point to a file.", SECTION, configName));
+          String.format(
+              "Config [%s.%s] must point to a file, value [%s] or [%s.%s] must be set to a valid file location, value [%s].",
+              SECTION,
+              configName,
+              getDelegate().getValue(SECTION, configName).orElse(""),
+              SECTION,
+              getEnvVarFieldNameForField(configName),
+              getDelegate().getValue(SECTION, getEnvVarFieldNameForField(configName)).orElse("")));
     }
 
     if (!Files.exists(certPath.get())) {

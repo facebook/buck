@@ -61,8 +61,8 @@ public class RemoteExecutionConfigTest {
       Assert.fail("Should've thrown.");
     } catch (HumanReadableException e) {
       Assert.assertEquals(
-          "Config [remoteexecution.cert] must point to a file.\n"
-              + "Config [remoteexecution.key] must point to a file.\n"
+          "Config [remoteexecution.cert] must point to a file, value [] or [remoteexecution.cert_env_var] must be set to a valid file location, value [].\n"
+              + "Config [remoteexecution.key] must point to a file, value [] or [remoteexecution.key_env_var] must be set to a valid file location, value [].\n"
               + "Config [remoteexecution.ca] points to file [does_not_exist] that does not exist.",
           e.getMessage());
     }

@@ -141,6 +141,8 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
       "download_heavy_build_http_cache_fetch_threads";
   private static final int DEFAULT_DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS = 20;
 
+  private static final String ENV_VAR_SUFFIX = "_env_var";
+
   private final ProjectFilesystem projectFilesystem;
   private final BuckConfig buckConfig;
   private final SlbBuckConfig slbConfig;
@@ -633,11 +635,19 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   public static Optional<String> getStringOrEnvironmentVariable(
       BuckConfig buckConfig, String section, String field) {
     Optional<String> defaultValue = buckConfig.getValue(section, field);
-    Optional<String> envVariable = buckConfig.getValue(section, field + "_env_var");
+    Optional<String> envVariable = buckConfig.getValue(section, getEnvVarFieldNameForField(field));
     if (!envVariable.isPresent()) {
       return defaultValue;
     }
     String envValue = buckConfig.getEnvironment().getOrDefault(envVariable.get(), "").trim();
     return envValue.isEmpty() ? defaultValue : Optional.of(envValue);
+  }
+
+  /**
+   * @param field
+   * @return append the {@value #ENV_VAR_SUFFIX} to the {field}
+   */
+  public static String getEnvVarFieldNameForField(String field) {
+    return field + ENV_VAR_SUFFIX;
   }
 }
