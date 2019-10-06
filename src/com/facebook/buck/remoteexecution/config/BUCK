@@ -14,7 +14,7 @@ java_immutables_library(
         "//src/com/facebook/buck/artifact_cache/config:config",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/util/log:log",
-        "//src/com/facebook/buck/distributed:common",
+        "//src/com/facebook/buck/remoteexecution/util:util",
         "//src/com/facebook/buck/rules/modern/config:config",
     ],
 )

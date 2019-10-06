@@ -70,7 +70,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.counters.CounterBuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
-import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.doctor.DefaultDefectReporter;
 import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.event.BuckEventBus;
@@ -140,6 +139,7 @@ import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.remoteexecution.event.listener.RemoteExecutionConsoleLineProvider;
 import com.facebook.buck.remoteexecution.event.listener.RemoteExecutionEventListener;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
+import com.facebook.buck.remoteexecution.util.RemoteExecutionUtil;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -741,7 +741,8 @@ public final class MainRunner {
         BuildCommand subcommand = (BuildCommand) command.subcommand;
         executionEnvironment.getUsername();
 
-        projectPrefix = DistBuildUtil.getCommonProjectPrefix(subcommand.getArguments(), buckConfig);
+        projectPrefix =
+            RemoteExecutionUtil.getCommonProjectPrefix(subcommand.getArguments(), buckConfig);
       }
 
       RuleKeyConfiguration ruleKeyConfiguration =

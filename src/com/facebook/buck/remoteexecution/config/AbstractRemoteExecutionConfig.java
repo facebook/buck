@@ -24,9 +24,9 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
+import com.facebook.buck.remoteexecution.util.RemoteExecutionUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -456,8 +456,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
         optionalProjectsWhitelist.isPresent()
             ? ImmutableSet.copyOf(optionalProjectsWhitelist.get())
             : ImmutableSet.of();
-    // TODO(msienkiewicz): Once Stampede/DistBuild is fully deprecated, move this util here.
-    return DistBuildUtil.doTargetsMatchProjectWhitelist(
+    return RemoteExecutionUtil.doTargetsMatchProjectWhitelist(
         commandArguments, projectWhitelist, getDelegate());
   }
 
