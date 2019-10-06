@@ -186,7 +186,7 @@ public class BuildCommand extends AbstractCommand {
   @Option(name = SHOW_RULEKEY_LONG_ARG, usage = "Print the rulekey for each of the built rules.")
   private boolean showRuleKey;
 
-  @Option(name = LOCAL_BUILD_LONG_ARG, usage = "Disable distributed build.")
+  @Option(name = LOCAL_BUILD_LONG_ARG, usage = "Disable remote execution for this build.")
   private boolean forceDisableRemoteExecution = false;
 
   @Nullable
@@ -253,10 +253,6 @@ public class BuildCommand extends AbstractCommand {
 
   public void setKeepGoing(boolean keepGoing) {
     this.keepGoing = keepGoing;
-  }
-
-  public void forceDisableRemoteExecution() {
-    forceDisableRemoteExecution = true;
   }
 
   public boolean isRemoteExecutionForceDisabled() {
