@@ -1010,47 +1010,55 @@ class BuckTool(object):
 
     def _get_java_args(self, version_uid, extra_default_options=None):
         with Tracing("BuckTool._get_java_args"):
-            java_args = [
-                "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
-                "-Djava.awt.headless=true",
-                "-Djna.nosys=true",
-                "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
-                "-Dbuck.test_util_no_tests_dir=true",
-                "-Dbuck.version_uid={0}".format(version_uid),
-                "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
-                "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
-                "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
-                "-Dbuck.git_commit_timestamp={0}".format(
-                    self._get_buck_version_timestamp()
-                ),
-                "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash()),
-                "-Dbuck.base_buck_out_dir={0}".format(
-                    self._buck_project.get_buck_out_relative_dir()
-                ),
-            ]
+            java_args = []
 
             if "BUCK_DEFAULT_FILESYSTEM" not in os.environ and (
                 sys.platform == "darwin" or sys.platform.startswith("linux")
             ):
                 # Change default filesystem to custom filesystem for memory optimizations
                 # Calls like Paths.get() would return optimized Path implementation
+                if self.get_buck_compiled_java_version() >= 9:
+                    # In Java 9+, the default file system provider gets initialized in the middle of
+                    # loading the jar for the main class (bootstrapper.jar for Buck). Due to a
+                    # potential circular dependency, we can't place BuckFileSystemProvider in
+                    # bootstrapper.jar, or even in a separate jar on the regular classpath. To
+                    # ensure BuckFileSystemProvider is available early enough, we add it to the JVM
+                    # bootstrap classloader (not to be confused with Buck's bootstrapper) via the
+                    # bootclasspath. Note that putting everything in bootstrapper.jar and putting it
+                    # on the bootclasspath is problematic due to subtle classloader issues during
+                    # in-process Java compilation.
+                    #
+                    # WARNING: The JVM appears to be sensitive about where this argument appears in
+                    #          the argument list. It needs to come first, or it *sometimes* doesn't
+                    #          get picked up. We don't understand exactly when or why this occurs.
+                    java_args.append(
+                        "-Xbootclasspath/a:" + self._get_buckfilesystem_classpath()
+                    )
                 java_args.append(
                     "-Djava.nio.file.spi.DefaultFileSystemProvider="
                     "com.facebook.buck.core.filesystems.BuckFileSystemProvider"
                 )
 
-                # In Java 9+, the default file system provider gets initialized in the middle of
-                # loading the jar for the main class (bootstrapper.jar for Buck). Due to a potential
-                # circular dependency, we can't place BuckFileSystemProvider in bootstrapper.jar, or
-                # even in a separate jar on the regular classpath. To ensure BuckFileSystemProvider
-                # is available early enough, we add it to the JVM bootstrap classloader (not to be
-                # confused with Buck's bootstrapper) via the bootclasspath. Note that putting
-                # everything in bootstrapper.jar and putting it on the bootclasspath is problematic
-                # due to subtle classloader issues during in-process Java compilation.
-                if self.get_buck_compiled_java_version() >= 9:
-                    java_args.append(
-                        "-Xbootclasspath/a:" + self._get_buckfilesystem_classpath()
-                    )
+            java_args.extend(
+                [
+                    "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
+                    "-Djava.awt.headless=true",
+                    "-Djna.nosys=true",
+                    "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
+                    "-Dbuck.test_util_no_tests_dir=true",
+                    "-Dbuck.version_uid={0}".format(version_uid),
+                    "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
+                    "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
+                    "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
+                    "-Dbuck.git_commit_timestamp={0}".format(
+                        self._get_buck_version_timestamp()
+                    ),
+                    "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash()),
+                    "-Dbuck.base_buck_out_dir={0}".format(
+                        self._buck_project.get_buck_out_relative_dir()
+                    ),
+                ]
+            )
 
             resource_lock_path = self._get_resource_lock_path()
             if resource_lock_path is not None:
