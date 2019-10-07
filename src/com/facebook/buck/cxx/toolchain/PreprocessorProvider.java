@@ -47,6 +47,8 @@ public class PreprocessorProvider extends CxxToolProvider<Preprocessor> {
     switch (type) {
       case CLANG:
         return new ClangPreprocessor(tool);
+      case CLANG_CL:
+        return new ClangClPreprocessor(tool);
       case GCC:
         return new GccPreprocessor(tool);
       case WINDOWS:
