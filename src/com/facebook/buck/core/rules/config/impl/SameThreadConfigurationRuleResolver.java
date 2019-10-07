@@ -16,12 +16,12 @@
 
 package com.facebook.buck.core.rules.config.impl;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
+import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.base.Preconditions;
@@ -62,7 +62,7 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
     return computeIfAbsent(buildTarget, this::createConfigurationRule);
   }
 
-  private <T extends ConstructorArg> ConfigurationRule createConfigurationRule(
+  private <T extends ConfigurationRuleArg> ConfigurationRule createConfigurationRule(
       BuildTarget buildTarget) {
     @SuppressWarnings("unchecked")
     TargetNode<T> targetNode = (TargetNode<T>) targetNodeSupplier.apply(buildTarget);

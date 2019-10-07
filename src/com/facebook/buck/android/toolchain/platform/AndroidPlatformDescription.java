@@ -16,11 +16,12 @@
 
 package com.facebook.buck.android.toolchain.platform;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
+import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.platform.ImmutableMultiPlatformRule;
@@ -75,12 +76,15 @@ public class AndroidPlatformDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAndroidPlatformArg extends ConstructorArg {
+  interface AbstractAndroidPlatformArg extends ConfigurationRuleArg {
+    @Hint(isConfigurable = false)
     String getName();
 
+    @Hint(isConfigurable = false)
     UnconfiguredBuildTargetView getBasePlatform();
 
     @Value.NaturalOrder
+    @Hint(isConfigurable = false)
     ImmutableSortedSet<UnconfiguredBuildTargetView> getNativePlatforms();
   }
 }

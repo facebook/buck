@@ -16,11 +16,12 @@
 
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
+import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -74,13 +75,16 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractPlatformArg extends ConstructorArg {
+  interface AbstractPlatformArg extends ConfigurationRuleArg {
+    @Hint(isConfigurable = false)
     String getName();
 
     @Value.NaturalOrder
+    @Hint(isConfigurable = false)
     ImmutableSortedSet<UnconfiguredBuildTargetView> getConstraintValues();
 
     @Value.NaturalOrder
+    @Hint(isConfigurable = false)
     ImmutableSortedSet<UnconfiguredBuildTargetView> getDeps();
   }
 

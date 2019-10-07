@@ -25,7 +25,6 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.List;
@@ -43,8 +42,10 @@ import java.util.Set;
 public interface ConstructorArgMarshaller {
 
   /**
-   * Use the information contained in the {@code params} to fill in the public fields and settable
-   * properties of {@code dto}. The following rules are used:
+   * Creates a constructor argument using raw attributes that may contain configurable attributes.
+   *
+   * <p>Use the information contained in the {@code params} to fill in the public fields and
+   * settable properties of {@code dto}. The following rules are used:
    *
    * <ul>
    *   <li>Boolean values are set to true or false.
@@ -63,23 +64,10 @@ public interface ConstructorArgMarshaller {
    *
    * @param declaredDeps A builder to be populated with the declared dependencies.
    * @return The fully populated DTO.
-   */
-  <T extends ConstructorArg> T populate(
-      CellPathResolver cellRoots,
-      ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      ConstructorArgBuilder<T> constructorArgBuilder,
-      ImmutableSet.Builder<BuildTarget> declaredDeps,
-      Map<String, ?> instance)
-      throws ParamInfoException;
-
-  /**
-   * Creates a constructor argument using raw attributes that may contain configurable attributes.
-   *
    * @param attributes configured attributes that cannot contain selectable values (instances of
    *     {@link SelectorList})
    */
-  <T extends ConstructorArg> T populateWithConfiguringAttributes(
+  <T extends ConstructorArg> T populate(
       CellPathResolver cellPathResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
@@ -89,6 +77,6 @@ public interface ConstructorArgMarshaller {
       ConstructorArgBuilder<T> constructorArgBuilder,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      ImmutableMap<String, ?> attributes)
+      Map<String, ?> attributes)
       throws CoerceFailedException;
 }

@@ -22,6 +22,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
+import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
@@ -33,7 +34,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
-import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller {
@@ -48,32 +48,6 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
    */
   public DefaultConstructorArgMarshaller(TypeCoercerFactory typeCoercerFactory) {
     this.typeCoercerFactory = typeCoercerFactory;
-  }
-
-  @CheckReturnValue
-  @Override
-  public <T extends ConstructorArg> T populate(
-      CellPathResolver cellRoots,
-      ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      ConstructorArgBuilder<T> constructorArgBuilder,
-      ImmutableSet.Builder<BuildTarget> declaredDeps,
-      Map<String, ?> instance)
-      throws ParamInfoException {
-
-    ImmutableMap<String, ParamInfo> allParamInfo = constructorArgBuilder.getParamInfos();
-    for (ParamInfo info : allParamInfo.values()) {
-      info.setFromParams(
-          cellRoots,
-          filesystem,
-          buildTarget,
-          buildTarget.getTargetConfiguration(),
-          constructorArgBuilder.getBuilder(),
-          instance);
-    }
-    T dto = constructorArgBuilder.build();
-    collectDeclaredDeps(cellRoots, allParamInfo.get("deps"), declaredDeps, dto);
-    return dto;
   }
 
   private void collectDeclaredDeps(
@@ -95,7 +69,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
   }
 
   @Override
-  public <T extends ConstructorArg> T populateWithConfiguringAttributes(
+  public <T extends ConstructorArg> T populate(
       CellPathResolver cellPathResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
@@ -105,10 +79,14 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       ConstructorArgBuilder<T> constructorArgBuilder,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      ImmutableMap<String, ?> attributes)
+      Map<String, ?> attributes)
       throws CoerceFailedException {
 
     ImmutableMap<String, ParamInfo> allParamInfo = constructorArgBuilder.getParamInfos();
+
+    boolean isConfigurationRule =
+        ConfigurationRuleArg.class.isAssignableFrom(constructorArgBuilder.constructorArgClass());
+
     for (ParamInfo info : allParamInfo.values()) {
       Object attribute = attributes.get(info.getName());
       if (attribute == null) {
@@ -142,6 +120,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 buildTarget.getTargetConfiguration(),
                 configurationDeps,
                 info,
+                isConfigurationRule,
                 attribute);
       } else {
         attributeValue =
@@ -154,6 +133,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 buildTarget.getTargetConfiguration(),
                 configurationDeps,
                 info,
+                isConfigurationRule,
                 attribute);
       }
       if (attributeValue != null) {
@@ -177,6 +157,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       TargetConfiguration targetConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       ParamInfo info,
+      boolean isConfigurationRule,
       Object attribute)
       throws CoerceFailedException {
     ImmutableList.Builder<Object> valuesForConcatenation = ImmutableList.builder();
@@ -192,6 +173,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
               nestedTargetConfiguration,
               configurationDeps,
               info,
+              isConfigurationRule,
               attribute);
       if (configuredAttributeValue != null) {
         valuesForConcatenation.add(configuredAttributeValue);
@@ -211,11 +193,18 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       TargetConfiguration targetConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       ParamInfo info,
+      boolean isConfigurationRule,
       Object attribute)
       throws CoerceFailedException {
     Object attributeWithSelectableValue =
         createCoercedAttributeWithSelectableValue(
-            cellPathResolver, filesystem, buildTarget, targetConfiguration, info, attribute);
+            cellPathResolver,
+            filesystem,
+            buildTarget,
+            targetConfiguration,
+            info,
+            isConfigurationRule,
+            attribute);
     return configureAttributeValue(
         configurationContext,
         selectorListResolver,
@@ -231,8 +220,15 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       BuildTarget buildTarget,
       TargetConfiguration targetConfiguration,
       ParamInfo argumentInfo,
+      boolean isConfigurationRule,
       Object rawValue)
       throws CoerceFailedException {
+    if (isConfigurationRule) {
+      if (argumentInfo.isConfigurable()) {
+        throw new IllegalStateException("configurable param in configuration rule");
+      }
+    }
+
     TypeCoercer<?> coercer;
     // When an attribute value contains an instance of {@link ListWithSelects} it's coerced by a
     // coercer for {@link SelectorList}.

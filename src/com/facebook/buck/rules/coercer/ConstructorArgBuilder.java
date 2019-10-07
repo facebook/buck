@@ -24,6 +24,9 @@ import java.util.function.Function;
 @BuckStyleValue
 public abstract class ConstructorArgBuilder<T extends ConstructorArg> {
 
+  /** Reified {@code <T>} */
+  public abstract Class<T> constructorArgClass();
+
   /**
    * Get the builder for a constructor arg.
    *

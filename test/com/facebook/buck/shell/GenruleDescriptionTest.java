@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -31,6 +32,8 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
+import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
@@ -93,9 +96,13 @@ public class GenruleDescriptionTest {
         marshaller.populate(
             createCellRoots(projectFilesystem),
             projectFilesystem,
+            new ThrowingSelectorListResolver(),
+            new ThrowingTargetConfigurationTransformer(),
+            new ThrowingSelectableConfigurationContext(),
             buildTarget,
             builder,
             declaredDeps,
+            ImmutableSet.builder(),
             instance);
     TargetNode<GenruleDescriptionArg> targetNode =
         new TargetNodeFactory(new DefaultTypeCoercerFactory())

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,19 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.core.rules.config;
 
-import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 
-/**
- * This class describe a configuration rule - a rule that can be used during configuration of a
- * target graph.
- */
-public interface ConfigurationRuleDescription<T extends ConfigurationRuleArg>
-    extends BaseDescription<T> {
-  /** Creates a {@link ConfigurationRule} */
-  ConfigurationRule createConfigurationRule(
-      ConfigurationRuleResolver configurationRuleResolver, BuildTarget buildTarget, T arg);
-}
+/** Marker for constructor args of configuration rules */
+public interface ConfigurationRuleArg extends ConstructorArg {}

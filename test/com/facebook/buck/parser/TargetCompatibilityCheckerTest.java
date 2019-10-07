@@ -25,6 +25,7 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
@@ -42,6 +43,8 @@ import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
+import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -257,8 +260,12 @@ public class TargetCompatibilityCheckerTest {
     return marshaller.populate(
         TestCellPathResolver.get(projectFilesystem),
         projectFilesystem,
+        new ThrowingSelectorListResolver(),
+        new ThrowingTargetConfigurationTransformer(),
+        new ThrowingSelectableConfigurationContext(),
         buildTarget,
         builder,
+        ImmutableSet.builder(),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>builder().putAll(rawNode).put("name", "target").build());
   }

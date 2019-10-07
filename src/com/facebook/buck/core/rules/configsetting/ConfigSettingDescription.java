@@ -16,11 +16,12 @@
 
 package com.facebook.buck.core.rules.configsetting;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
+import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -71,13 +72,16 @@ public class ConfigSettingDescription implements ConfigurationRuleDescription<Co
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractConfigSettingArg extends ConstructorArg {
+  interface AbstractConfigSettingArg extends ConfigurationRuleArg {
+    @Hint(isConfigurable = false)
     String getName();
 
     @Value.NaturalOrder
+    @Hint(isConfigurable = false)
     ImmutableSortedMap<String, String> getValues();
 
     @Value.NaturalOrder
+    @Hint(isConfigurable = false)
     ImmutableSortedSet<UnconfiguredBuildTargetView> getConstraintValues();
   }
 }

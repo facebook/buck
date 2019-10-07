@@ -8,6 +8,7 @@ java_test(
         ":testutil",
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/select/impl:impl",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/util/json:json",
         "//test/com/facebook/buck/core/cell:testutil",

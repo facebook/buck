@@ -67,6 +67,7 @@ public class CoercedTypeCache {
       Object builder = dtoType.getMethod("builder").invoke(null);
       Method buildMethod = builder.getClass().getMethod("build");
       return new ImmutableConstructorArgBuilder<T>(
+          dtoType,
           builder,
           INSTANCE.getAllParamInfo(typeCoercerFactory, dtoType),
           x -> {

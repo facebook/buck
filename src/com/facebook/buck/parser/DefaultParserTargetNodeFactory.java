@@ -22,18 +22,21 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
+import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.function.BuckPyFunction;
+import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
-import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
@@ -112,9 +115,13 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFromAttrM
             marshaller.populate(
                 cell.getCellPathResolver(),
                 cell.getFilesystem(),
+                new ThrowingSelectorListResolver(),
+                new ThrowingTargetConfigurationTransformer(),
+                new ThrowingSelectableConfigurationContext(),
                 target,
                 builder,
                 declaredDeps,
+                ImmutableSet.builder(),
                 rawNode);
         visibilityPatterns =
             VisibilityPatterns.createFromStringList(
@@ -142,7 +149,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFromAttrM
           perfEventScope);
     } catch (NoSuchBuildTargetException e) {
       throw new HumanReadableException(e);
-    } catch (ParamInfoException e) {
+    } catch (CoerceFailedException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     } catch (IOException e) {
       throw new HumanReadableException(e.getMessage(), e);

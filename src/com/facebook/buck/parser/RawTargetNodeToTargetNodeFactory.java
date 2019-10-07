@@ -109,7 +109,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFromRaw
           knownRuleTypes.getConstructorArgBuilder(
               typeCoercerFactory, ruleType, description.getConstructorArgType(), target);
       constructorArg =
-          marshaller.populateWithConfiguringAttributes(
+          marshaller.populate(
               targetCell.getCellPathResolver(),
               targetCell.getFilesystem(),
               selectorListResolver,

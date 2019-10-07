@@ -108,6 +108,7 @@ public class KnownUserDefinedRuleTypes implements KnownRuleTypes {
     Preconditions.checkArgument(dtoClass.isAssignableFrom(SkylarkDescriptionArg.class));
     SkylarkUserDefinedRule rule = Objects.requireNonNull(getRule(ruleType.getName()));
     return new ImmutableConstructorArgBuilder<T>(
+        dtoClass,
         new SkylarkDescriptionArg(rule),
         rule.getAllParamInfo(),
         args -> {

@@ -16,11 +16,12 @@
 
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
+import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -70,9 +71,11 @@ public class ConstraintSettingDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractConstraintSettingArg extends ConstructorArg {
+  interface AbstractConstraintSettingArg extends ConfigurationRuleArg {
+    @Hint(isConfigurable = false)
     String getName();
 
+    @Hint(isConfigurable = false)
     Optional<UnconfiguredBuildTargetView> getHostConstraintDetector();
   }
 }
