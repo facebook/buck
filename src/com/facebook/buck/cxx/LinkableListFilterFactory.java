@@ -42,6 +42,8 @@ import javax.annotation.Nonnull;
 public class LinkableListFilterFactory {
   private LinkableListFilterFactory() {}
 
+  private static String MATCH_ALL_LINK_GROUP_NAME = "MATCH_ALL";
+
   /** Convenience method that unpacks a {@link LinkableCxxConstructorArg} and forwards the call. */
   public static Optional<LinkableListFilter> from(
       CxxBuckConfig cxxBuckConfig, LinkableCxxConstructorArg linkableArg, TargetGraph targetGraph) {
@@ -105,6 +107,10 @@ public class LinkableListFilterFactory {
 
                         String linkableLinkGroup =
                             buildTargetToLinkGroupMap.get(linkableBuildTarget);
+                        if (linkableLinkGroup.equals(MATCH_ALL_LINK_GROUP_NAME)) {
+                          return true;
+                        }
+
                         return (linkGroup
                                 .map(group -> group.equals(linkableLinkGroup))
                                 .orElse(false))

@@ -619,6 +619,40 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
+  public void testAppleBinaryWithLinkGroupsWithMultipleDylibsWithDuplicateSymbols()
+      throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_multiples_dylibs_with_duplicate_symbols", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+
+    // Check that binary does _not_ contain any symbols from the libraries
+    String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:TestApp", workspace);
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_b")));
+    // NOTE: Even though C will be linked
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_c")));
+
+    // Check that Dylib1 contains symbols from //Apps/Libs:B and //Apps/Libs:C (marked DUPLICATE)
+    String dylib1SymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:Dylib1", "Dylib1.dylib", workspace);
+    assertThat(dylib1SymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(dylib1SymbolTable, containsString("T _get_value_from_b"));
+    assertThat(dylib1SymbolTable, containsString("T _get_value_from_c"));
+
+    // Check that Dylib2 contains symbols from //Apps/Libs:A and //Apps/Libs:C (marked DUPLICATE)
+    String dylib2SymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:Dylib2", "Dylib2.dylib", workspace);
+    assertThat(dylib2SymbolTable, containsString("T _get_value_from_a"));
+    assertThat(dylib2SymbolTable, not(containsString("T _get_value_from_b")));
+    assertThat(dylib2SymbolTable, containsString("T _get_value_from_c"));
+  }
+
+  @Test
   public void testAppleBinaryWithLibraryDependencyBuildsSomething() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
