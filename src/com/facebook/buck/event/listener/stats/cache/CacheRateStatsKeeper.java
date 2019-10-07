@@ -21,7 +21,6 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
-import com.facebook.buck.distributed.thrift.CacheRateStats;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.external.events.CacheRateStatsUpdateExternalEventInterface;
@@ -47,7 +46,6 @@ public class CacheRateStatsKeeper {
   private final AtomicInteger cacheHits = new AtomicInteger(0);
   private final AtomicInteger cacheIgnores = new AtomicInteger(0);
   private final AtomicInteger cacheLocalKeyUnchangedHits = new AtomicInteger(0);
-  private final AtomicInteger unexpectedCacheMissesInStampedeBuildSlave = new AtomicInteger(0);
   private final AtomicInteger ruleCount = new AtomicInteger(0);
 
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
@@ -83,42 +81,12 @@ public class CacheRateStatsKeeper {
     }
   }
 
-  public void recordUnexpectedCacheMisses(int unexpectedMisses) {
-    unexpectedCacheMissesInStampedeBuildSlave.addAndGet(unexpectedMisses);
-  }
-
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
     ruleCount.set(calculated.getNumRules());
   }
 
   public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
     ruleCount.set(updated.getNumRules());
-  }
-
-  public CacheRateStats getSerializableStats() {
-    CacheRateStats serializableStats = new CacheRateStats();
-    serializableStats.setTotalRulesCount(ruleCount.get());
-    serializableStats.setUpdatedRulesCount(updated.get());
-    serializableStats.setCacheHitsCount(cacheHits.get());
-    serializableStats.setCacheMissesCount(cacheMisses.get());
-    serializableStats.setCacheErrorsCount(cacheErrors.get());
-    serializableStats.setCacheLocalKeyUnchangedHitsCount(cacheLocalKeyUnchangedHits.get());
-    serializableStats.setCacheIgnoresCount(cacheIgnores.get());
-    serializableStats.setCacheIgnoresCount(cacheIgnores.get());
-    serializableStats.setUnexpectedCacheMissesCount(
-        unexpectedCacheMissesInStampedeBuildSlave.get());
-
-    return serializableStats;
-  }
-
-  public static CacheRateStatsUpdateEvent getCacheRateStatsUpdateEventFromSerializedStats(
-      CacheRateStats serializedStats) {
-    return new CacheRateStatsUpdateEvent(
-        serializedStats.getCacheMissesCount(),
-        serializedStats.getCacheErrorsCount(),
-        serializedStats.getCacheHitsCount(),
-        serializedStats.getTotalRulesCount(),
-        serializedStats.getUpdatedRulesCount());
   }
 
   public static CacheRateStatsUpdateEvent getAggregatedCacheRateStats(

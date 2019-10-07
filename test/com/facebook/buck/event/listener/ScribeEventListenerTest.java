@@ -95,7 +95,7 @@ public class ScribeEventListenerTest {
     Started started = BuildEvent.started(Collections.singletonList("arg1"));
     eventBus.post(started);
     eventBus.post(BuildEvent.finished(started, ExitCode.SUCCESS));
-    eventBus.post(BuildEvent.distBuildStarted());
+    eventBus.post(BuildEvent.buildReport(""));
 
     assertEquals(2, logger.getLinesForCategory(CATEGORY).size());
   }

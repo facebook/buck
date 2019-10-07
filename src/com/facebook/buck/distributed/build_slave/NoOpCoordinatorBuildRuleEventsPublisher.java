@@ -13,9 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.event.listener;
+package com.facebook.buck.distributed.build_slave;
 
-import com.facebook.buck.distributed.build_slave.CoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.google.common.collect.ImmutableList;
 

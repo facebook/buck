@@ -33,7 +33,6 @@ import com.facebook.buck.distributed.testutil.CustomActionGraphBuilderFactory;
 import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.WorkUnit;
-import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;

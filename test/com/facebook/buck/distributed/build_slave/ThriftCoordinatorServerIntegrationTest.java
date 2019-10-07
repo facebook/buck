@@ -28,7 +28,6 @@ import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;

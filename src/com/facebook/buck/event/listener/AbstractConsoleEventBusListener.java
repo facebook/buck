@@ -36,7 +36,6 @@ import com.facebook.buck.event.listener.stats.cache.NetworkStatsTracker;
 import com.facebook.buck.event.listener.stats.cache.RemoteArtifactUploadStats;
 import com.facebook.buck.event.listener.stats.cache.RemoteDownloadStats;
 import com.facebook.buck.event.listener.stats.parse.ParseStatsTracker;
-import com.facebook.buck.event.listener.stats.stampede.DistBuildStatsTracker;
 import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.test.TestRuleEvent;
@@ -124,9 +123,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Nullable protected volatile BuildEvent.Started buildStarted;
   @Nullable protected volatile BuildEvent.Finished buildFinished;
 
-  @Nullable protected volatile BuildEvent.DistBuildStarted distBuildStarted;
-  @Nullable protected volatile BuildEvent.DistBuildFinished distBuildFinished;
-
   @Nullable protected volatile InstallEvent.Started installStarted;
   @Nullable protected volatile InstallEvent.Finished installFinished;
 
@@ -141,7 +137,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected final NetworkStatsTracker networkStatsTracker;
   protected final ParseStatsTracker parseStats;
-  protected final DistBuildStatsTracker distStatsTracker;
 
   protected BuildRuleThreadTracker buildRuleThreadTracker;
 
@@ -162,7 +157,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.console = console;
     this.parseStats = new ParseStatsTracker();
     this.networkStatsTracker = new NetworkStatsTracker();
-    this.distStatsTracker = new DistBuildStatsTracker();
     this.clock = clock;
     this.locale = locale;
     this.ansi = console.getAnsi();
@@ -197,7 +191,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     buildEventBus.register(this);
     buildEventBus.register(parseStats);
     buildEventBus.register(networkStatsTracker);
-    buildEventBus.register(distStatsTracker);
   }
 
   public static String getBuildDetailsLine(BuildId buildId, String buildDetailsTemplate) {
@@ -230,20 +223,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     return minutes == 0 ? String.valueOf(seconds) : String.format("%2$dm %1$s", seconds, minutes);
   }
 
-  /** Local build progress. */
-  protected Optional<Double> getApproximateLocalBuildProgress() {
+  protected Optional<Double> getApproximateBuildProgress() {
     if (progressEstimator.isPresent()) {
       return progressEstimator.get().getApproximateBuildProgress();
     } else {
       return Optional.empty();
-    }
-  }
-
-  protected Optional<Double> getApproximateBuildProgress() {
-    if (distBuildStarted != null && distBuildFinished == null) {
-      return distStatsTracker.getApproximateProgress();
-    } else {
-      return getApproximateLocalBuildProgress();
     }
   }
 
@@ -686,11 +670,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
-  public void distBuildStarted(BuildEvent.DistBuildStarted started) {
-    distBuildStarted = started;
-  }
-
-  @Subscribe
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
     ruleCount = OptionalInt.of(calculated.getNumRules());
     progressEstimator.ifPresent(estimator -> estimator.setNumberOfRules(calculated.getNumRules()));
@@ -811,13 +790,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
 
     buildRuleThreadTracker.didFinishBuildRule(finished);
-  }
-
-  @Subscribe
-  public void distBuildFinished(BuildEvent.DistBuildFinished finished) {
-    if (distBuildFinished == null) {
-      distBuildFinished = finished;
-    }
   }
 
   @Subscribe

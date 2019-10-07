@@ -25,7 +25,6 @@ import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;

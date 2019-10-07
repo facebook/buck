@@ -24,17 +24,11 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.test.event.IndividualTestEvent;
 import com.facebook.buck.core.test.event.TestRunEvent;
 import com.facebook.buck.core.test.event.TestStatusMessageEvent;
-import com.facebook.buck.distributed.DistBuildCreatedEvent;
-import com.facebook.buck.distributed.DistBuildRunEvent;
-import com.facebook.buck.distributed.build_client.StampedeConsoleEvent;
-import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
-import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
-import com.facebook.buck.event.listener.stats.stampede.DistBuildStatsTracker;
 import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
@@ -113,31 +107,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
     this.parseStats.registerListener(this::parseFinished);
     this.networkStatsTracker.registerListener(this::onCacheUploadsFinished);
-    this.distStatsTracker.registerListener(
-        new DistBuildStatsTracker.Listener() {
-          @Override
-          public void onWorkerJoined(BuildSlaveInfo slaveInfo) {
-            printLine(
-                "STAMPEDE WORKER [%s][%s] JOINED BUILD WITH STATUS [%s]",
-                slaveInfo.getHostname(),
-                slaveInfo.getBuildSlaveRunId().getId(),
-                slaveInfo.getStatus().name());
-          }
-
-          @Override
-          public void onWorkerStatusChanged(BuildSlaveInfo slaveInfo) {
-            printLine(
-                "STAMPEDE WORKER [%s][%s] CHANGED STATUS TO [%s]",
-                slaveInfo.getHostname(),
-                slaveInfo.getBuildSlaveRunId().getId(),
-                slaveInfo.getStatus().name());
-          }
-
-          @Override
-          public void onDistBuildStateChanged(BuildStatus distBuildState) {
-            printLine("STAMPEDE JOB STATUS CHANGED TO [%s]", distBuildState);
-          }
-        });
   }
 
   private void parseFinished() {
@@ -150,16 +119,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     logHttpCacheUploads(lines);
     printLines(lines);
-  }
-
-  /** Print information regarding the current distributed build. */
-  @Subscribe
-  public void onDistbuildRunEvent(DistBuildRunEvent event) {
-    String line =
-        String.format(
-            "StampedeId=[%s] BuildSlaveRunId=[%s]",
-            event.getStampedeId().id, event.getBuildSlaveRunId().id);
-    printLines(ImmutableList.<String>builder().add(line));
   }
 
   @Override
@@ -255,11 +214,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     printLines(lines);
   }
 
-  @Subscribe
-  public void logStampedeConsoleEvent(StampedeConsoleEvent event) {
-    logEvent(event.getConsoleEvent());
-  }
-
   @Override
   public void printSevereWarningDirectly(String line) {
     logEvent(ConsoleEvent.severe(line));
@@ -336,13 +290,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     synchronized (testStatusMessageBuilder) {
       testStatusMessageBuilder.add(finished.getTestStatusMessage());
     }
-  }
-
-  @Subscribe
-  public void onDistBuildCreatedEvent(DistBuildCreatedEvent distBuildCreatedEvent) {
-    ImmutableList.Builder<String> lines =
-        ImmutableList.<String>builder().add(distBuildCreatedEvent.getConsoleLogLine());
-    printLines(lines);
   }
 
   private void printLine(String format, Object... args) {

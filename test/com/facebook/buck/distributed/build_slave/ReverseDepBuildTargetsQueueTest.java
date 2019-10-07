@@ -39,7 +39,6 @@ import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.testutil.CustomActionGraphBuilderFactory;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.WorkUnit;
-import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
