@@ -97,17 +97,6 @@ public class ProgressEstimator implements AutoCloseable {
   }
 
   /**
-   * Reset the stats associated with BuildRuleEvent counts. Can be used to reset progress estimation
-   * for a second build instance.
-   */
-  public void resetBuildData() {
-    numberOfRules.set(0);
-    numberOfStartedRules.set(0);
-    numberOfFinishedRules.set(0);
-    buildProgress.set(-1.0);
-  }
-
-  /**
    * Sets the current command that we are estimating
    *
    * @param commandName the name of the command

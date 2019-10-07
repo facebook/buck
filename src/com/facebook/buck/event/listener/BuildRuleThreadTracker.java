@@ -52,11 +52,6 @@ public class BuildRuleThreadTracker {
     this.threadsToRunningTestRuleEvent.putAll(threadsToRunningTestRuleEvent);
   }
 
-  public void reset() {
-    threadsToRunningBuildRuleEvent.clear();
-    threadsToRunningTestRuleEvent.clear();
-  }
-
   public ConcurrentMap<Long, Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>>
       getBuildEventsByThread() {
     return threadsToRunningBuildRuleEvent;

@@ -30,7 +30,6 @@ COMMON_FILES = (
     "FileMaterializationStatsTracker.java",
     "FrontendService.java",
     "DistBuildConfig.java",
-    "DistBuildCreatedEvent.java",
     "MaterializerDummyFileHashCache.java",
     "RecordedFileHashes.java",
     "RecordingProjectFileHashCache.java",
