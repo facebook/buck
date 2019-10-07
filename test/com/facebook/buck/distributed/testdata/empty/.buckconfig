@@ -1,6 +1,0 @@
-[stampede]
-  slb_server_pool=http://this.server.does.not.exist.com
-  load_balancing_type=CLIENT_SLB
-  slb_ping_endpoint=/ping
-  slb_timeout_millis=60000
-  slb_max_acceptable_latency_millis=60000

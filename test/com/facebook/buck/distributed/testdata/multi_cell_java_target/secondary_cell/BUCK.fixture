@@ -1,5 +1,0 @@
-java_library(
-    name = "libC",
-    srcs = ["C.java"],
-    visibility = ["PUBLIC"],
-)

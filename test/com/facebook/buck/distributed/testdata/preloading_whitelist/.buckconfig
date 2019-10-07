@@ -1,5 +1,0 @@
-[stampede]
-  always_materialize_whitelist = javac_wrapper.sh
-
-[tools]
-  javac = javac_wrapper.sh

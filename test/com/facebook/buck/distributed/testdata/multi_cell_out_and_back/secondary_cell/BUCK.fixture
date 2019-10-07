@@ -1,6 +1,0 @@
-genrule(
-    name = "secondary_cell_gen_rule",
-    out = "dir_list.txt",
-    cmd = "$(exe main_cell//:my_java_binary) > $OUT",
-    visibility = ["PUBLIC"],
-)
