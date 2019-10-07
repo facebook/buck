@@ -208,7 +208,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             getBuildDeps().stream()
                 .filter(SwiftCompile.class::isInstance)
                 .map(BuildRule::getSourcePathToOutput)
-                .map(input -> resolver.getAbsolutePath(input).toString())
+                .map(input -> resolver.getRelativePath(input).toString())
                 .collect(ImmutableSet.toImmutableSet())));
 
     boolean hasMainEntry =
