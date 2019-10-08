@@ -36,6 +36,9 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InnerClassNode;
 
 class StubJarClassEntry extends StubJarEntry {
+  private static final String DEFAULT_METHOD_SUFFIX = "$default";
+  private static final int DEFAULT_METHOD_SUFFIX_LENGTH = DEFAULT_METHOD_SUFFIX.length();
+
   @Nullable private final Set<String> referencedClassNames;
   private final List<String> methodBodiesToRetain;
   private final Path path;
@@ -181,11 +184,19 @@ class StubJarClassEntry extends StubJarEntry {
     }
 
     final List<String> inlineFunctions = inlineFunctionsMap.get(outerClass);
-    if (inlineFunctions == null) {
+    if (inlineFunctions == null || outerMethod == null) {
       return false;
     }
 
-    return inlineFunctions.contains(outerMethod);
+    return inlineFunctions.contains(sanitizeMethodName(outerMethod));
+  }
+
+  private static String sanitizeMethodName(String methodName) {
+    if (methodName.endsWith(DEFAULT_METHOD_SUFFIX)) {
+      return methodName.substring(0, methodName.length() - DEFAULT_METHOD_SUFFIX_LENGTH);
+    }
+
+    return methodName;
   }
 
   @Nullable
