@@ -31,12 +31,14 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
+import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.PerfTimesStats;
@@ -46,10 +48,11 @@ import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
-import com.facebook.buck.support.build.report.BuildReportFileUploader;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
+import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsEvent;
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -63,6 +66,7 @@ import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
@@ -85,8 +89,11 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private final ProjectFilesystem filesystem;
   private final ObjectWriter objectWriter;
   private BufferedOutputStream outputStream;
-  private final Optional<BuildReportFileUploader> buildReportFileUploader;
 
+  private final ChromeTraceBuckConfig chromeTraceConfig;
+  private final Path logFilePath;
+  private final Path logDirectoryPath;
+  private final BuildId buildId;
   private final TaskManagerCommandScope managerScope;
 
   private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHits = Maps.newConcurrentMap();
@@ -110,13 +117,19 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       ProjectFilesystem filesystem,
       ExecutorService executor,
       ImmutableSet<ArtifactCacheMode> cacheModes,
-      Optional<BuildReportFileUploader> buildReportFileUploader,
+      ChromeTraceBuckConfig chromeTraceConfig,
+      Path logFilePath,
+      Path logDirectoryPath,
+      BuildId buildId,
       TaskManagerCommandScope managerScope)
       throws FileNotFoundException {
     this.info = info;
     this.filesystem = filesystem;
     this.executor = executor;
-    this.buildReportFileUploader = buildReportFileUploader;
+    this.chromeTraceConfig = chromeTraceConfig;
+    this.logFilePath = logFilePath;
+    this.logDirectoryPath = logDirectoryPath;
+    this.buildId = buildId;
     this.managerScope = managerScope;
 
     for (ArtifactCacheMode mode : cacheModes) {
@@ -296,7 +309,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Override
-  public void close() {
+  public synchronized void close() {
     executor.submit(
         () -> {
           try {
@@ -333,8 +346,13 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     MachineReadableLoggerListenerCloseArgs args =
         MachineReadableLoggerListenerCloseArgs.of(
             executor,
-            buildReportFileUploader,
-            info.getLogDirectoryPath().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME));
+            info.getLogDirectoryPath().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME),
+            chromeTraceConfig.getLogUploadMode().shouldUploadLogs(exitCode)
+                ? chromeTraceConfig.getTraceUploadUri()
+                : Optional.empty(),
+            logDirectoryPath,
+            logFilePath,
+            buildId);
 
     BackgroundTask<MachineReadableLoggerListenerCloseArgs> task =
         ImmutableBackgroundTask.of(
@@ -354,11 +372,15 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     public void run(MachineReadableLoggerListenerCloseArgs args) {
       args.getExecutor().shutdown();
 
-      args.getBuildReportFileUploader()
-          .ifPresent(
-              uploader ->
-                  uploader.uploadFile(
-                      args.getMachineReadableLogFilePath(), "machine_readable_log"));
+      if (args.getTraceUploadURI().isPresent()) {
+        UploaderLauncher.uploadInBackground(
+            args.getBuildId(),
+            args.getMachineReadableLogFilePath(),
+            "machine_readable_log",
+            args.getTraceUploadURI().get(),
+            args.getLogDirectoryPath().resolve("upload-machine-readable-log.log"),
+            CompressionType.NONE);
+      }
 
       // Allow SHUTDOWN_TIMEOUT_SECONDS seconds for already scheduled writeToLog calls
       // to complete.
@@ -382,9 +404,18 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     public abstract ExecutorService getExecutor();
 
     @Value.Parameter
-    public abstract Optional<BuildReportFileUploader> getBuildReportFileUploader();
+    public abstract Path getMachineReadableLogFilePath();
 
     @Value.Parameter
-    public abstract Path getMachineReadableLogFilePath();
+    public abstract Optional<URI> getTraceUploadURI();
+
+    @Value.Parameter
+    public abstract Path getLogDirectoryPath();
+
+    @Value.Parameter
+    public abstract Path getLogFilePath();
+
+    @Value.Parameter
+    public abstract BuildId getBuildId();
   }
 }

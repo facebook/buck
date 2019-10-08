@@ -2140,7 +2140,10 @@ public final class MainRunner {
                 MostExecutors.newSingleThreadExecutor(
                     new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
                 artifactCacheConfig.getArtifactCacheModes(),
-                buildReportFileUploader,
+                chromeTraceConfig,
+                invocationInfo.getLogFilePath(),
+                invocationInfo.getLogDirectoryPath(),
+                invocationInfo.getBuildId(),
                 managerScope));
       } catch (FileNotFoundException e) {
         LOG.warn("Unable to open stream for machine readable log file.");
