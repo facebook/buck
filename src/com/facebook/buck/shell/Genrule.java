@@ -132,8 +132,7 @@ public class Genrule extends ModernBuildRule<GenruleBuildable> implements HasOut
             createSandboxConfiguration(
                 buildRuleResolver, buildTarget, projectFilesystem, srcs, cmd, bash, cmdExe),
             androidTools.map(
-                tools -> GenruleAndroidTools.of(tools, buildTarget, buildRuleResolver)),
-            /* noRemote (for now, genrules can't be executed remotely) */ true));
+                tools -> GenruleAndroidTools.of(tools, buildTarget, buildRuleResolver))));
   }
 
   @Override

@@ -67,20 +67,6 @@ public interface BuildEngineAction {
    */
 
   /**
-   * @return true if this rule, and all rules which that depend on it, should be built locally i.e.
-   *     on the machine that initiated a build instead of one of the remote workers taking part in
-   *     the distributed build.
-   * @deprecated this property was used by no longer existing system called Stampede<br>
-   *     Will be removed really soon<br>
-   *     POC: msienkiewicz<br>
-   *     Check how to disable remote execution in the {@link RemoteExecutionStrategy#canBuild()}
-   */
-  @Deprecated
-  default boolean shouldBuildLocally() {
-    return false;
-  }
-
-  /**
    * @return true if this rule should only be allowed to be executed via Remote Execution if it
    *     satisfies input size limits.
    */

@@ -88,8 +88,7 @@ public class ApkGenrule extends LegacyGenrule implements HasInstallableApk, HasR
         false,
         isCacheable,
         environmentExpansionSeparator,
-        androidTools,
-        false);
+        androidTools);
     // TODO(cjhopman): Disallow apk_genrule depending on an apk with exopackage enabled.
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
     this.apk = (BuildTargetSourcePath) apk;

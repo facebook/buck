@@ -85,8 +85,7 @@ public class JarGenrule extends LegacyGenrule implements BinaryBuildRule {
         false,
         isCacheable,
         environmentExpansionSeparator,
-        Optional.empty(),
-        false);
+        Optional.empty());
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.pathToOutput = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s.jar");
   }

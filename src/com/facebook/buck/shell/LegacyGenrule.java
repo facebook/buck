@@ -149,7 +149,6 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final boolean enableSandboxingInGenrule;
   @AddToRuleKey private final boolean isCacheable;
   @AddToRuleKey private final String environmentExpansionSeparator;
-  @AddToRuleKey private final boolean noRemote;
 
   private BuildRuleResolver buildRuleResolver;
   private final SandboxExecutionStrategy sandboxExecutionStrategy;
@@ -175,8 +174,7 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
-      Optional<AndroidTools> androidTools,
-      boolean noRemote) {
+      Optional<AndroidTools> androidTools) {
     super(buildTarget, projectFilesystem, params);
     this.androidTools = androidTools;
     this.buildRuleResolver = buildRuleResolver;
@@ -206,8 +204,6 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.type = super.getType() + (type.map(typeStr -> "_" + typeStr).orElse(""));
     this.isWorkerGenrule = this.isWorkerGenrule();
     this.enableSandboxingInGenrule = enableSandboxingInGenrule;
-
-    this.noRemote = noRemote;
   }
 
   /** @return the absolute path to the output file */
@@ -572,11 +568,6 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public final boolean isCacheable() {
     return isCacheable;
-  }
-
-  @Override
-  public final boolean shouldBuildLocally() {
-    return noRemote;
   }
 
   @Override

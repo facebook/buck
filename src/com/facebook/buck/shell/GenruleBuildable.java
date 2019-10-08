@@ -132,7 +132,7 @@ public class GenruleBuildable implements Buildable {
   /** Whether or not this genrule can be executed remotely. Fails serialization if false. */
   @AddToRuleKey
   @CustomFieldBehavior(RemoteExecutionEnabled.class)
-  protected final boolean executeRemotely;
+  private final boolean executeRemotely = false;
 
   /** Type for this genrule, if one was provided. */
   @AddToRuleKey protected final Optional<String> type;
@@ -188,8 +188,7 @@ public class GenruleBuildable implements Buildable {
       boolean isCacheable,
       String environmentExpansionSeparator,
       SandboxProperties sandboxProperties,
-      Optional<GenruleAndroidTools> androidTools,
-      boolean noRemote) {
+      Optional<GenruleAndroidTools> androidTools) {
     this.buildTarget = buildTarget;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.srcs = srcs;
@@ -214,7 +213,6 @@ public class GenruleBuildable implements Buildable {
     }
 
     this.outputPath = new PublicOutputPath(legacyBasePath);
-    this.executeRemotely = !noRemote;
   }
 
   public OutputPath getOutput() {

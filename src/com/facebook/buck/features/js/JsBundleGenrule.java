@@ -87,8 +87,7 @@ public class JsBundleGenrule extends LegacyGenrule
         false,
         true,
         environmentExpansionSeparator,
-        androidTools,
-        false);
+        androidTools);
     this.jsBundle = jsBundle;
     this.jsDependencies = jsDependencies;
     this.jsBundleSourcePath = jsBundle.getSourcePathToOutput();

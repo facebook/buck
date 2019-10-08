@@ -78,8 +78,7 @@ public class ExternallyBuiltApplePackage extends LegacyGenrule {
         false,
         cacheable,
         environmentExpansionSeparator,
-        androidTools,
-        false);
+        androidTools);
     this.sdkPath = packageConfigAndPlatformInfo.getSdkPath();
     this.sdkVersion = packageConfigAndPlatformInfo.getSdkVersion();
     this.platformBuildVersion = packageConfigAndPlatformInfo.getPlatformBuildVersion();

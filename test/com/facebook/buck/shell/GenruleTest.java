@@ -89,7 +89,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class GenruleTest {
@@ -946,76 +945,16 @@ public class GenruleTest {
     assertFalse(genrule3.isCacheable());
   }
 
-  @Test
-  @Ignore("Genrules currently can't be executed remotely, not included in the rule key")
-  public void testChangingNoRemoteChangesRuleKey() {
-    StandaloneGenruleBuilder builder1 = new StandaloneGenruleBuilder("//:genrule1");
-    StandaloneGenruleBuilder builder2 = new StandaloneGenruleBuilder("//:genrule1");
-
-    builder1.genruleBuilder.setOut("foo").setNoRemote(true);
-    RuleKey key1 = builder1.getRuleKey();
-
-    builder2.genruleBuilder.setOut("foo").setNoRemote(false);
-    RuleKey key2 = builder2.getRuleKey();
-
-    assertNotEquals(key1, key2);
-  }
-
-  @Test
-  @Ignore("Genrules currently can't be executed remotely")
-  public void testNoRemoteIsRespected() {
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    BuildTarget buildTarget1 = BuildTargetFactory.newInstance("//:genrule1");
-    BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//:genrule2");
-    BuildTarget buildTarget3 = BuildTargetFactory.newInstance("//:genrule3");
-
-    Genrule genrule1 =
-        GenruleBuilder.newGenruleBuilder(buildTarget1)
-            .setOut("foo")
-            .setNoRemote(null)
-            .build(graphBuilder);
-    Genrule genrule2 =
-        GenruleBuilder.newGenruleBuilder(buildTarget2)
-            .setOut("foo")
-            .setNoRemote(false)
-            .build(graphBuilder);
-    Genrule genrule3 =
-        GenruleBuilder.newGenruleBuilder(buildTarget3)
-            .setOut("foo")
-            .setNoRemote(true)
-            .build(graphBuilder);
-
-    assertFalse(genrule1.shouldBuildLocally());
-    assertFalse(genrule2.shouldBuildLocally());
-    assertTrue(genrule3.shouldBuildLocally());
-  }
-
   /**
-   * Tests that genrules aren't executed remotely, regardless of what their NoRemote parameter says.
-   * Ideally, this is a temporary thing while we work out the issues involved.
+   * Tests that genrules aren't executed remotely. Ideally, this is a temporary thing while we work
+   * out the issues involved.
    */
   @Test
   public void testNoRemoteRegardlessOfNoRemoteParameter() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    BuildTarget buildTarget1 = BuildTargetFactory.newInstance("//:genrule1");
-    BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//:genrule2");
-    BuildTarget buildTarget3 = BuildTargetFactory.newInstance("//:genrule3");
-
-    Genrule genrule1 =
-        GenruleBuilder.newGenruleBuilder(buildTarget1)
-            .setOut("foo")
-            .setNoRemote(null)
-            .build(graphBuilder);
-    Genrule genrule2 =
-        GenruleBuilder.newGenruleBuilder(buildTarget2)
-            .setOut("foo")
-            .setNoRemote(false)
-            .build(graphBuilder);
-    Genrule genrule3 =
-        GenruleBuilder.newGenruleBuilder(buildTarget3)
-            .setOut("foo")
-            .setNoRemote(true)
-            .build(graphBuilder);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:genrule");
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(buildTarget).setOut("foo").build(graphBuilder);
 
     BuckEventBus eventBus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("dontcare"));
     SourcePathRuleFinder ruleFinder =
@@ -1030,8 +969,6 @@ public class GenruleTest {
         new ModernBuildRuleRemoteExecutionHelper(
             eventBus, new GrpcProtocol(), ruleFinder, root, path -> HashCode.fromInt(0));
 
-    assertFalse(mbrHelper.supportsRemoteExecution(genrule1));
-    assertFalse(mbrHelper.supportsRemoteExecution(genrule2));
-    assertFalse(mbrHelper.supportsRemoteExecution(genrule3));
+    assertFalse(mbrHelper.supportsRemoteExecution(genrule));
   }
 }
