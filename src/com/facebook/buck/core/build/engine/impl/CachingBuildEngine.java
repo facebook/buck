@@ -20,7 +20,6 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
 import com.facebook.buck.core.build.engine.BuildEngineResult;
@@ -144,8 +143,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final boolean consoleLogBuildFailuresInline;
 
-  private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
-
   private final Optional<BuildRuleStrategy> customBuildRuleStrategy;
 
   private final Optional<ManifestService> manifestService;
@@ -165,7 +162,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       boolean consoleLogBuildFailuresInline,
       RuleKeyFactories ruleKeyFactories,
-      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       Optional<ManifestService> manifestService) {
     this(
         cachingBuildEngineDelegate,
@@ -180,7 +176,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         actionToBuildRuleResolver,
         targetConfigurationSerializer,
         ruleKeyFactories,
-        remoteBuildRuleCompletionWaiter,
         resourceAwareSchedulingInfo,
         new RuleKeyDiagnostics<>(
             rule ->
@@ -210,7 +205,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
       RuleKeyFactories ruleKeyFactories,
-      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
       boolean consoleLogBuildFailuresInline,
@@ -231,7 +225,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.buildInfoStoreManager = buildInfoStoreManager;
-    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
 
     this.ruleDeps = new DefaultRuleDepsCache(resolver, actionToBuildRuleResolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
@@ -511,7 +504,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildInfoRecorder,
             buildableContext,
             pipelinesRunner,
-            remoteBuildRuleCompletionWaiter,
             customBuildRuleStrategy,
             manifestService);
     ruleBuilders.add(new WeakReference<>(cachingBuildRuleBuilder));

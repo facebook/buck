@@ -17,7 +17,6 @@ package com.facebook.buck.command;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.config.BuildBuckConfig;
-import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
@@ -78,7 +77,6 @@ public class LocalBuildExecutor implements BuildExecutor {
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private final BuildExecutorArgs args;
   private final RuleKeyCacheScope<RuleKey> ruleKeyCacheScope;
-  private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
   private final Optional<BuildType> buildEngineMode;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
   private final MetadataProvider metadataProvider;
@@ -103,7 +101,6 @@ public class LocalBuildExecutor implements BuildExecutor {
       RuleKeyCacheScope<RuleKey> ruleKeyRuleKeyCacheScope,
       Optional<BuildType> buildEngineMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       MetadataProvider metadataProvider,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfiguration targetConfiguration,
@@ -117,7 +114,6 @@ public class LocalBuildExecutor implements BuildExecutor {
     this.buildEngineMode = buildEngineMode;
     this.ruleKeyLogger = ruleKeyLogger;
     this.ruleKeyCacheScope = ruleKeyRuleKeyCacheScope;
-    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
     this.metadataProvider = metadataProvider;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.targetConfiguration = targetConfiguration;
@@ -253,7 +249,6 @@ public class LocalBuildExecutor implements BuildExecutor {
             args.getBuckConfig().getView(BuildBuckConfig.class).getBuildInputRuleKeyFileSizeLimit(),
             ruleKeyCacheScope.getCache(),
             ruleKeyLogger),
-        remoteBuildRuleCompletionWaiter,
         args.getManifestService());
   }
 

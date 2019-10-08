@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.config.BuildBuckConfig;
-import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
@@ -154,7 +153,6 @@ public class FetchCommand extends BuildCommand {
                           .getView(BuildBuckConfig.class)
                           .getBuildInputRuleKeyFileSizeLimit(),
                       ruleKeyCacheScope.getCache()),
-                  new NoOpRemoteBuildRuleCompletionWaiter(),
                   cachingBuildEngineBuckConfig.getManifestServiceIfEnabled(
                       params.getManifestServiceSupplier()));
           Build build =

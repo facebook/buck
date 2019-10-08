@@ -21,8 +21,6 @@ import com.facebook.buck.apple.AppleDsym;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.command.config.BuildBuckConfig;
-import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
-import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.event.BuildEvent;
@@ -445,7 +443,6 @@ public class BuildCommand extends AbstractCommand {
                 graphsAndBuildTargets,
                 commandThreadManager.getWeightedListeningExecutorService(),
                 optionalRuleKeyLogger,
-                new NoOpRemoteBuildRuleCompletionWaiter(),
                 false,
                 Optional.empty(),
                 ruleKeyCacheScope,
@@ -710,7 +707,6 @@ public class BuildCommand extends AbstractCommand {
       GraphsAndBuildTargets graphsAndBuildTargets,
       WeightedListeningExecutorService executor,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       boolean isDownloadHeavyBuild,
       Optional<CountDownLatch> initializeBuildLatch,
       RuleKeyCacheScope<RuleKey> ruleKeyCacheScope,
@@ -738,7 +734,6 @@ public class BuildCommand extends AbstractCommand {
             ruleKeyCacheScope,
             getBuildEngineMode(),
             ruleKeyLogger,
-            remoteBuildRuleCompletionWaiter,
             params.getMetadataProvider(),
             params.getUnconfiguredBuildTargetFactory(),
             params.getTargetConfiguration(),

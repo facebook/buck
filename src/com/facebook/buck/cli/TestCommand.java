@@ -22,7 +22,6 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
@@ -617,7 +616,6 @@ public class TestCommand extends BuildCommand {
                             .getView(BuildBuckConfig.class)
                             .getBuildInputRuleKeyFileSizeLimit(),
                         ruleKeyCacheScope.getCache()),
-                    new NoOpRemoteBuildRuleCompletionWaiter(),
                     cachingBuildEngineBuckConfig.getManifestServiceIfEnabled(
                         params.getManifestServiceSupplier()));
             Build build =

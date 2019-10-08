@@ -49,8 +49,6 @@ import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRule
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
-import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
 import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.BuildResult;
@@ -260,7 +258,6 @@ public class CachingBuildEngineTest {
     protected ProjectFilesystem filesystem;
     protected BuildInfoStoreManager buildInfoStoreManager;
     protected BuildInfoStore buildInfoStore;
-    protected RemoteBuildRuleCompletionWaiter defaultRemoteBuildRuleCompletionWaiter;
     protected FileHashCache fileHashCache;
     protected BuildEngineBuildContext buildContext;
     protected ActionGraphBuilder graphBuilder;
@@ -276,7 +273,6 @@ public class CachingBuildEngineTest {
       buildInfoStoreManager = new BuildInfoStoreManager();
       Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
       buildInfoStore = buildInfoStoreManager.get(filesystem);
-      defaultRemoteBuildRuleCompletionWaiter = new NoOpRemoteBuildRuleCompletionWaiter();
       fileHashCache =
           StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
       buildContext =
@@ -298,16 +294,8 @@ public class CachingBuildEngineTest {
     }
 
     protected CachingBuildEngineFactory cachingBuildEngineFactory() {
-      return cachingBuildEngineFactory(defaultRemoteBuildRuleCompletionWaiter);
-    }
-
-    protected CachingBuildEngineFactory cachingBuildEngineFactory(
-        RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
       return new CachingBuildEngineFactory(
-              graphBuilder,
-              actionToBuildRuleResolver,
-              buildInfoStoreManager,
-              remoteBuildRuleCompletionWaiter)
+              graphBuilder, actionToBuildRuleResolver, buildInfoStoreManager)
           .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache));
     }
 
