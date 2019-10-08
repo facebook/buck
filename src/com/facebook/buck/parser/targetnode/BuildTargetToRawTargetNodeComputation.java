@@ -41,12 +41,12 @@ import javax.annotation.Nullable;
 public class BuildTargetToRawTargetNodeComputation
     implements GraphComputation<BuildTargetToRawTargetNodeKey, RawTargetNode> {
 
-  private final RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory;
+  private final RawTargetNodeFactory rawTargetNodeFactory;
   private final Cell cell;
   private final Path buildFileName;
 
   private BuildTargetToRawTargetNodeComputation(
-      RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory, Cell cell) {
+      RawTargetNodeFactory rawTargetNodeFactory, Cell cell) {
     this.rawTargetNodeFactory = rawTargetNodeFactory;
     this.cell = cell;
     buildFileName =
@@ -65,7 +65,7 @@ public class BuildTargetToRawTargetNodeComputation
    * @return
    */
   public static BuildTargetToRawTargetNodeComputation of(
-      RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory, Cell cell) {
+      RawTargetNodeFactory rawTargetNodeFactory, Cell cell) {
     return new BuildTargetToRawTargetNodeComputation(rawTargetNodeFactory, cell);
   }
 

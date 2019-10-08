@@ -62,7 +62,7 @@ public class RawTargetNodePipeline implements AutoCloseable {
 
   private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
   private final BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline;
-  private final RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory;
+  private final RawTargetNodeFactory rawTargetNodeFactory;
 
   public RawTargetNodePipeline(
       ListeningExecutorService executorService,
@@ -70,7 +70,7 @@ public class RawTargetNodePipeline implements AutoCloseable {
       BuckEventBus eventBus,
       BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
       BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline,
-      RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory) {
+      RawTargetNodeFactory rawTargetNodeFactory) {
     this.executorService = executorService;
     this.eventBus = eventBus;
     this.buildFileRawNodeParsePipeline = buildFileRawNodeParsePipeline;
