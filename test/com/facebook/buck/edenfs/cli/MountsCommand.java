@@ -18,13 +18,10 @@ package com.facebook.buck.edenfs.cli;
 
 import com.facebook.buck.edenfs.EdenClient;
 import com.facebook.buck.edenfs.EdenClientPool;
-import com.facebook.buck.edenfs.EdenMount;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.thrift.TException;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 public class MountsCommand implements Command {
@@ -35,13 +32,6 @@ public class MountsCommand implements Command {
     System.out.printf("Number of mounts: %d\n", mountInfos.size());
     for (MountInfo info : mountInfos) {
       System.out.println(info.mountPoint);
-      EdenMount mount =
-          EdenMount.createEdenMountForProjectRoot(Paths.get(info.mountPoint), pool).get();
-      List<Path> bindMounts = mount.getBindMounts();
-      System.out.printf("    Number of bind mounts: %d\n", bindMounts.size());
-      for (Path bindMount : bindMounts) {
-        System.out.printf("    %s\n", bindMount);
-      }
     }
 
     return 0;

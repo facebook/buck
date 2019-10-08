@@ -86,7 +86,7 @@ final class ReconnectingEdenClient implements EdenClient {
 
   @Override
   public List<SHA1Result> getSHA1(String mountPoint, List<String> paths)
-      throws IOException, TException {
+      throws IOException, TException, EdenError {
     try {
       return attemptGetSHA1(mountPoint, paths);
     } catch (TException e) {
@@ -101,23 +101,6 @@ final class ReconnectingEdenClient implements EdenClient {
     List<SHA1Result> sha1s = getConnectedClient().getSHA1(mountPoint, paths);
     lastSuccessfulRequest = clock.currentTimeMillis();
     return sha1s;
-  }
-
-  @Override
-  public List<String> getBindMounts(String mountPoint) throws IOException, TException {
-    try {
-      return attemptGetBindMounts(mountPoint);
-    } catch (TException e) {
-      investigateAndPossiblyRethrowException(e);
-    }
-
-    return attemptGetBindMounts(mountPoint);
-  }
-
-  private List<String> attemptGetBindMounts(String mountPoint) throws IOException, TException {
-    List<String> bindMounts = getConnectedClient().getBindMounts(mountPoint);
-    lastSuccessfulRequest = clock.currentTimeMillis();
-    return bindMounts;
   }
 
   @Override

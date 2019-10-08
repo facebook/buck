@@ -27,7 +27,6 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -101,17 +100,6 @@ public class EdenMount {
     } else {
       throw result.getError();
     }
-  }
-
-  public ImmutableList<Path> getBindMounts() {
-    List<String> bindMounts;
-    try {
-      bindMounts = pool.getClient().getBindMounts(mountPoint);
-    } catch (IOException | TException e) {
-      throw new RuntimeException(e);
-    }
-
-    return bindMounts.stream().map(Paths::get).collect(ImmutableList.toImmutableList());
   }
 
   /**

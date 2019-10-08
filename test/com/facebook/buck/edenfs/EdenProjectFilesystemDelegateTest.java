@@ -30,7 +30,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -63,40 +62,12 @@ public class EdenProjectFilesystemDelegateTest {
 
     EdenMount mount = createMock(EdenMount.class);
     Path path = fs.getPath("foo/bar");
-    expect(mount.getBindMounts()).andReturn(ImmutableList.of());
     expect(mount.getPathRelativeToProjectRoot(root.resolve(path))).andReturn(Optional.of(path));
     expect(mount.getSha1(path)).andReturn(DUMMY_SHA1);
     replay(mount);
 
     EdenProjectFilesystemDelegate edenDelegate = new EdenProjectFilesystemDelegate(mount, delegate);
     assertEquals(DUMMY_SHA1, edenDelegate.computeSha1(path));
-
-    verify(mount);
-  }
-
-  @Test
-  public void computeSha1ForOrdinaryFileUnderMountButBehindBindMount() throws IOException {
-    FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
-    Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
-    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
-
-    EdenMount mount = createMock(EdenMount.class);
-    Path path = fs.getPath("buck-out/gen/some-output");
-    Files.createDirectories(path.getParent());
-    Files.createFile(path);
-    byte[] bytes = new byte[] {66, 85, 67, 75};
-    Files.write(path, bytes);
-
-    expect(mount.getBindMounts()).andReturn(ImmutableList.of(fs.getPath("buck-out")));
-    expect(mount.getPathRelativeToProjectRoot(root.resolve(path))).andReturn(Optional.of(path));
-    replay(mount);
-
-    EdenProjectFilesystemDelegate edenDelegate = new EdenProjectFilesystemDelegate(mount, delegate);
-    assertEquals(
-        "EdenProjectFilesystemDelegate.computeSha1() should compute the SHA-1 directly via "
-            + "DefaultProjectFilesystemDelegate because the path is behind a bind mount.",
-        Sha1HashCode.fromHashCode(Hashing.sha1().hashBytes(bytes)),
-        edenDelegate.computeSha1(path));
 
     verify(mount);
   }
@@ -117,7 +88,6 @@ public class EdenProjectFilesystemDelegateTest {
     // Eden will throw when the SHA-1 for the link is requested, but return a SHA-1 when the target
     // is requested.
     EdenMount mount = createMock(EdenMount.class);
-    expect(mount.getBindMounts()).andReturn(ImmutableList.of());
     expect(mount.getPathRelativeToProjectRoot(link)).andReturn(Optional.of(fs.getPath("link")));
     expect(mount.getPathRelativeToProjectRoot(target)).andReturn(Optional.of(fs.getPath("target")));
     expect(mount.getSha1(fs.getPath("link"))).andThrow(new EdenError());
@@ -148,7 +118,6 @@ public class EdenProjectFilesystemDelegateTest {
     // Eden will throw when the SHA-1 for the link is requested, but return a SHA-1 when the target
     // is requested.
     EdenMount mount = createMock(EdenMount.class);
-    expect(mount.getBindMounts()).andReturn(ImmutableList.of());
     expect(mount.getPathRelativeToProjectRoot(link)).andReturn(Optional.of(fs.getPath("link")));
     expect(mount.getPathRelativeToProjectRoot(target)).andReturn(Optional.empty());
     expect(mount.getSha1(fs.getPath("link"))).andThrow(new EdenError());
@@ -175,7 +144,6 @@ public class EdenProjectFilesystemDelegateTest {
     Files.write(target, bytes);
 
     EdenMount mount = createMock(EdenMount.class);
-    expect(mount.getBindMounts()).andReturn(ImmutableList.of());
     expect(mount.getPathRelativeToProjectRoot(target)).andReturn(Optional.empty());
     replay(mount);
 
