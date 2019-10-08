@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.core.model;
 
-import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Special configuration that is used together with {@link UnconfiguredBuildTarget} that represent
@@ -41,7 +41,7 @@ public class ConfigurationForConfigurationTargets implements TargetConfiguration
   }
 
   @Override
-  public ImmutableSet<BuildTarget> getConfigurationTargets() {
-    return ImmutableSet.of();
+  public Optional<BuildTarget> getConfigurationTarget() {
+    return Optional.empty();
   }
 }

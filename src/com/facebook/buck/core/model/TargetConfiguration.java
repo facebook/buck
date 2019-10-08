@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.core.model;
 
-import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 
 /** Contains configuration information attached to a configured build target. */
 public interface TargetConfiguration {
-  ImmutableSet<BuildTarget> getConfigurationTargets();
+  Optional<BuildTarget> getConfigurationTarget();
 }

@@ -124,7 +124,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFromRaw
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
 
-    configurationDeps.addAll(target.getTargetConfiguration().getConfigurationTargets());
+    target.getTargetConfiguration().getConfigurationTarget().ifPresent(configurationDeps::add);
 
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(

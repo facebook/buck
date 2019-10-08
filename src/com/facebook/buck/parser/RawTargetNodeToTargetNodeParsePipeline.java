@@ -267,7 +267,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
       TargetConfiguration globalTargetConfiguration,
       RawTargetNode rawTargetNode) {
     TargetConfiguration targetConfiguration = globalTargetConfiguration;
-    if (globalTargetConfiguration.getConfigurationTargets().isEmpty()) {
+    if (!globalTargetConfiguration.getConfigurationTarget().isPresent()) {
       // We use `default_target_platform` only when global platform is not specified
       String defaultTargetPlatform =
           (String)

@@ -16,8 +16,8 @@
 package com.facebook.buck.core.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Configuration that doesn't have any options */
 public class EmptyTargetConfiguration implements TargetConfiguration {
@@ -39,7 +39,7 @@ public class EmptyTargetConfiguration implements TargetConfiguration {
 
   @JsonIgnore
   @Override
-  public ImmutableSet<BuildTarget> getConfigurationTargets() {
-    return ImmutableSet.of();
+  public Optional<BuildTarget> getConfigurationTarget() {
+    return Optional.empty();
   }
 }
