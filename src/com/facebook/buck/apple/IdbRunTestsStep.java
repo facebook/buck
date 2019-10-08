@@ -119,12 +119,6 @@ public class IdbRunTestsStep implements Step {
     this.appTestBundlePath = parseBuckAppPath(appTestBundlePath);
     this.testHostAppBundlePath = parseBuckAppPath(testHostAppBundlePath);
     this.deviceUdid = deviceUdid;
-    if (!deviceUdid.isPresent()) {
-      if (type == TestTypeEnum.LOGIC) {
-        LOG.warn(
-            "Could not find any simulator to run the tests, this will cause a slower execution");
-      } else throw new HumanReadableException("Cannot run app or ui tests without a simulator");
-    }
     ImmutableList.Builder<String> installCommandBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> runCommandBuilder = ImmutableList.builder();
     installCommandBuilder.add(idbPath.toString(), "xctest", "install", testBundlePath.toString());
@@ -242,6 +236,14 @@ public class IdbRunTestsStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
+
+    // Verify if there is the udid of the device
+    if (!deviceUdid.isPresent()) {
+      if (type == TestTypeEnum.LOGIC) {
+        LOG.warn(
+            "Could not find any simulator to run the tests, this will cause a slower execution");
+      } else throw new HumanReadableException("Cannot run app or ui tests without a simulator");
+    }
 
     // Installing the test
     ProcessExecutorParams processExecutorParams =
