@@ -154,7 +154,7 @@ def main():
     copy_package(pex_builder, "_markerlib", prefix=pex_builder.BOOTSTRAP_DIR)
 
     # Add the sources listed in the manifest.
-    for dst, src in manifest["modules"].iteritems():
+    for dst, src in manifest["modules"].items():
         # NOTE(agallagher): calls the `add_source` and `add_resource` below
         # hard-link the given source into the PEX temp dir.  Since OS X and
         # Linux behave different when hard-linking a source that is a
@@ -166,12 +166,12 @@ def main():
             raise Exception("Failed to add {}: {}".format(src, e))
 
     # Add resources listed in the manifest.
-    for dst, src in manifest["resources"].iteritems():
+    for dst, src in manifest["resources"].items():
         # NOTE(agallagher): see rationale above.
         pex_builder.add_resource(dereference_symlinks(src), dst)
 
     # Add resources listed in the manifest.
-    for dst, src in manifest["nativeLibraries"].iteritems():
+    for dst, src in manifest["nativeLibraries"].items():
         # NOTE(agallagher): see rationale above.
         pex_builder.add_resource(dereference_symlinks(src), dst)
 
