@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -251,9 +252,12 @@ public class CxxTestDescriptionTest {
             graphBuilder.getRule(
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath)));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
@@ -280,9 +284,12 @@ public class CxxTestDescriptionTest {
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath)));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
@@ -313,9 +320,12 @@ public class CxxTestDescriptionTest {
             graphBuilder.getRule(
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath)));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
@@ -345,10 +355,12 @@ public class CxxTestDescriptionTest {
             graphBuilder.getRule(
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
-        Matchers.not(
-            hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath()))));
+        Matchers.not(hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath))));
     assertThat(binary.getBuildDeps(), Matchers.not(hasItem(dep)));
   }
 

@@ -66,7 +66,6 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           buildTarget,
           projectFilesystem,
           graphBuilder,
-          params,
           sandboxExecutionStrategy,
           args.getSrcs(),
           cmd,
@@ -78,15 +77,13 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
               && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
-          getAndroidToolsOptional(args),
-          args.getNoRemote().orElse(false));
+          getAndroidToolsOptional(args));
     } else {
       return new GenruleBinary(
           buildTarget,
           projectFilesystem,
           sandboxExecutionStrategy,
           graphBuilder,
-          params,
           args.getSrcs(),
           cmd,
           bash,
@@ -95,8 +92,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getOut(),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
-          getAndroidToolsOptional(args),
-          args.getNoRemote().orElse(false));
+          getAndroidToolsOptional(args));
     }
   }
 

@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -113,6 +114,8 @@ public class GenruleIntegrationTest {
 
   @Test
   public void genruleWithAbsoluteOutParameterFails() throws IOException {
+    // Note: the path in this genrule is not absolute on Windows.
+    assumeThat(Platform.detect(), not(equalTo(Platform.WINDOWS)));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "genrule_absolute_out", temporaryFolder);

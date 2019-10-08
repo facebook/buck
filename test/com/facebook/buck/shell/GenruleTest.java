@@ -22,37 +22,37 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.impl.AbstractBuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
-import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -62,6 +62,7 @@ import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.rules.macros.WorkerMacro;
+import com.facebook.buck.rules.modern.builders.ModernBuildRuleRemoteExecutionHelper;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -75,17 +76,20 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class GenruleTest {
@@ -164,18 +168,21 @@ public class GenruleTest {
             .getGenDir()
             .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
         pathResolver.getRelativePath(genrule.getSourcePathToOutput()));
+
+    SourcePath outputSourcePath = genrule.getSourcePathToOutput();
+    Path manifestPath = graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertEquals(
         filesystem.resolve(
             filesystem
                 .getBuckPaths()
                 .getGenDir()
                 .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml")),
-        genrule.getAbsoluteOutputFilePath());
+        manifestPath);
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
             .withBuildCellRootPath(filesystem.getRootPath());
     assertThat(
-        pathResolver.filterInputsToCompareToOutput(genrule.getSrcs().getPaths()),
+        pathResolver.filterInputsToCompareToOutput(genrule.getBuildable().srcs.getPaths()),
         Matchers.containsInAnyOrder(
             filesystem.getPath("src/com/facebook/katana/convert_to_katana.py"),
             filesystem.getPath("src/com/facebook/katana/AndroidManifest.xml")));
@@ -186,7 +193,17 @@ public class GenruleTest {
     MoreAsserts.assertStepsNames(
         "",
         ImmutableList.of(
-            "rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "genrule_srcs_link_tree", "genrule"),
+            "rm",
+            "rm",
+            "mkdir",
+            "rm",
+            "mkdir",
+            "rm",
+            "mkdir",
+            "rm",
+            "mkdir",
+            "genrule_srcs_link_tree",
+            "genrule"),
         steps);
 
     ExecutionContext executionContext = newEmptyExecutionContext();
@@ -199,19 +216,9 @@ public class GenruleTest {
                     filesystem
                         .getBuckPaths()
                         .getGenDir()
-                        .resolve("src/com/facebook/katana/katana_manifest")))
+                        .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml")))
             .withRecursive(true),
         steps.get(0));
-    assertEquals(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                buildContext.getBuildCellRootPath(),
-                filesystem,
-                filesystem
-                    .getBuckPaths()
-                    .getGenDir()
-                    .resolve("src/com/facebook/katana/katana_manifest"))),
-        steps.get(1));
 
     assertEquals(
         RmStep.of(
@@ -221,9 +228,9 @@ public class GenruleTest {
                     filesystem
                         .getBuckPaths()
                         .getGenDir()
-                        .resolve("src/com/facebook/katana/katana_manifest__tmp")))
+                        .resolve("src/com/facebook/katana/katana_manifest__")))
             .withRecursive(true),
-        steps.get(2));
+        steps.get(1));
     assertEquals(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -232,8 +239,44 @@ public class GenruleTest {
                 filesystem
                     .getBuckPaths()
                     .getGenDir()
-                    .resolve("src/com/facebook/katana/katana_manifest__tmp"))),
+                    .resolve("src/com/facebook/katana/katana_manifest__"))),
+        steps.get(2));
+
+    assertEquals(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    filesystem,
+                    filesystem
+                        .getBuckPaths()
+                        .getScratchDir()
+                        .resolve("src/com/facebook/katana/katana_manifest__")))
+            .withRecursive(true),
         steps.get(3));
+    assertEquals(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                filesystem,
+                filesystem
+                    .getBuckPaths()
+                    .getScratchDir()
+                    .resolve("src/com/facebook/katana/katana_manifest__"))),
+        steps.get(4));
+
+    Path pathToOutDir =
+        filesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/katana/katana_manifest");
+    assertEquals(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(), filesystem, pathToOutDir))
+            .withRecursive(true),
+        steps.get(5));
+    assertEquals(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), filesystem, pathToOutDir)),
+        steps.get(6));
 
     Path pathToSrcDir =
         filesystem
@@ -245,12 +288,12 @@ public class GenruleTest {
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, pathToSrcDir))
             .withRecursive(true),
-        steps.get(4));
+        steps.get(7));
     assertEquals(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(), filesystem, pathToSrcDir)),
-        steps.get(5));
+        steps.get(8));
 
     assertEquals(
         new SymlinkTreeStep(
@@ -262,11 +305,11 @@ public class GenruleTest {
                 filesystem.getPath("src/com/facebook/katana/convert_to_katana.py"),
                 filesystem.getPath("AndroidManifest.xml"),
                 filesystem.getPath("src/com/facebook/katana/AndroidManifest.xml"))),
-        steps.get(6));
+        steps.get(9));
 
-    Step eighthStep = steps.get(7);
-    assertTrue(eighthStep instanceof AbstractGenruleStep);
-    AbstractGenruleStep genruleCommand = (AbstractGenruleStep) eighthStep;
+    Step genruleStep = steps.get(10);
+    assertTrue(genruleStep instanceof AbstractGenruleStep);
+    AbstractGenruleStep genruleCommand = (AbstractGenruleStep) genruleStep;
     assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(
         ImmutableMap.<String, String>builder()
@@ -308,59 +351,6 @@ public class GenruleTest {
             .setType("xxxxx")
             .build(graphBuilder, filesystem);
     assertTrue(genrule.getType().contains("xxxxx"));
-  }
-
-  @Test
-  public void testGenruleUsesSpacesForSrcsVariableDelimiterByDefault() {
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
-    SourcePath path1 = PathSourcePath.of(filesystem, filesystem.getPath("path1.txt"));
-    SourcePath path2 = PathSourcePath.of(filesystem, filesystem.getPath("dir", "path2.txt"));
-
-    Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
-            .setSrcs(ImmutableList.of(path1, path2))
-            .setCmd("echo \"Hello, world\" >> $OUT")
-            .setOut("output.txt")
-            .build(graphBuilder);
-
-    String expected =
-        String.format(
-            "%s %s", pathResolver.getAbsolutePath(path2), pathResolver.getAbsolutePath(path1));
-    ImmutableMap.Builder<String, String> actualEnvVarsBuilder = ImmutableMap.builder();
-
-    genrule.addEnvironmentVariables(pathResolver, actualEnvVarsBuilder);
-
-    assertEquals(expected, actualEnvVarsBuilder.build().get("SRCS"));
-  }
-
-  @Test
-  public void testGenruleUsesProvidedDelimiterForSrcsVariable() {
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
-    SourcePath path1 = PathSourcePath.of(filesystem, filesystem.getPath("path 1.txt"));
-    SourcePath path2 = PathSourcePath.of(filesystem, filesystem.getPath("dir name", "path 2.txt"));
-
-    Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
-            .setSrcs(ImmutableList.of(path1, path2))
-            .setCmd("echo \"Hello, world\" >> $OUT")
-            .setOut("output.txt")
-            .setEnvironmentExpansionSeparator("//")
-            .build(graphBuilder);
-
-    String expected =
-        String.format(
-            "%s//%s", pathResolver.getAbsolutePath(path2), pathResolver.getAbsolutePath(path1));
-    ImmutableMap.Builder<String, String> actualEnvVarsBuilder = ImmutableMap.builder();
-
-    genrule.addEnvironmentVariables(pathResolver, actualEnvVarsBuilder);
-
-    assertEquals(expected, actualEnvVarsBuilder.build().get("SRCS"));
   }
 
   private GenruleBuilder createGenruleBuilderThatUsesWorkerMacro(ActionGraphBuilder graphBuilder)
@@ -416,9 +406,12 @@ public class GenruleTest {
             new FakeBuildableContext());
 
     MoreAsserts.assertStepsNames(
-        "", ImmutableList.of("rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "worker"), steps);
+        "",
+        ImmutableList.of(
+            "rm", "rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "worker"),
+        steps);
 
-    Step step = steps.get(6);
+    Step step = steps.get(9);
     assertTrue(step instanceof WorkerShellStep);
     WorkerShellStep workerShellStep = (WorkerShellStep) step;
     assertThat(workerShellStep.getShortName(), Matchers.equalTo("worker"));
@@ -436,7 +429,7 @@ public class GenruleTest {
   public void testIsWorkerGenruleReturnsTrue() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Genrule genrule = createGenruleBuilderThatUsesWorkerMacro(graphBuilder).build(graphBuilder);
-    assertTrue(genrule.isWorkerGenrule());
+    assertTrue(genrule.getBuildable().isWorkerGenrule());
   }
 
   @Test
@@ -448,7 +441,7 @@ public class GenruleTest {
             .setCmd("echo hello >> $OUT")
             .setOut("output.txt")
             .build(graphBuilder, filesystem);
-    assertFalse(genrule.isWorkerGenrule());
+    assertFalse(genrule.getBuildable().isWorkerGenrule());
   }
 
   @Test
@@ -502,47 +495,6 @@ public class GenruleTest {
     return newEmptyExecutionContext(Platform.detect());
   }
 
-  @Test
-  public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() {
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    BuildContext context =
-        FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(filesystem.getRootPath());
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:example");
-    Genrule rule =
-        GenruleBuilder.newGenruleBuilder(target, filesystem)
-            .setBash("ignored")
-            .setSrcs(
-                ImmutableList.of(
-                    PathSourcePath.of(filesystem, filesystem.getPath("in-dir.txt")),
-                    PathSourcePath.of(filesystem, filesystem.getPath("foo/bar.html")),
-                    PathSourcePath.of(filesystem, filesystem.getPath("other/place.txt"))))
-            .setOut("example-file")
-            .build(graphBuilder);
-
-    ImmutableList.Builder<Step> builder = ImmutableList.builder();
-    rule.addSymlinkCommands(context, builder);
-    ImmutableList<Step> commands = builder.build();
-
-    Path baseTmpPath = filesystem.getBuckPaths().getGenDir().resolve("example__srcs");
-
-    MoreAsserts.assertStepsNames("", ImmutableList.of("genrule_srcs_link_tree"), commands);
-
-    assertEquals(
-        new SymlinkTreeStep(
-            "genrule_srcs",
-            filesystem,
-            baseTmpPath,
-            ImmutableMap.of(
-                filesystem.getPath("in-dir.txt"),
-                filesystem.getPath("in-dir.txt"),
-                filesystem.getPath("foo/bar.html"),
-                filesystem.getPath("foo/bar.html"),
-                filesystem.getPath("other/place.txt"),
-                filesystem.getPath("other/place.txt"))),
-        commands.get(0));
-  }
-
   private BuildRule createSampleJavaBinaryRule(ActionGraphBuilder graphBuilder)
       throws NoSuchBuildTargetException {
     // Create a java_binary that depends on a java_library so it is possible to create a
@@ -559,70 +511,6 @@ public class GenruleTest {
         .setDeps(ImmutableSortedSet.of(javaLibrary.getBuildTarget()))
         .setMainClass("com.facebook.util.ManifestGenerator")
         .build(graphBuilder);
-  }
-
-  @Test
-  public void testShouldIncludeAndroidSpecificEnvInEnvironmentIfPresent() {
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    AndroidPlatformTarget android =
-        AndroidPlatformTarget.of(
-            "android",
-            Paths.get(""),
-            Collections.emptyList(),
-            () -> new SimpleTool("aapt"),
-            new ConstantToolProvider(new SimpleTool("aapt2")),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get("zipalign"),
-            Paths.get("."),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get(""));
-    Path sdkDir = Paths.get("/opt/users/android_sdk");
-    Path ndkDir = Paths.get("/opt/users/android_ndk");
-
-    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    ToolchainProvider toolchainProvider =
-        new ToolchainProviderBuilder()
-            .withToolchain(AndroidPlatformTarget.DEFAULT_NAME, android)
-            .withToolchain(
-                AndroidNdk.DEFAULT_NAME, AndroidNdk.of("12", ndkDir, false, new ExecutableFinder()))
-            .withToolchain(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.of(sdkDir))
-            .build();
-    Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(target, toolchainProvider)
-            .setBash("echo something > $OUT")
-            .setOut("file")
-            .setNeedAndroidTools(true)
-            .build(graphBuilder);
-
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    genrule.addEnvironmentVariables(graphBuilder.getSourcePathResolver(), builder);
-    ImmutableMap<String, String> env = builder.build();
-
-    assertEquals(Paths.get(".").toString(), env.get("DX"));
-    assertEquals(Paths.get("zipalign").toString(), env.get("ZIPALIGN"));
-    assertEquals("aapt", env.get("AAPT"));
-    assertEquals("aapt2", env.get("AAPT2"));
-    assertEquals(sdkDir.toString(), env.get("ANDROID_HOME"));
-    assertEquals(ndkDir.toString(), env.get("NDK_HOME"));
-  }
-
-  @Test
-  public void shouldPreventTheParentBuckdBeingUsedIfARecursiveBuckCallIsMade() {
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(target)
-            .setBash("echo something > $OUT")
-            .setOut("file")
-            .build(graphBuilder);
-
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    genrule.addEnvironmentVariables(graphBuilder.getSourcePathResolver(), builder);
-
-    assertEquals("1", builder.build().get("NO_BUCKD"));
   }
 
   @Test
@@ -645,13 +533,13 @@ public class GenruleTest {
             .build(graphBuilder);
 
     assertGenruleCommandAndScript(
-        genrule.createGenruleStep(buildContext),
+        createGenruleStep(genrule, buildContext),
         linuxExecutionContext,
         ImmutableList.of("/bin/bash", "-e"),
         bash);
 
     assertGenruleCommandAndScript(
-        genrule.createGenruleStep(buildContext),
+        createGenruleStep(genrule, buildContext),
         windowsExecutionContext,
         ImmutableList.of(),
         cmdExe);
@@ -663,13 +551,13 @@ public class GenruleTest {
             .setOut("out.txt")
             .build(graphBuilder);
     assertGenruleCommandAndScript(
-        genrule.createGenruleStep(buildContext),
+        createGenruleStep(genrule, buildContext),
         linuxExecutionContext,
         ImmutableList.of("/bin/bash", "-e"),
         cmd);
 
     assertGenruleCommandAndScript(
-        genrule.createGenruleStep(buildContext), windowsExecutionContext, ImmutableList.of(), cmd);
+        createGenruleStep(genrule, buildContext), windowsExecutionContext, ImmutableList.of(), cmd);
 
     // Test command absent
     genrule =
@@ -677,18 +565,31 @@ public class GenruleTest {
             .setOut("out.txt")
             .build(graphBuilder);
     try {
-      genrule.createGenruleStep(buildContext).getShellCommand(linuxExecutionContext);
+      createGenruleStep(genrule, buildContext).getShellCommand(linuxExecutionContext);
     } catch (HumanReadableException e) {
       assertEquals(
           "You must specify either bash or cmd for genrule.", e.getHumanReadableErrorMessage());
     }
 
     try {
-      genrule.createGenruleStep(buildContext).getShellCommand(windowsExecutionContext);
+      createGenruleStep(genrule, buildContext).getShellCommand(windowsExecutionContext);
     } catch (HumanReadableException e) {
       assertEquals(
           "You must specify either cmd_exe or cmd for genrule.", e.getHumanReadableErrorMessage());
     }
+  }
+
+  /**
+   * Helper method to extract the generated Genrule step from a Genrule's list of generated steps.
+   */
+  private static AbstractGenruleStep createGenruleStep(Genrule genrule, BuildContext buildContext) {
+    BuildableContext buildableContext = new FakeBuildableContext();
+    ImmutableList<Step> steps = genrule.getBuildSteps(buildContext, buildableContext);
+
+    Optional<Step> genruleStep =
+        steps.stream().filter(s -> s instanceof AbstractGenruleStep).findFirst();
+    assertTrue("Genrule did not generate a genrule step", genruleStep.isPresent());
+    return (AbstractGenruleStep) genruleStep.get();
   }
 
   private void assertGenruleCommandAndScript(
@@ -1046,6 +947,7 @@ public class GenruleTest {
   }
 
   @Test
+  @Ignore("Genrules currently can't be executed remotely, not included in the rule key")
   public void testChangingNoRemoteChangesRuleKey() {
     StandaloneGenruleBuilder builder1 = new StandaloneGenruleBuilder("//:genrule1");
     StandaloneGenruleBuilder builder2 = new StandaloneGenruleBuilder("//:genrule1");
@@ -1060,6 +962,7 @@ public class GenruleTest {
   }
 
   @Test
+  @Ignore("Genrules currently can't be executed remotely")
   public void testNoRemoteIsRespected() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget buildTarget1 = BuildTargetFactory.newInstance("//:genrule1");
@@ -1085,5 +988,50 @@ public class GenruleTest {
     assertFalse(genrule1.shouldBuildLocally());
     assertFalse(genrule2.shouldBuildLocally());
     assertTrue(genrule3.shouldBuildLocally());
+  }
+
+  /**
+   * Tests that genrules aren't executed remotely, regardless of what their NoRemote parameter says.
+   * Ideally, this is a temporary thing while we work out the issues involved.
+   */
+  @Test
+  public void testNoRemoteRegardlessOfNoRemoteParameter() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildTarget buildTarget1 = BuildTargetFactory.newInstance("//:genrule1");
+    BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//:genrule2");
+    BuildTarget buildTarget3 = BuildTargetFactory.newInstance("//:genrule3");
+
+    Genrule genrule1 =
+        GenruleBuilder.newGenruleBuilder(buildTarget1)
+            .setOut("foo")
+            .setNoRemote(null)
+            .build(graphBuilder);
+    Genrule genrule2 =
+        GenruleBuilder.newGenruleBuilder(buildTarget2)
+            .setOut("foo")
+            .setNoRemote(false)
+            .build(graphBuilder);
+    Genrule genrule3 =
+        GenruleBuilder.newGenruleBuilder(buildTarget3)
+            .setOut("foo")
+            .setNoRemote(true)
+            .build(graphBuilder);
+
+    BuckEventBus eventBus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("dontcare"));
+    SourcePathRuleFinder ruleFinder =
+        new AbstractBuildRuleResolver() {
+          @Override
+          public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
+            return Optional.empty();
+          }
+        };
+    Cell root = new TestCellBuilder().setFilesystem(new FakeProjectFilesystem()).build();
+    ModernBuildRuleRemoteExecutionHelper mbrHelper =
+        new ModernBuildRuleRemoteExecutionHelper(
+            eventBus, new GrpcProtocol(), ruleFinder, root, path -> HashCode.fromInt(0));
+
+    assertFalse(mbrHelper.supportsRemoteExecution(genrule1));
+    assertFalse(mbrHelper.supportsRemoteExecution(genrule2));
+    assertFalse(mbrHelper.supportsRemoteExecution(genrule3));
   }
 }

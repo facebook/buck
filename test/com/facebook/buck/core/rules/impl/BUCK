@@ -10,6 +10,7 @@ java_test(
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util/cache/impl:impl",

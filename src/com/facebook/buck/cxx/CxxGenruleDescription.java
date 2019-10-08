@@ -275,6 +275,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   protected BuildRule createBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      // TODO(swgillespie) T55035474 tracks removal of this parameter
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       CxxGenruleDescriptionArg args,
@@ -282,15 +283,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
     return createBuildRule(
-        buildTarget,
-        projectFilesystem,
-        params,
-        graphBuilder,
-        args,
-        cmd,
-        bash,
-        cmdExe,
-        args.getOut());
+        buildTarget, projectFilesystem, graphBuilder, args, cmd, bash, cmdExe, args.getOut());
   }
 
   @Override

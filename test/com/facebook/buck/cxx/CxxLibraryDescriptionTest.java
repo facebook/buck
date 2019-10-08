@@ -750,9 +750,12 @@ public class CxxLibraryDescriptionTest {
     assertThat(builder.build().getExtraDeps(), hasItem(dep.getBuildTarget()));
     BuildRule binary = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(binary, instanceOf(CxxLink.class));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs(), graphBuilder.getSourcePathResolver()),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath)));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
