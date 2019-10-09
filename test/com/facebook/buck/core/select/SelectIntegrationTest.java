@@ -37,7 +37,8 @@ public class SelectIntegrationTest {
     assertThat(
         workspace.runBuckBuild(":non_config_rule").getStderr(),
         containsString(
-            "//:a was used to resolve configurable attribute but it is not a configuration rule"));
+            "//:non_config_rule: "
+                + "//:a was used to resolve a configuration rule but it is a build rule"));
   }
 
   @Test

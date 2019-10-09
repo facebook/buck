@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.rules.config.impl;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -66,11 +65,6 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
       BuildTarget buildTarget) {
     @SuppressWarnings("unchecked")
     TargetNode<T> targetNode = (TargetNode<T>) targetNodeSupplier.apply(buildTarget);
-    if (!(targetNode.getDescription() instanceof ConfigurationRuleDescription)) {
-      throw new HumanReadableException(
-          "%s was used to resolve configurable attribute but it is not a configuration rule",
-          buildTarget);
-    }
     ConfigurationRuleDescription<T> configurationRuleDescription =
         (ConfigurationRuleDescription<T>) targetNode.getDescription();
     ConfigurationRule configurationRule =

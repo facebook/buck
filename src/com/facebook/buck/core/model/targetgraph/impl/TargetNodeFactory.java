@@ -23,9 +23,11 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.NodeCopier;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -117,6 +119,22 @@ public class TargetNodeFactory implements NodeCopier {
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       CellPathResolver cellRoots)
       throws NoSuchBuildTargetException {
+
+    boolean isConfigurationRule = description instanceof ConfigurationRuleDescription<?>;
+
+    if (buildTarget
+        .getTargetConfiguration()
+        .equals(ConfigurationForConfigurationTargets.INSTANCE)) {
+      if (!isConfigurationRule) {
+        throw new HumanReadableException(
+            "%s was used to resolve a configuration rule but it is a build rule", buildTarget);
+      }
+    } else {
+      if (isConfigurationRule) {
+        throw new HumanReadableException(
+            "%s was used to resolve a build rule but it is a configuration rule", buildTarget);
+      }
+    }
 
     ImmutableSortedSet.Builder<BuildTarget> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<BuildTarget> targetGraphOnlyDepsBuilder =
