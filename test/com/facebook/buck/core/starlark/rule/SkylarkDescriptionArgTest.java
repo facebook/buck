@@ -52,6 +52,7 @@ public class SkylarkDescriptionArgTest {
   public void throwsWhenSettingAfterBuilding() throws LabelSyntaxException, EvalException {
     SkylarkDescriptionArg arg =
         new SkylarkDescriptionArg(FakeSkylarkUserDefinedRuleFactory.createSimpleRule());
+    arg.setPostCoercionValue("name", "ohmy");
     arg.build();
 
     expected.expect(IllegalStateException.class);

@@ -110,6 +110,7 @@ public class HybridKnownRuleTypesTest {
     ConstructorArgBuilder<SkylarkDescriptionArg> builder =
         knownTypes.getConstructorArgBuilder(factory, ruleType, SkylarkDescriptionArg.class, target);
     ((SkylarkDescriptionArgBuilder) builder.getBuilder()).setPostCoercionValue("baz", "value");
+    ((SkylarkDescriptionArgBuilder) builder.getBuilder()).setPostCoercionValue("name", "thename");
 
     // Ensure that we can cast back properly
     SkylarkDescriptionArg built = builder.build();

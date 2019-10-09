@@ -16,4 +16,8 @@
 package com.facebook.buck.core.description.arg;
 
 /** Marker interface for all rule args including configuration rules. */
-public interface ConstructorArg {}
+public interface ConstructorArg {
+  /** Each rule has a name */
+  @Hint(isConfigurable = false)
+  String getName();
+}

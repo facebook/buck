@@ -20,6 +20,7 @@ import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgBuilder;
 import com.google.common.base.Preconditions;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Description arg for user defined rules. Instead of using reflection and immutables, this class
@@ -30,6 +31,7 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Cons
   private boolean attrValuesAreMutable = true;
   private final SkylarkUserDefinedRule rule;
   private final Map<String, Object> coercedAttrValues;
+  @Nullable private String name;
 
   /**
    * Create an instance of {@link SkylarkDescriptionArg}
@@ -71,6 +73,7 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Cons
    */
   public void build() {
     attrValuesAreMutable = false;
+    name = (String) Preconditions.checkNotNull(coercedAttrValues.get("name"));
   }
 
   /**
@@ -83,5 +86,10 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Cons
 
   Map<String, Object> getCoercedAttrValues() {
     return java.util.Collections.unmodifiableMap(coercedAttrValues);
+  }
+
+  @Override
+  public String getName() {
+    return Preconditions.checkNotNull(name);
   }
 }

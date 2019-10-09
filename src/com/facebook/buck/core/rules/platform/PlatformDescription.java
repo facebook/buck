@@ -76,9 +76,6 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPlatformArg extends ConfigurationRuleArg {
-    @Hint(isConfigurable = false)
-    String getName();
-
     @Value.NaturalOrder
     @Hint(isConfigurable = false)
     ImmutableSortedSet<UnconfiguredBuildTargetView> getConstraintValues();

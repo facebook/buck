@@ -79,9 +79,6 @@ public class AndroidPlatformDescription
   @Value.Immutable
   interface AbstractAndroidPlatformArg extends ConfigurationRuleArg {
     @Hint(isConfigurable = false)
-    String getName();
-
-    @Hint(isConfigurable = false)
     UnconfiguredBuildTargetView getBasePlatform();
 
     @Value.NaturalOrder

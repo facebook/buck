@@ -56,8 +56,6 @@ public class AuditRuleTypeCommandTest {
     @BuckStyleImmutable
     @Value.Immutable
     interface AbstractBuildRuleDescriptionArg extends ConstructorArg {
-      String getName();
-
       ImmutableSet<SourcePath> getLicenses();
 
       @Value.NaturalOrder

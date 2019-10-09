@@ -73,9 +73,6 @@ public class ConfigSettingDescription implements ConfigurationRuleDescription<Co
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractConfigSettingArg extends ConfigurationRuleArg {
-    @Hint(isConfigurable = false)
-    String getName();
-
     @Value.NaturalOrder
     @Hint(isConfigurable = false)
     ImmutableSortedMap<String, String> getValues();

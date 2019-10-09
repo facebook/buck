@@ -68,9 +68,6 @@ public class ConstraintValueDescription
   @Value.Immutable
   interface AbstractConstraintValueArg extends ConfigurationRuleArg {
     @Hint(isConfigurable = false)
-    String getName();
-
-    @Hint(isConfigurable = false)
     UnconfiguredBuildTargetView getConstraintSetting();
   }
 }
