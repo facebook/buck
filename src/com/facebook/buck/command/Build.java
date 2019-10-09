@@ -285,14 +285,8 @@ public class Build implements Closeable {
         .build();
   }
 
-  /**
-   * Starts building the given BuildRules asynchronously.
-   *
-   * @param rulesToBuild
-   * @return Futures that will complete once the rules have finished building
-   * @throws IOException
-   */
-  public List<BuildEngineResult> initializeBuild(ImmutableList<BuildRule> rulesToBuild)
+  /** Starts building the given BuildRules asynchronously. */
+  private List<BuildEngineResult> initializeBuild(ImmutableList<BuildRule> rulesToBuild)
       throws IOException {
     setupBuildSymlinks();
 

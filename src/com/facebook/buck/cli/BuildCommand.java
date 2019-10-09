@@ -735,8 +735,6 @@ public class BuildCommand extends AbstractCommand {
             getBuildEngineMode(),
             ruleKeyLogger,
             params.getMetadataProvider(),
-            params.getUnconfiguredBuildTargetFactory(),
-            params.getTargetConfiguration(),
             params.getTargetConfigurationSerializer(),
             remoteExecutionAutoEnabled,
             isRemoteExecutionForceDisabled());

@@ -17,7 +17,6 @@ package com.facebook.buck.command;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.config.BuildBuckConfig;
-import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
@@ -29,14 +28,9 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rulekey.config.RuleKeyConfig;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -51,27 +45,20 @@ import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.modern.builders.ModernBuildRuleBuilderFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Used to build a given set of targets on the local machine. */
-public class LocalBuildExecutor implements BuildExecutor {
+public class LocalBuildExecutor {
   private final ActionGraphAndBuilder actionGraphAndBuilder;
   private final WeightedListeningExecutorService executorService;
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
@@ -80,8 +67,6 @@ public class LocalBuildExecutor implements BuildExecutor {
   private final Optional<BuildType> buildEngineMode;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
   private final MetadataProvider metadataProvider;
-  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
-  private final TargetConfiguration targetConfiguration;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
 
   private final CachingBuildEngine cachingBuildEngine;
@@ -102,8 +87,6 @@ public class LocalBuildExecutor implements BuildExecutor {
       Optional<BuildType> buildEngineMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       MetadataProvider metadataProvider,
-      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      TargetConfiguration targetConfiguration,
       TargetConfigurationSerializer targetConfigurationSerializer,
       boolean remoteExecutionAutoEnabled,
       boolean forceDisableRemoteExecution) {
@@ -115,8 +98,6 @@ public class LocalBuildExecutor implements BuildExecutor {
     this.ruleKeyLogger = ruleKeyLogger;
     this.ruleKeyCacheScope = ruleKeyRuleKeyCacheScope;
     this.metadataProvider = metadataProvider;
-    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
-    this.targetConfiguration = targetConfiguration;
     this.targetConfigurationSerializer = targetConfigurationSerializer;
 
     // Init resources.
@@ -135,20 +116,12 @@ public class LocalBuildExecutor implements BuildExecutor {
             keepGoing);
   }
 
-  @Override
-  public ExitCode buildLocallyAndReturnExitCode(
-      Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport) throws Exception {
-    return buildTargets(
-        FluentIterable.from(targetsToBuild)
-            .transform(
-                targetName ->
-                    unconfiguredBuildTargetFactory
-                        .create(args.getRootCell().getCellPathResolver(), targetName)
-                        .configure(targetConfiguration)),
-        pathToBuildReport);
-  }
-
-  @Override
+  /**
+   * Builds the given targets synchronously. Failures are printed to the EventBus.
+   *
+   * @param targetsToBuild
+   * @return exit code.
+   */
   public ExitCode buildTargets(
       Iterable<BuildTarget> targetsToBuild, Optional<Path> pathToBuildReport) throws Exception {
     Preconditions.checkArgument(!isShutdown);
@@ -163,34 +136,14 @@ public class LocalBuildExecutor implements BuildExecutor {
     }
   }
 
-  @Override
-  public List<BuildEngineResult> initializeBuild(Iterable<String> targetsToBuild)
-      throws IOException {
-    Preconditions.checkArgument(!isShutdown);
-    return build.initializeBuild(getRulesToBuild(targetsToBuild));
-  }
-
-  @Override
-  public ExitCode waitForBuildToFinish(
-      Iterable<String> targetsToBuild,
-      List<BuildEngineResult> resultFutures,
-      Optional<Path> pathToBuildReport)
-      throws Exception {
-    Preconditions.checkArgument(!isShutdown);
-    return build.waitForBuildToFinishAndPrintFailuresToEventBus(
-        getRulesToBuild(targetsToBuild),
-        resultFutures,
-        args.getBuckEventBus(),
-        args.getConsole(),
-        pathToBuildReport);
-  }
-
-  @Override
   public CachingBuildEngine getCachingBuildEngine() {
     return cachingBuildEngine;
   }
 
-  @Override
+  /**
+   * Destroy any resources associated with this builder. Call this once only, when all
+   * buildLocallyAndReturnExitCode calls have finished.
+   */
   public synchronized void shutdown() {
     if (isShutdown) {
       return;
@@ -201,16 +154,6 @@ public class LocalBuildExecutor implements BuildExecutor {
     // Destroy resources.
     build.close();
     cachingBuildEngine.close();
-  }
-
-  private ImmutableList<BuildRule> getRulesToBuild(Iterable<String> targetsToBuild) {
-    return build.getRulesToBuild(
-        Iterables.transform(
-            targetsToBuild,
-            targetName ->
-                unconfiguredBuildTargetFactory
-                    .create(args.getRootCell().getCellPathResolver(), targetName)
-                    .configure(targetConfiguration)));
   }
 
   private CachingBuildEngine createCachingBuildEngine(
@@ -255,42 +198,6 @@ public class LocalBuildExecutor implements BuildExecutor {
   public Build getBuild() {
     return build;
   }
-
-  /**
-   * Create {@link ExecutionContext} using {@link BuildExecutorArgs}.
-   *
-   * @param args - an instance {@link BuildExecutorArgs}.
-   */
-  public static ExecutionContext createExecutionContext(BuildExecutorArgs args) {
-    // TODO(shivanker): Fix this for stampede to be able to build android.
-    ConcurrencyLimit concurrencyLimit =
-        args.getBuckConfig().getView(ResourcesConfig.class).getConcurrencyLimit();
-    DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
-
-    return ExecutionContext.builder()
-        .setConsole(args.getConsole())
-        .setTargetDevice(Optional.empty())
-        .setDefaultTestTimeoutMillis(1000)
-        .setCodeCoverageEnabled(false)
-        .setInclNoLocationClassesEnabled(false)
-        .setDebugEnabled(false)
-        .setRuleKeyDiagnosticsMode(
-            args.getBuckConfig().getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
-        .setShouldReportAbsolutePaths(false)
-        .setBuckEventBus(args.getBuckEventBus())
-        .setPlatform(args.getPlatform())
-        .setJavaPackageFinder(
-            args.getBuckConfig().getView(JavaBuckConfig.class).createDefaultJavaPackageFinder())
-        .setConcurrencyLimit(concurrencyLimit)
-        .setPersistentWorkerPools(Optional.empty())
-        .setExecutors(args.getExecutors())
-        .setCellPathResolver(args.getRootCell().getCellPathResolver())
-        .setBuildCellRootPath(args.getRootCell().getRoot())
-        .setProcessExecutor(processExecutor)
-        .setEnvironment(args.getBuckConfig().getEnvironment())
-        .setProjectFilesystemFactory(args.getProjectFilesystemFactory())
-        .build();
-  }
 }
 
 /** Common arguments for running a build. */
@@ -321,9 +228,5 @@ abstract class AbstractBuildExecutorArgs {
 
   public BuckConfig getBuckConfig() {
     return getRootCell().getBuckConfig();
-  }
-
-  public int getBuildThreadCount() {
-    return getBuckConfig().getView(ResourcesConfig.class).getConcurrencyLimit().threadLimit;
   }
 }
