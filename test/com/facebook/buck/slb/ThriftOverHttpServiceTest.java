@@ -48,10 +48,10 @@ public class ThriftOverHttpServiceTest {
   public void testSendValidMessageAndReturnError() throws IOException {
     // TODO(ruibm): Add jetty end to end integration tests for this API.
     FrontendRequest request = new FrontendRequest();
-    request.setType(FrontendRequestType.BUILD_STATUS);
+    request.setType(FrontendRequestType.ANNOUNCEMENT);
 
     FrontendResponse response = new FrontendResponse();
-    response.setType(FrontendRequestType.START_BUILD);
+    response.setType(FrontendRequestType.ANNOUNCEMENT);
 
     Capture<Request.Builder> requestBuilder = EasyMock.newCapture();
     HttpResponse httpResponse = EasyMock.createNiceMock(HttpResponse.class);
@@ -81,10 +81,10 @@ public class ThriftOverHttpServiceTest {
   @Test
   public void testSendValidMessageAndReturnValidResponse() throws IOException, TException {
     FrontendRequest request = new FrontendRequest();
-    request.setType(FrontendRequestType.BUILD_STATUS);
+    request.setType(FrontendRequestType.ANNOUNCEMENT);
 
     FrontendResponse expectedResponse = new FrontendResponse();
-    expectedResponse.setType(FrontendRequestType.START_BUILD);
+    expectedResponse.setType(FrontendRequestType.ANNOUNCEMENT);
 
     Capture<Request.Builder> requestBuilder = EasyMock.newCapture();
     TSerializer serializer = new TSerializer(config.getThriftProtocol().getFactory());

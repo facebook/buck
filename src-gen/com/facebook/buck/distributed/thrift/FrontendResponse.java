@@ -14,30 +14,8 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
   private static final org.apache.thrift.protocol.TField WAS_SUCCESSFUL_FIELD_DESC = new org.apache.thrift.protocol.TField("wasSuccessful", org.apache.thrift.protocol.TType.BOOL, (short)1);
   private static final org.apache.thrift.protocol.TField ERROR_MESSAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("errorMessage", org.apache.thrift.protocol.TType.STRING, (short)2);
   private static final org.apache.thrift.protocol.TField TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("type", org.apache.thrift.protocol.TType.I32, (short)10);
-  private static final org.apache.thrift.protocol.TField START_BUILD_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("startBuildResponse", org.apache.thrift.protocol.TType.STRUCT, (short)11);
-  private static final org.apache.thrift.protocol.TField BUILD_STATUS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("buildStatusResponse", org.apache.thrift.protocol.TType.STRUCT, (short)12);
-  private static final org.apache.thrift.protocol.TField CAS_CONTAINS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("casContainsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)15);
-  private static final org.apache.thrift.protocol.TField CREATE_BUILD_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("createBuildResponse", org.apache.thrift.protocol.TType.STRUCT, (short)16);
-  private static final org.apache.thrift.protocol.TField FETCH_SOURCE_FILES_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("fetchSourceFilesResponse", org.apache.thrift.protocol.TType.STRUCT, (short)17);
-  private static final org.apache.thrift.protocol.TField FETCH_BUILD_GRAPH_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("fetchBuildGraphResponse", org.apache.thrift.protocol.TType.STRUCT, (short)18);
   private static final org.apache.thrift.protocol.TField ANNOUNCEMENT_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("announcementResponse", org.apache.thrift.protocol.TType.STRUCT, (short)19);
-  private static final org.apache.thrift.protocol.TField MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("multiGetBuildSlaveLogDirResponse", org.apache.thrift.protocol.TType.STRUCT, (short)20);
-  private static final org.apache.thrift.protocol.TField MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("multiGetBuildSlaveRealTimeLogsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)21);
-  private static final org.apache.thrift.protocol.TField UPDATE_BUILD_SLAVE_STATUS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("updateBuildSlaveStatusResponse", org.apache.thrift.protocol.TType.STRUCT, (short)22);
-  private static final org.apache.thrift.protocol.TField FETCH_BUILD_SLAVE_STATUS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("fetchBuildSlaveStatusResponse", org.apache.thrift.protocol.TType.STRUCT, (short)23);
-  private static final org.apache.thrift.protocol.TField APPEND_BUILD_SLAVE_EVENTS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("appendBuildSlaveEventsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)24);
-  private static final org.apache.thrift.protocol.TField MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("multiGetBuildSlaveEventsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)25);
   private static final org.apache.thrift.protocol.TField FETCH_RULE_KEY_LOGS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("fetchRuleKeyLogsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)26);
-  private static final org.apache.thrift.protocol.TField STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("storeBuildSlaveFinishedStatsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)27);
-  private static final org.apache.thrift.protocol.TField FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("fetchBuildSlaveFinishedStatsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)28);
-  private static final org.apache.thrift.protocol.TField SET_COORDINATOR_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("setCoordinatorResponse", org.apache.thrift.protocol.TType.STRUCT, (short)29);
-  private static final org.apache.thrift.protocol.TField ENQUEUE_MINIONS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("enqueueMinionsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)30);
-  private static final org.apache.thrift.protocol.TField SET_FINAL_BUILD_STATUS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("setFinalBuildStatusResponse", org.apache.thrift.protocol.TType.STRUCT, (short)31);
-  private static final org.apache.thrift.protocol.TField REPORT_COORDINATOR_ALIVE_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("reportCoordinatorAliveResponse", org.apache.thrift.protocol.TType.STRUCT, (short)32);
-  private static final org.apache.thrift.protocol.TField UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("updateBuildSlaveBuildStatusResponse", org.apache.thrift.protocol.TType.STRUCT, (short)33);
-  private static final org.apache.thrift.protocol.TField REMOTE_EXECUTION_STORE_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("remoteExecutionStoreResponse", org.apache.thrift.protocol.TType.STRUCT, (short)34);
-  private static final org.apache.thrift.protocol.TField REMOTE_EXECUTION_FETCH_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("remoteExecutionFetchResponse", org.apache.thrift.protocol.TType.STRUCT, (short)35);
-  private static final org.apache.thrift.protocol.TField REMOTE_EXECUTION_CONTAINS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("remoteExecutionContainsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)36);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new FrontendResponseStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new FrontendResponseTupleSchemeFactory();
@@ -49,30 +27,8 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
    * @see FrontendRequestType
    */
   public @org.apache.thrift.annotation.Nullable FrontendRequestType type; // optional
-  public @org.apache.thrift.annotation.Nullable StartBuildResponse startBuildResponse; // optional
-  public @org.apache.thrift.annotation.Nullable BuildStatusResponse buildStatusResponse; // optional
-  public @org.apache.thrift.annotation.Nullable CASContainsResponse casContainsResponse; // optional
-  public @org.apache.thrift.annotation.Nullable CreateBuildResponse createBuildResponse; // optional
-  public @org.apache.thrift.annotation.Nullable FetchSourceFilesResponse fetchSourceFilesResponse; // optional
-  public @org.apache.thrift.annotation.Nullable FetchBuildGraphResponse fetchBuildGraphResponse; // optional
   public @org.apache.thrift.annotation.Nullable AnnouncementResponse announcementResponse; // optional
-  public @org.apache.thrift.annotation.Nullable MultiGetBuildSlaveLogDirResponse multiGetBuildSlaveLogDirResponse; // optional
-  public @org.apache.thrift.annotation.Nullable MultiGetBuildSlaveRealTimeLogsResponse multiGetBuildSlaveRealTimeLogsResponse; // optional
-  public @org.apache.thrift.annotation.Nullable UpdateBuildSlaveStatusResponse updateBuildSlaveStatusResponse; // optional
-  public @org.apache.thrift.annotation.Nullable FetchBuildSlaveStatusResponse fetchBuildSlaveStatusResponse; // optional
-  public @org.apache.thrift.annotation.Nullable AppendBuildSlaveEventsResponse appendBuildSlaveEventsResponse; // optional
-  public @org.apache.thrift.annotation.Nullable MultiGetBuildSlaveEventsResponse multiGetBuildSlaveEventsResponse; // optional
   public @org.apache.thrift.annotation.Nullable FetchRuleKeyLogsResponse fetchRuleKeyLogsResponse; // optional
-  public @org.apache.thrift.annotation.Nullable StoreBuildSlaveFinishedStatsResponse storeBuildSlaveFinishedStatsResponse; // optional
-  public @org.apache.thrift.annotation.Nullable FetchBuildSlaveFinishedStatsResponse fetchBuildSlaveFinishedStatsResponse; // optional
-  public @org.apache.thrift.annotation.Nullable SetCoordinatorResponse setCoordinatorResponse; // optional
-  public @org.apache.thrift.annotation.Nullable EnqueueMinionsResponse enqueueMinionsResponse; // optional
-  public @org.apache.thrift.annotation.Nullable SetFinalBuildStatusResponse setFinalBuildStatusResponse; // optional
-  public @org.apache.thrift.annotation.Nullable ReportCoordinatorAliveResponse reportCoordinatorAliveResponse; // optional
-  public @org.apache.thrift.annotation.Nullable UpdateBuildSlaveBuildStatusResponse updateBuildSlaveBuildStatusResponse; // optional
-  public @org.apache.thrift.annotation.Nullable RemoteExecutionStoreResponse remoteExecutionStoreResponse; // optional
-  public @org.apache.thrift.annotation.Nullable RemoteExecutionFetchResponse remoteExecutionFetchResponse; // optional
-  public @org.apache.thrift.annotation.Nullable RemoteExecutionContainsResponse remoteExecutionContainsResponse; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -83,30 +39,8 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
      * @see FrontendRequestType
      */
     TYPE((short)10, "type"),
-    START_BUILD_RESPONSE((short)11, "startBuildResponse"),
-    BUILD_STATUS_RESPONSE((short)12, "buildStatusResponse"),
-    CAS_CONTAINS_RESPONSE((short)15, "casContainsResponse"),
-    CREATE_BUILD_RESPONSE((short)16, "createBuildResponse"),
-    FETCH_SOURCE_FILES_RESPONSE((short)17, "fetchSourceFilesResponse"),
-    FETCH_BUILD_GRAPH_RESPONSE((short)18, "fetchBuildGraphResponse"),
     ANNOUNCEMENT_RESPONSE((short)19, "announcementResponse"),
-    MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE((short)20, "multiGetBuildSlaveLogDirResponse"),
-    MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE((short)21, "multiGetBuildSlaveRealTimeLogsResponse"),
-    UPDATE_BUILD_SLAVE_STATUS_RESPONSE((short)22, "updateBuildSlaveStatusResponse"),
-    FETCH_BUILD_SLAVE_STATUS_RESPONSE((short)23, "fetchBuildSlaveStatusResponse"),
-    APPEND_BUILD_SLAVE_EVENTS_RESPONSE((short)24, "appendBuildSlaveEventsResponse"),
-    MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE((short)25, "multiGetBuildSlaveEventsResponse"),
-    FETCH_RULE_KEY_LOGS_RESPONSE((short)26, "fetchRuleKeyLogsResponse"),
-    STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE((short)27, "storeBuildSlaveFinishedStatsResponse"),
-    FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE((short)28, "fetchBuildSlaveFinishedStatsResponse"),
-    SET_COORDINATOR_RESPONSE((short)29, "setCoordinatorResponse"),
-    ENQUEUE_MINIONS_RESPONSE((short)30, "enqueueMinionsResponse"),
-    SET_FINAL_BUILD_STATUS_RESPONSE((short)31, "setFinalBuildStatusResponse"),
-    REPORT_COORDINATOR_ALIVE_RESPONSE((short)32, "reportCoordinatorAliveResponse"),
-    UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE((short)33, "updateBuildSlaveBuildStatusResponse"),
-    REMOTE_EXECUTION_STORE_RESPONSE((short)34, "remoteExecutionStoreResponse"),
-    REMOTE_EXECUTION_FETCH_RESPONSE((short)35, "remoteExecutionFetchResponse"),
-    REMOTE_EXECUTION_CONTAINS_RESPONSE((short)36, "remoteExecutionContainsResponse");
+    FETCH_RULE_KEY_LOGS_RESPONSE((short)26, "fetchRuleKeyLogsResponse");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -128,54 +62,10 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
           return ERROR_MESSAGE;
         case 10: // TYPE
           return TYPE;
-        case 11: // START_BUILD_RESPONSE
-          return START_BUILD_RESPONSE;
-        case 12: // BUILD_STATUS_RESPONSE
-          return BUILD_STATUS_RESPONSE;
-        case 15: // CAS_CONTAINS_RESPONSE
-          return CAS_CONTAINS_RESPONSE;
-        case 16: // CREATE_BUILD_RESPONSE
-          return CREATE_BUILD_RESPONSE;
-        case 17: // FETCH_SOURCE_FILES_RESPONSE
-          return FETCH_SOURCE_FILES_RESPONSE;
-        case 18: // FETCH_BUILD_GRAPH_RESPONSE
-          return FETCH_BUILD_GRAPH_RESPONSE;
         case 19: // ANNOUNCEMENT_RESPONSE
           return ANNOUNCEMENT_RESPONSE;
-        case 20: // MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE
-          return MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE;
-        case 21: // MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE
-          return MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE;
-        case 22: // UPDATE_BUILD_SLAVE_STATUS_RESPONSE
-          return UPDATE_BUILD_SLAVE_STATUS_RESPONSE;
-        case 23: // FETCH_BUILD_SLAVE_STATUS_RESPONSE
-          return FETCH_BUILD_SLAVE_STATUS_RESPONSE;
-        case 24: // APPEND_BUILD_SLAVE_EVENTS_RESPONSE
-          return APPEND_BUILD_SLAVE_EVENTS_RESPONSE;
-        case 25: // MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE
-          return MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE;
         case 26: // FETCH_RULE_KEY_LOGS_RESPONSE
           return FETCH_RULE_KEY_LOGS_RESPONSE;
-        case 27: // STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE
-          return STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE;
-        case 28: // FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE
-          return FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE;
-        case 29: // SET_COORDINATOR_RESPONSE
-          return SET_COORDINATOR_RESPONSE;
-        case 30: // ENQUEUE_MINIONS_RESPONSE
-          return ENQUEUE_MINIONS_RESPONSE;
-        case 31: // SET_FINAL_BUILD_STATUS_RESPONSE
-          return SET_FINAL_BUILD_STATUS_RESPONSE;
-        case 32: // REPORT_COORDINATOR_ALIVE_RESPONSE
-          return REPORT_COORDINATOR_ALIVE_RESPONSE;
-        case 33: // UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE
-          return UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE;
-        case 34: // REMOTE_EXECUTION_STORE_RESPONSE
-          return REMOTE_EXECUTION_STORE_RESPONSE;
-        case 35: // REMOTE_EXECUTION_FETCH_RESPONSE
-          return REMOTE_EXECUTION_FETCH_RESPONSE;
-        case 36: // REMOTE_EXECUTION_CONTAINS_RESPONSE
-          return REMOTE_EXECUTION_CONTAINS_RESPONSE;
         default:
           return null;
       }
@@ -219,7 +109,7 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
   // isset id assignments
   private static final int __WASSUCCESSFUL_ISSET_ID = 0;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.WAS_SUCCESSFUL,_Fields.ERROR_MESSAGE,_Fields.TYPE,_Fields.START_BUILD_RESPONSE,_Fields.BUILD_STATUS_RESPONSE,_Fields.CAS_CONTAINS_RESPONSE,_Fields.CREATE_BUILD_RESPONSE,_Fields.FETCH_SOURCE_FILES_RESPONSE,_Fields.FETCH_BUILD_GRAPH_RESPONSE,_Fields.ANNOUNCEMENT_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE,_Fields.UPDATE_BUILD_SLAVE_STATUS_RESPONSE,_Fields.FETCH_BUILD_SLAVE_STATUS_RESPONSE,_Fields.APPEND_BUILD_SLAVE_EVENTS_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE,_Fields.FETCH_RULE_KEY_LOGS_RESPONSE,_Fields.STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE,_Fields.FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE,_Fields.SET_COORDINATOR_RESPONSE,_Fields.ENQUEUE_MINIONS_RESPONSE,_Fields.SET_FINAL_BUILD_STATUS_RESPONSE,_Fields.REPORT_COORDINATOR_ALIVE_RESPONSE,_Fields.UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE,_Fields.REMOTE_EXECUTION_STORE_RESPONSE,_Fields.REMOTE_EXECUTION_FETCH_RESPONSE,_Fields.REMOTE_EXECUTION_CONTAINS_RESPONSE};
+  private static final _Fields optionals[] = {_Fields.WAS_SUCCESSFUL,_Fields.ERROR_MESSAGE,_Fields.TYPE,_Fields.ANNOUNCEMENT_RESPONSE,_Fields.FETCH_RULE_KEY_LOGS_RESPONSE};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -229,54 +119,10 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.TYPE, new org.apache.thrift.meta_data.FieldMetaData("type", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, FrontendRequestType.class)));
-    tmpMap.put(_Fields.START_BUILD_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("startBuildResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, StartBuildResponse.class)));
-    tmpMap.put(_Fields.BUILD_STATUS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("buildStatusResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, BuildStatusResponse.class)));
-    tmpMap.put(_Fields.CAS_CONTAINS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("casContainsResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, CASContainsResponse.class)));
-    tmpMap.put(_Fields.CREATE_BUILD_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("createBuildResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, CreateBuildResponse.class)));
-    tmpMap.put(_Fields.FETCH_SOURCE_FILES_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("fetchSourceFilesResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, FetchSourceFilesResponse.class)));
-    tmpMap.put(_Fields.FETCH_BUILD_GRAPH_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("fetchBuildGraphResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, FetchBuildGraphResponse.class)));
     tmpMap.put(_Fields.ANNOUNCEMENT_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("announcementResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, AnnouncementResponse.class)));
-    tmpMap.put(_Fields.MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("multiGetBuildSlaveLogDirResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, MultiGetBuildSlaveLogDirResponse.class)));
-    tmpMap.put(_Fields.MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("multiGetBuildSlaveRealTimeLogsResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, MultiGetBuildSlaveRealTimeLogsResponse.class)));
-    tmpMap.put(_Fields.UPDATE_BUILD_SLAVE_STATUS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("updateBuildSlaveStatusResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, UpdateBuildSlaveStatusResponse.class)));
-    tmpMap.put(_Fields.FETCH_BUILD_SLAVE_STATUS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("fetchBuildSlaveStatusResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, FetchBuildSlaveStatusResponse.class)));
-    tmpMap.put(_Fields.APPEND_BUILD_SLAVE_EVENTS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("appendBuildSlaveEventsResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, AppendBuildSlaveEventsResponse.class)));
-    tmpMap.put(_Fields.MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("multiGetBuildSlaveEventsResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, MultiGetBuildSlaveEventsResponse.class)));
     tmpMap.put(_Fields.FETCH_RULE_KEY_LOGS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("fetchRuleKeyLogsResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, FetchRuleKeyLogsResponse.class)));
-    tmpMap.put(_Fields.STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("storeBuildSlaveFinishedStatsResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, StoreBuildSlaveFinishedStatsResponse.class)));
-    tmpMap.put(_Fields.FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("fetchBuildSlaveFinishedStatsResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, FetchBuildSlaveFinishedStatsResponse.class)));
-    tmpMap.put(_Fields.SET_COORDINATOR_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("setCoordinatorResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, SetCoordinatorResponse.class)));
-    tmpMap.put(_Fields.ENQUEUE_MINIONS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("enqueueMinionsResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, EnqueueMinionsResponse.class)));
-    tmpMap.put(_Fields.SET_FINAL_BUILD_STATUS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("setFinalBuildStatusResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, SetFinalBuildStatusResponse.class)));
-    tmpMap.put(_Fields.REPORT_COORDINATOR_ALIVE_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("reportCoordinatorAliveResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ReportCoordinatorAliveResponse.class)));
-    tmpMap.put(_Fields.UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("updateBuildSlaveBuildStatusResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, UpdateBuildSlaveBuildStatusResponse.class)));
-    tmpMap.put(_Fields.REMOTE_EXECUTION_STORE_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("remoteExecutionStoreResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RemoteExecutionStoreResponse.class)));
-    tmpMap.put(_Fields.REMOTE_EXECUTION_FETCH_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("remoteExecutionFetchResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RemoteExecutionFetchResponse.class)));
-    tmpMap.put(_Fields.REMOTE_EXECUTION_CONTAINS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("remoteExecutionContainsResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RemoteExecutionContainsResponse.class)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(FrontendResponse.class, metaDataMap);
   }
@@ -298,77 +144,11 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     if (other.isSetType()) {
       this.type = other.type;
     }
-    if (other.isSetStartBuildResponse()) {
-      this.startBuildResponse = new StartBuildResponse(other.startBuildResponse);
-    }
-    if (other.isSetBuildStatusResponse()) {
-      this.buildStatusResponse = new BuildStatusResponse(other.buildStatusResponse);
-    }
-    if (other.isSetCasContainsResponse()) {
-      this.casContainsResponse = new CASContainsResponse(other.casContainsResponse);
-    }
-    if (other.isSetCreateBuildResponse()) {
-      this.createBuildResponse = new CreateBuildResponse(other.createBuildResponse);
-    }
-    if (other.isSetFetchSourceFilesResponse()) {
-      this.fetchSourceFilesResponse = new FetchSourceFilesResponse(other.fetchSourceFilesResponse);
-    }
-    if (other.isSetFetchBuildGraphResponse()) {
-      this.fetchBuildGraphResponse = new FetchBuildGraphResponse(other.fetchBuildGraphResponse);
-    }
     if (other.isSetAnnouncementResponse()) {
       this.announcementResponse = new AnnouncementResponse(other.announcementResponse);
     }
-    if (other.isSetMultiGetBuildSlaveLogDirResponse()) {
-      this.multiGetBuildSlaveLogDirResponse = new MultiGetBuildSlaveLogDirResponse(other.multiGetBuildSlaveLogDirResponse);
-    }
-    if (other.isSetMultiGetBuildSlaveRealTimeLogsResponse()) {
-      this.multiGetBuildSlaveRealTimeLogsResponse = new MultiGetBuildSlaveRealTimeLogsResponse(other.multiGetBuildSlaveRealTimeLogsResponse);
-    }
-    if (other.isSetUpdateBuildSlaveStatusResponse()) {
-      this.updateBuildSlaveStatusResponse = new UpdateBuildSlaveStatusResponse(other.updateBuildSlaveStatusResponse);
-    }
-    if (other.isSetFetchBuildSlaveStatusResponse()) {
-      this.fetchBuildSlaveStatusResponse = new FetchBuildSlaveStatusResponse(other.fetchBuildSlaveStatusResponse);
-    }
-    if (other.isSetAppendBuildSlaveEventsResponse()) {
-      this.appendBuildSlaveEventsResponse = new AppendBuildSlaveEventsResponse(other.appendBuildSlaveEventsResponse);
-    }
-    if (other.isSetMultiGetBuildSlaveEventsResponse()) {
-      this.multiGetBuildSlaveEventsResponse = new MultiGetBuildSlaveEventsResponse(other.multiGetBuildSlaveEventsResponse);
-    }
     if (other.isSetFetchRuleKeyLogsResponse()) {
       this.fetchRuleKeyLogsResponse = new FetchRuleKeyLogsResponse(other.fetchRuleKeyLogsResponse);
-    }
-    if (other.isSetStoreBuildSlaveFinishedStatsResponse()) {
-      this.storeBuildSlaveFinishedStatsResponse = new StoreBuildSlaveFinishedStatsResponse(other.storeBuildSlaveFinishedStatsResponse);
-    }
-    if (other.isSetFetchBuildSlaveFinishedStatsResponse()) {
-      this.fetchBuildSlaveFinishedStatsResponse = new FetchBuildSlaveFinishedStatsResponse(other.fetchBuildSlaveFinishedStatsResponse);
-    }
-    if (other.isSetSetCoordinatorResponse()) {
-      this.setCoordinatorResponse = new SetCoordinatorResponse(other.setCoordinatorResponse);
-    }
-    if (other.isSetEnqueueMinionsResponse()) {
-      this.enqueueMinionsResponse = new EnqueueMinionsResponse(other.enqueueMinionsResponse);
-    }
-    if (other.isSetSetFinalBuildStatusResponse()) {
-      this.setFinalBuildStatusResponse = new SetFinalBuildStatusResponse(other.setFinalBuildStatusResponse);
-    }
-    if (other.isSetReportCoordinatorAliveResponse()) {
-      this.reportCoordinatorAliveResponse = new ReportCoordinatorAliveResponse(other.reportCoordinatorAliveResponse);
-    }
-    if (other.isSetUpdateBuildSlaveBuildStatusResponse()) {
-      this.updateBuildSlaveBuildStatusResponse = new UpdateBuildSlaveBuildStatusResponse(other.updateBuildSlaveBuildStatusResponse);
-    }
-    if (other.isSetRemoteExecutionStoreResponse()) {
-      this.remoteExecutionStoreResponse = new RemoteExecutionStoreResponse(other.remoteExecutionStoreResponse);
-    }
-    if (other.isSetRemoteExecutionFetchResponse()) {
-      this.remoteExecutionFetchResponse = new RemoteExecutionFetchResponse(other.remoteExecutionFetchResponse);
-    }
-    if (other.isSetRemoteExecutionContainsResponse()) {
-      this.remoteExecutionContainsResponse = new RemoteExecutionContainsResponse(other.remoteExecutionContainsResponse);
     }
   }
 
@@ -383,30 +163,8 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     this.errorMessage = null;
     this.type = com.facebook.buck.distributed.thrift.FrontendRequestType.UNKNOWN;
 
-    this.startBuildResponse = null;
-    this.buildStatusResponse = null;
-    this.casContainsResponse = null;
-    this.createBuildResponse = null;
-    this.fetchSourceFilesResponse = null;
-    this.fetchBuildGraphResponse = null;
     this.announcementResponse = null;
-    this.multiGetBuildSlaveLogDirResponse = null;
-    this.multiGetBuildSlaveRealTimeLogsResponse = null;
-    this.updateBuildSlaveStatusResponse = null;
-    this.fetchBuildSlaveStatusResponse = null;
-    this.appendBuildSlaveEventsResponse = null;
-    this.multiGetBuildSlaveEventsResponse = null;
     this.fetchRuleKeyLogsResponse = null;
-    this.storeBuildSlaveFinishedStatsResponse = null;
-    this.fetchBuildSlaveFinishedStatsResponse = null;
-    this.setCoordinatorResponse = null;
-    this.enqueueMinionsResponse = null;
-    this.setFinalBuildStatusResponse = null;
-    this.reportCoordinatorAliveResponse = null;
-    this.updateBuildSlaveBuildStatusResponse = null;
-    this.remoteExecutionStoreResponse = null;
-    this.remoteExecutionFetchResponse = null;
-    this.remoteExecutionContainsResponse = null;
   }
 
   public boolean isWasSuccessful() {
@@ -491,156 +249,6 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
   }
 
   @org.apache.thrift.annotation.Nullable
-  public StartBuildResponse getStartBuildResponse() {
-    return this.startBuildResponse;
-  }
-
-  public FrontendResponse setStartBuildResponse(@org.apache.thrift.annotation.Nullable StartBuildResponse startBuildResponse) {
-    this.startBuildResponse = startBuildResponse;
-    return this;
-  }
-
-  public void unsetStartBuildResponse() {
-    this.startBuildResponse = null;
-  }
-
-  /** Returns true if field startBuildResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetStartBuildResponse() {
-    return this.startBuildResponse != null;
-  }
-
-  public void setStartBuildResponseIsSet(boolean value) {
-    if (!value) {
-      this.startBuildResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public BuildStatusResponse getBuildStatusResponse() {
-    return this.buildStatusResponse;
-  }
-
-  public FrontendResponse setBuildStatusResponse(@org.apache.thrift.annotation.Nullable BuildStatusResponse buildStatusResponse) {
-    this.buildStatusResponse = buildStatusResponse;
-    return this;
-  }
-
-  public void unsetBuildStatusResponse() {
-    this.buildStatusResponse = null;
-  }
-
-  /** Returns true if field buildStatusResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetBuildStatusResponse() {
-    return this.buildStatusResponse != null;
-  }
-
-  public void setBuildStatusResponseIsSet(boolean value) {
-    if (!value) {
-      this.buildStatusResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public CASContainsResponse getCasContainsResponse() {
-    return this.casContainsResponse;
-  }
-
-  public FrontendResponse setCasContainsResponse(@org.apache.thrift.annotation.Nullable CASContainsResponse casContainsResponse) {
-    this.casContainsResponse = casContainsResponse;
-    return this;
-  }
-
-  public void unsetCasContainsResponse() {
-    this.casContainsResponse = null;
-  }
-
-  /** Returns true if field casContainsResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetCasContainsResponse() {
-    return this.casContainsResponse != null;
-  }
-
-  public void setCasContainsResponseIsSet(boolean value) {
-    if (!value) {
-      this.casContainsResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public CreateBuildResponse getCreateBuildResponse() {
-    return this.createBuildResponse;
-  }
-
-  public FrontendResponse setCreateBuildResponse(@org.apache.thrift.annotation.Nullable CreateBuildResponse createBuildResponse) {
-    this.createBuildResponse = createBuildResponse;
-    return this;
-  }
-
-  public void unsetCreateBuildResponse() {
-    this.createBuildResponse = null;
-  }
-
-  /** Returns true if field createBuildResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetCreateBuildResponse() {
-    return this.createBuildResponse != null;
-  }
-
-  public void setCreateBuildResponseIsSet(boolean value) {
-    if (!value) {
-      this.createBuildResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public FetchSourceFilesResponse getFetchSourceFilesResponse() {
-    return this.fetchSourceFilesResponse;
-  }
-
-  public FrontendResponse setFetchSourceFilesResponse(@org.apache.thrift.annotation.Nullable FetchSourceFilesResponse fetchSourceFilesResponse) {
-    this.fetchSourceFilesResponse = fetchSourceFilesResponse;
-    return this;
-  }
-
-  public void unsetFetchSourceFilesResponse() {
-    this.fetchSourceFilesResponse = null;
-  }
-
-  /** Returns true if field fetchSourceFilesResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetFetchSourceFilesResponse() {
-    return this.fetchSourceFilesResponse != null;
-  }
-
-  public void setFetchSourceFilesResponseIsSet(boolean value) {
-    if (!value) {
-      this.fetchSourceFilesResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public FetchBuildGraphResponse getFetchBuildGraphResponse() {
-    return this.fetchBuildGraphResponse;
-  }
-
-  public FrontendResponse setFetchBuildGraphResponse(@org.apache.thrift.annotation.Nullable FetchBuildGraphResponse fetchBuildGraphResponse) {
-    this.fetchBuildGraphResponse = fetchBuildGraphResponse;
-    return this;
-  }
-
-  public void unsetFetchBuildGraphResponse() {
-    this.fetchBuildGraphResponse = null;
-  }
-
-  /** Returns true if field fetchBuildGraphResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetFetchBuildGraphResponse() {
-    return this.fetchBuildGraphResponse != null;
-  }
-
-  public void setFetchBuildGraphResponseIsSet(boolean value) {
-    if (!value) {
-      this.fetchBuildGraphResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
   public AnnouncementResponse getAnnouncementResponse() {
     return this.announcementResponse;
   }
@@ -666,156 +274,6 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
   }
 
   @org.apache.thrift.annotation.Nullable
-  public MultiGetBuildSlaveLogDirResponse getMultiGetBuildSlaveLogDirResponse() {
-    return this.multiGetBuildSlaveLogDirResponse;
-  }
-
-  public FrontendResponse setMultiGetBuildSlaveLogDirResponse(@org.apache.thrift.annotation.Nullable MultiGetBuildSlaveLogDirResponse multiGetBuildSlaveLogDirResponse) {
-    this.multiGetBuildSlaveLogDirResponse = multiGetBuildSlaveLogDirResponse;
-    return this;
-  }
-
-  public void unsetMultiGetBuildSlaveLogDirResponse() {
-    this.multiGetBuildSlaveLogDirResponse = null;
-  }
-
-  /** Returns true if field multiGetBuildSlaveLogDirResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetMultiGetBuildSlaveLogDirResponse() {
-    return this.multiGetBuildSlaveLogDirResponse != null;
-  }
-
-  public void setMultiGetBuildSlaveLogDirResponseIsSet(boolean value) {
-    if (!value) {
-      this.multiGetBuildSlaveLogDirResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public MultiGetBuildSlaveRealTimeLogsResponse getMultiGetBuildSlaveRealTimeLogsResponse() {
-    return this.multiGetBuildSlaveRealTimeLogsResponse;
-  }
-
-  public FrontendResponse setMultiGetBuildSlaveRealTimeLogsResponse(@org.apache.thrift.annotation.Nullable MultiGetBuildSlaveRealTimeLogsResponse multiGetBuildSlaveRealTimeLogsResponse) {
-    this.multiGetBuildSlaveRealTimeLogsResponse = multiGetBuildSlaveRealTimeLogsResponse;
-    return this;
-  }
-
-  public void unsetMultiGetBuildSlaveRealTimeLogsResponse() {
-    this.multiGetBuildSlaveRealTimeLogsResponse = null;
-  }
-
-  /** Returns true if field multiGetBuildSlaveRealTimeLogsResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetMultiGetBuildSlaveRealTimeLogsResponse() {
-    return this.multiGetBuildSlaveRealTimeLogsResponse != null;
-  }
-
-  public void setMultiGetBuildSlaveRealTimeLogsResponseIsSet(boolean value) {
-    if (!value) {
-      this.multiGetBuildSlaveRealTimeLogsResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public UpdateBuildSlaveStatusResponse getUpdateBuildSlaveStatusResponse() {
-    return this.updateBuildSlaveStatusResponse;
-  }
-
-  public FrontendResponse setUpdateBuildSlaveStatusResponse(@org.apache.thrift.annotation.Nullable UpdateBuildSlaveStatusResponse updateBuildSlaveStatusResponse) {
-    this.updateBuildSlaveStatusResponse = updateBuildSlaveStatusResponse;
-    return this;
-  }
-
-  public void unsetUpdateBuildSlaveStatusResponse() {
-    this.updateBuildSlaveStatusResponse = null;
-  }
-
-  /** Returns true if field updateBuildSlaveStatusResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetUpdateBuildSlaveStatusResponse() {
-    return this.updateBuildSlaveStatusResponse != null;
-  }
-
-  public void setUpdateBuildSlaveStatusResponseIsSet(boolean value) {
-    if (!value) {
-      this.updateBuildSlaveStatusResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public FetchBuildSlaveStatusResponse getFetchBuildSlaveStatusResponse() {
-    return this.fetchBuildSlaveStatusResponse;
-  }
-
-  public FrontendResponse setFetchBuildSlaveStatusResponse(@org.apache.thrift.annotation.Nullable FetchBuildSlaveStatusResponse fetchBuildSlaveStatusResponse) {
-    this.fetchBuildSlaveStatusResponse = fetchBuildSlaveStatusResponse;
-    return this;
-  }
-
-  public void unsetFetchBuildSlaveStatusResponse() {
-    this.fetchBuildSlaveStatusResponse = null;
-  }
-
-  /** Returns true if field fetchBuildSlaveStatusResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetFetchBuildSlaveStatusResponse() {
-    return this.fetchBuildSlaveStatusResponse != null;
-  }
-
-  public void setFetchBuildSlaveStatusResponseIsSet(boolean value) {
-    if (!value) {
-      this.fetchBuildSlaveStatusResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public AppendBuildSlaveEventsResponse getAppendBuildSlaveEventsResponse() {
-    return this.appendBuildSlaveEventsResponse;
-  }
-
-  public FrontendResponse setAppendBuildSlaveEventsResponse(@org.apache.thrift.annotation.Nullable AppendBuildSlaveEventsResponse appendBuildSlaveEventsResponse) {
-    this.appendBuildSlaveEventsResponse = appendBuildSlaveEventsResponse;
-    return this;
-  }
-
-  public void unsetAppendBuildSlaveEventsResponse() {
-    this.appendBuildSlaveEventsResponse = null;
-  }
-
-  /** Returns true if field appendBuildSlaveEventsResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetAppendBuildSlaveEventsResponse() {
-    return this.appendBuildSlaveEventsResponse != null;
-  }
-
-  public void setAppendBuildSlaveEventsResponseIsSet(boolean value) {
-    if (!value) {
-      this.appendBuildSlaveEventsResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public MultiGetBuildSlaveEventsResponse getMultiGetBuildSlaveEventsResponse() {
-    return this.multiGetBuildSlaveEventsResponse;
-  }
-
-  public FrontendResponse setMultiGetBuildSlaveEventsResponse(@org.apache.thrift.annotation.Nullable MultiGetBuildSlaveEventsResponse multiGetBuildSlaveEventsResponse) {
-    this.multiGetBuildSlaveEventsResponse = multiGetBuildSlaveEventsResponse;
-    return this;
-  }
-
-  public void unsetMultiGetBuildSlaveEventsResponse() {
-    this.multiGetBuildSlaveEventsResponse = null;
-  }
-
-  /** Returns true if field multiGetBuildSlaveEventsResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetMultiGetBuildSlaveEventsResponse() {
-    return this.multiGetBuildSlaveEventsResponse != null;
-  }
-
-  public void setMultiGetBuildSlaveEventsResponseIsSet(boolean value) {
-    if (!value) {
-      this.multiGetBuildSlaveEventsResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
   public FetchRuleKeyLogsResponse getFetchRuleKeyLogsResponse() {
     return this.fetchRuleKeyLogsResponse;
   }
@@ -837,256 +295,6 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
   public void setFetchRuleKeyLogsResponseIsSet(boolean value) {
     if (!value) {
       this.fetchRuleKeyLogsResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public StoreBuildSlaveFinishedStatsResponse getStoreBuildSlaveFinishedStatsResponse() {
-    return this.storeBuildSlaveFinishedStatsResponse;
-  }
-
-  public FrontendResponse setStoreBuildSlaveFinishedStatsResponse(@org.apache.thrift.annotation.Nullable StoreBuildSlaveFinishedStatsResponse storeBuildSlaveFinishedStatsResponse) {
-    this.storeBuildSlaveFinishedStatsResponse = storeBuildSlaveFinishedStatsResponse;
-    return this;
-  }
-
-  public void unsetStoreBuildSlaveFinishedStatsResponse() {
-    this.storeBuildSlaveFinishedStatsResponse = null;
-  }
-
-  /** Returns true if field storeBuildSlaveFinishedStatsResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetStoreBuildSlaveFinishedStatsResponse() {
-    return this.storeBuildSlaveFinishedStatsResponse != null;
-  }
-
-  public void setStoreBuildSlaveFinishedStatsResponseIsSet(boolean value) {
-    if (!value) {
-      this.storeBuildSlaveFinishedStatsResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public FetchBuildSlaveFinishedStatsResponse getFetchBuildSlaveFinishedStatsResponse() {
-    return this.fetchBuildSlaveFinishedStatsResponse;
-  }
-
-  public FrontendResponse setFetchBuildSlaveFinishedStatsResponse(@org.apache.thrift.annotation.Nullable FetchBuildSlaveFinishedStatsResponse fetchBuildSlaveFinishedStatsResponse) {
-    this.fetchBuildSlaveFinishedStatsResponse = fetchBuildSlaveFinishedStatsResponse;
-    return this;
-  }
-
-  public void unsetFetchBuildSlaveFinishedStatsResponse() {
-    this.fetchBuildSlaveFinishedStatsResponse = null;
-  }
-
-  /** Returns true if field fetchBuildSlaveFinishedStatsResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetFetchBuildSlaveFinishedStatsResponse() {
-    return this.fetchBuildSlaveFinishedStatsResponse != null;
-  }
-
-  public void setFetchBuildSlaveFinishedStatsResponseIsSet(boolean value) {
-    if (!value) {
-      this.fetchBuildSlaveFinishedStatsResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public SetCoordinatorResponse getSetCoordinatorResponse() {
-    return this.setCoordinatorResponse;
-  }
-
-  public FrontendResponse setSetCoordinatorResponse(@org.apache.thrift.annotation.Nullable SetCoordinatorResponse setCoordinatorResponse) {
-    this.setCoordinatorResponse = setCoordinatorResponse;
-    return this;
-  }
-
-  public void unsetSetCoordinatorResponse() {
-    this.setCoordinatorResponse = null;
-  }
-
-  /** Returns true if field setCoordinatorResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetSetCoordinatorResponse() {
-    return this.setCoordinatorResponse != null;
-  }
-
-  public void setSetCoordinatorResponseIsSet(boolean value) {
-    if (!value) {
-      this.setCoordinatorResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public EnqueueMinionsResponse getEnqueueMinionsResponse() {
-    return this.enqueueMinionsResponse;
-  }
-
-  public FrontendResponse setEnqueueMinionsResponse(@org.apache.thrift.annotation.Nullable EnqueueMinionsResponse enqueueMinionsResponse) {
-    this.enqueueMinionsResponse = enqueueMinionsResponse;
-    return this;
-  }
-
-  public void unsetEnqueueMinionsResponse() {
-    this.enqueueMinionsResponse = null;
-  }
-
-  /** Returns true if field enqueueMinionsResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetEnqueueMinionsResponse() {
-    return this.enqueueMinionsResponse != null;
-  }
-
-  public void setEnqueueMinionsResponseIsSet(boolean value) {
-    if (!value) {
-      this.enqueueMinionsResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public SetFinalBuildStatusResponse getSetFinalBuildStatusResponse() {
-    return this.setFinalBuildStatusResponse;
-  }
-
-  public FrontendResponse setSetFinalBuildStatusResponse(@org.apache.thrift.annotation.Nullable SetFinalBuildStatusResponse setFinalBuildStatusResponse) {
-    this.setFinalBuildStatusResponse = setFinalBuildStatusResponse;
-    return this;
-  }
-
-  public void unsetSetFinalBuildStatusResponse() {
-    this.setFinalBuildStatusResponse = null;
-  }
-
-  /** Returns true if field setFinalBuildStatusResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetSetFinalBuildStatusResponse() {
-    return this.setFinalBuildStatusResponse != null;
-  }
-
-  public void setSetFinalBuildStatusResponseIsSet(boolean value) {
-    if (!value) {
-      this.setFinalBuildStatusResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public ReportCoordinatorAliveResponse getReportCoordinatorAliveResponse() {
-    return this.reportCoordinatorAliveResponse;
-  }
-
-  public FrontendResponse setReportCoordinatorAliveResponse(@org.apache.thrift.annotation.Nullable ReportCoordinatorAliveResponse reportCoordinatorAliveResponse) {
-    this.reportCoordinatorAliveResponse = reportCoordinatorAliveResponse;
-    return this;
-  }
-
-  public void unsetReportCoordinatorAliveResponse() {
-    this.reportCoordinatorAliveResponse = null;
-  }
-
-  /** Returns true if field reportCoordinatorAliveResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetReportCoordinatorAliveResponse() {
-    return this.reportCoordinatorAliveResponse != null;
-  }
-
-  public void setReportCoordinatorAliveResponseIsSet(boolean value) {
-    if (!value) {
-      this.reportCoordinatorAliveResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public UpdateBuildSlaveBuildStatusResponse getUpdateBuildSlaveBuildStatusResponse() {
-    return this.updateBuildSlaveBuildStatusResponse;
-  }
-
-  public FrontendResponse setUpdateBuildSlaveBuildStatusResponse(@org.apache.thrift.annotation.Nullable UpdateBuildSlaveBuildStatusResponse updateBuildSlaveBuildStatusResponse) {
-    this.updateBuildSlaveBuildStatusResponse = updateBuildSlaveBuildStatusResponse;
-    return this;
-  }
-
-  public void unsetUpdateBuildSlaveBuildStatusResponse() {
-    this.updateBuildSlaveBuildStatusResponse = null;
-  }
-
-  /** Returns true if field updateBuildSlaveBuildStatusResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetUpdateBuildSlaveBuildStatusResponse() {
-    return this.updateBuildSlaveBuildStatusResponse != null;
-  }
-
-  public void setUpdateBuildSlaveBuildStatusResponseIsSet(boolean value) {
-    if (!value) {
-      this.updateBuildSlaveBuildStatusResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public RemoteExecutionStoreResponse getRemoteExecutionStoreResponse() {
-    return this.remoteExecutionStoreResponse;
-  }
-
-  public FrontendResponse setRemoteExecutionStoreResponse(@org.apache.thrift.annotation.Nullable RemoteExecutionStoreResponse remoteExecutionStoreResponse) {
-    this.remoteExecutionStoreResponse = remoteExecutionStoreResponse;
-    return this;
-  }
-
-  public void unsetRemoteExecutionStoreResponse() {
-    this.remoteExecutionStoreResponse = null;
-  }
-
-  /** Returns true if field remoteExecutionStoreResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetRemoteExecutionStoreResponse() {
-    return this.remoteExecutionStoreResponse != null;
-  }
-
-  public void setRemoteExecutionStoreResponseIsSet(boolean value) {
-    if (!value) {
-      this.remoteExecutionStoreResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public RemoteExecutionFetchResponse getRemoteExecutionFetchResponse() {
-    return this.remoteExecutionFetchResponse;
-  }
-
-  public FrontendResponse setRemoteExecutionFetchResponse(@org.apache.thrift.annotation.Nullable RemoteExecutionFetchResponse remoteExecutionFetchResponse) {
-    this.remoteExecutionFetchResponse = remoteExecutionFetchResponse;
-    return this;
-  }
-
-  public void unsetRemoteExecutionFetchResponse() {
-    this.remoteExecutionFetchResponse = null;
-  }
-
-  /** Returns true if field remoteExecutionFetchResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetRemoteExecutionFetchResponse() {
-    return this.remoteExecutionFetchResponse != null;
-  }
-
-  public void setRemoteExecutionFetchResponseIsSet(boolean value) {
-    if (!value) {
-      this.remoteExecutionFetchResponse = null;
-    }
-  }
-
-  @org.apache.thrift.annotation.Nullable
-  public RemoteExecutionContainsResponse getRemoteExecutionContainsResponse() {
-    return this.remoteExecutionContainsResponse;
-  }
-
-  public FrontendResponse setRemoteExecutionContainsResponse(@org.apache.thrift.annotation.Nullable RemoteExecutionContainsResponse remoteExecutionContainsResponse) {
-    this.remoteExecutionContainsResponse = remoteExecutionContainsResponse;
-    return this;
-  }
-
-  public void unsetRemoteExecutionContainsResponse() {
-    this.remoteExecutionContainsResponse = null;
-  }
-
-  /** Returns true if field remoteExecutionContainsResponse is set (has been assigned a value) and false otherwise */
-  public boolean isSetRemoteExecutionContainsResponse() {
-    return this.remoteExecutionContainsResponse != null;
-  }
-
-  public void setRemoteExecutionContainsResponseIsSet(boolean value) {
-    if (!value) {
-      this.remoteExecutionContainsResponse = null;
     }
   }
 
@@ -1116,54 +324,6 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       }
       break;
 
-    case START_BUILD_RESPONSE:
-      if (value == null) {
-        unsetStartBuildResponse();
-      } else {
-        setStartBuildResponse((StartBuildResponse)value);
-      }
-      break;
-
-    case BUILD_STATUS_RESPONSE:
-      if (value == null) {
-        unsetBuildStatusResponse();
-      } else {
-        setBuildStatusResponse((BuildStatusResponse)value);
-      }
-      break;
-
-    case CAS_CONTAINS_RESPONSE:
-      if (value == null) {
-        unsetCasContainsResponse();
-      } else {
-        setCasContainsResponse((CASContainsResponse)value);
-      }
-      break;
-
-    case CREATE_BUILD_RESPONSE:
-      if (value == null) {
-        unsetCreateBuildResponse();
-      } else {
-        setCreateBuildResponse((CreateBuildResponse)value);
-      }
-      break;
-
-    case FETCH_SOURCE_FILES_RESPONSE:
-      if (value == null) {
-        unsetFetchSourceFilesResponse();
-      } else {
-        setFetchSourceFilesResponse((FetchSourceFilesResponse)value);
-      }
-      break;
-
-    case FETCH_BUILD_GRAPH_RESPONSE:
-      if (value == null) {
-        unsetFetchBuildGraphResponse();
-      } else {
-        setFetchBuildGraphResponse((FetchBuildGraphResponse)value);
-      }
-      break;
-
     case ANNOUNCEMENT_RESPONSE:
       if (value == null) {
         unsetAnnouncementResponse();
@@ -1172,139 +332,11 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       }
       break;
 
-    case MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE:
-      if (value == null) {
-        unsetMultiGetBuildSlaveLogDirResponse();
-      } else {
-        setMultiGetBuildSlaveLogDirResponse((MultiGetBuildSlaveLogDirResponse)value);
-      }
-      break;
-
-    case MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE:
-      if (value == null) {
-        unsetMultiGetBuildSlaveRealTimeLogsResponse();
-      } else {
-        setMultiGetBuildSlaveRealTimeLogsResponse((MultiGetBuildSlaveRealTimeLogsResponse)value);
-      }
-      break;
-
-    case UPDATE_BUILD_SLAVE_STATUS_RESPONSE:
-      if (value == null) {
-        unsetUpdateBuildSlaveStatusResponse();
-      } else {
-        setUpdateBuildSlaveStatusResponse((UpdateBuildSlaveStatusResponse)value);
-      }
-      break;
-
-    case FETCH_BUILD_SLAVE_STATUS_RESPONSE:
-      if (value == null) {
-        unsetFetchBuildSlaveStatusResponse();
-      } else {
-        setFetchBuildSlaveStatusResponse((FetchBuildSlaveStatusResponse)value);
-      }
-      break;
-
-    case APPEND_BUILD_SLAVE_EVENTS_RESPONSE:
-      if (value == null) {
-        unsetAppendBuildSlaveEventsResponse();
-      } else {
-        setAppendBuildSlaveEventsResponse((AppendBuildSlaveEventsResponse)value);
-      }
-      break;
-
-    case MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE:
-      if (value == null) {
-        unsetMultiGetBuildSlaveEventsResponse();
-      } else {
-        setMultiGetBuildSlaveEventsResponse((MultiGetBuildSlaveEventsResponse)value);
-      }
-      break;
-
     case FETCH_RULE_KEY_LOGS_RESPONSE:
       if (value == null) {
         unsetFetchRuleKeyLogsResponse();
       } else {
         setFetchRuleKeyLogsResponse((FetchRuleKeyLogsResponse)value);
-      }
-      break;
-
-    case STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE:
-      if (value == null) {
-        unsetStoreBuildSlaveFinishedStatsResponse();
-      } else {
-        setStoreBuildSlaveFinishedStatsResponse((StoreBuildSlaveFinishedStatsResponse)value);
-      }
-      break;
-
-    case FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE:
-      if (value == null) {
-        unsetFetchBuildSlaveFinishedStatsResponse();
-      } else {
-        setFetchBuildSlaveFinishedStatsResponse((FetchBuildSlaveFinishedStatsResponse)value);
-      }
-      break;
-
-    case SET_COORDINATOR_RESPONSE:
-      if (value == null) {
-        unsetSetCoordinatorResponse();
-      } else {
-        setSetCoordinatorResponse((SetCoordinatorResponse)value);
-      }
-      break;
-
-    case ENQUEUE_MINIONS_RESPONSE:
-      if (value == null) {
-        unsetEnqueueMinionsResponse();
-      } else {
-        setEnqueueMinionsResponse((EnqueueMinionsResponse)value);
-      }
-      break;
-
-    case SET_FINAL_BUILD_STATUS_RESPONSE:
-      if (value == null) {
-        unsetSetFinalBuildStatusResponse();
-      } else {
-        setSetFinalBuildStatusResponse((SetFinalBuildStatusResponse)value);
-      }
-      break;
-
-    case REPORT_COORDINATOR_ALIVE_RESPONSE:
-      if (value == null) {
-        unsetReportCoordinatorAliveResponse();
-      } else {
-        setReportCoordinatorAliveResponse((ReportCoordinatorAliveResponse)value);
-      }
-      break;
-
-    case UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE:
-      if (value == null) {
-        unsetUpdateBuildSlaveBuildStatusResponse();
-      } else {
-        setUpdateBuildSlaveBuildStatusResponse((UpdateBuildSlaveBuildStatusResponse)value);
-      }
-      break;
-
-    case REMOTE_EXECUTION_STORE_RESPONSE:
-      if (value == null) {
-        unsetRemoteExecutionStoreResponse();
-      } else {
-        setRemoteExecutionStoreResponse((RemoteExecutionStoreResponse)value);
-      }
-      break;
-
-    case REMOTE_EXECUTION_FETCH_RESPONSE:
-      if (value == null) {
-        unsetRemoteExecutionFetchResponse();
-      } else {
-        setRemoteExecutionFetchResponse((RemoteExecutionFetchResponse)value);
-      }
-      break;
-
-    case REMOTE_EXECUTION_CONTAINS_RESPONSE:
-      if (value == null) {
-        unsetRemoteExecutionContainsResponse();
-      } else {
-        setRemoteExecutionContainsResponse((RemoteExecutionContainsResponse)value);
       }
       break;
 
@@ -1323,77 +355,11 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     case TYPE:
       return getType();
 
-    case START_BUILD_RESPONSE:
-      return getStartBuildResponse();
-
-    case BUILD_STATUS_RESPONSE:
-      return getBuildStatusResponse();
-
-    case CAS_CONTAINS_RESPONSE:
-      return getCasContainsResponse();
-
-    case CREATE_BUILD_RESPONSE:
-      return getCreateBuildResponse();
-
-    case FETCH_SOURCE_FILES_RESPONSE:
-      return getFetchSourceFilesResponse();
-
-    case FETCH_BUILD_GRAPH_RESPONSE:
-      return getFetchBuildGraphResponse();
-
     case ANNOUNCEMENT_RESPONSE:
       return getAnnouncementResponse();
 
-    case MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE:
-      return getMultiGetBuildSlaveLogDirResponse();
-
-    case MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE:
-      return getMultiGetBuildSlaveRealTimeLogsResponse();
-
-    case UPDATE_BUILD_SLAVE_STATUS_RESPONSE:
-      return getUpdateBuildSlaveStatusResponse();
-
-    case FETCH_BUILD_SLAVE_STATUS_RESPONSE:
-      return getFetchBuildSlaveStatusResponse();
-
-    case APPEND_BUILD_SLAVE_EVENTS_RESPONSE:
-      return getAppendBuildSlaveEventsResponse();
-
-    case MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE:
-      return getMultiGetBuildSlaveEventsResponse();
-
     case FETCH_RULE_KEY_LOGS_RESPONSE:
       return getFetchRuleKeyLogsResponse();
-
-    case STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE:
-      return getStoreBuildSlaveFinishedStatsResponse();
-
-    case FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE:
-      return getFetchBuildSlaveFinishedStatsResponse();
-
-    case SET_COORDINATOR_RESPONSE:
-      return getSetCoordinatorResponse();
-
-    case ENQUEUE_MINIONS_RESPONSE:
-      return getEnqueueMinionsResponse();
-
-    case SET_FINAL_BUILD_STATUS_RESPONSE:
-      return getSetFinalBuildStatusResponse();
-
-    case REPORT_COORDINATOR_ALIVE_RESPONSE:
-      return getReportCoordinatorAliveResponse();
-
-    case UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE:
-      return getUpdateBuildSlaveBuildStatusResponse();
-
-    case REMOTE_EXECUTION_STORE_RESPONSE:
-      return getRemoteExecutionStoreResponse();
-
-    case REMOTE_EXECUTION_FETCH_RESPONSE:
-      return getRemoteExecutionFetchResponse();
-
-    case REMOTE_EXECUTION_CONTAINS_RESPONSE:
-      return getRemoteExecutionContainsResponse();
 
     }
     throw new java.lang.IllegalStateException();
@@ -1412,54 +378,10 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       return isSetErrorMessage();
     case TYPE:
       return isSetType();
-    case START_BUILD_RESPONSE:
-      return isSetStartBuildResponse();
-    case BUILD_STATUS_RESPONSE:
-      return isSetBuildStatusResponse();
-    case CAS_CONTAINS_RESPONSE:
-      return isSetCasContainsResponse();
-    case CREATE_BUILD_RESPONSE:
-      return isSetCreateBuildResponse();
-    case FETCH_SOURCE_FILES_RESPONSE:
-      return isSetFetchSourceFilesResponse();
-    case FETCH_BUILD_GRAPH_RESPONSE:
-      return isSetFetchBuildGraphResponse();
     case ANNOUNCEMENT_RESPONSE:
       return isSetAnnouncementResponse();
-    case MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE:
-      return isSetMultiGetBuildSlaveLogDirResponse();
-    case MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE:
-      return isSetMultiGetBuildSlaveRealTimeLogsResponse();
-    case UPDATE_BUILD_SLAVE_STATUS_RESPONSE:
-      return isSetUpdateBuildSlaveStatusResponse();
-    case FETCH_BUILD_SLAVE_STATUS_RESPONSE:
-      return isSetFetchBuildSlaveStatusResponse();
-    case APPEND_BUILD_SLAVE_EVENTS_RESPONSE:
-      return isSetAppendBuildSlaveEventsResponse();
-    case MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE:
-      return isSetMultiGetBuildSlaveEventsResponse();
     case FETCH_RULE_KEY_LOGS_RESPONSE:
       return isSetFetchRuleKeyLogsResponse();
-    case STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE:
-      return isSetStoreBuildSlaveFinishedStatsResponse();
-    case FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE:
-      return isSetFetchBuildSlaveFinishedStatsResponse();
-    case SET_COORDINATOR_RESPONSE:
-      return isSetSetCoordinatorResponse();
-    case ENQUEUE_MINIONS_RESPONSE:
-      return isSetEnqueueMinionsResponse();
-    case SET_FINAL_BUILD_STATUS_RESPONSE:
-      return isSetSetFinalBuildStatusResponse();
-    case REPORT_COORDINATOR_ALIVE_RESPONSE:
-      return isSetReportCoordinatorAliveResponse();
-    case UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE:
-      return isSetUpdateBuildSlaveBuildStatusResponse();
-    case REMOTE_EXECUTION_STORE_RESPONSE:
-      return isSetRemoteExecutionStoreResponse();
-    case REMOTE_EXECUTION_FETCH_RESPONSE:
-      return isSetRemoteExecutionFetchResponse();
-    case REMOTE_EXECUTION_CONTAINS_RESPONSE:
-      return isSetRemoteExecutionContainsResponse();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -1506,60 +428,6 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         return false;
     }
 
-    boolean this_present_startBuildResponse = true && this.isSetStartBuildResponse();
-    boolean that_present_startBuildResponse = true && that.isSetStartBuildResponse();
-    if (this_present_startBuildResponse || that_present_startBuildResponse) {
-      if (!(this_present_startBuildResponse && that_present_startBuildResponse))
-        return false;
-      if (!this.startBuildResponse.equals(that.startBuildResponse))
-        return false;
-    }
-
-    boolean this_present_buildStatusResponse = true && this.isSetBuildStatusResponse();
-    boolean that_present_buildStatusResponse = true && that.isSetBuildStatusResponse();
-    if (this_present_buildStatusResponse || that_present_buildStatusResponse) {
-      if (!(this_present_buildStatusResponse && that_present_buildStatusResponse))
-        return false;
-      if (!this.buildStatusResponse.equals(that.buildStatusResponse))
-        return false;
-    }
-
-    boolean this_present_casContainsResponse = true && this.isSetCasContainsResponse();
-    boolean that_present_casContainsResponse = true && that.isSetCasContainsResponse();
-    if (this_present_casContainsResponse || that_present_casContainsResponse) {
-      if (!(this_present_casContainsResponse && that_present_casContainsResponse))
-        return false;
-      if (!this.casContainsResponse.equals(that.casContainsResponse))
-        return false;
-    }
-
-    boolean this_present_createBuildResponse = true && this.isSetCreateBuildResponse();
-    boolean that_present_createBuildResponse = true && that.isSetCreateBuildResponse();
-    if (this_present_createBuildResponse || that_present_createBuildResponse) {
-      if (!(this_present_createBuildResponse && that_present_createBuildResponse))
-        return false;
-      if (!this.createBuildResponse.equals(that.createBuildResponse))
-        return false;
-    }
-
-    boolean this_present_fetchSourceFilesResponse = true && this.isSetFetchSourceFilesResponse();
-    boolean that_present_fetchSourceFilesResponse = true && that.isSetFetchSourceFilesResponse();
-    if (this_present_fetchSourceFilesResponse || that_present_fetchSourceFilesResponse) {
-      if (!(this_present_fetchSourceFilesResponse && that_present_fetchSourceFilesResponse))
-        return false;
-      if (!this.fetchSourceFilesResponse.equals(that.fetchSourceFilesResponse))
-        return false;
-    }
-
-    boolean this_present_fetchBuildGraphResponse = true && this.isSetFetchBuildGraphResponse();
-    boolean that_present_fetchBuildGraphResponse = true && that.isSetFetchBuildGraphResponse();
-    if (this_present_fetchBuildGraphResponse || that_present_fetchBuildGraphResponse) {
-      if (!(this_present_fetchBuildGraphResponse && that_present_fetchBuildGraphResponse))
-        return false;
-      if (!this.fetchBuildGraphResponse.equals(that.fetchBuildGraphResponse))
-        return false;
-    }
-
     boolean this_present_announcementResponse = true && this.isSetAnnouncementResponse();
     boolean that_present_announcementResponse = true && that.isSetAnnouncementResponse();
     if (this_present_announcementResponse || that_present_announcementResponse) {
@@ -1569,156 +437,12 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         return false;
     }
 
-    boolean this_present_multiGetBuildSlaveLogDirResponse = true && this.isSetMultiGetBuildSlaveLogDirResponse();
-    boolean that_present_multiGetBuildSlaveLogDirResponse = true && that.isSetMultiGetBuildSlaveLogDirResponse();
-    if (this_present_multiGetBuildSlaveLogDirResponse || that_present_multiGetBuildSlaveLogDirResponse) {
-      if (!(this_present_multiGetBuildSlaveLogDirResponse && that_present_multiGetBuildSlaveLogDirResponse))
-        return false;
-      if (!this.multiGetBuildSlaveLogDirResponse.equals(that.multiGetBuildSlaveLogDirResponse))
-        return false;
-    }
-
-    boolean this_present_multiGetBuildSlaveRealTimeLogsResponse = true && this.isSetMultiGetBuildSlaveRealTimeLogsResponse();
-    boolean that_present_multiGetBuildSlaveRealTimeLogsResponse = true && that.isSetMultiGetBuildSlaveRealTimeLogsResponse();
-    if (this_present_multiGetBuildSlaveRealTimeLogsResponse || that_present_multiGetBuildSlaveRealTimeLogsResponse) {
-      if (!(this_present_multiGetBuildSlaveRealTimeLogsResponse && that_present_multiGetBuildSlaveRealTimeLogsResponse))
-        return false;
-      if (!this.multiGetBuildSlaveRealTimeLogsResponse.equals(that.multiGetBuildSlaveRealTimeLogsResponse))
-        return false;
-    }
-
-    boolean this_present_updateBuildSlaveStatusResponse = true && this.isSetUpdateBuildSlaveStatusResponse();
-    boolean that_present_updateBuildSlaveStatusResponse = true && that.isSetUpdateBuildSlaveStatusResponse();
-    if (this_present_updateBuildSlaveStatusResponse || that_present_updateBuildSlaveStatusResponse) {
-      if (!(this_present_updateBuildSlaveStatusResponse && that_present_updateBuildSlaveStatusResponse))
-        return false;
-      if (!this.updateBuildSlaveStatusResponse.equals(that.updateBuildSlaveStatusResponse))
-        return false;
-    }
-
-    boolean this_present_fetchBuildSlaveStatusResponse = true && this.isSetFetchBuildSlaveStatusResponse();
-    boolean that_present_fetchBuildSlaveStatusResponse = true && that.isSetFetchBuildSlaveStatusResponse();
-    if (this_present_fetchBuildSlaveStatusResponse || that_present_fetchBuildSlaveStatusResponse) {
-      if (!(this_present_fetchBuildSlaveStatusResponse && that_present_fetchBuildSlaveStatusResponse))
-        return false;
-      if (!this.fetchBuildSlaveStatusResponse.equals(that.fetchBuildSlaveStatusResponse))
-        return false;
-    }
-
-    boolean this_present_appendBuildSlaveEventsResponse = true && this.isSetAppendBuildSlaveEventsResponse();
-    boolean that_present_appendBuildSlaveEventsResponse = true && that.isSetAppendBuildSlaveEventsResponse();
-    if (this_present_appendBuildSlaveEventsResponse || that_present_appendBuildSlaveEventsResponse) {
-      if (!(this_present_appendBuildSlaveEventsResponse && that_present_appendBuildSlaveEventsResponse))
-        return false;
-      if (!this.appendBuildSlaveEventsResponse.equals(that.appendBuildSlaveEventsResponse))
-        return false;
-    }
-
-    boolean this_present_multiGetBuildSlaveEventsResponse = true && this.isSetMultiGetBuildSlaveEventsResponse();
-    boolean that_present_multiGetBuildSlaveEventsResponse = true && that.isSetMultiGetBuildSlaveEventsResponse();
-    if (this_present_multiGetBuildSlaveEventsResponse || that_present_multiGetBuildSlaveEventsResponse) {
-      if (!(this_present_multiGetBuildSlaveEventsResponse && that_present_multiGetBuildSlaveEventsResponse))
-        return false;
-      if (!this.multiGetBuildSlaveEventsResponse.equals(that.multiGetBuildSlaveEventsResponse))
-        return false;
-    }
-
     boolean this_present_fetchRuleKeyLogsResponse = true && this.isSetFetchRuleKeyLogsResponse();
     boolean that_present_fetchRuleKeyLogsResponse = true && that.isSetFetchRuleKeyLogsResponse();
     if (this_present_fetchRuleKeyLogsResponse || that_present_fetchRuleKeyLogsResponse) {
       if (!(this_present_fetchRuleKeyLogsResponse && that_present_fetchRuleKeyLogsResponse))
         return false;
       if (!this.fetchRuleKeyLogsResponse.equals(that.fetchRuleKeyLogsResponse))
-        return false;
-    }
-
-    boolean this_present_storeBuildSlaveFinishedStatsResponse = true && this.isSetStoreBuildSlaveFinishedStatsResponse();
-    boolean that_present_storeBuildSlaveFinishedStatsResponse = true && that.isSetStoreBuildSlaveFinishedStatsResponse();
-    if (this_present_storeBuildSlaveFinishedStatsResponse || that_present_storeBuildSlaveFinishedStatsResponse) {
-      if (!(this_present_storeBuildSlaveFinishedStatsResponse && that_present_storeBuildSlaveFinishedStatsResponse))
-        return false;
-      if (!this.storeBuildSlaveFinishedStatsResponse.equals(that.storeBuildSlaveFinishedStatsResponse))
-        return false;
-    }
-
-    boolean this_present_fetchBuildSlaveFinishedStatsResponse = true && this.isSetFetchBuildSlaveFinishedStatsResponse();
-    boolean that_present_fetchBuildSlaveFinishedStatsResponse = true && that.isSetFetchBuildSlaveFinishedStatsResponse();
-    if (this_present_fetchBuildSlaveFinishedStatsResponse || that_present_fetchBuildSlaveFinishedStatsResponse) {
-      if (!(this_present_fetchBuildSlaveFinishedStatsResponse && that_present_fetchBuildSlaveFinishedStatsResponse))
-        return false;
-      if (!this.fetchBuildSlaveFinishedStatsResponse.equals(that.fetchBuildSlaveFinishedStatsResponse))
-        return false;
-    }
-
-    boolean this_present_setCoordinatorResponse = true && this.isSetSetCoordinatorResponse();
-    boolean that_present_setCoordinatorResponse = true && that.isSetSetCoordinatorResponse();
-    if (this_present_setCoordinatorResponse || that_present_setCoordinatorResponse) {
-      if (!(this_present_setCoordinatorResponse && that_present_setCoordinatorResponse))
-        return false;
-      if (!this.setCoordinatorResponse.equals(that.setCoordinatorResponse))
-        return false;
-    }
-
-    boolean this_present_enqueueMinionsResponse = true && this.isSetEnqueueMinionsResponse();
-    boolean that_present_enqueueMinionsResponse = true && that.isSetEnqueueMinionsResponse();
-    if (this_present_enqueueMinionsResponse || that_present_enqueueMinionsResponse) {
-      if (!(this_present_enqueueMinionsResponse && that_present_enqueueMinionsResponse))
-        return false;
-      if (!this.enqueueMinionsResponse.equals(that.enqueueMinionsResponse))
-        return false;
-    }
-
-    boolean this_present_setFinalBuildStatusResponse = true && this.isSetSetFinalBuildStatusResponse();
-    boolean that_present_setFinalBuildStatusResponse = true && that.isSetSetFinalBuildStatusResponse();
-    if (this_present_setFinalBuildStatusResponse || that_present_setFinalBuildStatusResponse) {
-      if (!(this_present_setFinalBuildStatusResponse && that_present_setFinalBuildStatusResponse))
-        return false;
-      if (!this.setFinalBuildStatusResponse.equals(that.setFinalBuildStatusResponse))
-        return false;
-    }
-
-    boolean this_present_reportCoordinatorAliveResponse = true && this.isSetReportCoordinatorAliveResponse();
-    boolean that_present_reportCoordinatorAliveResponse = true && that.isSetReportCoordinatorAliveResponse();
-    if (this_present_reportCoordinatorAliveResponse || that_present_reportCoordinatorAliveResponse) {
-      if (!(this_present_reportCoordinatorAliveResponse && that_present_reportCoordinatorAliveResponse))
-        return false;
-      if (!this.reportCoordinatorAliveResponse.equals(that.reportCoordinatorAliveResponse))
-        return false;
-    }
-
-    boolean this_present_updateBuildSlaveBuildStatusResponse = true && this.isSetUpdateBuildSlaveBuildStatusResponse();
-    boolean that_present_updateBuildSlaveBuildStatusResponse = true && that.isSetUpdateBuildSlaveBuildStatusResponse();
-    if (this_present_updateBuildSlaveBuildStatusResponse || that_present_updateBuildSlaveBuildStatusResponse) {
-      if (!(this_present_updateBuildSlaveBuildStatusResponse && that_present_updateBuildSlaveBuildStatusResponse))
-        return false;
-      if (!this.updateBuildSlaveBuildStatusResponse.equals(that.updateBuildSlaveBuildStatusResponse))
-        return false;
-    }
-
-    boolean this_present_remoteExecutionStoreResponse = true && this.isSetRemoteExecutionStoreResponse();
-    boolean that_present_remoteExecutionStoreResponse = true && that.isSetRemoteExecutionStoreResponse();
-    if (this_present_remoteExecutionStoreResponse || that_present_remoteExecutionStoreResponse) {
-      if (!(this_present_remoteExecutionStoreResponse && that_present_remoteExecutionStoreResponse))
-        return false;
-      if (!this.remoteExecutionStoreResponse.equals(that.remoteExecutionStoreResponse))
-        return false;
-    }
-
-    boolean this_present_remoteExecutionFetchResponse = true && this.isSetRemoteExecutionFetchResponse();
-    boolean that_present_remoteExecutionFetchResponse = true && that.isSetRemoteExecutionFetchResponse();
-    if (this_present_remoteExecutionFetchResponse || that_present_remoteExecutionFetchResponse) {
-      if (!(this_present_remoteExecutionFetchResponse && that_present_remoteExecutionFetchResponse))
-        return false;
-      if (!this.remoteExecutionFetchResponse.equals(that.remoteExecutionFetchResponse))
-        return false;
-    }
-
-    boolean this_present_remoteExecutionContainsResponse = true && this.isSetRemoteExecutionContainsResponse();
-    boolean that_present_remoteExecutionContainsResponse = true && that.isSetRemoteExecutionContainsResponse();
-    if (this_present_remoteExecutionContainsResponse || that_present_remoteExecutionContainsResponse) {
-      if (!(this_present_remoteExecutionContainsResponse && that_present_remoteExecutionContainsResponse))
-        return false;
-      if (!this.remoteExecutionContainsResponse.equals(that.remoteExecutionContainsResponse))
         return false;
     }
 
@@ -1741,101 +465,13 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     if (isSetType())
       hashCode = hashCode * 8191 + type.getValue();
 
-    hashCode = hashCode * 8191 + ((isSetStartBuildResponse()) ? 131071 : 524287);
-    if (isSetStartBuildResponse())
-      hashCode = hashCode * 8191 + startBuildResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetBuildStatusResponse()) ? 131071 : 524287);
-    if (isSetBuildStatusResponse())
-      hashCode = hashCode * 8191 + buildStatusResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetCasContainsResponse()) ? 131071 : 524287);
-    if (isSetCasContainsResponse())
-      hashCode = hashCode * 8191 + casContainsResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetCreateBuildResponse()) ? 131071 : 524287);
-    if (isSetCreateBuildResponse())
-      hashCode = hashCode * 8191 + createBuildResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetFetchSourceFilesResponse()) ? 131071 : 524287);
-    if (isSetFetchSourceFilesResponse())
-      hashCode = hashCode * 8191 + fetchSourceFilesResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetFetchBuildGraphResponse()) ? 131071 : 524287);
-    if (isSetFetchBuildGraphResponse())
-      hashCode = hashCode * 8191 + fetchBuildGraphResponse.hashCode();
-
     hashCode = hashCode * 8191 + ((isSetAnnouncementResponse()) ? 131071 : 524287);
     if (isSetAnnouncementResponse())
       hashCode = hashCode * 8191 + announcementResponse.hashCode();
 
-    hashCode = hashCode * 8191 + ((isSetMultiGetBuildSlaveLogDirResponse()) ? 131071 : 524287);
-    if (isSetMultiGetBuildSlaveLogDirResponse())
-      hashCode = hashCode * 8191 + multiGetBuildSlaveLogDirResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetMultiGetBuildSlaveRealTimeLogsResponse()) ? 131071 : 524287);
-    if (isSetMultiGetBuildSlaveRealTimeLogsResponse())
-      hashCode = hashCode * 8191 + multiGetBuildSlaveRealTimeLogsResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetUpdateBuildSlaveStatusResponse()) ? 131071 : 524287);
-    if (isSetUpdateBuildSlaveStatusResponse())
-      hashCode = hashCode * 8191 + updateBuildSlaveStatusResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetFetchBuildSlaveStatusResponse()) ? 131071 : 524287);
-    if (isSetFetchBuildSlaveStatusResponse())
-      hashCode = hashCode * 8191 + fetchBuildSlaveStatusResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetAppendBuildSlaveEventsResponse()) ? 131071 : 524287);
-    if (isSetAppendBuildSlaveEventsResponse())
-      hashCode = hashCode * 8191 + appendBuildSlaveEventsResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetMultiGetBuildSlaveEventsResponse()) ? 131071 : 524287);
-    if (isSetMultiGetBuildSlaveEventsResponse())
-      hashCode = hashCode * 8191 + multiGetBuildSlaveEventsResponse.hashCode();
-
     hashCode = hashCode * 8191 + ((isSetFetchRuleKeyLogsResponse()) ? 131071 : 524287);
     if (isSetFetchRuleKeyLogsResponse())
       hashCode = hashCode * 8191 + fetchRuleKeyLogsResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetStoreBuildSlaveFinishedStatsResponse()) ? 131071 : 524287);
-    if (isSetStoreBuildSlaveFinishedStatsResponse())
-      hashCode = hashCode * 8191 + storeBuildSlaveFinishedStatsResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetFetchBuildSlaveFinishedStatsResponse()) ? 131071 : 524287);
-    if (isSetFetchBuildSlaveFinishedStatsResponse())
-      hashCode = hashCode * 8191 + fetchBuildSlaveFinishedStatsResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetSetCoordinatorResponse()) ? 131071 : 524287);
-    if (isSetSetCoordinatorResponse())
-      hashCode = hashCode * 8191 + setCoordinatorResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetEnqueueMinionsResponse()) ? 131071 : 524287);
-    if (isSetEnqueueMinionsResponse())
-      hashCode = hashCode * 8191 + enqueueMinionsResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetSetFinalBuildStatusResponse()) ? 131071 : 524287);
-    if (isSetSetFinalBuildStatusResponse())
-      hashCode = hashCode * 8191 + setFinalBuildStatusResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetReportCoordinatorAliveResponse()) ? 131071 : 524287);
-    if (isSetReportCoordinatorAliveResponse())
-      hashCode = hashCode * 8191 + reportCoordinatorAliveResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetUpdateBuildSlaveBuildStatusResponse()) ? 131071 : 524287);
-    if (isSetUpdateBuildSlaveBuildStatusResponse())
-      hashCode = hashCode * 8191 + updateBuildSlaveBuildStatusResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetRemoteExecutionStoreResponse()) ? 131071 : 524287);
-    if (isSetRemoteExecutionStoreResponse())
-      hashCode = hashCode * 8191 + remoteExecutionStoreResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetRemoteExecutionFetchResponse()) ? 131071 : 524287);
-    if (isSetRemoteExecutionFetchResponse())
-      hashCode = hashCode * 8191 + remoteExecutionFetchResponse.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetRemoteExecutionContainsResponse()) ? 131071 : 524287);
-    if (isSetRemoteExecutionContainsResponse())
-      hashCode = hashCode * 8191 + remoteExecutionContainsResponse.hashCode();
 
     return hashCode;
   }
@@ -1878,66 +514,6 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         return lastComparison;
       }
     }
-    lastComparison = java.lang.Boolean.valueOf(isSetStartBuildResponse()).compareTo(other.isSetStartBuildResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetStartBuildResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.startBuildResponse, other.startBuildResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetBuildStatusResponse()).compareTo(other.isSetBuildStatusResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetBuildStatusResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.buildStatusResponse, other.buildStatusResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetCasContainsResponse()).compareTo(other.isSetCasContainsResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetCasContainsResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.casContainsResponse, other.casContainsResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetCreateBuildResponse()).compareTo(other.isSetCreateBuildResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetCreateBuildResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.createBuildResponse, other.createBuildResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetFetchSourceFilesResponse()).compareTo(other.isSetFetchSourceFilesResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetFetchSourceFilesResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.fetchSourceFilesResponse, other.fetchSourceFilesResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetFetchBuildGraphResponse()).compareTo(other.isSetFetchBuildGraphResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetFetchBuildGraphResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.fetchBuildGraphResponse, other.fetchBuildGraphResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
     lastComparison = java.lang.Boolean.valueOf(isSetAnnouncementResponse()).compareTo(other.isSetAnnouncementResponse());
     if (lastComparison != 0) {
       return lastComparison;
@@ -1948,172 +524,12 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         return lastComparison;
       }
     }
-    lastComparison = java.lang.Boolean.valueOf(isSetMultiGetBuildSlaveLogDirResponse()).compareTo(other.isSetMultiGetBuildSlaveLogDirResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetMultiGetBuildSlaveLogDirResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.multiGetBuildSlaveLogDirResponse, other.multiGetBuildSlaveLogDirResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetMultiGetBuildSlaveRealTimeLogsResponse()).compareTo(other.isSetMultiGetBuildSlaveRealTimeLogsResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetMultiGetBuildSlaveRealTimeLogsResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.multiGetBuildSlaveRealTimeLogsResponse, other.multiGetBuildSlaveRealTimeLogsResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetUpdateBuildSlaveStatusResponse()).compareTo(other.isSetUpdateBuildSlaveStatusResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetUpdateBuildSlaveStatusResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.updateBuildSlaveStatusResponse, other.updateBuildSlaveStatusResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetFetchBuildSlaveStatusResponse()).compareTo(other.isSetFetchBuildSlaveStatusResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetFetchBuildSlaveStatusResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.fetchBuildSlaveStatusResponse, other.fetchBuildSlaveStatusResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetAppendBuildSlaveEventsResponse()).compareTo(other.isSetAppendBuildSlaveEventsResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetAppendBuildSlaveEventsResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.appendBuildSlaveEventsResponse, other.appendBuildSlaveEventsResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetMultiGetBuildSlaveEventsResponse()).compareTo(other.isSetMultiGetBuildSlaveEventsResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetMultiGetBuildSlaveEventsResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.multiGetBuildSlaveEventsResponse, other.multiGetBuildSlaveEventsResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
     lastComparison = java.lang.Boolean.valueOf(isSetFetchRuleKeyLogsResponse()).compareTo(other.isSetFetchRuleKeyLogsResponse());
     if (lastComparison != 0) {
       return lastComparison;
     }
     if (isSetFetchRuleKeyLogsResponse()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.fetchRuleKeyLogsResponse, other.fetchRuleKeyLogsResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetStoreBuildSlaveFinishedStatsResponse()).compareTo(other.isSetStoreBuildSlaveFinishedStatsResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetStoreBuildSlaveFinishedStatsResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.storeBuildSlaveFinishedStatsResponse, other.storeBuildSlaveFinishedStatsResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetFetchBuildSlaveFinishedStatsResponse()).compareTo(other.isSetFetchBuildSlaveFinishedStatsResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetFetchBuildSlaveFinishedStatsResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.fetchBuildSlaveFinishedStatsResponse, other.fetchBuildSlaveFinishedStatsResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetSetCoordinatorResponse()).compareTo(other.isSetSetCoordinatorResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetSetCoordinatorResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.setCoordinatorResponse, other.setCoordinatorResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetEnqueueMinionsResponse()).compareTo(other.isSetEnqueueMinionsResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetEnqueueMinionsResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.enqueueMinionsResponse, other.enqueueMinionsResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetSetFinalBuildStatusResponse()).compareTo(other.isSetSetFinalBuildStatusResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetSetFinalBuildStatusResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.setFinalBuildStatusResponse, other.setFinalBuildStatusResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetReportCoordinatorAliveResponse()).compareTo(other.isSetReportCoordinatorAliveResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetReportCoordinatorAliveResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.reportCoordinatorAliveResponse, other.reportCoordinatorAliveResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetUpdateBuildSlaveBuildStatusResponse()).compareTo(other.isSetUpdateBuildSlaveBuildStatusResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetUpdateBuildSlaveBuildStatusResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.updateBuildSlaveBuildStatusResponse, other.updateBuildSlaveBuildStatusResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetRemoteExecutionStoreResponse()).compareTo(other.isSetRemoteExecutionStoreResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetRemoteExecutionStoreResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.remoteExecutionStoreResponse, other.remoteExecutionStoreResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetRemoteExecutionFetchResponse()).compareTo(other.isSetRemoteExecutionFetchResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetRemoteExecutionFetchResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.remoteExecutionFetchResponse, other.remoteExecutionFetchResponse);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetRemoteExecutionContainsResponse()).compareTo(other.isSetRemoteExecutionContainsResponse());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetRemoteExecutionContainsResponse()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.remoteExecutionContainsResponse, other.remoteExecutionContainsResponse);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -2164,66 +580,6 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       }
       first = false;
     }
-    if (isSetStartBuildResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("startBuildResponse:");
-      if (this.startBuildResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.startBuildResponse);
-      }
-      first = false;
-    }
-    if (isSetBuildStatusResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("buildStatusResponse:");
-      if (this.buildStatusResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.buildStatusResponse);
-      }
-      first = false;
-    }
-    if (isSetCasContainsResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("casContainsResponse:");
-      if (this.casContainsResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.casContainsResponse);
-      }
-      first = false;
-    }
-    if (isSetCreateBuildResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("createBuildResponse:");
-      if (this.createBuildResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.createBuildResponse);
-      }
-      first = false;
-    }
-    if (isSetFetchSourceFilesResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("fetchSourceFilesResponse:");
-      if (this.fetchSourceFilesResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.fetchSourceFilesResponse);
-      }
-      first = false;
-    }
-    if (isSetFetchBuildGraphResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("fetchBuildGraphResponse:");
-      if (this.fetchBuildGraphResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.fetchBuildGraphResponse);
-      }
-      first = false;
-    }
     if (isSetAnnouncementResponse()) {
       if (!first) sb.append(", ");
       sb.append("announcementResponse:");
@@ -2231,66 +587,6 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         sb.append("null");
       } else {
         sb.append(this.announcementResponse);
-      }
-      first = false;
-    }
-    if (isSetMultiGetBuildSlaveLogDirResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("multiGetBuildSlaveLogDirResponse:");
-      if (this.multiGetBuildSlaveLogDirResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.multiGetBuildSlaveLogDirResponse);
-      }
-      first = false;
-    }
-    if (isSetMultiGetBuildSlaveRealTimeLogsResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("multiGetBuildSlaveRealTimeLogsResponse:");
-      if (this.multiGetBuildSlaveRealTimeLogsResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.multiGetBuildSlaveRealTimeLogsResponse);
-      }
-      first = false;
-    }
-    if (isSetUpdateBuildSlaveStatusResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("updateBuildSlaveStatusResponse:");
-      if (this.updateBuildSlaveStatusResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.updateBuildSlaveStatusResponse);
-      }
-      first = false;
-    }
-    if (isSetFetchBuildSlaveStatusResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("fetchBuildSlaveStatusResponse:");
-      if (this.fetchBuildSlaveStatusResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.fetchBuildSlaveStatusResponse);
-      }
-      first = false;
-    }
-    if (isSetAppendBuildSlaveEventsResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("appendBuildSlaveEventsResponse:");
-      if (this.appendBuildSlaveEventsResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.appendBuildSlaveEventsResponse);
-      }
-      first = false;
-    }
-    if (isSetMultiGetBuildSlaveEventsResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("multiGetBuildSlaveEventsResponse:");
-      if (this.multiGetBuildSlaveEventsResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.multiGetBuildSlaveEventsResponse);
       }
       first = false;
     }
@@ -2304,106 +600,6 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       }
       first = false;
     }
-    if (isSetStoreBuildSlaveFinishedStatsResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("storeBuildSlaveFinishedStatsResponse:");
-      if (this.storeBuildSlaveFinishedStatsResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.storeBuildSlaveFinishedStatsResponse);
-      }
-      first = false;
-    }
-    if (isSetFetchBuildSlaveFinishedStatsResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("fetchBuildSlaveFinishedStatsResponse:");
-      if (this.fetchBuildSlaveFinishedStatsResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.fetchBuildSlaveFinishedStatsResponse);
-      }
-      first = false;
-    }
-    if (isSetSetCoordinatorResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("setCoordinatorResponse:");
-      if (this.setCoordinatorResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.setCoordinatorResponse);
-      }
-      first = false;
-    }
-    if (isSetEnqueueMinionsResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("enqueueMinionsResponse:");
-      if (this.enqueueMinionsResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.enqueueMinionsResponse);
-      }
-      first = false;
-    }
-    if (isSetSetFinalBuildStatusResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("setFinalBuildStatusResponse:");
-      if (this.setFinalBuildStatusResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.setFinalBuildStatusResponse);
-      }
-      first = false;
-    }
-    if (isSetReportCoordinatorAliveResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("reportCoordinatorAliveResponse:");
-      if (this.reportCoordinatorAliveResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.reportCoordinatorAliveResponse);
-      }
-      first = false;
-    }
-    if (isSetUpdateBuildSlaveBuildStatusResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("updateBuildSlaveBuildStatusResponse:");
-      if (this.updateBuildSlaveBuildStatusResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.updateBuildSlaveBuildStatusResponse);
-      }
-      first = false;
-    }
-    if (isSetRemoteExecutionStoreResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("remoteExecutionStoreResponse:");
-      if (this.remoteExecutionStoreResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.remoteExecutionStoreResponse);
-      }
-      first = false;
-    }
-    if (isSetRemoteExecutionFetchResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("remoteExecutionFetchResponse:");
-      if (this.remoteExecutionFetchResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.remoteExecutionFetchResponse);
-      }
-      first = false;
-    }
-    if (isSetRemoteExecutionContainsResponse()) {
-      if (!first) sb.append(", ");
-      sb.append("remoteExecutionContainsResponse:");
-      if (this.remoteExecutionContainsResponse == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.remoteExecutionContainsResponse);
-      }
-      first = false;
-    }
     sb.append(")");
     return sb.toString();
   }
@@ -2411,77 +607,11 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
   public void validate() throws org.apache.thrift.TException {
     // check for required fields
     // check for sub-struct validity
-    if (startBuildResponse != null) {
-      startBuildResponse.validate();
-    }
-    if (buildStatusResponse != null) {
-      buildStatusResponse.validate();
-    }
-    if (casContainsResponse != null) {
-      casContainsResponse.validate();
-    }
-    if (createBuildResponse != null) {
-      createBuildResponse.validate();
-    }
-    if (fetchSourceFilesResponse != null) {
-      fetchSourceFilesResponse.validate();
-    }
-    if (fetchBuildGraphResponse != null) {
-      fetchBuildGraphResponse.validate();
-    }
     if (announcementResponse != null) {
       announcementResponse.validate();
     }
-    if (multiGetBuildSlaveLogDirResponse != null) {
-      multiGetBuildSlaveLogDirResponse.validate();
-    }
-    if (multiGetBuildSlaveRealTimeLogsResponse != null) {
-      multiGetBuildSlaveRealTimeLogsResponse.validate();
-    }
-    if (updateBuildSlaveStatusResponse != null) {
-      updateBuildSlaveStatusResponse.validate();
-    }
-    if (fetchBuildSlaveStatusResponse != null) {
-      fetchBuildSlaveStatusResponse.validate();
-    }
-    if (appendBuildSlaveEventsResponse != null) {
-      appendBuildSlaveEventsResponse.validate();
-    }
-    if (multiGetBuildSlaveEventsResponse != null) {
-      multiGetBuildSlaveEventsResponse.validate();
-    }
     if (fetchRuleKeyLogsResponse != null) {
       fetchRuleKeyLogsResponse.validate();
-    }
-    if (storeBuildSlaveFinishedStatsResponse != null) {
-      storeBuildSlaveFinishedStatsResponse.validate();
-    }
-    if (fetchBuildSlaveFinishedStatsResponse != null) {
-      fetchBuildSlaveFinishedStatsResponse.validate();
-    }
-    if (setCoordinatorResponse != null) {
-      setCoordinatorResponse.validate();
-    }
-    if (enqueueMinionsResponse != null) {
-      enqueueMinionsResponse.validate();
-    }
-    if (setFinalBuildStatusResponse != null) {
-      setFinalBuildStatusResponse.validate();
-    }
-    if (reportCoordinatorAliveResponse != null) {
-      reportCoordinatorAliveResponse.validate();
-    }
-    if (updateBuildSlaveBuildStatusResponse != null) {
-      updateBuildSlaveBuildStatusResponse.validate();
-    }
-    if (remoteExecutionStoreResponse != null) {
-      remoteExecutionStoreResponse.validate();
-    }
-    if (remoteExecutionFetchResponse != null) {
-      remoteExecutionFetchResponse.validate();
-    }
-    if (remoteExecutionContainsResponse != null) {
-      remoteExecutionContainsResponse.validate();
     }
   }
 
@@ -2545,60 +675,6 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 11: // START_BUILD_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.startBuildResponse = new StartBuildResponse();
-              struct.startBuildResponse.read(iprot);
-              struct.setStartBuildResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 12: // BUILD_STATUS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.buildStatusResponse = new BuildStatusResponse();
-              struct.buildStatusResponse.read(iprot);
-              struct.setBuildStatusResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 15: // CAS_CONTAINS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.casContainsResponse = new CASContainsResponse();
-              struct.casContainsResponse.read(iprot);
-              struct.setCasContainsResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 16: // CREATE_BUILD_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.createBuildResponse = new CreateBuildResponse();
-              struct.createBuildResponse.read(iprot);
-              struct.setCreateBuildResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 17: // FETCH_SOURCE_FILES_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.fetchSourceFilesResponse = new FetchSourceFilesResponse();
-              struct.fetchSourceFilesResponse.read(iprot);
-              struct.setFetchSourceFilesResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 18: // FETCH_BUILD_GRAPH_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.fetchBuildGraphResponse = new FetchBuildGraphResponse();
-              struct.fetchBuildGraphResponse.read(iprot);
-              struct.setFetchBuildGraphResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
           case 19: // ANNOUNCEMENT_RESPONSE
             if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
               struct.announcementResponse = new AnnouncementResponse();
@@ -2608,155 +684,11 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 20: // MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.multiGetBuildSlaveLogDirResponse = new MultiGetBuildSlaveLogDirResponse();
-              struct.multiGetBuildSlaveLogDirResponse.read(iprot);
-              struct.setMultiGetBuildSlaveLogDirResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 21: // MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.multiGetBuildSlaveRealTimeLogsResponse = new MultiGetBuildSlaveRealTimeLogsResponse();
-              struct.multiGetBuildSlaveRealTimeLogsResponse.read(iprot);
-              struct.setMultiGetBuildSlaveRealTimeLogsResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 22: // UPDATE_BUILD_SLAVE_STATUS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.updateBuildSlaveStatusResponse = new UpdateBuildSlaveStatusResponse();
-              struct.updateBuildSlaveStatusResponse.read(iprot);
-              struct.setUpdateBuildSlaveStatusResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 23: // FETCH_BUILD_SLAVE_STATUS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.fetchBuildSlaveStatusResponse = new FetchBuildSlaveStatusResponse();
-              struct.fetchBuildSlaveStatusResponse.read(iprot);
-              struct.setFetchBuildSlaveStatusResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 24: // APPEND_BUILD_SLAVE_EVENTS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.appendBuildSlaveEventsResponse = new AppendBuildSlaveEventsResponse();
-              struct.appendBuildSlaveEventsResponse.read(iprot);
-              struct.setAppendBuildSlaveEventsResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 25: // MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.multiGetBuildSlaveEventsResponse = new MultiGetBuildSlaveEventsResponse();
-              struct.multiGetBuildSlaveEventsResponse.read(iprot);
-              struct.setMultiGetBuildSlaveEventsResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
           case 26: // FETCH_RULE_KEY_LOGS_RESPONSE
             if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
               struct.fetchRuleKeyLogsResponse = new FetchRuleKeyLogsResponse();
               struct.fetchRuleKeyLogsResponse.read(iprot);
               struct.setFetchRuleKeyLogsResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 27: // STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.storeBuildSlaveFinishedStatsResponse = new StoreBuildSlaveFinishedStatsResponse();
-              struct.storeBuildSlaveFinishedStatsResponse.read(iprot);
-              struct.setStoreBuildSlaveFinishedStatsResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 28: // FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.fetchBuildSlaveFinishedStatsResponse = new FetchBuildSlaveFinishedStatsResponse();
-              struct.fetchBuildSlaveFinishedStatsResponse.read(iprot);
-              struct.setFetchBuildSlaveFinishedStatsResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 29: // SET_COORDINATOR_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.setCoordinatorResponse = new SetCoordinatorResponse();
-              struct.setCoordinatorResponse.read(iprot);
-              struct.setSetCoordinatorResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 30: // ENQUEUE_MINIONS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.enqueueMinionsResponse = new EnqueueMinionsResponse();
-              struct.enqueueMinionsResponse.read(iprot);
-              struct.setEnqueueMinionsResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 31: // SET_FINAL_BUILD_STATUS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.setFinalBuildStatusResponse = new SetFinalBuildStatusResponse();
-              struct.setFinalBuildStatusResponse.read(iprot);
-              struct.setSetFinalBuildStatusResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 32: // REPORT_COORDINATOR_ALIVE_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.reportCoordinatorAliveResponse = new ReportCoordinatorAliveResponse();
-              struct.reportCoordinatorAliveResponse.read(iprot);
-              struct.setReportCoordinatorAliveResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 33: // UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.updateBuildSlaveBuildStatusResponse = new UpdateBuildSlaveBuildStatusResponse();
-              struct.updateBuildSlaveBuildStatusResponse.read(iprot);
-              struct.setUpdateBuildSlaveBuildStatusResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 34: // REMOTE_EXECUTION_STORE_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.remoteExecutionStoreResponse = new RemoteExecutionStoreResponse();
-              struct.remoteExecutionStoreResponse.read(iprot);
-              struct.setRemoteExecutionStoreResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 35: // REMOTE_EXECUTION_FETCH_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.remoteExecutionFetchResponse = new RemoteExecutionFetchResponse();
-              struct.remoteExecutionFetchResponse.read(iprot);
-              struct.setRemoteExecutionFetchResponseIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 36: // REMOTE_EXECUTION_CONTAINS_RESPONSE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.remoteExecutionContainsResponse = new RemoteExecutionContainsResponse();
-              struct.remoteExecutionContainsResponse.read(iprot);
-              struct.setRemoteExecutionContainsResponseIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -2795,48 +727,6 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
           oprot.writeFieldEnd();
         }
       }
-      if (struct.startBuildResponse != null) {
-        if (struct.isSetStartBuildResponse()) {
-          oprot.writeFieldBegin(START_BUILD_RESPONSE_FIELD_DESC);
-          struct.startBuildResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.buildStatusResponse != null) {
-        if (struct.isSetBuildStatusResponse()) {
-          oprot.writeFieldBegin(BUILD_STATUS_RESPONSE_FIELD_DESC);
-          struct.buildStatusResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.casContainsResponse != null) {
-        if (struct.isSetCasContainsResponse()) {
-          oprot.writeFieldBegin(CAS_CONTAINS_RESPONSE_FIELD_DESC);
-          struct.casContainsResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.createBuildResponse != null) {
-        if (struct.isSetCreateBuildResponse()) {
-          oprot.writeFieldBegin(CREATE_BUILD_RESPONSE_FIELD_DESC);
-          struct.createBuildResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.fetchSourceFilesResponse != null) {
-        if (struct.isSetFetchSourceFilesResponse()) {
-          oprot.writeFieldBegin(FETCH_SOURCE_FILES_RESPONSE_FIELD_DESC);
-          struct.fetchSourceFilesResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.fetchBuildGraphResponse != null) {
-        if (struct.isSetFetchBuildGraphResponse()) {
-          oprot.writeFieldBegin(FETCH_BUILD_GRAPH_RESPONSE_FIELD_DESC);
-          struct.fetchBuildGraphResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
       if (struct.announcementResponse != null) {
         if (struct.isSetAnnouncementResponse()) {
           oprot.writeFieldBegin(ANNOUNCEMENT_RESPONSE_FIELD_DESC);
@@ -2844,122 +734,10 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
           oprot.writeFieldEnd();
         }
       }
-      if (struct.multiGetBuildSlaveLogDirResponse != null) {
-        if (struct.isSetMultiGetBuildSlaveLogDirResponse()) {
-          oprot.writeFieldBegin(MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE_FIELD_DESC);
-          struct.multiGetBuildSlaveLogDirResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.multiGetBuildSlaveRealTimeLogsResponse != null) {
-        if (struct.isSetMultiGetBuildSlaveRealTimeLogsResponse()) {
-          oprot.writeFieldBegin(MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE_FIELD_DESC);
-          struct.multiGetBuildSlaveRealTimeLogsResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.updateBuildSlaveStatusResponse != null) {
-        if (struct.isSetUpdateBuildSlaveStatusResponse()) {
-          oprot.writeFieldBegin(UPDATE_BUILD_SLAVE_STATUS_RESPONSE_FIELD_DESC);
-          struct.updateBuildSlaveStatusResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.fetchBuildSlaveStatusResponse != null) {
-        if (struct.isSetFetchBuildSlaveStatusResponse()) {
-          oprot.writeFieldBegin(FETCH_BUILD_SLAVE_STATUS_RESPONSE_FIELD_DESC);
-          struct.fetchBuildSlaveStatusResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.appendBuildSlaveEventsResponse != null) {
-        if (struct.isSetAppendBuildSlaveEventsResponse()) {
-          oprot.writeFieldBegin(APPEND_BUILD_SLAVE_EVENTS_RESPONSE_FIELD_DESC);
-          struct.appendBuildSlaveEventsResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.multiGetBuildSlaveEventsResponse != null) {
-        if (struct.isSetMultiGetBuildSlaveEventsResponse()) {
-          oprot.writeFieldBegin(MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE_FIELD_DESC);
-          struct.multiGetBuildSlaveEventsResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
       if (struct.fetchRuleKeyLogsResponse != null) {
         if (struct.isSetFetchRuleKeyLogsResponse()) {
           oprot.writeFieldBegin(FETCH_RULE_KEY_LOGS_RESPONSE_FIELD_DESC);
           struct.fetchRuleKeyLogsResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.storeBuildSlaveFinishedStatsResponse != null) {
-        if (struct.isSetStoreBuildSlaveFinishedStatsResponse()) {
-          oprot.writeFieldBegin(STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE_FIELD_DESC);
-          struct.storeBuildSlaveFinishedStatsResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.fetchBuildSlaveFinishedStatsResponse != null) {
-        if (struct.isSetFetchBuildSlaveFinishedStatsResponse()) {
-          oprot.writeFieldBegin(FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE_FIELD_DESC);
-          struct.fetchBuildSlaveFinishedStatsResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.setCoordinatorResponse != null) {
-        if (struct.isSetSetCoordinatorResponse()) {
-          oprot.writeFieldBegin(SET_COORDINATOR_RESPONSE_FIELD_DESC);
-          struct.setCoordinatorResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.enqueueMinionsResponse != null) {
-        if (struct.isSetEnqueueMinionsResponse()) {
-          oprot.writeFieldBegin(ENQUEUE_MINIONS_RESPONSE_FIELD_DESC);
-          struct.enqueueMinionsResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.setFinalBuildStatusResponse != null) {
-        if (struct.isSetSetFinalBuildStatusResponse()) {
-          oprot.writeFieldBegin(SET_FINAL_BUILD_STATUS_RESPONSE_FIELD_DESC);
-          struct.setFinalBuildStatusResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.reportCoordinatorAliveResponse != null) {
-        if (struct.isSetReportCoordinatorAliveResponse()) {
-          oprot.writeFieldBegin(REPORT_COORDINATOR_ALIVE_RESPONSE_FIELD_DESC);
-          struct.reportCoordinatorAliveResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.updateBuildSlaveBuildStatusResponse != null) {
-        if (struct.isSetUpdateBuildSlaveBuildStatusResponse()) {
-          oprot.writeFieldBegin(UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE_FIELD_DESC);
-          struct.updateBuildSlaveBuildStatusResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.remoteExecutionStoreResponse != null) {
-        if (struct.isSetRemoteExecutionStoreResponse()) {
-          oprot.writeFieldBegin(REMOTE_EXECUTION_STORE_RESPONSE_FIELD_DESC);
-          struct.remoteExecutionStoreResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.remoteExecutionFetchResponse != null) {
-        if (struct.isSetRemoteExecutionFetchResponse()) {
-          oprot.writeFieldBegin(REMOTE_EXECUTION_FETCH_RESPONSE_FIELD_DESC);
-          struct.remoteExecutionFetchResponse.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.remoteExecutionContainsResponse != null) {
-        if (struct.isSetRemoteExecutionContainsResponse()) {
-          oprot.writeFieldBegin(REMOTE_EXECUTION_CONTAINS_RESPONSE_FIELD_DESC);
-          struct.remoteExecutionContainsResponse.write(oprot);
           oprot.writeFieldEnd();
         }
       }
@@ -2990,79 +768,13 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       if (struct.isSetType()) {
         optionals.set(2);
       }
-      if (struct.isSetStartBuildResponse()) {
+      if (struct.isSetAnnouncementResponse()) {
         optionals.set(3);
       }
-      if (struct.isSetBuildStatusResponse()) {
+      if (struct.isSetFetchRuleKeyLogsResponse()) {
         optionals.set(4);
       }
-      if (struct.isSetCasContainsResponse()) {
-        optionals.set(5);
-      }
-      if (struct.isSetCreateBuildResponse()) {
-        optionals.set(6);
-      }
-      if (struct.isSetFetchSourceFilesResponse()) {
-        optionals.set(7);
-      }
-      if (struct.isSetFetchBuildGraphResponse()) {
-        optionals.set(8);
-      }
-      if (struct.isSetAnnouncementResponse()) {
-        optionals.set(9);
-      }
-      if (struct.isSetMultiGetBuildSlaveLogDirResponse()) {
-        optionals.set(10);
-      }
-      if (struct.isSetMultiGetBuildSlaveRealTimeLogsResponse()) {
-        optionals.set(11);
-      }
-      if (struct.isSetUpdateBuildSlaveStatusResponse()) {
-        optionals.set(12);
-      }
-      if (struct.isSetFetchBuildSlaveStatusResponse()) {
-        optionals.set(13);
-      }
-      if (struct.isSetAppendBuildSlaveEventsResponse()) {
-        optionals.set(14);
-      }
-      if (struct.isSetMultiGetBuildSlaveEventsResponse()) {
-        optionals.set(15);
-      }
-      if (struct.isSetFetchRuleKeyLogsResponse()) {
-        optionals.set(16);
-      }
-      if (struct.isSetStoreBuildSlaveFinishedStatsResponse()) {
-        optionals.set(17);
-      }
-      if (struct.isSetFetchBuildSlaveFinishedStatsResponse()) {
-        optionals.set(18);
-      }
-      if (struct.isSetSetCoordinatorResponse()) {
-        optionals.set(19);
-      }
-      if (struct.isSetEnqueueMinionsResponse()) {
-        optionals.set(20);
-      }
-      if (struct.isSetSetFinalBuildStatusResponse()) {
-        optionals.set(21);
-      }
-      if (struct.isSetReportCoordinatorAliveResponse()) {
-        optionals.set(22);
-      }
-      if (struct.isSetUpdateBuildSlaveBuildStatusResponse()) {
-        optionals.set(23);
-      }
-      if (struct.isSetRemoteExecutionStoreResponse()) {
-        optionals.set(24);
-      }
-      if (struct.isSetRemoteExecutionFetchResponse()) {
-        optionals.set(25);
-      }
-      if (struct.isSetRemoteExecutionContainsResponse()) {
-        optionals.set(26);
-      }
-      oprot.writeBitSet(optionals, 27);
+      oprot.writeBitSet(optionals, 5);
       if (struct.isSetWasSuccessful()) {
         oprot.writeBool(struct.wasSuccessful);
       }
@@ -3072,84 +784,18 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       if (struct.isSetType()) {
         oprot.writeI32(struct.type.getValue());
       }
-      if (struct.isSetStartBuildResponse()) {
-        struct.startBuildResponse.write(oprot);
-      }
-      if (struct.isSetBuildStatusResponse()) {
-        struct.buildStatusResponse.write(oprot);
-      }
-      if (struct.isSetCasContainsResponse()) {
-        struct.casContainsResponse.write(oprot);
-      }
-      if (struct.isSetCreateBuildResponse()) {
-        struct.createBuildResponse.write(oprot);
-      }
-      if (struct.isSetFetchSourceFilesResponse()) {
-        struct.fetchSourceFilesResponse.write(oprot);
-      }
-      if (struct.isSetFetchBuildGraphResponse()) {
-        struct.fetchBuildGraphResponse.write(oprot);
-      }
       if (struct.isSetAnnouncementResponse()) {
         struct.announcementResponse.write(oprot);
       }
-      if (struct.isSetMultiGetBuildSlaveLogDirResponse()) {
-        struct.multiGetBuildSlaveLogDirResponse.write(oprot);
-      }
-      if (struct.isSetMultiGetBuildSlaveRealTimeLogsResponse()) {
-        struct.multiGetBuildSlaveRealTimeLogsResponse.write(oprot);
-      }
-      if (struct.isSetUpdateBuildSlaveStatusResponse()) {
-        struct.updateBuildSlaveStatusResponse.write(oprot);
-      }
-      if (struct.isSetFetchBuildSlaveStatusResponse()) {
-        struct.fetchBuildSlaveStatusResponse.write(oprot);
-      }
-      if (struct.isSetAppendBuildSlaveEventsResponse()) {
-        struct.appendBuildSlaveEventsResponse.write(oprot);
-      }
-      if (struct.isSetMultiGetBuildSlaveEventsResponse()) {
-        struct.multiGetBuildSlaveEventsResponse.write(oprot);
-      }
       if (struct.isSetFetchRuleKeyLogsResponse()) {
         struct.fetchRuleKeyLogsResponse.write(oprot);
-      }
-      if (struct.isSetStoreBuildSlaveFinishedStatsResponse()) {
-        struct.storeBuildSlaveFinishedStatsResponse.write(oprot);
-      }
-      if (struct.isSetFetchBuildSlaveFinishedStatsResponse()) {
-        struct.fetchBuildSlaveFinishedStatsResponse.write(oprot);
-      }
-      if (struct.isSetSetCoordinatorResponse()) {
-        struct.setCoordinatorResponse.write(oprot);
-      }
-      if (struct.isSetEnqueueMinionsResponse()) {
-        struct.enqueueMinionsResponse.write(oprot);
-      }
-      if (struct.isSetSetFinalBuildStatusResponse()) {
-        struct.setFinalBuildStatusResponse.write(oprot);
-      }
-      if (struct.isSetReportCoordinatorAliveResponse()) {
-        struct.reportCoordinatorAliveResponse.write(oprot);
-      }
-      if (struct.isSetUpdateBuildSlaveBuildStatusResponse()) {
-        struct.updateBuildSlaveBuildStatusResponse.write(oprot);
-      }
-      if (struct.isSetRemoteExecutionStoreResponse()) {
-        struct.remoteExecutionStoreResponse.write(oprot);
-      }
-      if (struct.isSetRemoteExecutionFetchResponse()) {
-        struct.remoteExecutionFetchResponse.write(oprot);
-      }
-      if (struct.isSetRemoteExecutionContainsResponse()) {
-        struct.remoteExecutionContainsResponse.write(oprot);
       }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, FrontendResponse struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(27);
+      java.util.BitSet incoming = iprot.readBitSet(5);
       if (incoming.get(0)) {
         struct.wasSuccessful = iprot.readBool();
         struct.setWasSuccessfulIsSet(true);
@@ -3163,124 +809,14 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         struct.setTypeIsSet(true);
       }
       if (incoming.get(3)) {
-        struct.startBuildResponse = new StartBuildResponse();
-        struct.startBuildResponse.read(iprot);
-        struct.setStartBuildResponseIsSet(true);
-      }
-      if (incoming.get(4)) {
-        struct.buildStatusResponse = new BuildStatusResponse();
-        struct.buildStatusResponse.read(iprot);
-        struct.setBuildStatusResponseIsSet(true);
-      }
-      if (incoming.get(5)) {
-        struct.casContainsResponse = new CASContainsResponse();
-        struct.casContainsResponse.read(iprot);
-        struct.setCasContainsResponseIsSet(true);
-      }
-      if (incoming.get(6)) {
-        struct.createBuildResponse = new CreateBuildResponse();
-        struct.createBuildResponse.read(iprot);
-        struct.setCreateBuildResponseIsSet(true);
-      }
-      if (incoming.get(7)) {
-        struct.fetchSourceFilesResponse = new FetchSourceFilesResponse();
-        struct.fetchSourceFilesResponse.read(iprot);
-        struct.setFetchSourceFilesResponseIsSet(true);
-      }
-      if (incoming.get(8)) {
-        struct.fetchBuildGraphResponse = new FetchBuildGraphResponse();
-        struct.fetchBuildGraphResponse.read(iprot);
-        struct.setFetchBuildGraphResponseIsSet(true);
-      }
-      if (incoming.get(9)) {
         struct.announcementResponse = new AnnouncementResponse();
         struct.announcementResponse.read(iprot);
         struct.setAnnouncementResponseIsSet(true);
       }
-      if (incoming.get(10)) {
-        struct.multiGetBuildSlaveLogDirResponse = new MultiGetBuildSlaveLogDirResponse();
-        struct.multiGetBuildSlaveLogDirResponse.read(iprot);
-        struct.setMultiGetBuildSlaveLogDirResponseIsSet(true);
-      }
-      if (incoming.get(11)) {
-        struct.multiGetBuildSlaveRealTimeLogsResponse = new MultiGetBuildSlaveRealTimeLogsResponse();
-        struct.multiGetBuildSlaveRealTimeLogsResponse.read(iprot);
-        struct.setMultiGetBuildSlaveRealTimeLogsResponseIsSet(true);
-      }
-      if (incoming.get(12)) {
-        struct.updateBuildSlaveStatusResponse = new UpdateBuildSlaveStatusResponse();
-        struct.updateBuildSlaveStatusResponse.read(iprot);
-        struct.setUpdateBuildSlaveStatusResponseIsSet(true);
-      }
-      if (incoming.get(13)) {
-        struct.fetchBuildSlaveStatusResponse = new FetchBuildSlaveStatusResponse();
-        struct.fetchBuildSlaveStatusResponse.read(iprot);
-        struct.setFetchBuildSlaveStatusResponseIsSet(true);
-      }
-      if (incoming.get(14)) {
-        struct.appendBuildSlaveEventsResponse = new AppendBuildSlaveEventsResponse();
-        struct.appendBuildSlaveEventsResponse.read(iprot);
-        struct.setAppendBuildSlaveEventsResponseIsSet(true);
-      }
-      if (incoming.get(15)) {
-        struct.multiGetBuildSlaveEventsResponse = new MultiGetBuildSlaveEventsResponse();
-        struct.multiGetBuildSlaveEventsResponse.read(iprot);
-        struct.setMultiGetBuildSlaveEventsResponseIsSet(true);
-      }
-      if (incoming.get(16)) {
+      if (incoming.get(4)) {
         struct.fetchRuleKeyLogsResponse = new FetchRuleKeyLogsResponse();
         struct.fetchRuleKeyLogsResponse.read(iprot);
         struct.setFetchRuleKeyLogsResponseIsSet(true);
-      }
-      if (incoming.get(17)) {
-        struct.storeBuildSlaveFinishedStatsResponse = new StoreBuildSlaveFinishedStatsResponse();
-        struct.storeBuildSlaveFinishedStatsResponse.read(iprot);
-        struct.setStoreBuildSlaveFinishedStatsResponseIsSet(true);
-      }
-      if (incoming.get(18)) {
-        struct.fetchBuildSlaveFinishedStatsResponse = new FetchBuildSlaveFinishedStatsResponse();
-        struct.fetchBuildSlaveFinishedStatsResponse.read(iprot);
-        struct.setFetchBuildSlaveFinishedStatsResponseIsSet(true);
-      }
-      if (incoming.get(19)) {
-        struct.setCoordinatorResponse = new SetCoordinatorResponse();
-        struct.setCoordinatorResponse.read(iprot);
-        struct.setSetCoordinatorResponseIsSet(true);
-      }
-      if (incoming.get(20)) {
-        struct.enqueueMinionsResponse = new EnqueueMinionsResponse();
-        struct.enqueueMinionsResponse.read(iprot);
-        struct.setEnqueueMinionsResponseIsSet(true);
-      }
-      if (incoming.get(21)) {
-        struct.setFinalBuildStatusResponse = new SetFinalBuildStatusResponse();
-        struct.setFinalBuildStatusResponse.read(iprot);
-        struct.setSetFinalBuildStatusResponseIsSet(true);
-      }
-      if (incoming.get(22)) {
-        struct.reportCoordinatorAliveResponse = new ReportCoordinatorAliveResponse();
-        struct.reportCoordinatorAliveResponse.read(iprot);
-        struct.setReportCoordinatorAliveResponseIsSet(true);
-      }
-      if (incoming.get(23)) {
-        struct.updateBuildSlaveBuildStatusResponse = new UpdateBuildSlaveBuildStatusResponse();
-        struct.updateBuildSlaveBuildStatusResponse.read(iprot);
-        struct.setUpdateBuildSlaveBuildStatusResponseIsSet(true);
-      }
-      if (incoming.get(24)) {
-        struct.remoteExecutionStoreResponse = new RemoteExecutionStoreResponse();
-        struct.remoteExecutionStoreResponse.read(iprot);
-        struct.setRemoteExecutionStoreResponseIsSet(true);
-      }
-      if (incoming.get(25)) {
-        struct.remoteExecutionFetchResponse = new RemoteExecutionFetchResponse();
-        struct.remoteExecutionFetchResponse.read(iprot);
-        struct.setRemoteExecutionFetchResponseIsSet(true);
-      }
-      if (incoming.get(26)) {
-        struct.remoteExecutionContainsResponse = new RemoteExecutionContainsResponse();
-        struct.remoteExecutionContainsResponse.read(iprot);
-        struct.setRemoteExecutionContainsResponseIsSet(true);
       }
     }
   }

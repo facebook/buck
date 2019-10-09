@@ -16,10 +16,9 @@
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.distributed.thrift.BuildJob;
-import com.facebook.buck.distributed.thrift.BuildStatus;
-import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.distributed.thrift.ScribeData;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -38,10 +37,10 @@ public class ThriftUtilTest {
     for (Serializer serializer : serializers) {
       for (Deserializer deserializer : deserializers) {
         for (ThriftProtocol protocol : ThriftProtocol.values()) {
-          BuildJob expectedJob = createBuildJob();
+          ScribeData expectedJob = createScribeData();
 
           byte[] data = serializer.serialize(protocol, expectedJob);
-          BuildJob actualJob = deserializer.deserialize(protocol, data);
+          ScribeData actualJob = deserializer.deserialize(protocol, data);
           Assert.assertEquals(
               String.format(
                   "Serializer=[%s] Deserializer=[%s] Protocol=[%s] Expected=[%s] Actual=[%s]",
@@ -57,33 +56,32 @@ public class ThriftUtilTest {
     }
   }
 
-  private BuildJob createBuildJob() {
-    BuildJob job = new BuildJob();
-    job.setStatus(BuildStatus.FINISHED_SUCCESSFULLY);
-    StampedeId stampedeId = new StampedeId();
-    stampedeId.setId("all will be well");
-    job.setStampedeId(stampedeId);
-    return job;
+  private ScribeData createScribeData() {
+    ScribeData data = new ScribeData();
+    data.setCategory("Category");
+    data.setLines(Lists.newArrayList("line1", "line2"));
+    data.setBucket(3);
+    return data;
   }
 
   public interface Serializer {
-    byte[] serialize(ThriftProtocol protocol, BuildJob job) throws IOException;
+    byte[] serialize(ThriftProtocol protocol, ScribeData job) throws IOException;
   }
 
   public interface Deserializer {
-    BuildJob deserialize(ThriftProtocol protocol, byte[] data) throws IOException;
+    ScribeData deserialize(ThriftProtocol protocol, byte[] data) throws IOException;
   }
 
   public static class ByteSerializer implements Serializer, Deserializer {
 
     @Override
-    public byte[] serialize(ThriftProtocol protocol, BuildJob job) throws ThriftException {
+    public byte[] serialize(ThriftProtocol protocol, ScribeData job) throws ThriftException {
       return ThriftUtil.serialize(protocol, job);
     }
 
     @Override
-    public BuildJob deserialize(ThriftProtocol protocol, byte[] data) throws IOException {
-      BuildJob job = new BuildJob();
+    public ScribeData deserialize(ThriftProtocol protocol, byte[] data) throws IOException {
+      ScribeData job = new ScribeData();
       ThriftUtil.deserialize(protocol, data, job);
       return job;
     }
@@ -92,7 +90,7 @@ public class ThriftUtilTest {
   public static class StreamSerializer implements Serializer, Deserializer {
 
     @Override
-    public byte[] serialize(ThriftProtocol protocol, BuildJob job) throws IOException {
+    public byte[] serialize(ThriftProtocol protocol, ScribeData job) throws IOException {
       try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
         ThriftUtil.serialize(protocol, job, stream);
         return stream.toByteArray();
@@ -100,8 +98,8 @@ public class ThriftUtilTest {
     }
 
     @Override
-    public BuildJob deserialize(ThriftProtocol protocol, byte[] data) throws IOException {
-      BuildJob job = new BuildJob();
+    public ScribeData deserialize(ThriftProtocol protocol, byte[] data) throws IOException {
+      ScribeData job = new ScribeData();
       try (ByteArrayInputStream stream = new ByteArrayInputStream(data)) {
         ThriftUtil.deserialize(protocol, stream, job);
       }

@@ -586,14 +586,14 @@ public class RuleKeyLogEntry implements org.apache.thrift.TBase<RuleKeyLogEntry,
           case 4: // STORE_LOG_ENTRIES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list176 = iprot.readListBegin();
-                struct.storeLogEntries = new java.util.ArrayList<RuleKeyStoreLogEntry>(_list176.size);
-                @org.apache.thrift.annotation.Nullable RuleKeyStoreLogEntry _elem177;
-                for (int _i178 = 0; _i178 < _list176.size; ++_i178)
+                org.apache.thrift.protocol.TList _list16 = iprot.readListBegin();
+                struct.storeLogEntries = new java.util.ArrayList<RuleKeyStoreLogEntry>(_list16.size);
+                @org.apache.thrift.annotation.Nullable RuleKeyStoreLogEntry _elem17;
+                for (int _i18 = 0; _i18 < _list16.size; ++_i18)
                 {
-                  _elem177 = new RuleKeyStoreLogEntry();
-                  _elem177.read(iprot);
-                  struct.storeLogEntries.add(_elem177);
+                  _elem17 = new RuleKeyStoreLogEntry();
+                  _elem17.read(iprot);
+                  struct.storeLogEntries.add(_elem17);
                 }
                 iprot.readListEnd();
               }
@@ -639,9 +639,9 @@ public class RuleKeyLogEntry implements org.apache.thrift.TBase<RuleKeyLogEntry,
           oprot.writeFieldBegin(STORE_LOG_ENTRIES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.storeLogEntries.size()));
-            for (RuleKeyStoreLogEntry _iter179 : struct.storeLogEntries)
+            for (RuleKeyStoreLogEntry _iter19 : struct.storeLogEntries)
             {
-              _iter179.write(oprot);
+              _iter19.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -691,9 +691,9 @@ public class RuleKeyLogEntry implements org.apache.thrift.TBase<RuleKeyLogEntry,
       if (struct.isSetStoreLogEntries()) {
         {
           oprot.writeI32(struct.storeLogEntries.size());
-          for (RuleKeyStoreLogEntry _iter180 : struct.storeLogEntries)
+          for (RuleKeyStoreLogEntry _iter20 : struct.storeLogEntries)
           {
-            _iter180.write(oprot);
+            _iter20.write(oprot);
           }
         }
       }
@@ -717,14 +717,14 @@ public class RuleKeyLogEntry implements org.apache.thrift.TBase<RuleKeyLogEntry,
       }
       if (incoming.get(3)) {
         {
-          org.apache.thrift.protocol.TList _list181 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.storeLogEntries = new java.util.ArrayList<RuleKeyStoreLogEntry>(_list181.size);
-          @org.apache.thrift.annotation.Nullable RuleKeyStoreLogEntry _elem182;
-          for (int _i183 = 0; _i183 < _list181.size; ++_i183)
+          org.apache.thrift.protocol.TList _list21 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.storeLogEntries = new java.util.ArrayList<RuleKeyStoreLogEntry>(_list21.size);
+          @org.apache.thrift.annotation.Nullable RuleKeyStoreLogEntry _elem22;
+          for (int _i23 = 0; _i23 < _list21.size; ++_i23)
           {
-            _elem182 = new RuleKeyStoreLogEntry();
-            _elem182.read(iprot);
-            struct.storeLogEntries.add(_elem182);
+            _elem22 = new RuleKeyStoreLogEntry();
+            _elem22.read(iprot);
+            struct.storeLogEntries.add(_elem22);
           }
         }
         struct.setStoreLogEntriesIsSet(true);

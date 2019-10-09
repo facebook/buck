@@ -324,14 +324,14 @@ public class AnnouncementResponse implements org.apache.thrift.TBase<Announcemen
           case 1: // ANNOUNCEMENTS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list144 = iprot.readListBegin();
-                struct.announcements = new java.util.ArrayList<Announcement>(_list144.size);
-                @org.apache.thrift.annotation.Nullable Announcement _elem145;
-                for (int _i146 = 0; _i146 < _list144.size; ++_i146)
+                org.apache.thrift.protocol.TList _list8 = iprot.readListBegin();
+                struct.announcements = new java.util.ArrayList<Announcement>(_list8.size);
+                @org.apache.thrift.annotation.Nullable Announcement _elem9;
+                for (int _i10 = 0; _i10 < _list8.size; ++_i10)
                 {
-                  _elem145 = new Announcement();
-                  _elem145.read(iprot);
-                  struct.announcements.add(_elem145);
+                  _elem9 = new Announcement();
+                  _elem9.read(iprot);
+                  struct.announcements.add(_elem9);
                 }
                 iprot.readListEnd();
               }
@@ -360,9 +360,9 @@ public class AnnouncementResponse implements org.apache.thrift.TBase<Announcemen
           oprot.writeFieldBegin(ANNOUNCEMENTS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.announcements.size()));
-            for (Announcement _iter147 : struct.announcements)
+            for (Announcement _iter11 : struct.announcements)
             {
-              _iter147.write(oprot);
+              _iter11.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -394,9 +394,9 @@ public class AnnouncementResponse implements org.apache.thrift.TBase<Announcemen
       if (struct.isSetAnnouncements()) {
         {
           oprot.writeI32(struct.announcements.size());
-          for (Announcement _iter148 : struct.announcements)
+          for (Announcement _iter12 : struct.announcements)
           {
-            _iter148.write(oprot);
+            _iter12.write(oprot);
           }
         }
       }
@@ -408,14 +408,14 @@ public class AnnouncementResponse implements org.apache.thrift.TBase<Announcemen
       java.util.BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list149 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.announcements = new java.util.ArrayList<Announcement>(_list149.size);
-          @org.apache.thrift.annotation.Nullable Announcement _elem150;
-          for (int _i151 = 0; _i151 < _list149.size; ++_i151)
+          org.apache.thrift.protocol.TList _list13 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.announcements = new java.util.ArrayList<Announcement>(_list13.size);
+          @org.apache.thrift.annotation.Nullable Announcement _elem14;
+          for (int _i15 = 0; _i15 < _list13.size; ++_i15)
           {
-            _elem150 = new Announcement();
-            _elem150.read(iprot);
-            struct.announcements.add(_elem150);
+            _elem14 = new Announcement();
+            _elem14.read(iprot);
+            struct.announcements.add(_elem14);
           }
         }
         struct.setAnnouncementsIsSet(true);

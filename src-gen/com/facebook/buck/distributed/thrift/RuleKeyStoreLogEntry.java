@@ -16,6 +16,10 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
   private static final org.apache.thrift.protocol.TField LAST_STORE_EPOCH_SECONDS_FIELD_DESC = new org.apache.thrift.protocol.TField("lastStoreEpochSeconds", org.apache.thrift.protocol.TType.I64, (short)3);
   private static final org.apache.thrift.protocol.TField LAST_ATTEMPTED_STORE_EPOCH_SECONDS_FIELD_DESC = new org.apache.thrift.protocol.TField("lastAttemptedStoreEpochSeconds", org.apache.thrift.protocol.TType.I64, (short)4);
   private static final org.apache.thrift.protocol.TField LAST_FETCH_EPOCH_SECONDS_FIELD_DESC = new org.apache.thrift.protocol.TField("lastFetchEpochSeconds", org.apache.thrift.protocol.TType.I64, (short)5);
+  private static final org.apache.thrift.protocol.TField REPOSITORY_FIELD_DESC = new org.apache.thrift.protocol.TField("repository", org.apache.thrift.protocol.TType.STRING, (short)6);
+  private static final org.apache.thrift.protocol.TField SCHEDULE_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("scheduleType", org.apache.thrift.protocol.TType.STRING, (short)7);
+  private static final org.apache.thrift.protocol.TField FETCH_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("fetchCount", org.apache.thrift.protocol.TType.I64, (short)8);
+  private static final org.apache.thrift.protocol.TField ATTEMPTED_STORE_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("attemptedStoreCount", org.apache.thrift.protocol.TType.I64, (short)9);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new RuleKeyStoreLogEntryStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new RuleKeyStoreLogEntryTupleSchemeFactory();
@@ -25,6 +29,10 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
   public long lastStoreEpochSeconds; // optional
   public long lastAttemptedStoreEpochSeconds; // optional
   public long lastFetchEpochSeconds; // optional
+  public @org.apache.thrift.annotation.Nullable java.lang.String repository; // optional
+  public @org.apache.thrift.annotation.Nullable java.lang.String scheduleType; // optional
+  public long fetchCount; // optional
+  public long attemptedStoreCount; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -32,7 +40,11 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
     STORE_TTLSECONDS((short)2, "storeTTLSeconds"),
     LAST_STORE_EPOCH_SECONDS((short)3, "lastStoreEpochSeconds"),
     LAST_ATTEMPTED_STORE_EPOCH_SECONDS((short)4, "lastAttemptedStoreEpochSeconds"),
-    LAST_FETCH_EPOCH_SECONDS((short)5, "lastFetchEpochSeconds");
+    LAST_FETCH_EPOCH_SECONDS((short)5, "lastFetchEpochSeconds"),
+    REPOSITORY((short)6, "repository"),
+    SCHEDULE_TYPE((short)7, "scheduleType"),
+    FETCH_COUNT((short)8, "fetchCount"),
+    ATTEMPTED_STORE_COUNT((short)9, "attemptedStoreCount");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -58,6 +70,14 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
           return LAST_ATTEMPTED_STORE_EPOCH_SECONDS;
         case 5: // LAST_FETCH_EPOCH_SECONDS
           return LAST_FETCH_EPOCH_SECONDS;
+        case 6: // REPOSITORY
+          return REPOSITORY;
+        case 7: // SCHEDULE_TYPE
+          return SCHEDULE_TYPE;
+        case 8: // FETCH_COUNT
+          return FETCH_COUNT;
+        case 9: // ATTEMPTED_STORE_COUNT
+          return ATTEMPTED_STORE_COUNT;
         default:
           return null;
       }
@@ -103,8 +123,10 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
   private static final int __LASTSTOREEPOCHSECONDS_ISSET_ID = 1;
   private static final int __LASTATTEMPTEDSTOREEPOCHSECONDS_ISSET_ID = 2;
   private static final int __LASTFETCHEPOCHSECONDS_ISSET_ID = 3;
+  private static final int __FETCHCOUNT_ISSET_ID = 4;
+  private static final int __ATTEMPTEDSTORECOUNT_ISSET_ID = 5;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.STORE_ID,_Fields.STORE_TTLSECONDS,_Fields.LAST_STORE_EPOCH_SECONDS,_Fields.LAST_ATTEMPTED_STORE_EPOCH_SECONDS,_Fields.LAST_FETCH_EPOCH_SECONDS};
+  private static final _Fields optionals[] = {_Fields.STORE_ID,_Fields.STORE_TTLSECONDS,_Fields.LAST_STORE_EPOCH_SECONDS,_Fields.LAST_ATTEMPTED_STORE_EPOCH_SECONDS,_Fields.LAST_FETCH_EPOCH_SECONDS,_Fields.REPOSITORY,_Fields.SCHEDULE_TYPE,_Fields.FETCH_COUNT,_Fields.ATTEMPTED_STORE_COUNT};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -117,6 +139,14 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
     tmpMap.put(_Fields.LAST_ATTEMPTED_STORE_EPOCH_SECONDS, new org.apache.thrift.meta_data.FieldMetaData("lastAttemptedStoreEpochSeconds", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.LAST_FETCH_EPOCH_SECONDS, new org.apache.thrift.meta_data.FieldMetaData("lastFetchEpochSeconds", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+    tmpMap.put(_Fields.REPOSITORY, new org.apache.thrift.meta_data.FieldMetaData("repository", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.SCHEDULE_TYPE, new org.apache.thrift.meta_data.FieldMetaData("scheduleType", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.FETCH_COUNT, new org.apache.thrift.meta_data.FieldMetaData("fetchCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+    tmpMap.put(_Fields.ATTEMPTED_STORE_COUNT, new org.apache.thrift.meta_data.FieldMetaData("attemptedStoreCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(RuleKeyStoreLogEntry.class, metaDataMap);
@@ -137,6 +167,14 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
     this.lastStoreEpochSeconds = other.lastStoreEpochSeconds;
     this.lastAttemptedStoreEpochSeconds = other.lastAttemptedStoreEpochSeconds;
     this.lastFetchEpochSeconds = other.lastFetchEpochSeconds;
+    if (other.isSetRepository()) {
+      this.repository = other.repository;
+    }
+    if (other.isSetScheduleType()) {
+      this.scheduleType = other.scheduleType;
+    }
+    this.fetchCount = other.fetchCount;
+    this.attemptedStoreCount = other.attemptedStoreCount;
   }
 
   public RuleKeyStoreLogEntry deepCopy() {
@@ -154,6 +192,12 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
     this.lastAttemptedStoreEpochSeconds = 0;
     setLastFetchEpochSecondsIsSet(false);
     this.lastFetchEpochSeconds = 0;
+    this.repository = null;
+    this.scheduleType = null;
+    setFetchCountIsSet(false);
+    this.fetchCount = 0;
+    setAttemptedStoreCountIsSet(false);
+    this.attemptedStoreCount = 0;
   }
 
   @org.apache.thrift.annotation.Nullable
@@ -273,6 +317,102 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __LASTFETCHEPOCHSECONDS_ISSET_ID, value);
   }
 
+  @org.apache.thrift.annotation.Nullable
+  public java.lang.String getRepository() {
+    return this.repository;
+  }
+
+  public RuleKeyStoreLogEntry setRepository(@org.apache.thrift.annotation.Nullable java.lang.String repository) {
+    this.repository = repository;
+    return this;
+  }
+
+  public void unsetRepository() {
+    this.repository = null;
+  }
+
+  /** Returns true if field repository is set (has been assigned a value) and false otherwise */
+  public boolean isSetRepository() {
+    return this.repository != null;
+  }
+
+  public void setRepositoryIsSet(boolean value) {
+    if (!value) {
+      this.repository = null;
+    }
+  }
+
+  @org.apache.thrift.annotation.Nullable
+  public java.lang.String getScheduleType() {
+    return this.scheduleType;
+  }
+
+  public RuleKeyStoreLogEntry setScheduleType(@org.apache.thrift.annotation.Nullable java.lang.String scheduleType) {
+    this.scheduleType = scheduleType;
+    return this;
+  }
+
+  public void unsetScheduleType() {
+    this.scheduleType = null;
+  }
+
+  /** Returns true if field scheduleType is set (has been assigned a value) and false otherwise */
+  public boolean isSetScheduleType() {
+    return this.scheduleType != null;
+  }
+
+  public void setScheduleTypeIsSet(boolean value) {
+    if (!value) {
+      this.scheduleType = null;
+    }
+  }
+
+  public long getFetchCount() {
+    return this.fetchCount;
+  }
+
+  public RuleKeyStoreLogEntry setFetchCount(long fetchCount) {
+    this.fetchCount = fetchCount;
+    setFetchCountIsSet(true);
+    return this;
+  }
+
+  public void unsetFetchCount() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __FETCHCOUNT_ISSET_ID);
+  }
+
+  /** Returns true if field fetchCount is set (has been assigned a value) and false otherwise */
+  public boolean isSetFetchCount() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __FETCHCOUNT_ISSET_ID);
+  }
+
+  public void setFetchCountIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __FETCHCOUNT_ISSET_ID, value);
+  }
+
+  public long getAttemptedStoreCount() {
+    return this.attemptedStoreCount;
+  }
+
+  public RuleKeyStoreLogEntry setAttemptedStoreCount(long attemptedStoreCount) {
+    this.attemptedStoreCount = attemptedStoreCount;
+    setAttemptedStoreCountIsSet(true);
+    return this;
+  }
+
+  public void unsetAttemptedStoreCount() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __ATTEMPTEDSTORECOUNT_ISSET_ID);
+  }
+
+  /** Returns true if field attemptedStoreCount is set (has been assigned a value) and false otherwise */
+  public boolean isSetAttemptedStoreCount() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __ATTEMPTEDSTORECOUNT_ISSET_ID);
+  }
+
+  public void setAttemptedStoreCountIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __ATTEMPTEDSTORECOUNT_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
     switch (field) {
     case STORE_ID:
@@ -315,6 +455,38 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
       }
       break;
 
+    case REPOSITORY:
+      if (value == null) {
+        unsetRepository();
+      } else {
+        setRepository((java.lang.String)value);
+      }
+      break;
+
+    case SCHEDULE_TYPE:
+      if (value == null) {
+        unsetScheduleType();
+      } else {
+        setScheduleType((java.lang.String)value);
+      }
+      break;
+
+    case FETCH_COUNT:
+      if (value == null) {
+        unsetFetchCount();
+      } else {
+        setFetchCount((java.lang.Long)value);
+      }
+      break;
+
+    case ATTEMPTED_STORE_COUNT:
+      if (value == null) {
+        unsetAttemptedStoreCount();
+      } else {
+        setAttemptedStoreCount((java.lang.Long)value);
+      }
+      break;
+
     }
   }
 
@@ -335,6 +507,18 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
 
     case LAST_FETCH_EPOCH_SECONDS:
       return getLastFetchEpochSeconds();
+
+    case REPOSITORY:
+      return getRepository();
+
+    case SCHEDULE_TYPE:
+      return getScheduleType();
+
+    case FETCH_COUNT:
+      return getFetchCount();
+
+    case ATTEMPTED_STORE_COUNT:
+      return getAttemptedStoreCount();
 
     }
     throw new java.lang.IllegalStateException();
@@ -357,6 +541,14 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
       return isSetLastAttemptedStoreEpochSeconds();
     case LAST_FETCH_EPOCH_SECONDS:
       return isSetLastFetchEpochSeconds();
+    case REPOSITORY:
+      return isSetRepository();
+    case SCHEDULE_TYPE:
+      return isSetScheduleType();
+    case FETCH_COUNT:
+      return isSetFetchCount();
+    case ATTEMPTED_STORE_COUNT:
+      return isSetAttemptedStoreCount();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -421,6 +613,42 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
         return false;
     }
 
+    boolean this_present_repository = true && this.isSetRepository();
+    boolean that_present_repository = true && that.isSetRepository();
+    if (this_present_repository || that_present_repository) {
+      if (!(this_present_repository && that_present_repository))
+        return false;
+      if (!this.repository.equals(that.repository))
+        return false;
+    }
+
+    boolean this_present_scheduleType = true && this.isSetScheduleType();
+    boolean that_present_scheduleType = true && that.isSetScheduleType();
+    if (this_present_scheduleType || that_present_scheduleType) {
+      if (!(this_present_scheduleType && that_present_scheduleType))
+        return false;
+      if (!this.scheduleType.equals(that.scheduleType))
+        return false;
+    }
+
+    boolean this_present_fetchCount = true && this.isSetFetchCount();
+    boolean that_present_fetchCount = true && that.isSetFetchCount();
+    if (this_present_fetchCount || that_present_fetchCount) {
+      if (!(this_present_fetchCount && that_present_fetchCount))
+        return false;
+      if (this.fetchCount != that.fetchCount)
+        return false;
+    }
+
+    boolean this_present_attemptedStoreCount = true && this.isSetAttemptedStoreCount();
+    boolean that_present_attemptedStoreCount = true && that.isSetAttemptedStoreCount();
+    if (this_present_attemptedStoreCount || that_present_attemptedStoreCount) {
+      if (!(this_present_attemptedStoreCount && that_present_attemptedStoreCount))
+        return false;
+      if (this.attemptedStoreCount != that.attemptedStoreCount)
+        return false;
+    }
+
     return true;
   }
 
@@ -447,6 +675,22 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
     hashCode = hashCode * 8191 + ((isSetLastFetchEpochSeconds()) ? 131071 : 524287);
     if (isSetLastFetchEpochSeconds())
       hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(lastFetchEpochSeconds);
+
+    hashCode = hashCode * 8191 + ((isSetRepository()) ? 131071 : 524287);
+    if (isSetRepository())
+      hashCode = hashCode * 8191 + repository.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetScheduleType()) ? 131071 : 524287);
+    if (isSetScheduleType())
+      hashCode = hashCode * 8191 + scheduleType.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetFetchCount()) ? 131071 : 524287);
+    if (isSetFetchCount())
+      hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(fetchCount);
+
+    hashCode = hashCode * 8191 + ((isSetAttemptedStoreCount()) ? 131071 : 524287);
+    if (isSetAttemptedStoreCount())
+      hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(attemptedStoreCount);
 
     return hashCode;
   }
@@ -509,6 +753,46 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
         return lastComparison;
       }
     }
+    lastComparison = java.lang.Boolean.valueOf(isSetRepository()).compareTo(other.isSetRepository());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetRepository()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.repository, other.repository);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetScheduleType()).compareTo(other.isSetScheduleType());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetScheduleType()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.scheduleType, other.scheduleType);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetFetchCount()).compareTo(other.isSetFetchCount());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetFetchCount()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.fetchCount, other.fetchCount);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetAttemptedStoreCount()).compareTo(other.isSetAttemptedStoreCount());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetAttemptedStoreCount()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.attemptedStoreCount, other.attemptedStoreCount);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -561,6 +845,38 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
       if (!first) sb.append(", ");
       sb.append("lastFetchEpochSeconds:");
       sb.append(this.lastFetchEpochSeconds);
+      first = false;
+    }
+    if (isSetRepository()) {
+      if (!first) sb.append(", ");
+      sb.append("repository:");
+      if (this.repository == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.repository);
+      }
+      first = false;
+    }
+    if (isSetScheduleType()) {
+      if (!first) sb.append(", ");
+      sb.append("scheduleType:");
+      if (this.scheduleType == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.scheduleType);
+      }
+      first = false;
+    }
+    if (isSetFetchCount()) {
+      if (!first) sb.append(", ");
+      sb.append("fetchCount:");
+      sb.append(this.fetchCount);
+      first = false;
+    }
+    if (isSetAttemptedStoreCount()) {
+      if (!first) sb.append(", ");
+      sb.append("attemptedStoreCount:");
+      sb.append(this.attemptedStoreCount);
       first = false;
     }
     sb.append(")");
@@ -648,6 +964,38 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 6: // REPOSITORY
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.repository = iprot.readString();
+              struct.setRepositoryIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 7: // SCHEDULE_TYPE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.scheduleType = iprot.readString();
+              struct.setScheduleTypeIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 8: // FETCH_COUNT
+            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+              struct.fetchCount = iprot.readI64();
+              struct.setFetchCountIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 9: // ATTEMPTED_STORE_COUNT
+            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+              struct.attemptedStoreCount = iprot.readI64();
+              struct.setAttemptedStoreCountIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -690,6 +1038,30 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
         oprot.writeI64(struct.lastFetchEpochSeconds);
         oprot.writeFieldEnd();
       }
+      if (struct.repository != null) {
+        if (struct.isSetRepository()) {
+          oprot.writeFieldBegin(REPOSITORY_FIELD_DESC);
+          oprot.writeString(struct.repository);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.scheduleType != null) {
+        if (struct.isSetScheduleType()) {
+          oprot.writeFieldBegin(SCHEDULE_TYPE_FIELD_DESC);
+          oprot.writeString(struct.scheduleType);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.isSetFetchCount()) {
+        oprot.writeFieldBegin(FETCH_COUNT_FIELD_DESC);
+        oprot.writeI64(struct.fetchCount);
+        oprot.writeFieldEnd();
+      }
+      if (struct.isSetAttemptedStoreCount()) {
+        oprot.writeFieldBegin(ATTEMPTED_STORE_COUNT_FIELD_DESC);
+        oprot.writeI64(struct.attemptedStoreCount);
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -723,7 +1095,19 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
       if (struct.isSetLastFetchEpochSeconds()) {
         optionals.set(4);
       }
-      oprot.writeBitSet(optionals, 5);
+      if (struct.isSetRepository()) {
+        optionals.set(5);
+      }
+      if (struct.isSetScheduleType()) {
+        optionals.set(6);
+      }
+      if (struct.isSetFetchCount()) {
+        optionals.set(7);
+      }
+      if (struct.isSetAttemptedStoreCount()) {
+        optionals.set(8);
+      }
+      oprot.writeBitSet(optionals, 9);
       if (struct.isSetStoreId()) {
         oprot.writeString(struct.storeId);
       }
@@ -739,12 +1123,24 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
       if (struct.isSetLastFetchEpochSeconds()) {
         oprot.writeI64(struct.lastFetchEpochSeconds);
       }
+      if (struct.isSetRepository()) {
+        oprot.writeString(struct.repository);
+      }
+      if (struct.isSetScheduleType()) {
+        oprot.writeString(struct.scheduleType);
+      }
+      if (struct.isSetFetchCount()) {
+        oprot.writeI64(struct.fetchCount);
+      }
+      if (struct.isSetAttemptedStoreCount()) {
+        oprot.writeI64(struct.attemptedStoreCount);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, RuleKeyStoreLogEntry struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(5);
+      java.util.BitSet incoming = iprot.readBitSet(9);
       if (incoming.get(0)) {
         struct.storeId = iprot.readString();
         struct.setStoreIdIsSet(true);
@@ -764,6 +1160,22 @@ public class RuleKeyStoreLogEntry implements org.apache.thrift.TBase<RuleKeyStor
       if (incoming.get(4)) {
         struct.lastFetchEpochSeconds = iprot.readI64();
         struct.setLastFetchEpochSecondsIsSet(true);
+      }
+      if (incoming.get(5)) {
+        struct.repository = iprot.readString();
+        struct.setRepositoryIsSet(true);
+      }
+      if (incoming.get(6)) {
+        struct.scheduleType = iprot.readString();
+        struct.setScheduleTypeIsSet(true);
+      }
+      if (incoming.get(7)) {
+        struct.fetchCount = iprot.readI64();
+        struct.setFetchCountIsSet(true);
+      }
+      if (incoming.get(8)) {
+        struct.attemptedStoreCount = iprot.readI64();
+        struct.setAttemptedStoreCountIsSet(true);
       }
     }
   }

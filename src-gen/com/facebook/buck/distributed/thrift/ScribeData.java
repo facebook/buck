@@ -491,13 +491,13 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
           case 2: // LINES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list24 = iprot.readListBegin();
-                struct.lines = new java.util.ArrayList<java.lang.String>(_list24.size);
-                @org.apache.thrift.annotation.Nullable java.lang.String _elem25;
-                for (int _i26 = 0; _i26 < _list24.size; ++_i26)
+                org.apache.thrift.protocol.TList _list0 = iprot.readListBegin();
+                struct.lines = new java.util.ArrayList<java.lang.String>(_list0.size);
+                @org.apache.thrift.annotation.Nullable java.lang.String _elem1;
+                for (int _i2 = 0; _i2 < _list0.size; ++_i2)
                 {
-                  _elem25 = iprot.readString();
-                  struct.lines.add(_elem25);
+                  _elem1 = iprot.readString();
+                  struct.lines.add(_elem1);
                 }
                 iprot.readListEnd();
               }
@@ -541,9 +541,9 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
           oprot.writeFieldBegin(LINES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.lines.size()));
-            for (java.lang.String _iter27 : struct.lines)
+            for (java.lang.String _iter3 : struct.lines)
             {
-              oprot.writeString(_iter27);
+              oprot.writeString(_iter3);
             }
             oprot.writeListEnd();
           }
@@ -589,9 +589,9 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
       if (struct.isSetLines()) {
         {
           oprot.writeI32(struct.lines.size());
-          for (java.lang.String _iter28 : struct.lines)
+          for (java.lang.String _iter4 : struct.lines)
           {
-            oprot.writeString(_iter28);
+            oprot.writeString(_iter4);
           }
         }
       }
@@ -610,13 +610,13 @@ public class ScribeData implements org.apache.thrift.TBase<ScribeData, ScribeDat
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list29 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.lines = new java.util.ArrayList<java.lang.String>(_list29.size);
-          @org.apache.thrift.annotation.Nullable java.lang.String _elem30;
-          for (int _i31 = 0; _i31 < _list29.size; ++_i31)
+          org.apache.thrift.protocol.TList _list5 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.lines = new java.util.ArrayList<java.lang.String>(_list5.size);
+          @org.apache.thrift.annotation.Nullable java.lang.String _elem6;
+          for (int _i7 = 0; _i7 < _list5.size; ++_i7)
           {
-            _elem30 = iprot.readString();
-            struct.lines.add(_elem30);
+            _elem6 = iprot.readString();
+            struct.lines.add(_elem6);
           }
         }
         struct.setLinesIsSet(true);
