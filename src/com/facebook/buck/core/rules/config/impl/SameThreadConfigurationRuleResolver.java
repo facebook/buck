@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.config.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
@@ -63,6 +64,9 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
 
   private <T extends ConfigurationRuleArg> ConfigurationRule createConfigurationRule(
       BuildTarget buildTarget) {
+    Preconditions.checkArgument(
+        buildTarget.getTargetConfiguration() == ConfigurationForConfigurationTargets.INSTANCE);
+
     @SuppressWarnings("unchecked")
     TargetNode<T> targetNode = (TargetNode<T>) targetNodeSupplier.apply(buildTarget);
     ConfigurationRuleDescription<T> configurationRuleDescription =
