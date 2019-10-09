@@ -66,6 +66,11 @@ public abstract class AbstractLogBuckConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue(LOG_SECTION, "jul_build_log", false);
   }
 
+  @Value.Lazy
+  public boolean isJavaGCEventLoggingEnabled() {
+    return getDelegate().getBooleanValue(LOG_SECTION, "gc_event_logging_enabled", false);
+  }
+
   public boolean isLogBuildIdToConsoleEnabled() {
     return getDelegate().getBooleanValue(LOG_SECTION, "log_build_id_to_console_enabled", false);
   }

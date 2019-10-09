@@ -1,0 +1,9 @@
+java_test(
+    name = "jvm",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/support/jvm:jvm",
+        "//test/com/facebook/buck/event:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -164,6 +164,7 @@ import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.support.fix.BuckFixSpec;
 import com.facebook.buck.support.fix.FixBuckConfig;
+import com.facebook.buck.support.jvm.GCNotificationEventEmitter;
 import com.facebook.buck.support.log.LogBuckConfig;
 import com.facebook.buck.support.state.BuckGlobalState;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
@@ -1150,6 +1151,11 @@ public final class MainRunner {
           LOG.debug(invocationInfo.toLogLine());
 
           buildEventBus.register(HANG_MONITOR.getHangMonitor());
+
+          if (logBuckConfig.isJavaGCEventLoggingEnabled()) {
+            // Register for GC events to be published to the event bus.
+            GCNotificationEventEmitter.register(buildEventBus);
+          }
 
           ImmutableMap<ExecutorPool, ListeningExecutorService> executors =
               ImmutableMap.of(

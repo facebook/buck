@@ -48,6 +48,7 @@ import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
+import com.facebook.buck.support.jvm.GCCollectionEvent;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -232,6 +233,11 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     } else {
       cacheMisses.incrementAndGet();
     }
+  }
+
+  @Subscribe
+  public void garbageCollection(GCCollectionEvent event) {
+    writeToLog(event.getEventName(), event);
   }
 
   @Subscribe
