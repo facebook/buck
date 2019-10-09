@@ -554,14 +554,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
                               .resolve(graphBuilder, buildTarget.getTargetConfiguration())
                               .origin(),
                           absLinkOut.getParent().relativize(symlinkTree.getRoot()).toString()))))
-          .map(
-              arg ->
-                  new ProxyArg(arg) {
-                    // This is added so that the arg's rulekey properly reflects its deps.
-                    @AddToRuleKey
-                    private final NonHashableSourcePathContainer symlinkTreeRef =
-                        new NonHashableSourcePathContainer(symlinkTree.getSourcePathToOutput());
-                  })
+          .map(arg -> new SymlinkProxyArg(arg, symlinkTree.getSourcePathToOutput()))
           .collect(ImmutableList.toImmutableList());
     }
 
@@ -636,6 +629,16 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     @Override
     public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
       consumer.accept(shquoteJoin(Arg.stringify(args, pathResolver)));
+    }
+  }
+
+  private static class SymlinkProxyArg extends ProxyArg {
+    // This is added so that the arg's rulekey properly reflects its deps.
+    @AddToRuleKey private final NonHashableSourcePathContainer symlinkTreeRef;
+
+    public SymlinkProxyArg(Arg arg, SourcePath symlinkTreePath) {
+      super(arg);
+      this.symlinkTreeRef = new NonHashableSourcePathContainer(symlinkTreePath);
     }
   }
 }
