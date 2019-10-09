@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.impl.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -27,11 +28,13 @@ import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResol
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.platform.ThrowingConstraintResolver;
 import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
+import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.select.impl.UnconfiguredSelectorListResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
@@ -149,14 +152,17 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
 
     ParserTargetNodeFromRawTargetNodeFactory nonResolvingRawTargetNodeToTargetNodeFactory =
-        new NonResolvingRawTargetNodeToTargetNodeFactory(
-            new DefaultParserTargetNodeFactory(
-                typeCoercerFactory,
-                knownRuleTypesProvider,
-                marshaller,
-                new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees()),
-                symlinkCheckers,
-                targetNodeFactory));
+        new RawTargetNodeToTargetNodeFactory(
+            typeCoercerFactory,
+            knownRuleTypesProvider,
+            marshaller,
+            targetNodeFactory,
+            packageBoundaryChecker,
+            symlinkCheckers,
+            new ThrowingSelectorListResolver(),
+            new ThrowingConstraintResolver(),
+            new ThrowingPlatformResolver(),
+            new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()));
 
     // This pipeline uses a direct executor instead of pipelineExecutorService to avoid
     // deadlocks happening when too many node are requested from targetNodeParsePipeline.

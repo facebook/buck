@@ -27,12 +27,16 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
+import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.impl.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.platform.ThrowingConstraintResolver;
+import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
@@ -440,14 +444,17 @@ public class ParsePipelineTest {
               buildTargetRawNodeParsePipeline,
               new DefaultRawTargetNodeFactory(knownRuleTypesProvider, new BuiltTargetVerifier()));
       ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory =
-          new NonResolvingRawTargetNodeToTargetNodeFactory(
-              new DefaultParserTargetNodeFactory(
-                  coercerFactory,
-                  knownRuleTypesProvider,
-                  constructorArgMarshaller,
-                  new ThrowingPackageBoundaryChecker(buildFileTrees),
-                  nodeListener,
-                  new TargetNodeFactory(coercerFactory)));
+          new RawTargetNodeToTargetNodeFactory(
+              coercerFactory,
+              knownRuleTypesProvider,
+              constructorArgMarshaller,
+              new TargetNodeFactory(coercerFactory),
+              new ThrowingPackageBoundaryChecker(buildFileTrees),
+              nodeListener,
+              new ThrowingSelectorListResolver(),
+              new ThrowingConstraintResolver(),
+              new ThrowingPlatformResolver(),
+              new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()));
       this.targetNodeParsePipeline =
           new RawTargetNodeToTargetNodeParsePipeline(
               this.targetNodeParsePipelineCache,

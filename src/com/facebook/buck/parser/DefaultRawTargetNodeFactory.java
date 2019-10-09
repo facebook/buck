@@ -18,16 +18,19 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -57,6 +60,10 @@ public class DefaultRawTargetNodeFactory implements RawTargetNodeFactory {
       Map<String, Object> rawAttributes) {
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);
+
+    if (ruleType.getKind() == AbstractRuleType.Kind.CONFIGURATION) {
+      assertRawTargetNodeAttributesNotConfigurable(target, rawAttributes);
+    }
 
     // Because of the way that the parser works, we know this can never return null.
     BaseDescription<?> description = knownRuleTypes.getDescription(ruleType);
@@ -90,5 +97,16 @@ public class DefaultRawTargetNodeFactory implements RawTargetNodeFactory {
     String type =
         (String) Objects.requireNonNull(attributes.get(BuckPyFunction.TYPE_PROPERTY_NAME));
     return knownRuleTypes.getRuleType(type);
+  }
+
+  private void assertRawTargetNodeAttributesNotConfigurable(
+      UnconfiguredBuildTargetView buildTarget, Map<String, Object> rawTargetNodeAttributes) {
+    for (Map.Entry<String, ?> entry : rawTargetNodeAttributes.entrySet()) {
+      Preconditions.checkState(
+          !(entry.getValue() instanceof SelectorList),
+          "Attribute %s cannot be configurable in %s",
+          entry.getKey(),
+          buildTarget);
+    }
   }
 }
