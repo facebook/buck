@@ -17,7 +17,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.HasTargetCompatibleWith;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -353,8 +353,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             .getTargetPlatform(targetNode.getBuildTarget().getTargetConfiguration());
     if (!TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
         state.getConfigurationRuleRegistry(), targetNode.getConstructorArg(), targetPlatform)) {
-      HasTargetCompatibleWith argWithTargetCompatible =
-          (HasTargetCompatibleWith) targetNode.getConstructorArg();
+      CommonDescriptionArg argWithTargetCompatible =
+          (CommonDescriptionArg) targetNode.getConstructorArg();
 
       StringBuilder diagnostics = new StringBuilder();
       if (!argWithTargetCompatible.getTargetCompatibleWith().isEmpty()) {

@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
-import com.facebook.buck.core.description.arg.HasTargetCompatibleWith;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -43,10 +43,10 @@ class TargetCompatibilityChecker {
       ConfigurationRuleRegistry configurationRuleRegistry,
       ConstructorArg targetNodeArg,
       Platform platform) {
-    if (!(targetNodeArg instanceof HasTargetCompatibleWith)) {
+    if (!(targetNodeArg instanceof CommonDescriptionArg)) {
       return true;
     }
-    HasTargetCompatibleWith argWithTargetCompatible = (HasTargetCompatibleWith) targetNodeArg;
+    CommonDescriptionArg argWithTargetCompatible = (CommonDescriptionArg) targetNodeArg;
     ConstraintResolver constraintResolver = configurationRuleRegistry.getConstraintResolver();
 
     List<ConstraintValue> targetCompatibleWithConstraints =

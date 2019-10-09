@@ -16,7 +16,10 @@
 
 package com.facebook.buck.core.description.arg;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -24,7 +27,7 @@ import java.util.Set;
 import org.immutables.value.Value;
 
 /** Common arguments for build rules (but not configuration rules) */
-public interface CommonDescriptionArg extends ConstructorArg, HasTargetCompatibleWith {
+public interface CommonDescriptionArg extends ConstructorArg {
   ImmutableSet<SourcePath> getLicenses();
 
   @Value.NaturalOrder
@@ -44,6 +47,19 @@ public interface CommonDescriptionArg extends ConstructorArg, HasTargetCompatibl
   default String getDefaultTargetPlatform() {
     return "";
   }
+
+  /**
+   * A list of {@code constraint_value} rules a target is compatible with.
+   *
+   * <p>This parameter is deprecated, and will be removed as soon as last user migrates to {@link
+   * #getCompatibleWith()}.
+   */
+  @Hint(isDep = false)
+  ImmutableList<BuildTarget> getTargetCompatibleWith();
+
+  /** A list of {@code config_setting} a target is compatible with. */
+  @Hint(isDep = false, isConfigurable = false)
+  ImmutableList<UnconfiguredBuildTargetView> getCompatibleWith();
 
   @Value.Derived
   default boolean labelsContainsAnyOf(Set<String> labels) {
