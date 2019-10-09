@@ -103,6 +103,19 @@ public class FileTreeFileNameIterator implements Iterator<Path> {
         nextPath = candidate;
         return;
       }
+
+      // Technically, symlink may be not a file, but a directory
+      // Because it is really expensive to check it by querying file system, we assume this is
+      // a file. This stands true as along as this class is used for searching of build files, as
+      // having a folder with exact same name as build file is an error anyways.
+      //
+      // This is still a hack as in case of symlinks file trees will not be properly invalidated
+      //
+      // Ideally, we want to forbid using symlinks in Buck.
+      if (next.getDirectoryList().getSymlinks().contains(candidate)) {
+        nextPath = candidate;
+        return;
+      }
     }
   }
 }

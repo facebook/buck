@@ -78,8 +78,12 @@ public class BuildTargetPatternToBuildPackagePathComputation
         // only, so we only determine if build file is in the appropriate folder and return one
         // element if it is, empty collection if it is not
         DirectoryList dirList = env.getDep(ImmutableDirectoryListKey.of(basePath));
+
+        Path relativeBuildFilePath = basePath.resolve(buildFileName);
+
         packageRoots =
-            dirList.getFiles().contains(basePath.resolve(buildFileName))
+            dirList.getFiles().contains(relativeBuildFilePath)
+                    || dirList.getSymlinks().contains(relativeBuildFilePath)
                 ? ImmutableSortedSet.of(basePath)
                 : ImmutableSortedSet.of();
         break;

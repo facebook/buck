@@ -129,7 +129,6 @@ class WatchmanBuildPackageComputation
               ImmutableList.of(),
               EnumSet.of(
                   WatchmanGlobber.Option.EXCLUDE_DIRECTORIES,
-                  WatchmanGlobber.Option.EXCLUDE_SYMLINKS,
                   WatchmanGlobber.Option.FORCE_CASE_SENSITIVE));
     }
     if (!paths.isPresent()) {

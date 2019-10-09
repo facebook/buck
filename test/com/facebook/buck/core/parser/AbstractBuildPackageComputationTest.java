@@ -234,15 +234,16 @@ public abstract class AbstractBuildPackageComputationTest {
 
   @Test
   @Parameters(method = "getAnyPathParams")
-  public void ignoresSymlinkBuildFiles(Kind kind, String targetName)
+  public void processesSymlinkBuildFiles(Kind kind, String targetName)
       throws ExecutionException, InterruptedException, IOException {
     filesystem.mkdirs(Paths.get("dir1"));
-    filesystem.createSymLink(Paths.get("dir1/BUCK"), Paths.get("dir1/not-a-build-file"), false);
-    filesystem.createNewFile(Paths.get("dir1/not-a-build-file"));
+    filesystem.mkdirs(Paths.get("dir2"));
+    filesystem.createSymLink(Paths.get("dir1/BUCK"), Paths.get("dir2/BUCK_SYMLINK"), false);
+    filesystem.createNewFile(Paths.get("dir2/BUCK_SYMLINK"));
 
     BuildPackagePaths paths = transform("BUCK", key("", kind, "dir1", targetName));
 
-    assertEquals(ImmutableSortedSet.of(), paths.getPackageRoots());
+    assertEquals(ImmutableSortedSet.of(Paths.get("dir1")), paths.getPackageRoots());
   }
 
   @Test
