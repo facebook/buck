@@ -13,16 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.rules.platform;
+package com.facebook.buck.core.model.platform;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.platform.Platform;
-import com.facebook.buck.core.rules.config.ConfigurationRule;
 
-/** Represents multiplatform. */
-public interface MultiPlatformRule extends ConfigurationRule {
-  @Override
+/** A platform defined in a build file */
+public interface NamedPlatform extends Platform {
+
+  /** Build target used to define this platform */
+  // TODO(nga): make all platforms named
   BuildTarget getBuildTarget();
-
-  Platform createPlatform(RuleBasedPlatformResolver ruleBasedPlatformResolver);
 }

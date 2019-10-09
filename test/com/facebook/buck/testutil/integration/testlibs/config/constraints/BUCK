@@ -45,6 +45,14 @@ constraint_setting(
 )
 
 constraint_value(
+    name = "x86_32",
+    constraint_setting = ":cpu",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+constraint_value(
     name = "x86_64",
     constraint_setting = ":cpu",
     visibility = [

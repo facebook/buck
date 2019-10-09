@@ -17,6 +17,8 @@ package com.facebook.buck.core.model;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 
@@ -68,5 +70,16 @@ public class ConfigurationBuildTargets {
     return map.entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> convert(entry.getValue())));
+  }
+
+  /**
+   * Applies conversion similar to {@link #convert(UnconfiguredBuildTargetView)} to values in a map.
+   */
+  public static <T extends Comparable<T>> ImmutableSortedMap<T, BuildTarget> convertValues(
+      ImmutableSortedMap<T, UnconfiguredBuildTargetView> map) {
+    return map.entrySet().stream()
+        .collect(
+            ImmutableSortedMap.toImmutableSortedMap(
+                Comparator.naturalOrder(), Map.Entry::getKey, entry -> convert(entry.getValue())));
   }
 }

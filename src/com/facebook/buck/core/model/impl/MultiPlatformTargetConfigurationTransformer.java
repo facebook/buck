@@ -17,10 +17,10 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.MultiPlatform;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
-import com.facebook.buck.core.model.platform.impl.MultiPlatform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 

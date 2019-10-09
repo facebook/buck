@@ -18,12 +18,13 @@ package com.facebook.buck.core.model.platform.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintValue;
+import com.facebook.buck.core.model.platform.NamedPlatform;
 import com.facebook.buck.core.model.platform.Platform;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 
 /** An implementation of a {@link Platform} that has a fixed set of constraints. */
-public class ConstraintBasedPlatform implements Platform {
+public class ConstraintBasedPlatform implements NamedPlatform {
   private final BuildTarget buildTarget;
   private final ImmutableSet<ConstraintValue> constraintValues;
 
@@ -48,6 +49,7 @@ public class ConstraintBasedPlatform implements Platform {
   }
 
   /** @return the build target of the {@code platform} rule where this platform is declared. */
+  @Override
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }

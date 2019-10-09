@@ -32,12 +32,4 @@ public interface AndroidPackageableFilter {
    *     java library or resources) should be excluded from the collection.
    */
   boolean shouldExcludeNonNativeTarget(BuildTarget buildTarget);
-
-  /**
-   * Encapsulates the filtering logic of native targets (cxx libraries, etc.)
-   *
-   * @return {@code true} if the given target (that represents a target with native code, like cxx
-   *     library) should be excluded from the collection.
-   */
-  boolean shouldExcludeNativeTarget(BuildTarget buildTarget);
 }

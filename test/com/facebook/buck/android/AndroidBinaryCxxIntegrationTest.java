@@ -264,9 +264,9 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testCxxLibraryDepWithConstraints() throws IOException {
-    String target = "//apps/sample:app_cxx_lib_dep_with_constraints";
+    String target = "//apps/sample:app_cxx_lib_dep_with_constraints_without_cpu_map";
     workspace
-        .runBuckCommand("build", target, "--target-platforms", "//:android-x86_64-arm")
+        .runBuckCommand("build", target, "--target-platforms", "//:android-x86_32-armv7")
         .assertSuccess();
 
     ZipInspector zipInspector =
@@ -297,40 +297,8 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     assertThat(
         result.getStderr(),
         containsString(
-            "//apps/sample:app_cxx_lib_dep_with_constraints_without_cpu_map "
-                + "is missing information about constraint for ARMV7 CPU type in "
-                + "target_cpu_type_to_constraint"));
-  }
-
-  @Test
-  public void cannotBuildBinaryWhenMultipleNativePlatformsMatchingConstraint() {
-    String target = "//apps/sample:app_cxx_lib_dep_with_constraints";
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "build", target, "--target-platforms", "//:android-x86_64-arm-armv7");
-
-    result.assertFailure();
-    assertThat(
-        result.getStderr(),
-        containsString(
-            "//apps/sample:app_cxx_lib_dep_with_constraints "
-                + "contains ambiguous information in target_cpu_type_to_constraint: "
-                + "buck//config/constraints:arm matches both //:android-arm and //:android-armv7"));
-  }
-
-  @Test
-  public void cannotBuildBinaryWhenCpuTypeDoesNotMatchNativePlatforms() {
-    String target = "//apps/sample:app_cxx_lib_dep_with_constraints";
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "build", target, "--target-platforms", "//:android-platform-x86_64");
-
-    result.assertFailure();
-    assertThat(
-        result.getStderr(),
-        containsString(
-            "//apps/sample:app_cxx_lib_dep_with_constraints "
-                + "contains incomplete information in target_cpu_type_to_constraint: "
-                + "buck//config/constraints:arm does not match native platforms [//:android-x86_64]"));
+            "//apps/sample:app_cxx_lib_dep_with_constraints_without_cpu_map: "
+                + "nested platform is not found for ARMV7 CPU type "
+                + "in platform //:android-x86_64-arm"));
   }
 }

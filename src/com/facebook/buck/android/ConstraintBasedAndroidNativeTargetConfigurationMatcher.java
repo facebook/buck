@@ -18,10 +18,11 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.platform.ConstraintValue;
+import com.facebook.buck.core.model.platform.NamedPlatform;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
 /**
  * Matcher that uses constraints to figure out whether platform in target configuration matches the
@@ -35,12 +36,11 @@ public class ConstraintBasedAndroidNativeTargetConfigurationMatcher
     implements AndroidNativeTargetConfigurationMatcher {
 
   private final ConfigurationRuleRegistry configurationRuleRegistry;
-  private final ImmutableMap<TargetCpuType, ImmutableList<ConstraintValue>>
-      targetCpuTypeToConstraints;
+  private final ImmutableMap<TargetCpuType, NamedPlatform> targetCpuTypeToConstraints;
 
   public ConstraintBasedAndroidNativeTargetConfigurationMatcher(
       ConfigurationRuleRegistry configurationRuleRegistry,
-      ImmutableMap<TargetCpuType, ImmutableList<ConstraintValue>> targetCpuTypeToConstraints) {
+      ImmutableMap<TargetCpuType, NamedPlatform> targetCpuTypeToConstraints) {
     this.configurationRuleRegistry = configurationRuleRegistry;
     this.targetCpuTypeToConstraints = targetCpuTypeToConstraints;
   }
@@ -48,24 +48,22 @@ public class ConstraintBasedAndroidNativeTargetConfigurationMatcher
   @Override
   public boolean nativeTargetConfigurationMatchesCpuType(
       BuildTarget buildTarget, TargetCpuType targetCpuType) {
-    if (!targetCpuTypeToConstraints.containsKey(targetCpuType)) {
+    NamedPlatform cpuPlatform = targetCpuTypeToConstraints.get(targetCpuType);
+    if (cpuPlatform == null) {
       throw new HumanReadableException(
           "%s has inconsistent information about CPU type constraints: %s is not present.",
           buildTarget, targetCpuType);
     }
-    ImmutableList<ConstraintValue> constraintValues = targetCpuTypeToConstraints.get(targetCpuType);
-    return configurationRuleRegistry
-        .getTargetPlatformResolver()
-        .getTargetPlatform(buildTarget.getTargetConfiguration())
-        .matchesAll(constraintValues);
+
+    Optional<BuildTarget> buildTargetConfigurationTargets =
+        buildTarget.getTargetConfiguration().getConfigurationTarget();
+    // Platforms are always configured if we get here
+    Preconditions.checkState(buildTargetConfigurationTargets.isPresent());
+
+    return cpuPlatform.getBuildTarget().equals(buildTargetConfigurationTargets.get());
   }
 
   public ConfigurationRuleRegistry getConfigurationRuleRegistry() {
     return configurationRuleRegistry;
-  }
-
-  public ImmutableMap<TargetCpuType, ImmutableList<ConstraintValue>>
-      getTargetCpuTypeToConstraints() {
-    return targetCpuTypeToConstraints;
   }
 }

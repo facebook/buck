@@ -194,8 +194,7 @@ public class AndroidPackageableCollector {
 
   public AndroidPackageableCollector addNativeLibsDirectory(
       BuildTarget owner, SourcePath nativeLibDir) {
-    if (nativeLibsToExclude.contains(nativeLibDir)
-        || androidPackageableFilter.shouldExcludeNativeTarget(owner)) {
+    if (nativeLibsToExclude.contains(nativeLibDir)) {
       return this;
     }
     APKModule module = apkModuleGraph.findModuleForTarget(owner);
@@ -213,8 +212,7 @@ public class AndroidPackageableCollector {
    */
   public AndroidPackageableCollector addNativeLibsDirectoryForSystemLoader(
       BuildTarget owner, SourcePath nativeLibDir) {
-    if (nativeLibsToExclude.contains(nativeLibDir)
-        || androidPackageableFilter.shouldExcludeNativeTarget(owner)) {
+    if (nativeLibsToExclude.contains(nativeLibDir)) {
       return this;
     }
     APKModule module = apkModuleGraph.findModuleForTarget(owner);
@@ -229,9 +227,7 @@ public class AndroidPackageableCollector {
   }
 
   public AndroidPackageableCollector addNativeLinkable(NativeLinkableGroup nativeLinkableGroup) {
-    if (nativeLinkablesToExcludeGroup.contains(nativeLinkableGroup)
-        || androidPackageableFilter.shouldExcludeNativeTarget(
-            nativeLinkableGroup.getBuildTarget())) {
+    if (nativeLinkablesToExcludeGroup.contains(nativeLinkableGroup)) {
       return this;
     }
     APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkableGroup.getBuildTarget());
@@ -245,9 +241,7 @@ public class AndroidPackageableCollector {
 
   public AndroidPackageableCollector addNativeLinkableAsset(
       NativeLinkableGroup nativeLinkableGroup) {
-    if (nativeLinkablesAssetsToExcludeGroup.contains(nativeLinkableGroup)
-        || androidPackageableFilter.shouldExcludeNativeTarget(
-            nativeLinkableGroup.getBuildTarget())) {
+    if (nativeLinkablesAssetsToExcludeGroup.contains(nativeLinkableGroup)) {
       return this;
     }
     APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkableGroup.getBuildTarget());
@@ -257,8 +251,7 @@ public class AndroidPackageableCollector {
 
   public AndroidPackageableCollector addNativeLibAssetsDirectory(
       BuildTarget owner, SourcePath assetsDir) {
-    if (nativeLibAssetsToExclude.contains(assetsDir)
-        || androidPackageableFilter.shouldExcludeNativeTarget(owner)) {
+    if (nativeLibAssetsToExclude.contains(assetsDir)) {
       return this;
     }
     // We need to build the native target in order to have the assets available still.

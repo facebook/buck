@@ -19,10 +19,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
-import com.facebook.buck.core.model.platform.impl.MultiPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.google.common.collect.ImmutableList;
 
 /** {@link PlatformResolver} that supports multiplatforms. */
 public class RuleBasedMultiPlatformResolver implements PlatformResolver {
@@ -40,14 +38,7 @@ public class RuleBasedMultiPlatformResolver implements PlatformResolver {
   @Override
   public Platform getPlatform(BuildTarget buildTarget) {
     MultiPlatformRule multiPlatformRule = getMultiPlatformRule(buildTarget);
-    Platform basePlatform =
-        ruleBasedPlatformResolver.getPlatform(multiPlatformRule.getBasePlatform());
-    ImmutableList<Platform> nestedPlatform =
-        multiPlatformRule.getNestedPlatforms().stream()
-            .map(ruleBasedPlatformResolver::getPlatform)
-            .collect(ImmutableList.toImmutableList());
-
-    return new MultiPlatform(buildTarget, basePlatform, nestedPlatform);
+    return multiPlatformRule.createPlatform(ruleBasedPlatformResolver);
   }
 
   private MultiPlatformRule getMultiPlatformRule(BuildTarget buildTarget) {

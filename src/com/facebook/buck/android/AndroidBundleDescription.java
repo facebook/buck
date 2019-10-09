@@ -29,7 +29,6 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -257,12 +256,6 @@ public class AndroidBundleDescription
           androidBuckConfig.getRedexTarget(buildTarget.getTargetConfiguration());
       redexTarget.ifPresent(extraDepsBuilder::add);
     }
-  }
-
-  @Override
-  public ImmutableSet<BuildTarget> getConfigurationDeps(AndroidBundleDescriptionArg arg) {
-    return ImmutableSet.copyOf(
-        ConfigurationBuildTargets.convertValues(arg.getTargetCpuTypeConstraints()).values());
   }
 
   @BuckStyleImmutable

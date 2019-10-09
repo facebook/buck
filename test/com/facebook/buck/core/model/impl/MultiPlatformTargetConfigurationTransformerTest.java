@@ -24,9 +24,9 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
-import com.facebook.buck.core.model.platform.impl.MultiPlatform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Rule;
@@ -63,7 +63,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
     MultiPlatformTargetConfigurationTransformer transformer =
         new MultiPlatformTargetConfigurationTransformer(
             configuration ->
-                new MultiPlatform(
+                new FakeMultiPlatform(
                     multiPlatformBuildTarget,
                     new ConstraintBasedPlatform(
                         BuildTargetFactory.newInstance("//:platform"), ImmutableSet.of()),
@@ -100,7 +100,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
     MultiPlatformTargetConfigurationTransformer transformer =
         new MultiPlatformTargetConfigurationTransformer(
             configuration ->
-                new MultiPlatform(
+                new FakeMultiPlatform(
                     multiPlatformTarget,
                     new ConstraintBasedPlatform(basePlatformTarget, ImmutableSet.of()),
                     ImmutableList.of(

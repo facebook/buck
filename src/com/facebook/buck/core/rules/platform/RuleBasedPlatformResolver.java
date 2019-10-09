@@ -19,7 +19,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintValue;
-import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.model.platform.NamedPlatform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
@@ -41,7 +41,7 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
   }
 
   @Override
-  public Platform getPlatform(BuildTarget buildTarget) {
+  public NamedPlatform getPlatform(BuildTarget buildTarget) {
     GraphTraversable<BuildTarget> traversable =
         target -> {
           PlatformRule platformRule = getPlatformRule(target);

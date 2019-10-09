@@ -13,30 +13,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.model.platform.impl;
+package com.facebook.buck.android.toolchain.platform;
 
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.platform.ConstraintValue;
+import com.facebook.buck.core.model.platform.MultiPlatform;
+import com.facebook.buck.core.model.platform.NamedPlatform;
 import com.facebook.buck.core.model.platform.Platform;
-import com.google.common.collect.ImmutableList;
-import java.util.Collection;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSortedMap;
 
-/**
- * A generic platform that encapsulates multiple other platforms. This is used to support building
- * packages and binaries that support multiple platforms (for example, an Android binary).
- *
- * <p>A multiplatform is a platform that has a base platform and multiple nested platforms. When
- * this platform is used in the context that expects a single platform the base platform is used to
- * match the constraints.
- */
-public class MultiPlatform implements Platform {
+/** Android-specific implementation of multi-platform. */
+public class AndroidMultiPlatform implements MultiPlatform {
 
   private final BuildTarget buildTarget;
   private final Platform basePlatform;
-  private final ImmutableList<Platform> nestedPlatforms;
+  private final ImmutableSortedMap<TargetCpuType, NamedPlatform> nestedPlatforms;
 
   /**
-   * Creates an instance of {@link MultiPlatform}.
+   * Creates an instance of {@link AndroidMultiPlatform}.
    *
    * <p>A multiplatform is a platform the has a base platform and multiple nested platforms. Base
    * platform is the platform that is used in the context that expects a single platform. Nested
@@ -44,27 +39,35 @@ public class MultiPlatform implements Platform {
    * needs to be built for every platform specified in nested platform the multiplatform is
    * processed by duplicating targets with nested platforms in configurations.
    */
-  public MultiPlatform(
-      BuildTarget buildTarget, Platform basePlatform, ImmutableList<Platform> nestedPlatforms) {
+  public AndroidMultiPlatform(
+      BuildTarget buildTarget,
+      Platform basePlatform,
+      ImmutableSortedMap<TargetCpuType, NamedPlatform> nestedPlatforms) {
     this.buildTarget = buildTarget;
     this.basePlatform = basePlatform;
     this.nestedPlatforms = nestedPlatforms;
   }
 
   @Override
-  public boolean matchesAll(Collection<ConstraintValue> constraintValues) {
-    return basePlatform.matchesAll(constraintValues);
-  }
-
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }
 
+  @Override
   public Platform getBasePlatform() {
     return basePlatform;
   }
 
-  public ImmutableList<Platform> getNestedPlatforms() {
+  @Override
+  public ImmutableCollection<NamedPlatform> getNestedPlatforms() {
+    return nestedPlatforms.values();
+  }
+
+  /**
+   * Android platform is a multiplatform which maps knows CPUs to nested platforms. This functions
+   * returns that mapping.
+   */
+  public ImmutableSortedMap<TargetCpuType, NamedPlatform> getNestedPlatformsByCpuType() {
     return nestedPlatforms;
   }
 }

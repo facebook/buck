@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.toolchain.platform;
 
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
@@ -24,10 +25,9 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.facebook.buck.core.rules.platform.ImmutableMultiPlatformRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSortedMap;
 import org.immutables.value.Value;
 
 /**
@@ -59,18 +59,19 @@ public class AndroidPlatformDescription
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,
       AndroidPlatformArg arg) {
-    return new ImmutableMultiPlatformRule(
+    return new AndroidMultiPlatformRule(
         buildTarget,
-        arg.getName(),
         ConfigurationBuildTargets.convert(arg.getBasePlatform()),
-        ConfigurationBuildTargets.convert(arg.getNativePlatforms()));
+        ConfigurationBuildTargets.convertValues(arg.getNativePlatforms()));
   }
 
   @Override
   public ImmutableSet<BuildTarget> getConfigurationDeps(AndroidPlatformArg arg) {
     return ImmutableSet.<BuildTarget>builder()
         .add(ConfigurationBuildTargets.convert(arg.getBasePlatform()))
-        .addAll(ConfigurationBuildTargets.convert(arg.getNativePlatforms()))
+        .addAll(
+            ConfigurationBuildTargets.convert(
+                ImmutableSet.copyOf(arg.getNativePlatforms().values())))
         .build();
   }
 
@@ -85,6 +86,6 @@ public class AndroidPlatformDescription
 
     @Value.NaturalOrder
     @Hint(isConfigurable = false)
-    ImmutableSortedSet<UnconfiguredBuildTargetView> getNativePlatforms();
+    ImmutableSortedMap<TargetCpuType, UnconfiguredBuildTargetView> getNativePlatforms();
   }
 }

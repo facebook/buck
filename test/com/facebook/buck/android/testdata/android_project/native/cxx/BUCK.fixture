@@ -141,7 +141,7 @@ cxx_library(
         "PUBLIC",
     ],
     deps = select({
-        "//:x86-64_config": [":x86-only-2"],
+        "//:x86_32-config": [":x86-only-2"],
         "DEFAULT": [],
     }),
 )

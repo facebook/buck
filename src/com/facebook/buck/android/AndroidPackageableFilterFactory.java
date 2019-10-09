@@ -18,12 +18,11 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.packageable.AndroidPackageableFilter;
 import com.facebook.buck.android.packageable.ConstraintBasedAndroidPackageableFilter;
 import com.facebook.buck.android.packageable.NoopAndroidPackageableFilter;
+import com.facebook.buck.android.toolchain.platform.AndroidMultiPlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
-import com.facebook.buck.core.model.platform.impl.MultiPlatform;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Factory to create {@link AndroidPackageableFilter} using an instance of {@link
@@ -43,16 +42,8 @@ class AndroidPackageableFilterFactory {
     if (configurationMatcher instanceof NoopAndroidNativeTargetConfigurationMatcher) {
       return new NoopAndroidPackageableFilter();
     }
-    ConstraintBasedAndroidNativeTargetConfigurationMatcher
-        constraintBasedAndroidNativeTargetConfigurationMatcher =
-            (ConstraintBasedAndroidNativeTargetConfigurationMatcher) configurationMatcher;
 
-    return new ConstraintBasedAndroidPackageableFilter(
-        constraintBasedAndroidNativeTargetConfigurationMatcher.getConfigurationRuleRegistry(),
-        buildTarget.getTargetConfiguration(),
-        constraintBasedAndroidNativeTargetConfigurationMatcher
-            .getTargetCpuTypeToConstraints()
-            .values());
+    return new ConstraintBasedAndroidPackageableFilter(buildTarget.getTargetConfiguration());
   }
 
   /**
@@ -67,11 +58,10 @@ class AndroidPackageableFilterFactory {
             .getTargetPlatformResolver()
             .getTargetPlatform(targetConfiguration);
 
-    if (!(platform instanceof MultiPlatform)) {
+    if (!(platform instanceof AndroidMultiPlatform)) {
       return new NoopAndroidPackageableFilter();
     }
 
-    return new ConstraintBasedAndroidPackageableFilter(
-        configurationRuleRegistry, targetConfiguration, ImmutableSet.of());
+    return new ConstraintBasedAndroidPackageableFilter(targetConfiguration);
   }
 }

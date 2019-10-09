@@ -21,9 +21,9 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.model.platform.FakeMultiPlatform;
+import com.facebook.buck.core.model.platform.NamedPlatform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
-import com.facebook.buck.core.model.platform.impl.MultiPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -76,11 +76,10 @@ public class RuleBasedMultiPlatformResolverTest {
     ConfigurationRuleResolver configurationRuleResolver =
         buildTarget -> {
           if (buildTarget.equals(multiPlatformTarget)) {
-            return new ImmutableMultiPlatformRule(
+            return new FakeMultiPlatformRule(
                 multiPlatformTarget,
-                "multi_platform",
                 basePlatformTarget,
-                ImmutableSortedSet.of(nestedPlatform1Target, nestedPlatform2Target));
+                ImmutableList.of(nestedPlatform1Target, nestedPlatform2Target));
           }
           if (buildTarget.equals(basePlatformTarget)) {
             return PlatformRule.of(
@@ -120,7 +119,8 @@ public class RuleBasedMultiPlatformResolverTest {
     RuleBasedMultiPlatformResolver multiPlatformResolver =
         new RuleBasedMultiPlatformResolver(configurationRuleResolver, resolver);
 
-    MultiPlatform platform = (MultiPlatform) multiPlatformResolver.getPlatform(multiPlatformTarget);
+    FakeMultiPlatform platform =
+        (FakeMultiPlatform) multiPlatformResolver.getPlatform(multiPlatformTarget);
 
     assertEquals(multiPlatformTarget, platform.getBuildTarget());
 
@@ -131,7 +131,7 @@ public class RuleBasedMultiPlatformResolverTest {
         baseConstraintValue,
         Iterables.getOnlyElement(basedPlatform.getConstraintValues()).getBuildTarget());
 
-    ImmutableList<Platform> nestedPlatforms = platform.getNestedPlatforms();
+    ImmutableList<NamedPlatform> nestedPlatforms = platform.getNestedPlatforms().asList();
 
     ConstraintBasedPlatform nestedPlatform1 = (ConstraintBasedPlatform) nestedPlatforms.get(0);
     assertEquals(nestedPlatform1Target, nestedPlatform1.getBuildTarget());

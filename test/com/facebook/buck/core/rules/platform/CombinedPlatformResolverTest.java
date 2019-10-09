@@ -21,9 +21,10 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
-import com.facebook.buck.core.model.platform.impl.MultiPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.junit.Rule;
@@ -75,11 +76,10 @@ public class CombinedPlatformResolverTest {
     ConfigurationRuleResolver configurationRuleResolver =
         buildTarget -> {
           if (buildTarget.equals(multiPlatformTarget)) {
-            return new ImmutableMultiPlatformRule(
+            return new FakeMultiPlatformRule(
                 multiPlatformTarget,
-                "multi_platform",
                 basePlatformTarget,
-                ImmutableSortedSet.of(nestedPlatform1Target, nestedPlatform2Target));
+                ImmutableList.of(nestedPlatform1Target, nestedPlatform2Target));
           }
           if (buildTarget.equals(basePlatformTarget)) {
             return PlatformRule.of(
@@ -121,8 +121,8 @@ public class CombinedPlatformResolverTest {
     CombinedPlatformResolver combinedPlatformResolver =
         new CombinedPlatformResolver(configurationRuleResolver, resolver, multiPlatformResolver);
 
-    MultiPlatform platform =
-        (MultiPlatform) combinedPlatformResolver.getPlatform(multiPlatformTarget);
+    FakeMultiPlatform platform =
+        (FakeMultiPlatform) combinedPlatformResolver.getPlatform(multiPlatformTarget);
     assertEquals(multiPlatformTarget, platform.getBuildTarget());
 
     ConstraintBasedPlatform basePlatform =

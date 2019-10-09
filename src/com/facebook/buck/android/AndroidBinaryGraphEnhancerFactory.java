@@ -23,7 +23,6 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -201,10 +200,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         rulesToExcludeFromDex,
         useProtoFormat,
         AndroidNativeTargetConfigurationMatcherFactory.create(
-            configurationRuleRegistry,
-            buildTarget,
-            args.getCpuFilters(),
-            ConfigurationBuildTargets.convertValues(args.getTargetCpuTypeConstraints())));
+            configurationRuleRegistry, buildTarget, args.getCpuFilters()));
   }
 
   private ImmutableSet<String> addFallbackLocales(ImmutableSet<String> locales) {

@@ -32,7 +32,6 @@ import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -265,12 +264,6 @@ public class AndroidBinaryDescription
 
     AndroidTools.addParseTimeDepsToAndroidTools(
         toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
-  }
-
-  @Override
-  public ImmutableSet<BuildTarget> getConfigurationDeps(AndroidBinaryDescriptionArg arg) {
-    return ImmutableSet.copyOf(
-        ConfigurationBuildTargets.convertValues(arg.getTargetCpuTypeConstraints()).values());
   }
 
   @BuckStyleImmutable

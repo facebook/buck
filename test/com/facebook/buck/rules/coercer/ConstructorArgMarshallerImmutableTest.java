@@ -37,10 +37,10 @@ import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
-import com.facebook.buck.core.model.platform.impl.MultiPlatform;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
@@ -634,8 +634,8 @@ public class ConstructorArgMarshallerImmutableTest {
     BuildTarget nestedPlatform2Target =
         ConfigurationBuildTargetFactoryForTests.newInstance("//platform:nested_platform_2");
 
-    MultiPlatform multiPlatform =
-        new MultiPlatform(
+    FakeMultiPlatform multiPlatform =
+        new FakeMultiPlatform(
             multiPlatformTarget,
             new ConstraintBasedPlatform(basePlatformTarget, ImmutableSet.of()),
             ImmutableList.of(

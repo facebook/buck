@@ -17,9 +17,6 @@ package com.facebook.buck.android.packageable;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.platform.ConstraintValue;
-import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Performs filtering using a single configuration for non-native targets and a set of allowed
@@ -32,34 +29,14 @@ import com.google.common.collect.ImmutableList;
  */
 public class ConstraintBasedAndroidPackageableFilter implements AndroidPackageableFilter {
 
-  private final ConfigurationRuleRegistry configurationRuleRegistry;
   private final TargetConfiguration nonNativeConfiguration;
-  private final Iterable<ImmutableList<ConstraintValue>> nativePlatformConstraints;
 
-  public ConstraintBasedAndroidPackageableFilter(
-      ConfigurationRuleRegistry configurationRuleRegistry,
-      TargetConfiguration nonNativeConfiguration,
-      Iterable<ImmutableList<ConstraintValue>> nativePlatformConstraints) {
-    this.configurationRuleRegistry = configurationRuleRegistry;
+  public ConstraintBasedAndroidPackageableFilter(TargetConfiguration nonNativeConfiguration) {
     this.nonNativeConfiguration = nonNativeConfiguration;
-    this.nativePlatformConstraints = nativePlatformConstraints;
   }
 
   @Override
   public boolean shouldExcludeNonNativeTarget(BuildTarget buildTarget) {
     return !nonNativeConfiguration.equals(buildTarget.getTargetConfiguration());
-  }
-
-  @Override
-  public boolean shouldExcludeNativeTarget(BuildTarget buildTarget) {
-    for (ImmutableList<ConstraintValue> constraintValues : nativePlatformConstraints) {
-      if (configurationRuleRegistry
-          .getTargetPlatformResolver()
-          .getTargetPlatform(buildTarget.getTargetConfiguration())
-          .matchesAll(constraintValues)) {
-        return false;
-      }
-    }
-    return true;
   }
 }

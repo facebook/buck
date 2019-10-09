@@ -24,9 +24,4 @@ public class NoopAndroidPackageableFilter implements AndroidPackageableFilter {
   public boolean shouldExcludeNonNativeTarget(BuildTarget buildTarget) {
     return false;
   }
-
-  @Override
-  public boolean shouldExcludeNativeTarget(BuildTarget buildTarget) {
-    return false;
-  }
 }
