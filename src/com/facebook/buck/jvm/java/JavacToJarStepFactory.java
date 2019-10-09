@@ -42,7 +42,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
   @AddToRuleKey private final Javac javac;
-  @AddToRuleKey private JavacOptions javacOptions;
+  @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
   public JavacToJarStepFactory(
