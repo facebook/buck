@@ -57,8 +57,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-/** Used to build a given set of targets on the local machine. */
-public class LocalBuildExecutor {
+/** Used to build a given set of targets. */
+public class BuildExecutor {
   private final ActionGraphAndBuilder actionGraphAndBuilder;
   private final WeightedListeningExecutorService executorService;
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
@@ -74,7 +74,7 @@ public class LocalBuildExecutor {
 
   private volatile boolean isShutdown = false;
 
-  public LocalBuildExecutor(
+  public BuildExecutor(
       BuildExecutorArgs args,
       ExecutionContext executionContext,
       ActionGraphAndBuilder actionGraphAndBuilder,

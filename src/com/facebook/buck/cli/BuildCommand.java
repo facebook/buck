@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleDsym;
 import com.facebook.buck.command.Build;
-import com.facebook.buck.command.LocalBuildExecutor;
+import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.type.BuildType;
@@ -721,8 +721,8 @@ public class BuildCommand extends AbstractCommand {
             .getView(RemoteExecutionConfig.class)
             .isRemoteExecutionAutoEnabled(
                 params.getBuildEnvironmentDescription().getUser(), getArguments());
-    LocalBuildExecutor builder =
-        new LocalBuildExecutor(
+    BuildExecutor builder =
+        new BuildExecutor(
             params.createBuilderArgs(),
             getExecutionContext(),
             actionGraphAndBuilder,
