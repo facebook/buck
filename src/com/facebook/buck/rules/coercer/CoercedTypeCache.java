@@ -16,13 +16,16 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.Types;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -63,6 +66,14 @@ public class CoercedTypeCache {
   @SuppressWarnings("unchecked")
   public static <T extends ConstructorArg> ConstructorArgBuilder<T> instantiateSkeleton(
       TypeCoercerFactory typeCoercerFactory, Class<T> dtoType, BuildTarget buildTarget) {
+
+    boolean isBuildRule = CommonDescriptionArg.class.isAssignableFrom(dtoType);
+    boolean isConfiguration = ConfigurationRuleArg.class.isAssignableFrom(dtoType);
+    Preconditions.checkArgument(
+        isBuildRule != isConfiguration,
+        "constructor arg must be either build or configuration: %s",
+        dtoType.getName());
+
     try {
       Object builder = dtoType.getMethod("builder").invoke(null);
       Method buildMethod = builder.getClass().getMethod("build");
