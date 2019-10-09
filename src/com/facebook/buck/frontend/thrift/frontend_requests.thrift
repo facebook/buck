@@ -8,9 +8,9 @@
 # will likely be changed in non-compatible ways
 #
 # Whenever you change this file please run the following command to refresh the java source code:
-# $ thrift --gen java:generated_annotations=undated  -out src-gen/ src/com/facebook/buck/distributed/thrift/stampede.thrift
+# $ ./third-party/java/thrift/gen.sh
 
-namespace java com.facebook.buck.distributed.thrift
+namespace java com.facebook.buck.frontend.thrift
 
 ##############################################################################
 ## DataTypes

@@ -22,11 +22,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.distributed.thrift.FrontendRequest;
-import com.facebook.buck.distributed.thrift.FrontendRequestType;
-import com.facebook.buck.distributed.thrift.FrontendResponse;
-import com.facebook.buck.distributed.thrift.LogRequestType;
-import com.facebook.buck.distributed.thrift.ScribeData;
+import com.facebook.buck.frontend.thrift.FrontendRequest;
+import com.facebook.buck.frontend.thrift.FrontendRequestType;
+import com.facebook.buck.frontend.thrift.FrontendResponse;
+import com.facebook.buck.frontend.thrift.LogRequestType;
+import com.facebook.buck.frontend.thrift.ScribeData;
 import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.slb.ThriftService;
 import com.facebook.buck.util.types.Unit;

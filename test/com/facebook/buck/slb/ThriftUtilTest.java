@@ -16,7 +16,7 @@
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.distributed.thrift.ScribeData;
+import com.facebook.buck.frontend.thrift.ScribeData;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.ByteArrayInputStream;

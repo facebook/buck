@@ -16,12 +16,12 @@
 
 package com.facebook.buck.util.network;
 
-import com.facebook.buck.distributed.thrift.FrontendRequest;
-import com.facebook.buck.distributed.thrift.FrontendRequestType;
-import com.facebook.buck.distributed.thrift.FrontendResponse;
-import com.facebook.buck.distributed.thrift.LogRequest;
-import com.facebook.buck.distributed.thrift.LogRequestType;
-import com.facebook.buck.distributed.thrift.ScribeData;
+import com.facebook.buck.frontend.thrift.FrontendRequest;
+import com.facebook.buck.frontend.thrift.FrontendRequestType;
+import com.facebook.buck.frontend.thrift.FrontendResponse;
+import com.facebook.buck.frontend.thrift.LogRequest;
+import com.facebook.buck.frontend.thrift.LogRequestType;
+import com.facebook.buck.frontend.thrift.ScribeData;
 import com.facebook.buck.slb.ThriftService;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;

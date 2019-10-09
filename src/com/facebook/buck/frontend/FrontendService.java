@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.frontend;
 
-import com.facebook.buck.distributed.thrift.FrontendRequest;
-import com.facebook.buck.distributed.thrift.FrontendResponse;
+import com.facebook.buck.frontend.thrift.FrontendRequest;
+import com.facebook.buck.frontend.thrift.FrontendResponse;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
 import com.facebook.buck.slb.ThriftOverHttpServiceImpl;
 import java.io.IOException;
