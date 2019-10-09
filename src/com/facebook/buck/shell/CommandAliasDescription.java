@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -103,7 +103,7 @@ public class CommandAliasDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractCommandAliasDescriptionArg extends CommonDescriptionArg {
+  interface AbstractCommandAliasDescriptionArg extends BuildRuleArg {
     ImmutableList<StringWithMacros> getArgs();
 
     Optional<BuildTarget> getExe();

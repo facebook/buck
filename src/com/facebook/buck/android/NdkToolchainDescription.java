@@ -17,7 +17,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -75,7 +75,7 @@ public class NdkToolchainDescription
   /** An ndk_toolchain is mostly just a cxx_toolchain and a few other fields. */
   @Value.Immutable
   @BuckStyleImmutable
-  interface AbstractNdkToolchainDescriptionArg extends CommonDescriptionArg {
+  interface AbstractNdkToolchainDescriptionArg extends BuildRuleArg {
 
     /** Target for the cxx toolchain part of the ndk toolchain. */
     BuildTarget getCxxToolchain();

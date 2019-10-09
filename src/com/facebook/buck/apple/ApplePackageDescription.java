@@ -20,7 +20,7 @@ import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -148,7 +148,7 @@ public class ApplePackageDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractApplePackageDescriptionArg extends CommonDescriptionArg {
+  interface AbstractApplePackageDescriptionArg extends BuildRuleArg {
     @Hint(isDep = false)
     BuildTarget getBundle();
 

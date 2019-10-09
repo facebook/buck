@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -190,8 +190,7 @@ public class JavaBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJavaBinaryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasTests {
+  interface AbstractJavaBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasTests {
     Optional<String> getMainClass();
 
     Optional<SourcePath> getManifestFile();

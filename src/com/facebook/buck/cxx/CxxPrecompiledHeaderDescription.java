@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -59,8 +59,7 @@ public class CxxPrecompiledHeaderDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractCxxPrecompiledHeaderDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractCxxPrecompiledHeaderDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     SourcePath getSrc();
   }
 }

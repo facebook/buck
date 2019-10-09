@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.filegroup;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -53,5 +53,5 @@ public class FilegroupDescription implements DescriptionWithTargetGraph<FileGrou
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractFileGroupDescriptionArg extends CommonDescriptionArg, HasSrcs {}
+  interface AbstractFileGroupDescriptionArg extends BuildRuleArg, HasSrcs {}
 }

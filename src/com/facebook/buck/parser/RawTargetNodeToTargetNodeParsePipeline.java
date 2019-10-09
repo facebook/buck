@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.model.AbstractRuleType;
@@ -273,13 +273,11 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
       targetConfiguration = ConfigurationForConfigurationTargets.INSTANCE;
       String defaultTargetPlatform =
           (String)
-              rawTargetNode
-                  .getAttributes()
-                  .get(CommonDescriptionArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
+              rawTargetNode.getAttributes().get(BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
       if (defaultTargetPlatform != null && !defaultTargetPlatform.isEmpty()) {
         throw new HumanReadableException(
             "configuration target %s cannot specify %s",
-            unconfiguredTarget, CommonDescriptionArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
+            unconfiguredTarget, BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
       }
     } else {
       targetConfiguration = globalTargetConfiguration;
@@ -287,9 +285,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
         // We use `default_target_platform` only when global platform is not specified
         String defaultTargetPlatform =
             (String)
-                rawTargetNode
-                    .getAttributes()
-                    .get(CommonDescriptionArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
+                rawTargetNode.getAttributes().get(BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
         if (defaultTargetPlatform != null && !defaultTargetPlatform.isEmpty()) {
           UnconfiguredBuildTargetView configurationTarget =
               unconfiguredBuildTargetViewFactory.createForBaseName(

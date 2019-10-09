@@ -17,7 +17,7 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.description.RuleDescription;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.FakeAction;
@@ -76,5 +76,5 @@ public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionA
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractFakeRuleDescriptionArg implements CommonDescriptionArg {}
+  abstract static class AbstractFakeRuleDescriptionArg implements BuildRuleArg {}
 }

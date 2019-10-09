@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -134,6 +134,6 @@ public class FakeWorkerBuilder
 
     @BuckStyleImmutable
     @Value.Immutable
-    interface AbstractFakeWorkerDescriptionArg extends CommonDescriptionArg {}
+    interface AbstractFakeWorkerDescriptionArg extends BuildRuleArg {}
   }
 }

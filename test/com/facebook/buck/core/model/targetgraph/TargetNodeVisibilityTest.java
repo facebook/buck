@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -225,7 +225,7 @@ public class TargetNodeVisibilityTest {
 
     @BuckStyleImmutable
     @Value.Immutable
-    interface AbstractFakeRuleDescriptionArg extends CommonDescriptionArg {}
+    interface AbstractFakeRuleDescriptionArg extends BuildRuleArg {}
   }
 
   private static TargetNode<?> createTargetNode(

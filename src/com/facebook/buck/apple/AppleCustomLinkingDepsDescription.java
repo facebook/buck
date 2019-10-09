@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -26,5 +26,5 @@ import com.google.common.collect.ImmutableSortedSet;
  * to link the binaries during project generation.
  */
 public interface AppleCustomLinkingDepsDescription {
-  ImmutableSortedSet<BuildTarget> getCustomLinkingDeps(CommonDescriptionArg arg);
+  ImmutableSortedSet<BuildTarget> getCustomLinkingDeps(BuildRuleArg arg);
 }

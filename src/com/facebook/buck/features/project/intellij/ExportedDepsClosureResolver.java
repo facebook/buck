@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.project.intellij;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -70,8 +70,7 @@ public class ExportedDepsClosureResolver {
         exportedDeps.stream()
             .filter(
                 target -> {
-                  CommonDescriptionArg arg =
-                      (CommonDescriptionArg) targetGraph.get(target).getConstructorArg();
+                  BuildRuleArg arg = (BuildRuleArg) targetGraph.get(target).getConstructorArg();
                   return !arg.labelsContainsAnyOf(ignoredTargetLabels);
                 })
             .flatMap(

@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.features.project.intellij.model;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
@@ -27,7 +27,7 @@ import com.facebook.buck.features.project.intellij.aggregation.AggregationContex
  *
  * @param <T> TargetNode Description Arg type.
  */
-public interface IjModuleRule<T extends CommonDescriptionArg> {
+public interface IjModuleRule<T extends BuildRuleArg> {
   Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass();
 
   void apply(TargetNode<T> targetNode, ModuleBuildContext context);

@@ -17,7 +17,7 @@
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -934,7 +934,7 @@ public class HaskellLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractHaskellLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractHaskellLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     @Value.Default
     default SourceSortedSet getSrcs() {
       return SourceSortedSet.EMPTY;

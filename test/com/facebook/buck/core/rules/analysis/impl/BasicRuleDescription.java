@@ -17,7 +17,7 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.description.RuleDescription;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
@@ -114,7 +114,7 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractBasicRuleDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractBasicRuleDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     int getVal();
   }
 }

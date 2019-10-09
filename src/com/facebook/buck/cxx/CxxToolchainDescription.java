@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -250,7 +250,7 @@ public class CxxToolchainDescription
    */
   @Value.Immutable
   @BuckStyleImmutable
-  interface AbstractCxxToolchainDescriptionArg extends CommonDescriptionArg {
+  interface AbstractCxxToolchainDescriptionArg extends BuildRuleArg {
     /** When building or creating a project, create symlinks for the public headers if it's true. */
     @Value.Default
     default boolean getPrivateHeadersSymlinksEnabled() {

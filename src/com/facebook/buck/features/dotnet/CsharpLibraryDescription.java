@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.dotnet;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -77,7 +77,7 @@ public class CsharpLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractCsharpLibraryDescriptionArg extends CommonDescriptionArg, HasSrcs {
+  interface AbstractCsharpLibraryDescriptionArg extends BuildRuleArg, HasSrcs {
     FrameworkVersion getFrameworkVer();
 
     ImmutableMap<String, SourcePath> getResources();

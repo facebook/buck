@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
@@ -76,8 +76,7 @@ public class AndroidAppModularityDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAndroidAppModularityDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractAndroidAppModularityDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
 
     Map<String, List<BuildTarget>> getApplicationModuleConfigs();
 

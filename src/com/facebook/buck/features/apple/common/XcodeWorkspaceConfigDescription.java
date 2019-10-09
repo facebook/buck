@@ -17,7 +17,7 @@
 package com.facebook.buck.features.apple.common;
 
 import com.facebook.buck.apple.xcode.XCScheme;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -77,7 +77,7 @@ public class XcodeWorkspaceConfigDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractXcodeWorkspaceConfigDescriptionArg extends CommonDescriptionArg {
+  interface AbstractXcodeWorkspaceConfigDescriptionArg extends BuildRuleArg {
     Optional<BuildTarget> getSrcTarget();
 
     @Value.NaturalOrder

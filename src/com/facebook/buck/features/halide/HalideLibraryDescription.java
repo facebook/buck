@@ -18,7 +18,7 @@ package com.facebook.buck.features.halide;
 
 import com.facebook.buck.apple.AppleCustomLinkingDepsDescription;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -364,7 +364,7 @@ public class HalideLibraryDescription
   }
 
   @Override
-  public ImmutableSortedSet<BuildTarget> getCustomLinkingDeps(CommonDescriptionArg args) {
+  public ImmutableSortedSet<BuildTarget> getCustomLinkingDeps(BuildRuleArg args) {
     return ((HalideLibraryDescriptionArg) args).getDeps();
   }
 

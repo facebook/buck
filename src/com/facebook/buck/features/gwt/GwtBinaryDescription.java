@@ -17,7 +17,7 @@
 package com.facebook.buck.features.gwt;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -175,7 +175,7 @@ public class GwtBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractGwtBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractGwtBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     @Value.NaturalOrder
     ImmutableSortedSet<String> getModules();
 

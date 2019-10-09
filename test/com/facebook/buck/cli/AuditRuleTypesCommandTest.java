@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -41,10 +41,10 @@ public class AuditRuleTypesCommandTest {
       Arrays.asList("another_build_rule", "some_build_rule");
 
   private static class SomeBuildRuleDescription
-      implements DescriptionWithTargetGraph<CommonDescriptionArg> {
+      implements DescriptionWithTargetGraph<BuildRuleArg> {
 
     @Override
-    public Class<CommonDescriptionArg> getConstructorArgType() {
+    public Class<BuildRuleArg> getConstructorArgType() {
       return null;
     }
 
@@ -53,7 +53,7 @@ public class AuditRuleTypesCommandTest {
         BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
-        CommonDescriptionArg args) {
+        BuildRuleArg args) {
       return null;
     }
   }

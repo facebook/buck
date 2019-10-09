@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -52,8 +52,7 @@ public class GenAidlDescription implements DescriptionWithTargetGraph<GenAidlDes
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractGenAidlDescriptionArg
-      implements CommonDescriptionArg, HasDeclaredDeps {
+  abstract static class AbstractGenAidlDescriptionArg implements BuildRuleArg, HasDeclaredDeps {
     abstract SourcePath getAidl();
 
     // import_path is an anomaly: it is a path that is relative to the project root rather than

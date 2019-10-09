@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.python;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -55,8 +55,7 @@ public class PrebuiltPythonLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractPrebuiltPythonLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractPrebuiltPythonLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     SourcePath getBinarySrc();
 
     @Value.Default

@@ -18,7 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -175,7 +175,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractWorkerToolDescriptionArg extends CommonDescriptionArg {
+  interface AbstractWorkerToolDescriptionArg extends BuildRuleArg {
     ImmutableMap<String, StringWithMacros> getEnv();
 
     @Value.Default

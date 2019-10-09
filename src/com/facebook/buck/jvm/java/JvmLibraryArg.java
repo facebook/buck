@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type.ANNOTATION_PROCESSOR;
 import static com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type.JAVAC_PLUGIN;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -41,7 +41,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSourceOnlyAbiArg {
+/** JVM library rule constructor arg */
+public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyAbiArg {
   Optional<String> getSource();
 
   Optional<String> getTarget();

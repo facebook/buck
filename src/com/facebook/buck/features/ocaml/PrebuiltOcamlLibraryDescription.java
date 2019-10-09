@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -112,7 +112,7 @@ public class PrebuiltOcamlLibraryDescription
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractPrebuiltOcamlLibraryDescriptionArg
-      implements CommonDescriptionArg, HasDeclaredDeps {
+      implements BuildRuleArg, HasDeclaredDeps {
 
     @Value.Default
     String getLibDir() {

@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -143,7 +143,7 @@ public class PrebuiltAppleFrameworkDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPrebuiltAppleFrameworkDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSystemFrameworkAndLibraries {
+      extends BuildRuleArg, HasDeclaredDeps, HasSystemFrameworkAndLibraries {
     SourcePath getFramework();
 
     Optional<Pattern> getSupportedPlatformsRegex();

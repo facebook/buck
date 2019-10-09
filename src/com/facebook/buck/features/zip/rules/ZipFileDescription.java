@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.zip.rules;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -66,7 +66,7 @@ public class ZipFileDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractZipFileDescriptionArg extends CommonDescriptionArg {
+  interface AbstractZipFileDescriptionArg extends BuildRuleArg {
     @Value.Default
     default String getOut() {
       return getName() + ".zip";

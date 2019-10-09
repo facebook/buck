@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.features.rust;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.model.BuildTarget;
@@ -29,7 +29,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public interface RustCommonArgs
-    extends CommonDescriptionArg, HasNamedDeclaredDeps, HasSrcs, HasDefaultPlatform {
+    extends BuildRuleArg, HasNamedDeclaredDeps, HasSrcs, HasDefaultPlatform {
   @Value.NaturalOrder
   ImmutableSortedMap<SourcePath, String> getMappedSrcs();
 

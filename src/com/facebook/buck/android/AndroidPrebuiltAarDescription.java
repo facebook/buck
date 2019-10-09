@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -237,7 +237,7 @@ public class AndroidPrebuiltAarDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractAndroidPrebuiltAarDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, MaybeRequiredForSourceOnlyAbiArg {
+      extends BuildRuleArg, HasDeclaredDeps, MaybeRequiredForSourceOnlyAbiArg {
     SourcePath getAar();
 
     Optional<SourcePath> getSourceJar();

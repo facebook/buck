@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -45,7 +45,7 @@ public class KeystoreDescription implements DescriptionWithTargetGraph<KeystoreD
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractKeystoreDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractKeystoreDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     SourcePath getStore();
 
     SourcePath getProperties();

@@ -16,11 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import org.immutables.value.Value;
 
-public interface JavacPluginArgs extends CommonDescriptionArg, HasDeclaredDeps {
+/** Constructor arg of javac plugin rule */
+public interface JavacPluginArgs extends BuildRuleArg, HasDeclaredDeps {
 
   /**
    * A value of false indicates that the plugin will not use a shared class loader to be loaded.

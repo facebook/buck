@@ -17,7 +17,7 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -92,7 +92,7 @@ public class FakeTargetNodeBuilder
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractFakeTargetNodeArg extends CommonDescriptionArg, HasDeclaredDeps {}
+  interface AbstractFakeTargetNodeArg extends BuildRuleArg, HasDeclaredDeps {}
 
   public static class FakeDescription
       implements DescriptionWithTargetGraph<FakeTargetNodeArg>,

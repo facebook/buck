@@ -16,7 +16,7 @@
 
 package com.facebook.buck.file;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -75,7 +75,7 @@ public class RemoteFileDescription implements DescriptionWithTargetGraph<RemoteF
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractRemoteFileDescriptionArg extends CommonDescriptionArg {
+  interface AbstractRemoteFileDescriptionArg extends BuildRuleArg {
     URI getUrl();
 
     String getSha1();

@@ -18,7 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -222,7 +222,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   }
 
   @SuppressFieldNotInitialized
-  public interface CommonArg extends CommonDescriptionArg, HasTests {
+  public interface CommonArg extends BuildRuleArg, HasTests {
     Optional<StringWithMacros> getBash();
 
     Optional<StringWithMacros> getCmd();

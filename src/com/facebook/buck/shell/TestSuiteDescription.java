@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -73,7 +73,7 @@ public class TestSuiteDescription implements DescriptionWithTargetGraph<TestSuit
   /** Args for test_suite */
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractTestSuiteDescriptionArg extends CommonDescriptionArg {
+  interface AbstractTestSuiteDescriptionArg extends BuildRuleArg {
     /** Test or TestSuite targets that should be invoked when this rule run through buck test */
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getTests();

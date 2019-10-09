@@ -23,7 +23,7 @@ import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -118,7 +118,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractTouchOutputDescriptionArg extends HasDeclaredDeps, CommonDescriptionArg {
+  interface AbstractTouchOutputDescriptionArg extends HasDeclaredDeps, BuildRuleArg {
     String getOut();
   }
 
@@ -145,7 +145,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractCheckSerializationArg extends CommonDescriptionArg {}
+  interface AbstractCheckSerializationArg extends BuildRuleArg {}
 
   private static class CheckSerializationDescription
       implements DescriptionWithTargetGraph<CheckSerializationArg> {
@@ -197,7 +197,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractLargeDynamicsArg extends HasDeclaredDeps, CommonDescriptionArg {
+  interface AbstractLargeDynamicsArg extends HasDeclaredDeps, BuildRuleArg {
     Optional<BuildTarget> getFirstRef();
 
     Optional<BuildTarget> getSecondRef();
@@ -236,7 +236,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
   @Value.Immutable
   @BuckStyleImmutable
-  interface AbstractFailingRuleArg extends CommonDescriptionArg {
+  interface AbstractFailingRuleArg extends BuildRuleArg {
     boolean getStepFailure();
   }
 
@@ -396,7 +396,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
   @Value.Immutable
   @BuckStyleImmutable
-  interface AbstractDuplicateOutputsArg extends CommonDescriptionArg {
+  interface AbstractDuplicateOutputsArg extends BuildRuleArg {
     boolean getOutputsAreDirectories();
   }
 

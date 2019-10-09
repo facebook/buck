@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -50,7 +50,7 @@ public class GoTestRunnerDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractGoTestRunnerDescriptionArg extends CommonDescriptionArg {
+  interface AbstractGoTestRunnerDescriptionArg extends BuildRuleArg {
     SourcePath getTestRunnerGenerator();
   }
 }

@@ -27,7 +27,7 @@ import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -295,8 +295,7 @@ public class AndroidInstrumentationApkDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAndroidInstrumentationApkDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractAndroidInstrumentationApkDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     Optional<SourcePath> getManifest();
 
     Optional<SourcePath> getManifestSkeleton();

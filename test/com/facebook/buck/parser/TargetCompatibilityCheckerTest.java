@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -292,5 +292,5 @@ public class TargetCompatibilityCheckerTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractTestDescriptionArg extends CommonDescriptionArg {}
+  interface AbstractTestDescriptionArg extends BuildRuleArg {}
 }

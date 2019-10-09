@@ -19,7 +19,7 @@ package com.facebook.buck.features.d;
 import static com.facebook.buck.features.d.DDescriptionUtils.SOURCE_LINK_TREE;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -136,7 +136,7 @@ public class DBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractDBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractDBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     SourceSortedSet getSrcs();
 
     ImmutableList<String> getLinkerFlags();

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.lua;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -81,7 +81,7 @@ public class LuaLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractLuaLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractLuaLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
 
     @Value.Default
     default SourceSortedSet getSrcs() {

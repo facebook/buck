@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -57,7 +57,7 @@ public class AndroidManifestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAndroidManifestDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractAndroidManifestDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     SourcePath getSkeleton();
 
     /**

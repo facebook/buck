@@ -16,7 +16,7 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -49,7 +49,7 @@ abstract class AbstractVersionedAliasDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractVersionedAliasDescriptionArg extends CommonDescriptionArg {
+  interface AbstractVersionedAliasDescriptionArg extends BuildRuleArg {
     ImmutableMap<Version, BuildTarget> getVersions();
   }
 }

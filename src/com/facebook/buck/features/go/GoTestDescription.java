@@ -17,7 +17,7 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
@@ -558,7 +558,7 @@ public class GoTestDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractGoTestDescriptionArg
-      extends CommonDescriptionArg,
+      extends BuildRuleArg,
           HasContacts,
           HasDeclaredDeps,
           HasSrcs,

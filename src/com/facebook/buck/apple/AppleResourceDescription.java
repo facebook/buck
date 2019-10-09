@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -97,7 +97,7 @@ public class AppleResourceDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAppleResourceDescriptionArg extends CommonDescriptionArg {
+  interface AbstractAppleResourceDescriptionArg extends BuildRuleArg {
     ImmutableSet<SourcePath> getDirs();
 
     ImmutableSet<SourcePath> getFiles();

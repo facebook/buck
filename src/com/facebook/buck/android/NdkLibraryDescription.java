@@ -21,7 +21,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -471,8 +471,7 @@ public class NdkLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractNdkLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+  interface AbstractNdkLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasSrcs {
     ImmutableList<StringWithMacros> getFlags();
 
     @Value.Default

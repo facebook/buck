@@ -17,7 +17,7 @@
 package com.facebook.buck.features.js;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
@@ -168,7 +168,7 @@ public class JsLibraryDescription
   @BuckStyleImmutable
   @Value.Immutable(copy = true)
   interface AbstractJsLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDepsQuery, HasExtraJson, HasTests {
+      extends BuildRuleArg, HasDepsQuery, HasExtraJson, HasTests {
     ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> getSrcs();
 
     BuildTarget getWorker();

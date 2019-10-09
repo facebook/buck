@@ -28,7 +28,7 @@ import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
 import com.facebook.buck.apple.SourcePathWithAppleBundleDestination;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -358,7 +358,7 @@ public class JsBundleDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractJsBundleDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasExtraJson, HasBundleName {
+      extends BuildRuleArg, HasDeclaredDeps, HasExtraJson, HasBundleName {
 
     Either<ImmutableSet<String>, String> getEntry();
 

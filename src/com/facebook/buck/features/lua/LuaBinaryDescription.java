@@ -17,7 +17,7 @@
 package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -829,7 +829,7 @@ public class LuaBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractLuaBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractLuaBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     String getMainModule();
 
     Optional<BuildTarget> getNativeStarterLibrary();

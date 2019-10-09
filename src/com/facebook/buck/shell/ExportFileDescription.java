@@ -17,7 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -139,7 +139,7 @@ public class ExportFileDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractExportFileDescriptionArg extends CommonDescriptionArg {
+  interface AbstractExportFileDescriptionArg extends BuildRuleArg {
     Optional<SourcePath> getSrc();
 
     Optional<String> getOut();

@@ -16,7 +16,7 @@
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -147,7 +147,7 @@ public class HaskellHaddockDescription
 
   @BuckStyleImmutable
   @Value.Immutable(copy = true)
-  interface AbstractHaskellHaddockDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
+  interface AbstractHaskellHaddockDescriptionArg extends BuildRuleArg, HasDepsQuery {
     Optional<Flavor> getPlatform();
 
     @Value.Default

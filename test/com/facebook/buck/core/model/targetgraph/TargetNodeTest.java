@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -181,7 +181,7 @@ public class TargetNodeTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractExampleDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractExampleDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getSourcePaths();
 

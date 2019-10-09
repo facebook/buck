@@ -17,7 +17,7 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -495,8 +495,7 @@ public class SwiftLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractSwiftLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+  interface AbstractSwiftLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasSrcs {
     Optional<String> getModuleName();
 
     ImmutableList<StringWithMacros> getCompilerFlags();

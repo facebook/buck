@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -88,11 +88,11 @@ public class AppleResources {
 
     for (TargetNode<?> resourceNode : resourceNodes) {
       @SuppressWarnings("unchecked")
-      TargetNode<CommonDescriptionArg> node = (TargetNode<CommonDescriptionArg>) resourceNode;
+      TargetNode<BuildRuleArg> node = (TargetNode<BuildRuleArg>) resourceNode;
 
       @SuppressWarnings("unchecked")
-      HasAppleBundleResourcesDescription<CommonDescriptionArg> description =
-          (HasAppleBundleResourcesDescription<CommonDescriptionArg>) node.getDescription();
+      HasAppleBundleResourcesDescription<BuildRuleArg> description =
+          (HasAppleBundleResourcesDescription<BuildRuleArg>) node.getDescription();
 
       description.addAppleBundleResources(builder, node, filesystem, resolver);
     }

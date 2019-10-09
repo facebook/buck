@@ -27,7 +27,7 @@ import java.util.Set;
 import org.immutables.value.Value;
 
 /** Common arguments for build rules (but not configuration rules) */
-public interface CommonDescriptionArg extends ConstructorArg {
+public interface BuildRuleArg extends ConstructorArg {
   ImmutableSet<SourcePath> getLicenses();
 
   @Value.NaturalOrder

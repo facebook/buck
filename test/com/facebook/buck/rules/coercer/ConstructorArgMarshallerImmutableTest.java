@@ -23,7 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -101,7 +101,7 @@ public class ConstructorArgMarshallerImmutableTest {
     knownRuleTypes = KnownNativeRuleTypes.of(ImmutableList.of(), ImmutableList.of());
   }
 
-  private <T extends CommonDescriptionArg> T invokePopulate2(
+  private <T extends BuildRuleArg> T invokePopulate2(
       Class<T> constructorClass,
       Map<String, ?> attributes,
       ImmutableSet.Builder<BuildTarget> declaredDeps)
@@ -126,7 +126,7 @@ public class ConstructorArgMarshallerImmutableTest {
     return result;
   }
 
-  private <T extends CommonDescriptionArg> T invokePopulate(
+  private <T extends BuildRuleArg> T invokePopulate(
       Class<T> constructorClass, Map<String, ?> attributes) throws CoerceFailedException {
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     T result = invokePopulate2(constructorClass, attributes, declaredDeps);
@@ -682,13 +682,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithString implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithString implements BuildRuleArg {
     abstract String getString();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithBoolean implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithBoolean implements BuildRuleArg {
     abstract boolean getBooleanOne();
 
     abstract boolean isBooleanTwo();
@@ -696,13 +696,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithListOfStrings implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithListOfStrings implements BuildRuleArg {
     abstract List<String> getList();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithFakeDeps implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithFakeDeps implements BuildRuleArg {
     @Hint(isDep = false)
     abstract Set<BuildTarget> getDeps();
 
@@ -712,7 +712,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithCollections implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithCollections implements BuildRuleArg {
     abstract Set<String> getSet();
 
     abstract ImmutableSet<String> getImmutableSet();
@@ -734,29 +734,29 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithOptionalSetOfStrings implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithOptionalSetOfStrings implements BuildRuleArg {
     abstract Optional<Set<String>> getStrings();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithSetOfStrings implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithSetOfStrings implements BuildRuleArg {
     abstract Set<String> getStrings();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithPath implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithPath implements BuildRuleArg {
     abstract Path getPath();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractEmptyImmutableDto implements CommonDescriptionArg {}
+  abstract static class AbstractEmptyImmutableDto implements BuildRuleArg {}
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithBuildTargets implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithBuildTargets implements BuildRuleArg {
     abstract BuildTarget getTarget();
 
     abstract BuildTarget getLocal();
@@ -764,13 +764,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithLong implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithLong implements BuildRuleArg {
     abstract long getNumber();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithSourcePaths implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithSourcePaths implements BuildRuleArg {
     abstract SourcePath getFilePath();
 
     abstract SourcePath getTargetPath();
@@ -778,13 +778,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithImmutableSortedSet implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithImmutableSortedSet implements BuildRuleArg {
     abstract ImmutableSortedSet<BuildTarget> getStuff();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithDeclaredDeps implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithDeclaredDeps implements BuildRuleArg {
     abstract ImmutableSet<BuildTarget> getDeps();
 
     abstract ImmutableSet<SourcePath> getPaths();
@@ -792,13 +792,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithSetOfPaths implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithSetOfPaths implements BuildRuleArg {
     abstract Set<Path> getPaths();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithDepsAndNotDeps implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithDepsAndNotDeps implements BuildRuleArg {
     abstract Set<BuildTarget> getDeps();
 
     abstract Set<BuildTarget> getNotDeps();
@@ -806,7 +806,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithBuildTargetList implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithBuildTargetList implements BuildRuleArg {
     abstract BuildTarget getSingle();
 
     abstract BuildTarget getSameBuildFileTarget();
@@ -816,7 +816,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithVariousTypes implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithVariousTypes implements BuildRuleArg {
     abstract String getRequired();
 
     abstract Optional<String> getNotRequired();
@@ -840,7 +840,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithOptionalValues implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithOptionalValues implements BuildRuleArg {
     abstract Optional<String> getNoString();
 
     abstract Optional<String> getDefaultString();
@@ -852,7 +852,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithDefaultValues implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithDefaultValues implements BuildRuleArg {
     @Value.Default
     public String getSomething() {
       return "foo";
@@ -876,13 +876,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithSetOfSourcePaths implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithSetOfSourcePaths implements BuildRuleArg {
     abstract ImmutableSortedSet<SourcePath> getSrcs();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithCheck implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithCheck implements BuildRuleArg {
     abstract String getString();
 
     @Value.Check
@@ -893,7 +893,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithDerivedAndOrdinaryMethods implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithDerivedAndOrdinaryMethods implements BuildRuleArg {
     abstract String getString();
 
     public String getConstant() {
@@ -906,7 +906,7 @@ public class ConstructorArgMarshallerImmutableTest {
     }
   }
 
-  interface HasDefaultMethod extends CommonDescriptionArg {
+  interface HasDefaultMethod extends BuildRuleArg {
     @Value.Default
     default String getString() {
       return "foo";
@@ -919,7 +919,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithSplit implements CommonDescriptionArg {
+  abstract static class AbstractDtoWithSplit implements BuildRuleArg {
     @Hint(splitConfiguration = true)
     abstract ImmutableSortedSet<BuildTarget> getDeps();
   }

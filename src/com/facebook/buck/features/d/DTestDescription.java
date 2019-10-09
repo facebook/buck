@@ -19,7 +19,7 @@ package com.facebook.buck.features.d;
 import static com.facebook.buck.features.d.DDescriptionUtils.SOURCE_LINK_TREE;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
@@ -143,7 +143,7 @@ public class DTestDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractDTestDescriptionArg
-      extends CommonDescriptionArg, HasContacts, HasDeclaredDeps, HasTestTimeout {
+      extends BuildRuleArg, HasContacts, HasDeclaredDeps, HasTestTimeout {
     SourceSortedSet getSrcs();
 
     ImmutableList<String> getLinkerFlags();

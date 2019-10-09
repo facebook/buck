@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
@@ -388,8 +388,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractPrebuiltCxxLibraryGroupDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractPrebuiltCxxLibraryGroupDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     ImmutableList<String> getExportedPreprocessorFlags();
 
     ImmutableList<SourcePath> getIncludeDirs();

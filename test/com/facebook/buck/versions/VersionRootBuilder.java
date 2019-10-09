@@ -16,7 +16,7 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -88,7 +88,7 @@ public class VersionRootBuilder
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractVersionRootDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractVersionRootDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     Optional<String> getVersionUniverse();
 
     @Value.NaturalOrder

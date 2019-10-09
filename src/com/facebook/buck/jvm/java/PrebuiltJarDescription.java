@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -167,7 +167,7 @@ public class PrebuiltJarDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPrebuiltJarDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, MaybeRequiredForSourceOnlyAbiArg {
+      extends BuildRuleArg, HasDeclaredDeps, MaybeRequiredForSourceOnlyAbiArg {
     SourcePath getBinaryJar();
 
     Optional<SourcePath> getSourceJar();

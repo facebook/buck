@@ -22,7 +22,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasDefaultPlatform;
@@ -356,7 +356,7 @@ public class AppleBundleDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractAppleBundleDescriptionArg
-      extends CommonDescriptionArg,
+      extends BuildRuleArg,
           HasAppleBundleFields,
           HasAppleCodesignFields,
           HasContacts,

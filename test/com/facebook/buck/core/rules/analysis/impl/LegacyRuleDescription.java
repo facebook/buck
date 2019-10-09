@@ -20,7 +20,7 @@ import com.facebook.buck.core.artifact.BuildTargetSourcePathToArtifactConverter;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -163,7 +163,7 @@ public class LegacyRuleDescription implements DescriptionWithTargetGraph<LegacyR
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractLegacyRuleDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractLegacyRuleDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     int getVal();
   }
 }

@@ -17,7 +17,7 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -157,7 +157,7 @@ public class OcamlBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractOcamlBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractOcamlBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     Optional<SourceSet> getSrcs();
 
     ImmutableList<StringWithMacros> getCompilerFlags();

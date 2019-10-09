@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.haskell;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -223,8 +223,7 @@ public class HaskellPrebuiltLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractHaskellPrebuiltLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractHaskellPrebuiltLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     String getVersion();
 
     @Value.Default

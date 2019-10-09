@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -176,7 +176,7 @@ public class AndroidBuildConfigDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAndroidBuildConfigDescriptionArg extends CommonDescriptionArg {
+  interface AbstractAndroidBuildConfigDescriptionArg extends BuildRuleArg {
     /** For R.java */
     String getPackage();
 

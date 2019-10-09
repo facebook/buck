@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -934,7 +934,7 @@ public class PrebuiltCxxLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractPrebuiltCxxLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractPrebuiltCxxLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
 
     // New API.
     Optional<ImmutableList<SourcePath>> getHeaderDirs();

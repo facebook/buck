@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -133,7 +133,7 @@ public class AndroidInstrumentationTestDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractAndroidInstrumentationTestDescriptionArg
-      extends CommonDescriptionArg, HasContacts, HasTestTimeout {
+      extends BuildRuleArg, HasContacts, HasTestTimeout {
     BuildTarget getApk();
   }
 }

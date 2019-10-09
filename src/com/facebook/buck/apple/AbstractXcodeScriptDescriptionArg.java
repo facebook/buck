@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
@@ -24,7 +24,7 @@ import org.immutables.value.Value;
 
 @BuckStyleImmutable
 @Value.Immutable
-interface AbstractXcodeScriptDescriptionArg extends CommonDescriptionArg, HasSrcs {
+interface AbstractXcodeScriptDescriptionArg extends BuildRuleArg, HasSrcs {
   @Value.NaturalOrder
   ImmutableSortedSet<String> getInputs();
 

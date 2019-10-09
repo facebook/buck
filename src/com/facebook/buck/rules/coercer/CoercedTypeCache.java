@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -67,7 +67,7 @@ public class CoercedTypeCache {
   public static <T extends ConstructorArg> ConstructorArgBuilder<T> instantiateSkeleton(
       TypeCoercerFactory typeCoercerFactory, Class<T> dtoType, BuildTarget buildTarget) {
 
-    boolean isBuildRule = CommonDescriptionArg.class.isAssignableFrom(dtoType);
+    boolean isBuildRule = BuildRuleArg.class.isAssignableFrom(dtoType);
     boolean isConfiguration = ConfigurationRuleArg.class.isAssignableFrom(dtoType);
     Preconditions.checkArgument(
         isBuildRule != isConfiguration,

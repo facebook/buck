@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -510,7 +510,7 @@ public class BuildCommandErrorsIntegrationTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractMockArg extends CommonDescriptionArg {}
+  interface AbstractMockArg extends BuildRuleArg {}
 
   private class MockDescription implements DescriptionWithTargetGraph<MockArg> {
     private BuildRuleFactory buildRuleFactory = null;

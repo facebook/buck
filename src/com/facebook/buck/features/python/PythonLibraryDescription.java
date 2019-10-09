@@ -17,7 +17,7 @@
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
+/** Python library rule description */
 public class PythonLibraryDescription
     implements DescriptionWithTargetGraph<PythonLibraryDescriptionArg>,
         VersionPropagator<PythonLibraryDescriptionArg>,
@@ -200,7 +201,8 @@ public class PythonLibraryDescription
     }
   }
 
-  interface CoreArg extends CommonDescriptionArg, HasDeclaredDeps, HasTests {
+  /** Arguments shared by Python rules */
+  interface CoreArg extends BuildRuleArg, HasDeclaredDeps, HasTests {
     @Value.Default
     default SourceSortedSet getSrcs() {
       return SourceSortedSet.EMPTY;

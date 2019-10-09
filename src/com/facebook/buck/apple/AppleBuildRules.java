@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -223,7 +223,7 @@ public final class AppleBuildRules {
           if (node.getDescription() instanceof AppleCustomLinkingDepsDescription) {
             ImmutableSortedSet<BuildTarget> customLinkingDepsTargets =
                 ((AppleCustomLinkingDepsDescription) node.getDescription())
-                    .getCustomLinkingDeps((CommonDescriptionArg) node.getConstructorArg());
+                    .getCustomLinkingDeps((BuildRuleArg) node.getConstructorArg());
             Iterable<TargetNode<?>> nodes = targetGraph.getAll(customLinkingDepsTargets);
             customLinkingDepsBuilder.addAll(nodes);
           }

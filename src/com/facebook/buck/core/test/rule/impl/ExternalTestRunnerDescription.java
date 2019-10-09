@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.test.rule.impl;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -53,7 +53,7 @@ public class ExternalTestRunnerDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractExternalTestRunnerDescriptionArg extends CommonDescriptionArg {
+  interface AbstractExternalTestRunnerDescriptionArg extends BuildRuleArg {
     BuildTarget getBinary();
   }
 }

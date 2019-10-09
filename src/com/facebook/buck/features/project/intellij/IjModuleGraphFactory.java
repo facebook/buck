@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.features.project.intellij;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -73,7 +73,7 @@ public final class IjModuleGraphFactory {
                         input.getDescription().getClass()))
             .filter(
                 targetNode -> {
-                  CommonDescriptionArg arg = (CommonDescriptionArg) targetNode.getConstructorArg();
+                  BuildRuleArg arg = (BuildRuleArg) targetNode.getConstructorArg();
                   return !arg.labelsContainsAnyOf(ignoredTargetLabels);
                 })
             // Experimental support for generating modules outside the project root
@@ -254,7 +254,7 @@ public final class IjModuleGraphFactory {
         BuildTarget depBuildTarget = entry.getKey();
         TargetNode<?> depTargetNode = targetGraph.get(depBuildTarget);
 
-        CommonDescriptionArg arg = (CommonDescriptionArg) depTargetNode.getConstructorArg();
+        BuildRuleArg arg = (BuildRuleArg) depTargetNode.getConstructorArg();
         if (arg.labelsContainsAnyOf(ignoredTargetLabels)) {
           continue;
         }

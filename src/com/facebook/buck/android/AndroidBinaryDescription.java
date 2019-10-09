@@ -25,7 +25,7 @@ import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
@@ -269,7 +269,7 @@ public class AndroidBinaryDescription
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractAndroidBinaryDescriptionArg
-      implements CommonDescriptionArg,
+      implements BuildRuleArg,
           HasDeclaredDeps,
           HasExopackageArgs,
           HasTests,

@@ -16,7 +16,7 @@
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
@@ -348,7 +348,7 @@ public class HaskellGhciDescription
 
   @BuckStyleImmutable
   @Value.Immutable(copy = true)
-  interface AbstractHaskellGhciDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
+  interface AbstractHaskellGhciDescriptionArg extends BuildRuleArg, HasDepsQuery {
     @Value.Default
     default SourceSortedSet getSrcs() {
       return SourceSortedSet.EMPTY;

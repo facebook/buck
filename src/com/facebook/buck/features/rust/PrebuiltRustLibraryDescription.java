@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.rust;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -90,8 +90,7 @@ public class PrebuiltRustLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractPrebuiltRustLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractPrebuiltRustLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     SourcePath getRlib();
 
     @Value.Default

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -52,7 +52,7 @@ public class AppleAssetCatalogDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAppleAssetCatalogDescriptionArg extends CommonDescriptionArg {
+  interface AbstractAppleAssetCatalogDescriptionArg extends BuildRuleArg {
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getDirs();
 

@@ -23,7 +23,7 @@ import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -261,7 +261,7 @@ public class AndroidBundleDescription
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractAndroidBundleDescriptionArg
-      implements CommonDescriptionArg,
+      implements BuildRuleArg,
           HasDeclaredDeps,
           HasExopackageArgs,
           HasTests,

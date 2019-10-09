@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.python;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -49,7 +49,7 @@ public class PythonTestRunnerDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractPythonTestRunnerDescriptionArg extends CommonDescriptionArg {
+  interface AbstractPythonTestRunnerDescriptionArg extends BuildRuleArg {
     SourcePath getSrc();
   }
 }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.rules.knowntypes;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -29,7 +29,7 @@ class KnownRuleTestDescription implements DescriptionWithTargetGraph<KnownRuleTe
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractKnownRuleTestDescriptionArg extends CommonDescriptionArg {}
+  interface AbstractKnownRuleTestDescriptionArg extends BuildRuleArg {}
 
   private final String value;
 

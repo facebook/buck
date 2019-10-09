@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -70,8 +70,7 @@ public class PrebuiltNativeLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractPrebuiltNativeLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractPrebuiltNativeLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     @Value.Default
     default boolean getIsAsset() {
       return false;

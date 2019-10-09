@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.features.project.intellij;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -52,7 +52,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implements IjModuleRule<T> {
+/** Base class for IntelliJ module rules */
+public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModuleRule<T> {
 
   protected final ProjectFilesystem projectFilesystem;
   protected final IjModuleFactoryResolver moduleFactoryResolver;

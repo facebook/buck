@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.model.BuildTarget;
@@ -57,7 +57,7 @@ public class ShBinaryDescription implements DescriptionWithTargetGraph<ShBinaryD
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractShBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasTests {
+  interface AbstractShBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasTests {
     SourcePath getMain();
 
     ImmutableSet<SourcePath> getResources();

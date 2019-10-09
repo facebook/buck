@@ -20,7 +20,7 @@ import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -408,7 +408,7 @@ public class AndroidResourceDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAndroidResourceDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractAndroidResourceDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> getRes();
 
     Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> getAssets();

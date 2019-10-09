@@ -16,7 +16,7 @@
 
 package com.facebook.buck.file;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.collect.ImmutableList;
@@ -25,7 +25,7 @@ import java.net.URI;
 import java.util.Optional;
 
 /** Common arguments for descriptions that download http files */
-interface HttpCommonDescriptionArg extends CommonDescriptionArg {
+interface HttpCommonDescriptionArg extends BuildRuleArg {
   String getSha256();
 
   ImmutableList<URI> getUrls();

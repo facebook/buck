@@ -16,13 +16,13 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
 /** Rule description for rules which have apple bundles */
-public interface HasAppleBundleResourcesDescription<T extends CommonDescriptionArg> {
+public interface HasAppleBundleResourcesDescription<T extends BuildRuleArg> {
   void addAppleBundleResources(
       AppleBundleResources.Builder builder,
       TargetNode<T> targetNode,

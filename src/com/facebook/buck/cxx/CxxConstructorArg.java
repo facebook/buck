@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 public interface CxxConstructorArg
-    extends CommonDescriptionArg,
+    extends BuildRuleArg,
         HasDeclaredDeps,
         HasDefaultFlavors,
         HasDefaultPlatform,

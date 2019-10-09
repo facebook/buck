@@ -17,7 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
@@ -117,7 +117,7 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractShTestDescriptionArg
-      extends CommonDescriptionArg, HasContacts, HasDeclaredDeps, HasTestTimeout {
+      extends BuildRuleArg, HasContacts, HasDeclaredDeps, HasTestTimeout {
     Optional<SourcePath> getTest();
 
     ImmutableList<StringWithMacros> getArgs();
