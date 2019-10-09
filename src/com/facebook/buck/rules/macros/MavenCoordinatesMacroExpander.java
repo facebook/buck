@@ -54,13 +54,19 @@ public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander<Mave
   @Override
   public Arg expand(SourcePathResolver resolver, MavenCoordinatesMacro ignored, BuildRule rule)
       throws MacroException {
-    return new Arg() {
-      @AddToRuleKey private final String mavenCoordinates = getMavenCoordinates(rule);
+    return new MavenCoordinateLink(getMavenCoordinates(rule));
+  }
 
-      @Override
-      public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
-        consumer.accept(mavenCoordinates);
-      }
-    };
+  private static class MavenCoordinateLink implements Arg {
+    @AddToRuleKey private final String mavenCoordinates;
+
+    public MavenCoordinateLink(String mavenCoordinates) {
+      this.mavenCoordinates = mavenCoordinates;
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+      consumer.accept(mavenCoordinates);
+    }
   }
 }
