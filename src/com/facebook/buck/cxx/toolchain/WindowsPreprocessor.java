@@ -20,9 +20,16 @@ import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /** Preprocessor implementation for the Windows toolchain. */
 public class WindowsPreprocessor extends DelegatingTool implements Preprocessor {
+
+  public static final String ENABLE_WIN_EXTERNAL_FLAGS = "/experimental:external";
+  public static final String WIN_SYSTEM_INCLUDE_FLAG = "/external:I";
+
   public WindowsPreprocessor(Tool tool) {
     super(tool);
   }
@@ -51,7 +58,18 @@ public class WindowsPreprocessor extends DelegatingTool implements Preprocessor 
 
   @Override
   public Iterable<String> systemIncludeArgs(Iterable<String> includeRoots) {
-    return Iterables.transform(includeRoots, WindowsPreprocessor::prependIncludeFlag);
+    if (Iterables.isEmpty(includeRoots)) {
+      return Collections.emptyList();
+    }
+
+    List<String> systemIncludes = new ArrayList<>();
+    systemIncludes.add(ENABLE_WIN_EXTERNAL_FLAGS);
+    for (String include : includeRoots) {
+      systemIncludes.add(WIN_SYSTEM_INCLUDE_FLAG);
+      systemIncludes.add(include);
+    }
+
+    return systemIncludes;
   }
 
   @Override
