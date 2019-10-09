@@ -34,6 +34,15 @@ public class CxxToolTypeInfererTest {
     assertThat(
         CxxToolTypeInferer.getTypeFromVersionOutput(
             ImmutableList.of(
+                "Apple clang version 11.0.0 (clang-1100.0.33.8) ",
+                "Target: x86_64-apple-darwin18.7.0",
+                "Thread model: posix",
+                "InstalledDir: /Applications/Xcode_11.0.0_fb.app/Contents/Developer/Toolchains/",
+                "XcodeDefault.xctoolchain/usr/bin")),
+        Matchers.is(CxxToolProvider.Type.CLANG));
+    assertThat(
+        CxxToolTypeInferer.getTypeFromVersionOutput(
+            ImmutableList.of(
                 "Apple LLVM version 7.0.2 (clang-700.1.81)",
                 "Target: x86_64-apple-darwin15.3.0",
                 "Thread model: posix")),

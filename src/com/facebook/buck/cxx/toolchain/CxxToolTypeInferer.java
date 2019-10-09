@@ -41,7 +41,7 @@ public class CxxToolTypeInferer {
               "clang version [.0-9]*(\\s*\\(.*\\))?"
               + // Format used by opensource Clang.
               "|"
-              + "Apple LLVM version [.0-9]*\\s*\\(clang-[.0-9]*\\)"
+              + "Apple (clang|LLVM) version [.0-9]*\\s*\\(clang-[.0-9]*\\)"
               + // Format used by Apple's clang.
               ")\\s*"); // Ignore trailing whitespace.
 
