@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -36,6 +37,7 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
       ProjectFilesystem projectFilesystem,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       BuildRuleResolver resolver,
+      BuildRuleParams params,
       SourceSet srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
@@ -49,6 +51,7 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
         buildTarget,
         projectFilesystem,
         resolver,
+        params,
         sandboxExecutionStrategy,
         srcs,
         cmd,

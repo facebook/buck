@@ -92,6 +92,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   protected BuildRule createBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       BuildRuleResolver resolver,
       T args,
       Optional<Arg> cmd,
@@ -102,6 +103,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         buildTarget,
         projectFilesystem,
         resolver,
+        params,
         sandboxExecutionStrategy,
         args.getSrcs(),
         cmd,

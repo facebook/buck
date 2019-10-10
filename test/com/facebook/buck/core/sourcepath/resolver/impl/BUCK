@@ -7,7 +7,6 @@ java_test(
     deps = [
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/rules/keys:keys",
-        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/shell:rules",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
