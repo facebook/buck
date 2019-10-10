@@ -53,7 +53,6 @@ public class HelpCommandIntegrationTest {
             "  cache          makes calls to the artifact cache",
             "  cachedelete    Delete artifacts from the local and remote cache",
             "  clean          deletes any generated files and caches",
-            "  distbuild      attaches to a distributed build (experimental)",
             "  doctor         debug and fix issues of Buck commands",
             "  fetch          downloads remote resources to your local machine",
             "  fix            attempts to fix errors encountered in the previous build",

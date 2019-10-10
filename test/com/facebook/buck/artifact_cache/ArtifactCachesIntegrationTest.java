@@ -348,7 +348,7 @@ public class ArtifactCachesIntegrationTest {
       CacheResult result;
       try (ArtifactCache artifactCache =
           newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+              .remoteOnlyInstance(false)) {
 
         result =
             artifactCache
@@ -388,7 +388,7 @@ public class ArtifactCachesIntegrationTest {
       CacheResult result;
       try (ArtifactCache artifactCache =
           newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+              .remoteOnlyInstance(false)) {
 
         result =
             artifactCache
@@ -432,7 +432,7 @@ public class ArtifactCachesIntegrationTest {
       CacheResult result;
       try (ArtifactCache artifactCache =
           newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+              .remoteOnlyInstance(false)) {
 
         result =
             artifactCache
@@ -473,7 +473,7 @@ public class ArtifactCachesIntegrationTest {
       CacheResult result;
       try (ArtifactCache artifactCache =
           newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+              .remoteOnlyInstance(false)) {
 
         result =
             artifactCache
@@ -517,7 +517,7 @@ public class ArtifactCachesIntegrationTest {
 
       try (ArtifactCache artifactCache =
           newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+              .remoteOnlyInstance(false)) {
 
         artifactCache
             .store(
@@ -555,7 +555,7 @@ public class ArtifactCachesIntegrationTest {
 
       try (ArtifactCache artifactCache =
           newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+              .remoteOnlyInstance(false)) {
 
         artifactCache
             .store(
@@ -597,7 +597,7 @@ public class ArtifactCachesIntegrationTest {
 
       try (ArtifactCache artifactCache =
           newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+              .remoteOnlyInstance(false)) {
 
         artifactCache
             .store(
@@ -636,7 +636,7 @@ public class ArtifactCachesIntegrationTest {
 
       try (ArtifactCache artifactCache =
           newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+              .remoteOnlyInstance(false)) {
 
         artifactCache
             .store(
@@ -671,7 +671,6 @@ public class ArtifactCachesIntegrationTest {
         TargetConfigurationSerializerForTests.create(cellPathResolver),
         projectFilesystem,
         Optional.empty(),
-        MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),

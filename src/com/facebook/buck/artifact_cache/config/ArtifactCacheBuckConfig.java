@@ -137,10 +137,6 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   public static final String MULTI_CHECK = "multi_check";
   private static final int DEFAULT_MULTI_FETCH_LIMIT = 100;
 
-  private static final String DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS =
-      "download_heavy_build_http_cache_fetch_threads";
-  private static final int DEFAULT_DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS = 20;
-
   private static final String ENV_VAR_SUFFIX = "_env_var";
 
   private final ProjectFilesystem projectFilesystem;
@@ -170,12 +166,6 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   @Override
   public BuckConfig getDelegate() {
     return buckConfig;
-  }
-
-  public int getDownloadHeavyBuildHttpFetchConcurrency() {
-    return Math.min(
-        buckConfig.getView(ResourcesConfig.class).getMaximumResourceAmounts().getNetworkIO(),
-        getDownloadHeavyBuildHttpCacheFetchThreads());
   }
 
   public int getHttpFetchConcurrency() {
@@ -613,18 +603,6 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
       }
     }
     return false;
-  }
-
-  /**
-   * Number of cache fetch threads to be used by download heavy builds, such as the synchronized
-   * build phase of Stampede, which almost entirely consists of cache fetches.
-   *
-   * @return
-   */
-  private int getDownloadHeavyBuildHttpCacheFetchThreads() {
-    return buckConfig
-        .getInteger(CACHE_SECTION_NAME, DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS)
-        .orElse(DEFAULT_DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS);
   }
 
   /**

@@ -33,7 +33,7 @@ public class RemoteExecutionUtil {
 
   private RemoteExecutionUtil() {}
 
-  /** Checks whether the given target command line arguments match the Stampede project whitelist */
+  /** Checks whether the given target command line arguments match the RE project whitelist */
   public static boolean doTargetsMatchProjectWhitelist(
       List<String> commandArgs, ImmutableSet<String> projectWhitelist, BuckConfig buckConfig) {
     ImmutableSet<String> buildTargets = getBuildTargets(commandArgs, buckConfig);
@@ -109,7 +109,7 @@ public class RemoteExecutionUtil {
     return buildTargets.build();
   }
 
-  /** Checks whether the given targets match the Stampede project whitelist */
+  /** Checks whether the given targets match the RE project whitelist */
   protected static boolean doTargetsMatchProjectWhitelist(
       ImmutableSet<String> buildTargets, ImmutableSet<String> projectWhitelist) {
     if (buildTargets.isEmpty()) {

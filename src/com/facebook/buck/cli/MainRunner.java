@@ -1003,13 +1003,6 @@ public final class MainRunner {
                         "HTTP Write",
                         cacheBuckConfig.getHttpWriterShutdownTimeout());
             ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
-                stampedeSyncBuildHttpFetchExecutorService =
-                    getExecutorWrapper(
-                        getHttpFetchExecutorService(
-                            "heavy", cacheBuckConfig.getDownloadHeavyBuildHttpFetchConcurrency()),
-                        "Download Heavy Build HTTP Read",
-                        cacheBuckConfig.getHttpWriterShutdownTimeout());
-            ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
                 httpFetchExecutorService =
                     getExecutorWrapper(
                         getHttpFetchExecutorService(
@@ -1121,7 +1114,6 @@ public final class MainRunner {
                     executionEnvironment.getWifiSsid(),
                     httpWriteExecutorService.get(),
                     httpFetchExecutorService.get(),
-                    stampedeSyncBuildHttpFetchExecutorService.get(),
                     getDirCacheStoreExecutor(cacheBuckConfig, diskIoExecutorService),
                     managerScope,
                     getArtifactProducerId(executionEnvironment),

@@ -20,13 +20,11 @@ import com.facebook.buck.core.config.BuckConfig;
 public interface ArtifactCacheFactory {
   ArtifactCache newInstance();
 
-  ArtifactCache newInstance(boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild);
+  ArtifactCache newInstance(boolean distributedBuildModeEnabled);
 
-  ArtifactCache remoteOnlyInstance(
-      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild);
+  ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled);
 
-  ArtifactCache localOnlyInstance(
-      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild);
+  ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled);
 
   ArtifactCacheFactory cloneWith(BuckConfig newConfig);
 }

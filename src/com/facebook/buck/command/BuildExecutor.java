@@ -82,7 +82,6 @@ public class BuildExecutor {
       WeightedListeningExecutorService executorService,
       boolean keepGoing,
       boolean useDistributedBuildCache,
-      boolean isDownloadHeavyBuild,
       RuleKeyCacheScope<RuleKey> ruleKeyRuleKeyCacheScope,
       Optional<BuildType> buildEngineMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
@@ -108,8 +107,7 @@ public class BuildExecutor {
             actionGraphAndBuilder.getActionGraphBuilder(),
             args.getRootCell(),
             cachingBuildEngine,
-            args.getArtifactCacheFactory()
-                .newInstance(useDistributedBuildCache, isDownloadHeavyBuild),
+            args.getArtifactCacheFactory().newInstance(useDistributedBuildCache),
             args.getBuckConfig().getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
             args.getClock(),
             executionContext,

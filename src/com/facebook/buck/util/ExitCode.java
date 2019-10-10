@@ -67,8 +67,6 @@ public enum ExitCode {
   FATAL_IO(13),
   /** No space on device */
   FATAL_DISK_FULL(14),
-  /** Identifies that build failed due to Stampede infra error */
-  STAMPEDE_INFRA_ERROR(15),
 
   /** Indicates that the buck fix script returned a non-zero exit */
   FIX_FAILED(16),

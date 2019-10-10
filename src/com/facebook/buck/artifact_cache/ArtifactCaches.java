@@ -92,7 +92,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private final Optional<String> wifiSsid;
   private final ListeningExecutorService httpWriteExecutorService;
   private final ListeningExecutorService httpFetchExecutorService;
-  private final ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService;
   private List<ArtifactCache> artifactCaches = new ArrayList<>();
   private final ListeningExecutorService dirWriteExecutorService;
   private final TaskManagerCommandScope managerScope;
@@ -156,7 +155,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
-      ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService,
       ListeningExecutorService dirWriteExecutorService,
       TaskManagerCommandScope managerScope,
       String producerId,
@@ -170,7 +168,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     this.wifiSsid = wifiSsid;
     this.httpWriteExecutorService = httpWriteExecutorService;
     this.httpFetchExecutorService = httpFetchExecutorService;
-    this.downloadHeavyBuildHttpFetchExecutorService = downloadHeavyBuildHttpFetchExecutorService;
     this.dirWriteExecutorService = dirWriteExecutorService;
     this.managerScope = managerScope;
     this.producerId = producerId;
@@ -189,41 +186,32 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
 
   @Override
   public ArtifactCache newInstance() {
-    return newInstance(false, false);
+    return newInstance(false);
   }
 
   /**
    * Creates a new instance of the cache for use during a build.
    *
    * @param distributedBuildModeEnabled true if this is a distributed build
-   * @param isDownloadHeavyBuild true if creating cache connector for download heavy build
    * @return ArtifactCache instance
    */
   @Override
-  public ArtifactCache newInstance(
-      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
-    return newInstanceInternal(
-        ImmutableSet.of(), distributedBuildModeEnabled, isDownloadHeavyBuild);
+  public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
+    return newInstanceInternal(ImmutableSet.of(), distributedBuildModeEnabled);
   }
 
   @Override
-  public ArtifactCache remoteOnlyInstance(
-      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
-    return newInstanceInternal(
-        ImmutableSet.of(local), distributedBuildModeEnabled, isDownloadHeavyBuild);
+  public ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled) {
+    return newInstanceInternal(ImmutableSet.of(local), distributedBuildModeEnabled);
   }
 
   @Override
-  public ArtifactCache localOnlyInstance(
-      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
-    return newInstanceInternal(
-        ImmutableSet.of(remote), distributedBuildModeEnabled, isDownloadHeavyBuild);
+  public ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled) {
+    return newInstanceInternal(ImmutableSet.of(remote), distributedBuildModeEnabled);
   }
 
   private ArtifactCache newInstanceInternal(
-      ImmutableSet<CacheType> cacheTypeBlacklist,
-      boolean distributedBuildModeEnabled,
-      boolean isDownloadHeavyBuild) {
+      ImmutableSet<CacheType> cacheTypeBlacklist, boolean distributedBuildModeEnabled) {
     ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
     buckEventBus.post(started);
 
@@ -236,9 +224,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             projectFilesystem,
             wifiSsid,
             httpWriteExecutorService,
-            isDownloadHeavyBuild
-                ? downloadHeavyBuildHttpFetchExecutorService
-                : httpFetchExecutorService,
+            httpFetchExecutorService,
             dirWriteExecutorService,
             cacheTypeBlacklist,
             distributedBuildModeEnabled,
@@ -263,7 +249,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         wifiSsid,
         httpWriteExecutorService,
         httpFetchExecutorService,
-        downloadHeavyBuildHttpFetchExecutorService,
         dirWriteExecutorService,
         managerScope,
         producerId,

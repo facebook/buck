@@ -279,14 +279,6 @@ public class ProjectWorkspace extends AbstractWorkspace {
     return runBuckCommand(totalArgs);
   }
 
-  public ProcessResult runBuckDistBuildRun(String... args) {
-    String[] totalArgs = new String[args.length + 2];
-    totalArgs[0] = "distbuild";
-    totalArgs[1] = "run";
-    System.arraycopy(args, 0, totalArgs, 2, args.length);
-    return runBuckCommand(totalArgs);
-  }
-
   private ImmutableMap<String, String> buildMultipleAndReturnStringOutputs(
       Optional<NGContext> context, Path buildRoot, String... args) {
     // Add in `--show-output` to the build, so we can parse the output paths after the fact.

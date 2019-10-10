@@ -443,7 +443,6 @@ public class BuildCommand extends AbstractCommand {
                 graphsAndBuildTargets,
                 commandThreadManager.getWeightedListeningExecutorService(),
                 optionalRuleKeyLogger,
-                false,
                 Optional.empty(),
                 ruleKeyCacheScope,
                 lastBuild);
@@ -707,7 +706,6 @@ public class BuildCommand extends AbstractCommand {
       GraphsAndBuildTargets graphsAndBuildTargets,
       WeightedListeningExecutorService executor,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      boolean isDownloadHeavyBuild,
       Optional<CountDownLatch> initializeBuildLatch,
       RuleKeyCacheScope<RuleKey> ruleKeyCacheScope,
       AtomicReference<Build> buildReference)
@@ -730,7 +728,6 @@ public class BuildCommand extends AbstractCommand {
             executor,
             isKeepGoing(),
             false,
-            isDownloadHeavyBuild,
             ruleKeyCacheScope,
             getBuildEngineMode(),
             ruleKeyLogger,
@@ -741,7 +738,6 @@ public class BuildCommand extends AbstractCommand {
     // TODO(buck_team): use try-with-resources instead
     try {
       buildReference.set(builder.getBuild());
-      // TODO(alisdair): ensure that all Stampede local builds re-use same calculator
       localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
 
       // Signal to other threads that lastBuild has now been set.

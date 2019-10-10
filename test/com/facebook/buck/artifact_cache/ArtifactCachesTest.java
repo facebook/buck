@@ -233,7 +233,7 @@ public class ArtifactCachesTest {
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
         newArtifactCache(cacheConfig, projectFilesystem, buckEventBus, Optional.empty())
-            .remoteOnlyInstance(false, false);
+            .remoteOnlyInstance(false);
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
     artifactCache.close();
     managerScope.close();
@@ -247,7 +247,7 @@ public class ArtifactCachesTest {
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
         newArtifactCache(cacheConfig, projectFilesystem, buckEventBus, Optional.empty())
-            .localOnlyInstance(false, false);
+            .localOnlyInstance(false);
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
     artifactCache.close();
     managerScope.close();
@@ -283,7 +283,6 @@ public class ArtifactCachesTest {
         TargetConfigurationSerializerForTests.create(cellPathResolver),
         projectFilesystem,
         wifiSsid,
-        MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),
