@@ -2099,35 +2099,19 @@ public class ProjectGenerator {
     if (arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
         || isModularAppleLibrary) {
       createPublicHeaderSymlinkTree(
+          targetNode,
           publicCxxHeaders,
           requiredBuildTargetsBuilder,
-          getSwiftPublicHeaderMapEntriesForTarget(targetNode),
           moduleName,
           moduleMapMode,
-          getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
-          true,
-          false,
           options.shouldGenerateMissingUmbrellaHeader());
     }
 
-    ImmutableSortedMap<Path, SourcePath> privateCxxHeaders = getPrivateCxxHeaders(targetNode);
-    privateCxxHeaders
-        .values()
-        .forEach(
-            sourcePath ->
-                addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
-
     createPrivateHeaderSymlinkTree(
-        privateCxxHeaders,
+        targetNode,
         requiredBuildTargetsBuilder,
-        ImmutableMap.of(), // private interfaces never have a modulemap
-        Optional.empty(),
-        moduleMapMode,
-        getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
         arg.getXcodePrivateHeadersSymlinks()
-            .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled()),
-        true,
-        options.shouldGenerateMissingUmbrellaHeader());
+            .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled()));
 
     if (bundle.isPresent()) {
       addEntitlementsPlistIntoTarget(bundle.get(), xcodeNativeTargetAttributesBuilder);
@@ -2893,19 +2877,11 @@ public class ProjectGenerator {
         .writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
   }
 
-  private void createPublicHeaderSymlinkTree(
+  private ImmutableSortedMap<Path, Path> resolveHeaderContent(
       Map<Path, SourcePath> contents,
-      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableMap<Path, Path> nonSourcePaths,
-      Optional<String> moduleName,
-      ModuleMapMode moduleMapMode,
       Path headerSymlinkTreeRoot,
-      boolean shouldCreateHeadersSymlinks,
-      boolean shouldCreateHeaderMap,
-      boolean shouldGenerateUmbrellaHeaderIfMissing)
-      throws IOException {
-    LOG.verbose(
-        "Building header symlink tree at %s with contents %s", headerSymlinkTreeRoot, contents);
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder) {
     ImmutableSortedMap.Builder<Path, Path> resolvedContentsBuilder =
         ImmutableSortedMap.naturalOrder();
     for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
@@ -2919,103 +2895,92 @@ public class ProjectGenerator {
       resolvedContentsBuilder.put(link, entry.getValue());
     }
     ImmutableSortedMap<Path, Path> resolvedContents = resolvedContentsBuilder.build();
+    return resolvedContents;
+  }
 
-    Path headerMapLocation = getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot);
-
+  private boolean shouldUpdateSymlinkTree(
+      Path headerSymlinkTreeRoot,
+      ImmutableSortedMap<Path, Path> resolvedContents,
+      Optional<String> moduleName,
+      boolean shouldCreateHeadersSymlinks)
+      throws IOException {
     Path hashCodeFilePath = headerSymlinkTreeRoot.resolve(".contents-hash");
     Optional<String> currentHashCode = projectFilesystem.readFileIfItExists(hashCodeFilePath);
     String newHashCode =
-        getHeaderSymlinkTreeHashCode(
-                resolvedContents, moduleName, shouldCreateHeadersSymlinks, shouldCreateHeaderMap)
-            .toString();
+        getHeaderSymlinkTreeHashCode(resolvedContents, moduleName, true, false).toString();
+
+    headerSymlinkTrees.add(headerSymlinkTreeRoot);
     if (Optional.of(newHashCode).equals(currentHashCode)) {
       LOG.debug(
           "Symlink tree at %s is up to date, not regenerating (key %s).",
           headerSymlinkTreeRoot, newHashCode);
-    } else {
-      LOG.debug(
-          "Updating symlink tree at %s (old key %s, new key %s).",
-          headerSymlinkTreeRoot, currentHashCode, newHashCode);
-      projectFilesystem.deleteRecursivelyIfExists(headerSymlinkTreeRoot);
-      projectFilesystem.mkdirs(headerSymlinkTreeRoot);
-      if (shouldCreateHeadersSymlinks) {
-        for (Map.Entry<Path, Path> entry : resolvedContents.entrySet()) {
-          Path link = entry.getKey();
-          Path existing = entry.getValue();
-          projectFilesystem.createParentDirs(link);
-          projectFilesystem.createSymLink(link, existing, /* force */ false);
-        }
+      return false;
+    }
+    LOG.debug(
+        "Updating symlink tree at %s (old key %s, new key %s).",
+        headerSymlinkTreeRoot, currentHashCode, newHashCode);
+    projectFilesystem.deleteRecursivelyIfExists(headerSymlinkTreeRoot);
+    projectFilesystem.mkdirs(headerSymlinkTreeRoot);
+    if (shouldCreateHeadersSymlinks) {
+      for (Map.Entry<Path, Path> entry : resolvedContents.entrySet()) {
+        Path link = entry.getKey();
+        Path existing = entry.getValue();
+        projectFilesystem.createParentDirs(link);
+        projectFilesystem.createSymLink(link, existing, /* force */ false);
       }
-      projectFilesystem.writeContentsToPath(newHashCode, hashCodeFilePath);
+    }
 
-      if (shouldCreateHeaderMap) {
-        HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
-        for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
-          if (shouldCreateHeadersSymlinks) {
-            headerMapBuilder.add(
-                entry.getKey().toString(),
-                getHeaderMapRelativeSymlinkPathForEntry(entry, headerSymlinkTreeRoot));
-          } else {
-            headerMapBuilder.add(
-                entry.getKey().toString(),
-                projectFilesystem.resolve(resolveSourcePath(entry.getValue())));
-          }
-        }
+    projectFilesystem.writeContentsToPath(newHashCode, hashCodeFilePath);
 
-        for (Map.Entry<Path, Path> entry : nonSourcePaths.entrySet()) {
-          if (shouldCreateHeadersSymlinks) {
-            headerMapBuilder.add(
-                entry.getKey().toString(),
-                getHeaderMapRelativeSymlinkPathForEntry(entry, headerSymlinkTreeRoot));
-          } else {
-            headerMapBuilder.add(entry.getKey().toString(), entry.getValue());
-          }
-        }
+    return true;
+  }
 
-        projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
+  private void createPublicHeaderSymlinkTree(
+      TargetNode<? extends CommonArg> targetNode,
+      Map<Path, SourcePath> contents,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
+      Optional<String> moduleName,
+      ModuleMapMode moduleMapMode,
+      boolean shouldGenerateUmbrellaHeaderIfMissing)
+      throws IOException {
+
+    Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC);
+
+    ImmutableMap<Path, Path> nonSourcePaths = getSwiftPublicHeaderMapEntriesForTarget(targetNode);
+
+    LOG.verbose(
+        "Building header symlink tree at %s with contents %s", headerSymlinkTreeRoot, contents);
+
+    ImmutableSortedMap<Path, Path> resolvedContents =
+        resolveHeaderContent(
+            contents, nonSourcePaths, headerSymlinkTreeRoot, requiredBuildTargetsBuilder);
+
+    if (!shouldUpdateSymlinkTree(headerSymlinkTreeRoot, resolvedContents, moduleName, true)) {
+      return;
+    }
+
+    if (moduleName.isPresent() && resolvedContents.size() > 0) {
+      if (shouldGenerateUmbrellaHeaderIfMissing) {
+        writeUmbrellaHeaderIfNeeded(
+            moduleName.get(), resolvedContents.keySet(), headerSymlinkTreeRoot);
       }
-      if (moduleName.isPresent() && resolvedContents.size() > 0) {
-        if (shouldGenerateUmbrellaHeaderIfMissing) {
-          writeUmbrellaHeaderIfNeeded(
-              moduleName.get(), resolvedContents.keySet(), headerSymlinkTreeRoot);
-        }
-        boolean containsSwift = !nonSourcePaths.isEmpty();
-        if (containsSwift) {
-          projectFilesystem.writeContentsToPath(
-              ModuleMapFactory.createModuleMap(
-                      moduleName.get(),
-                      moduleMapMode,
-                      UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER)
-                  .render(),
-              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
-          projectFilesystem.writeContentsToPath(
-              ModuleMapFactory.createModuleMap(
-                      moduleName.get(),
-                      moduleMapMode,
-                      UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER)
-                  .render(),
-              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
+      boolean containsSwift = !nonSourcePaths.isEmpty();
+      if (containsSwift) {
+        projectFilesystem.writeContentsToPath(
+            ModuleMapFactory.createModuleMap(
+                    moduleName.get(),
+                    moduleMapMode,
+                    UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER)
+                .render(),
+            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
+        projectFilesystem.writeContentsToPath(
+            ModuleMapFactory.createModuleMap(
+                    moduleName.get(),
+                    moduleMapMode,
+                    UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER)
+                .render(),
+            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
 
-          Path absoluteModuleRoot =
-              projectFilesystem
-                  .getRootPath()
-                  .resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
-          VFSOverlay vfsOverlay =
-              new VFSOverlay(
-                  ImmutableSortedMap.of(
-                      absoluteModuleRoot.resolve("module.modulemap"),
-                      absoluteModuleRoot.resolve("objc.modulemap")));
-
-          projectFilesystem.writeContentsToPath(
-              vfsOverlay.render(),
-              getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
-        } else {
-          projectFilesystem.writeContentsToPath(
-              ModuleMapFactory.createModuleMap(
-                      moduleName.get(), moduleMapMode, UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT)
-                  .render(),
-              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
-        }
         Path absoluteModuleRoot =
             projectFilesystem
                 .getRootPath()
@@ -3024,162 +2989,77 @@ public class ProjectGenerator {
             new VFSOverlay(
                 ImmutableSortedMap.of(
                     absoluteModuleRoot.resolve("module.modulemap"),
-                    absoluteModuleRoot.resolve("testing.modulemap")));
+                    absoluteModuleRoot.resolve("objc.modulemap")));
 
         projectFilesystem.writeContentsToPath(
             vfsOverlay.render(),
-            getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
+            getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
+      } else {
         projectFilesystem.writeContentsToPath(
-            "", // empty modulemap to allow non-modular imports for testing
-            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("testing.modulemap"));
+            ModuleMapFactory.createModuleMap(
+                    moduleName.get(), moduleMapMode, UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT)
+                .render(),
+            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
       }
+      Path absoluteModuleRoot =
+          projectFilesystem.getRootPath().resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
+      VFSOverlay vfsOverlay =
+          new VFSOverlay(
+              ImmutableSortedMap.of(
+                  absoluteModuleRoot.resolve("module.modulemap"),
+                  absoluteModuleRoot.resolve("testing.modulemap")));
+
+      projectFilesystem.writeContentsToPath(
+          vfsOverlay.render(),
+          getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
+      projectFilesystem.writeContentsToPath(
+          "", // empty modulemap to allow non-modular imports for testing
+          headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("testing.modulemap"));
     }
-    headerSymlinkTrees.add(headerSymlinkTreeRoot);
   }
 
   private void createPrivateHeaderSymlinkTree(
-      Map<Path, SourcePath> contents,
+      TargetNode<? extends CommonArg> targetNode,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
-      ImmutableMap<Path, Path> nonSourcePaths,
-      Optional<String> moduleName,
-      ModuleMapMode moduleMapMode,
-      Path headerSymlinkTreeRoot,
-      boolean shouldCreateHeadersSymlinks,
-      boolean shouldCreateHeaderMap,
-      boolean shouldGenerateUmbrellaHeaderIfMissing)
+      boolean shouldCreateHeadersSymlinks)
       throws IOException {
+
+    ImmutableSortedMap<Path, SourcePath> contents = getPrivateCxxHeaders(targetNode);
+    contents
+        .values()
+        .forEach(
+            sourcePath ->
+                addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
+
+    Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE);
 
     LOG.verbose(
         "Building header symlink tree at %s with contents %s", headerSymlinkTreeRoot, contents);
-    ImmutableSortedMap.Builder<Path, Path> resolvedContentsBuilder =
-        ImmutableSortedMap.naturalOrder();
+
+    ImmutableSortedMap<Path, Path> resolvedContents =
+        resolveHeaderContent(
+            contents, ImmutableMap.of(), headerSymlinkTreeRoot, requiredBuildTargetsBuilder);
+
+    if (!shouldUpdateSymlinkTree(
+        headerSymlinkTreeRoot, resolvedContents, Optional.empty(), shouldCreateHeadersSymlinks)) {
+      return;
+    }
+
+    HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
     for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
-      Path link = headerSymlinkTreeRoot.resolve(entry.getKey());
-      Path existing = projectFilesystem.resolve(resolveSourcePath(entry.getValue()));
-      addRequiredBuildTargetFromSourcePath(entry.getValue(), requiredBuildTargetsBuilder);
-      resolvedContentsBuilder.put(link, existing);
+      if (shouldCreateHeadersSymlinks) {
+        headerMapBuilder.add(
+            entry.getKey().toString(),
+            getHeaderMapRelativeSymlinkPathForEntry(entry, headerSymlinkTreeRoot));
+      } else {
+        headerMapBuilder.add(
+            entry.getKey().toString(),
+            projectFilesystem.resolve(resolveSourcePath(entry.getValue())));
+      }
     }
-    for (Map.Entry<Path, Path> entry : nonSourcePaths.entrySet()) {
-      Path link = headerSymlinkTreeRoot.resolve(entry.getKey());
-      resolvedContentsBuilder.put(link, entry.getValue());
-    }
-    ImmutableSortedMap<Path, Path> resolvedContents = resolvedContentsBuilder.build();
 
     Path headerMapLocation = getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot);
-
-    Path hashCodeFilePath = headerSymlinkTreeRoot.resolve(".contents-hash");
-    Optional<String> currentHashCode = projectFilesystem.readFileIfItExists(hashCodeFilePath);
-    String newHashCode =
-        getHeaderSymlinkTreeHashCode(
-                resolvedContents, moduleName, shouldCreateHeadersSymlinks, shouldCreateHeaderMap)
-            .toString();
-    if (Optional.of(newHashCode).equals(currentHashCode)) {
-      LOG.debug(
-          "Symlink tree at %s is up to date, not regenerating (key %s).",
-          headerSymlinkTreeRoot, newHashCode);
-    } else {
-      LOG.debug(
-          "Updating symlink tree at %s (old key %s, new key %s).",
-          headerSymlinkTreeRoot, currentHashCode, newHashCode);
-      projectFilesystem.deleteRecursivelyIfExists(headerSymlinkTreeRoot);
-      projectFilesystem.mkdirs(headerSymlinkTreeRoot);
-      if (shouldCreateHeadersSymlinks) {
-        for (Map.Entry<Path, Path> entry : resolvedContents.entrySet()) {
-          Path link = entry.getKey();
-          Path existing = entry.getValue();
-          projectFilesystem.createParentDirs(link);
-          projectFilesystem.createSymLink(link, existing, /* force */ false);
-        }
-      }
-      projectFilesystem.writeContentsToPath(newHashCode, hashCodeFilePath);
-
-      if (shouldCreateHeaderMap) {
-        HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
-        for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
-          if (shouldCreateHeadersSymlinks) {
-            headerMapBuilder.add(
-                entry.getKey().toString(),
-                getHeaderMapRelativeSymlinkPathForEntry(entry, headerSymlinkTreeRoot));
-          } else {
-            headerMapBuilder.add(
-                entry.getKey().toString(),
-                projectFilesystem.resolve(resolveSourcePath(entry.getValue())));
-          }
-        }
-
-        for (Map.Entry<Path, Path> entry : nonSourcePaths.entrySet()) {
-          if (shouldCreateHeadersSymlinks) {
-            headerMapBuilder.add(
-                entry.getKey().toString(),
-                getHeaderMapRelativeSymlinkPathForEntry(entry, headerSymlinkTreeRoot));
-          } else {
-            headerMapBuilder.add(entry.getKey().toString(), entry.getValue());
-          }
-        }
-
-        projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
-      }
-      if (moduleName.isPresent() && resolvedContents.size() > 0) {
-        if (shouldGenerateUmbrellaHeaderIfMissing) {
-          writeUmbrellaHeaderIfNeeded(
-              moduleName.get(), resolvedContents.keySet(), headerSymlinkTreeRoot);
-        }
-        boolean containsSwift = !nonSourcePaths.isEmpty();
-        if (containsSwift) {
-          projectFilesystem.writeContentsToPath(
-              ModuleMapFactory.createModuleMap(
-                      moduleName.get(),
-                      moduleMapMode,
-                      UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER)
-                  .render(),
-              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
-          projectFilesystem.writeContentsToPath(
-              ModuleMapFactory.createModuleMap(
-                      moduleName.get(),
-                      moduleMapMode,
-                      UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER)
-                  .render(),
-              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
-
-          Path absoluteModuleRoot =
-              projectFilesystem
-                  .getRootPath()
-                  .resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
-          VFSOverlay vfsOverlay =
-              new VFSOverlay(
-                  ImmutableSortedMap.of(
-                      absoluteModuleRoot.resolve("module.modulemap"),
-                      absoluteModuleRoot.resolve("objc.modulemap")));
-
-          projectFilesystem.writeContentsToPath(
-              vfsOverlay.render(),
-              getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
-        } else {
-          projectFilesystem.writeContentsToPath(
-              ModuleMapFactory.createModuleMap(
-                      moduleName.get(), moduleMapMode, UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT)
-                  .render(),
-              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
-        }
-        Path absoluteModuleRoot =
-            projectFilesystem
-                .getRootPath()
-                .resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
-        VFSOverlay vfsOverlay =
-            new VFSOverlay(
-                ImmutableSortedMap.of(
-                    absoluteModuleRoot.resolve("module.modulemap"),
-                    absoluteModuleRoot.resolve("testing.modulemap")));
-
-        projectFilesystem.writeContentsToPath(
-            vfsOverlay.render(),
-            getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
-        projectFilesystem.writeContentsToPath(
-            "", // empty modulemap to allow non-modular imports for testing
-            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("testing.modulemap"));
-      }
-    }
-    headerSymlinkTrees.add(headerSymlinkTreeRoot);
+    projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
   }
 
   private void writeUmbrellaHeaderIfNeeded(
