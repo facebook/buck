@@ -478,6 +478,7 @@ public class TestCommand extends BuildCommand {
               .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
               .withSpeculativeParsing(SpeculativeParsing.ENABLED);
 
+      ImmutableSet<BuildTarget> explicitBuildTargets = ImmutableSet.of();
       try {
 
         // If the user asked to run all of the tests, parse all of the build files looking for any
@@ -509,7 +510,8 @@ public class TestCommand extends BuildCommand {
                           params.getCell(), params.getBuckConfig(), getArguments()),
                       params.getTargetConfiguration());
 
-          LOG.debug("Got explicit build targets %s", targetGraphCreationResult.getBuildTargets());
+          explicitBuildTargets = targetGraphCreationResult.getBuildTargets();
+          LOG.debug("Got explicit build targets %s", explicitBuildTargets);
           ImmutableSet.Builder<BuildTarget> testTargetsBuilder = ImmutableSet.builder();
           for (TargetNode<?> node :
               targetGraphCreationResult
@@ -552,9 +554,7 @@ public class TestCommand extends BuildCommand {
       // Unless the user requests that we build filtered tests, filter them out here, before
       // the build.
       if (!isBuildFiltered(params.getBuckConfig())) {
-        testRules =
-            filterTestRules(
-                params.getBuckConfig(), targetGraphCreationResult.getBuildTargets(), testRules);
+        testRules = filterTestRules(params.getBuckConfig(), explicitBuildTargets, testRules);
       }
 
       ImmutableSet<BuildRule> rulesToMaterializeForAnalysis = ImmutableSet.of();
@@ -657,9 +657,7 @@ public class TestCommand extends BuildCommand {
           // If the user requests that we build tests that we filter out, then we perform
           // the filtering here, after we've done the build but before we run the tests.
           if (isBuildFiltered(params.getBuckConfig())) {
-            testRules =
-                filterTestRules(
-                    params.getBuckConfig(), targetGraphCreationResult.getBuildTargets(), testRules);
+            testRules = filterTestRules(params.getBuckConfig(), explicitBuildTargets, testRules);
           }
           BuildContext buildContext =
               BuildContext.builder()

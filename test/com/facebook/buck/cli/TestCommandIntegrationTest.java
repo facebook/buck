@@ -207,4 +207,36 @@ public class TestCommandIntegrationTest {
                 Pattern.MULTILINE | Pattern.DOTALL)));
     Assert.assertThat(result.getStderr(), Matchers.containsString("TESTS PASSED"));
   }
+
+  @Test
+  public void testLabelInclusiveFiltering() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
+    workspace.setUp();
+
+    // Run tests of foo, but only include label A
+    workspace.runBuckCommand("test", "//:foo", "--include", "A");
+    // Has label A
+    workspace.getBuildLog().assertTargetBuiltLocally("//test:wider_classpath_coverage_test");
+    // Has labels A and B
+    workspace.getBuildLog().assertTargetBuiltLocally("//test:simple_test");
+    // Has label B
+    workspace.getBuildLog().assertNoLogEntry("//test:test_setup_for_source_only_abi");
+  }
+
+  @Test
+  public void testLabelExclusiveFiltering() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
+    workspace.setUp();
+
+    // Run tests of foo, but exclude label B
+    workspace.runBuckCommand("test", "//:foo", "--exclude", "B");
+    // Has label A
+    workspace.getBuildLog().assertTargetBuiltLocally("//test:wider_classpath_coverage_test");
+    // Has label A and B
+    workspace.getBuildLog().assertNoLogEntry("//test:simple_test");
+    // Has label B
+    workspace.getBuildLog().assertNoLogEntry("//test:test_setup_for_source_only_abi");
+  }
 }
