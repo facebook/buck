@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import java.util.IdentityHashMap;
 
+/** Cache of calculated values for targets during project generation. */
 public class ProjectGenerationStateCache {
   private final IdentityHashMap<TargetNode<?>, Boolean> targetSwiftCodeCache =
       new IdentityHashMap<TargetNode<?>, Boolean>();

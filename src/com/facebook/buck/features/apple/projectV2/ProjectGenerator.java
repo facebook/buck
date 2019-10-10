@@ -135,7 +135,6 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCommonArg;
-import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Either;
@@ -165,7 +164,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -253,6 +251,8 @@ public class ProjectGenerator {
   private final BuildTarget workspaceTarget;
   private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
 
+  private final SwiftAttributeParser swiftAttributeParser;
+
   /**
    * Mapping from an apple_library target to the associated apple_bundle which names it as its
    * 'binary'
@@ -335,6 +335,9 @@ public class ProjectGenerator {
     this.platformCxxBuckConfigs = cxxBuckConfig.getFlavoredConfigs();
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
+
+    this.swiftAttributeParser =
+        new SwiftAttributeParser(swiftBuckConfig, projGenerationStateCache, projectFilesystem);
 
     gidGenerator = new GidGenerator();
   }
@@ -1256,20 +1259,6 @@ public class ProjectGenerator {
     return String.format("%s[sdk=%s*][arch=%s]", key, sdk, arch);
   }
 
-  private Optional<String> getSwiftVersionForTargetNode(TargetNode<?> targetNode) {
-    Optional<TargetNode<SwiftCommonArg>> targetNodeWithSwiftArgs =
-        TargetNodes.castArg(targetNode, SwiftCommonArg.class);
-    Optional<String> targetExplicitSwiftVersion =
-        targetNodeWithSwiftArgs.flatMap(t -> t.getConstructorArg().getSwiftVersion());
-    if (!targetExplicitSwiftVersion.isPresent()
-        && (targetNode.getDescription() instanceof AppleLibraryDescription
-            || targetNode.getDescription() instanceof AppleBinaryDescription
-            || targetNode.getDescription() instanceof AppleTestDescription)) {
-      return swiftBuckConfig.getVersion();
-    }
-    return targetExplicitSwiftVersion;
-  }
-
   private static String sourceNameRelativeToOutput(
       SourcePath source, SourcePathResolver pathResolver, Path outputDirectory) {
     Path pathRelativeToCell = pathResolver.getRelativePath(source);
@@ -1469,7 +1458,9 @@ public class ProjectGenerator {
     ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langPreprocessorFlags =
         targetNode.getConstructorArg().getLangPreprocessorFlags();
 
-    Optional<String> swiftVersion = getSwiftVersionForTargetNode(targetNode);
+    SwiftAttributes swiftAttributes = swiftAttributeParser.parseSwiftAttributes(targetNode);
+
+    Optional<String> swiftVersion = swiftAttributes.swiftVersion();
     boolean hasSwiftVersionArg = swiftVersion.isPresent();
     if (!swiftVersion.isPresent()) {
       swiftVersion = swiftBuckConfig.getVersion();
@@ -1607,7 +1598,7 @@ public class ProjectGenerator {
         String swiftModulePath =
             String.format(
                 "${BUILT_PRODUCTS_DIR}/%s.swiftmodule/${CURRENT_ARCH}.swiftmodule",
-                getModuleName(swiftNode));
+                com.facebook.buck.features.apple.projectV2.Utils.getModuleName(swiftNode));
         swiftDebugLinkerFlagsBuilder.add("-Xlinker");
         swiftDebugLinkerFlagsBuilder.add("-add_ast_path");
         swiftDebugLinkerFlagsBuilder.add("-Xlinker");
@@ -1765,11 +1756,12 @@ public class ProjectGenerator {
 
     swiftVersion.ifPresent(s -> extraSettingsBuilder.put("SWIFT_VERSION", s));
     swiftVersion.ifPresent(
-        s -> extraSettingsBuilder.put("PRODUCT_MODULE_NAME", getModuleName(targetNode)));
+        s -> extraSettingsBuilder.put("PRODUCT_MODULE_NAME", swiftAttributes.moduleName()));
 
     if (hasSwiftVersionArg && containsSwiftCode) {
       extraSettingsBuilder.put(
-          "SWIFT_OBJC_INTERFACE_HEADER_NAME", getSwiftObjCGeneratedHeaderName(buildTargetNode));
+          "SWIFT_OBJC_INTERFACE_HEADER_NAME",
+          SwiftAttributeParser.getSwiftObjCGeneratedHeaderName(buildTargetNode, Optional.empty()));
 
       if (swiftBuckConfig.getProjectWMO()) {
         // We must disable "Index While Building" as there's a bug in the LLVM infra which
@@ -1816,7 +1808,8 @@ public class ProjectGenerator {
       // that the Obj-C Generated Header can be included in the header map and imported through
       // a framework-style import like <Module/Module-Swift.h>
       Path derivedSourcesDir =
-          getDerivedSourcesDirectoryForBuildTarget(buildTarget, projectFilesystem);
+          com.facebook.buck.features.apple.projectV2.Utils.getDerivedSourcesDirectoryForBuildTarget(
+              buildTarget, projectFilesystem);
       defaultSettingsBuilder.put(
           "DERIVED_FILE_DIR", repoRoot.resolve(derivedSourcesDir).toString());
     }
@@ -2092,18 +2085,14 @@ public class ProjectGenerator {
         targetConfigNamesBuilder,
         xcconfigPathsBuilder);
 
-    Optional<String> moduleName =
-        isModularAppleLibrary ? Optional.of(getModuleName(targetNode)) : Optional.empty();
-    ModuleMapMode moduleMapMode = getModuleMapMode(targetNode);
-    // -- phases
     if (arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
         || isModularAppleLibrary) {
       createPublicHeaderSymlinkTree(
           targetNode,
           publicCxxHeaders,
           requiredBuildTargetsBuilder,
-          moduleName,
-          moduleMapMode,
+          isModularAppleLibrary,
+          swiftAttributes,
           options.shouldGenerateMissingUmbrellaHeader());
     }
 
@@ -2830,8 +2819,9 @@ public class ProjectGenerator {
       headerMapBuilder.add(entry.getKey().toString(), path);
     }
 
-    ImmutableMap<Path, Path> swiftHeaderMapEntries =
-        getSwiftPublicHeaderMapEntriesForTarget(targetNode);
+    SwiftAttributes swiftAttributes = swiftAttributeParser.parseSwiftAttributes(targetNode);
+
+    ImmutableMap<Path, Path> swiftHeaderMapEntries = swiftAttributes.publicHeaderMapEntries();
     for (Map.Entry<Path, Path> entry : swiftHeaderMapEntries.entrySet()) {
       headerMapBuilder.add(entry.getKey().toString(), entry.getValue());
     }
@@ -2939,14 +2929,17 @@ public class ProjectGenerator {
       TargetNode<? extends CommonArg> targetNode,
       Map<Path, SourcePath> contents,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
-      Optional<String> moduleName,
-      ModuleMapMode moduleMapMode,
+      boolean isModularAppleLibrary,
+      SwiftAttributes swiftAttributes,
       boolean shouldGenerateUmbrellaHeaderIfMissing)
       throws IOException {
 
     Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC);
 
-    ImmutableMap<Path, Path> nonSourcePaths = getSwiftPublicHeaderMapEntriesForTarget(targetNode);
+    Optional<String> moduleName =
+        isModularAppleLibrary ? Optional.of(swiftAttributes.moduleName()) : Optional.empty();
+    ModuleMapMode moduleMapMode = getModuleMapMode(targetNode);
+    ImmutableMap<Path, Path> nonSourcePaths = swiftAttributes.publicHeaderMapEntries();
 
     LOG.verbose(
         "Building header symlink tree at %s with contents %s", headerSymlinkTreeRoot, contents);
@@ -3150,19 +3143,6 @@ public class ProjectGenerator {
     }
   }
 
-  private String getModuleName(TargetNode<?> buildTargetNode) {
-    Optional<String> swiftName =
-        TargetNodes.castArg(buildTargetNode, SwiftLibraryDescriptionArg.class)
-            .flatMap(node -> node.getConstructorArg().getModuleName());
-    if (swiftName.isPresent()) {
-      return swiftName.get();
-    }
-
-    return TargetNodes.castArg(buildTargetNode, CommonArg.class)
-        .flatMap(node -> node.getConstructorArg().getModuleName())
-        .orElse(buildTargetNode.getBuildTarget().getShortName());
-  }
-
   private String getProductName(TargetNode<?> buildTargetNode) {
     return TargetNodes.castArg(buildTargetNode, AppleBundleDescriptionArg.class)
         .flatMap(node -> node.getConstructorArg().getProductName())
@@ -3184,63 +3164,6 @@ public class ProjectGenerator {
     } else {
       return targetNode.getBuildTarget().getShortName();
     }
-  }
-
-  private static Path getDerivedSourcesDirectoryForBuildTarget(
-      BuildTarget buildTarget, ProjectFilesystem fs) {
-    String fullTargetName = buildTarget.getFullyQualifiedName();
-    byte[] utf8Bytes = fullTargetName.getBytes(Charset.forName("UTF-8"));
-
-    Hasher hasher = Hashing.sha1().newHasher();
-    hasher.putBytes(utf8Bytes);
-
-    String targetSha1Hash = hasher.hash().toString();
-    String targetFolderName = buildTarget.getShortName() + "-" + targetSha1Hash;
-
-    Path xcodeDir = fs.getBuckPaths().getXcodeDir();
-    Path derivedSourcesDir = xcodeDir.resolve("derived-sources").resolve(targetFolderName);
-
-    return derivedSourcesDir;
-  }
-
-  private String getSwiftObjCGeneratedHeaderName(TargetNode<?> node) {
-    return getModuleName(node) + "-Swift.h";
-  }
-
-  private Path getSwiftObjCGeneratedHeaderPath(TargetNode<?> node, ProjectFilesystem fs) {
-    Path derivedSourcesDir = getDerivedSourcesDirectoryForBuildTarget(node.getBuildTarget(), fs);
-    return derivedSourcesDir.resolve(getSwiftObjCGeneratedHeaderName(node));
-  }
-
-  private ImmutableMap<Path, Path> getSwiftPublicHeaderMapEntriesForTarget(
-      TargetNode<? extends CommonArg> node) {
-    boolean hasSwiftVersionArg = getSwiftVersionForTargetNode(node).isPresent();
-    if (!hasSwiftVersionArg) {
-      return ImmutableMap.of();
-    }
-
-    Optional<TargetNode<AppleNativeTargetDescriptionArg>> maybeAppleNode =
-        TargetNodes.castArg(node, AppleNativeTargetDescriptionArg.class);
-    if (!maybeAppleNode.isPresent()) {
-      return ImmutableMap.of();
-    }
-
-    TargetNode<? extends AppleNativeTargetDescriptionArg> appleNode = maybeAppleNode.get();
-    if (!projGenerationStateCache.targetContainsSwiftSourceCode(appleNode)) {
-      return ImmutableMap.of();
-    }
-
-    BuildTarget buildTarget = appleNode.getBuildTarget();
-    Path headerPrefix =
-        AppleDescriptions.getHeaderPathPrefix(appleNode.getConstructorArg(), buildTarget);
-    Path relativePath = headerPrefix.resolve(getSwiftObjCGeneratedHeaderName(appleNode));
-
-    ImmutableSortedMap.Builder<Path, Path> builder = ImmutableSortedMap.naturalOrder();
-    builder.put(
-        relativePath,
-        getSwiftObjCGeneratedHeaderPath(appleNode, projectFilesystem).toAbsolutePath());
-
-    return builder.build();
   }
 
   /** @param targetNode Must have a header symlink tree or an exception will be thrown. */
