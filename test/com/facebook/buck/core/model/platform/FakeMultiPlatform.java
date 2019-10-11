@@ -16,6 +16,7 @@
 package com.facebook.buck.core.model.platform;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -29,6 +30,7 @@ public class FakeMultiPlatform implements MultiPlatform {
       BuildTarget buildTarget,
       NamedPlatform basePlatform,
       ImmutableList<NamedPlatform> nestedPlatforms) {
+    ConfigurationForConfigurationTargets.validateTarget(buildTarget);
     this.basePlatform = basePlatform;
     this.buildTarget = buildTarget;
     this.nestedPlatforms = nestedPlatforms;

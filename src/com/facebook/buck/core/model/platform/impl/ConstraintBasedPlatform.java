@@ -17,6 +17,7 @@
 package com.facebook.buck.core.model.platform.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.NamedPlatform;
 import com.facebook.buck.core.model.platform.Platform;
@@ -30,6 +31,7 @@ public class ConstraintBasedPlatform implements NamedPlatform {
 
   public ConstraintBasedPlatform(
       BuildTarget buildTarget, ImmutableSet<ConstraintValue> constraintValues) {
+    ConfigurationForConfigurationTargets.validateTarget(buildTarget);
     this.buildTarget = buildTarget;
     this.constraintValues = constraintValues;
   }

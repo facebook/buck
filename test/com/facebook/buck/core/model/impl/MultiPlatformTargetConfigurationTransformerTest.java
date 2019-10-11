@@ -20,7 +20,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -68,7 +67,8 @@ public class MultiPlatformTargetConfigurationTransformerTest {
                 new FakeMultiPlatform(
                     multiPlatformBuildTarget,
                     new ConstraintBasedPlatform(
-                        BuildTargetFactory.newInstance("//:platform"), ImmutableSet.of()),
+                        ConfigurationBuildTargetFactoryForTests.newInstance("//:platform"),
+                        ImmutableSet.of()),
                     ImmutableList.of()));
 
     assertTrue(

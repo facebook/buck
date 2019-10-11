@@ -82,7 +82,8 @@ public class TargetCompatibilityCheckerTest {
   public void setUp() {
     platform =
         new ConstraintBasedPlatform(
-            BuildTargetFactory.newInstance("//platform:platform"), ImmutableSet.of(cs1v1));
+            ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform"),
+            ImmutableSet.of(cs1v1));
     ConstraintResolver constraintResolver =
         new RuleBasedConstraintResolver(
             buildTarget -> {

@@ -17,6 +17,7 @@ package com.facebook.buck.android.toolchain.platform;
 
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.platform.MultiPlatform;
 import com.facebook.buck.core.model.platform.NamedPlatform;
 import com.facebook.buck.core.model.platform.Platform;
@@ -43,6 +44,7 @@ public class AndroidMultiPlatform implements MultiPlatform {
       BuildTarget buildTarget,
       Platform basePlatform,
       ImmutableSortedMap<TargetCpuType, NamedPlatform> nestedPlatforms) {
+    ConfigurationForConfigurationTargets.validateTarget(buildTarget);
     this.buildTarget = buildTarget;
     this.basePlatform = basePlatform;
     this.nestedPlatforms = nestedPlatforms;
