@@ -236,6 +236,11 @@ public abstract class AbstractBuildPackageComputationTest {
   @Parameters(method = "getAnyPathParams")
   public void processesSymlinkBuildFiles(Kind kind, String targetName)
       throws ExecutionException, InterruptedException, IOException {
+
+    // Watchman throws "GetOverlappedResult() failed for read operation" while trying
+    // with symlinks on Windows
+    assumeFalse(isWindows());
+
     filesystem.mkdirs(Paths.get("dir1"));
     filesystem.mkdirs(Paths.get("dir2"));
     filesystem.createSymLink(Paths.get("dir1/BUCK"), Paths.get("dir2/BUCK_SYMLINK"), false);
