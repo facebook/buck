@@ -19,6 +19,7 @@ package com.facebook.buck.features.python.toolchain;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 /**
@@ -35,4 +36,7 @@ public interface PythonPlatform extends FlavorConvertible {
 
   /** @return the {@link BuildTarget} wrapping the C/C++ library used by C/C++ extensions. */
   Optional<BuildTarget> getCxxLibrary();
+
+  /** @return flags that should be added to the hashbang of inplace python binaries */
+  ImmutableList<String> getInplaceBinaryInterpreterFlags();
 }

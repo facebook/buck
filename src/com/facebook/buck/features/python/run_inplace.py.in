@@ -1,4 +1,4 @@
-#!<PYTHON> -Es
+#!<PYTHON> <PYTHON_INTERPRETER_FLAGS>
 
 import os
 import sys
@@ -78,7 +78,7 @@ __run()
     this_file=__file__,
 )
 
-args = [sys.executable, '-Es', '-c', STARTUP]
+args = [sys.executable, '<PYTHON_INTERPRETER_FLAGS>', '-c', STARTUP]
 
 # Default to 'd' warnings, but allow users to control this via PYTHONWARNINGS
 # The -E causes python to ignore all PYTHON* environment vars so we have to

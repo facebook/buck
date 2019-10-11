@@ -154,7 +154,8 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
                       : getRunInplaceLiteResource())
               .add("PYTHON", pythonPlatform.getEnvironment().getPythonPath())
               .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
-              .add("MODULES_DIR", relativeLinkTreeRootStr);
+              .add("MODULES_DIR", relativeLinkTreeRootStr)
+              .add("PYTHON_INTERPRETER_FLAGS", pythonPlatform.getInplaceBinaryInterpreterFlags());
 
       // Only add platform-specific values when the binary includes native libraries.
       if (components.getNativeLibraries().isEmpty()) {
@@ -192,7 +193,10 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder(python)
+    CommandTool.Builder builder = new CommandTool.Builder(python);
+    getPythonPlatform().getInplaceBinaryInterpreterFlags().forEach(builder::addArg);
+
+    return builder
         .addArg(SourcePathArg.of(getSourcePathToOutput()))
         .addNonHashableInput(linkTree.getRootSourcePath())
         .addInputs(getComponents().getModules().values())
