@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.model;
 
+import com.google.common.base.Preconditions;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -29,6 +30,15 @@ public class ConfigurationForConfigurationTargets implements TargetConfiguration
   private final int hashCode = Objects.hash(ConfigurationForConfigurationTargets.class.getName());
 
   private ConfigurationForConfigurationTargets() {}
+
+  /** Validate build target is configuration target */
+  public static void validateTarget(BuildTarget buildTarget) {
+    Preconditions.checkArgument(
+        buildTarget.getTargetConfiguration() == INSTANCE,
+        "must be a configuration target: %s (%s)",
+        buildTarget,
+        buildTarget.getTargetConfiguration());
+  }
 
   @Override
   public int hashCode() {

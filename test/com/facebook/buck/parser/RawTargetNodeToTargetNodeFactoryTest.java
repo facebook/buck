@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -64,7 +63,8 @@ public class RawTargetNodeToTargetNodeFactoryTest {
 
   @Test
   public void testTargetNodeCreatedWithAttributes() {
-    BuildTarget targetPlatform = BuildTargetFactory.newInstance("//config:platform");
+    BuildTarget targetPlatform =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//config:platform");
     TargetConfiguration targetConfiguration =
         ImmutableDefaultTargetConfiguration.of(targetPlatform);
     BuildTarget buildTarget =

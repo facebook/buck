@@ -39,7 +39,8 @@ public class MultiPlatformTargetConfigurationTransformerTest {
 
   @Test
   public void noTransformationForRegularPlatform() {
-    BuildTarget platformBuildTarget = BuildTargetFactory.newInstance("//:platform");
+    BuildTarget platformBuildTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//:platform");
     MultiPlatformTargetConfigurationTransformer transformer =
         new MultiPlatformTargetConfigurationTransformer(
             configuration -> new ConstraintBasedPlatform(platformBuildTarget, ImmutableSet.of()));
@@ -59,7 +60,8 @@ public class MultiPlatformTargetConfigurationTransformerTest {
 
   @Test
   public void transformationNeededForMultiPlatform() {
-    BuildTarget multiPlatformBuildTarget = BuildTargetFactory.newInstance("//:multi_platform");
+    BuildTarget multiPlatformBuildTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//:multi_platform");
     MultiPlatformTargetConfigurationTransformer transformer =
         new MultiPlatformTargetConfigurationTransformer(
             configuration ->
@@ -76,7 +78,8 @@ public class MultiPlatformTargetConfigurationTransformerTest {
 
   @Test
   public void transformFailsWithNonMultiPlatform() {
-    BuildTarget platformBuildTarget = BuildTargetFactory.newInstance("//:platform");
+    BuildTarget platformBuildTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//:platform");
     MultiPlatformTargetConfigurationTransformer transformer =
         new MultiPlatformTargetConfigurationTransformer(
             configuration -> new ConstraintBasedPlatform(platformBuildTarget, ImmutableSet.of()));
