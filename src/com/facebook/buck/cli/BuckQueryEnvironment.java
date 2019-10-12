@@ -30,6 +30,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
@@ -426,7 +427,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
                   targetsToNodes.get(dep), "Couldn't find TargetNode for %s", dep));
         }
       }
-    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+    } catch (CycleException e) {
       throw new QueryException(e, e.getMessage());
     }
 

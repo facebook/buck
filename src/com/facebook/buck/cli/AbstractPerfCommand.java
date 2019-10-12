@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.event.FlushConsoleEvent;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -195,8 +196,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
 
   /** Gets a list of the rules in the graph reachable from the provided targets. */
   protected static ImmutableList<BuildRule> getRulesInGraph(
-      ActionGraphBuilder graphBuilder, Iterable<BuildTarget> targets)
-      throws AcyclicDepthFirstPostOrderTraversal.CycleException {
+      ActionGraphBuilder graphBuilder, Iterable<BuildTarget> targets) throws CycleException {
     ImmutableList.Builder<BuildRule> rulesBuilder = ImmutableList.builder();
 
     ImmutableSortedSet<BuildRule> topLevelRules = graphBuilder.requireAllRules(targets);

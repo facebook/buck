@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
@@ -221,7 +222,7 @@ abstract class AbstractParser implements Parser {
 
       targetGraph = new TargetGraph(graph, ImmutableMap.copyOf(index));
       return new ImmutableTargetGraphCreationResult(targetGraph, toExplore);
-    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+    } catch (CycleException e) {
       throw new HumanReadableException(e.getMessage());
     } catch (RuntimeException e) {
       throw propagateRuntimeCause(e);

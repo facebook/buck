@@ -17,6 +17,7 @@
 package com.facebook.buck.features.project.intellij.aggregation;
 
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
@@ -79,7 +80,7 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
       for (AggregationTreeNode node : nodesToTraverse) {
         aggregateModules(node);
       }
-    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+    } catch (CycleException e) {
       throw new IllegalStateException("Cycle detected despite using a tree", e);
     }
   }
@@ -258,7 +259,7 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
                 }
               });
       return result;
-    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+    } catch (CycleException e) {
       throw new IllegalStateException("Cycle detected despite using a tree", e);
     }
   }

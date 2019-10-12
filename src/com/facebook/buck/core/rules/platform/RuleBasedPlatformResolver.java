@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -55,7 +56,7 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
     try {
       platformTargets =
           ImmutableSet.copyOf(platformTraversal.traverse(ImmutableList.of(buildTarget)));
-    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+    } catch (CycleException e) {
       throw new HumanReadableException(e.getMessage());
     }
 

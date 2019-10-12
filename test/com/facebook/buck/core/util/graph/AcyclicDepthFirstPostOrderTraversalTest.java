@@ -20,7 +20,6 @@ import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
@@ -216,8 +215,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
       this.numFindChildrenCalls = 0;
     }
 
-    public void traverse(Iterable<String> initial)
-        throws AcyclicDepthFirstPostOrderTraversal.CycleException {
+    public void traverse(Iterable<String> initial) throws CycleException {
       AcyclicDepthFirstPostOrderTraversal<String> traversal =
           new AcyclicDepthFirstPostOrderTraversal<>(
               node -> {

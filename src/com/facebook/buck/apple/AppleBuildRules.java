@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -315,7 +316,7 @@ public final class AppleBuildRules {
           filteredRules.add(node);
         }
       }
-    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+    } catch (CycleException e) {
       // actual load failures and cycle exceptions should have been caught at an earlier stage
       throw new RuntimeException(e);
     }

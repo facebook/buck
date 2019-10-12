@@ -49,7 +49,7 @@ import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegist
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;

@@ -50,7 +50,7 @@ public abstract class AbstractBottomUpTraversal<T, E extends Throwable> {
               .traverse(roots, shouldExploreChildren)) {
         visit(node);
       }
-    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+    } catch (CycleException e) {
       throw new IllegalStateException(
           "Cycle detected despite graph which was claimed to be a DAG", e);
     }

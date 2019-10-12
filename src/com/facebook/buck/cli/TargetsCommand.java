@@ -53,7 +53,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;

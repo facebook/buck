@@ -21,7 +21,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;

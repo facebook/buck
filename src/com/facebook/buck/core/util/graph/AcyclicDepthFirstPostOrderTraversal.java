@@ -16,11 +16,7 @@
 
 package com.facebook.buck.core.util.graph;
 
-import static com.facebook.buck.util.string.MoreStrings.linesToText;
-
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.util.Deque;
 import java.util.HashSet;
@@ -153,25 +149,5 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
         chain);
 
     return new CycleException(chain);
-  }
-
-  public static final class CycleException extends Exception {
-
-    private final ImmutableList<?> nodes;
-
-    private CycleException(Iterable<?> nodes) {
-      super(
-          linesToText(
-              "Buck can't handle circular dependencies.",
-              "The following circular dependency has been found:",
-              Joiner.on(" -> ").join(nodes),
-              "",
-              "Please break the circular dependency and try again."));
-      this.nodes = ImmutableList.copyOf(nodes);
-    }
-
-    public ImmutableList<?> getCycle() {
-      return nodes;
-    }
   }
 }

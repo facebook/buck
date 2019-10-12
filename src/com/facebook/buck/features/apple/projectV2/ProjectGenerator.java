@@ -91,6 +91,7 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
@@ -1063,7 +1064,7 @@ public class ProjectGenerator {
                   });
         }
       }
-    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+    } catch (CycleException e) {
       throw new RuntimeException(e);
     }
     return filteredRules.build();
