@@ -24,15 +24,16 @@ import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResu
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
 import com.facebook.buck.core.util.graph.CycleException;
-import com.facebook.buck.core.util.graph.GraphTraversable;
+import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -172,7 +173,7 @@ abstract class AbstractParser implements Parser {
     ParseEvent.Started parseStart = ParseEvent.started(toExplore);
     eventBus.post(parseStart);
 
-    GraphTraversable<BuildTarget> traversable =
+    GraphTraversableWithPayload<BuildTarget, TargetNode<?>> traversable =
         target -> {
           TargetNode<?> node;
           try {
@@ -195,18 +196,19 @@ abstract class AbstractParser implements Parser {
               throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
             }
           }
-          return node.getTotalDeps().iterator();
+          return new Pair<>(node, node.getTotalDeps().iterator());
         };
 
-    AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetNodeTraversal =
-        new AcyclicDepthFirstPostOrderTraversal<>(traversable);
+    AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, TargetNode<?>> targetNodeTraversal =
+        new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
 
     TargetGraph targetGraph = null;
     try {
-      for (BuildTarget target : targetNodeTraversal.traverse(toExplore)) {
-        TargetNode<?> targetNode = state.getTargetNode(target);
+      for (Map.Entry<BuildTarget, TargetNode<?>> targetAndNode :
+          targetNodeTraversal.traverse(toExplore).entrySet()) {
+        BuildTarget target = targetAndNode.getKey();
+        TargetNode<?> targetNode = targetAndNode.getValue();
 
-        Preconditions.checkNotNull(targetNode, "No target node found for %s", target);
         assertTargetIsCompatible(state, targetNode);
 
         graph.addNode(targetNode);
