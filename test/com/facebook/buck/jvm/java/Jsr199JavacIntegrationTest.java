@@ -34,6 +34,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.Javac.Invocation;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.MockClassLoader;
@@ -61,6 +62,8 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -252,6 +255,10 @@ public class Jsr199JavacIntegrationTest {
 
   @Test
   public void shouldUseSpecifiedJavacJar() throws Exception {
+    // TODO(T47912516): Remove or test for expected error message after we've decided how to handle
+    //                  javac JARs in Java 11.
+    Assume.assumeThat(JavaVersion.getMajorVersion(), Matchers.lessThanOrEqualTo(8));
+
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule rule = new FakeBuildRule("//:fake");
     graphBuilder.addToIndex(rule);

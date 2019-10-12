@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -33,6 +34,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import java.io.IOException;
 import java.nio.file.Path;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -41,6 +45,13 @@ public class RobolectricTestRuleIntegrationTest {
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
+
+  @Before
+  public void setUp() {
+    // TODO(T47912516): Remove once we can upgrade our Robolectric libraries and run this on Java
+    //                  11.
+    Assume.assumeThat(JavaVersion.getMajorVersion(), Matchers.lessThanOrEqualTo(8));
+  }
 
   @Test
   public void testRobolectricTestBuildsWithDummyR() throws IOException {
