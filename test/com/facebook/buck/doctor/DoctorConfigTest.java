@@ -63,10 +63,7 @@ public class DoctorConfigTest {
                 ImmutableMap.of(
                     "doctor",
                     ImmutableMap.of(
-                        "report_upload_path",
-                        testPath,
-                        "slb_server_pool",
-                        "https://stampede-frontend-prod.internal.tfbnw.net")))
+                        "report_upload_path", testPath, "slb_server_pool", "https://test.url.net")))
             .build();
     DoctorConfig config = new ImmutableDoctorConfig(buckConfig);
     assertThat(config.getReportUploadPath(), Matchers.equalTo(testPath));
