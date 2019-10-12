@@ -27,6 +27,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -70,18 +71,32 @@ public class JavaTestIntegrationTest {
     result.assertFailure();
     String stderr = result.getStderr();
 
-    // Javac emits different errors on Windows !?!
     String lookFor;
-    if (Platform.detect() == Platform.WINDOWS) {
-      // Note: javac puts wrong line ending
-      lookFor =
-          "cannot find symbol\n"
-              + "  symbol:   class Nullable\n"
-              + "  location: package javax.annotation"
-              + System.lineSeparator()
-              + "import javax.annotation.Nullable;";
+    if (JavaVersion.getMajorVersion() <= 8) {
+      // Javac emits different errors on Windows !?!
+      if (Platform.detect() == Platform.WINDOWS) {
+        // Note: javac puts wrong line ending
+        lookFor =
+            "cannot find symbol\n"
+                + "  symbol:   class Nullable\n"
+                + "  location: package javax.annotation"
+                + System.lineSeparator()
+                + "import javax.annotation.Nullable;";
+      } else {
+        lookFor =
+            "cannot find symbol" + System.lineSeparator() + "import javax.annotation.Nullable;";
+      }
     } else {
-      lookFor = "cannot find symbol" + System.lineSeparator() + "import javax.annotation.Nullable;";
+      lookFor =
+          "cannot find symbol"
+              + System.lineSeparator()
+              + "  @Nullable private String foobar;"
+              + System.lineSeparator()
+              + "   ^"
+              + System.lineSeparator()
+              + "  symbol:   class Nullable"
+              + System.lineSeparator()
+              + "  location: class com.facebook.buck.example.UsesNullable";
     }
     assertTrue(stderr, stderr.contains(lookFor));
   }
