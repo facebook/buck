@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Optional;
 import org.junit.Test;
 
 public class ConstraintBasedPlatformTest {
@@ -36,17 +35,17 @@ public class ConstraintBasedPlatformTest {
       ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform");
 
   private final ConstraintSetting cs1 =
-      ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs1"), Optional.empty());
+      ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs1"));
   private final ConstraintValue cs1v1 =
       ConstraintValue.of(BuildTargetFactory.newInstance("//cs:cs1v1"), cs1);
 
   private final ConstraintSetting cs2 =
-      ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs2"), Optional.empty());
+      ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs2"));
   private final ConstraintValue cs2v1 =
       ConstraintValue.of(BuildTargetFactory.newInstance("//cs:cs2v1"), cs2);
 
   private final ConstraintSetting cs3 =
-      ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs3"), Optional.empty());
+      ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs3"));
   private final ConstraintValue cs3v1 =
       ConstraintValue.of(BuildTargetFactory.newInstance("//cs:cs3v1"), cs3);
 

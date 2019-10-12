@@ -60,7 +60,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closer;
 import java.io.IOException;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Factory that creates {@link GraphTransformationEngine} for given parameters */
@@ -176,13 +175,12 @@ public class GraphEngineFactory {
             new ConstraintResolver() {
               @Override
               public ConstraintSetting getConstraintSetting(BuildTarget buildTarget) {
-                return ConstraintSetting.of(buildTarget, Optional.empty());
+                return ConstraintSetting.of(buildTarget);
               }
 
               @Override
               public ConstraintValue getConstraintValue(BuildTarget buildTarget) {
-                return ConstraintValue.of(
-                    buildTarget, ConstraintSetting.of(buildTarget, Optional.empty()));
+                return ConstraintValue.of(buildTarget, ConstraintSetting.of(buildTarget));
               }
             },
             targetPlatformResolver,

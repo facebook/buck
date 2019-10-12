@@ -18,7 +18,6 @@ package com.facebook.buck.core.model.platform;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Represents a group of constraints defined using {@code constraint_setting}. */
@@ -27,8 +26,4 @@ import org.immutables.value.Value;
 public abstract class AbstractConstraintSetting {
   @Value.Parameter
   public abstract BuildTarget getBuildTarget();
-
-  @Value.Parameter
-  @Value.Auxiliary
-  public abstract Optional<HostConstraintDetector> getHostConstraintDetector();
 }

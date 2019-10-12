@@ -65,7 +65,7 @@ public class TargetCompatibilityCheckerTest {
 
   private final BuildTarget cs1target =
       ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1");
-  private final ConstraintSetting cs1 = ConstraintSetting.of(cs1target, Optional.empty());
+  private final ConstraintSetting cs1 = ConstraintSetting.of(cs1target);
   private final BuildTarget cs1v1target =
       ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1v1");
   private final ConstraintValue cs1v1 = ConstraintValue.of(cs1v1target, cs1);
