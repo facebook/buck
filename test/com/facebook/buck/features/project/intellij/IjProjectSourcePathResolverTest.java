@@ -24,8 +24,13 @@ import com.facebook.buck.android.AndroidBuildConfigDescriptionArg;
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
+import com.facebook.buck.android.AndroidManifest;
+import com.facebook.buck.android.AndroidManifestDescription;
+import com.facebook.buck.android.AndroidManifestDescriptionArg;
+import com.facebook.buck.android.AndroidManifestFactory;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -145,15 +150,6 @@ public class IjProjectSourcePathResolverTest {
   }
 
   @Test
-  public void testAndroidBuildConfig() {
-    TargetNode<AndroidBuildConfigDescriptionArg> byReference =
-        new AndroidBuildConfigBuilder(BuildTargetFactory.newInstance("//android:build_config"))
-            .setPackage("com.example.foo")
-            .build(filesystem);
-    assertOutputPathsEqual(byReference);
-  }
-
-  @Test
   public void testPrebuiltJar() {
     TargetNode<PrebuiltJarDescriptionArg> node =
         PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//prebuilt:one.jar"))
@@ -219,6 +215,37 @@ public class IjProjectSourcePathResolverTest {
         FilegroupBuilder.createBuilder(BuildTargetFactory.newInstance("//files:group"))
             .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("file.txt")))
             .build(filesystem);
+    assertOutputPathsEqual(node);
+  }
+
+  @Test
+  public void testAndroidBuildConfig() {
+    TargetNode<AndroidBuildConfigDescriptionArg> node =
+        new AndroidBuildConfigBuilder(BuildTargetFactory.newInstance("//android:build_config"))
+            .setPackage("com.example.foo")
+            .build(filesystem);
+    assertOutputPathsEqual(node);
+  }
+
+  @Test
+  public void testAndroidManifest() {
+    AbstractNodeBuilder<
+            AndroidManifestDescriptionArg.Builder,
+            AndroidManifestDescriptionArg,
+            AndroidManifestDescription,
+            AndroidManifest>
+        builder =
+            new AbstractNodeBuilder<
+                AndroidManifestDescriptionArg.Builder,
+                AndroidManifestDescriptionArg,
+                AndroidManifestDescription,
+                AndroidManifest>(
+                new AndroidManifestDescription(new AndroidManifestFactory()),
+                BuildTargetFactory.newInstance("//app:manifest")) {};
+    builder
+        .getArgForPopulating()
+        .setSkeleton(PathSourcePath.of(filesystem, Paths.get("app/AndroidManifest.xml")));
+    TargetNode<AndroidManifestDescriptionArg> node = builder.build(filesystem);
     assertOutputPathsEqual(node);
   }
 

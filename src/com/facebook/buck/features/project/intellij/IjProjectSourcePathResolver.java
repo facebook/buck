@@ -18,6 +18,7 @@ package com.facebook.buck.features.project.intellij;
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidBuildConfigDescription;
 import com.facebook.buck.android.AndroidLibraryDescription;
+import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.core.description.BaseDescription;
@@ -105,6 +106,9 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       // All the JVM languages currently use DefaultJavaLibrary under the hood, so we can share
       // the implementation for these languages here
       return getOutputPathFromJavaBuildTarget(buildTarget, filesystem);
+    } else if (description instanceof AndroidManifestDescription) {
+      return Optional.of(
+          BuildTargetPaths.getGenPath(filesystem, buildTarget, "AndroidManifest__%s__.xml"));
     } else if (isJvmTestTargetNode(targetNode)) {
       // Test targets compile their code into a standard library under the hood using the
       // TESTS_FLAVOR
