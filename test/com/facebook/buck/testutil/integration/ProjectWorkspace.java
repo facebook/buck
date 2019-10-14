@@ -538,6 +538,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
         }
       }
       envBuilder.putAll(environmentOverrides);
+      envBuilder.put(
+          "BUCK_CLIENT_PWD", repoRoot.toAbsolutePath().resolve(relativeWorkingDir).toString());
 
       ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
       BackgroundTaskManager manager = AsyncBackgroundTaskManager.of();
@@ -895,5 +897,21 @@ public class ProjectWorkspace extends AbstractWorkspace {
         "'verify(subdirectory)' takes a relative path, but received '%s'",
         subdirectory);
     assertPathsEqual(templatePath.resolve(subdirectory), destPath.resolve(subdirectory));
+  }
+
+  /**
+   * Add the correct environment variable to emulate executing buck wrapper from a working directory
+   */
+  public static ImmutableMap<String, String> setAbsoluteClientWorkingDir(
+      Path workingDir, ImmutableMap<String, String> existingEnv) {
+    ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
+    envBuilder.put("BUCK_CLIENT_PWD", workingDir.toAbsolutePath().toString());
+    existingEnv.forEach(
+        (k, v) -> {
+          if (!k.equals("BUCK_CLIENT_PWD")) {
+            envBuilder.put(k, v);
+          }
+        });
+    return envBuilder.build();
   }
 }

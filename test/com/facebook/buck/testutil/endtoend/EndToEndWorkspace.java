@@ -388,7 +388,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
         ProcessExecutorParams.builder()
             .setCommand(command)
             .setEnvironment(environment)
-            .setDirectory(destPath.toAbsolutePath())
+            .setDirectory(destPath.resolve(relativeWorkingDir).toAbsolutePath())
             .build();
     ProcessExecutor.Result result =
         processExecutor.launchAndExecute(
@@ -423,7 +423,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
         ProcessExecutorParams.builder()
             .setCommand(command)
             .setEnvironment(environment)
-            .setDirectory(destPath.toAbsolutePath())
+            .setDirectory(destPath.resolve(relativeWorkingDir).toAbsolutePath())
             .build();
     return processExecutor.launchProcess(params);
   }

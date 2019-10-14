@@ -164,13 +164,16 @@ public class DaemonIntegrationTest {
   private Runnable createRunnableCommand(ExitCode expectedExitCode, String... args) {
     return () -> {
       try {
+        ImmutableMap<String, String> env =
+            ProjectWorkspace.setAbsoluteClientWorkingDir(
+                tmp.getRoot(), EnvVariablesProvider.getSystemEnv());
         BackgroundTaskManager manager = TestBackgroundTaskManager.of();
         MainForTests main =
             new MainForTests(
                 new TestConsole(),
                 new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
                 tmp.getRoot(),
-                EnvVariablesProvider.getSystemEnv(),
+                env,
                 Optional.of(new TestContext()));
 
         MainRunner mainRunner = main.prepareMainRunner(manager);

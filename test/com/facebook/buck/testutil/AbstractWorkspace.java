@@ -24,6 +24,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Charsets;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.BufferedOutputStream;
@@ -43,6 +44,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -93,6 +95,7 @@ public abstract class AbstractWorkspace {
   protected static final String SKIP_SUFFIX = "win.expected";
 
   protected Path destPath;
+  protected Path relativeWorkingDir = Paths.get("");
   private final Map<String, Map<String, String>> localConfigs = new HashMap<>();
   private boolean firstTemplateAdded = false;
 
@@ -449,6 +452,15 @@ public abstract class AbstractWorkspace {
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
   public abstract ProcessResult runBuckCommand(String... args) throws Exception;
+
+  /**
+   * Set the subdirectory that commands will be executed from. Note that this might just set env
+   * vars for some workspaces
+   */
+  public void setRelativeWorkingDirectory(Path relativeWorkingDir) {
+    Verify.verify(!relativeWorkingDir.isAbsolute());
+    this.relativeWorkingDir = relativeWorkingDir;
+  }
 
   /**
    * Runs Buck with the specified list of command-line arguments with the given map of environment
