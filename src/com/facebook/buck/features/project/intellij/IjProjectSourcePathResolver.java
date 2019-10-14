@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidBuildConfigDescription;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
@@ -81,7 +82,9 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
-    if (description instanceof AndroidResourceDescription) {
+    if (description instanceof AndroidBinaryDescription) {
+      return getOutputPathForAndroidBinary(buildTarget, filesystem);
+    } else if (description instanceof AndroidResourceDescription) {
       return getOutputPathForAndroidResource(buildTarget, filesystem);
     } else if (description instanceof AndroidBuildConfigDescription) {
       // AndroidBuildConfig is just a library made of generated sources under the hood
@@ -267,5 +270,14 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       return Optional.of(
           BuildTargetPaths.getGenPath(filesystem, buildTarget, "__%s_text_symbols__"));
     }
+  }
+
+  /**
+   * Calculate the output path of the apk produced by an android_binary rule from the information in
+   * the constructor Arg
+   */
+  private Optional<Path> getOutputPathForAndroidBinary(
+      BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.apk"));
   }
 }

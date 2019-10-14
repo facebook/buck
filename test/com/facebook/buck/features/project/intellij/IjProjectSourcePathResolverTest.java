@@ -17,6 +17,8 @@ package com.facebook.buck.features.project.intellij;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.AndroidBinaryBuilder;
+import com.facebook.buck.android.AndroidBinaryDescriptionArg;
 import com.facebook.buck.android.AndroidBuildConfigBuilder;
 import com.facebook.buck.android.AndroidBuildConfigDescriptionArg;
 import com.facebook.buck.android.AndroidResourceBuilder;
@@ -43,6 +45,8 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JavaTestDescriptionArg;
+import com.facebook.buck.jvm.java.KeystoreBuilder;
+import com.facebook.buck.jvm.java.KeystoreDescriptionArg;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
 import com.facebook.buck.shell.ExportFileBuilder;
@@ -64,6 +68,24 @@ public class IjProjectSourcePathResolverTest {
   @Before
   public void setUp() throws Exception {
     filesystem = new FakeProjectFilesystem();
+  }
+
+  @Test
+  public void testAndroidBinary() {
+    BuildTarget target = BuildTargetFactory.newInstance("//app:app");
+    BuildTarget keystore = BuildTargetFactory.newInstance("//app:keystore");
+    TargetNode<KeystoreDescriptionArg> keystoreNode =
+        KeystoreBuilder.createBuilder(keystore)
+            .setStore(FakeSourcePath.of("keystore/debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystore/debug.keystore.properties"))
+            .build(filesystem);
+    TargetNode<AndroidBinaryDescriptionArg> node =
+        AndroidBinaryBuilder.createBuilder(target)
+            .setKeystore(keystore)
+            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
+            .build(filesystem);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(keystoreNode, node);
+    assertOutputPathsEqual(targetGraph, target);
   }
 
   @Test
