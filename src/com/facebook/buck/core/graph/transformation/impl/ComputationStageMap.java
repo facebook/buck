@@ -46,11 +46,10 @@ class ComputationStageMap {
 
   @SuppressWarnings("unchecked")
   /** @return the corresponding {@link GraphComputationStage} for the given {@link ComputeKey} */
-  GraphComputationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult> get(
-      ComputeKey<? extends ComputeResult> key) {
+  <UResultType extends ComputeResult, UKeyType extends ComputeKey<UResultType>>
+      GraphComputationStage<UKeyType, UResultType> get(UKeyType key) {
     GraphComputationStage<?, ?> ret = stageMaps.get(key.getIdentifier());
     Verify.verify(ret != null, "Unknown stage for key: (%s) requested.", key);
-    return (GraphComputationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult>)
-        ret;
+    return (GraphComputationStage<UKeyType, UResultType>) ret;
   }
 }

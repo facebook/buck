@@ -569,7 +569,8 @@ public class DefaultGraphTransformationEngineTest {
    * @param computationIndex the computationIndex of the engine
    */
   private static void assertComputationIndexBecomesEmpty(
-      ConcurrentHashMap<ComputeKey<? extends ComputeResult>, ? extends DepsAwareTask<?, ?>>
+      ConcurrentHashMap<
+              ? extends ComputeKey<? extends ComputeResult>, ? extends DepsAwareTask<?, ?>>
           computationIndex) {
     // wait for all tasks to complete in the computation.
     // we can have situation where the computation was completed by using the cache.
