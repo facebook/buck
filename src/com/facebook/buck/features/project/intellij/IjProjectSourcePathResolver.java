@@ -20,6 +20,7 @@ import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -27,6 +28,8 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
+import com.facebook.buck.features.filegroup.FileGroupDescriptionArg;
+import com.facebook.buck.features.filegroup.FilegroupDescription;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
@@ -61,7 +64,19 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
    *     resolve the given TargetNode type to an output path.
    */
   private Optional<Path> getOutputPathForTargetNode(TargetNode<?> targetNode) {
-    throw new UnsupportedOperationException("Not yet implemented");
+    BaseDescription<?> description = targetNode.getDescription();
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+    ProjectFilesystem filesystem = targetNode.getFilesystem();
+
+    if (description instanceof FilegroupDescription) {
+      return getOutputPathForFilegroup(
+          (FileGroupDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
+    } else {
+      // This SourcePathResolver does not attempt to exhaustively list all possible rule
+      // descriptions,
+      // instead opting to only implement those relevant for IjProject
+      return Optional.empty();
+    }
   }
 
   /**
@@ -122,5 +137,14 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
         || description instanceof ScalaTestDescription
         || description instanceof GroovyTestDescription
         || description instanceof KotlinTestDescription;
+  }
+
+  /** Calculate the output path for a Filegroup rule */
+  private Optional<Path> getOutputPathForFilegroup(
+      FileGroupDescriptionArg arg, BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    // This matches the implementation in Filegroup which uses the name of the rule as the output
+    // name for the exported files
+    String filename = arg.getName();
+    return Optional.of(BuildPaths.getGenDir(filesystem, buildTarget).resolve(filename));
   }
 }
