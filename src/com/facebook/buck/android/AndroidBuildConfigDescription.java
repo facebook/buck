@@ -48,7 +48,7 @@ public class AndroidBuildConfigDescription
     implements DescriptionWithTargetGraph<AndroidBuildConfigDescriptionArg>,
         ImplicitDepsInferringDescription<AndroidBuildConfigDescriptionArg> {
 
-  private static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
+  public static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
 
   private final JavacFactory javacFactory;
 

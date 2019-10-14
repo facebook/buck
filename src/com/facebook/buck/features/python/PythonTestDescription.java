@@ -89,7 +89,7 @@ public class PythonTestDescription
         ImplicitDepsInferringDescription<PythonTestDescription.AbstractPythonTestDescriptionArg>,
         VersionRoot<PythonTestDescriptionArg> {
 
-  private static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
+  public static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
 
   private final ToolchainProvider toolchainProvider;
   private final PythonBinaryDescription binaryDescription;

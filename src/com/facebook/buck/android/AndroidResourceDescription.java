@@ -78,8 +78,8 @@ public class AndroidResourceDescription
 
   private final AndroidBuckConfig androidBuckConfig;
 
-  @VisibleForTesting
-  static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR = InternalFlavor.of("resources-symlink-tree");
+  public static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR =
+      InternalFlavor.of("resources-symlink-tree");
 
   public static final Flavor ANDROID_RESOURCE_INDEX_FLAVOR =
       InternalFlavor.of("android-resource-index");
