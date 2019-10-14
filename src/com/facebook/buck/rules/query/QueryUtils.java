@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.query;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.HasApplicationModuleBlacklist;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.arg.HasProvidedDepsQuery;
 import com.facebook.buck.core.model.BuildTarget;
@@ -31,9 +32,11 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Threads;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -90,6 +93,53 @@ public final class QueryUtils {
             resolveDepQuery(
                 target, query, cache, graphBuilder, cellRoots, graph, castedArg.getProvidedDeps());
         arg = (T) castedArg.withProvidedDepsQuery(query.withResolvedQuery(resolvedQuery));
+      }
+    }
+
+    return arg;
+  }
+
+  /**
+   * Utility method for resolving queries in application_module_blacklist
+   *
+   * @param arg
+   * @param target
+   * @param cache
+   * @param graphBuilder
+   * @param cellRoots
+   * @param graph
+   * @param <T>
+   * @return args with the queries in application_module_blacklist resolved
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> T withModuleBlacklistQuery(
+      T arg,
+      BuildTarget target,
+      QueryCache cache,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      TargetGraph graph) {
+    if (arg instanceof HasApplicationModuleBlacklist) {
+      HasApplicationModuleBlacklist castedArg = (HasApplicationModuleBlacklist) arg;
+      if (castedArg.getApplicationModuleBlacklist().isPresent()) {
+        List<Query> queries = castedArg.getApplicationModuleBlacklist().get();
+
+        ImmutableList<Query> resolvedQueries =
+            queries.stream()
+                .map(
+                    query ->
+                        query.withResolvedQuery(
+                            resolveDepQuery(
+                                target,
+                                query,
+                                cache,
+                                graphBuilder,
+                                cellRoots,
+                                graph,
+                                ImmutableSet.of())))
+                .collect(ImmutableList.toImmutableList());
+
+        arg = (T) castedArg.withApplicationModuleBlacklist(resolvedQueries);
       }
     }
 

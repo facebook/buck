@@ -29,6 +29,7 @@ import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
 import com.facebook.buck.jvm.java.classes.ClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.FileLike;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -194,6 +195,29 @@ public class APKModuleGraph implements AddsToRuleKey {
                 Ordering.natural(),
                 module -> module,
                 module -> ImmutableSortedSet.copyOf(getGraph().getOutgoingNodesFor(module))));
+  }
+
+  /**
+   * Utility method for flattening a list of queries into the a list of the build targets they
+   * resolve to.
+   *
+   * @param queries list of queries, they are expected to have already been resolved
+   * @return list of build targets queries resolve to joined together
+   */
+  public static Optional<List<BuildTarget>> extractTargetsFromQueries(
+      Optional<List<Query>> queries) {
+    if (!queries.isPresent()) {
+      return Optional.empty();
+    }
+
+    ImmutableList<BuildTarget> targets =
+        queries.get().stream()
+            .map(query -> Optional.ofNullable(query.getResolvedQuery()))
+            .filter(resolution -> resolution.isPresent())
+            .flatMap(resolution -> resolution.get().stream())
+            .collect(ImmutableList.toImmutableList());
+
+    return Optional.of(targets);
   }
 
   private Optional<Map<String, List<BuildTarget>>> generateSeedConfigMap() {

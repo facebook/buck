@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.core.description.arg.HasApplicationModuleBlacklist;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -34,7 +35,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
-public interface AndroidGraphEnhancerArgs extends HasDuplicateAndroidResourceTypes {
+public interface AndroidGraphEnhancerArgs
+    extends HasDuplicateAndroidResourceTypes, HasApplicationModuleBlacklist {
   Optional<SourcePath> getManifest();
 
   Optional<SourcePath> getManifestSkeleton();
@@ -102,9 +104,6 @@ public interface AndroidGraphEnhancerArgs extends HasDuplicateAndroidResourceTyp
   }
 
   Optional<Map<String, List<String>>> getApplicationModuleDependencies();
-
-  @Hint(isDep = false)
-  Optional<List<BuildTarget>> getApplicationModuleBlacklist();
 
   @Value.Default
   default boolean getIsCacheable() {

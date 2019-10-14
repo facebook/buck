@@ -135,6 +135,9 @@ public abstract class AbstractNodeBuilder<
     builtArg =
         QueryUtils.withProvidedDepsQuery(
             builtArg, target, cache, graphBuilder, cellRoots, targetGraph);
+    builtArg =
+        QueryUtils.withModuleBlacklistQuery(
+            builtArg, target, cache, graphBuilder, cellRoots, targetGraph);
 
     @SuppressWarnings("unchecked")
     TBuildRule rule =

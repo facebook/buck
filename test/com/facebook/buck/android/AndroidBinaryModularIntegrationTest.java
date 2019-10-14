@@ -369,6 +369,24 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   }
 
   @Test
+  public void testBlacklistingModularWithSharedUsingQuery() throws IOException {
+    String target = "//apps/multidex:app_modular_manifest_debug_blacklist_query_shared_multiple";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    String module = "small_with_shared_with_no_resource_deps";
+    String modulePath = "assets/" + module + "/" + module + "2.dex";
+    Path apkPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    DexInspector moduleInspector = new DexInspector(apkPath, modulePath);
+    moduleInspector.assertTypeExists("Lcom/facebook/sample/SmallWithShared;");
+    moduleInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Shared;");
+
+    DexInspector apkInspector = new DexInspector(apkPath, "classes2.dex");
+    apkInspector.assertTypeExists("Lcom/facebook/sample/Shared;");
+  }
+
+  @Test
   public void testBlacklistedModuleWhenNotVisible() throws IOException {
     String target = "//apps/multidex:app_modular_manifest_debug_blacklisted_no_visibility";
     workspace.runBuckCommand("build", target).assertSuccess();

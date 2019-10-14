@@ -81,6 +81,14 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               graphBuilder,
               targetNode.getCellNames(),
               targetGraph);
+      arg =
+          QueryUtils.withModuleBlacklistQuery(
+              arg,
+              targetNode.getBuildTarget(),
+              cache,
+              graphBuilder,
+              targetNode.getCellNames(),
+              targetGraph);
 
       // The params used for the Buildable only contain the declared parameters. However, the deps
       // of the rule include not only those, but also any that were picked up through the deps

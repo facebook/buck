@@ -267,7 +267,7 @@ public class AndroidBinaryDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   abstract static class AbstractAndroidBinaryDescriptionArg
       implements BuildRuleArg,
           HasDeclaredDeps,

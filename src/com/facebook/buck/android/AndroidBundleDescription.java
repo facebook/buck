@@ -259,7 +259,7 @@ public class AndroidBundleDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   abstract static class AbstractAndroidBundleDescriptionArg
       implements BuildRuleArg,
           HasDeclaredDeps,
