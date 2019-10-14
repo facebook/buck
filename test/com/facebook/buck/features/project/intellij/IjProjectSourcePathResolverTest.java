@@ -41,6 +41,8 @@ import com.facebook.buck.file.RemoteFileBuilder;
 import com.facebook.buck.file.RemoteFileDescriptionArg;
 import com.facebook.buck.file.downloader.impl.ExplodingDownloader;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaBinaryDescriptionArg;
+import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
@@ -68,6 +70,14 @@ public class IjProjectSourcePathResolverTest {
   @Before
   public void setUp() throws Exception {
     filesystem = new FakeProjectFilesystem();
+  }
+
+  @Test
+  public void testJavaBinary() {
+    TargetNode<JavaBinaryDescriptionArg> binary =
+        new JavaBinaryRuleBuilder(BuildTargetFactory.newInstance("//java:binary"))
+            .build(filesystem);
+    assertOutputPathsEqual(binary);
   }
 
   @Test

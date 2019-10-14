@@ -42,6 +42,7 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
+import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
@@ -54,6 +55,7 @@ import com.facebook.buck.jvm.scala.ScalaTestDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 /**
@@ -82,7 +84,9 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
-    if (description instanceof AndroidBinaryDescription) {
+    if (description instanceof JavaBinaryDescription) {
+      return getOutputPathForJavaBinary(buildTarget, filesystem);
+    } else if (description instanceof AndroidBinaryDescription) {
       return getOutputPathForAndroidBinary(buildTarget, filesystem);
     } else if (description instanceof AndroidResourceDescription) {
       return getOutputPathForAndroidResource(buildTarget, filesystem);
@@ -279,5 +283,17 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
   private Optional<Path> getOutputPathForAndroidBinary(
       BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.apk"));
+  }
+
+  /** Calculate the output path for a JavaBinary based on its build target */
+  private Optional<Path> getOutputPathForJavaBinary(
+      BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    // Matches the implementation in JavaBinary#getOutputDirectory()
+    Path outputDirectory = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").getParent();
+    // Matches the implementation in JavaBinary#getSourcePathToOutput()
+    return Optional.of(
+        Paths.get(
+            String.format(
+                "%s/%s.jar", outputDirectory, buildTarget.getShortNameAndFlavorPostfix())));
   }
 }
