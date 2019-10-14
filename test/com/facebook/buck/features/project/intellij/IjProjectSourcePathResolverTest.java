@@ -17,6 +17,8 @@ package com.facebook.buck.features.project.intellij;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.AndroidBuildConfigBuilder;
+import com.facebook.buck.android.AndroidBuildConfigDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -57,6 +59,16 @@ public class IjProjectSourcePathResolverTest {
   public void setUp() throws Exception {
     filesystem = new FakeProjectFilesystem();
   }
+
+  @Test
+  public void testAndroidBuildConfig() {
+    TargetNode<AndroidBuildConfigDescriptionArg> byReference =
+      new AndroidBuildConfigBuilder(BuildTargetFactory.newInstance("//android:build_config"))
+        .setPackage("com.example.foo")
+        .build(filesystem);
+    assertOutputPathsEqual(byReference);
+  }
+
 
   @Test
   public void testPrebuiltJar() {

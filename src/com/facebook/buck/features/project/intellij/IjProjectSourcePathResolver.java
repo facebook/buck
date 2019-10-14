@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.android.AndroidBuildConfigDescription;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.core.description.BaseDescription;
@@ -79,7 +80,10 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
-    if (description instanceof PrebuiltJarDescription) {
+    if (description instanceof AndroidBuildConfigDescription) {
+      // AndroidBuildConfig is just a library made of generated sources under the hood
+      return getOutputPathFromJavaBuildTarget(buildTarget, filesystem);
+    } else if (description instanceof PrebuiltJarDescription) {
       return getOutputPathForPrebuiltJar(
           (PrebuiltJarDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
     } else if (isJvmLanguageTargetNode(targetNode)) {
