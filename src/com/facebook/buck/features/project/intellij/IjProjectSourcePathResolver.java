@@ -33,6 +33,7 @@ import com.facebook.buck.features.filegroup.FileGroupDescriptionArg;
 import com.facebook.buck.features.filegroup.FilegroupDescription;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.file.RemoteFileDescriptionArg;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
@@ -41,6 +42,8 @@ import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.java.PrebuiltJarDescription;
+import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
@@ -76,7 +79,10 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
-    if (isJvmLanguageTargetNode(targetNode)) {
+    if (description instanceof PrebuiltJarDescription) {
+      return getOutputPathForPrebuiltJar(
+          (PrebuiltJarDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
+    } else if (isJvmLanguageTargetNode(targetNode)) {
       // All the JVM languages currently use DefaultJavaLibrary under the hood, so we can share
       // the implementation for these languages here
       return getOutputPathFromJavaBuildTarget(buildTarget, filesystem);
@@ -222,5 +228,21 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     } else {
       return Optional.empty();
     }
+  }
+
+  /** Calculate the output path for a PrebuiltJar from information in the Arg */
+  private Optional<Path> getOutputPathForPrebuiltJar(
+      PrebuiltJarDescriptionArg constructorArg,
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem) {
+    // The binary jar is copied with its same name to the output directory, so we need to get
+    // the name. The only difference is when the name doesn't end in `.jar` it gets renamed.
+    SourcePath binaryJar = constructorArg.getBinaryJar();
+    Path fileName = getRelativePath(filesystem, binaryJar).getFileName();
+    String fileNameWithJarExtension =
+        String.format("%s.jar", MorePaths.getNameWithoutExtension(fileName));
+    // Matches the implementation in PrebuiltJar's constructor
+    return Optional.of(
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "__%s__/" + fileNameWithJarExtension));
   }
 }

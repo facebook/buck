@@ -37,6 +37,8 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JavaTestDescriptionArg;
+import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
+import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
@@ -54,6 +56,21 @@ public class IjProjectSourcePathResolverTest {
   @Before
   public void setUp() throws Exception {
     filesystem = new FakeProjectFilesystem();
+  }
+
+  @Test
+  public void testPrebuiltJar() {
+    TargetNode<PrebuiltJarDescriptionArg> node =
+        PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//prebuilt:one.jar"))
+            .setBinaryJar(Paths.get("one.jar"))
+            .build(filesystem);
+    assertOutputPathsEqual(node);
+
+    TargetNode<PrebuiltJarDescriptionArg> notAJar =
+        PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//prebuilt:other.foojar"))
+            .setBinaryJar(Paths.get("one.foo"))
+            .build(filesystem);
+    assertOutputPathsEqual(notAJar);
   }
 
   @Test
