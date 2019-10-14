@@ -27,6 +27,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/cli:main",
         "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/features/project/intellij:",
         "//test/com/facebook/buck/file:",
         "//test/com/facebook/buck/maven:maven",
         "//test/com/facebook/buck/rules/keys:keys",

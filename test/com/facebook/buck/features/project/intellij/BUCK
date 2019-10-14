@@ -126,6 +126,7 @@ java_test(
     name = "intellij",
     srcs = TEST_SRCS,
     module_deps = [
+        "//src/com/facebook/buck/features/filegroup:filegroup",
         "//src/com/facebook/buck/features/zip/rules:rules",
         "//src/com/facebook/buck/features/go:go",
         "//src/com/facebook/buck/features/python:module",
@@ -224,6 +225,7 @@ java_test(
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/cxx:testutil",
+        "//test/com/facebook/buck/features/filegroup:testutil",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/jvm/groovy:testutil",
         "//test/com/facebook/buck/jvm/java:fakepackagefinder",

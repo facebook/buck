@@ -728,13 +728,14 @@
     </build-buck-module-jar>
   </target>
 
-  <target name="build-module-intellij" depends="compile, build-module-python">
+  <target name="build-module-intellij" depends="compile, build-module-python, build-module-filegroup">
     <build-buck-module-jar-with-resources module-name="intellij">
       <module-javac-params>
         <include name="com/facebook/buck/features/project/intellij/**/*.java" />
       </module-javac-params>
       <additional-classpath-entries>
         <include name="python.jar"/>
+        <include name="filegroup.jar" />
       </additional-classpath-entries>
       <module-resources>
         <include name="com/facebook/buck/features/project/intellij/templates/*.st"/>
