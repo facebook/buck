@@ -19,7 +19,8 @@ package com.facebook.buck.features.project.intellij;
 import com.facebook.buck.core.module.BuckModule;
 import com.facebook.buck.features.filegroup.FilegroupModule;
 import com.facebook.buck.features.python.PythonModule;
+import com.facebook.buck.features.zip.rules.ZipRulesModule;
 
 /** Module with project generator for IntelliJ. */
-@BuckModule(dependencies = {FilegroupModule.class, PythonModule.class})
+@BuckModule(dependencies = {FilegroupModule.class, PythonModule.class, ZipRulesModule.class})
 public class IjBuckModule {}
