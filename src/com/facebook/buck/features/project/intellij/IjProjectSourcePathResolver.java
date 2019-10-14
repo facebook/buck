@@ -52,8 +52,10 @@ import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
 import com.facebook.buck.jvm.scala.ScalaTestDescription;
+import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
+import com.facebook.buck.shell.GenruleDescriptionArg;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -84,7 +86,10 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
-    if (description instanceof JavaBinaryDescription) {
+    if (description instanceof AbstractGenruleDescription) {
+      return getOutputPathForGenrule(
+          (GenruleDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
+    } else if (description instanceof JavaBinaryDescription) {
       return getOutputPathForJavaBinary(buildTarget, filesystem);
     } else if (description instanceof AndroidBinaryDescription) {
       return getOutputPathForAndroidBinary(buildTarget, filesystem);
@@ -295,5 +300,15 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
         Paths.get(
             String.format(
                 "%s/%s.jar", outputDirectory, buildTarget.getShortNameAndFlavorPostfix())));
+  }
+
+  /**
+   * Calculate the output path for a Genrule from the information contained in its constructor Arg
+   */
+  private Optional<Path> getOutputPathForGenrule(
+      GenruleDescriptionArg constructorArg, BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return Optional.of(
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+            .resolve(constructorArg.getOut()));
   }
 }

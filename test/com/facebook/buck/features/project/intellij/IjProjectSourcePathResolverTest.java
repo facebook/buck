@@ -73,6 +73,17 @@ public class IjProjectSourcePathResolverTest {
   }
 
   @Test
+  public void testGenrule() {
+    BuildTarget target = BuildTargetFactory.newInstance("//lib:rule");
+    TargetNode<GenruleDescriptionArg> node =
+        GenruleBuilder.newGenruleBuilder(target)
+            .setOut("i_am_an_output")
+            .setCmd("echo hi > $OUT")
+            .build(filesystem);
+    assertOutputPathsEqual(node);
+  }
+
+  @Test
   public void testJavaBinary() {
     TargetNode<JavaBinaryDescriptionArg> binary =
         new JavaBinaryRuleBuilder(BuildTargetFactory.newInstance("//java:binary"))
