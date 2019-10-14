@@ -180,6 +180,11 @@ public final class NativeLinkableInfo implements NativeLinkable {
   }
 
   @Override
+  public String toString() {
+    return String.format("NativeLinkableInfo: %s (%s)", ruleType, buildTarget.toString());
+  }
+
+  @Override
   public String getRuleType() {
     return ruleType;
   }
