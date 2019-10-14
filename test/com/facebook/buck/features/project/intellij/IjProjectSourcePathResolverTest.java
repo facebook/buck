@@ -19,6 +19,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBuildConfigBuilder;
 import com.facebook.buck.android.AndroidBuildConfigDescriptionArg;
+import com.facebook.buck.android.AndroidResourceBuilder;
+import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -28,6 +31,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.filegroup.FileGroupDescriptionArg;
 import com.facebook.buck.features.filegroup.FilegroupBuilder;
@@ -44,6 +48,8 @@ import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
+import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
@@ -61,14 +67,48 @@ public class IjProjectSourcePathResolverTest {
   }
 
   @Test
-  public void testAndroidBuildConfig() {
-    TargetNode<AndroidBuildConfigDescriptionArg> byReference =
-      new AndroidBuildConfigBuilder(BuildTargetFactory.newInstance("//android:build_config"))
-        .setPackage("com.example.foo")
-        .build(filesystem);
-    assertOutputPathsEqual(byReference);
+  public void testAndroidResource() {
+    TargetNode<AndroidResourceDescriptionArg> standardRes =
+        AndroidResourceBuilder.createBuilder(BuildTargetFactory.newInstance("//android:res"))
+            .setManifest(PathSourcePath.of(filesystem, Paths.get("AndroidManifest.xml")))
+            .setRes(Paths.get("res"))
+            .build(filesystem);
+    assertOutputPathsEqual(standardRes);
+
+    TargetNode<AndroidResourceDescriptionArg> withSymlinkTreeFlavor =
+        AndroidResourceBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//android:res")
+                    .withFlavors(AndroidResourceDescription.RESOURCES_SYMLINK_TREE_FLAVOR))
+            .setManifest(PathSourcePath.of(filesystem, Paths.get("AndroidManifest.xml")))
+            .setRes(Paths.get("res"))
+            .build(filesystem);
+    assertOutputPathsEqual(withSymlinkTreeFlavor);
   }
 
+  @Test
+  public void testAndroidResourceWithGenruleAsRes() {
+    BuildTarget genruleTarget = BuildTargetFactory.newInstance("//android:genrule_for_res");
+    TargetNode<GenruleDescriptionArg> genrule =
+        GenruleBuilder.newGenruleBuilder(genruleTarget).setOut("res").build(filesystem);
+    BuildTarget resTarget = BuildTargetFactory.newInstance("//android:res");
+    TargetNode<AndroidResourceDescriptionArg> usesOutputOfOtherRule =
+        AndroidResourceBuilder.createBuilder(resTarget)
+            .setManifest(PathSourcePath.of(filesystem, Paths.get("AndroidManifest.xml")))
+            .setRes(DefaultBuildTargetSourcePath.of(genruleTarget))
+            .build(filesystem);
+
+    assertOutputPathsEqual(
+        TargetGraphFactory.newInstance(genrule, usesOutputOfOtherRule), resTarget);
+  }
+
+  @Test
+  public void testAndroidBuildConfig() {
+    TargetNode<AndroidBuildConfigDescriptionArg> byReference =
+        new AndroidBuildConfigBuilder(BuildTargetFactory.newInstance("//android:build_config"))
+            .setPackage("com.example.foo")
+            .build(filesystem);
+    assertOutputPathsEqual(byReference);
+  }
 
   @Test
   public void testPrebuiltJar() {
