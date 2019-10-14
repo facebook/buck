@@ -17,7 +17,9 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.util.ExitCode;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
 import java.util.OptionalLong;
 
 /** Events tracking the start and stop of a buck command. */
@@ -73,8 +75,12 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
   }
 
   public static Started started(
-      String commandName, ImmutableList<String> args, OptionalLong daemonUptime, long pid) {
-    return new Started(commandName, args, daemonUptime, pid);
+      String commandName,
+      ImmutableList<String> args,
+      Path clientSubdirectory,
+      OptionalLong daemonUptime,
+      long pid) {
+    return new Started(commandName, args, clientSubdirectory, daemonUptime, pid);
   }
 
   public static Finished finished(Started started, ExitCode exitCode) {
@@ -86,14 +92,30 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
   }
 
   public static class Started extends CommandEvent {
+
+    private final String clientSubdirectory;
+
     private Started(
-        String commandName, ImmutableList<String> args, OptionalLong daemonUptime, long pid) {
+        String commandName,
+        ImmutableList<String> args,
+        Path clientSubdirectory,
+        OptionalLong daemonUptime,
+        long pid) {
       super(EventKey.unique(), commandName, args, daemonUptime, pid);
+      this.clientSubdirectory = Joiner.on("/").join(clientSubdirectory);
     }
 
     @Override
     public String getEventName() {
       return "CommandStarted";
+    }
+
+    /**
+     * @return the subdirectory that the client was in when the command was started, relative to the
+     *     project root
+     */
+    public String getClientSubdirectory() {
+      return clientSubdirectory;
     }
   }
 

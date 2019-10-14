@@ -96,6 +96,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
@@ -755,7 +756,8 @@ public class SuperConsoleEventBusListenerTest {
             "HTTP CACHE UPLOAD... 2.10 Kbytes (2 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)"));
 
     CommandEvent.Started commandStarted =
-        CommandEvent.started("build", ImmutableList.of(), OptionalLong.of(100), 1234);
+        CommandEvent.started(
+            "build", ImmutableList.of(), Paths.get(""), OptionalLong.of(100), 1234);
     eventBus.post(CommandEvent.finished(commandStarted, ExitCode.SUCCESS));
     if (buildDetailsCommands.contains("build") && buildDetailsTemplate.isPresent()) {
       validateBuildIdConsole(
@@ -2199,7 +2201,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.post(
         CommandEvent.started(
-            "project", ImmutableList.of("arg1", "arg2"), OptionalLong.empty(), 23L));
+            "project", ImmutableList.of("arg1", "arg2"), Paths.get(""), OptionalLong.empty(), 23L));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -2267,7 +2269,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.post(
         CommandEvent.started(
-            "project", ImmutableList.of("arg1", "arg2"), OptionalLong.empty(), 23L));
+            "project", ImmutableList.of("arg1", "arg2"), Paths.get(""), OptionalLong.empty(), 23L));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(

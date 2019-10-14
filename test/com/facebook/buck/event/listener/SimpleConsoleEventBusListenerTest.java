@@ -57,6 +57,7 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
@@ -322,7 +323,8 @@ public class SimpleConsoleEventBusListenerTest {
     assertOutput(expectedOutput, console);
 
     CommandEvent.Started commandStarted =
-        CommandEvent.started("build", ImmutableList.of(), OptionalLong.of(100), 1234);
+        CommandEvent.started(
+            "build", ImmutableList.of(), Paths.get(""), OptionalLong.of(100), 1234);
     eventBus.post(CommandEvent.finished(commandStarted, ExitCode.SUCCESS));
     if (buildDetailsCommands.contains("build") && buildDetailsTemplate.isPresent()) {
       expectedOutput +=

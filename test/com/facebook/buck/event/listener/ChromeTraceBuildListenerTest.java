@@ -365,7 +365,8 @@ public class ChromeTraceBuildListenerTest {
     eventBus.register(listener);
 
     CommandEvent.Started commandEventStarted =
-        CommandEvent.started("party", ImmutableList.of("arg1", "arg2"), OptionalLong.of(100), 23L);
+        CommandEvent.started(
+            "party", ImmutableList.of("arg1", "arg2"), Paths.get(""), OptionalLong.of(100), 23L);
     eventBus.post(commandEventStarted);
 
     RemoteExecutionSessionEvent.Started reEventStarted = RemoteExecutionSessionEvent.started();
@@ -449,7 +450,8 @@ public class ChromeTraceBuildListenerTest {
     eventBus.register(listener);
 
     CommandEvent.Started commandEventStarted =
-        CommandEvent.started("party", ImmutableList.of("arg1", "arg2"), OptionalLong.of(100), 23L);
+        CommandEvent.started(
+            "party", ImmutableList.of("arg1", "arg2"), Paths.get(""), OptionalLong.of(100), 23L);
     eventBus.post(commandEventStarted);
     eventBus.post(
         new PerfStatsTracking.MemoryPerfStatsEvent(

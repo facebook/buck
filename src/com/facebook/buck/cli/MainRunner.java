@@ -1300,10 +1300,12 @@ public final class MainRunner {
                   : filteredUnexpandedArgsForLogging.subList(
                       1, filteredUnexpandedArgsForLogging.size());
 
+          Path absoluteClientPwd = getClientPwd(rootCell, clientEnvironment);
           CommandEvent.Started startedEvent =
               CommandEvent.started(
                   command.getDeclaredSubCommandName(),
                   remainingArgs,
+                  rootCell.getRoot().relativize(absoluteClientPwd).normalize(),
                   context.isPresent()
                       ? OptionalLong.of(buckGlobalState.getUptime())
                       : OptionalLong.empty(),
@@ -1420,7 +1422,7 @@ public final class MainRunner {
                         metadataProvider,
                         manifestServiceSupplier,
                         buckGlobalState,
-                        getClientPwd(rootCell, clientEnvironment)));
+                        absoluteClientPwd));
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));
             throw e;

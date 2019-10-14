@@ -391,7 +391,8 @@ public class CachingBuildEngineTest {
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
       buckEventBus.post(
           CommandEvent.finished(
-              CommandEvent.started("build", ImmutableList.of(), OptionalLong.empty(), 23L),
+              CommandEvent.started(
+                  "build", ImmutableList.of(), Paths.get(""), OptionalLong.empty(), 23L),
               ExitCode.SUCCESS));
       verifyAll();
 
@@ -563,7 +564,8 @@ public class CachingBuildEngineTest {
             .getEventBus()
             .post(
                 CommandEvent.finished(
-                    CommandEvent.started("build", ImmutableList.of(), OptionalLong.empty(), 23L),
+                    CommandEvent.started(
+                        "build", ImmutableList.of(), Paths.get(""), OptionalLong.empty(), 23L),
                     ExitCode.SUCCESS));
 
         BuildResult result = buildResult.get();
@@ -653,7 +655,8 @@ public class CachingBuildEngineTest {
             .getEventBus()
             .post(
                 CommandEvent.finished(
-                    CommandEvent.started("build", ImmutableList.of(), OptionalLong.empty(), 23L),
+                    CommandEvent.started(
+                        "build", ImmutableList.of(), Paths.get(""), OptionalLong.empty(), 23L),
                     ExitCode.SUCCESS));
 
         BuildResult result = buildResult.get();
