@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -237,58 +236,6 @@ public class AndroidResourceDescription
     Path symlinkTreeRoot =
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").resolve(outputDirName);
     return new SymlinkTree("android_res", buildTarget, projectFilesystem, symlinkTreeRoot, links);
-  }
-
-  public static Optional<SourcePath> getResDirectoryForProject(
-      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg> node) {
-    AndroidResourceDescriptionArg arg = node.getConstructorArg();
-    if (arg.getProjectRes().isPresent()) {
-      return Optional.of(PathSourcePath.of(node.getFilesystem(), arg.getProjectRes().get()));
-    }
-    if (!arg.getRes().isPresent()) {
-      return Optional.empty();
-    }
-    if (arg.getRes().get().isLeft()) {
-      return Optional.of(arg.getRes().get().getLeft());
-    } else {
-      return getResDirectory(graphBuilder, node);
-    }
-  }
-
-  public static Optional<SourcePath> getAssetsDirectoryForProject(
-      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg> node) {
-    AndroidResourceDescriptionArg arg = node.getConstructorArg();
-    if (arg.getProjectAssets().isPresent()) {
-      return Optional.of(PathSourcePath.of(node.getFilesystem(), arg.getProjectAssets().get()));
-    }
-    if (!arg.getAssets().isPresent()) {
-      return Optional.empty();
-    }
-    if (arg.getAssets().get().isLeft()) {
-      return Optional.of(arg.getAssets().get().getLeft());
-    } else {
-      return getAssetsDirectory(graphBuilder, node);
-    }
-  }
-
-  private static Optional<SourcePath> getResDirectory(
-      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg> node) {
-    return collectInputSourcePaths(
-            graphBuilder,
-            node.getBuildTarget(),
-            RESOURCES_SYMLINK_TREE_FLAVOR,
-            node.getConstructorArg().getRes())
-        .getSecond();
-  }
-
-  private static Optional<SourcePath> getAssetsDirectory(
-      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg> node) {
-    return collectInputSourcePaths(
-            graphBuilder,
-            node.getBuildTarget(),
-            ASSETS_SYMLINK_TREE_FLAVOR,
-            node.getConstructorArg().getAssets())
-        .getSecond();
   }
 
   private static Pair<Optional<SymlinkTree>, Optional<SourcePath>> collectInputSourcePaths(
