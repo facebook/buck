@@ -106,6 +106,23 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testNormalizesRelativeBuildTargetsInQueries() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProcessResult topLevelRecursive = workspace.runBuckCommand("query", "testsof(...)");
+    ProcessResult subdirRecursive = workspace.runBuckCommand("query", "testsof(example/app/...)");
+    ProcessResult subdirPackage = workspace.runBuckCommand("query", "testsof(example/app:)");
+    ProcessResult subdirTarget = workspace.runBuckCommand("query", "testsof(example/app:seven)");
+
+    assertLinesMatch("stdout-recursive-pattern-testsof", topLevelRecursive, workspace);
+    assertLinesMatch("stdout-subdir-recursive-pattern-testsof", subdirRecursive, workspace);
+    assertLinesMatch("stdout-subdir-recursive-pattern-testsof", subdirPackage, workspace);
+    assertLinesMatch("stdout-subdir-recursive-pattern-testsof", subdirTarget, workspace);
+  }
+
+  @Test
   public void testTransitiveDependencies() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);

@@ -103,7 +103,16 @@ class TargetPatternEvaluator {
         }
       } else {
         // Check if the pattern corresponds to a build target or a path.
-        if (pattern.contains("//") || pattern.startsWith(":")) {
+        // Note: If trying to get a path with a single ':' in it, this /will/ choose to assume a
+        // build target, not a file. In general, this is okay as:
+        //  1) Most of our functions that take paths are going to be build files and the like, not
+        //     something with a ':' in it
+        //  2) By putting a ':' in the filename, you're already dooming yourself to never work on
+        //     windows. Don't do that.
+        if (pattern.contains("//")
+            || pattern.contains(":")
+            || pattern.endsWith("/...")
+            || pattern.equals("...")) {
           unresolved.put(pattern, pattern);
         } else {
           ImmutableSet<QueryTarget> fileTargets = resolveFilePattern(pattern);
