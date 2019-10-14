@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -53,7 +54,7 @@ public class FauxKotlinLibraryBuilder
                         .setJavacProvider(JavacSpec.builder().build().getJavacProvider())
                         .build())
                 .build(),
-            null,
+            new KotlinBuckConfig(FakeBuckConfig.builder().build()),
             null),
         target,
         projectFilesystem);
