@@ -34,9 +34,12 @@ import com.facebook.buck.features.filegroup.FilegroupDescription;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.file.RemoteFileDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
+import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
@@ -73,7 +76,17 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
-    if (description instanceof ExportFileDescription) {
+    if (isJvmLanguageTargetNode(targetNode)) {
+      // All the JVM languages currently use DefaultJavaLibrary under the hood, so we can share
+      // the implementation for these languages here
+      return getOutputPathFromJavaBuildTarget(buildTarget, filesystem);
+    } else if (isJvmTestTargetNode(targetNode)) {
+      // Test targets compile their code into a standard library under the hood using the
+      // TESTS_FLAVOR
+      BuildTarget testTarget =
+          buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+      return getOutputPathFromJavaBuildTarget(testTarget, filesystem);
+    } else if (description instanceof ExportFileDescription) {
       return getOutputPathForExportFile(
           (ExportFileDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
     } else if (description instanceof RemoteFileDescription) {
@@ -180,5 +193,34 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     // Otherwise, we resolve the generated path for the COPY
     String name = arg.getOut().orElse(buildTarget.getShortNameAndFlavorPostfix());
     return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(name));
+  }
+
+  /**
+   * @return the output path for the given buildTarget assuming that the buildTarget points to
+   *     something like a JavaLibrary
+   */
+  private Optional<Path> getOutputPathFromJavaBuildTarget(
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+    TargetNode<?> targetNode = targetGraph.get(buildTarget);
+    if (targetNode != null
+        && targetNode.getConstructorArg() instanceof JavaLibraryDescription.CoreArg) {
+      JavaLibraryDescription.CoreArg constructorArg =
+          (JavaLibraryDescription.CoreArg) targetNode.getConstructorArg();
+
+      // This matches the implementation of JarBuildStepsFactory#producesJar()
+      if (constructorArg.getSrcs().isEmpty()
+          && constructorArg.getResources().isEmpty()
+          && !constructorArg.getManifestFile().isPresent()) {
+        // Does not produce a jar
+        return Optional.empty();
+      }
+    }
+    if (JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget)) {
+      return Optional.of(CompilerOutputPaths.getAbiJarPath(buildTarget, projectFilesystem));
+    } else if (JavaAbis.isLibraryTarget(buildTarget)) {
+      return Optional.of(CompilerOutputPaths.getOutputJarPath(buildTarget, projectFilesystem));
+    } else {
+      return Optional.empty();
+    }
   }
 }

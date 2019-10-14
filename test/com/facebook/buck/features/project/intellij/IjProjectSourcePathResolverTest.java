@@ -33,12 +33,17 @@ import com.facebook.buck.file.RemoteFileBuilder;
 import com.facebook.buck.file.RemoteFileDescriptionArg;
 import com.facebook.buck.file.downloader.impl.ExplodingDownloader;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
+import com.facebook.buck.jvm.java.JavaTestBuilder;
+import com.facebook.buck.jvm.java.JavaTestDescriptionArg;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,6 +54,22 @@ public class IjProjectSourcePathResolverTest {
   @Before
   public void setUp() throws Exception {
     filesystem = new FakeProjectFilesystem();
+  }
+
+  @Test
+  public void testJavaLibrary() {
+    BuildTarget target = BuildTargetFactory.newInstance("//java:lib");
+    TargetNode<JavaLibraryDescriptionArg> normal =
+        JavaLibraryBuilder.createBuilder(target).addSrc(Paths.get("Foo.java")).build(filesystem);
+    assertOutputPathsEqual(normal);
+  }
+
+  @Test
+  public void testJavaTest() {
+    BuildTarget target = BuildTargetFactory.newInstance("//test:junit");
+    TargetNode<JavaTestDescriptionArg> node =
+        JavaTestBuilder.createBuilder(target).addSrc(Paths.get("Test.java")).build(filesystem);
+    assertOutputPathsEqual(node);
   }
 
   @Test
