@@ -88,7 +88,6 @@ public class RustLibraryDescription
   private RustCompileRule requireBuild(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       RustPlatform rustPlatform,
       RustBuckConfig rustBuckConfig,
@@ -116,7 +115,6 @@ public class RustLibraryDescription
     return RustCompileUtils.requireBuild(
         buildTarget,
         projectFilesystem,
-        params,
         graphBuilder,
         rustPlatform,
         rustBuckConfig,
@@ -214,7 +212,6 @@ public class RustLibraryDescription
       return requireBuild(
           buildTarget,
           projectFilesystem,
-          params,
           graphBuilder,
           platform,
           rustBuckConfig,
@@ -293,7 +290,6 @@ public class RustLibraryDescription
             requireBuild(
                 buildTarget,
                 projectFilesystem,
-                params,
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
@@ -337,7 +333,6 @@ public class RustLibraryDescription
             requireBuild(
                 buildTarget,
                 projectFilesystem,
-                params,
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
@@ -446,7 +441,6 @@ public class RustLibraryDescription
             requireBuild(
                 buildTarget,
                 projectFilesystem,
-                params,
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
@@ -492,7 +486,6 @@ public class RustLibraryDescription
             requireBuild(
                 buildTarget,
                 projectFilesystem,
-                params,
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,

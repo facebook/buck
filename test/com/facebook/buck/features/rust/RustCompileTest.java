@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -227,11 +226,14 @@ public class RustCompileTest {
 
   static class FakeRustCompileRule extends RustCompileRule {
     private FakeRustCompileRule(
-        BuildTarget target, ImmutableSortedSet<SourcePath> srcs, SourcePath rootModule) {
+        BuildTarget target,
+        ImmutableSortedSet<SourcePath> srcs,
+        SourcePath rootModule,
+        SourcePathRuleFinder ruleFinder) {
       super(
           target,
           new FakeProjectFilesystem(),
-          TestBuildRuleParams.create(),
+          ruleFinder,
           String.format("lib%s.rlib", target.getShortName()),
           fakeTool(),
           fakeLinker(),
@@ -266,7 +268,7 @@ public class RustCompileTest {
       if (!root.isPresent()) {
         throw new HumanReadableException("No crate root source identified");
       }
-      return new FakeRustCompileRule(buildTarget, srcs, root.get());
+      return new FakeRustCompileRule(buildTarget, srcs, root.get(), ruleFinder);
     }
   }
 }
