@@ -693,7 +693,7 @@ class BuckTool(object):
                 else:
                     return ExecuteTarget(exit_code, path, argv, envp, cwd)
 
-    def launch_buck(self, build_id, java_path, argv):
+    def launch_buck(self, build_id, client_cwd, java_path, argv):
         with Tracing("BuckTool.launch_buck"):
             with JvmCrashLogger(self, self._buck_project.root):
                 self._reporter.build_id = build_id
@@ -772,6 +772,7 @@ class BuckTool(object):
 
                 env = self._environ_for_buck()
                 env["BUCK_BUILD_ID"] = build_id
+                env["BUCK_CLIENT_PWD"] = client_cwd
 
                 self._reporter.is_buckd = use_buckd
                 run_fn = (
