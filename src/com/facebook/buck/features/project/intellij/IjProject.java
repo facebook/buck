@@ -18,7 +18,6 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.features.project.intellij.aggregation.DefaultAggregationModuleFactory;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.features.project.intellij.lang.java.ParsingJavaPackageFinder;
@@ -40,7 +39,6 @@ public class IjProject {
   private final TargetGraph targetGraph;
   private final JavaPackageFinder javaPackageFinder;
   private final JavaFileParser javaFileParser;
-  private final ActionGraphBuilder graphBuilder;
   private final ProjectFilesystem projectFilesystem;
   private final IjProjectConfig projectConfig;
   private final ProjectFilesystem outFilesystem;
@@ -50,14 +48,12 @@ public class IjProject {
       TargetGraph targetGraph,
       JavaPackageFinder javaPackageFinder,
       JavaFileParser javaFileParser,
-      ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
       IjProjectConfig projectConfig,
       ProjectFilesystem outFilesystem) {
     this.targetGraph = targetGraph;
     this.javaPackageFinder = javaPackageFinder;
     this.javaFileParser = javaFileParser;
-    this.graphBuilder = graphBuilder;
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
     this.outFilesystem = outFilesystem;

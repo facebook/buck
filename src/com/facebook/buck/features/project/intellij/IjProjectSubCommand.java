@@ -193,7 +193,6 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             params.getBuckEventBus(),
             executor,
             params.getDepsAwareExecutorSupplier(),
-            params.getActionGraphProvider(),
             params.getVersionedTargetGraphCache(),
             params.getTypeCoercerFactory(),
             params.getUnconfiguredBuildTargetFactory(),

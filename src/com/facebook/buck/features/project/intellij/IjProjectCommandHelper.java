@@ -27,8 +27,6 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -37,8 +35,6 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
@@ -78,7 +74,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -88,7 +83,6 @@ public class IjProjectCommandHelper {
   private final Console console;
   private final Parser parser;
   private final BuckConfig buckConfig;
-  private final ActionGraphProvider actionGraphProvider;
   private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
@@ -108,7 +102,6 @@ public class IjProjectCommandHelper {
       BuckEventBus buckEventBus,
       ListeningExecutorService executor,
       CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor,
-      ActionGraphProvider actionGraphProvider,
       InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
@@ -129,7 +122,6 @@ public class IjProjectCommandHelper {
     this.console = projectGeneratorParameters.getConsole();
     this.parser = projectGeneratorParameters.getParser();
     this.buckConfig = buckConfig;
-    this.actionGraphProvider = actionGraphProvider;
     this.versionedTargetGraphCache = versionedTargetGraphCache;
     this.typeCoercerFactory = typeCoercerFactory;
     this.cell = cell;
@@ -205,12 +197,6 @@ public class IjProjectCommandHelper {
     return runIntellijProjectGenerator(targetGraphCreationResult);
   }
 
-  private ActionGraphAndBuilder getActionGraph(
-      TargetGraphCreationResult targetGraphCreationResult) {
-    TargetNodeToBuildRuleTransformer transformer = new ShallowTargetNodeToBuildRuleTransformer();
-    return actionGraphProvider.getFreshActionGraph(transformer, targetGraphCreationResult);
-  }
-
   /** Run intellij specific project generation actions. */
   private ExitCode runIntellijProjectGenerator(TargetGraphCreationResult targetGraphCreationResult)
       throws IOException, InterruptedException {
@@ -245,11 +231,6 @@ public class IjProjectCommandHelper {
 
   private ImmutableSet<BuildTarget> writeProjectAndGetRequiredBuildTargets(
       TargetGraphCreationResult targetGraphCreationResult) throws IOException {
-    ActionGraphAndBuilder result =
-        Objects.requireNonNull(getActionGraph(targetGraphCreationResult));
-
-    ActionGraphBuilder graphBuilder = result.getActionGraphBuilder();
-
     AbstractJavacLanguageLevelOptions languageLevelOptions =
         buckConfig.getView(JavaBuckConfig.class).getJavacLanguageLevelOptions();
 
@@ -258,7 +239,6 @@ public class IjProjectCommandHelper {
             targetGraphCreationResult.getTargetGraph(),
             getJavaPackageFinder(buckConfig),
             JavaFileParser.createJavaFileParser(languageLevelOptions),
-            graphBuilder,
             cell.getFilesystem(),
             projectConfig,
             getProjectOutputFilesystem());
