@@ -15,6 +15,9 @@
  */
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.android.AndroidLibraryDescription;
+import com.facebook.buck.android.RobolectricTestDescription;
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -25,6 +28,14 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
+import com.facebook.buck.jvm.groovy.GroovyTestDescription;
+import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
+import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
+import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
+import com.facebook.buck.jvm.scala.ScalaTestDescription;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -91,5 +102,25 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     } else {
       return Optional.empty();
     }
+  }
+
+  /** @return true if the given target node describes a rule targeting the JVM */
+  public static boolean isJvmLanguageTargetNode(TargetNode<?> targetNode) {
+    BaseDescription<?> description = targetNode.getDescription();
+    return description instanceof JavaLibraryDescription
+        || description instanceof AndroidLibraryDescription
+        || description instanceof ScalaLibraryDescription
+        || description instanceof GroovyLibraryDescription
+        || description instanceof KotlinLibraryDescription;
+  }
+
+  /** @return true if the given target node describes a junit/ngtest rule targeting the JVM */
+  public static boolean isJvmTestTargetNode(TargetNode<?> targetNode) {
+    BaseDescription<?> description = targetNode.getDescription();
+    return description instanceof JavaTestDescription
+        || description instanceof RobolectricTestDescription
+        || description instanceof ScalaTestDescription
+        || description instanceof GroovyTestDescription
+        || description instanceof KotlinTestDescription;
   }
 }
