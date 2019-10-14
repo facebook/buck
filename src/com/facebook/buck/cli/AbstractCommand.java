@@ -329,10 +329,14 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-      Cell owningCell, BuckConfig config, Iterable<String> targetsAsArgs) {
+      Cell owningCell,
+      Path absoluteClientWorkingDir,
+      Iterable<String> targetsAsArgs,
+      BuckConfig config) {
     ImmutableList.Builder<TargetNodeSpec> specs = ImmutableList.builder();
     CommandLineTargetNodeSpecParser parser =
-        new CommandLineTargetNodeSpecParser(config, new BuildTargetMatcherTargetNodeParser());
+        new CommandLineTargetNodeSpecParser(
+            owningCell, absoluteClientWorkingDir, config, new BuildTargetMatcherTargetNodeParser());
     for (String arg : targetsAsArgs) {
       specs.addAll(parser.parse(owningCell, arg));
     }

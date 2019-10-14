@@ -90,7 +90,7 @@ public class BuildEndToEndTest {
         .withBuckdToggled(ToggleState.ON);
   }
 
-  @EnvironmentFor(testNames = {"printsErrorWhenBuckConfigIsMissing"})
+  @EnvironmentFor(testNames = {"printsErrorWhenBuckConfigIsMissing", "allowsRelativeBuildTargets"})
   public static EndToEndEnvironment setSimpleEnv() {
     return getBaseEnvironment().addTemplates("cli");
   }
@@ -98,6 +98,27 @@ public class BuildEndToEndTest {
   @EnvironmentFor(testNames = {"nestedBuildsUseDifferentUUID"})
   public static EndToEndEnvironment setupNestedBuildsEnv() {
     return getBaseEnvironment().addTemplates("nested_build");
+  }
+
+  @Test
+  public void allowsRelativeBuildTargets(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
+      throws Throwable {
+    workspace.addPremadeTemplate("cli");
+    workspace.setup();
+
+    ImmutableMap<String, Path> simpleBinPath =
+        workspace.buildAndReturnOutputs("run/simple_bin:main_py");
+
+    workspace.setRelativeWorkingDirectory(Paths.get("run"));
+
+    ImmutableMap<String, Path> relativeSimpleBinPath =
+        workspace.buildAndReturnOutputs("simple_bin:main_py");
+
+    ImmutableMap<String, Path> targetsRelativeSimpleBinPath =
+        workspace.runCommandAndReturnOutputs("targets", "simple_bin:main_py");
+
+    assertEquals(simpleBinPath, relativeSimpleBinPath);
+    assertEquals(simpleBinPath, targetsRelativeSimpleBinPath);
   }
 
   @Test

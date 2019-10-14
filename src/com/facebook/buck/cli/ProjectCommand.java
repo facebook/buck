@@ -131,7 +131,10 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
               .setArgsParser(
                   arguments ->
                       parseArgumentsAsTargetNodeSpecs(
-                          params.getCell(), params.getBuckConfig(), arguments))
+                          params.getCell(),
+                          params.getClientWorkingDir(),
+                          arguments,
+                          params.getBuckConfig()))
               .setCommandRunnerParams(params)
               .setDryRun(dryRun)
               .setEnableParserProfiling(getEnableParserProfiling())

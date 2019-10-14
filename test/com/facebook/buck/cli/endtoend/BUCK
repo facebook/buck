@@ -18,6 +18,7 @@ java_test(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/string:string",
         "//test/com/facebook/buck/cli:testutil",
         "//test/com/facebook/buck/features/python:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",

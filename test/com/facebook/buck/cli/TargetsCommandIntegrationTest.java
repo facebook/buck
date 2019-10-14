@@ -45,7 +45,9 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.string.MoreStrings;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
@@ -57,6 +59,7 @@ import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -1246,6 +1249,45 @@ public class TargetsCommandIntegrationTest {
             .map(node -> node.asText())
             .collect(Collectors.toList()),
         Matchers.containsInAnyOrder("//:A", "//:test-library"));
+  }
+
+  @Test
+  public void testHandlesRelativeTargets() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+
+    ThrowingFunction<String, String, Exception> getOutput =
+        (String data) ->
+            MoreStrings.lines(data).stream()
+                .filter(line -> line.startsWith("//subdir1/subdir2:bar"))
+                .map(line -> line.trim().split("\\s+")[1])
+                .findFirst()
+                .get();
+
+    String absolutePath =
+        getOutput.apply(
+            workspace
+                .runBuckCommand("targets", "--show-output", "//subdir1/subdir2:bar")
+                .assertSuccess()
+                .getStdout());
+
+    workspace.setRelativeWorkingDirectory(Paths.get("subdir1"));
+    String subdirRelativePath =
+        getOutput.apply(
+            workspace
+                .runBuckCommand("targets", "--show-output", "subdir2:bar")
+                .assertSuccess()
+                .getStdout());
+    String subdirAbsolutePath =
+        getOutput.apply(
+            workspace
+                .runBuckCommand("targets", "--show-output", "//subdir1/subdir2:bar")
+                .assertSuccess()
+                .getStdout());
+
+    assertEquals(absolutePath, subdirAbsolutePath);
+    assertEquals(absolutePath, subdirRelativePath);
   }
 
   private static ImmutableList<String> extractTargetsFromOutput(String output) {

@@ -195,6 +195,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
         parserState,
         new TargetPatternEvaluator(
             params.getCell(),
+            params.getClientWorkingDir(),
             params.getBuckConfig(),
             params.getParser(),
             // We disable mapping //path/to:lib to //path/to:lib#default,static

@@ -150,6 +150,7 @@ public class QueryCommandTest {
             perBuildState,
             new TargetPatternEvaluator(
                 params.getCell(),
+                params.getClientWorkingDir(),
                 params.getBuckConfig(),
                 params.getParser(),
                 ParsingContext.builder(params.getCell(), executorService).build(),

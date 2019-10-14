@@ -29,6 +29,7 @@ import com.facebook.buck.util.ProcessExecutor.LaunchedProcessImpl;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessHelper;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -319,6 +321,27 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
     List<String> command = platformUtils.getBuckCommandBuilder().add(args).build();
     ranWithBuckd = ranWithBuckd || buckdEnabled;
     return runCommand(buckdEnabled, environmentOverrides, stdin, command, Optional.empty());
+  }
+
+  public ImmutableMap<String, Path> buildAndReturnOutputs(String... targetPatterns)
+      throws Exception {
+    return runCommandAndReturnOutputs("build", targetPatterns);
+  }
+
+  public ImmutableMap<String, Path> runCommandAndReturnOutputs(
+      String command, String... targetPatterns) throws Exception {
+
+    String[] cmd =
+        ImmutableList.builder()
+            .add(command)
+            .add("--show-output")
+            .addAll(Arrays.asList(targetPatterns))
+            .build()
+            .toArray(new String[0]);
+
+    return MoreStrings.lines(runBuckCommand(cmd).assertSuccess().getStdout()).stream()
+        .map(line -> line.trim().split("\\s+"))
+        .collect(ImmutableMap.toImmutableMap(pieces -> pieces[0], pieces -> Paths.get(pieces[1])));
   }
 
   /**

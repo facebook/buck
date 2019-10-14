@@ -148,6 +148,7 @@ public class BuckQueryEnvironmentTest {
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
             cell,
+            cell.getRoot(),
             FakeBuckConfig.builder().build(),
             parser,
             ParsingContext.builder(cell, executor).build(),

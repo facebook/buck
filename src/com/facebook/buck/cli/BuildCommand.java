@@ -653,7 +653,10 @@ public class BuildCommand extends AbstractCommand {
                   .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode()),
               targetNodeSpecEnhancer.apply(
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(), params.getBuckConfig(), getArguments())),
+                      params.getCell(),
+                      params.getClientWorkingDir(),
+                      getArguments(),
+                      params.getBuckConfig())),
               params.getTargetConfiguration());
     } catch (BuildTargetException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));

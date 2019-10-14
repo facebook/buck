@@ -616,7 +616,10 @@ public class TargetsCommand extends AbstractCommand {
                   parsingContext.withApplyDefaultFlavorsMode(
                       ParserConfig.ApplyDefaultFlavorsMode.DISABLED),
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(), params.getBuckConfig(), arguments),
+                      params.getCell(),
+                      params.getClientWorkingDir(),
+                      arguments,
+                      params.getBuckConfig()),
                   params.getTargetConfiguration()),
           descriptionClasses);
     }
@@ -731,7 +734,10 @@ public class TargetsCommand extends AbstractCommand {
               .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext,
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(), params.getBuckConfig(), arguments),
+                      params.getCell(),
+                      params.getClientWorkingDir(),
+                      arguments,
+                      params.getBuckConfig()),
                   params.getTargetConfiguration());
     }
     return params.getBuckConfig().getView(BuildBuckConfig.class).getTargetsVersions()

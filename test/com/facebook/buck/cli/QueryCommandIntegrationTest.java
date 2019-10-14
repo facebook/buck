@@ -54,6 +54,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -252,6 +253,28 @@ public class QueryCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("query", "testsof(//example:)");
     assertLinesMatch("stdout-pkg-pattern-testsof", result, workspace);
+  }
+
+  @Test
+  public void testRelativeTargetsWorkForVariousQueries() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    workspace.setRelativeWorkingDirectory(Paths.get("example"));
+
+    ProcessResult testsOfPackage = workspace.runBuckCommand("query", "testsof(:)").assertSuccess();
+    ProcessResult testsOfRecursive =
+        workspace.runBuckCommand("query", "testsof(...)").assertSuccess();
+    ProcessResult testsOfSubdirRecursive = workspace.runBuckCommand("query", "testsof(app/...)");
+    ProcessResult simpleDeps = workspace.runBuckCommand("query", "deps(:one)").assertSuccess();
+    ProcessResult simpleSubdir = workspace.runBuckCommand("query", "app:seven").assertSuccess();
+
+    assertLinesMatch("stdout-pkg-pattern-testsof", testsOfPackage, workspace);
+    assertLinesMatch("stdout-recursive-pattern-testsof", testsOfRecursive, workspace);
+    assertLinesMatch("stdout-subdir-recursive-pattern-testsof", testsOfSubdirRecursive, workspace);
+    assertLinesMatch("stdout-one-transitive-deps", simpleDeps, workspace);
+    assertEquals("//example/app:seven", simpleSubdir.getStdout().trim());
   }
 
   @Test

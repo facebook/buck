@@ -23,7 +23,10 @@ import com.facebook.buck.parser.BuildTargetMatcherTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.support.cli.config.AliasConfig;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -34,17 +37,77 @@ import java.util.Optional;
  */
 public class CommandLineTargetNodeSpecParser {
 
+  private final String rootRelativePackage;
   private final BuckConfig config;
   private final BuildTargetMatcherTargetNodeParser parser;
+  private final boolean shouldRelativize;
 
   public CommandLineTargetNodeSpecParser(
-      BuckConfig config, BuildTargetMatcherTargetNodeParser parser) {
+      Cell rootCell,
+      Path absoluteClientWorkingDirectory,
+      BuckConfig config,
+      BuildTargetMatcherTargetNodeParser parser) {
+    this.rootRelativePackage = getRootRelativePackagePath(rootCell, absoluteClientWorkingDirectory);
     this.config = config;
     this.parser = parser;
+    this.shouldRelativize =
+        config.getView(CliConfig.class).getRelativizeTargetsToWorkingDirectory();
+  }
+
+  /**
+   * Get the package to use in build targets for a given path and cell
+   *
+   * <p>e.g. for a cell at "/foo/bar", and a path at "/foo/bar/baz/sub", "baz/sub" would be returned
+   *
+   * @param rootCell The cell to relativize to
+   * @param absolutePathUnderRootCell An absolute path underneath or equal to the {@code rootCell}'s
+   *     root path
+   * @return The package path as a string, with '/' separating the path components, or empty if
+   *     {@code absolutePathUnderRootCell} was equal to {@code rootCell}'s path
+   * @throws com.google.common.base.VerifyException if {@code absolutePathUnderRootCell} is not
+   *     absolute, or isn't underneath {@code rootCell}
+   */
+  static String getRootRelativePackagePath(Cell rootCell, Path absolutePathUnderRootCell) {
+    Verify.verify(
+        absolutePathUnderRootCell.isAbsolute(), "%s must be absolute", absolutePathUnderRootCell);
+    Verify.verify(
+        absolutePathUnderRootCell.startsWith(rootCell.getRoot()),
+        "%s must be under cell root %s",
+        absolutePathUnderRootCell,
+        rootCell.getRoot());
+
+    return Joiner.on("/")
+        .join(rootCell.getRoot().relativize(absolutePathUnderRootCell).normalize());
+  }
+
+  /**
+   * Prepends a package path to target strings from the command line that look like relative build
+   * targets.
+   *
+   * <p>Target strings of the following forms will be transformed (given the package "pre/fix":
+   *
+   * <p>foo/bar:baz -> pre/fix/foo/bar:baz foo:bar -> pre/fix/foo:bar foo -> pre/fix/foo :bar ->
+   * pre/fix:bar
+   *
+   * @param packagePath the package path to optionally prepend
+   * @param target the target string provided on the command line
+   * @return either a string prefixed with the package path, or the original target if a fully
+   *     qualified target was specified.
+   */
+  static String addPackagePathToRelativeBuildTarget(String packagePath, String target) {
+    if (!target.contains("//") && !packagePath.isEmpty()) {
+      String packageDelimiter = (target.startsWith(":") || target.isEmpty()) ? "" : "/";
+      return String.format("%s%s%s", packagePath, packageDelimiter, target);
+    }
+    return target;
   }
 
   @VisibleForTesting
   protected String normalizeBuildTargetString(String target) {
+    if (shouldRelativize) {
+      target = addPackagePathToRelativeBuildTarget(rootRelativePackage, target);
+    }
+
     // Check and save the cell name
     BuckCellArg arg = BuckCellArg.of(target);
     target = arg.getArg();

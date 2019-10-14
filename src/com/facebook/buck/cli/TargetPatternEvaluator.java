@@ -60,6 +60,7 @@ class TargetPatternEvaluator {
 
   public TargetPatternEvaluator(
       Cell rootCell,
+      Path absoluteClientWorkingDir,
       BuckConfig buckConfig,
       Parser parser,
       ParsingContext parsingContext,
@@ -70,7 +71,11 @@ class TargetPatternEvaluator {
     this.buckConfig = buckConfig;
     this.projectRoot = rootCell.getFilesystem().getRootPath();
     this.targetNodeSpecParser =
-        new CommandLineTargetNodeSpecParser(buckConfig, new BuildTargetMatcherTargetNodeParser());
+        new CommandLineTargetNodeSpecParser(
+            rootCell,
+            absoluteClientWorkingDir,
+            buckConfig,
+            new BuildTargetMatcherTargetNodeParser());
     this.targetConfiguration = targetConfiguration;
   }
 

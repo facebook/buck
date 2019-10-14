@@ -102,7 +102,10 @@ public class UninstallCommand extends AbstractCommand {
                       .withExcludeUnsupportedTargets(false)
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(), params.getBuckConfig(), getArguments()),
+                      params.getCell(),
+                      params.getClientWorkingDir(),
+                      getArguments(),
+                      params.getBuckConfig()),
                   params.getTargetConfiguration());
       buildTargets = result.getBuildTargets();
       graphBuilder = params.getActionGraphProvider().getActionGraph(result).getActionGraphBuilder();
