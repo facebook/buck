@@ -82,6 +82,33 @@ public class ArtifactImplTest {
   }
 
   @Test
+  public void rejectsDotPath() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+
+    expectedException.expect(ArtifactDeclarationException.class);
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("."), Location.BUILTIN);
+  }
+
+  @Test
+  public void rejectsPrefixedDotPath() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+
+    expectedException.expect(ArtifactDeclarationException.class);
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("./foo/.."), Location.BUILTIN);
+  }
+
+  @Test
+  public void rejectsSuffixedDotPath() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+
+    expectedException.expect(ArtifactDeclarationException.class);
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("foo/../."), Location.BUILTIN);
+  }
+
+  @Test
   public void rejectsPrefixedUpwardPathTraversal() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path genDir = Paths.get("buck-out/gen");
