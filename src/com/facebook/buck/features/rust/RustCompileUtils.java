@@ -802,6 +802,7 @@ public class RustCompileUtils {
             .setCellPathResolver(context.getCellPathResolver())
             .setActionGraphBuilder(context.getActionGraphBuilder())
             .setExpanders(expanders)
+            .setSanitizer(cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty()))
             .build();
 
     return macrosConverter;
