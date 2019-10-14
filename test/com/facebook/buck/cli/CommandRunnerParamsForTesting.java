@@ -188,7 +188,8 @@ public class CommandRunnerParamsForTesting {
         depsAwareExecutorSupplier,
         MetadataProviderFactory.emptyMetadataProvider(),
         getManifestSupplier(),
-        buckGlobalState);
+        buckGlobalState,
+        cell.getRoot());
   }
 
   public static Builder builder() {

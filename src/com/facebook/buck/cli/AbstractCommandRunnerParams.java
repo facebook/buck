@@ -62,6 +62,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
@@ -198,6 +199,15 @@ public abstract class AbstractCommandRunnerParams {
    */
   @Value.Parameter
   public abstract BuckGlobalState getGlobalState();
+
+  /**
+   * @return the original absolute PWD for the client
+   *     <p>NOTE: This is the path the the user was in when they invoked buck. The buck wrapper
+   *     executes buck from the project root, so this is not the same as most {@code getCwd()} style
+   *     functions.
+   */
+  @Value.Parameter
+  public abstract Path getClientWorkingDir();
 
   /**
    * Create {@link BuildExecutorArgs} using this {@link CommandRunnerParams}.

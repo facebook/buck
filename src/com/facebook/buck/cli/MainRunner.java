@@ -250,6 +250,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -1418,7 +1419,8 @@ public final class MainRunner {
                         depsAwareExecutorSupplier,
                         metadataProvider,
                         manifestServiceSupplier,
-                        buckGlobalState));
+                        buckGlobalState,
+                        getClientPwd(rootCell, clientEnvironment)));
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));
             throw e;
@@ -1476,6 +1478,31 @@ public final class MainRunner {
       }
     }
     return exitCode;
+  }
+
+  private Path getClientPwd(Cell rootCell, ImmutableMap<String, String> clientEnvironment) {
+    String rawPwd = clientEnvironment.get("BUCK_CLIENT_PWD");
+    if (rawPwd == null) {
+      throw new IllegalStateException("BUCK_CLIENT_PWD was not sent from the wrapper script");
+    }
+    Path pwd;
+    try {
+      pwd = Paths.get(rawPwd);
+    } catch (Exception e) {
+      throw new IllegalStateException(
+          String.format("Received non-path BUCK_CLIENT_PWD %s from wrapper", rawPwd));
+    }
+    if (!pwd.isAbsolute()) {
+      throw new IllegalStateException(
+          String.format("Received non-absolute BUCK_CLIENT_PWD %s from wrapper", pwd));
+    }
+    if (!pwd.startsWith(rootCell.getRoot())) {
+      throw new IllegalStateException(
+          String.format(
+              "Received BUCK_CLIENT_PWD %s from wrapper that was not a child of %s",
+              pwd, rootCell.getRoot()));
+    }
+    return pwd;
   }
 
   /**
