@@ -29,8 +29,12 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.filegroup.FileGroupDescriptionArg;
 import com.facebook.buck.features.filegroup.FilegroupBuilder;
+import com.facebook.buck.file.RemoteFileBuilder;
+import com.facebook.buck.file.RemoteFileDescriptionArg;
+import com.facebook.buck.file.downloader.impl.ExplodingDownloader;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +46,17 @@ public class IjProjectSourcePathResolverTest {
   @Before
   public void setUp() throws Exception {
     filesystem = new FakeProjectFilesystem();
+  }
+
+  @Test
+  public void testRemoteFile() {
+    TargetNode<RemoteFileDescriptionArg> node =
+        RemoteFileBuilder.createBuilder(
+                new ExplodingDownloader(), BuildTargetFactory.newInstance("//files:remote"))
+            .setSha1(HashCode.fromInt(0))
+            .setUrl("https://example.com/remote_file")
+            .build(filesystem);
+    assertOutputPathsEqual(node);
   }
 
   @Test

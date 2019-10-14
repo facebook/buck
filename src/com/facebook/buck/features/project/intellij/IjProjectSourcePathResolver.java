@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -30,6 +31,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.features.filegroup.FileGroupDescriptionArg;
 import com.facebook.buck.features.filegroup.FilegroupDescription;
+import com.facebook.buck.file.RemoteFileDescription;
+import com.facebook.buck.file.RemoteFileDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
@@ -68,7 +71,10 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
-    if (description instanceof FilegroupDescription) {
+    if (description instanceof RemoteFileDescription) {
+      return getOutputPathForRemoteFile(
+          (RemoteFileDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
+    } else if (description instanceof FilegroupDescription) {
       return getOutputPathForFilegroup(
           (FileGroupDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
     } else {
@@ -146,5 +152,15 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     // name for the exported files
     String filename = arg.getName();
     return Optional.of(BuildPaths.getGenDir(filesystem, buildTarget).resolve(filename));
+  }
+
+  /** Calculate the output path for a RemoteFile rule */
+  private Optional<Path> getOutputPathForRemoteFile(
+      RemoteFileDescriptionArg arg, BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    // This matches the implementation in RemoteFileDescription for the output filename
+    // calculation
+    String filename = arg.getOut().orElse(buildTarget.getShortNameAndFlavorPostfix());
+    // This matches the output path calculation in RemoteFile's constructor
+    return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s/" + filename));
   }
 }
