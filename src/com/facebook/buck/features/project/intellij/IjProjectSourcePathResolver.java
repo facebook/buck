@@ -35,6 +35,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.features.filegroup.FileGroupDescriptionArg;
 import com.facebook.buck.features.filegroup.FilegroupDescription;
+import com.facebook.buck.features.zip.rules.ZipFileDescription;
+import com.facebook.buck.features.zip.rules.ZipFileDescriptionArg;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.file.RemoteFileDescriptionArg;
 import com.facebook.buck.io.file.MorePaths;
@@ -124,6 +126,9 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     } else if (description instanceof FilegroupDescription) {
       return getOutputPathForFilegroup(
           (FileGroupDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
+    } else if (description instanceof ZipFileDescription) {
+      return getOutputPathForZipfile(
+          (ZipFileDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
     } else {
       // This SourcePathResolver does not attempt to exhaustively list all possible rule
       // descriptions,
@@ -314,5 +319,12 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     return Optional.of(
         BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
             .resolve(constructorArg.getOut()));
+  }
+
+  /** Calculate the output path for a */
+  private Optional<Path> getOutputPathForZipfile(
+      ZipFileDescriptionArg arg, BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    String filename = arg.getOut();
+    return Optional.of(BuildPaths.getGenDir(filesystem, buildTarget).resolve(filename));
   }
 }

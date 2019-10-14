@@ -21,13 +21,13 @@ import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidBinaryDescriptionArg;
 import com.facebook.buck.android.AndroidBuildConfigBuilder;
 import com.facebook.buck.android.AndroidBuildConfigDescriptionArg;
-import com.facebook.buck.android.AndroidResourceBuilder;
-import com.facebook.buck.android.AndroidResourceDescription;
-import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.android.AndroidManifest;
 import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidManifestDescriptionArg;
 import com.facebook.buck.android.AndroidManifestFactory;
+import com.facebook.buck.android.AndroidResourceBuilder;
+import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -42,6 +42,9 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.filegroup.FileGroupDescriptionArg;
 import com.facebook.buck.features.filegroup.FilegroupBuilder;
+import com.facebook.buck.features.zip.rules.Zip;
+import com.facebook.buck.features.zip.rules.ZipFileDescription;
+import com.facebook.buck.features.zip.rules.ZipFileDescriptionArg;
 import com.facebook.buck.file.RemoteFileBuilder;
 import com.facebook.buck.file.RemoteFileDescriptionArg;
 import com.facebook.buck.file.downloader.impl.ExplodingDownloader;
@@ -246,6 +249,18 @@ public class IjProjectSourcePathResolverTest {
         .getArgForPopulating()
         .setSkeleton(PathSourcePath.of(filesystem, Paths.get("app/AndroidManifest.xml")));
     TargetNode<AndroidManifestDescriptionArg> node = builder.build(filesystem);
+    assertOutputPathsEqual(node);
+  }
+
+  @Test
+  public void testZipFile() {
+    AbstractNodeBuilder<
+            ZipFileDescriptionArg.Builder, ZipFileDescriptionArg, ZipFileDescription, Zip>
+        builder =
+            new AbstractNodeBuilder<
+                ZipFileDescriptionArg.Builder, ZipFileDescriptionArg, ZipFileDescription, Zip>(
+                new ZipFileDescription(), BuildTargetFactory.newInstance("//files:zip")) {};
+    TargetNode<ZipFileDescriptionArg> node = builder.build(filesystem);
     assertOutputPathsEqual(node);
   }
 
