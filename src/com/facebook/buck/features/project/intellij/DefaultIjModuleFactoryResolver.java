@@ -18,50 +18,67 @@ package com.facebook.buck.features.project.intellij;
 import com.facebook.buck.android.AndroidBinaryDescriptionArg;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
+import com.facebook.buck.android.AndroidPrebuiltAarDescriptionArg;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.android.DummyRDotJava;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
-import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.facebook.buck.util.RichStream;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
-  private final ActionGraphBuilder graphBuilder;
+  private final IjProjectSourcePathResolver sourcePathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final Optional<Set<BuildTarget>> requiredBuildTargets;
+  private TargetGraph targetGraph;
 
   DefaultIjModuleFactoryResolver(
-      ActionGraphBuilder graphBuilder,
+      IjProjectSourcePathResolver sourcePathResolver,
       ProjectFilesystem projectFilesystem,
-      Optional<Set<BuildTarget>> requiredBuildTargets) {
-    this.graphBuilder = graphBuilder;
+      Optional<Set<BuildTarget>> requiredBuildTargets,
+      TargetGraph targetGraph) {
+    this.sourcePathResolver = sourcePathResolver;
     this.projectFilesystem = projectFilesystem;
     this.requiredBuildTargets = requiredBuildTargets;
+    this.targetGraph = targetGraph;
   }
 
   @Override
   public Optional<Path> getDummyRDotJavaPath(TargetNode<?> targetNode) {
     BuildTarget dummyRDotJavaTarget =
         AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(targetNode.getBuildTarget());
-    Optional<BuildRule> dummyRDotJavaRule = graphBuilder.getRuleOptional(dummyRDotJavaTarget);
-    if (dummyRDotJavaRule.isPresent()) {
-      requiredBuildTargets.ifPresent(set -> set.add(dummyRDotJavaTarget));
+    if (willHaveDummyRDotJavaRule(targetNode)) {
+      requiredBuildTargets.ifPresent(requiredTargets -> requiredTargets.add(dummyRDotJavaTarget));
       return Optional.of(DummyRDotJava.getOutputJarPath(dummyRDotJavaTarget, projectFilesystem));
     }
     return Optional.empty();
+  }
+
+  private boolean willHaveDummyRDotJavaRule(TargetNode<?> targetNode) {
+    return targetNode.getBuildDeps().stream()
+        .anyMatch(
+            dep -> {
+              ConstructorArg constructorArg = targetGraph.get(dep).getConstructorArg();
+              if (constructorArg instanceof AndroidResourceDescriptionArg) {
+                // AndroidResource implements HasAndroidResourceDeps
+                return true;
+              } else if (constructorArg instanceof AndroidPrebuiltAarDescriptionArg) {
+                // AndroidPrebuiltAar implements HasAndroidResourceDeps
+                return true;
+              }
+              return false;
+            });
   }
 
   @Override
@@ -77,16 +94,14 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
               + targetNode.getBuildTarget()
               + " did not specify manifest or manifest_skeleton");
     }
-    return graphBuilder.getSourcePathResolver().getAbsolutePath(manifestSourcePath.get());
+    return sourcePathResolver.getAbsolutePath(manifestSourcePath.get());
   }
 
   @Override
   public Optional<Path> getLibraryAndroidManifestPath(
       TargetNode<AndroidLibraryDescription.CoreArg> targetNode) {
     Optional<SourcePath> manifestPath = targetNode.getConstructorArg().getManifest();
-    return manifestPath
-        .map(graphBuilder.getSourcePathResolver()::getAbsolutePath)
-        .map(projectFilesystem::relativize);
+    return manifestPath.map(sourcePathResolver::getAbsolutePath).map(projectFilesystem::relativize);
   }
 
   @Override
@@ -100,23 +115,61 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   @Override
   public Optional<Path> getAndroidResourcePath(
       TargetNode<AndroidResourceDescriptionArg> targetNode) {
-    return AndroidResourceDescription.getResDirectoryForProject(graphBuilder, targetNode)
-        .map(this::getRelativePathAndRecordRule);
+    AndroidResourceDescriptionArg arg = targetNode.getConstructorArg();
+    if (arg.getProjectRes().isPresent()) {
+      return arg.getProjectRes();
+    }
+    if (!arg.getRes().isPresent()) {
+      return Optional.empty();
+    }
+    if (arg.getRes().get().isLeft()) {
+      // Left is a simple source path
+      return Optional.of(
+          sourcePathResolver.getRelativePath(
+              targetNode.getFilesystem(), arg.getRes().get().getLeft()));
+    } else {
+      // Right is a mapped set of paths, so we need the symlink tree
+      return Optional.of(
+          sourcePathResolver.getRelativePath(
+              targetNode.getFilesystem(),
+              DefaultBuildTargetSourcePath.of(
+                  targetNode
+                      .getBuildTarget()
+                      .withAppendedFlavors(
+                          AndroidResourceDescription.RESOURCES_SYMLINK_TREE_FLAVOR))));
+    }
   }
 
   @Override
   public Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescriptionArg> targetNode) {
-    return AndroidResourceDescription.getAssetsDirectoryForProject(graphBuilder, targetNode)
-        .map(this::getRelativePathAndRecordRule);
+    AndroidResourceDescriptionArg arg = targetNode.getConstructorArg();
+    if (arg.getProjectAssets().isPresent()) {
+      return arg.getProjectAssets();
+    }
+    if (!arg.getAssets().isPresent()) {
+      return Optional.empty();
+    }
+    if (arg.getAssets().get().isLeft()) {
+      // Left is a simple source path
+      return Optional.of(sourcePathResolver.getRelativePath(arg.getAssets().get().getLeft()));
+    } else {
+      // Right is a mapped set of paths, so we need the symlink tree
+      return Optional.of(
+          sourcePathResolver.getRelativePath(
+              targetNode.getFilesystem(),
+              DefaultBuildTargetSourcePath.of(
+                  targetNode
+                      .getBuildTarget()
+                      .withAppendedFlavors(
+                          AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR))));
+    }
   }
 
   @Override
   public Optional<Path> getAnnotationOutputPath(TargetNode<? extends JvmLibraryArg> targetNode) {
-    JavacPluginParams annotationProcessingParams =
-        targetNode
-            .getConstructorArg()
-            .buildJavaAnnotationProcessorParams(targetNode.getBuildTarget(), graphBuilder);
-    if (annotationProcessingParams == null || annotationProcessingParams.isEmpty()) {
+    JvmLibraryArg constructorArg = targetNode.getConstructorArg();
+    if (constructorArg.getPlugins().isEmpty()
+        && constructorArg.getAnnotationProcessors().isEmpty()) {
       return Optional.empty();
     }
     return CompilerOutputPaths.getAnnotationPath(projectFilesystem, targetNode.getBuildTarget());
@@ -131,10 +184,8 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
     requiredBuildTargets.ifPresent(
-        set ->
-            set.addAll(
-                RichStream.from(graphBuilder.getRule(sourcePath).map(BuildRule::getBuildTarget))
-                    .collect(Collectors.toList())));
-    return graphBuilder.getSourcePathResolver().getRelativePath(sourcePath);
+        requiredTargets ->
+            sourcePathResolver.getBuildTarget(sourcePath).ifPresent(requiredTargets::add));
+    return sourcePathResolver.getRelativePath(sourcePath);
   }
 }
