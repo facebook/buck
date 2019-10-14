@@ -5102,6 +5102,21 @@ buck = .
 
 {call buckconfig.entry}
   {param section: 'ui' /}
+  {param name: 'relativize_targets_to_working_directory' /}
+  {param example_value: 'false' /}
+  {param description}
+    Determines whether {call buck.build_target_pattern /}s provided on the command line 
+    are relativized to the current working directory. For example, if <code>buck build bar/...</code>
+    is run from the <code>foo</code> subdirectory of the project, the pattern
+    <code>//foo/bar/...</code> is built instead. If set to <code>false</code>, <code>//bar/...</code>
+    would be built.
+
+    This defaults to true.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
   {param name: 'thread_line_limit' /}
   {param example_value: '10' /}
   {param description}

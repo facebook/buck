@@ -97,4 +97,14 @@ public abstract class AbstractCliConfig implements ConfigView<BuckConfig> {
   public ImmutableList<String> getMessageOfTheDay() {
     return getDelegate().getListWithoutComments("project", "motd");
   }
+
+  /**
+   * @return whether relative targets given on the command line should be relativized to the user's
+   *     working dir
+   */
+  @Value.Lazy
+  public boolean getRelativizeTargetsToWorkingDirectory() {
+    return getDelegate()
+        .getBooleanValue(UI_SECTION, "relativize_targets_to_working_directory", true);
+  }
 }
