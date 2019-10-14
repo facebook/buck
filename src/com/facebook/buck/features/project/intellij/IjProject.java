@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.java.JavaFileParser;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Set;
 
 /** Top-level class for IntelliJ project generation. */
@@ -97,13 +98,18 @@ public class IjProject {
    * @throws IOException
    */
   private ImmutableSet<BuildTarget> performWriteOrUpdate(boolean updateOnly) throws IOException {
-    final Set<BuildTarget> requiredBuildTargets = Sets.newConcurrentHashSet();
+    final Optional<Set<BuildTarget>> requiredBuildTargets =
+        projectConfig.isSkipBuildEnabled()
+            ? Optional.empty()
+            : Optional.of(Sets.newConcurrentHashSet());
+    IjProjectSourcePathResolver sourcePathResolver = new IjProjectSourcePathResolver(targetGraph);
     IjLibraryFactory libraryFactory =
         new DefaultIjLibraryFactory(
             new DefaultIjLibraryFactoryResolver(
-                projectFilesystem, graphBuilder, requiredBuildTargets));
+                projectFilesystem, sourcePathResolver, requiredBuildTargets));
     IjModuleFactoryResolver moduleFactoryResolver =
-        new DefaultIjModuleFactoryResolver(graphBuilder, projectFilesystem, requiredBuildTargets);
+        new DefaultIjModuleFactoryResolver(
+            sourcePathResolver, projectFilesystem, requiredBuildTargets, targetGraph);
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
             projectFilesystem, moduleFactoryResolver, projectConfig, javaPackageFinder);
@@ -154,7 +160,7 @@ public class IjProject {
       cleaner.writeFilesToKeepToFile(projectConfig.getGeneratedFilesListFilename().get());
     }
 
-    return ImmutableSet.copyOf(requiredBuildTargets);
+    return requiredBuildTargets.map(ImmutableSet::copyOf).orElse(ImmutableSet.of());
   }
 
   /**

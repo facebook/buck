@@ -41,12 +41,12 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   private final ActionGraphBuilder graphBuilder;
   private final ProjectFilesystem projectFilesystem;
-  private final Set<BuildTarget> requiredBuildTargets;
+  private final Optional<Set<BuildTarget>> requiredBuildTargets;
 
   DefaultIjModuleFactoryResolver(
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
-      Set<BuildTarget> requiredBuildTargets) {
+      Optional<Set<BuildTarget>> requiredBuildTargets) {
     this.graphBuilder = graphBuilder;
     this.projectFilesystem = projectFilesystem;
     this.requiredBuildTargets = requiredBuildTargets;
@@ -58,7 +58,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
         AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(targetNode.getBuildTarget());
     Optional<BuildRule> dummyRDotJavaRule = graphBuilder.getRuleOptional(dummyRDotJavaTarget);
     if (dummyRDotJavaRule.isPresent()) {
-      requiredBuildTargets.add(dummyRDotJavaTarget);
+      requiredBuildTargets.ifPresent(set -> set.add(dummyRDotJavaTarget));
       return Optional.of(DummyRDotJava.getOutputJarPath(dummyRDotJavaTarget, projectFilesystem));
     }
     return Optional.empty();
@@ -119,7 +119,6 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     if (annotationProcessingParams == null || annotationProcessingParams.isEmpty()) {
       return Optional.empty();
     }
-
     return CompilerOutputPaths.getAnnotationPath(projectFilesystem, targetNode.getBuildTarget());
   }
 
@@ -131,9 +130,11 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   }
 
   private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
-    requiredBuildTargets.addAll(
-        RichStream.from(graphBuilder.getRule(sourcePath).map(BuildRule::getBuildTarget))
-            .collect(Collectors.toList()));
+    requiredBuildTargets.ifPresent(
+        set ->
+            set.addAll(
+                RichStream.from(graphBuilder.getRule(sourcePath).map(BuildRule::getBuildTarget))
+                    .collect(Collectors.toList())));
     return graphBuilder.getSourcePathResolver().getRelativePath(sourcePath);
   }
 }

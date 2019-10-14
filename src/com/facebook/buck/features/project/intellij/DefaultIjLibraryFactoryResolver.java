@@ -32,12 +32,12 @@ import java.util.Set;
 class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
   private final ProjectFilesystem projectFilesystem;
   private final BuildRuleResolver buildRuleResolver;
-  private final Set<BuildTarget> requiredBuildTargets;
+  private final Optional<Set<BuildTarget>> requiredBuildTargets;
 
   DefaultIjLibraryFactoryResolver(
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver buildRuleResolver,
-      Set<BuildTarget> requiredBuildTargets) {
+      Optional<Set<BuildTarget>> requiredBuildTargets) {
     this.projectFilesystem = projectFilesystem;
     this.buildRuleResolver = buildRuleResolver;
     this.requiredBuildTargets = requiredBuildTargets;
@@ -46,8 +46,8 @@ class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
   @Override
   public Path getPath(SourcePath path) {
     Optional<BuildRule> rule = buildRuleResolver.getRule(path);
-    if (rule.isPresent()) {
-      requiredBuildTargets.add(rule.get().getBuildTarget());
+    if (requiredBuildTargets.isPresent() && rule.isPresent()) {
+      requiredBuildTargets.get().add(rule.get().getBuildTarget());
     }
     return projectFilesystem
         .getRootPath()
@@ -64,7 +64,7 @@ class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
       AndroidPrebuiltAar aarRule = (AndroidPrebuiltAar) rule;
       return Optional.ofNullable(aarRule.getBinaryJar());
     }
-    requiredBuildTargets.add(rule.getBuildTarget());
+    requiredBuildTargets.ifPresent(set -> set.add(rule.getBuildTarget()));
     return Optional.ofNullable(rule.getSourcePathToOutput());
   }
 }
