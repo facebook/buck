@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
@@ -28,6 +29,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.kohsuke.args4j.Argument;
@@ -69,14 +71,18 @@ public class AuditDependenciesCommand extends AbstractCommand {
     return includeTests;
   }
 
-  public ImmutableList<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
-    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
+  public ImmutableList<String> getArgumentsFormattedAsBuildTargets(
+      Cell rootCell, Path clientWorkingDir, BuckConfig buckConfig) {
+    return getCommandLineBuildTargetNormalizer(rootCell, clientWorkingDir, buckConfig)
+        .normalizeAll(getArguments());
   }
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     ImmutableSet<String> fullyQualifiedBuildTargets =
-        ImmutableSet.copyOf(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
+        ImmutableSet.copyOf(
+            getArgumentsFormattedAsBuildTargets(
+                params.getCell(), params.getClientWorkingDir(), params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
       throw new CommandLineException("must specify at least one build target");
@@ -126,7 +132,8 @@ public class AuditDependenciesCommand extends AbstractCommand {
           env,
           QueryCommand.getAuditDependenciesQueryFormat(
               shouldShowTransitiveDependencies(), shouldIncludeTests()),
-          getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
+          getArgumentsFormattedAsBuildTargets(
+              params.getCell(), params.getClientWorkingDir(), params.getBuckConfig()),
           shouldGenerateJsonOutput(),
           ImmutableSet.of(),
           params.getConsole().getStdOut());

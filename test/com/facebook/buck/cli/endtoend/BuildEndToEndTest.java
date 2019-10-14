@@ -109,6 +109,8 @@ public class BuildEndToEndTest {
     ImmutableMap<String, Path> simpleBinPath =
         workspace.buildAndReturnOutputs("run/simple_bin:main_py");
 
+    workspace.runBuckCommand("run", "run/simple_bin:main_py").assertSuccess();
+
     workspace.setRelativeWorkingDirectory(Paths.get("run"));
 
     ImmutableMap<String, Path> relativeSimpleBinPath =
@@ -116,6 +118,8 @@ public class BuildEndToEndTest {
 
     ImmutableMap<String, Path> targetsRelativeSimpleBinPath =
         workspace.runCommandAndReturnOutputs("targets", "simple_bin:main_py");
+
+    workspace.runBuckCommand("run", "simple_bin:main_py").assertSuccess();
 
     assertEquals(simpleBinPath, relativeSimpleBinPath);
     assertEquals(simpleBinPath, targetsRelativeSimpleBinPath);

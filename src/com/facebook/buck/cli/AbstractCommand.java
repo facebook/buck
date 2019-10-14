@@ -320,8 +320,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   public abstract ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception;
 
   protected CommandLineBuildTargetNormalizer getCommandLineBuildTargetNormalizer(
-      BuckConfig buckConfig) {
-    return new CommandLineBuildTargetNormalizer(buckConfig);
+      Cell rootCell, Path clientWorkingDirectory, BuckConfig buckConfig) {
+    return new CommandLineBuildTargetNormalizer(rootCell, clientWorkingDirectory, buckConfig);
   }
 
   public boolean getEnableParserProfiling() {
@@ -447,8 +447,9 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       CommandRunnerParams params, List<String> arguments) {
     UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
         params.getUnconfiguredBuildTargetFactory();
-    return getCommandLineBuildTargetNormalizer(params.getBuckConfig()).normalizeAll(arguments)
-        .stream()
+    return getCommandLineBuildTargetNormalizer(
+            params.getCell(), params.getClientWorkingDir(), params.getBuckConfig())
+        .normalizeAll(arguments).stream()
         .map(
             input ->
                 unconfiguredBuildTargetFactory.create(
