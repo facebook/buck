@@ -232,7 +232,7 @@ public class RustCompileTest {
           target,
           new FakeProjectFilesystem(),
           TestBuildRuleParams.create(),
-          Optional.of(String.format("lib%s.rlib", target)),
+          String.format("lib%s.rlib", target.getShortName()),
           fakeTool(),
           fakeLinker(),
           Stream.of("--crate-name", target.getShortName(), "--crate-type", "rlib")

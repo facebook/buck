@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import java.util.Optional;
 
 /** Rust-specific flavors. */
 public class RustDescriptionEnhancer {
@@ -79,6 +78,6 @@ public class RustDescriptionEnhancer {
 
   @FunctionalInterface
   interface FilenameMap {
-    Optional<String> apply(BuildTarget target, String name, CxxPlatform cxxPlatform);
+    String apply(BuildTarget target, String name, CxxPlatform cxxPlatform);
   }
 }

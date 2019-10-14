@@ -130,12 +130,11 @@ public class RustCompileUtils {
     CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
 
-    Optional<String> filename = crateType.filenameFor(target, crateName, cxxPlatform);
+    String filename = crateType.filenameFor(target, crateName, cxxPlatform);
 
     if (crateType == CrateType.CDYLIB) {
-      String soname = filename.get();
       Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
-      linkerArgs.addAll(StringArg.from(linker.soname(soname)));
+      linkerArgs.addAll(StringArg.from(linker.soname(filename)));
     }
 
     Stream.concat(rustPlatform.getLinkerArgs().stream(), extraLinkerFlags.stream())

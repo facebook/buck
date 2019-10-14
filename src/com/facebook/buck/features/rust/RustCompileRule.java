@@ -73,7 +73,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final RustBuckConfig.RemapSrcPaths remapSrcPaths;
 
   private final Path scratchDir;
-  private final Optional<String> filename;
+  private final String filename;
   private final Optional<Path> xcrunSdkPath;
 
   /**
@@ -98,7 +98,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      Optional<String> filename,
+      String filename,
       Tool compiler,
       Linker linker,
       ImmutableList<Arg> args,
@@ -131,7 +131,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      Optional<String> filename,
+      String filename,
       Tool compiler,
       Linker linker,
       ImmutableList<Arg> args,
@@ -180,7 +180,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private Path getOutput() {
-    return getOutputDir(getBuildTarget(), getProjectFilesystem()).resolve(filename.orElse(""));
+    return getOutputDir(getBuildTarget(), getProjectFilesystem()).resolve(filename);
   }
 
   @Override
@@ -191,9 +191,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Path outputdir = getOutputDir(buildTarget, getProjectFilesystem());
     Path output = getOutput();
 
-    if (filename.isPresent()) {
-      buildableContext.recordArtifact(output);
-    }
+    buildableContext.recordArtifact(output);
 
     SourcePathResolver resolver = buildContext.getSourcePathResolver();
 

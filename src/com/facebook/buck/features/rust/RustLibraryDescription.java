@@ -328,7 +328,7 @@ public class RustLibraryDescription
 
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
-            CrateType.DYLIB.filenameFor(target, crate, rustPlatform.getCxxPlatform()).get();
+            CrateType.DYLIB.filenameFor(target, crate, rustPlatform.getCxxPlatform());
 
         Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
             getRustcArgsEnv.apply(rustPlatform);
@@ -478,7 +478,7 @@ public class RustLibraryDescription
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
-            CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform).get();
+            CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform);
         RustPlatform rustPlatform =
             getRustToolchain()
                 .getRustPlatforms()
