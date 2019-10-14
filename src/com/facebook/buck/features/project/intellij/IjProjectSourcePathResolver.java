@@ -42,6 +42,8 @@ import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
 import com.facebook.buck.jvm.scala.ScalaTestDescription;
+import com.facebook.buck.shell.ExportFileDescription;
+import com.facebook.buck.shell.ExportFileDescriptionArg;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -71,7 +73,10 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
-    if (description instanceof RemoteFileDescription) {
+    if (description instanceof ExportFileDescription) {
+      return getOutputPathForExportFile(
+          (ExportFileDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
+    } else if (description instanceof RemoteFileDescription) {
       return getOutputPathForRemoteFile(
           (RemoteFileDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
     } else if (description instanceof FilegroupDescription) {
@@ -162,5 +167,18 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     String filename = arg.getOut().orElse(buildTarget.getShortNameAndFlavorPostfix());
     // This matches the output path calculation in RemoteFile's constructor
     return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s/" + filename));
+  }
+
+  /** Calculate the output path for an ExportFile rule */
+  private Optional<Path> getOutputPathForExportFile(
+      ExportFileDescriptionArg arg, BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    // This matches the implementation in ExportFileDescription
+    // If the mode is REFERENCE we need to return the relative path to the real underlying file
+    if (arg.getMode().map(mode -> mode == ExportFileDescription.Mode.REFERENCE).orElse(false)) {
+      return arg.getSrc().map(this::getRelativePath);
+    }
+    // Otherwise, we resolve the generated path for the COPY
+    String name = arg.getOut().orElse(buildTarget.getShortNameAndFlavorPostfix());
+    return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(name));
   }
 }

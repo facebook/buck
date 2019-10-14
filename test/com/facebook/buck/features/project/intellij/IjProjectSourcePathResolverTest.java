@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.features.project.intellij;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -33,6 +33,9 @@ import com.facebook.buck.file.RemoteFileBuilder;
 import com.facebook.buck.file.RemoteFileDescriptionArg;
 import com.facebook.buck.file.downloader.impl.ExplodingDownloader;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.shell.ExportFileBuilder;
+import com.facebook.buck.shell.ExportFileDescription;
+import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
@@ -46,6 +49,24 @@ public class IjProjectSourcePathResolverTest {
   @Before
   public void setUp() throws Exception {
     filesystem = new FakeProjectFilesystem();
+  }
+
+  @Test
+  public void testExportFile() {
+    TargetNode<ExportFileDescriptionArg> byReference =
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//files:export"))
+            .setSrc(FakeSourcePath.of("source.txt"))
+            .setMode(ExportFileDescription.Mode.REFERENCE)
+            .build(filesystem);
+    assertOutputPathsEqual(byReference);
+
+    TargetNode<ExportFileDescriptionArg> byCopy =
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//files:export"))
+            .setSrc(FakeSourcePath.of("source.txt"))
+            .setOut("out.txt")
+            .setMode(ExportFileDescription.Mode.COPY)
+            .build(filesystem);
+    assertOutputPathsEqual(byCopy);
   }
 
   @Test
