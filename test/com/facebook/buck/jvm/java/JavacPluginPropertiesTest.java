@@ -61,7 +61,8 @@ public class JavacPluginPropertiesTest {
             Optional.of("http://junit-team.github.io/junit-util/javadoc/latest/"),
             /* mavenCoords */ Optional.empty(),
             /* provided */ false,
-            /* requiredForSourceOnlyAbi */ false);
+            /* requiredForSourceOnlyAbi */ false,
+            /* generateAbi */ true);
     BuildRule transitivePrebuiltJarDep =
         graphBuilder.computeIfAbsent(
             rawTransitivePrebuiltJarDep.getBuildTarget(),
@@ -82,7 +83,8 @@ public class JavacPluginPropertiesTest {
             Optional.of("http://junit-team.github.io/junit/javadoc/latest/"),
             /* mavenCoords */ Optional.empty(),
             /* provided */ false,
-            /* requiredForSourceOnlyAbi */ false);
+            /* requiredForSourceOnlyAbi */ false,
+            /* generateAbi */ true);
     BuildRule firstLevelPrebuiltJarDep =
         graphBuilder.computeIfAbsent(
             rawFirstLevelPrebuiltJarDep.getBuildTarget(),

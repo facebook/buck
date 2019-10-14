@@ -589,7 +589,8 @@ public class AndroidBinaryGraphEnhancer {
               Optional.empty(),
               Optional.empty(),
               false,
-              false);
+              false,
+              true);
       graphBuilder.addToIndex(prebuiltJar);
 
       // For the primary dex, don't scale our weight estimate.  Just try to fit it and hope for

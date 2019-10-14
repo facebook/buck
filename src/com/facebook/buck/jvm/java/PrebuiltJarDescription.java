@@ -82,7 +82,8 @@ public class PrebuiltJarDescription
             args.getJavadocUrl(),
             args.getMavenCoords(),
             args.getProvided(),
-            args.getRequiredForSourceOnlyAbi());
+            args.getRequiredForSourceOnlyAbi(),
+            args.getGenerateAbi());
 
     BuildTarget gwtTarget = buildTarget.withAppendedFlavors(JavaLibrary.GWT_MODULE_FLAVOR);
     BuildRuleParams gwtParams =
@@ -189,6 +190,12 @@ public class PrebuiltJarDescription
       // Prebuilt jars are quick to build, and often contain third-party code, which in turn is
       // often a source of annotations and constants. To ease migration to ABI generation from
       // source without deps, we have them present during ABI gen by default.
+      return true;
+    }
+
+    // TODO T55723624 remove this
+    @Value.Default
+    default boolean getGenerateAbi() {
       return true;
     }
   }
