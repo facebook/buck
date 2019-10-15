@@ -19,16 +19,18 @@ package com.facebook.buck.util;
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.*;
 
-import com.facebook.buck.core.exceptions.BuckExecutionException;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.exceptions.ExceptionWithContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
+import com.facebook.buck.core.exceptions.WrapsException;
 import com.facebook.buck.util.ErrorLogger.DeconstructedException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.FileSystemLoopException;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -56,10 +58,28 @@ public class ErrorLoggerTest {
     assertEquals("message", errors.userVisible);
   }
 
+  private static class TestException extends Exception
+      implements ExceptionWithContext, WrapsException {
+    private @Nullable final String context;
+
+    public TestException(Throwable cause) {
+      this(cause, null);
+    }
+
+    public TestException(Throwable cause, @Nullable String context) {
+      super(cause);
+      this.context = context;
+    }
+
+    @Override
+    public Optional<String> getContext() {
+      return Optional.ofNullable(context);
+    }
+  }
+
   @Test
   public void testWrappedException() {
-    LoggedErrors errors =
-        logException(new BuckExecutionException(new HumanReadableException("message")));
+    LoggedErrors errors = logException(new TestException(new HumanReadableException("message")));
     assertNull(errors.userVisibleInternal);
     assertEquals("message", errors.userVisible);
   }
@@ -83,7 +103,7 @@ public class ErrorLoggerTest {
   @Test
   public void testWrappedExceptionWithContext() {
     LoggedErrors errors =
-        logException(new BuckExecutionException(new HumanReadableException("message"), "context"));
+        logException(new TestException(new HumanReadableException("message"), "context"));
     assertNull(errors.userVisibleInternal);
     assertEquals(linesToText("message", "    context"), errors.userVisible);
   }
@@ -102,7 +122,7 @@ public class ErrorLoggerTest {
     String expected = linesToText(rawMessage, "    context", "Try adding '}'!");
 
     LoggedErrors errors =
-        logException(new BuckExecutionException(new HumanReadableException(rawMessage), "context"));
+        logException(new TestException(new HumanReadableException(rawMessage), "context"));
     assertNull(errors.userVisibleInternal);
     assertEquals(expected, errors.userVisible);
   }
@@ -122,7 +142,7 @@ public class ErrorLoggerTest {
         linesToText("java.lang.RuntimeException: " + rawMessage, "    context", "Try adding '}'!");
 
     LoggedErrors errors =
-        logException(new BuckExecutionException(new RuntimeException(rawMessage), "context"));
+        logException(new TestException(new RuntimeException(rawMessage), "context"));
     assertNull(errors.userVisible);
     assertEquals(expected, errors.userVisibleInternal);
   }
@@ -130,8 +150,7 @@ public class ErrorLoggerTest {
   @Test
   public void testInterruptedException() {
     LoggedErrors errors =
-        logException(
-            new BuckExecutionException(new InterruptedException("This has been interrupted.")));
+        logException(new TestException(new InterruptedException("This has been interrupted.")));
 
     assertEquals("Interrupted", errors.userVisible);
     assertNull(errors.userVisibleInternal);
@@ -139,8 +158,7 @@ public class ErrorLoggerTest {
 
   @Test
   public void testClosedByInterruptedException() {
-    LoggedErrors errors =
-        logException(new BuckExecutionException(new ClosedByInterruptException()));
+    LoggedErrors errors = logException(new TestException(new ClosedByInterruptException()));
 
     assertEquals("Interrupted", errors.userVisible);
     assertNull(errors.userVisibleInternal);
@@ -148,8 +166,7 @@ public class ErrorLoggerTest {
 
   @Test
   public void testOutOfMemoryError() {
-    LoggedErrors errors =
-        logException(new BuckExecutionException(new OutOfMemoryError("No more memory!")));
+    LoggedErrors errors = logException(new TestException(new OutOfMemoryError("No more memory!")));
 
     assertNull(errors.userVisible);
     assertEquals(
@@ -163,7 +180,7 @@ public class ErrorLoggerTest {
   @Test
   public void testFileSystemLoopException() {
     LoggedErrors errors =
-        logException(new BuckExecutionException(new FileSystemLoopException("It's a loop!")));
+        logException(new TestException(new FileSystemLoopException("It's a loop!")));
 
     assertNull(errors.userVisible);
     assertEquals(
@@ -177,7 +194,7 @@ public class ErrorLoggerTest {
   @Test
   public void testNoSpaceLeftOnDevice() {
     LoggedErrors errors =
-        logException(new BuckExecutionException(new IOException("No space left on device xyzzy.")));
+        logException(new TestException(new IOException("No space left on device xyzzy.")));
 
     assertEquals("No space left on device xyzzy.", errors.userVisible);
     assertNull(errors.userVisibleInternal);
@@ -192,8 +209,7 @@ public class ErrorLoggerTest {
   @Test
   public void testBuckIsDying() {
     LoggedErrors errors =
-        logException(
-            new BuckExecutionException(new BuckIsDyingException("It's all falling apart.")));
+        logException(new TestException(new BuckIsDyingException("It's all falling apart.")));
 
     assertNull(errors.userVisible);
     assertEquals("Failed because buck was already dying", errors.userVisibleInternal);
@@ -202,8 +218,7 @@ public class ErrorLoggerTest {
   @Test
   public void testCommandLineException() {
     LoggedErrors errors =
-        logException(
-            new BuckExecutionException(new CommandLineException("--foo isn't an argument, silly")));
+        logException(new TestException(new CommandLineException("--foo isn't an argument, silly")));
 
     assertEquals("BAD ARGUMENTS: --foo isn't an argument, silly", errors.userVisible);
     assertNull(errors.userVisibleInternal);
@@ -213,7 +228,7 @@ public class ErrorLoggerTest {
   public void testDeconstruct() {
     DeconstructedException deconstructed =
         ErrorLogger.deconstruct(
-            new BuckExecutionException(
+            new TestException(
                 new BuckUncheckedExecutionException(
                     new ExecutionException(new IOException("okay")) {}, "a little more context"),
                 "a little context"));
