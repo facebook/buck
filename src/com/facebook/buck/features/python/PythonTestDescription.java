@@ -39,6 +39,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.test.rule.HasTestRunner;
 import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -67,6 +68,7 @@ import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -90,6 +92,7 @@ public class PythonTestDescription
         VersionRoot<PythonTestDescriptionArg> {
 
   public static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
+  private static final String DEFAULT_TEST_MAIN_NAME = "__test_main__.py";
 
   private final ToolchainProvider toolchainProvider;
   private final PythonBinaryDescription binaryDescription;
@@ -113,8 +116,11 @@ public class PythonTestDescription
   }
 
   @VisibleForTesting
-  protected static Path getTestMainName() {
-    return Paths.get("__test_main__.py");
+  protected static Path getTestMainPath(
+      SourcePathResolver resolver, Optional<PythonTestRunner> testRunner) {
+    return testRunner
+        .map(runner -> resolver.getRelativePath(runner.getSrc()))
+        .orElse(Paths.get(DEFAULT_TEST_MAIN_NAME));
   }
 
   @VisibleForTesting
@@ -179,10 +185,14 @@ public class PythonTestDescription
                 .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform()));
   }
 
+  /**
+   * Build rule for Python test that does not adhere to the TestX protocol. Hardcodes the path to a
+   * test runner.
+   */
   private static class PythonTestMainRule extends AbstractBuildRule {
     private final Path output =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), getBuildTarget(), "%s/__test_main__.py");
+            getProjectFilesystem(), getBuildTarget(), "%s/" + DEFAULT_TEST_MAIN_NAME);
 
     public PythonTestMainRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
       super(buildTarget, projectFilesystem);
@@ -204,7 +214,7 @@ public class PythonTestDescription
           new WriteFileStep(
               getProjectFilesystem(),
               Resources.asByteSource(
-                  Resources.getResource(PythonTestDescription.class, "__test_main__.py")),
+                  Resources.getResource(PythonTestDescription.class, DEFAULT_TEST_MAIN_NAME)),
               output,
               /* executable */ false));
     }
@@ -297,21 +307,26 @@ public class PythonTestDescription
             testModules);
     graphBuilder.addToIndex(testModulesBuildRule);
 
-    String mainModule;
-    if (args.getMainModule().isPresent()) {
-      mainModule = args.getMainModule().get();
-    } else {
-      mainModule = PythonUtil.toModuleName(buildTarget, getTestMainName().toString());
-    }
-
+    Optional<PythonTestRunner> testRunner = maybeGetTestRunner(args, graphBuilder);
+    Path testMainName = getTestMainPath(graphBuilder.getSourcePathResolver(), testRunner);
+    String mainModule =
+        testRunner
+            .map(runner -> runner.getMainModule())
+            .orElse(
+                args.getMainModule()
+                    .orElseGet(
+                        () -> PythonUtil.toModuleName(buildTarget, testMainName.toString())));
     // Build up the list of everything going into the python test.
     PythonPackageComponents testComponents =
         PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>builder()
                 .put(getTestModulesListName(), testModulesBuildRule.getSourcePathToOutput())
                 .put(
-                    getTestMainName(),
-                    requireTestMain(buildTarget, projectFilesystem, graphBuilder))
+                    testMainName,
+                    testRunner
+                        .map(runner -> runner.getSrc())
+                        .orElseGet(
+                            () -> requireTestMain(buildTarget, projectFilesystem, graphBuilder)))
                 .putAll(srcs)
                 .build(),
             resources,
@@ -370,7 +385,9 @@ public class PythonTestDescription
             PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, args.getPreloadDeps()));
     graphBuilder.addToIndex(binary);
 
-    if (args.getSpecs().isPresent()) {
+    if (testRunner.isPresent()) {
+      Preconditions.checkState(
+          args.getSpecs().isPresent(), "Specs must be present when runner is present.");
       return PythonTestX.from(
           buildTarget,
           projectFilesystem,
@@ -456,6 +473,18 @@ public class PythonTestDescription
                     .getView(TestBuckConfig.class)
                     .getDefaultTestRuleTimeoutMs()),
         args.getContacts());
+  }
+
+  private Optional<PythonTestRunner> maybeGetTestRunner(
+      PythonTestDescriptionArg args, ActionGraphBuilder graphBuilder) {
+    if (args.getRunner().isPresent()) {
+      BuildRule runnerRule = graphBuilder.requireRule(args.getRunner().get());
+      Preconditions.checkState(
+          runnerRule instanceof PythonTestRunner,
+          "Python tests should have python_test_runner as the test protocol runner.");
+      return Optional.of((PythonTestRunner) runnerRule);
+    }
+    return Optional.empty();
   }
 
   @Override

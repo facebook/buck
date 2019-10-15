@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -88,10 +89,10 @@ public class PythonTestIntegrationTest {
   }
 
   @Test
-  public void protocolPythonTestRuleShouldBuildAndGenerateSpec()
-      throws IOException, InterruptedException {
+  public void testXProtocolRuleWithoutFailures() throws IOException, InterruptedException {
     ProcessResult result =
-        workspace.runBuckCommand("test", "--config", "test.external_runner=echo", "//:testx");
+        workspace.runBuckCommand(
+            "test", "--config", "test.external_runner=echo", "//:testx_success");
     result.assertSuccess();
 
     Path specOutput =
@@ -102,25 +103,81 @@ public class PythonTestIntegrationTest {
     ArrayNode node = parser.readValueAsTree();
     JsonNode spec = node.get(0).get("specs");
 
-    assertEquals("spec", spec.get("my").textValue());
+    assertSpecParsing(spec);
+    ProcessExecutor.Result processResult = executeCmd(spec);
 
-    JsonNode other = spec.get("other");
-    assertTrue(other.isArray());
-    assertTrue(other.has(0));
-    assertEquals("stuff", other.get(0).get("complicated").textValue());
-
-    String cmd = spec.get("cmd").textValue();
-
-    Path script = Files.createTempFile("bash", "script");
-    Files.write(script, cmd.getBytes(Charsets.UTF_8));
-    MostFiles.makeExecutable(script);
-
-    DefaultProcessExecutor processExecutor =
-        new DefaultProcessExecutor(Console.createNullConsole());
-    ProcessExecutor.Result processResult =
-        processExecutor.launchAndExecute(
-            ProcessExecutorParams.builder().addCommand(script.toString()).build());
     assertEquals(0, processResult.getExitCode());
+
+    assertTrue(processResult.getStdout().toString().contains("hello runner"));
+    assertTrue(
+        processResult
+            .getStderr()
+            .toString()
+            .contains("test_that_passes (test_success.Test) ... ok"));
+    assertFalse(processResult.getStderr().toString().contains("FAIL"));
+    assertTrue(processResult.getStderr().toString().contains("Ran 1 test"));
+  }
+
+  @Test
+  public void testXProtocolRuleWithFailures() throws IOException, InterruptedException {
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test", "--config", "test.external_runner=echo", "//:testx_failure");
+    result.assertSuccess();
+
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0).get("specs");
+
+    assertSpecParsing(spec);
+    ProcessExecutor.Result processResult = executeCmd(spec);
+
+    // Exit code is 70 (internal software error) when test fails
+    assertEquals(70, processResult.getExitCode());
+
+    assertTrue(processResult.getStdout().toString().contains("hello runner"));
+    assertTrue(
+        processResult
+            .getStderr()
+            .toString()
+            .contains("test_that_fails (test_failure.Test) ... FAIL"));
+    assertTrue(
+        processResult
+            .getStderr()
+            .toString()
+            .contains("test_that_passes (test_failure.Test) ... ok"));
+    assertTrue(
+        processResult
+            .getStderr()
+            .toString()
+            .contains("test_that_passes (test_failure.Test2) ... ok"));
+    assertTrue(processResult.getStderr().toString().contains("Ran 3 tests"));
+  }
+
+  @Test
+  public void testXProtocolRuleWithBadTestMainModule() throws IOException, InterruptedException {
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test", "--config", "test.external_runner=echo", "//:testx_failure_with_test_main");
+    result.assertSuccess();
+
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0).get("specs");
+
+    assertSpecParsing(spec);
+    ProcessExecutor.Result processResult = executeCmd(spec);
+
+    assertEquals(1, processResult.getExitCode());
+    assertTrue(processResult.getStderr().toString().contains("No module named bad_test_main"));
   }
 
   @Test
@@ -248,6 +305,17 @@ public class PythonTestIntegrationTest {
     result.assertSuccess();
   }
 
+  private void assertSpecParsing(JsonNode spec) {
+    assertEquals("spec", spec.get("my").textValue());
+    JsonNode other = spec.get("other");
+    assertTrue(other.isArray());
+    assertTrue(other.has(0));
+    assertEquals("stuff", other.get(0).get("complicated").textValue());
+    assertEquals(1, other.get(0).get("integer").intValue());
+    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
+    assertTrue(other.get(0).get("boolean").booleanValue());
+  }
+
   private void assumePythonVersionIsAtLeast(String expectedVersion, String message) {
     PythonVersion actualVersion =
         PythonPlatformsProviderFactoryUtils.getPythonEnvironment(
@@ -271,5 +339,17 @@ public class PythonTestIntegrationTest {
             .setFilesystem(TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()))
             .build();
     return new PythonBuckConfig(buckConfig);
+  }
+
+  private ProcessExecutor.Result executeCmd(JsonNode spec)
+      throws IOException, InterruptedException {
+    String cmd = spec.get("cmd").textValue();
+    Path script = Files.createTempFile("bash", "script");
+    Files.write(script, cmd.getBytes(Charsets.UTF_8));
+    MostFiles.makeExecutable(script);
+    DefaultProcessExecutor processExecutor =
+        new DefaultProcessExecutor(Console.createNullConsole());
+    return processExecutor.launchAndExecute(
+        ProcessExecutorParams.builder().addCommand(script.toString()).build());
   }
 }

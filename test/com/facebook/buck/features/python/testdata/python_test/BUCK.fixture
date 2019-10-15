@@ -91,11 +91,12 @@ python_test(
 
 python_test_runner(
     name = "runner",
-    src = "binary_main.py",
+    src = "runner_binary.py",
+    main_module = "runner_binary",
 )
 
 python_test(
-    name = "testx",
+    name = "testx_success",
     srcs = [
         "test_success.py",
     ],
@@ -105,6 +106,55 @@ python_test(
         "other": [
             {
                 "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
+            },
+        ],
+        "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && python $out",
+    },
+)
+
+python_test(
+    name = "testx_failure",
+    srcs = [
+        "test_failure.py",
+    ],
+    runner = ":runner",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
+            },
+        ],
+        "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && python $out",
+    },
+)
+
+python_test_runner(
+    name = "runner_with_bad_test_main_module",
+    src = "runner_binary.py",
+    main_module = "bad_test_main",
+)
+
+python_test(
+    name = "testx_failure_with_test_main",
+    srcs = [
+        "test_success.py",
+    ],
+    runner = ":runner_with_bad_test_main_module",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
             },
         ],
         "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && python $out",

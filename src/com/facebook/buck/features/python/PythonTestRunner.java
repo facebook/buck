@@ -28,14 +28,23 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 public class PythonTestRunner extends NoopBuildRule {
 
   private final SourcePath src;
+  private final String mainModule;
 
   public PythonTestRunner(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, SourcePath src) {
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SourcePath src,
+      String mainModule) {
     super(buildTarget, projectFilesystem);
     this.src = src;
+    this.mainModule = mainModule;
   }
 
   public SourcePath getSrc() {
     return src;
+  }
+
+  public String getMainModule() {
+    return mainModule;
   }
 }

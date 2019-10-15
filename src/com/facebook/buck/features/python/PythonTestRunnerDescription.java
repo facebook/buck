@@ -44,12 +44,15 @@ public class PythonTestRunnerDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       PythonTestRunnerDescriptionArg args) {
-    return new PythonTestRunner(buildTarget, context.getProjectFilesystem(), args.getSrc());
+    return new PythonTestRunner(
+        buildTarget, context.getProjectFilesystem(), args.getSrc(), args.getMainModule());
   }
 
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPythonTestRunnerDescriptionArg extends BuildRuleArg {
     SourcePath getSrc();
+
+    String getMainModule();
   }
 }

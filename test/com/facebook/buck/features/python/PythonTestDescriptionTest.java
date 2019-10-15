@@ -92,12 +92,13 @@ public class PythonTestDescriptionTest {
         Matchers.hasItem(PythonTestDescription.getTestModulesListName()));
     assertThat(
         components.getModules().keySet(),
-        Matchers.hasItem(PythonTestDescription.getTestMainName()));
+        Matchers.hasItem(PythonTestDescription.getTestMainPath(null, Optional.empty())));
     assertThat(
         binRule.getMainModule(),
         Matchers.equalTo(
             PythonUtil.toModuleName(
-                testRule.getBuildTarget(), PythonTestDescription.getTestMainName().toString())));
+                testRule.getBuildTarget(),
+                PythonTestDescription.getTestMainPath(null, Optional.empty()).toString())));
   }
 
   @Test
