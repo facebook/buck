@@ -29,7 +29,16 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -41,6 +50,7 @@ import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.string.MoreStrings;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -52,6 +62,7 @@ import java.util.regex.Pattern;
 import org.apache.thrift.TException;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.MatcherAssert;
+import org.immutables.value.Value;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -363,5 +374,47 @@ public class BuildCommandIntegrationTest {
 
     assertEquals(absolutePath, subdirAbsolutePath);
     assertEquals(absolutePath, subdirRelativePath);
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractThrowInConstructorArg implements BuildRuleArg {}
+
+  private static class ThrowInConstructor
+      implements DescriptionWithTargetGraph<ThrowInConstructorArg> {
+
+    @Override
+    public Class<ThrowInConstructorArg> getConstructorArgType() {
+      return ThrowInConstructorArg.class;
+    }
+
+    @Override
+    public BuildRule createBuildRule(
+        BuildRuleCreationContextWithTargetGraph context,
+        BuildTarget buildTarget,
+        BuildRuleParams params,
+        ThrowInConstructorArg args) {
+      throw new HumanReadableException("test test test");
+    }
+  }
+
+  @Test
+  public void ruleCreationError() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "rule_creation_error", tmp);
+    workspace.setUp();
+    workspace.setKnownRuleTypesFactoryFactory(
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
+            cell ->
+                KnownNativeRuleTypes.of(
+                    ImmutableList.of(new ThrowInConstructor()), knownConfigurationDescriptions));
+    ProcessResult result = workspace.runBuckBuild(":qq");
+    result.assertFailure();
+    MatcherAssert.assertThat(result.getStderr(), Matchers.containsString("test test test"));
+    MatcherAssert.assertThat(
+        result.getStderr(), Matchers.not(Matchers.containsString("Exception")));
   }
 }
