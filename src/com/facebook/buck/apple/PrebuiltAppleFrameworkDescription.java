@@ -150,6 +150,8 @@ public class PrebuiltAppleFrameworkDescription
 
     ImmutableList<String> getExportedLinkerFlags();
 
+    Optional<Boolean> getCodeSignOnCopy();
+
     @Value.Default
     default PatternMatchedCollection<ImmutableList<String>> getExportedPlatformLinkerFlags() {
       return PatternMatchedCollection.of();

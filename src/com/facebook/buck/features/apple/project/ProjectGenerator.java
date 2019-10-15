@@ -3451,8 +3451,24 @@ public class ProjectGenerator {
         }
         frameworkTargets.add(buildTarget);
 
+        boolean codeSignOnCopy = true;
+        if (targetNode.getConstructorArg() instanceof PrebuiltAppleFrameworkDescriptionArg) {
+          PrebuiltAppleFrameworkDescriptionArg prebuiltFrameworkArg =
+              (PrebuiltAppleFrameworkDescriptionArg) targetNode.getConstructorArg();
+          Optional<Boolean> frameworkCodeSignOnCopy = prebuiltFrameworkArg.getCodeSignOnCopy();
+          if (frameworkCodeSignOnCopy.isPresent()) {
+            codeSignOnCopy = frameworkCodeSignOnCopy.get();
+          }
+        }
+
+        ArrayList<String> attributes = new ArrayList<>();
+        attributes.add("RemoveHeadersOnCopy");
+        if (codeSignOnCopy) {
+          attributes.add("CodeSignOnCopy");
+        }
+
         NSDictionary settings = new NSDictionary();
-        settings.put("ATTRIBUTES", new String[] {"CodeSignOnCopy", "RemoveHeadersOnCopy"});
+        settings.put("ATTRIBUTES", attributes.toArray(new String[] {}));
         buildFile.setSettings(Optional.of(settings));
       }
 
