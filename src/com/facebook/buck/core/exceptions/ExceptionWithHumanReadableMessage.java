@@ -20,4 +20,9 @@ public interface ExceptionWithHumanReadableMessage {
 
   /** @return a human-readable error message */
   String getHumanReadableErrorMessage();
+
+  /** Get the dependency stack associated with this error */
+  default DependencyStack getDependencyStack() {
+    return DependencyStack.root();
+  }
 }

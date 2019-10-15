@@ -20,6 +20,7 @@ import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
@@ -56,6 +57,25 @@ public class ErrorLoggerTest {
     LoggedErrors errors = logException(new HumanReadableException("message"));
     assertNull(errors.userVisibleInternal);
     assertEquals("message", errors.userVisible);
+  }
+
+  @Test
+  public void humanReadableExceptionWithDepStack() {
+    LoggedErrors errors =
+        logException(new HumanReadableException(DependencyStack.top("//foo:bar"), "message"));
+    assertNull(errors.userVisibleInternal);
+    assertEquals(linesToText("message", "    At //foo:bar"), errors.userVisible);
+  }
+
+  @Test
+  public void humanReadableExceptionWithDepStack2() {
+    LoggedErrors errors =
+        logException(
+            new HumanReadableException(
+                DependencyStack.top("//foo:bin").child("//bar:lib"), "message"));
+    assertNull(errors.userVisibleInternal);
+    assertEquals(
+        linesToText("message", "    At //bar:lib", "    At //foo:bin"), errors.userVisible);
   }
 
   private static class TestException extends Exception

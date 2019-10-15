@@ -26,18 +26,38 @@ public class HumanReadableException extends RuntimeException
     implements ExceptionWithHumanReadableMessage {
 
   private final String humanReadableErrorMessage;
+  private final DependencyStack dependencyStack;
+
+  public HumanReadableException(
+      DependencyStack dependencyStack, String humanReadableFormatString, Object... args) {
+    this(dependencyStack, String.format(humanReadableFormatString, args));
+  }
+
+  public HumanReadableException(DependencyStack dependencyStack, String humanReadableErrorMessage) {
+    this(null, dependencyStack, humanReadableErrorMessage);
+  }
+
+  private HumanReadableException(
+      @Nullable Throwable cause,
+      DependencyStack dependencyStack,
+      String humanReadableErrorMessage) {
+    super(humanReadableErrorMessage, cause);
+    this.humanReadableErrorMessage = humanReadableErrorMessage;
+    this.dependencyStack = dependencyStack;
+  }
 
   public HumanReadableException(String humanReadableFormatString, Object... args) {
     this(String.format(humanReadableFormatString, args));
   }
 
   public HumanReadableException(String humanReadableErrorMessage) {
-    this(null /* cause */, humanReadableErrorMessage);
+    this((Throwable) null /* cause */, humanReadableErrorMessage);
   }
 
   public HumanReadableException(@Nullable Throwable cause, String humanReadableErrorMessage) {
     super(humanReadableErrorMessage, cause);
     this.humanReadableErrorMessage = humanReadableErrorMessage;
+    this.dependencyStack = DependencyStack.root();
   }
 
   public HumanReadableException(
@@ -46,11 +66,19 @@ public class HumanReadableException extends RuntimeException
   }
 
   public HumanReadableException(ExceptionWithHumanReadableMessage e) {
-    this((Throwable) ((e instanceof Throwable) ? e : null), e.getHumanReadableErrorMessage());
+    this(
+        (Throwable) ((e instanceof Throwable) ? e : null),
+        e.getDependencyStack(),
+        e.getHumanReadableErrorMessage());
   }
 
   @Override
   public String getHumanReadableErrorMessage() {
     return humanReadableErrorMessage;
+  }
+
+  @Override
+  public DependencyStack getDependencyStack() {
+    return dependencyStack;
   }
 }

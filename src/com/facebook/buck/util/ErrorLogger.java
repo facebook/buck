@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
+import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.WrapsException;
@@ -215,6 +216,21 @@ public class ErrorLogger {
     logUserVisible(deconstruct(e));
   }
 
+  private static ImmutableList<Throwable> causeStack(Throwable e) {
+    ImmutableList.Builder<Throwable> stack = ImmutableList.builder();
+
+    stack.add(e);
+
+    while (e != null) {
+      e = e.getCause();
+      if (e != null) {
+        stack.add(e);
+      }
+    }
+
+    return stack.build();
+  }
+
   /** Deconstructs an exception to assist in creating user-friendly messages. */
   @VisibleForTesting
   public static DeconstructedException deconstruct(Throwable e) {
@@ -222,16 +238,44 @@ public class ErrorLogger {
 
     // TODO(cjhopman): Think about how to handle multiline context strings.
     List<String> context = new LinkedList<>();
+
+    for (Throwable t : causeStack(e)) {
+      if (t instanceof ExceptionWithContext) {
+        ((ExceptionWithContext) t).getContext().ifPresent(msg -> context.add(0, msg));
+        Throwable cause = e.getCause();
+        parent = e;
+        e = cause;
+      }
+    }
+
+    for (Throwable t : causeStack(e).reverse()) {
+      if (t instanceof ExceptionWithHumanReadableMessage) {
+        ImmutableList<String> stack =
+            ((ExceptionWithHumanReadableMessage) t)
+                .getDependencyStack()
+                .collectStringsFilterAdjacentDupes();
+        // Stop at deepest exception with non-empty dep stack
+        if (!stack.isEmpty()) {
+          for (String dep : stack) {
+            context.add("At " + dep);
+          }
+          break;
+        }
+      }
+    }
+
     while (e instanceof ExecutionException
         || e instanceof UncheckedExecutionException
         || e instanceof WrapsException) {
-      if (e instanceof ExceptionWithContext) {
-        ((ExceptionWithContext) e).getContext().ifPresent(msg -> context.add(0, msg));
+
+      if (e.getCause() == null) {
+        break;
       }
-      Throwable cause = e.getCause();
+
       // TODO(cjhopman): Should parent point to the closest parent with context instead of just the
       // parent? If the parent doesn't include context, we're currently removing parts of the stack
       // trace without any context to replace it.
+      Throwable cause = e.getCause();
       parent = e;
       e = cause;
     }
