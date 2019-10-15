@@ -19,6 +19,7 @@ package com.facebook.buck.core.util.graph;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,7 +30,7 @@ import org.junit.Test;
 
 public class AbstractBottomUpTraversalTest {
 
-  private enum Node {
+  private enum Node implements DependencyStack.Element {
     A,
     B,
     C,

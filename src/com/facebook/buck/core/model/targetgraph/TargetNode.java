@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.targetgraph;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -42,7 +43,11 @@ import java.util.Set;
  * targets and paths referenced from those inputs.
  */
 public interface TargetNode<T extends ConstructorArg>
-    extends Comparable<TargetNode<?>>, ObeysVisibility, HasBuildTarget, ComputeResult {
+    extends Comparable<TargetNode<?>>,
+        ObeysVisibility,
+        HasBuildTarget,
+        ComputeResult,
+        DependencyStack.ProvidesElement {
 
   @Override
   BuildTarget getBuildTarget();
@@ -139,4 +144,9 @@ public interface TargetNode<T extends ConstructorArg>
 
   TargetNode<T> withSelectedVersions(
       Optional<? extends ImmutableMap<BuildTarget, Version>> selectedVersions);
+
+  @Override
+  default DependencyStack.Element getElement() {
+    return getBuildTarget();
+  }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import javax.annotation.concurrent.ThreadSafe;
@@ -31,7 +32,8 @@ import javax.annotation.concurrent.ThreadSafe;
  * {@link UnconfiguredBuildTarget} directly.
  */
 @ThreadSafe
-public interface UnconfiguredBuildTargetView extends Comparable<UnconfiguredBuildTargetView> {
+public interface UnconfiguredBuildTargetView
+    extends Comparable<UnconfiguredBuildTargetView>, DependencyStack.Element {
 
   /** A build target without flavors. */
   UnflavoredBuildTargetView getUnflavoredBuildTargetView();

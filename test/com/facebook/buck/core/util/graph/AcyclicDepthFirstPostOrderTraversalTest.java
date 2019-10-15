@@ -20,6 +20,7 @@ import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
@@ -34,7 +35,7 @@ import org.junit.rules.ExpectedException;
 /** Unit test for {@link AcyclicDepthFirstPostOrderTraversal}. */
 public class AcyclicDepthFirstPostOrderTraversalTest {
 
-  private enum Node {
+  private enum Node implements DependencyStack.Element {
     A,
     B,
     C,

@@ -16,13 +16,14 @@
 
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
 
 @ThreadSafe
-public interface BuildTarget extends Comparable<BuildTarget> {
+public interface BuildTarget extends Comparable<BuildTarget>, DependencyStack.Element {
 
   UnconfiguredBuildTargetView getUnconfiguredBuildTargetView();
 
