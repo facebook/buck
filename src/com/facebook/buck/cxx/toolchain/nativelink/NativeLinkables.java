@@ -22,7 +22,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.util.RichStream;
@@ -45,7 +44,8 @@ public class NativeLinkables {
 
   /** @return the nodes found from traversing the given roots in topologically sorted order. */
   public static ImmutableList<? extends NativeLinkable> getTopoSortedNativeLinkables(
-      Iterable<? extends NativeLinkable> roots, GraphTraversable<NativeLinkable> depsFn) {
+      Iterable<? extends NativeLinkable> roots,
+      TopologicalSort.Traversable<NativeLinkable> depsFn) {
     // Topologically sort the rules.
     return TopologicalSort.snowflakeSort(
             roots, depsFn, Comparator.comparing(NativeLinkable::getBuildTarget))
