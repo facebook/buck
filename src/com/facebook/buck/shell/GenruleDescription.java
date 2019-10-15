@@ -109,18 +109,5 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
     String getOut();
 
     Optional<Boolean> getExecutable();
-
-    /**
-     * This functionality only exists to facilitate migration of projects to distributed building.
-     * It will likely go away in the future.
-     *
-     * @deprecated this property was used by no longer existing system called Stampede<br>
-     *     Will be removed really soon<br>
-     */
-    @Value.Default
-    @Deprecated
-    default boolean getNoRemote() {
-      return false;
-    }
   }
 }
