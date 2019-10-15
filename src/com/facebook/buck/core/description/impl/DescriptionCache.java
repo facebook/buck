@@ -42,16 +42,20 @@ public class DescriptionCache {
 
   private static RuleType.Kind getRuleKindFromDescriptionClass(
       Class<? extends BaseDescription<?>> cls) {
-    if (ConfigurationRuleDescription.class.isAssignableFrom(cls)) {
+    boolean isConfigurationRule = ConfigurationRuleDescription.class.isAssignableFrom(cls);
+    boolean isBuildRule =
+        DescriptionWithTargetGraph.class.isAssignableFrom(cls)
+            || RuleDescription.class.isAssignableFrom(cls);
+    if (isConfigurationRule && !isBuildRule) {
       return RuleType.Kind.CONFIGURATION;
-    }
-    if (DescriptionWithTargetGraph.class.isAssignableFrom(cls)) {
+    } else if (isBuildRule && !isConfigurationRule) {
       return RuleType.Kind.BUILD;
+    } else if (isBuildRule) {
+      throw new HumanReadableException(
+          "Rule cannot be both build rule and configuration rule: %s", cls);
+    } else {
+      throw new HumanReadableException("Cannot determine rule kind for description class: %s", cls);
     }
-    if (RuleDescription.class.isAssignableFrom(cls)) {
-      return RuleType.Kind.BUILD;
-    }
-    throw new HumanReadableException("Cannot determine rule kind for description class: %s", cls);
   }
 
   /** @return The {@link RuleType} being described. */
