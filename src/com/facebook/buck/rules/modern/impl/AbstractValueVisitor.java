@@ -20,7 +20,7 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.rules.modern.ClassInfo;
@@ -163,9 +163,10 @@ public abstract class AbstractValueVisitor<E extends Exception> implements Value
   public void visitTargetConfiguration(TargetConfiguration value) throws E {
     if (value instanceof EmptyTargetConfiguration) {
       visitSimple(Serializer.TARGET_CONFIGURATION_TYPE_EMPTY);
-    } else if (value instanceof DefaultTargetConfiguration) {
+    } else if (value instanceof RuleBasedTargetConfiguration) {
       visitSimple(Serializer.TARGET_CONFIGURATION_TYPE_DEFAULT);
-      visitSimple(((DefaultTargetConfiguration) value).getTargetPlatform().getFullyQualifiedName());
+      visitSimple(
+          ((RuleBasedTargetConfiguration) value).getTargetPlatform().getFullyQualifiedName());
     } else if (value instanceof ConfigurationForConfigurationTargets) {
       visitSimple(Serializer.TARGET_CONFIGURATION_TYPE_CONFIGURATION);
     } else {

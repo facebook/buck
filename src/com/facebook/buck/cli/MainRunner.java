@@ -52,7 +52,7 @@ import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
-import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -1539,7 +1539,7 @@ public final class MainRunner {
       TargetConfiguration hostTargetConfiguration =
           hostPlatformFromConfig
               .map(ConfigurationBuildTargets::convert)
-              .<TargetConfiguration>map(ImmutableDefaultTargetConfiguration::of)
+              .<TargetConfiguration>map(ImmutableRuleBasedTargetConfiguration::of)
               .orElse(EmptyTargetConfiguration.INSTANCE);
       return () -> hostTargetConfiguration;
     }
@@ -1547,7 +1547,7 @@ public final class MainRunner {
         ConfigurationBuildTargets.convert(
             unconfiguredBuildTargetFactory.create(
                 cellPathResolver, Iterables.getOnlyElement(command.getTargetPlatforms())));
-    return () -> ImmutableDefaultTargetConfiguration.of(targetPlatform);
+    return () -> ImmutableRuleBasedTargetConfiguration.of(targetPlatform);
   }
 
   private boolean isReuseCurrentConfigPropertySet(AbstractContainerCommand command) {

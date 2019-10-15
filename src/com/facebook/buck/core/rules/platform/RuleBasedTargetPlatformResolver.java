@@ -17,7 +17,7 @@ package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
@@ -25,7 +25,7 @@ import com.google.common.base.Preconditions;
 
 /**
  * An implementation of {@link TargetPlatformResolver} that creates {@link Platform} from {@link
- * PlatformRule} for {@link com.facebook.buck.core.model.impl.DefaultTargetConfiguration}.
+ * PlatformRule} for {@link RuleBasedTargetConfiguration}.
  *
  * <p>Note that the clients of this class need to make sure the queries are made with the correct
  * target configuration type.
@@ -41,11 +41,11 @@ public class RuleBasedTargetPlatformResolver implements TargetPlatformResolver {
   @Override
   public Platform getTargetPlatform(TargetConfiguration targetConfiguration) {
     Preconditions.checkState(
-        targetConfiguration instanceof DefaultTargetConfiguration,
+        targetConfiguration instanceof RuleBasedTargetConfiguration,
         "Wrong target configuration type: " + targetConfiguration);
 
     BuildTarget buildTarget =
-        ((DefaultTargetConfiguration) targetConfiguration).getTargetPlatform();
+        ((RuleBasedTargetConfiguration) targetConfiguration).getTargetPlatform();
 
     return platformResolver.getPlatform(buildTarget);
   }

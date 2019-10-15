@@ -26,7 +26,7 @@ import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
@@ -293,7 +293,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
                   unconfiguredTarget.getBaseName(),
                   defaultTargetPlatform);
           targetConfiguration =
-              ImmutableDefaultTargetConfiguration.of(
+              ImmutableRuleBasedTargetConfiguration.of(
                   ConfigurationBuildTargets.convert(configurationTarget));
         }
       }

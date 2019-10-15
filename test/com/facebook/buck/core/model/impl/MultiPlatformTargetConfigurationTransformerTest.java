@@ -46,7 +46,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
 
     assertFalse(
         transformer.needsTransformation(
-            ImmutableDefaultTargetConfiguration.of(platformBuildTarget)));
+            ImmutableRuleBasedTargetConfiguration.of(platformBuildTarget)));
   }
 
   @Test
@@ -73,7 +73,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
 
     assertTrue(
         transformer.needsTransformation(
-            ImmutableDefaultTargetConfiguration.of(multiPlatformBuildTarget)));
+            ImmutableRuleBasedTargetConfiguration.of(multiPlatformBuildTarget)));
   }
 
   @Test
@@ -86,7 +86,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
 
     thrown.expectMessage("Not multi platform: //:platform");
 
-    transformer.transform(ImmutableDefaultTargetConfiguration.of(platformBuildTarget));
+    transformer.transform(ImmutableRuleBasedTargetConfiguration.of(platformBuildTarget));
   }
 
   @Test
@@ -111,7 +111,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
                         new ConstraintBasedPlatform(nestedPlatform2Target, ImmutableSet.of()))));
 
     ImmutableList<TargetConfiguration> configurations =
-        transformer.transform(ImmutableDefaultTargetConfiguration.of(multiPlatformTarget));
+        transformer.transform(ImmutableRuleBasedTargetConfiguration.of(multiPlatformTarget));
 
     assertEquals(
         ImmutableList.of(
@@ -119,8 +119,8 @@ public class MultiPlatformTargetConfigurationTransformerTest {
             "//platform:nested_platform_1",
             "//platform:nested_platform_2"),
         configurations.stream()
-            .map(DefaultTargetConfiguration.class::cast)
-            .map(DefaultTargetConfiguration::getTargetPlatform)
+            .map(RuleBasedTargetConfiguration.class::cast)
+            .map(RuleBasedTargetConfiguration::getTargetPlatform)
             .map(BuildTarget::getFullyQualifiedName)
             .collect(ImmutableList.toImmutableList()));
   }

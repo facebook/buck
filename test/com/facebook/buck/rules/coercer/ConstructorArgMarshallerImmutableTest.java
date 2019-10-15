@@ -34,9 +34,9 @@ import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
-import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
-import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
+import com.facebook.buck.core.model.impl.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
@@ -654,7 +654,7 @@ public class ConstructorArgMarshallerImmutableTest {
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
             new RuleBasedConstraintResolver(DummyConfigurationRule::of),
-            ImmutableDefaultTargetConfiguration.of(multiPlatformTarget),
+            ImmutableRuleBasedTargetConfiguration.of(multiPlatformTarget),
             targetPlatformResolver);
 
     DtoWithSplit dto =
@@ -675,8 +675,8 @@ public class ConstructorArgMarshallerImmutableTest {
         ImmutableSet.of(multiPlatformTarget, nestedPlatform1Target, nestedPlatform2Target),
         dto.getDeps().stream()
             .map(BuildTarget::getTargetConfiguration)
-            .map(DefaultTargetConfiguration.class::cast)
-            .map(DefaultTargetConfiguration::getTargetPlatform)
+            .map(RuleBasedTargetConfiguration.class::cast)
+            .map(RuleBasedTargetConfiguration::getTargetPlatform)
             .collect(ImmutableSet.toImmutableSet()));
   }
 

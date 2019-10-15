@@ -54,7 +54,7 @@ public class MultiPlatformTargetConfigurationTransformer implements TargetConfig
     ImmutableList.Builder<TargetConfiguration> targetConfigurations =
         ImmutableList.builderWithExpectedSize(multiPlatform.getNestedPlatforms().size() + 1);
     targetConfigurations.add(
-        ImmutableDefaultTargetConfiguration.of(multiPlatform.getBuildTarget()));
+        ImmutableRuleBasedTargetConfiguration.of(multiPlatform.getBuildTarget()));
 
     multiPlatform.getNestedPlatforms().stream()
         .map(this::createDefaultTargetConfiguration)
@@ -67,7 +67,7 @@ public class MultiPlatformTargetConfigurationTransformer implements TargetConfig
     Preconditions.checkState(
         platform instanceof ConstraintBasedPlatform, "Wrong platform type: %s", platform);
     ConstraintBasedPlatform constraintBasedPlatform = (ConstraintBasedPlatform) platform;
-    return ImmutableDefaultTargetConfiguration.of(constraintBasedPlatform.getBuildTarget());
+    return ImmutableRuleBasedTargetConfiguration.of(constraintBasedPlatform.getBuildTarget());
   }
 
   @Override

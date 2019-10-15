@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
@@ -66,7 +66,7 @@ public class RawTargetNodeToTargetNodeFactoryTest {
     BuildTarget targetPlatform =
         ConfigurationBuildTargetFactoryForTests.newInstance("//config:platform");
     TargetConfiguration targetConfiguration =
-        ImmutableDefaultTargetConfiguration.of(targetPlatform);
+        ImmutableRuleBasedTargetConfiguration.of(targetPlatform);
     BuildTarget buildTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c")
             .configure(targetConfiguration);

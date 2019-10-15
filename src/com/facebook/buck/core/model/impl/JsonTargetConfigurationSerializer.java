@@ -94,6 +94,6 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
     BuildTarget platform =
         ConfigurationBuildTargets.convert(
             buildTargetProvider.apply(targetPlatformNode.textValue()));
-    return ImmutableDefaultTargetConfiguration.of(platform);
+    return ImmutableRuleBasedTargetConfiguration.of(platform);
   }
 }

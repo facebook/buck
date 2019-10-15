@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
@@ -111,7 +111,7 @@ public class DefaultTargetPlatformResolverTest {
     ConstraintBasedPlatform platform =
         (ConstraintBasedPlatform)
             targetPlatformResolver.getTargetPlatform(
-                ImmutableDefaultTargetConfiguration.of(platformTarget));
+                ImmutableRuleBasedTargetConfiguration.of(platformTarget));
 
     assertEquals("//platform:platform", platform.toString());
     assertEquals(1, platform.getConstraintValues().size());

@@ -24,9 +24,9 @@ import org.immutables.value.Value;
 import org.immutables.value.Value.Immutable;
 import org.immutables.value.Value.Parameter;
 
-/** An immutable implementation of {@link TargetConfiguration}. */
+/** Platform target implementation of {@link TargetConfiguration}. */
 @Immutable(builder = false, copy = false, prehash = true)
-public abstract class DefaultTargetConfiguration implements TargetConfiguration {
+public abstract class RuleBasedTargetConfiguration implements TargetConfiguration {
 
   @Value.Check
   protected void check() {

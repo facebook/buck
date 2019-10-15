@@ -19,7 +19,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 
@@ -44,7 +44,7 @@ public class DefaultTargetPlatformResolver implements TargetPlatformResolver {
     if (targetConfiguration instanceof EmptyTargetConfiguration
         || targetConfiguration instanceof ConfigurationForConfigurationTargets) {
       return emptyTargetConfigurationPlatform;
-    } else if (targetConfiguration instanceof DefaultTargetConfiguration) {
+    } else if (targetConfiguration instanceof RuleBasedTargetConfiguration) {
       return ruleBasedTargetPlatformResolver.getTargetPlatform(targetConfiguration);
     }
     throw new HumanReadableException(

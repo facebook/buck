@@ -56,7 +56,7 @@ public class JsonTargetConfigurationSerializerTest {
         "{\"targetPlatform\":\"//platform:platform\"}",
         new JsonTargetConfigurationSerializer(buildTargetProvider)
             .serialize(
-                ImmutableDefaultTargetConfiguration.of(
+                ImmutableRuleBasedTargetConfiguration.of(
                     ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform"))));
   }
 
@@ -69,8 +69,8 @@ public class JsonTargetConfigurationSerializerTest {
 
   @Test
   public void defaultTargetConfigurationDeserializedFromString() {
-    DefaultTargetConfiguration targetConfiguration =
-        (DefaultTargetConfiguration)
+    RuleBasedTargetConfiguration targetConfiguration =
+        (RuleBasedTargetConfiguration)
             new JsonTargetConfigurationSerializer(buildTargetProvider)
                 .deserialize("{\"targetPlatform\":\"//platform:platform\"}");
 
