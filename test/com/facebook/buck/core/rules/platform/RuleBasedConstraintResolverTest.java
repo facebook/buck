@@ -36,7 +36,6 @@ public class RuleBasedConstraintResolverTest {
     RuleBasedConstraintResolver ruleBasedConstraintResolver =
         new RuleBasedConstraintResolver(DummyConfigurationRule::of);
 
-    thrown.expect(IllegalStateException.class);
     thrown.expectMessage("//dummy:target is used as constraint_setting, but has wrong type");
 
     ruleBasedConstraintResolver.getConstraintSetting(
@@ -48,7 +47,6 @@ public class RuleBasedConstraintResolverTest {
     RuleBasedConstraintResolver ruleBasedConstraintResolver =
         new RuleBasedConstraintResolver(DummyConfigurationRule::of);
 
-    thrown.expect(IllegalStateException.class);
     thrown.expectMessage("//dummy:target is used as constraint_value, but has wrong type");
 
     ruleBasedConstraintResolver.getConstraintValue(
@@ -71,7 +69,6 @@ public class RuleBasedConstraintResolverTest {
               }
             });
 
-    thrown.expect(IllegalStateException.class);
     thrown.expectMessage("//:setting is used as constraint_setting, but has wrong type");
 
     ruleBasedConstraintResolver.getConstraintValue(constraintValueTarget);

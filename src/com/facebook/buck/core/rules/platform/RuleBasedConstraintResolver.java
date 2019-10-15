@@ -16,13 +16,13 @@
 
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -39,18 +39,31 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 public class RuleBasedConstraintResolver implements ConstraintResolver {
   private final ConfigurationRuleResolver configurationRuleResolver;
 
+  /**
+   * Returns the {@link ConfigurationRule} associated with the given {@link BuildTarget}, asserting
+   * that the rule has the requested type.
+   *
+   * @throws HumanReadableException if no rule is associated with the target.
+   */
+  private <T extends ConfigurationRule> T getRuleOfType(
+      BuildTarget buildTarget, String ruleName, Class<T> ruleClass) {
+    ConfigurationRule rule = configurationRuleResolver.getRule(buildTarget);
+    try {
+      return ruleClass.cast(rule);
+    } catch (ClassCastException e) {
+      throw new HumanReadableException(
+          "%s is used as %s, but has wrong type", buildTarget, ruleName);
+    }
+  }
+
   private final LoadingCache<BuildTarget, ConstraintSetting> constraintSettingCache =
       CacheBuilder.newBuilder()
           .build(
               new CacheLoader<BuildTarget, ConstraintSetting>() {
                 @Override
                 public ConstraintSetting load(BuildTarget buildTarget) {
-                  ConfigurationRule configurationRule =
-                      configurationRuleResolver.getRule(buildTarget);
-                  Preconditions.checkState(
-                      configurationRule instanceof ConstraintSettingRule,
-                      "%s is used as constraint_setting, but has wrong type",
-                      buildTarget);
+                  // Validate rule exists and have correct type
+                  getRuleOfType(buildTarget, "constraint_setting", ConstraintSettingRule.class);
 
                   return ConstraintSetting.of(buildTarget);
                 }
@@ -62,14 +75,8 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
               new CacheLoader<BuildTarget, ConstraintValue>() {
                 @Override
                 public ConstraintValue load(BuildTarget buildTarget) {
-                  ConfigurationRule configurationRule =
-                      configurationRuleResolver.getRule(buildTarget);
-                  Preconditions.checkState(
-                      configurationRule instanceof ConstraintValueRule,
-                      "%s is used as constraint_value, but has wrong type",
-                      buildTarget);
-
-                  ConstraintValueRule constraintValueRule = (ConstraintValueRule) configurationRule;
+                  ConstraintValueRule constraintValueRule =
+                      getRuleOfType(buildTarget, "constraint_value", ConstraintValueRule.class);
 
                   return ConstraintValue.of(
                       buildTarget,
