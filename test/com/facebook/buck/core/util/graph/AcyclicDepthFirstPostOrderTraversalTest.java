@@ -34,6 +34,15 @@ import org.junit.rules.ExpectedException;
 /** Unit test for {@link AcyclicDepthFirstPostOrderTraversal}. */
 public class AcyclicDepthFirstPostOrderTraversalTest {
 
+  private enum Node {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+  }
+
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   /**
@@ -51,18 +60,19 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    */
   @Test
   public void testExpectedTraversal() throws CycleException {
-    Multimap<String, String> graph = LinkedListMultimap.create();
-    graph.put("A", "B");
-    graph.put("A", "C");
-    graph.put("B", "D");
-    graph.put("B", "E");
-    graph.put("C", "E");
-    graph.put("D", "F");
-    graph.put("E", "F");
+    Multimap<Node, Node> graph = LinkedListMultimap.create();
+    graph.put(Node.A, Node.B);
+    graph.put(Node.A, Node.C);
+    graph.put(Node.B, Node.D);
+    graph.put(Node.B, Node.E);
+    graph.put(Node.C, Node.E);
+    graph.put(Node.D, Node.F);
+    graph.put(Node.E, Node.F);
     TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph);
 
-    dfs.traverse(ImmutableList.of("A"));
-    ImmutableList<String> expectedExploredNodes = ImmutableList.of("F", "D", "E", "B", "C", "A");
+    dfs.traverse(ImmutableList.of(Node.A));
+    ImmutableList<Node> expectedExploredNodes =
+        ImmutableList.of(Node.F, Node.D, Node.E, Node.B, Node.C, Node.A);
     assertEquals(expectedExploredNodes, dfs.exploredNodes);
     assertEquals(expectedExploredNodes.size(), dfs.numFindChildrenCalls);
   }
@@ -84,44 +94,44 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    */
   @Test
   public void testCycleDetection() {
-    Multimap<String, String> graph = LinkedListMultimap.create();
-    graph.put("A", "B");
-    graph.put("A", "C");
-    graph.put("B", "D");
-    graph.put("B", "E");
-    graph.put("C", "E");
-    graph.put("D", "F");
-    graph.put("E", "F");
-    graph.put("F", "C");
+    Multimap<Node, Node> graph = LinkedListMultimap.create();
+    graph.put(Node.A, Node.B);
+    graph.put(Node.A, Node.C);
+    graph.put(Node.B, Node.D);
+    graph.put(Node.B, Node.E);
+    graph.put(Node.C, Node.E);
+    graph.put(Node.D, Node.F);
+    graph.put(Node.E, Node.F);
+    graph.put(Node.F, Node.C);
     TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph);
 
     try {
-      dfs.traverse(ImmutableList.of("A"));
+      dfs.traverse(ImmutableList.of(Node.A));
     } catch (CycleException e) {
       assertThat(
           e.getMessage(),
           Matchers.containsString(
               linesToText(
                   "The following circular dependency has been found:", "F -> C -> E -> F")));
-      assertEquals(ImmutableList.of("F", "C", "E", "F"), e.getCycle());
+      assertEquals(ImmutableList.of(Node.F, Node.C, Node.E, Node.F), e.getCycle());
     }
   }
 
   /** Ensures that a cycle is detected in a trivial graph of a single node that points to itself. */
   @Test
   public void testTrivialCycle() {
-    Multimap<String, String> graph = LinkedListMultimap.create();
-    graph.put("A", "A");
+    Multimap<Node, Node> graph = LinkedListMultimap.create();
+    graph.put(Node.A, Node.A);
     TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph);
 
     try {
-      dfs.traverse(ImmutableList.of("A"));
+      dfs.traverse(ImmutableList.of(Node.A));
     } catch (CycleException e) {
       assertThat(
           e.getMessage(),
           Matchers.containsString(
               linesToText("The following circular dependency has been found:", "A -> A")));
-      assertEquals(ImmutableList.of("A", "A"), e.getCycle());
+      assertEquals(ImmutableList.of(Node.A, Node.A), e.getCycle());
     }
   }
 
@@ -140,23 +150,23 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    */
   @Test
   public void testCycleExceptionDoesNotContainUnrelatedNodes() {
-    Multimap<String, String> graph = LinkedListMultimap.create();
-    graph.put("A", "B");
-    graph.put("B", "C");
-    graph.put("B", "D");
-    graph.put("B", "E");
-    graph.put("D", "A");
+    Multimap<Node, Node> graph = LinkedListMultimap.create();
+    graph.put(Node.A, Node.B);
+    graph.put(Node.B, Node.C);
+    graph.put(Node.B, Node.D);
+    graph.put(Node.B, Node.E);
+    graph.put(Node.D, Node.A);
 
     TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph);
     try {
-      dfs.traverse(ImmutableList.of("A"));
+      dfs.traverse(ImmutableList.of(Node.A));
     } catch (CycleException e) {
       assertThat(
           e.getMessage(),
           Matchers.containsString(
               linesToText(
                   "The following circular dependency has been found:", "A -> B -> D -> A")));
-      assertEquals(ImmutableList.of("A", "B", "D", "A"), e.getCycle());
+      assertEquals(ImmutableList.of(Node.A, Node.B, Node.D, Node.A), e.getCycle());
     }
   }
 
@@ -173,56 +183,56 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    */
   @Test
   public void testTraverseMultipleInitialNodes() throws CycleException {
-    Multimap<String, String> graph = LinkedListMultimap.create();
-    graph.put("A", "B");
-    graph.put("B", "C");
-    graph.put("B", "D");
-    graph.put("B", "E");
+    Multimap<Node, Node> graph = LinkedListMultimap.create();
+    graph.put(Node.A, Node.B);
+    graph.put(Node.B, Node.C);
+    graph.put(Node.B, Node.D);
+    graph.put(Node.B, Node.E);
 
     TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph);
-    dfs.traverse(ImmutableList.of("A", "B", "C", "D", "E"));
-    assertEquals(ImmutableList.of("C", "D", "E", "B", "A"), dfs.exploredNodes);
+    dfs.traverse(ImmutableList.of(Node.A, Node.B, Node.C, Node.D, Node.E));
+    assertEquals(ImmutableList.of(Node.C, Node.D, Node.E, Node.B, Node.A), dfs.exploredNodes);
   }
 
   @Test
   public void testShortCircuitTraversal() throws CycleException {
-    Multimap<String, String> graph = LinkedListMultimap.create();
-    graph.put("A", "B");
-    graph.put("B", "C");
-    graph.put("C", "D");
-    graph.put("B", "E");
+    Multimap<Node, Node> graph = LinkedListMultimap.create();
+    graph.put(Node.A, Node.B);
+    graph.put(Node.B, Node.C);
+    graph.put(Node.C, Node.D);
+    graph.put(Node.B, Node.E);
 
-    TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph, node -> !node.equals("C"));
-    dfs.traverse(ImmutableList.of("A"));
-    assertEquals(ImmutableList.of("C", "E", "B", "A"), dfs.exploredNodes);
+    TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph, node -> !node.equals(Node.C));
+    dfs.traverse(ImmutableList.of(Node.A));
+    assertEquals(ImmutableList.of(Node.C, Node.E, Node.B, Node.A), dfs.exploredNodes);
   }
 
   private static class TestDagDepthFirstSearch {
 
-    private final Multimap<String, String> graph;
-    private final Predicate<String> shouldExploreChildren;
-    private final List<String> exploredNodes = new ArrayList<>();
+    private final Multimap<Node, Node> graph;
+    private final Predicate<Node> shouldExploreChildren;
+    private final List<Node> exploredNodes = new ArrayList<>();
     private int numFindChildrenCalls;
 
-    public TestDagDepthFirstSearch(Multimap<String, String> graph) {
+    public TestDagDepthFirstSearch(Multimap<Node, Node> graph) {
       this(graph, node -> true);
     }
 
     public TestDagDepthFirstSearch(
-        Multimap<String, String> graph, Predicate<String> shouldExploreChildren) {
+        Multimap<Node, Node> graph, Predicate<Node> shouldExploreChildren) {
       this.graph = graph;
       this.shouldExploreChildren = shouldExploreChildren;
       this.numFindChildrenCalls = 0;
     }
 
-    public void traverse(Iterable<String> initial) throws CycleException {
-      AcyclicDepthFirstPostOrderTraversal<String> traversal =
+    public void traverse(Iterable<Node> initial) throws CycleException {
+      AcyclicDepthFirstPostOrderTraversal<Node> traversal =
           new AcyclicDepthFirstPostOrderTraversal<>(
               node -> {
                 ++numFindChildrenCalls;
                 return graph.get(node).iterator();
               });
-      for (String node : traversal.traverse(initial, shouldExploreChildren)) {
+      for (Node node : traversal.traverse(initial, shouldExploreChildren)) {
         exploredNodes.add(node);
       }
     }
