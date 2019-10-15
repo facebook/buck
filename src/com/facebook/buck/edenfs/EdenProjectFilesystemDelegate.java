@@ -138,7 +138,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
         }
       }
     } catch (FileSystemException | IllegalArgumentException e) {
-      LOG.debug(e, "Failed when fetching SHA-1 for %s", path);
+      LOG.debug("Failed when fetching SHA-1 for %s", path);
     }
     return Optional.empty();
   }
