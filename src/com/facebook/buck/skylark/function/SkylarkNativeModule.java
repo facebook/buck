@@ -178,6 +178,8 @@ public class SkylarkNativeModule {
               .collect(ImmutableList.toImmutableList()));
     } catch (FileNotFoundException e) {
       throw new EvalException(ast.getLocation(), "Cannot find " + e.getMessage());
+    } catch (Exception e) {
+      throw new EvalException.EvalExceptionWithJavaCause(ast.getLocation(), e);
     }
   }
 
