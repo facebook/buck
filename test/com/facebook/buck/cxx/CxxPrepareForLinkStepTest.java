@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -66,7 +66,7 @@ public class CxxPrepareForLinkStepTest {
             dummyArgs,
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .getLd()
-                .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE),
+                .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
             dummyPath,
             buildRuleResolver.getSourcePathResolver());
 
@@ -86,7 +86,7 @@ public class CxxPrepareForLinkStepTest {
             dummyArgs,
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .getLd()
-                .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE),
+                .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
             dummyPath,
             buildRuleResolver.getSourcePathResolver());
 
@@ -175,7 +175,7 @@ public class CxxPrepareForLinkStepTest {
             args,
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .getLd()
-                .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE),
+                .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
             currentCellPath,
             buildRuleResolver.getSourcePathResolver());
 
@@ -242,7 +242,7 @@ public class CxxPrepareForLinkStepTest {
             args,
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .getLd()
-                .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE),
+                .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
             currentCellPath,
             buildRuleResolver.getSourcePathResolver());
 

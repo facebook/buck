@@ -26,8 +26,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.QueryTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -145,7 +145,7 @@ public class QueryCommandTest {
                 params.getCell(),
                 params.getParser(),
                 perBuildState,
-                EmptyTargetConfiguration.INSTANCE),
+                UnconfiguredTargetConfiguration.INSTANCE),
             params.getParser(),
             perBuildState,
             new TargetPatternEvaluator(
@@ -154,7 +154,7 @@ public class QueryCommandTest {
                 params.getBuckConfig(),
                 params.getParser(),
                 ParsingContext.builder(params.getCell(), executorService).build(),
-                EmptyTargetConfiguration.INSTANCE),
+                UnconfiguredTargetConfiguration.INSTANCE),
             eventBus,
             typeCoercerFactory);
   }

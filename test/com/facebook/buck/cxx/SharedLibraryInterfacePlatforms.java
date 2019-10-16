@@ -26,7 +26,7 @@ import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.android.toolchain.ndk.impl.NdkCxxPlatforms;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -64,7 +64,7 @@ public class SharedLibraryInterfacePlatforms {
             new AndroidBuckConfig(buckConfig, Platform.detect()),
             filesystem,
             ndkDir,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             compiler,
             NdkCxxPlatforms.getDefaultCxxRuntimeForNdk(ndkVersion),
             NdkCxxRuntimeType.DYNAMIC,
@@ -78,6 +78,6 @@ public class SharedLibraryInterfacePlatforms {
             .iterator()
             .next()
             .getCxxPlatform()
-            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE));
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE));
   }
 }

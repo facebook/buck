@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -137,7 +137,8 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
             .addSrc(Paths.get("Src.java"))
             .setDepsQuery(
                 Query.of(
-                    "filter('.*lib', deps($declared_deps))", EmptyTargetConfiguration.INSTANCE));
+                    "filter('.*lib', deps($declared_deps))",
+                    UnconfiguredTargetConfiguration.INSTANCE));
     TargetNode<AndroidLibraryDescriptionArg> rule = ruleBuilder.build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode, rule);

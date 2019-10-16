@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -72,7 +72,7 @@ public class PythonBuckConfigTest {
                 .build());
     assertThat(
         config
-            .getPexExecutor(resolver, EmptyTargetConfiguration.INSTANCE)
+            .getPexExecutor(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .get()
             .getCommandPrefix(resolver.getSourcePathResolver()),
         Matchers.contains(projectDir.resolve(pexExecuter).toString()));

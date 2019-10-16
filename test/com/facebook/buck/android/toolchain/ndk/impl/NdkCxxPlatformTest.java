@@ -40,8 +40,8 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -564,7 +564,7 @@ public class NdkCxxPlatformTest {
                   new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
                   filesystem,
                   root,
-                  EmptyTargetConfiguration.INSTANCE,
+                  UnconfiguredTargetConfiguration.INSTANCE,
                   NdkCxxPlatformCompiler.builder()
                       .setType(config.getFirst())
                       .setVersion("gcc-version")
@@ -618,7 +618,7 @@ public class NdkCxxPlatformTest {
             new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
             filesystem,
             root,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             NdkCxxPlatformCompiler.builder()
                 .setType(NdkCompilerType.GCC)
                 .setVersion("gcc-version")

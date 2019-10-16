@@ -28,8 +28,8 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.QueryTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -152,9 +152,9 @@ public class BuckQueryEnvironmentTest {
             FakeBuckConfig.builder().build(),
             parser,
             ParsingContext.builder(cell, executor).build(),
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
     OwnersReport.Builder ownersReportBuilder =
-        OwnersReport.builder(cell, parser, parserState, EmptyTargetConfiguration.INSTANCE);
+        OwnersReport.builder(cell, parser, parserState, UnconfiguredTargetConfiguration.INSTANCE);
     buckQueryEnvironment =
         BuckQueryEnvironment.from(
             cell,

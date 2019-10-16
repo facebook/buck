@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.test.rule.ImmutableTestRunnerSpec;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -56,7 +56,7 @@ public class TestRunnerSpecCoercerTest {
             cellPathResolver,
             filesystem,
             basePath,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("$(test arg)", "foo"));
 
     assertEquals(
@@ -75,7 +75,7 @@ public class TestRunnerSpecCoercerTest {
             cellPathResolver,
             filesystem,
             basePath,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("$(test arg)", "foo"));
 
     assertEquals(
@@ -96,7 +96,7 @@ public class TestRunnerSpecCoercerTest {
             cellPathResolver,
             filesystem,
             basePath,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("a", ImmutableList.of("foo", "some $(test arg2)")));
 
     assertEquals(
@@ -121,7 +121,7 @@ public class TestRunnerSpecCoercerTest {
             cellPathResolver,
             filesystem,
             basePath,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("a", 1.0, "b", 2));
 
     assertEquals(
@@ -141,7 +141,7 @@ public class TestRunnerSpecCoercerTest {
             cellPathResolver,
             filesystem,
             basePath,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("bb", true, "bby", false));
 
     assertEquals(
@@ -162,7 +162,7 @@ public class TestRunnerSpecCoercerTest {
         cellPathResolver,
         filesystem,
         basePath,
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableMap.of(ImmutableList.of(), "foo"));
   }
 
@@ -174,7 +174,7 @@ public class TestRunnerSpecCoercerTest {
         cellPathResolver,
         filesystem,
         basePath,
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableMap.of(1, "foo"));
   }
 }

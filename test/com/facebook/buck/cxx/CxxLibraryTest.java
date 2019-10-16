@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -150,7 +150,7 @@ public class CxxLibraryTest {
             cxxPlatform,
             Linker.LinkableDepType.STATIC,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE));
+            UnconfiguredTargetConfiguration.INSTANCE));
 
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.
@@ -165,7 +165,7 @@ public class CxxLibraryTest {
             cxxPlatform,
             Linker.LinkableDepType.SHARED,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE));
+            UnconfiguredTargetConfiguration.INSTANCE));
 
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));
@@ -228,7 +228,7 @@ public class CxxLibraryTest {
             cxxPlatform,
             Linker.LinkableDepType.SHARED,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE));
+            UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -291,7 +291,7 @@ public class CxxLibraryTest {
             cxxPlatform,
             Linker.LinkableDepType.SHARED,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     assertEquals(expectedSharedNativeLinkableInput, actualSharedNativeLinkableInput);
   }

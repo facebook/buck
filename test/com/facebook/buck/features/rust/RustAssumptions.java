@@ -22,7 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -41,12 +41,12 @@ abstract class RustAssumptions {
     RustPlatform rustPlatform =
         new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
-            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
     Throwable exception = null;
     try {
       rustPlatform
           .getRustCompiler()
-          .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+          .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
           .getCommandPrefix(resolver.getSourcePathResolver());
     } catch (HumanReadableException e) {
       exception = e;
@@ -60,11 +60,11 @@ abstract class RustAssumptions {
     RustPlatform rustPlatform =
         new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
-            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
     ImmutableList<String> rustc =
         rustPlatform
             .getRustCompiler()
-            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver.getSourcePathResolver());
 
     Result res = workspace.runCommand(rustc.get(0), "-Zhelp");
@@ -77,11 +77,11 @@ abstract class RustAssumptions {
     RustPlatform rustPlatform =
         new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
-            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
     ImmutableList<String> rustc =
         rustPlatform
             .getRustCompiler()
-            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver.getSourcePathResolver());
 
     String[] versionParts = version.split("\\.");

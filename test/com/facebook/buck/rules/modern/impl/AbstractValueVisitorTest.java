@@ -21,9 +21,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -258,7 +258,7 @@ public abstract class AbstractValueVisitorTest {
     final BuildTarget target =
         someBuildTarget
             .getUnconfiguredBuildTargetView()
-            .configure(EmptyTargetConfiguration.INSTANCE);
+            .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
 
   public static class WithBuildTargetWithConfigurationForConfigurationTargets

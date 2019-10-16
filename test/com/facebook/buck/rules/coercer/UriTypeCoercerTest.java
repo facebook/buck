@@ -21,7 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.net.URI;
@@ -45,7 +45,7 @@ public class UriTypeCoercerTest {
                 cellRoots,
                 filesystem,
                 pathFromRoot,
-                EmptyTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 expected.toString());
 
     assertEquals(expected, uri);
@@ -60,7 +60,7 @@ public class UriTypeCoercerTest {
                 cellRoots,
                 filesystem,
                 pathFromRoot,
-                EmptyTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 expected.toString());
 
     assertEquals(expected, uri);
@@ -75,7 +75,7 @@ public class UriTypeCoercerTest {
                 cellRoots,
                 filesystem,
                 pathFromRoot,
-                EmptyTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 expected.toString());
 
     assertEquals(expected, uri);
@@ -88,7 +88,7 @@ public class UriTypeCoercerTest {
             cellRoots,
             filesystem,
             pathFromRoot,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "not a valid URI");
     fail("Expected coercion failure");
   }

@@ -19,7 +19,7 @@ package com.facebook.buck.features.rust;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -54,17 +54,17 @@ public class RustPlatformFactoryTest {
     RustPlatform platform =
         factory
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
-            .resolve(resolver, EmptyTargetConfiguration.INSTANCE);
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         platform
             .getRustCompiler()
-            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(pathResolver),
         Matchers.equalTo(ImmutableList.of(filesystem.resolve("compiler").toString())));
     assertThat(
         platform
             .getLinkerProvider()
-            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(pathResolver),
         Matchers.equalTo(ImmutableList.of(filesystem.resolve("linker").toString())));
   }

@@ -24,7 +24,7 @@ import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -77,7 +77,7 @@ public class AndroidNdkFactoryTest {
             processExecutor,
             executableFinder,
             ruleKeyConfiguration,
-            () -> EmptyTargetConfiguration.INSTANCE);
+            () -> UnconfiguredTargetConfiguration.INSTANCE);
 
     Optional<AndroidNdk> androidNdk =
         defaultToolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
@@ -97,7 +97,7 @@ public class AndroidNdkFactoryTest {
             processExecutor,
             executableFinder,
             ruleKeyConfiguration,
-            () -> EmptyTargetConfiguration.INSTANCE);
+            () -> UnconfiguredTargetConfiguration.INSTANCE);
 
     try {
       defaultToolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
@@ -133,7 +133,7 @@ public class AndroidNdkFactoryTest {
                     processExecutor,
                     executableFinder,
                     ruleKeyConfiguration,
-                    () -> EmptyTargetConfiguration.INSTANCE))
+                    () -> UnconfiguredTargetConfiguration.INSTANCE))
             .get();
 
     assertFalse(androidNdk.shouldEscapeCFlagsInDoubleQuotes());
@@ -162,7 +162,7 @@ public class AndroidNdkFactoryTest {
                     processExecutor,
                     executableFinder,
                     ruleKeyConfiguration,
-                    () -> EmptyTargetConfiguration.INSTANCE))
+                    () -> UnconfiguredTargetConfiguration.INSTANCE))
             .get();
 
     assertTrue(androidNdk.shouldEscapeCFlagsInDoubleQuotes());

@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableList;
@@ -40,7 +40,8 @@ public class IntAttributeTest {
 
     IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of());
     Integer coerced =
-        attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 5);
+        attr.getValue(
+            cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, 5);
 
     assertEquals(5, coerced.intValue());
   }
@@ -51,7 +52,8 @@ public class IntAttributeTest {
 
     IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of());
 
-    attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "foo");
+    attr.getValue(
+        cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, "foo");
   }
 
   @Test
@@ -59,7 +61,8 @@ public class IntAttributeTest {
 
     IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of(1, 2, 3, 4));
     int value =
-        attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 3);
+        attr.getValue(
+            cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, 3);
 
     assertEquals(3, value);
   }
@@ -68,7 +71,8 @@ public class IntAttributeTest {
   public void allowsAnyValueIfValuesIsEmptyList() throws CoerceFailedException {
     IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of());
     int value =
-        attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 3);
+        attr.getValue(
+            cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, 3);
 
     assertEquals(3, value);
   }
@@ -80,6 +84,7 @@ public class IntAttributeTest {
 
     IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of(1, 2, 4));
 
-    attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 3);
+    attr.getValue(
+        cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, 3);
   }
 }

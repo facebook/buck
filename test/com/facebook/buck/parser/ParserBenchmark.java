@@ -23,7 +23,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -134,6 +134,6 @@ public class ParserBenchmark {
         ImmutableList.of(
             ImmutableTargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
-        EmptyTargetConfiguration.INSTANCE);
+        UnconfiguredTargetConfiguration.INSTANCE);
   }
 }

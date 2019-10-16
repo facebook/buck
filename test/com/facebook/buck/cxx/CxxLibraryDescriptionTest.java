@@ -39,8 +39,8 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -112,11 +112,11 @@ public class CxxLibraryDescriptionTest {
       HeaderVisibility headerVisibility) {
     if (cxxPlatform
             .getCpp()
-            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .supportsHeaderMaps()
         && cxxPlatform
             .getCxxpp()
-            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .supportsHeaderMaps()) {
       BuildTarget headerMapBuildTarget =
           CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
@@ -281,7 +281,7 @@ public class CxxLibraryDescriptionTest {
         cxxPlatform,
         Linker.LinkableDepType.STATIC,
         graphBuilder,
-        EmptyTargetConfiguration.INSTANCE);
+        UnconfiguredTargetConfiguration.INSTANCE);
     BuildRule archiveRule =
         graphBuilder.getRule(
             CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
@@ -355,7 +355,8 @@ public class CxxLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ruleBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxLink rule = (CxxLink) ruleBuilder.build(graphBuilder, filesystem, targetGraph);
-    Linker linker = cxxPlatform.getLd().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE);
+    Linker linker =
+        cxxPlatform.getLd().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE);
     ImmutableList<String> sonameArgs = ImmutableList.copyOf(linker.soname(soname));
     assertThat(
         Arg.stringify(rule.getArgs(), graphBuilder.getSourcePathResolver()),
@@ -405,7 +406,8 @@ public class CxxLibraryDescriptionTest {
         (CxxLibraryGroup) normalBuilder.build(graphBuilder, filesystem, normalGraph);
 
     // Lookup the link whole flags.
-    Linker linker = cxxPlatform.getLd().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE);
+    Linker linker =
+        cxxPlatform.getLd().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE);
     ImmutableList<String> linkWholeFlags =
         FluentIterable.from(linker.linkWhole(StringArg.of("sentinel"), pathResolver))
             .transformAndConcat((input1) -> Arg.stringifyList(input1, pathResolver))
@@ -418,7 +420,7 @@ public class CxxLibraryDescriptionTest {
             cxxPlatform,
             Linker.LinkableDepType.STATIC,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         Arg.stringify(input.getArgs(), pathResolver),
         not(hasItems(linkWholeFlags.toArray(new String[0]))));
@@ -443,7 +445,7 @@ public class CxxLibraryDescriptionTest {
             cxxPlatform,
             Linker.LinkableDepType.STATIC,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         Arg.stringify(linkWholeInput.getArgs(), pathResolver),
         hasItems(linkWholeFlags.toArray(new String[0])));
@@ -549,7 +551,7 @@ public class CxxLibraryDescriptionTest {
         cxxPlatform,
         Linker.LinkableDepType.STATIC,
         graphBuilder,
-        EmptyTargetConfiguration.INSTANCE);
+        UnconfiguredTargetConfiguration.INSTANCE);
     BuildRule staticRule =
         graphBuilder.getRule(
             CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
@@ -605,7 +607,7 @@ public class CxxLibraryDescriptionTest {
         cxxPlatform,
         Linker.LinkableDepType.SHARED,
         graphBuilder,
-        EmptyTargetConfiguration.INSTANCE);
+        UnconfiguredTargetConfiguration.INSTANCE);
     BuildRule sharedRule =
         graphBuilder.getRule(
             CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
@@ -679,7 +681,7 @@ public class CxxLibraryDescriptionTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Linker.LinkableDepType.SHARED,
                 builder1,
-                EmptyTargetConfiguration.INSTANCE)
+                UnconfiguredTargetConfiguration.INSTANCE)
             .getArgs(),
         not(empty()));
 
@@ -697,7 +699,7 @@ public class CxxLibraryDescriptionTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Linker.LinkableDepType.SHARED,
                 builder2,
-                EmptyTargetConfiguration.INSTANCE)
+                UnconfiguredTargetConfiguration.INSTANCE)
             .getArgs(),
         empty());
   }
@@ -717,7 +719,7 @@ public class CxxLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC_PIC,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
     Arg firstArg = nativeLinkableInput.getArgs().get(0);
     assertThat(firstArg, instanceOf(FileListableLinkerInputArg.class));
     ImmutableCollection<BuildRule> deps =
@@ -893,7 +895,7 @@ public class CxxLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.SHARED,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
             .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, graphBuilder))
@@ -938,7 +940,7 @@ public class CxxLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.SHARED,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
             .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, graphBuilder))
@@ -985,7 +987,7 @@ public class CxxLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.SHARED,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
             .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, graphBuilder))

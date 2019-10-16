@@ -22,7 +22,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
@@ -64,7 +64,7 @@ public class DepAttributeTest {
             cellRoots,
             filesystem,
             Paths.get(""),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "//foo/bar:baz");
 
     assertEquals(target, coercedTarget);
@@ -74,7 +74,8 @@ public class DepAttributeTest {
   public void failsMandatoryCoercionProperly() throws CoerceFailedException {
     thrown.expect(CoerceFailedException.class);
 
-    attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 1);
+    attr.getValue(
+        cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, 1);
   }
 
   @Test
@@ -82,7 +83,11 @@ public class DepAttributeTest {
     thrown.expect(CoerceFailedException.class);
 
     attr.getValue(
-        cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, Runtime.NONE);
+        cellRoots,
+        filesystem,
+        Paths.get(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
+        Runtime.NONE);
   }
 
   @Test
@@ -106,7 +111,11 @@ public class DepAttributeTest {
 
     BuildTarget coerced =
         attr.getValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "//foo:bar");
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "//foo:bar");
 
     thrown.expect(NullPointerException.class);
     attr.getPostCoercionTransform().postCoercionTransform(coerced, ImmutableMap.of());
@@ -123,7 +132,11 @@ public class DepAttributeTest {
 
     BuildTarget coerced =
         attr.getValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "//foo:bar");
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "//foo:bar");
 
     thrown.expect(VerifyException.class);
     attr.getPostCoercionTransform()
@@ -147,7 +160,11 @@ public class DepAttributeTest {
 
     BuildTarget coerced =
         attr.getValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "//foo:bar");
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "//foo:bar");
 
     SkylarkDependency dependency =
         attr.getPostCoercionTransform().postCoercionTransform(coerced, deps);

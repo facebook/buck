@@ -24,8 +24,8 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -53,7 +53,7 @@ public class CxxPrecompiledHeaderTest {
         new GccPreprocessor(
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .getCpp()
-                .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE)) {
+                .resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE)) {
           @Override
           public boolean supportsPrecompiledHeaders() {
             return true;
@@ -62,7 +62,7 @@ public class CxxPrecompiledHeaderTest {
     Compiler compiler =
         CxxPlatformUtils.DEFAULT_PLATFORM
             .getCxx()
-            .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE);
+            .resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE);
     CxxPrecompiledHeader precompiledHeader =
         new CxxPrecompiledHeader(
             /* canPrecompile */ true,

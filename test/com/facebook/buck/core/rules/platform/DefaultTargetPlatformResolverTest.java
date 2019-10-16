@@ -21,12 +21,12 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
-import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
+import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -41,26 +41,24 @@ public class DefaultTargetPlatformResolverTest {
 
   @Test
   public void returnCorrectPlatformForEmptyTargetConfiguration() {
-    Platform emptyTargetConfigurationPlatform = DefaultPlatform.INSTANCE;
+    Platform emptyTargetConfigurationPlatform = UnconfiguredPlatform.INSTANCE;
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(
-                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())),
-            emptyTargetConfigurationPlatform);
+                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())));
 
     assertEquals(
         emptyTargetConfigurationPlatform,
-        targetPlatformResolver.getTargetPlatform(EmptyTargetConfiguration.INSTANCE));
+        targetPlatformResolver.getTargetPlatform(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
   public void returnCorrectPlatformForConfigurationForConfigurationTargets() {
-    Platform emptyTargetConfigurationPlatform = DefaultPlatform.INSTANCE;
+    Platform emptyTargetConfigurationPlatform = UnconfiguredPlatform.INSTANCE;
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(
-                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())),
-            emptyTargetConfigurationPlatform);
+                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())));
 
     assertEquals(
         emptyTargetConfigurationPlatform,
@@ -69,8 +67,6 @@ public class DefaultTargetPlatformResolverTest {
 
   @Test
   public void returnCorrectPlatformForDefaultTargetConfiguration() {
-    Platform emptyTargetConfigurationPlatform = DefaultPlatform.INSTANCE;
-
     BuildTarget platformTarget =
         ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform");
     BuildTarget constraintValue =
@@ -105,8 +101,7 @@ public class DefaultTargetPlatformResolverTest {
                 new RuleBasedConstraintResolver(configurationRuleResolver)));
 
     DefaultTargetPlatformResolver targetPlatformResolver =
-        new DefaultTargetPlatformResolver(
-            ruleBasedTargetPlatformResolver, emptyTargetConfigurationPlatform);
+        new DefaultTargetPlatformResolver(ruleBasedTargetPlatformResolver);
 
     ConstraintBasedPlatform platform =
         (ConstraintBasedPlatform)
@@ -121,12 +116,10 @@ public class DefaultTargetPlatformResolverTest {
 
   @Test
   public void requestingPlatformForWrongTypeThrowsException() {
-    Platform emptyTargetConfigurationPlatform = DefaultPlatform.INSTANCE;
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(
-                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())),
-            emptyTargetConfigurationPlatform);
+                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("Cannot determine target platform for configuration:");

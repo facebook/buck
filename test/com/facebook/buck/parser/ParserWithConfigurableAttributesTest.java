@@ -51,9 +51,9 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -298,7 +298,7 @@ public class ParserWithConfigurableAttributesTest {
             processExecutor,
             executableFinder,
             TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            () -> UnconfiguredTargetConfiguration.INSTANCE);
 
     ToolchainProviderBuilder toolchainProviderBuilder = new ToolchainProviderBuilder();
     Optional<AppleDeveloperDirectoryProvider> appleDeveloperDirectoryProvider =
@@ -2166,7 +2166,7 @@ public class ParserWithConfigurableAttributesTest {
                     ImmutableBuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
                             cellRoot, "//lib", "lib"))),
-                EmptyTargetConfiguration.INSTANCE)
+                UnconfiguredTargetConfiguration.INSTANCE)
             .getBuildTargets();
 
     assertThat(
@@ -2213,7 +2213,7 @@ public class ParserWithConfigurableAttributesTest {
                     BuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
                             cellRoot, "//lib", "lib"))),
-                EmptyTargetConfiguration.INSTANCE)
+                UnconfiguredTargetConfiguration.INSTANCE)
             .getBuildTargets();
 
     assertThat(
@@ -2264,7 +2264,7 @@ public class ParserWithConfigurableAttributesTest {
                     BuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
                             cellRoot, "//lib", "lib"))),
-                EmptyTargetConfiguration.INSTANCE)
+                UnconfiguredTargetConfiguration.INSTANCE)
             .getBuildTargets();
 
     assertThat(
@@ -2305,7 +2305,7 @@ public class ParserWithConfigurableAttributesTest {
         ImmutableList.of(
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))),
-        EmptyTargetConfiguration.INSTANCE);
+        UnconfiguredTargetConfiguration.INSTANCE);
 
     // The read bytes are dependent on the serialization format of the parser, and the absolute path
     // of the temporary BUCK file we wrote, so let's just assert that there are a reasonable
@@ -2321,7 +2321,7 @@ public class ParserWithConfigurableAttributesTest {
         ImmutableList.of(
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))),
-        EmptyTargetConfiguration.INSTANCE);
+        UnconfiguredTargetConfiguration.INSTANCE);
     assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
   }
 
@@ -2611,7 +2611,7 @@ public class ParserWithConfigurableAttributesTest {
                         ImmutableTargetNodePredicateSpec.of(
                             BuildFileSpec.fromRecursivePath(
                                 Paths.get(""), parsingContext.getCell().getRoot()))),
-                    EmptyTargetConfiguration.INSTANCE)
+                    UnconfiguredTargetConfiguration.INSTANCE)
                 .getTargetGraph()
                 .getNodes())
         .transform(TargetNode::getBuildTarget)

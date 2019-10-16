@@ -38,7 +38,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -732,7 +732,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
             env,
             processExecutor,
             executableFinder,
-            () -> EmptyTargetConfiguration.INSTANCE);
+            () -> UnconfiguredTargetConfiguration.INSTANCE);
 
     return LocalCellProviderFactory.create(
             filesystem,

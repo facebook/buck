@@ -27,8 +27,8 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -153,7 +153,7 @@ public class CommandRunnerParamsForTesting {
         new SingletonArtifactCacheFactory(artifactCache),
         typeCoercerFactory,
         new ParsingUnconfiguredBuildTargetViewFactory(),
-        () -> EmptyTargetConfiguration.INSTANCE,
+        () -> UnconfiguredTargetConfiguration.INSTANCE,
         TargetConfigurationSerializerForTests.create(cell.getCellPathResolver()),
         TestParserFactory.create(executor, cell, knownRuleTypesProvider),
         eventBus,

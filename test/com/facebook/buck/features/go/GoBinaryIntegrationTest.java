@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -416,7 +416,7 @@ public class GoBinaryIntegrationTest {
     assumeTrue(
         cxxPlatform
             .getAr()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .supportsThinArchives());
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
     workspace.setUp();

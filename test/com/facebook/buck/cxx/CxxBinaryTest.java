@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -57,7 +57,7 @@ public class CxxBinaryTest {
                 TestCellPathResolver.get(projectFilesystem),
                 CxxPlatformUtils.DEFAULT_PLATFORM
                     .getLd()
-                    .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE),
+                    .resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE),
                 bin,
                 ImmutableMap.of(),
                 ImmutableList.of(),

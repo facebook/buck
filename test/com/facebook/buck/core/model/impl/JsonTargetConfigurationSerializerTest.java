@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -47,7 +47,7 @@ public class JsonTargetConfigurationSerializerTest {
     assertEquals(
         "{}",
         new JsonTargetConfigurationSerializer(buildTargetProvider)
-            .serialize(EmptyTargetConfiguration.INSTANCE));
+            .serialize(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -63,7 +63,7 @@ public class JsonTargetConfigurationSerializerTest {
   @Test
   public void emptyTargetConfigurationDeserializesFromString() {
     assertEquals(
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         new JsonTargetConfigurationSerializer(buildTargetProvider).deserialize("{}"));
   }
 

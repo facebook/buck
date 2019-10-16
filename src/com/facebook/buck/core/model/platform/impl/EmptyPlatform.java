@@ -26,8 +26,8 @@ import java.util.Objects;
  * <p>Note that this platform matches an empty list of constraints. The behavior of this platform is
  * equivalent to {@link ConstraintBasedPlatform} with an empty list of constraints.
  *
- * <p>Can be used in places when some platform is needed, but {@link DefaultPlatform} does not work
- * because it if effectively prohibits using platforms.
+ * <p>Can be used in places when some platform is needed, but {@link UnconfiguredPlatform} does not
+ * work because it if effectively prohibits using platforms.
  */
 public class EmptyPlatform implements Platform {
 

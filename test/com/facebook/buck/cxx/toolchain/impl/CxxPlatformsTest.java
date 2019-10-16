@@ -24,9 +24,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -108,7 +108,7 @@ public class CxxPlatformsTest {
                     borlandCxx452Platform.getFlavor(),
                     new StaticUnresolvedCxxPlatform(borlandCxx452Platform)),
                 CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
-            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE),
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE),
         equalTo(borlandCxx452Platform));
   }
 
@@ -221,7 +221,7 @@ public class CxxPlatformsTest {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     return CxxPlatformUtils.build(buckConfig)
         .getAr()
-        .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
+        .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE);
   }
 
   @Test

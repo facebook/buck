@@ -25,9 +25,9 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
@@ -95,7 +95,7 @@ public class SelectorListCoercerTest {
             cellPathResolver,
             projectFilesystem,
             projectFilesystem.getRootPath(),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             Lists.newArrayList(selectorValue, Lists.newArrayList("test3")),
             elementTypeCoercer);
 

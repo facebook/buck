@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -57,7 +57,7 @@ public class LocationMacroTypeCoercerTest {
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//:test")),
         Matchers.equalTo(
             LocationMacro.of(BuildTargetFactory.newInstance("//:test"), Optional.empty())));
@@ -67,7 +67,7 @@ public class LocationMacroTypeCoercerTest {
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//:test[foo]")),
         Matchers.equalTo(
             LocationMacro.of(BuildTargetFactory.newInstance("//:test"), Optional.of("foo"))));
@@ -81,7 +81,7 @@ public class LocationMacroTypeCoercerTest {
         CELL_PATH_RESOLVER,
         FILESYSTEM,
         BASE_PATH,
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of("not a target"));
   }
 
@@ -93,7 +93,7 @@ public class LocationMacroTypeCoercerTest {
         CELL_PATH_RESOLVER,
         FILESYSTEM,
         BASE_PATH,
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of("not", "a", "target"));
   }
 
@@ -105,7 +105,7 @@ public class LocationMacroTypeCoercerTest {
         CELL_PATH_RESOLVER,
         FILESYSTEM,
         BASE_PATH,
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of());
   }
 }

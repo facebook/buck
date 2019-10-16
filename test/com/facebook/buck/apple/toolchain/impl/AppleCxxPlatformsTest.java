@@ -45,9 +45,9 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -236,7 +236,7 @@ public class AppleCxxPlatformsTest {
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
         cxxPlatform
             .getCc()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver)
             .get(0));
     assertThat(
@@ -244,7 +244,7 @@ public class AppleCxxPlatformsTest {
             .addAll(
                 cxxPlatform
                     .getCc()
-                    .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+                    .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
                     .getCommandPrefix(resolver))
             .addAll(cxxPlatform.getCflags())
             .build(),
@@ -258,14 +258,14 @@ public class AppleCxxPlatformsTest {
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
         cxxPlatform
             .getCxx()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver)
             .get(0));
     assertEquals(
         "/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/ar",
         cxxPlatform
             .getAr()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver)
             .get(0));
   }
@@ -343,7 +343,7 @@ public class AppleCxxPlatformsTest {
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
         cxxPlatform
             .getCc()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver)
             .get(0));
     assertThat(
@@ -351,7 +351,7 @@ public class AppleCxxPlatformsTest {
             .addAll(
                 cxxPlatform
                     .getCc()
-                    .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+                    .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
                     .getCommandPrefix(resolver))
             .addAll(cxxPlatform.getCflags())
             .build(),
@@ -364,14 +364,14 @@ public class AppleCxxPlatformsTest {
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
         cxxPlatform
             .getCxx()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver)
             .get(0));
     assertEquals(
         "/Developer/Platforms/WatchOS.platform/Developer/usr/bin/ar",
         cxxPlatform
             .getAr()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver)
             .get(0));
   }
@@ -450,7 +450,7 @@ public class AppleCxxPlatformsTest {
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
         cxxPlatform
             .getCc()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver)
             .get(0));
     assertThat(
@@ -458,7 +458,7 @@ public class AppleCxxPlatformsTest {
             .addAll(
                 cxxPlatform
                     .getCc()
-                    .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+                    .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
                     .getCommandPrefix(resolver))
             .addAll(cxxPlatform.getCflags())
             .build(),
@@ -472,14 +472,14 @@ public class AppleCxxPlatformsTest {
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
         cxxPlatform
             .getCxx()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver)
             .get(0));
     assertEquals(
         "/Developer/Platforms/AppleTVOS.platform/Developer/usr/bin/ar",
         cxxPlatform
             .getAr()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver)
             .get(0));
   }
@@ -972,7 +972,7 @@ public class AppleCxxPlatformsTest {
     assertThat(
         appleCxxPlatform
             .getCodesignProvider()
-            .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(buildRuleResolver.getSourcePathResolver()),
         is(Collections.singletonList("/usr/bin/codesign")));
   }
@@ -1020,7 +1020,7 @@ public class AppleCxxPlatformsTest {
     assertThat(
         appleCxxPlatform
             .getCodesignProvider()
-            .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE),
+            .resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE),
         is(codesign));
   }
 
@@ -1039,7 +1039,7 @@ public class AppleCxxPlatformsTest {
     assertThat(
         appleCxxPlatform
             .getCodesignProvider()
-            .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(buildRuleResolver.getSourcePathResolver()),
         is(Collections.singletonList(codesignPath.toString())));
   }

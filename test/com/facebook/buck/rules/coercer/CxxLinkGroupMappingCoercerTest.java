@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -66,7 +66,7 @@ public class CxxLinkGroupMappingCoercerTest {
             createCellRoots(filesystem),
             filesystem,
             basePath,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             linkGroupMap);
 
     assertEquals(mapping.getLinkGroup(), linkGroup);

@@ -28,7 +28,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
-import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
+import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -101,7 +101,7 @@ public class RawTargetNodeToTargetNodeFactoryTest {
             ImmutableSet.of());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
-    TargetPlatformResolver targetPlatformResolver = configuration -> DefaultPlatform.INSTANCE;
+    TargetPlatformResolver targetPlatformResolver = configuration -> UnconfiguredPlatform.INSTANCE;
     RawTargetNodeToTargetNodeFactory factory =
         new RawTargetNodeToTargetNodeFactory(
             typeCoercerFactory,

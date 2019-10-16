@@ -24,7 +24,7 @@ import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -54,13 +54,15 @@ public class QueryCacheTest {
     Query q1 =
         Query.of(
             "deps(:a) union deps(:c) except (deps(:a) intersect classpath(deps(:f)))",
-            EmptyTargetConfiguration.INSTANCE);
-    Query q2 = Query.of("deps(:a) ^ classpath(deps(:f))", EmptyTargetConfiguration.INSTANCE);
-    Query q3 = Query.of("kind(binary, deps(:a))", EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
+    Query q2 = Query.of("deps(:a) ^ classpath(deps(:f))", UnconfiguredTargetConfiguration.INSTANCE);
+    Query q3 = Query.of("kind(binary, deps(:a))", UnconfiguredTargetConfiguration.INSTANCE);
     Query q4 =
-        Query.of("attrfilter(deps, :e, set(:b :c :f :g))", EmptyTargetConfiguration.INSTANCE);
-    Query q5 = Query.of("kind(library, deps(:a) + deps(:c))", EmptyTargetConfiguration.INSTANCE);
-    Query q6 = Query.of("deps(:c)", EmptyTargetConfiguration.INSTANCE);
+        Query.of(
+            "attrfilter(deps, :e, set(:b :c :f :g))", UnconfiguredTargetConfiguration.INSTANCE);
+    Query q5 =
+        Query.of("kind(library, deps(:a) + deps(:c))", UnconfiguredTargetConfiguration.INSTANCE);
+    Query q6 = Query.of("deps(:c)", UnconfiguredTargetConfiguration.INSTANCE);
 
     BuildTarget foo = BuildTargetFactory.newInstance("//:foo");
     BuildTarget bar = BuildTargetFactory.newInstance("//:bar");
@@ -116,7 +118,7 @@ public class QueryCacheTest {
             new ParsingUnconfiguredBuildTargetViewFactory(),
             targetA.getBaseName(),
             ImmutableSet.of(),
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     QueryCache cache = new QueryCache();
 
@@ -145,7 +147,7 @@ public class QueryCacheTest {
 
   @Test
   public void dynamicDeps() throws QueryException {
-    Query declared = Query.of("$declared_deps", EmptyTargetConfiguration.INSTANCE);
+    Query declared = Query.of("$declared_deps", UnconfiguredTargetConfiguration.INSTANCE);
 
     BuildTarget fooTarget = BuildTargetFactory.newInstance("//:foo");
     BuildTarget barTarget = BuildTargetFactory.newInstance("//:bar");
@@ -184,7 +186,7 @@ public class QueryCacheTest {
             unconfiguredBuildTargetFactory,
             fooTarget.getBaseName(),
             foo.getDeclaredDeps(),
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     GraphEnhancementQueryEnvironment barEnv =
         new GraphEnhancementQueryEnvironment(
@@ -195,7 +197,7 @@ public class QueryCacheTest {
             unconfiguredBuildTargetFactory,
             barTarget.getBaseName(),
             bar.getDeclaredDeps(),
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     QueryCache cache = new QueryCache();
 

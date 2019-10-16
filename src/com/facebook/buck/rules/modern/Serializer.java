@@ -20,8 +20,8 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
@@ -428,7 +428,7 @@ public class Serializer {
 
     @Override
     public void visitTargetConfiguration(TargetConfiguration value) throws IOException {
-      if (value instanceof EmptyTargetConfiguration) {
+      if (value instanceof UnconfiguredTargetConfiguration) {
         stream.writeInt(TARGET_CONFIGURATION_TYPE_EMPTY);
       } else if (value instanceof RuleBasedTargetConfiguration) {
         stream.writeInt(TARGET_CONFIGURATION_TYPE_DEFAULT);

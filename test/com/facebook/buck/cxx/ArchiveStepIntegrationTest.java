@@ -22,7 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -68,7 +68,8 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    Archiver archiver = platform.getAr().resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
+    Archiver archiver =
+        platform.getAr().resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE);
     Path output = filesystem.getPath("output.a");
     Path input = filesystem.getPath("input.dat");
     filesystem.writeContentsToPath("blah", input);
@@ -129,7 +130,8 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    Archiver archiver = platform.getAr().resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
+    Archiver archiver =
+        platform.getAr().resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE);
     Path output = filesystem.getPath("output.a");
 
     // Build an archive step.
@@ -168,7 +170,8 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    Archiver archiver = platform.getAr().resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
+    Archiver archiver =
+        platform.getAr().resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE);
     Path output = filesystem.getPath("output.a");
     Path input = filesystem.getPath("foo/blah.dat");
     filesystem.mkdirs(input.getParent());
@@ -211,7 +214,8 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    Archiver archiver = platform.getAr().resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
+    Archiver archiver =
+        platform.getAr().resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE);
 
     assumeTrue(archiver.supportsThinArchives());
 

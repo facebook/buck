@@ -17,11 +17,12 @@ package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
+import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 
 /**
  * {@link TargetPlatformResolver} that supports both rule based platforms and a platform for an
@@ -30,20 +31,17 @@ import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 public class DefaultTargetPlatformResolver implements TargetPlatformResolver {
 
   private final RuleBasedTargetPlatformResolver ruleBasedTargetPlatformResolver;
-  private final Platform emptyTargetConfigurationPlatform;
 
   public DefaultTargetPlatformResolver(
-      RuleBasedTargetPlatformResolver ruleBasedTargetPlatformResolver,
-      Platform emptyTargetConfigurationPlatform) {
+      RuleBasedTargetPlatformResolver ruleBasedTargetPlatformResolver) {
     this.ruleBasedTargetPlatformResolver = ruleBasedTargetPlatformResolver;
-    this.emptyTargetConfigurationPlatform = emptyTargetConfigurationPlatform;
   }
 
   @Override
   public Platform getTargetPlatform(TargetConfiguration targetConfiguration) {
-    if (targetConfiguration instanceof EmptyTargetConfiguration
+    if (targetConfiguration instanceof UnconfiguredTargetConfiguration
         || targetConfiguration instanceof ConfigurationForConfigurationTargets) {
-      return emptyTargetConfigurationPlatform;
+      return UnconfiguredPlatform.INSTANCE;
     } else if (targetConfiguration instanceof RuleBasedTargetConfiguration) {
       return ruleBasedTargetPlatformResolver.getTargetPlatform(targetConfiguration);
     }

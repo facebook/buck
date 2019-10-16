@@ -24,7 +24,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -154,7 +154,7 @@ public class ExecutableMacroExpanderTest {
                     cellPathResolver,
                     filesystem,
                     rule.getBuildTarget().getBasePath(),
-                    EmptyTargetConfiguration.INSTANCE,
+                    UnconfiguredTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());

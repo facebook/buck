@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -97,7 +97,7 @@ public class TestCellBuilder {
                 environmentCopy,
                 processExecutor,
                 executableFinder,
-                () -> EmptyTargetConfiguration.INSTANCE)
+                () -> UnconfiguredTargetConfiguration.INSTANCE)
             : (buckConfig, filesystem, ruleKeyConfiguration) -> toolchainProvider;
 
     DefaultCellPathResolver rootCellCellPathResolver =

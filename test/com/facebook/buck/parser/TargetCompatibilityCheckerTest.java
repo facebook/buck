@@ -31,7 +31,7 @@ import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
-import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
+import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -121,7 +121,7 @@ public class TargetCompatibilityCheckerTest {
         new ImmutableConfigurationRuleRegistry(
             configurationRuleResolver,
             constraintResolver,
-            configuration -> DefaultPlatform.INSTANCE);
+            configuration -> UnconfiguredPlatform.INSTANCE);
   }
 
   @Test

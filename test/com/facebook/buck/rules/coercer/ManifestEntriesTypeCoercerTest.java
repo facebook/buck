@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
@@ -61,7 +61,7 @@ public class ManifestEntriesTypeCoercerTest {
             createCellRoots(filesystem),
             filesystem,
             basePath,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             inputMap);
 
     assertTrue(result.getDebugMode().get());
@@ -80,7 +80,7 @@ public class ManifestEntriesTypeCoercerTest {
         createCellRoots(filesystem),
         filesystem,
         basePath,
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         inputMap);
   }
 
@@ -98,7 +98,7 @@ public class ManifestEntriesTypeCoercerTest {
             createCellRoots(filesystem),
             filesystem,
             basePath,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             inputMap);
 
     assertTrue(result.getDebugMode().get());

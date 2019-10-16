@@ -21,11 +21,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
-import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
+import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Rule;
@@ -52,9 +52,10 @@ public class MultiPlatformTargetConfigurationTransformerTest {
   @Test
   public void noTransformationForEmptyPlatform() {
     MultiPlatformTargetConfigurationTransformer transformer =
-        new MultiPlatformTargetConfigurationTransformer(configuration -> DefaultPlatform.INSTANCE);
+        new MultiPlatformTargetConfigurationTransformer(
+            configuration -> UnconfiguredPlatform.INSTANCE);
 
-    assertFalse(transformer.needsTransformation(EmptyTargetConfiguration.INSTANCE));
+    assertFalse(transformer.needsTransformation(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test

@@ -46,10 +46,10 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
@@ -1540,7 +1540,7 @@ public final class MainRunner {
           hostPlatformFromConfig
               .map(ConfigurationBuildTargets::convert)
               .<TargetConfiguration>map(ImmutableRuleBasedTargetConfiguration::of)
-              .orElse(EmptyTargetConfiguration.INSTANCE);
+              .orElse(UnconfiguredTargetConfiguration.INSTANCE);
       return () -> hostTargetConfiguration;
     }
     BuildTarget targetPlatform =

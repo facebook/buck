@@ -34,7 +34,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -83,14 +83,14 @@ public class JavaBuckConfigTest {
     assertEquals(
         ImmutableList.of("java"),
         javaOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
     assertEquals(
         ImmutableList.of("java"),
         javaForTestsOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
   }
 
@@ -116,14 +116,14 @@ public class JavaBuckConfigTest {
     assertEquals(
         ImmutableList.of(javaCommand),
         javaOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
     assertEquals(
         ImmutableList.of(javaForTestsCommand),
         javaForTestsOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
   }
 
@@ -142,7 +142,7 @@ public class JavaBuckConfigTest {
     assertEquals(
         ImmutableList.of(java.toString()),
         options
-            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
   }
 
@@ -161,14 +161,14 @@ public class JavaBuckConfigTest {
     assertEquals(
         ImmutableList.of(javaCommand),
         options
-            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
   public void whenJavacIsNotSetThenAbsentIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-    assertEquals(Optional.empty(), config.getJavacPath(EmptyTargetConfiguration.INSTANCE));
+    assertEquals(Optional.empty(), config.getJavacPath(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -183,7 +183,7 @@ public class JavaBuckConfigTest {
 
     assertEquals(
         config.getDelegate().getPathSourcePath(javac),
-        config.getJavacPath(EmptyTargetConfiguration.INSTANCE).get());
+        config.getJavacPath(UnconfiguredTargetConfiguration.INSTANCE).get());
   }
 
   @Test
@@ -195,7 +195,7 @@ public class JavaBuckConfigTest {
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     assertEquals(
         DefaultBuildTargetSourcePath.of(javacTarget),
-        config.getJavacPath(EmptyTargetConfiguration.INSTANCE).get());
+        config.getJavacPath(UnconfiguredTargetConfiguration.INSTANCE).get());
   }
 
   @Test
@@ -206,7 +206,7 @@ public class JavaBuckConfigTest {
             Joiner.on('\n').join("[tools]", "    javac = " + invalidPath.replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
-      config.getJavacPath(EmptyTargetConfiguration.INSTANCE);
+      config.getJavacPath(UnconfiguredTargetConfiguration.INSTANCE);
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -227,7 +227,7 @@ public class JavaBuckConfigTest {
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
       config
-          .getJavacSpec(EmptyTargetConfiguration.INSTANCE)
+          .getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE)
           .getJavacProvider()
           .resolve(new TestActionGraphBuilder());
       fail("Should throw exception as javac file is not executable.");
@@ -245,7 +245,7 @@ public class JavaBuckConfigTest {
                 .join("[tools]", "    javac_jar = " + invalidPath.replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
-      config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacJarPath();
+      config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacJarPath();
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -285,7 +285,7 @@ public class JavaBuckConfigTest {
     String localConfig = "[java]\nbootclasspath-6 = one.jar\nbootclasspath-7 = two.jar";
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    JavacOptions options = config.getDefaultJavacOptions(EmptyTargetConfiguration.INSTANCE);
+    JavacOptions options = config.getDefaultJavacOptions(UnconfiguredTargetConfiguration.INSTANCE);
 
     JavacOptions jse5 =
         JavacOptions.builder(options)
@@ -342,9 +342,9 @@ public class JavaBuckConfigTest {
             .getView(JavaBuckConfig.class);
 
     assumeThat(
-        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
         is(Javac.Source.JDK));
-    assertFalse(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
+    assertFalse(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -372,10 +372,10 @@ public class JavaBuckConfigTest {
             .getView(JavaBuckConfig.class);
 
     assumeThat(
-        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
         is(Javac.Source.EXTERNAL));
 
-    assertFalse(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
+    assertFalse(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -393,9 +393,9 @@ public class JavaBuckConfigTest {
             .getView(JavaBuckConfig.class);
 
     assumeThat(
-        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
         is(Javac.Source.EXTERNAL));
-    assertFalse(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
+    assertFalse(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -411,10 +411,10 @@ public class JavaBuckConfigTest {
             .getView(JavaBuckConfig.class);
 
     assumeThat(
-        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
         is(Javac.Source.JAR));
 
-    assertTrue(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
+    assertTrue(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -422,10 +422,10 @@ public class JavaBuckConfigTest {
     JavaBuckConfig config = FakeBuckConfig.builder().build().getView(JavaBuckConfig.class);
 
     assumeThat(
-        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
         is(Javac.Source.JDK));
 
-    assertTrue(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
+    assertTrue(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test

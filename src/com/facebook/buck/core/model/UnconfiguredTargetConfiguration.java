@@ -19,13 +19,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Configuration that doesn't have any options */
-public class EmptyTargetConfiguration implements TargetConfiguration {
-  public static final EmptyTargetConfiguration INSTANCE = new EmptyTargetConfiguration();
+/**
+ * Configuration that resolves to unconfigured platform, which results in error on any operations
+ * with platforms (like {@code compatible_with} or {@code select()}
+ */
+public class UnconfiguredTargetConfiguration implements TargetConfiguration {
+  public static final UnconfiguredTargetConfiguration INSTANCE =
+      new UnconfiguredTargetConfiguration();
 
-  private final int hashCode = Objects.hash(EmptyTargetConfiguration.class.getName());
+  private final int hashCode = Objects.hash(UnconfiguredTargetConfiguration.class.getName());
 
-  private EmptyTargetConfiguration() {}
+  private UnconfiguredTargetConfiguration() {}
 
   @Override
   public int hashCode() {
@@ -34,7 +38,7 @@ public class EmptyTargetConfiguration implements TargetConfiguration {
 
   @Override
   public boolean equals(Object obj) {
-    return obj instanceof EmptyTargetConfiguration;
+    return obj instanceof UnconfiguredTargetConfiguration;
   }
 
   @JsonIgnore

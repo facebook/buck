@@ -23,9 +23,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -188,7 +188,7 @@ public class CxxPythonExtensionDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.SHARED,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     // Verify that the shared library dep propagated to the link rule.
     extension.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);

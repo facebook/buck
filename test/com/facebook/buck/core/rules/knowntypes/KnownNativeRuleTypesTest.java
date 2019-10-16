@@ -21,9 +21,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -79,7 +79,7 @@ public class KnownNativeRuleTypesTest {
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
             TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            () -> UnconfiguredTargetConfiguration.INSTANCE);
 
     KnownNativeRuleTypes knownRuleTypes1 =
         TestKnownRuleTypesFactory.create(
@@ -99,7 +99,7 @@ public class KnownNativeRuleTypesTest {
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
             TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            () -> UnconfiguredTargetConfiguration.INSTANCE);
 
     KnownNativeRuleTypes knownRuleTypes2 =
         TestKnownRuleTypesFactory.create(
@@ -122,7 +122,7 @@ public class KnownNativeRuleTypesTest {
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
             TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE) {
+            () -> UnconfiguredTargetConfiguration.INSTANCE) {
           @Override
           public Toolchain getByName(String toolchainName) {
             throw new IllegalStateException(
@@ -151,7 +151,7 @@ public class KnownNativeRuleTypesTest {
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
             TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            () -> UnconfiguredTargetConfiguration.INSTANCE);
 
     // This would throw if "default" weren't available as a platform.
     TestKnownRuleTypesFactory.create(
@@ -176,14 +176,14 @@ public class KnownNativeRuleTypesTest {
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
             TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            () -> UnconfiguredTargetConfiguration.INSTANCE);
     CxxPlatformsProvider cxxPlatformsProvider =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
     assertThat(
         cxxPlatformsProvider
             .getUnresolvedCxxPlatforms()
             .getValue(flavor)
-            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE)
             .getCflags(),
         Matchers.contains(flag));
     TestKnownRuleTypesFactory.create(
@@ -209,7 +209,7 @@ public class KnownNativeRuleTypesTest {
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
             TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            () -> UnconfiguredTargetConfiguration.INSTANCE);
 
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.

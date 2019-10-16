@@ -26,8 +26,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
@@ -287,7 +287,7 @@ public class UnconfiguredSelectorListResolverTest {
             TestCellPathResolver.get(projectFilesystem),
             projectFilesystem,
             projectFilesystem.getRootPath(),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("//x:y", Lists.newArrayList("flavor11", "flavor12")),
             flavorListTypeCoercer,
             "Custom message");

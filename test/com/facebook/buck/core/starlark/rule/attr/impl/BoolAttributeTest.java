@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import java.nio.file.Paths;
@@ -40,7 +40,7 @@ public class BoolAttributeTest {
     BoolAttribute attr = new ImmutableBoolAttribute(false, "", true);
     boolean coerced =
         attr.getValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, true);
+            cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, true);
 
     assertTrue(coerced);
   }
@@ -51,6 +51,7 @@ public class BoolAttributeTest {
 
     BoolAttribute attr = new ImmutableBoolAttribute(false, "", true);
 
-    attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "foo");
+    attr.getValue(
+        cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, "foo");
   }
 }

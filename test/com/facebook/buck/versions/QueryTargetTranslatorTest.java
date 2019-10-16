@@ -22,7 +22,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -50,8 +50,9 @@ public class QueryTargetTranslatorTest {
             CELL_PATH_RESOLVER,
             "",
             translator,
-            Query.of("deps(//:a)", EmptyTargetConfiguration.INSTANCE)),
-        Matchers.equalTo(Optional.of(Query.of("deps(//:b)", EmptyTargetConfiguration.INSTANCE))));
+            Query.of("deps(//:a)", UnconfiguredTargetConfiguration.INSTANCE)),
+        Matchers.equalTo(
+            Optional.of(Query.of("deps(//:b)", UnconfiguredTargetConfiguration.INSTANCE))));
   }
 
   @Test
@@ -65,7 +66,7 @@ public class QueryTargetTranslatorTest {
             CELL_PATH_RESOLVER,
             "",
             translator,
-            Query.of("$declared_deps", EmptyTargetConfiguration.INSTANCE)),
+            Query.of("$declared_deps", UnconfiguredTargetConfiguration.INSTANCE)),
         Matchers.equalTo(Optional.empty()));
   }
 }

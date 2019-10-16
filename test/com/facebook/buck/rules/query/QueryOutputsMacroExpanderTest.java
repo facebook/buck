@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeArg;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -185,7 +185,7 @@ public class QueryOutputsMacroExpanderTest {
                     cellNames,
                     filesystem,
                     rule.getBuildTarget().getBasePath(),
-                    EmptyTargetConfiguration.INSTANCE,
+                    UnconfiguredTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());

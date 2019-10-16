@@ -26,7 +26,7 @@ import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
@@ -171,7 +171,7 @@ public abstract class IsolatedBuildableBuilder {
             clientEnvironment,
             processExecutor,
             executableFinder,
-            () -> EmptyTargetConfiguration.INSTANCE);
+            () -> UnconfiguredTargetConfiguration.INSTANCE);
 
     CellProvider cellProvider =
         LocalCellProviderFactory.create(

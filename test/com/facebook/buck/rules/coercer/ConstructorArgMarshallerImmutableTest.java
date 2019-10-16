@@ -31,9 +31,9 @@ import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.impl.RuleBasedTargetConfiguration;
@@ -41,7 +41,7 @@ import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
-import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
+import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
@@ -531,12 +531,12 @@ public class ConstructorArgMarshallerImmutableTest {
                 ImmutableSelectorValue.of(
                     ImmutableMap.of("DEFAULT", "string3", "//x:y", "string4"), "")),
             ImmutableMap.class);
-    TargetPlatformResolver targetPlatformResolver = configuration -> DefaultPlatform.INSTANCE;
+    TargetPlatformResolver targetPlatformResolver = configuration -> UnconfiguredPlatform.INSTANCE;
     SelectableConfigurationContext selectableConfigurationContext =
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
             new RuleBasedConstraintResolver(DummyConfigurationRule::of),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             targetPlatformResolver);
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
@@ -566,7 +566,8 @@ public class ConstructorArgMarshallerImmutableTest {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
-        new MultiPlatformTargetConfigurationTransformer(configuration -> DefaultPlatform.INSTANCE);
+        new MultiPlatformTargetConfigurationTransformer(
+            configuration -> UnconfiguredPlatform.INSTANCE);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     DtoWithString dto =
         marshaller.populate(
@@ -589,7 +590,8 @@ public class ConstructorArgMarshallerImmutableTest {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
-        new MultiPlatformTargetConfigurationTransformer(configuration -> DefaultPlatform.INSTANCE);
+        new MultiPlatformTargetConfigurationTransformer(
+            configuration -> UnconfiguredPlatform.INSTANCE);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     BuildTarget dep = BuildTargetFactory.newInstance("//a/b:c");
     marshaller.populate(
@@ -611,7 +613,8 @@ public class ConstructorArgMarshallerImmutableTest {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
-        new MultiPlatformTargetConfigurationTransformer(configuration -> DefaultPlatform.INSTANCE);
+        new MultiPlatformTargetConfigurationTransformer(
+            configuration -> UnconfiguredPlatform.INSTANCE);
     DtoWithOptionalSetOfStrings dto =
         marshaller.populate(
             createCellRoots(filesystem),

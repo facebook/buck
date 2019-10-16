@@ -26,13 +26,13 @@ import java.util.Objects;
  *
  * <p>Used by default when platform is not specified.
  */
-public class DefaultPlatform implements Platform {
+public class UnconfiguredPlatform implements Platform {
 
-  public static final DefaultPlatform INSTANCE = new DefaultPlatform();
+  public static final UnconfiguredPlatform INSTANCE = new UnconfiguredPlatform();
 
-  private final int hashCode = Objects.hash(DefaultPlatform.class.getName());
+  private final int hashCode = Objects.hash(UnconfiguredPlatform.class.getName());
 
-  private DefaultPlatform() {}
+  private UnconfiguredPlatform() {}
 
   @Override
   public boolean matchesAll(Collection<ConstraintValue> constraintValues) {
@@ -42,7 +42,7 @@ public class DefaultPlatform implements Platform {
 
   @Override
   public String toString() {
-    return "DefaultPlatform";
+    return "UnconfiguredPlatform";
   }
 
   @Override
@@ -52,6 +52,6 @@ public class DefaultPlatform implements Platform {
 
   @Override
   public boolean equals(Object obj) {
-    return obj instanceof DefaultPlatform;
+    return obj instanceof UnconfiguredPlatform;
   }
 }

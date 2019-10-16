@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
@@ -63,11 +63,11 @@ public class PexToolProviderFactoryTest {
                     new FakeProcessExecutor(),
                     new AlwaysFoundExecutableFinder(),
                     TestRuleKeyConfigurationFactory.create(),
-                    () -> EmptyTargetConfiguration.INSTANCE))
+                    () -> UnconfiguredTargetConfiguration.INSTANCE))
             .get();
     assertThat(
         pexToolProvider
-            .getPexTool(resolver, EmptyTargetConfiguration.INSTANCE)
+            .getPexTool(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver.getSourcePathResolver()),
         hasConsecutiveItems("--hello", "--world"));
   }

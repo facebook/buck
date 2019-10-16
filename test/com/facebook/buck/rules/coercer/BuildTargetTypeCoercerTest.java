@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -57,7 +57,7 @@ public class BuildTargetTypeCoercerTest {
                 createCellRoots(filesystem),
                 filesystem,
                 basePath,
-                EmptyTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 "//foo:bar");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar"), seen);
@@ -72,7 +72,7 @@ public class BuildTargetTypeCoercerTest {
             createCellRoots(filesystem),
             filesystem,
             basePath,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "//foo::bar");
   }
 
@@ -84,7 +84,7 @@ public class BuildTargetTypeCoercerTest {
                 createCellRoots(filesystem),
                 filesystem,
                 basePath,
-                EmptyTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 ":bar");
 
     assertEquals(BuildTargetFactory.newInstance("//java/com/facebook/buck/example:bar"), seen);
@@ -98,7 +98,7 @@ public class BuildTargetTypeCoercerTest {
                 createCellRoots(filesystem),
                 filesystem,
                 basePath,
-                EmptyTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 "//foo:bar#baz");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar#baz"), seen);
@@ -112,7 +112,7 @@ public class BuildTargetTypeCoercerTest {
                 createCellRoots(filesystem),
                 filesystem,
                 basePath,
-                EmptyTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 "//foo:bar#baz,qux");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar#baz,qux"), seen);
@@ -126,7 +126,7 @@ public class BuildTargetTypeCoercerTest {
                 createCellRoots(filesystem),
                 filesystem,
                 basePath,
-                EmptyTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 ":bar#baz");
 
     BuildTarget expected =
@@ -160,7 +160,7 @@ public class BuildTargetTypeCoercerTest {
                 createCellRoots(filesystem),
                 filesystem,
                 stubPath,
-                EmptyTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 ":baz");
 
     BuildTarget expected = BuildTargetFactory.newInstance("//foo/bar:baz");

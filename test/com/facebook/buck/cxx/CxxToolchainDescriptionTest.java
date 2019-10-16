@@ -19,8 +19,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -101,27 +101,27 @@ public class CxxToolchainDescriptionTest {
     assertIsBinaryTool(
         resolver,
         pathTool,
-        platform.getCc().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+        platform.getCc().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         pathTool,
-        platform.getCxx().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+        platform.getCxx().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         pathTool,
-        platform.getCxxpp().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+        platform.getCxxpp().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         pathTool,
-        platform.getLd().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+        platform.getLd().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         binaryTool,
-        platform.getAr().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+        platform.getAr().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         binaryTool,
-        platform.getAs().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+        platform.getAs().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertEquals(Optional.empty(), platform.getAsm());
     assertEquals(Optional.empty(), platform.getAsmpp());
     assertEquals(Optional.empty(), platform.getHip());

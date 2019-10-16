@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -69,7 +69,7 @@ public class SourcePathTypeCoercerTest {
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             path);
 
     assertEquals(PathSourcePath.of(projectFilesystem, Paths.get(path)), sourcePath);
@@ -82,7 +82,7 @@ public class SourcePathTypeCoercerTest {
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "//:hello");
 
     assertEquals(
@@ -98,7 +98,7 @@ public class SourcePathTypeCoercerTest {
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ":hello");
 
     assertEquals(
@@ -118,7 +118,7 @@ public class SourcePathTypeCoercerTest {
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "hello//:hello");
 
     // Note that the important thing is that the root of the target has been set to `helloRoot` so
@@ -141,7 +141,7 @@ public class SourcePathTypeCoercerTest {
         cellRoots,
         projectFilesystem,
         pathRelativeToProjectRoot,
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         path.toString());
   }
 }

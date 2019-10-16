@@ -25,7 +25,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -62,7 +62,8 @@ public class CxxCompileStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    Compiler compiler = platform.getCc().resolve(resolver, EmptyTargetConfiguration.INSTANCE);
+    Compiler compiler =
+        platform.getCc().resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE);
     ImmutableList<String> compilerCommandPrefix =
         compiler.getCommandPrefix(resolver.getSourcePathResolver());
     Path output = filesystem.resolve(Paths.get("output.o"));
@@ -133,7 +134,8 @@ public class CxxCompileStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    Compiler compiler = platform.getCc().resolve(resolver, EmptyTargetConfiguration.INSTANCE);
+    Compiler compiler =
+        platform.getCc().resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE);
     ImmutableList<String> compilerCommandPrefix =
         compiler.getCommandPrefix(resolver.getSourcePathResolver());
     Path output = filesystem.resolve(Paths.get("output.o"));

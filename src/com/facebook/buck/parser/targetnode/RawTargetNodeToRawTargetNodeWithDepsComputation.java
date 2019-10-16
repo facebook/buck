@@ -23,9 +23,9 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.ImmutableRawTargetNodeWithDeps;
@@ -96,7 +96,7 @@ public class RawTargetNodeToRawTargetNodeWithDepsComputation
         ImmutableUnconfiguredBuildTargetView.of(cell.getRoot(), unconfiguredBuildTarget);
 
     BuildTarget buildTarget =
-        unconfiguredBuildTargetView.configure(EmptyTargetConfiguration.INSTANCE);
+        unconfiguredBuildTargetView.configure(UnconfiguredTargetConfiguration.INSTANCE);
 
     // All target nodes are created sequentially from raw target nodes
     // TODO: use RawTargetNodeToTargetNode transformation

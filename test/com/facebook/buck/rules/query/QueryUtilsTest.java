@@ -22,7 +22,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
@@ -40,7 +40,7 @@ public class QueryUtilsTest {
         QueryUtils.extractParseTimeTargets(
                 TARGET,
                 CELL_NAMES,
-                Query.of("deps(//some:rule)", EmptyTargetConfiguration.INSTANCE))
+                Query.of("deps(//some:rule)", UnconfiguredTargetConfiguration.INSTANCE))
             .collect(Collectors.toList()),
         Matchers.contains(BuildTargetFactory.newInstance("//some:rule")));
   }

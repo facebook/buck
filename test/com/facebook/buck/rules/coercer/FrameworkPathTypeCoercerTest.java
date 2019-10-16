@@ -20,7 +20,7 @@ import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -54,7 +54,7 @@ public class FrameworkPathTypeCoercerTest {
         createCellRoots(projectFilesystem),
         projectFilesystem,
         pathRelativeToProjectRoot,
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         "$FOOBAR/libfoo.a");
   }
 }

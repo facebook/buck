@@ -39,7 +39,7 @@ public class TargetConfigurationSerializerForTests implements TargetConfiguratio
 
   @Override
   public TargetConfiguration deserialize(String rawValue) {
-    return EmptyTargetConfiguration.INSTANCE;
+    return UnconfiguredTargetConfiguration.INSTANCE;
   }
 
   public static TargetConfigurationSerializer create(CellPathResolver cellPathResolver) {

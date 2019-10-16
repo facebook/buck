@@ -21,9 +21,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
@@ -60,7 +60,7 @@ public class SelectorFactoryTest {
             TestCellPathResolver.get(projectFilesystem),
             projectFilesystem,
             projectFilesystem.getRootPath(),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of(),
             new FlavorTypeCoercer());
 
@@ -74,7 +74,7 @@ public class SelectorFactoryTest {
             TestCellPathResolver.get(projectFilesystem),
             projectFilesystem,
             projectFilesystem.getRootPath(),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("DEFAULT", "flavor1", "//:a", "flavor2"),
             new FlavorTypeCoercer());
 
@@ -95,7 +95,7 @@ public class SelectorFactoryTest {
             TestCellPathResolver.get(projectFilesystem),
             projectFilesystem,
             projectFilesystem.getRootPath(),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("//:z", "flavor1", "//:a", "flavor2"),
             new FlavorTypeCoercer());
 
@@ -116,7 +116,7 @@ public class SelectorFactoryTest {
             TestCellPathResolver.get(projectFilesystem),
             projectFilesystem,
             projectFilesystem.getRootPath(),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("DEFAULT", "flavor1"),
             new FlavorTypeCoercer());
 
@@ -135,7 +135,7 @@ public class SelectorFactoryTest {
             TestCellPathResolver.get(projectFilesystem),
             projectFilesystem,
             projectFilesystem.getRootPath(),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("//:z", Runtime.NONE, "//:a", "flavor2"),
             new FlavorTypeCoercer());
 

@@ -19,10 +19,10 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -83,7 +83,7 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
       throw new HumanReadableException(e, "Cannot deserialize target configuration %s", rawValue);
     }
     if (node.size() == 0) {
-      return EmptyTargetConfiguration.INSTANCE;
+      return UnconfiguredTargetConfiguration.INSTANCE;
     }
     if (node.has("configuration")) {
       return ConfigurationForConfigurationTargets.INSTANCE;

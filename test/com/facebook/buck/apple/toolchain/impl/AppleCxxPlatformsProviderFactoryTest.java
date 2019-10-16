@@ -32,7 +32,7 @@ import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -86,7 +86,7 @@ public class AppleCxxPlatformsProviderFactoryTest {
             processExecutor,
             new ExecutableFinder(),
             TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            () -> UnconfiguredTargetConfiguration.INSTANCE);
 
     Optional<Path> appleDeveloperDir =
         new AppleDeveloperDirectoryProviderFactory()

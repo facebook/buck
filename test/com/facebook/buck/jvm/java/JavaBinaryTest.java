@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -87,7 +87,7 @@ public class JavaBinaryTest {
                 new FakeProjectFilesystem(),
                 params,
                 JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher(
-                    graphBuilder, EmptyTargetConfiguration.INSTANCE),
+                    graphBuilder, UnconfiguredTargetConfiguration.INSTANCE),
                 "com.facebook.base.Main",
                 null,
                 /* merge manifests */ true,

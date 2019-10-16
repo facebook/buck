@@ -68,7 +68,7 @@ public class BuildTargetFactoryTest {
                     ImmutableCanonicalCellName.of(Optional.of("xplat")),
                     "//example/base",
                     "one"))
-            .configure(EmptyTargetConfiguration.INSTANCE),
+            .configure(UnconfiguredTargetConfiguration.INSTANCE),
         buildTarget);
   }
 }

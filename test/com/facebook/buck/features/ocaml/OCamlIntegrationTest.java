@@ -30,7 +30,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
@@ -113,7 +113,7 @@ public class OCamlIntegrationTest {
             processExecutor,
             executableFinder,
             TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            () -> UnconfiguredTargetConfiguration.INSTANCE);
 
     OcamlToolchainFactory factory = new OcamlToolchainFactory();
     Optional<OcamlToolchain> toolchain =
@@ -126,7 +126,7 @@ public class OCamlIntegrationTest {
     try {
       ocamlPlatform
           .getOcamlCompiler()
-          .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+          .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
           .getCommandPrefix(resolver.getSourcePathResolver());
     } catch (HumanReadableException e) {
       assumeNoException(e);

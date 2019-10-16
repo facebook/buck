@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
@@ -225,7 +225,7 @@ public class SkylarkParamInfoTest {
         TestCellPathResolver.get(filesystem),
         filesystem,
         Paths.get(""),
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         arg,
         "foo");
 
@@ -248,7 +248,7 @@ public class SkylarkParamInfoTest {
         TestCellPathResolver.get(filesystem),
         filesystem,
         Paths.get(""),
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         arg,
         7);
   }
@@ -265,7 +265,7 @@ public class SkylarkParamInfoTest {
         TestCellPathResolver.get(filesystem),
         filesystem,
         BuildTargetFactory.newInstance("//foo:bar"),
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         arg,
         ImmutableMap.of("baz", "foo"));
 

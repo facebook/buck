@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -72,7 +72,7 @@ public class PrebuiltCxxLibraryTest {
         (PrebuiltCxxLibrary) builder.build(graphBuilder, filesystem, targetGraph);
     lib.getNativeLinkable(platform, graphBuilder)
         .getNativeLinkableInput(
-            Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE);
+            Linker.LinkableDepType.STATIC, graphBuilder, UnconfiguredTargetConfiguration.INSTANCE);
 
     FileHashLoader originalHashCache =
         new StackedFileHashCache(

@@ -26,9 +26,9 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -381,7 +381,8 @@ public class CxxBinaryDescriptionTest {
     CxxBinaryBuilder builder =
         new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setDepQuery(
-                Query.of("filter(transitive, deps(//:dep))", EmptyTargetConfiguration.INSTANCE));
+                Query.of(
+                    "filter(transitive, deps(//:dep))", UnconfiguredTargetConfiguration.INSTANCE));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             transitiveDepBuilder.build(), depBuilder.build(), builder.build());

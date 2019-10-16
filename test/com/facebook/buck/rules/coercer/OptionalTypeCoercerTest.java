@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
@@ -53,7 +53,7 @@ public class OptionalTypeCoercerTest {
             TestCellBuilder.createCellRoots(FILESYSTEM),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             null);
     assertThat(result, Matchers.equalTo(Optional.empty()));
   }
@@ -66,7 +66,7 @@ public class OptionalTypeCoercerTest {
             TestCellBuilder.createCellRoots(FILESYSTEM),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "something");
     assertThat(result, Matchers.equalTo(Optional.of("something")));
   }

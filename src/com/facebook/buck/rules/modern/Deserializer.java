@@ -19,8 +19,8 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldSerializationTag;
@@ -436,7 +436,7 @@ public class Deserializer {
       int type = stream.readInt();
       switch (type) {
         case Serializer.TARGET_CONFIGURATION_TYPE_EMPTY:
-          return EmptyTargetConfiguration.INSTANCE;
+          return UnconfiguredTargetConfiguration.INSTANCE;
         case Serializer.TARGET_CONFIGURATION_TYPE_DEFAULT:
           BuildTarget targetPlatform = BuildTargetTypeInfo.INSTANCE.createNotNull(this);
           return ImmutableRuleBasedTargetConfiguration.of(targetPlatform);

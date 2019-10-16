@@ -17,10 +17,10 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
@@ -62,7 +62,7 @@ public abstract class AbstractArtifactCacheEventFactory implements ArtifactCache
       ImmutableMap<String, String> metadata) {
     String configuration = metadata.get(CONFIGURATION_KEY);
     if (Strings.isNullOrEmpty(configuration)) {
-      return EmptyTargetConfiguration.INSTANCE;
+      return UnconfiguredTargetConfiguration.INSTANCE;
     }
     return targetConfigurationSerializer.deserialize(configuration);
   }

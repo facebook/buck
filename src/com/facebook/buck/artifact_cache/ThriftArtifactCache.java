@@ -33,10 +33,10 @@ import com.facebook.buck.artifact_cache.thrift.FetchResultType;
 import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.LazyPath;
@@ -685,7 +685,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   private TargetConfiguration getTargetConfigurationFromMetadata(
       ArtifactMetadata artifactMetadata) {
     if (Strings.isNullOrEmpty(artifactMetadata.getConfiguration())) {
-      return EmptyTargetConfiguration.INSTANCE;
+      return UnconfiguredTargetConfiguration.INSTANCE;
     }
     return targetConfigurationSerializer.deserialize(artifactMetadata.getConfiguration());
   }

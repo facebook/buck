@@ -24,8 +24,8 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -94,7 +94,7 @@ public class CxxGenruleDescriptionTest {
           Matchers.equalTo(
               ImmutableSet.copyOf(
                   CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.getParseTimeDeps(
-                      EmptyTargetConfiguration.INSTANCE))));
+                      UnconfiguredTargetConfiguration.INSTANCE))));
     }
   }
 

@@ -23,9 +23,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -121,7 +121,7 @@ public class HaskellLibraryDescriptionTest {
     Linker linker =
         CxxPlatformUtils.DEFAULT_PLATFORM
             .getLd()
-            .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE);
+            .resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE);
     ImmutableList<String> linkWholeFlags =
         FluentIterable.from(linker.linkWhole(StringArg.of("sentinel"), pathResolver))
             .transformAndConcat((input) -> Arg.stringifyList(input, pathResolver))
@@ -134,7 +134,7 @@ public class HaskellLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         Arg.stringify(staticInput.getArgs(), pathResolver),
         hasItems(linkWholeFlags.toArray(new String[0])));
@@ -145,7 +145,7 @@ public class HaskellLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.SHARED,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         Arg.stringify(sharedInput.getArgs(), pathResolver),
         not(hasItems(linkWholeFlags.toArray(new String[0]))));
@@ -220,7 +220,7 @@ public class HaskellLibraryDescriptionTest {
             cxxPlatform,
             Linker.LinkableDepType.STATIC,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         FluentIterable.from(staticInput.getArgs())
             .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, graphBuilder))

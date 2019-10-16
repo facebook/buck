@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -61,7 +61,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
             createCellRoots(filesystem),
             filesystem,
             basePath,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             input);
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
     assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.TREE);
@@ -76,7 +76,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
             createCellRoots(filesystem),
             filesystem,
             basePath,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             input);
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
     assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.NODE);

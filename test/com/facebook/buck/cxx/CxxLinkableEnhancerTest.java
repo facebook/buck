@@ -31,8 +31,8 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -273,7 +273,7 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.copyOf(
             CXX_PLATFORM
                 .getLd()
-                .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE)
+                .resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE)
                 .soname(soname));
 
     // Construct a CxxLink object which links as an executable.
@@ -513,7 +513,7 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput totalInput =
         NativeLinkables.getTransitiveNativeLinkableInput(
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             Iterables.transform(
                 roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
             LinkableDepType.STATIC);

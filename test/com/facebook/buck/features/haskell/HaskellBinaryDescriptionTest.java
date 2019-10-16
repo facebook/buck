@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -60,7 +60,8 @@ public class HaskellBinaryDescriptionTest {
     HaskellBinaryBuilder builder =
         new HaskellBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setDepQuery(
-                Query.of("filter(transitive, deps(//:dep))", EmptyTargetConfiguration.INSTANCE));
+                Query.of(
+                    "filter(transitive, deps(//:dep))", UnconfiguredTargetConfiguration.INSTANCE));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             transitiveDepBuilder.build(), depBuilder.build(), builder.build());

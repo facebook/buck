@@ -56,13 +56,13 @@ public class BuildTargetFactory {
     if (nameAndFlavor.length != 2) {
       return ImmutableUnconfiguredBuildTargetView.of(
               ImmutableUnflavoredBuildTargetView.of(root, cellName, parts[0], parts[1]))
-          .configure(EmptyTargetConfiguration.INSTANCE);
+          .configure(UnconfiguredTargetConfiguration.INSTANCE);
     }
     String[] flavors = nameAndFlavor[1].split(",");
     return ImmutableUnconfiguredBuildTargetView.of(
             ImmutableUnflavoredBuildTargetView.of(root, cellName, parts[0], nameAndFlavor[0]),
             RichStream.from(flavors).map(InternalFlavor::of))
-        .configure(EmptyTargetConfiguration.INSTANCE);
+        .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
 
   public static BuildTarget newInstance(Path cellPath, String baseName, String shortName) {
@@ -73,7 +73,7 @@ public class BuildTargetFactory {
                 ImmutableCanonicalCellName.of(arg.getCellName()),
                 arg.getBasePath(),
                 shortName))
-        .configure(EmptyTargetConfiguration.INSTANCE);
+        .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
 
   public static BuildTarget newInstance(
@@ -86,6 +86,6 @@ public class BuildTargetFactory {
                 arg.getBasePath(),
                 shortName),
             RichStream.from(flavors))
-        .configure(EmptyTargetConfiguration.INSTANCE);
+        .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
 }

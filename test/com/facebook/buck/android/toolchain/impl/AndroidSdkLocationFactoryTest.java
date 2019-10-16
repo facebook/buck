@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -71,7 +71,7 @@ public class AndroidSdkLocationFactoryTest {
             new DefaultProcessExecutor(new TestConsole()),
             new ExecutableFinder(),
             TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE));
+            () -> UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -92,7 +92,7 @@ public class AndroidSdkLocationFactoryTest {
                 new DefaultProcessExecutor(new TestConsole()),
                 new ExecutableFinder(),
                 TestRuleKeyConfigurationFactory.create(),
-                () -> EmptyTargetConfiguration.INSTANCE));
+                () -> UnconfiguredTargetConfiguration.INSTANCE));
 
     assertEquals(sdkPath, toolchain.get().getSdkRootPath());
   }

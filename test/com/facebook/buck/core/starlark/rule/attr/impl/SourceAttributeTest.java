@@ -24,7 +24,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
@@ -62,13 +62,17 @@ public class SourceAttributeTest {
 
     SourcePath coercedSource =
         attr.getValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "foo/bar.cpp");
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "foo/bar.cpp");
     SourcePath coercedTarget =
         attr.getValue(
             cellRoots,
             filesystem,
             Paths.get(""),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "//foo/bar:baz");
 
     assertEquals(expectedSource, coercedSource);
@@ -79,7 +83,8 @@ public class SourceAttributeTest {
   public void failsMandatoryCoercionProperly() throws CoerceFailedException {
     thrown.expect(CoerceFailedException.class);
 
-    attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 1);
+    attr.getValue(
+        cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, 1);
   }
 
   @Test
@@ -87,7 +92,11 @@ public class SourceAttributeTest {
     thrown.expect(CoerceFailedException.class);
 
     attr.getValue(
-        cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, Runtime.NONE);
+        cellRoots,
+        filesystem,
+        Paths.get(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
+        Runtime.NONE);
   }
 
   @Test
@@ -101,7 +110,7 @@ public class SourceAttributeTest {
         cellRoots,
         filesystem,
         Paths.get(""),
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         absolutePathString);
   }
 
@@ -126,7 +135,11 @@ public class SourceAttributeTest {
 
     SourcePath coerced =
         attr.getValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "//foo:bar");
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "//foo:bar");
 
     thrown.expect(IllegalStateException.class);
     attr.getPostCoercionTransform().postCoercionTransform(coerced, ImmutableMap.of());
@@ -136,7 +149,11 @@ public class SourceAttributeTest {
   public void failsTransformIfMissingDefaultInfo() throws CoerceFailedException {
     SourcePath coerced =
         attr.getValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "//foo:bar");
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "//foo:bar");
 
     thrown.expect(IllegalStateException.class);
     attr.getPostCoercionTransform()
@@ -158,7 +175,11 @@ public class SourceAttributeTest {
 
     SourcePath coercedTarget =
         attr.getValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "//foo:bar");
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "//foo:bar");
 
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("must have exactly one output");
@@ -179,7 +200,11 @@ public class SourceAttributeTest {
 
     SourcePath coercedTarget =
         attr.getValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "//foo:bar");
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "//foo:bar");
 
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("must have exactly one output");
@@ -204,12 +229,16 @@ public class SourceAttributeTest {
             cellRoots,
             filesystem,
             Paths.get(""),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "src/main.cpp");
 
     SourcePath coercedTarget =
         attr.getValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "//foo:bar");
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "//foo:bar");
 
     Object transformedSource =
         attr.getPostCoercionTransform().postCoercionTransform(coercedSource, deps);

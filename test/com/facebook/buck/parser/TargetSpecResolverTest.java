@@ -28,7 +28,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -234,7 +234,7 @@ public class TargetSpecResolverTest {
     return targetNodeTargetSpecResolver.resolveTargetSpecs(
         cell,
         specs,
-        EmptyTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         flavorEnhancer,
         state,
         (spec, nodes) -> spec.filter(nodes));

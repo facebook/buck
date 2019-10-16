@@ -18,9 +18,9 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -159,7 +159,7 @@ public class CxxPlatformUtils {
     CxxPlatform defaultPlatform = getDefaultPlatform(root);
     return defaultPlatform
             .getCpp()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .supportsHeaderMaps()
         ? HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
         : HeaderMode.SYMLINK_TREE_ONLY;

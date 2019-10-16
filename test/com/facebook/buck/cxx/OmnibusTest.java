@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
@@ -95,9 +95,13 @@ public class OmnibusTest {
         getCxxLinkRule(graphBuilder, libs.get("libomnibus.so")),
         pathResolver,
         a.getNativeLinkableInput(
-            Linker.LinkableDepType.STATIC_PIC, graphBuilder, EmptyTargetConfiguration.INSTANCE),
+            Linker.LinkableDepType.STATIC_PIC,
+            graphBuilder,
+            UnconfiguredTargetConfiguration.INSTANCE),
         b.getNativeLinkableInput(
-            Linker.LinkableDepType.STATIC_PIC, graphBuilder, EmptyTargetConfiguration.INSTANCE));
+            Linker.LinkableDepType.STATIC_PIC,
+            graphBuilder,
+            UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -142,7 +146,7 @@ public class OmnibusTest {
         pathResolver,
         root.getNativeLinkTargetInput(graphBuilder, pathResolver),
         b.getNativeLinkableInput(
-            Linker.LinkableDepType.SHARED, graphBuilder, EmptyTargetConfiguration.INSTANCE));
+            Linker.LinkableDepType.SHARED, graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertThat(
         libs.get(b.getBuildTarget().toString()),
         Matchers.not(Matchers.instanceOf(ExplicitBuildTargetSourcePath.class)));
@@ -150,7 +154,9 @@ public class OmnibusTest {
         getCxxLinkRule(graphBuilder, libs.get("libomnibus.so")),
         pathResolver,
         a.getNativeLinkableInput(
-            Linker.LinkableDepType.STATIC_PIC, graphBuilder, EmptyTargetConfiguration.INSTANCE));
+            Linker.LinkableDepType.STATIC_PIC,
+            graphBuilder,
+            UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -201,7 +207,7 @@ public class OmnibusTest {
         pathResolver,
         root.getNativeLinkTargetInput(graphBuilder, pathResolver),
         c.getNativeLinkableInput(
-            Linker.LinkableDepType.SHARED, graphBuilder, EmptyTargetConfiguration.INSTANCE));
+            Linker.LinkableDepType.SHARED, graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertThat(
         libs.get(b.getBuildTarget().toString()),
         Matchers.not(Matchers.instanceOf(ExplicitBuildTargetSourcePath.class)));
@@ -212,7 +218,9 @@ public class OmnibusTest {
         getCxxLinkRule(graphBuilder, libs.get("libomnibus.so")),
         pathResolver,
         a.getNativeLinkableInput(
-            Linker.LinkableDepType.STATIC_PIC, graphBuilder, EmptyTargetConfiguration.INSTANCE));
+            Linker.LinkableDepType.STATIC_PIC,
+            graphBuilder,
+            UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -273,7 +281,9 @@ public class OmnibusTest {
         getCxxLinkRule(graphBuilder, libs.get("libomnibus.so")),
         pathResolver,
         a.getNativeLinkableInput(
-            Linker.LinkableDepType.STATIC_PIC, graphBuilder, EmptyTargetConfiguration.INSTANCE));
+            Linker.LinkableDepType.STATIC_PIC,
+            graphBuilder,
+            UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -373,12 +383,16 @@ public class OmnibusTest {
         pathResolver,
         root.getNativeLinkTargetInput(graphBuilder, pathResolver),
         a.getNativeLinkableInput(
-            Linker.LinkableDepType.STATIC_PIC, graphBuilder, EmptyTargetConfiguration.INSTANCE));
+            Linker.LinkableDepType.STATIC_PIC,
+            graphBuilder,
+            UnconfiguredTargetConfiguration.INSTANCE));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(graphBuilder, libs.get("libomnibus.so")),
         pathResolver,
         b.getNativeLinkableInput(
-            Linker.LinkableDepType.STATIC_PIC, graphBuilder, EmptyTargetConfiguration.INSTANCE));
+            Linker.LinkableDepType.STATIC_PIC,
+            graphBuilder,
+            UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test

@@ -29,8 +29,8 @@ import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -367,7 +367,7 @@ public class JsLibraryDescriptionTest {
             .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
             .library(
                 target,
-                Query.of(String.format("deps(%s)", x), EmptyTargetConfiguration.INSTANCE),
+                Query.of(String.format("deps(%s)", x), UnconfiguredTargetConfiguration.INSTANCE),
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
@@ -411,7 +411,7 @@ public class JsLibraryDescriptionTest {
             .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
             .library(
                 target,
-                Query.of(String.format("deps(%s)", x), EmptyTargetConfiguration.INSTANCE),
+                Query.of(String.format("deps(%s)", x), UnconfiguredTargetConfiguration.INSTANCE),
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
@@ -443,7 +443,7 @@ public class JsLibraryDescriptionTest {
         scenarioBuilder
             .library(a)
             .library(b)
-            .library(target, Query.of(a.toString(), EmptyTargetConfiguration.INSTANCE), b)
+            .library(target, Query.of(a.toString(), UnconfiguredTargetConfiguration.INSTANCE), b)
             .build();
 
     JsLibrary lib = scenario.graphBuilder.getRuleWithType(target, JsLibrary.class);

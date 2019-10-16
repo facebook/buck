@@ -22,9 +22,9 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorList;
@@ -65,7 +65,7 @@ public class SelectorListFactoryTest {
           TestCellPathResolver.get(projectFilesystem),
           projectFilesystem,
           projectFilesystem.getRootPath(),
-          EmptyTargetConfiguration.INSTANCE,
+          UnconfiguredTargetConfiguration.INSTANCE,
           Lists.newArrayList(new Object(), new Object()),
           new FlavorTypeCoercer());
       fail("SelectorListFactory.create should throw an exception");
@@ -86,7 +86,7 @@ public class SelectorListFactoryTest {
             TestCellPathResolver.get(projectFilesystem),
             projectFilesystem,
             projectFilesystem.getRootPath(),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             Lists.newArrayList(flavorName),
             coercer);
 
@@ -103,7 +103,7 @@ public class SelectorListFactoryTest {
             TestCellPathResolver.get(projectFilesystem),
             projectFilesystem,
             projectFilesystem.getRootPath(),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             Lists.newArrayList(),
             coercer);
 
@@ -121,7 +121,7 @@ public class SelectorListFactoryTest {
             TestCellPathResolver.get(projectFilesystem),
             projectFilesystem,
             projectFilesystem.getRootPath(),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             Lists.newArrayList(Lists.newArrayList(flavorName1), Lists.newArrayList(flavorName2)),
             coercer);
 
@@ -150,7 +150,7 @@ public class SelectorListFactoryTest {
             TestCellPathResolver.get(projectFilesystem),
             projectFilesystem,
             projectFilesystem.getRootPath(),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             Lists.newArrayList(selectorValue, Lists.newArrayList(flavorName2)),
             coercer);
 
