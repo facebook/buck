@@ -29,10 +29,10 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
 import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.GraphTraversable;
+import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -66,6 +66,7 @@ import com.facebook.buck.query.TestsOfFunction;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.QueryTargetAccessor;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
@@ -392,7 +393,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
           e, "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
 
-    GraphTraversable<BuildTarget> traversable =
+    GraphTraversableWithPayload<BuildTarget, TargetNode<?>> traversable =
         target -> {
           TargetNode<?> node =
               Preconditions.checkNotNull(
@@ -408,18 +409,17 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
           //  - there are no new edges or nodes to be discovered by descending into the "old" nodes,
           // making this node safe to skip.
           if (graph.getNodes().contains(node)) {
-            return ImmutableSet.<BuildTarget>of().iterator();
+            return new Pair<>(node, ImmutableSet.<BuildTarget>of().iterator());
           }
-          return node.getParseDeps().iterator();
+          return new Pair<>(node, node.getParseDeps().iterator());
         };
 
-    AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetNodeTraversal =
-        new AcyclicDepthFirstPostOrderTraversal<>(traversable);
+    AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, TargetNode<?>> targetNodeTraversal =
+        new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
     try {
-      for (BuildTarget buildTarget : targetNodeTraversal.traverse(newBuildTargets)) {
-        TargetNode<?> node =
-            Preconditions.checkNotNull(
-                targetsToNodes.get(buildTarget), "Couldn't find TargetNode for %s", buildTarget);
+      for (Map.Entry<BuildTarget, TargetNode<?>> entry :
+          targetNodeTraversal.traverse(newBuildTargets).entrySet()) {
+        TargetNode<?> node = entry.getValue();
         graph.addNode(node);
         for (BuildTarget dep : node.getParseDeps()) {
           graph.addEdge(

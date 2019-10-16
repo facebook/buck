@@ -24,11 +24,13 @@ import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
 import com.facebook.buck.core.util.graph.CycleException;
-import com.facebook.buck.core.util.graph.GraphTraversable;
+import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.LinkedHashMap;
 
 public class RuleBasedPlatformResolver implements PlatformResolver {
 
@@ -43,26 +45,24 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
 
   @Override
   public NamedPlatform getPlatform(BuildTarget buildTarget) {
-    GraphTraversable<BuildTarget> traversable =
+    GraphTraversableWithPayload<BuildTarget, PlatformRule> traversable =
         target -> {
           PlatformRule platformRule = getPlatformRule(target);
-          return platformRule.getDeps().iterator();
+          return new Pair<>(platformRule, platformRule.getDeps().iterator());
         };
 
-    AcyclicDepthFirstPostOrderTraversal<BuildTarget> platformTraversal =
-        new AcyclicDepthFirstPostOrderTraversal<>(traversable);
+    AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, PlatformRule> platformTraversal =
+        new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
 
-    ImmutableSet<BuildTarget> platformTargets;
+    LinkedHashMap<BuildTarget, PlatformRule> platformTargets;
     try {
-      platformTargets =
-          ImmutableSet.copyOf(platformTraversal.traverse(ImmutableList.of(buildTarget)));
+      platformTargets = platformTraversal.traverse(ImmutableList.of(buildTarget));
     } catch (CycleException e) {
       throw new HumanReadableException(e.getMessage());
     }
 
     ImmutableSet<ConstraintValue> constraintValues =
-        platformTargets.stream()
-            .map(this::getPlatformRule)
+        platformTargets.values().stream()
             .flatMap(rule -> rule.getConstrainValues().stream())
             .map(constraintResolver::getConstraintValue)
             .collect(ImmutableSet.toImmutableSet());
