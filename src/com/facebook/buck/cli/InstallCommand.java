@@ -893,9 +893,11 @@ public class InstallCommand extends BuildCommand {
         }
       }
       String debugOptionMessage =
-          "(waiting for debugger) Run lldb and then "
-              + debugCommand.get()
-              + " to run the debugger.";
+          waitForDebugger
+              ? "(waiting for debugger) Run lldb and then "
+                  + debugCommand.get()
+                  + " to run the debugger."
+              : "";
       params
           .getBuckEventBus()
           .post(
@@ -905,7 +907,7 @@ public class InstallCommand extends BuildCommand {
                       .getAnsi()
                       .asHighlightedSuccessText("Successfully launched %s. %s"),
                   getArguments().get(0),
-                  waitForDebugger ? debugOptionMessage : ""));
+                  debugOptionMessage));
     } else {
       params
           .getBuckEventBus()
