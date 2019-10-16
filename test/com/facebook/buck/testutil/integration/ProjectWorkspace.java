@@ -823,27 +823,48 @@ public class ProjectWorkspace extends AbstractWorkspace {
               observedObject);
           break;
         } else {
-          assertFileContentsEqual(expected, actual);
+          assertFileContentsEqual(expected, actual, false);
         }
         break;
-
+      case "iml":
+      case "xml":
+        assertFileContentsEqual(expected, actual, true);
+        break;
       default:
-        assertFileContentsEqual(expected, actual);
+        assertFileContentsEqual(expected, actual, false);
     }
   }
 
-  private void assertFileContentsEqual(Path expectedFile, Path observedFile) throws IOException {
+  private void assertFileContentsEqual(Path expectedFile, Path observedFile, boolean isXml)
+      throws IOException {
     String cleanPathToObservedFile =
         MoreStrings.withoutSuffix(
             templatePath.relativize(expectedFile).toString(), EXPECTED_SUFFIX);
 
     String expectedFileContent = getFileContents(expectedFile);
     String observedFileContent = new String(Files.readAllBytes(observedFile), UTF_8);
+
     // It is possible, on Windows, to have Git keep "\n"-style newlines, or convert them to
     // "\r\n"-style newlines.  Support both ways by normalizing to "\n"-style newlines.
     // See https://help.github.com/articles/dealing-with-line-endings/ for more information.
     expectedFileContent = expectedFileContent.replace("\r\n", "\n");
     observedFileContent = observedFileContent.replace("\r\n", "\n");
+
+    if (isXml) {
+      // `javax.xml.Transformer` has different (buggy) behavior on Java 9+ vs. Java 8-. See
+      // http://java9.wtf/xml-transformer/ for the details. In Java 9+, spurious empty lines get
+      // inserted, and leading whitespacing can be different, so we normalize before comparison.
+      // This has apparently been fixed in Java 14 (see JDK-8223291).
+
+      // Remove leading whitespace.
+      expectedFileContent = expectedFileContent.replaceAll("(?m)^[ \t]+", "");
+      observedFileContent = observedFileContent.replaceAll("(?m)^[ \t]+", "");
+
+      // Remove empty lines.
+      expectedFileContent = expectedFileContent.replaceAll("\n+", "\n");
+      observedFileContent = observedFileContent.replaceAll("\n+", "\n");
+    }
+
     assertEquals(
         String.format(
             "In %s, expected content of %s to match that of %s.",
