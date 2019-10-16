@@ -154,16 +154,20 @@ public class SkylarkUserDefinedRuleTest {
   }
 
   @Test
-  public void movesNameToFirstArgAndPutsMandatoryArgsAheadOfOptionalOnes()
+  public void movesNameToFirstArgAndPutsMandatoryArgsAheadOfOptionalOnesAndSorts()
       throws EvalException, LabelSyntaxException {
     ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.of(
-            "arg1", new ImmutableStringAttribute("some string", "", false, ImmutableList.of()),
-            "arg2", new ImmutableStringAttribute("some string", "", true, ImmutableList.of()),
-            "arg3", new ImmutableIntAttribute(5, "", false, ImmutableList.of()),
-            "arg4", new ImmutableIntAttribute(5, "", true, ImmutableList.of()));
+        ImmutableMap.<String, AttributeHolder>builder()
+            .put("arg1", new ImmutableStringAttribute("some string", "", false, ImmutableList.of()))
+            .put("arg9", new ImmutableStringAttribute("some string", "", true, ImmutableList.of()))
+            .put("arg2", new ImmutableStringAttribute("some string", "", true, ImmutableList.of()))
+            .put("arg3", new ImmutableIntAttribute(5, "", false, ImmutableList.of()))
+            .put("arg8", new ImmutableIntAttribute(5, "", false, ImmutableList.of()))
+            .put("arg4", new ImmutableIntAttribute(5, "", true, ImmutableList.of()))
+            .build();
 
-    ImmutableList<String> expectedOrder = ImmutableList.of("name", "arg2", "arg4", "arg1", "arg3");
+    ImmutableList<String> expectedOrder =
+        ImmutableList.of("name", "arg2", "arg4", "arg9", "arg1", "arg3", "arg8");
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(location, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);

@@ -307,10 +307,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
         Map.Entry<String, Attribute<?>> left, Map.Entry<String, Attribute<?>> right) {
       Attribute<?> leftAttr = left.getValue();
       Attribute<?> rightAttr = right.getValue();
-      if (leftAttr == rightAttr) {
-        return 0;
-      }
-      if (leftAttr.equals(rightAttr)) {
+
+      if (left.getKey().equals(right.getKey())) {
         return 0;
       }
       if ("name".equals(left.getKey())) {
@@ -320,7 +318,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
         return 1;
       }
       if (leftAttr.getMandatory() == rightAttr.getMandatory()) {
-        return 0;
+        return left.getKey().compareTo(right.getKey());
       }
       return leftAttr.getMandatory() ? -1 : 1;
     }
