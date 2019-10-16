@@ -260,24 +260,18 @@ public abstract class TargetNodeTranslator {
   private <A extends ConstructorArg> Optional<A> translateConstructorArg(
       CellPathResolver cellPathResolver, String targetBaseName, TargetNode<A> node) {
     A constructorArg = node.getConstructorArg();
-    if (node.getDescription() instanceof TargetTranslatorOverridingDescription) {
-      return ((TargetTranslatorOverridingDescription<A>) node.getDescription())
-          .translateConstructorArg(
-              node.getBuildTarget(), node.getCellNames(), this, constructorArg);
-    } else {
-      ConstructorArgBuilder<A> newArgAndBuild =
-          CoercedTypeCache.instantiateSkeleton(
-              typeCoercerFactory,
-              node.getDescription().getConstructorArgType(),
-              node.getBuildTarget());
-      boolean modified =
-          translateConstructorArg(
-              cellPathResolver, targetBaseName, constructorArg, newArgAndBuild.getBuilder());
-      if (!modified) {
-        return Optional.empty();
-      }
-      return Optional.of(newArgAndBuild.build());
+    ConstructorArgBuilder<A> newArgAndBuild =
+        CoercedTypeCache.instantiateSkeleton(
+            typeCoercerFactory,
+            node.getDescription().getConstructorArgType(),
+            node.getBuildTarget());
+    boolean modified =
+        translateConstructorArg(
+            cellPathResolver, targetBaseName, constructorArg, newArgAndBuild.getBuilder());
+    if (!modified) {
+      return Optional.empty();
     }
+    return Optional.of(newArgAndBuild.build());
   }
 
   /**

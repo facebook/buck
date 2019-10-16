@@ -16,7 +16,6 @@ TRANSLATOR_SRCS = [
     "TargetNodeTranslator.java",
     "TargetTranslatable.java",
     "TargetTranslator.java",
-    "TargetTranslatorOverridingDescription.java",
 ]
 
 java_library(
