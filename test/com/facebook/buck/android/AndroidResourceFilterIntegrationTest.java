@@ -21,12 +21,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.TestAndroidSdkLocationFactory;
-import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
-import com.facebook.buck.android.toolchain.impl.AndroidPlatformTargetProducer;
-import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
@@ -44,7 +38,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
@@ -60,49 +53,34 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class AndroidResourceFilterIntegrationTest {
 
-  private static boolean isBuildToolsNew;
-  private static Supplier<Tool> aaptProvider;
-
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
+  private AndroidSdkResolver sdkResolver;
 
   private ProjectFilesystem filesystem;
 
-  @BeforeClass
-  public static void findBuildToolsVersion() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
+  private boolean isBuildToolsNew() {
+    return sdkResolver.isBuildToolsVersionAtLeast("21");
+  }
 
-    AndroidSdkLocation androidSdkLocation = TestAndroidSdkLocationFactory.create(filesystem);
-    AndroidBuildToolsResolver buildToolsResolver =
-        new AndroidBuildToolsResolver(AndroidNdkHelper.DEFAULT_CONFIG, androidSdkLocation);
-    AndroidBuildToolsLocation buildToolsLocation =
-        AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath());
-    aaptProvider =
-        AndroidPlatformTargetProducer.getDefaultPlatformTarget(
-                filesystem,
-                buildToolsLocation,
-                androidSdkLocation,
-                Optional.empty(),
-                Optional.empty())
-            .getAaptExecutable();
-    String buildToolsVersion = buildToolsLocation.getBuildToolsPath().getFileName().toString();
-    isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") >= 0;
+  private Supplier<Tool> getAapt() {
+    return sdkResolver.getAndroidPlatformTarget().getAaptExecutable();
   }
 
   @Before
   public void setUp() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    sdkResolver = new AndroidSdkResolver(workspace);
+
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
@@ -118,7 +96,7 @@ public class AndroidResourceFilterIntegrationTest {
                 filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
-    if (isBuildToolsNew) {
+    if (isBuildToolsNew()) {
       zipInspector.assertFileExists("res/drawable-mdpi-v4/app_icon.png");
       zipInspector.assertFileExists("res/drawable-hdpi-v4/app_icon.png");
       zipInspector.assertFileExists("res/drawable-xhdpi-v4/app_icon.png");
@@ -141,7 +119,7 @@ public class AndroidResourceFilterIntegrationTest {
                 filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
-    if (isBuildToolsNew) {
+    if (isBuildToolsNew()) {
       zipInspector.assertFileExists("res/drawable-mdpi-v4/app_icon.png");
       zipInspector.assertFileDoesNotExist("res/drawable-hdpi-v4/app_icon.png");
       zipInspector.assertFileDoesNotExist("res/drawable-xhdpi-v4/app_icon.png");
@@ -163,7 +141,7 @@ public class AndroidResourceFilterIntegrationTest {
             BuildTargetPaths.getGenPath(
                 filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     String iconPath =
-        isBuildToolsNew ? "res/drawable-mdpi-v4/app_icon.png" : "res/drawable-mdpi/app_icon.png";
+        isBuildToolsNew() ? "res/drawable-mdpi-v4/app_icon.png" : "res/drawable-mdpi/app_icon.png";
     long firstImageCrc = new ZipInspector(apkFile).getCrc(iconPath);
 
     workspace.copyFile(
@@ -198,7 +176,7 @@ public class AndroidResourceFilterIntegrationTest {
                 filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
-    if (isBuildToolsNew) {
+    if (isBuildToolsNew()) {
       zipInspector.assertFileDoesNotExist("res/drawable-mdpi-v4/app_icon.png");
       zipInspector.assertFileExists("res/drawable-hdpi-v4/app_icon.png");
       zipInspector.assertFileExists("res/drawable-xhdpi-v4/app_icon.png");
@@ -318,7 +296,7 @@ public class AndroidResourceFilterIntegrationTest {
 
     zipInspector.assertFileExists("assets/strings/fr.fbstr");
 
-    if (isBuildToolsNew) {
+    if (isBuildToolsNew()) {
       zipInspector.assertFileExists("res/drawable-xhdpi-v4/app_icon.png");
       zipInspector.assertFileDoesNotExist("res/drawable-hdpi-v4/app_icon.png");
       zipInspector.assertFileDoesNotExist("res/drawable-mdpi-v4/app_icon.png");
@@ -406,7 +384,7 @@ public class AndroidResourceFilterIntegrationTest {
         workspace.runCommand(
             ImmutableList.<String>builder()
                 .addAll(
-                    aaptProvider
+                    getAapt()
                         .get()
                         .getCommandPrefix(new TestActionGraphBuilder().getSourcePathResolver()))
                 .add("dump")
