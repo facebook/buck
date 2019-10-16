@@ -19,9 +19,30 @@
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/android/annotations/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/aosp/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/core/util/immutables/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/math/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/math/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/math/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/math/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice_macros/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice_macros/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice_macros/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice_macros/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/buckv2/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/buckv2/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/buckv2/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/skunkworks/protobuck/buckv2/benches" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/ant-out" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
+      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/buckv2/target" />
+      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice/target" />
+      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice_macros/target" />
+      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/math/target" />
+      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/target" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/intellij" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/java11" />
