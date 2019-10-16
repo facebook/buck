@@ -204,10 +204,10 @@ abstract class AbstractParser implements Parser {
 
     TargetGraph targetGraph = null;
     try {
-      for (Map.Entry<BuildTarget, TargetNode<?>> targetAndNode :
-          targetNodeTraversal.traverse(toExplore).entrySet()) {
-        BuildTarget target = targetAndNode.getKey();
-        TargetNode<?> targetNode = targetAndNode.getValue();
+      for (Pair<BuildTarget, TargetNode<?>> targetAndNode :
+          targetNodeTraversal.traverse(toExplore)) {
+        BuildTarget target = targetAndNode.getFirst();
+        TargetNode<?> targetNode = targetAndNode.getSecond();
 
         assertTargetIsCompatible(state, targetNode);
 

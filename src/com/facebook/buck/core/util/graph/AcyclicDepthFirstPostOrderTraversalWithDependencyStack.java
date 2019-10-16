@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -20,26 +20,36 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.Iterables;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 /**
  * Performs a depth-first, post-order traversal over a DAG.
  *
+ * <p>This version of algorithm tracks traversal path in {@link DependencyStack} structure and
+ * provides it to user in {@link GraphTraversableWithDependencyStack} callback.
+ *
  * <p>If a cycle is encountered, a {@link CycleException} is thrown by {@link #traverse(Iterable)}.
  *
  * @param <T> the type of node in the graph
  */
-public class AcyclicDepthFirstPostOrderTraversal<T> {
+public class AcyclicDepthFirstPostOrderTraversalWithDependencyStack<T> {
 
   private final AcyclicDepthFirstPostOrderTraversalWithPayloadAndDependencyStack<T, Unit> traversal;
 
-  public AcyclicDepthFirstPostOrderTraversal(GraphTraversable<T> traversable) {
+  /**
+   * @param dependencyStackChild a function to construct a child stack from a stack and a new graph
+   *     node. In the most cases it is just an invocation of {@link
+   *     DependencyStack#child(DependencyStack.Element)}.
+   */
+  public AcyclicDepthFirstPostOrderTraversalWithDependencyStack(
+      GraphTraversableWithDependencyStack<T> traversable,
+      BiFunction<DependencyStack, T, DependencyStack> dependencyStackChild) {
     this.traversal =
         new AcyclicDepthFirstPostOrderTraversalWithPayloadAndDependencyStack<>(
-            (n, dependencyStack) -> {
-              return new Pair<>(Unit.UNIT, traversable.findChildren(n));
-            },
-            (dependencyStack, t) -> DependencyStack.root());
+            (node, dependencyStack) ->
+                new Pair<>(Unit.UNIT, traversable.findChildren(node, dependencyStack)),
+            dependencyStackChild);
   }
 
   public Iterable<T> traverse(Iterable<? extends T> initialNodes) throws CycleException {
