@@ -20,6 +20,7 @@ import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInst
 
 import com.facebook.buck.cli.OwnersReport.Builder;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
@@ -254,7 +255,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     }
 
     try {
-      return parser.getTargetNode(parserState, buildTarget);
+      return parser.getTargetNode(parserState, buildTarget, DependencyStack.top(buildTarget));
     } catch (BuildFileParseException e) {
       throw new QueryException(e, "Error getting target node for %s\n%s", target, e.getMessage());
     }
@@ -376,7 +377,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     try {
       List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
       for (BuildTarget buildTarget : newBuildTargets) {
-        discoverNewTargetsConcurrently(buildTarget, jobsCache)
+        discoverNewTargetsConcurrently(buildTarget, DependencyStack.top(buildTarget), jobsCache)
             .ifPresent(dep -> depsFuture.add(dep));
       }
       Futures.allAsList(depsFuture).get();
@@ -435,7 +436,9 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   }
 
   private Optional<ListenableFuture<Unit>> discoverNewTargetsConcurrently(
-      BuildTarget buildTarget, ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache)
+      BuildTarget buildTarget,
+      DependencyStack dependencyStack,
+      ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache)
       throws BuildFileParseException {
     ListenableFuture<Unit> job = jobsCache.get(buildTarget);
     if (job != null) {
@@ -448,13 +451,13 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
 
     ListenableFuture<Unit> future =
         Futures.transformAsync(
-            parser.getTargetNodeJob(parserState, buildTarget),
+            parser.getTargetNodeJob(parserState, buildTarget, dependencyStack),
             targetNode -> {
               targetsToNodes.put(buildTarget, targetNode);
               List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
               Set<BuildTarget> parseDeps = targetNode.getParseDeps();
               for (BuildTarget parseDep : parseDeps) {
-                discoverNewTargetsConcurrently(parseDep, jobsCache)
+                discoverNewTargetsConcurrently(parseDep, dependencyStack.child(parseDep), jobsCache)
                     .ifPresent(
                         depWork ->
                             depsFuture.add(

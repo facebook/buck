@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.config.impl;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
@@ -39,8 +40,9 @@ public class ConfigurationRuleSelectableResolver implements SelectableResolver {
   }
 
   @Override
-  public Selectable getSelectable(BuildTarget buildTarget) {
-    ConfigurationRule configurationRule = configurationRuleResolver.getRule(buildTarget);
+  public Selectable getSelectable(BuildTarget buildTarget, DependencyStack dependencyStack) {
+    ConfigurationRule configurationRule =
+        configurationRuleResolver.getRule(buildTarget, dependencyStack);
     if (!(configurationRule instanceof ProvidesSelectable)) {
       throw new HumanReadableException(
           "%s is used to resolve configurable attributes but it has the wrong type", buildTarget);

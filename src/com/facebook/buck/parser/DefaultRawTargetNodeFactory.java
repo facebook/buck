@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -57,6 +58,7 @@ public class DefaultRawTargetNodeFactory implements RawTargetNodeFactory {
       Cell cell,
       Path buildFile,
       UnconfiguredBuildTargetView target,
+      DependencyStack dependencyStack,
       Map<String, Object> rawAttributes) {
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);

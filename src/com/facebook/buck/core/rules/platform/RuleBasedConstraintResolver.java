@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
@@ -23,11 +24,7 @@ import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.util.concurrent.UncheckedExecutionException;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * {@link ConstraintResolver} that uses configuration rules obtained from {@link
@@ -46,65 +43,58 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
    * @throws HumanReadableException if no rule is associated with the target.
    */
   private <T extends ConfigurationRule> T getRuleOfType(
-      BuildTarget buildTarget, String ruleName, Class<T> ruleClass) {
-    ConfigurationRule rule = configurationRuleResolver.getRule(buildTarget);
+      BuildTarget buildTarget,
+      DependencyStack dependencyStack,
+      String ruleName,
+      Class<T> ruleClass) {
+    ConfigurationRule rule = configurationRuleResolver.getRule(buildTarget, dependencyStack);
     try {
       return ruleClass.cast(rule);
     } catch (ClassCastException e) {
       throw new HumanReadableException(
-          "%s is used as %s, but has wrong type", buildTarget, ruleName);
+          dependencyStack, "%s is used as %s, but has wrong type", buildTarget, ruleName);
     }
   }
-
-  private final LoadingCache<BuildTarget, ConstraintSetting> constraintSettingCache =
-      CacheBuilder.newBuilder()
-          .build(
-              new CacheLoader<BuildTarget, ConstraintSetting>() {
-                @Override
-                public ConstraintSetting load(BuildTarget buildTarget) {
-                  // Validate rule exists and have correct type
-                  getRuleOfType(buildTarget, "constraint_setting", ConstraintSettingRule.class);
-
-                  return ConstraintSetting.of(buildTarget);
-                }
-              });
-
-  private final LoadingCache<BuildTarget, ConstraintValue> constraintValueCache =
-      CacheBuilder.newBuilder()
-          .build(
-              new CacheLoader<BuildTarget, ConstraintValue>() {
-                @Override
-                public ConstraintValue load(BuildTarget buildTarget) {
-                  ConstraintValueRule constraintValueRule =
-                      getRuleOfType(buildTarget, "constraint_value", ConstraintValueRule.class);
-
-                  return ConstraintValue.of(
-                      buildTarget,
-                      getConstraintSetting(constraintValueRule.getConstraintSetting()));
-                }
-              });
 
   public RuleBasedConstraintResolver(ConfigurationRuleResolver configurationRuleResolver) {
     this.configurationRuleResolver = configurationRuleResolver;
   }
 
-  @Override
-  public ConstraintSetting getConstraintSetting(BuildTarget buildTarget) {
-    try {
-      return constraintSettingCache.getUnchecked(buildTarget);
-    } catch (UncheckedExecutionException e) {
-      Throwables.throwIfUnchecked(e.getCause());
-      throw new RuntimeException(e.getCause());
-    }
-  }
+  private final ConcurrentHashMap<BuildTarget, ConstraintSetting> constraintSettingCache =
+      new ConcurrentHashMap<>();
 
   @Override
-  public ConstraintValue getConstraintValue(BuildTarget buildTarget) {
-    try {
-      return constraintValueCache.getUnchecked(buildTarget);
-    } catch (UncheckedExecutionException e) {
-      Throwables.throwIfUnchecked(e.getCause());
-      throw new RuntimeException(e.getCause());
-    }
+  public ConstraintSetting getConstraintSetting(
+      BuildTarget buildTarget, DependencyStack dependencyStack) {
+    return constraintSettingCache.computeIfAbsent(
+        buildTarget,
+        t -> {
+          // Validate rule exists
+          getRuleOfType(
+              buildTarget, dependencyStack, "constraint_setting", ConstraintSettingRule.class);
+
+          return ConstraintSetting.of(buildTarget);
+        });
+  }
+
+  private final ConcurrentHashMap<BuildTarget, ConstraintValue> constraintValueCache =
+      new ConcurrentHashMap<>();
+
+  @Override
+  public ConstraintValue getConstraintValue(
+      BuildTarget buildTarget, DependencyStack dependencyStack) {
+    return constraintValueCache.computeIfAbsent(
+        buildTarget,
+        t -> {
+          ConstraintValueRule constraintValueRule =
+              getRuleOfType(
+                  buildTarget, dependencyStack, "constraint_value", ConstraintValueRule.class);
+
+          return ConstraintValue.of(
+              buildTarget,
+              getConstraintSetting(
+                  constraintValueRule.getConstraintSetting(),
+                  dependencyStack.child(constraintValueRule.getConstraintSetting())));
+        });
   }
 }

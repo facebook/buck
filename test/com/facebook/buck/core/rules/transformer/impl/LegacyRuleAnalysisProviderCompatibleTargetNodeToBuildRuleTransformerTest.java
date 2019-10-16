@@ -25,6 +25,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -160,6 +161,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             FakeTargetNodeArg.builder().setName("name").build(),
             projectFilesystem,
             target,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),

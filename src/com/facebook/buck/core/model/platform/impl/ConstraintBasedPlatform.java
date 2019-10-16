@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.platform.impl;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.platform.ConstraintValue;
@@ -41,7 +42,8 @@ public class ConstraintBasedPlatform implements NamedPlatform {
    * constraints (platform constraints is a superset of the provided constraints).
    */
   @Override
-  public boolean matchesAll(Collection<ConstraintValue> constraintValues) {
+  public boolean matchesAll(
+      Collection<ConstraintValue> constraintValues, DependencyStack dependencyStack) {
     return this.constraintValues.containsAll(constraintValues);
   }
 

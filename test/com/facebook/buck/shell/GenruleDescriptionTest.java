@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
@@ -100,6 +101,7 @@ public class GenruleDescriptionTest {
             new ThrowingTargetConfigurationTransformer(),
             new ThrowingSelectableConfigurationContext(),
             buildTarget,
+            DependencyStack.root(),
             builder,
             declaredDeps,
             ImmutableSet.builder(),
@@ -111,6 +113,7 @@ public class GenruleDescriptionTest {
                 constructorArg,
                 projectFilesystem,
                 buildTarget,
+                DependencyStack.root(),
                 declaredDeps.build(),
                 ImmutableSortedSet.of(),
                 visibilityPatterns.build(),

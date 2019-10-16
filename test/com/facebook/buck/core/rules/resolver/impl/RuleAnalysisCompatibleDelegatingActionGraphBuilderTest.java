@@ -25,6 +25,7 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -123,6 +124,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
             FakeRuleDescriptionArg.builder().setName("foo").build(),
             projectFilesystem,
             target,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),

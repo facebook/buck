@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
@@ -84,6 +85,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFromAttrM
       Cell cell,
       Path buildFile,
       BuildTarget target,
+      DependencyStack dependencyStack,
       Map<String, Object> rawNode,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope) {
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
@@ -119,6 +121,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFromAttrM
                 new ThrowingTargetConfigurationTransformer(),
                 new ThrowingSelectableConfigurationContext(),
                 target,
+                dependencyStack,
                 builder,
                 declaredDeps,
                 ImmutableSet.builder(),
@@ -141,6 +144,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFromAttrM
           cell,
           buildFile,
           target,
+          dependencyStack,
           description,
           constructorArg,
           declaredDeps.build(),
@@ -160,6 +164,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFromAttrM
       Cell cell,
       Path buildFile,
       BuildTarget target,
+      DependencyStack dependencyStack,
       BaseDescription<T> description,
       Object constructorArg,
       ImmutableSet<BuildTarget> declaredDeps,
@@ -174,6 +179,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFromAttrM
               constructorArg,
               cell.getFilesystem(),
               target,
+              dependencyStack,
               declaredDeps,
               ImmutableSortedSet.of(),
               visibilityPatterns,

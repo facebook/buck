@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.model.platform.impl;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
@@ -24,7 +25,8 @@ public class ThrowingPlatformResolver implements TargetPlatformResolver {
 
   /** Unconditionally throw */
   @Override
-  public Platform getTargetPlatform(TargetConfiguration targetConfiguration) {
+  public Platform getTargetPlatform(
+      TargetConfiguration targetConfiguration, DependencyStack dependencyStack) {
     throw new UnsupportedOperationException();
   }
 }

@@ -19,6 +19,7 @@ import com.facebook.buck.android.packageable.AndroidPackageableFilter;
 import com.facebook.buck.android.packageable.ConstraintBasedAndroidPackageableFilter;
 import com.facebook.buck.android.packageable.NoopAndroidPackageableFilter;
 import com.facebook.buck.android.toolchain.platform.AndroidMultiPlatform;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
@@ -56,7 +57,7 @@ class AndroidPackageableFilterFactory {
     Platform platform =
         configurationRuleRegistry
             .getTargetPlatformResolver()
-            .getTargetPlatform(targetConfiguration);
+            .getTargetPlatform(targetConfiguration, DependencyStack.top(buildTarget));
 
     if (!(platform instanceof AndroidMultiPlatform)) {
       return new NoopAndroidPackageableFilter();

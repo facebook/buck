@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleType;
@@ -101,7 +102,8 @@ public class RawTargetNodeToTargetNodeFactoryTest {
             ImmutableSet.of());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
-    TargetPlatformResolver targetPlatformResolver = configuration -> UnconfiguredPlatform.INSTANCE;
+    TargetPlatformResolver targetPlatformResolver =
+        (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
     RawTargetNodeToTargetNodeFactory factory =
         new RawTargetNodeToTargetNodeFactory(
             typeCoercerFactory,
@@ -122,6 +124,7 @@ public class RawTargetNodeToTargetNodeFactoryTest {
             cell,
             Paths.get("a/b/BUCK"),
             buildTarget,
+            DependencyStack.root(),
             node,
             id -> SimplePerfEvent.scope(Optional.empty(), null, null));
 

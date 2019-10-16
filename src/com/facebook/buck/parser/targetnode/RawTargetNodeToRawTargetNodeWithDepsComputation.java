@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.targetnode;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -98,6 +99,9 @@ public class RawTargetNodeToRawTargetNodeWithDepsComputation
     BuildTarget buildTarget =
         unconfiguredBuildTargetView.configure(UnconfiguredTargetConfiguration.INSTANCE);
 
+    // TODO(nga): obtain proper dependency stack
+    DependencyStack dependencyStack = DependencyStack.top(key.getRawTargetNode().getBuildTarget());
+
     // All target nodes are created sequentially from raw target nodes
     // TODO: use RawTargetNodeToTargetNode transformation
     TargetNode<?> targetNode =
@@ -105,6 +109,7 @@ public class RawTargetNodeToRawTargetNodeWithDepsComputation
             cell,
             buildFileAbsolutePath,
             buildTarget,
+            dependencyStack,
             key.getRawTargetNode(),
             id -> SimplePerfEvent.scope(Optional.empty(), PerfEventId.of("raw_to_targetnode")));
 

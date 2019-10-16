@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
@@ -24,5 +25,6 @@ public interface MultiPlatformRule extends ConfigurationRule {
   @Override
   BuildTarget getBuildTarget();
 
-  Platform createPlatform(RuleBasedPlatformResolver ruleBasedPlatformResolver);
+  Platform createPlatform(
+      RuleBasedPlatformResolver ruleBasedPlatformResolver, DependencyStack dependencyStack);
 }

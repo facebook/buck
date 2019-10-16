@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -76,6 +77,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       TargetConfigurationTransformer targetConfigurationTransformer,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       ConstructorArgBuilder<T> constructorArgBuilder,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
@@ -108,7 +110,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       if (info.splitConfiguration()
           && info.getTypeCoercer().supportsConcatenation()
           && targetConfigurationTransformer.needsTransformation(
-              buildTarget.getTargetConfiguration())) {
+              buildTarget.getTargetConfiguration(), dependencyStack)) {
         attributeValue =
             createAttributeWithConfigurationTransformation(
                 cellPathResolver,
@@ -117,6 +119,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 targetConfigurationTransformer,
                 configurationContext,
                 buildTarget,
+                dependencyStack,
                 buildTarget.getTargetConfiguration(),
                 configurationDeps,
                 info,
@@ -130,6 +133,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 selectorListResolver,
                 configurationContext,
                 buildTarget,
+                dependencyStack,
                 buildTarget.getTargetConfiguration(),
                 configurationDeps,
                 info,
@@ -154,6 +158,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       TargetConfigurationTransformer targetConfigurationTransformer,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       TargetConfiguration targetConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       ParamInfo info,
@@ -162,7 +167,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       throws CoerceFailedException {
     ImmutableList.Builder<Object> valuesForConcatenation = ImmutableList.builder();
     for (TargetConfiguration nestedTargetConfiguration :
-        targetConfigurationTransformer.transform(targetConfiguration)) {
+        targetConfigurationTransformer.transform(targetConfiguration, dependencyStack)) {
       Object configuredAttributeValue =
           createAttribute(
               cellPathResolver,
@@ -170,6 +175,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
               selectorListResolver,
               configurationContext.withTargetConfiguration(nestedTargetConfiguration),
               buildTarget.getUnconfiguredBuildTargetView().configure(nestedTargetConfiguration),
+              dependencyStack,
               nestedTargetConfiguration,
               configurationDeps,
               info,
@@ -190,6 +196,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       SelectorListResolver selectorListResolver,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       TargetConfiguration targetConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       ParamInfo info,
@@ -209,6 +216,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
         configurationContext,
         selectorListResolver,
         buildTarget,
+        dependencyStack,
         configurationDeps,
         info.getName(),
         attributeWithSelectableValue);
@@ -258,6 +266,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       SelectableConfigurationContext configurationContext,
       SelectorListResolver selectorListResolver,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       String attributeName,
       Object rawAttributeValue) {
@@ -266,7 +275,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       SelectorList<T> selectorList = (SelectorList<T>) rawAttributeValue;
       value =
           selectorListResolver.resolveList(
-              configurationContext, buildTarget, attributeName, selectorList);
+              configurationContext, buildTarget, attributeName, selectorList, dependencyStack);
       addSelectorListConfigurationDepsToBuilder(configurationDeps, selectorList);
     } else {
       value = (T) rawAttributeValue;

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -71,7 +72,12 @@ public class DefaultRawTargetNodeFactoryTest {
             .put("within_view", ImmutableList.of("//b/..."))
             .build();
     RawTargetNode rawTargetNode =
-        factory.create(cell, cell.getRoot().resolve("a/b/BUCK"), buildTarget, attributes);
+        factory.create(
+            cell,
+            cell.getRoot().resolve("a/b/BUCK"),
+            buildTarget,
+            DependencyStack.root(),
+            attributes);
 
     assertEquals(RuleType.of("java_library", RuleType.Kind.BUILD), rawTargetNode.getRuleType());
     assertEquals(buildTarget.getData(), rawTargetNode.getBuildTarget());

@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.select.impl;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
@@ -31,7 +32,8 @@ public class ThrowingSelectorListResolver implements SelectorListResolver {
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
       String attributeName,
-      SelectorList<T> selectorList) {
+      SelectorList<T> selectorList,
+      DependencyStack dependencyStack) {
     throw new IllegalStateException();
   }
 }

@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -134,7 +135,9 @@ public class ParsePipelineTest {
         fixture
             .getTargetNodeParsePipeline()
             .getNode(
-                cell, BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:lib"));
+                cell,
+                BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:lib"),
+                DependencyStack.root());
 
     waitForAll(
         libTargetNode.getBuildDeps(),
@@ -176,7 +179,8 @@ public class ParsePipelineTest {
           .getTargetNodeParsePipeline()
           .getNode(
               cell,
-              BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:notthere"));
+              BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:notthere"),
+              DependencyStack.root());
     }
   }
 
@@ -216,7 +220,9 @@ public class ParsePipelineTest {
       fixture
           .getTargetNodeParsePipeline()
           .getNode(
-              cell, BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:base"));
+              cell,
+              BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:base"),
+              DependencyStack.root());
     }
   }
 
@@ -293,7 +299,9 @@ public class ParsePipelineTest {
       fixture
           .getTargetNodeParsePipeline()
           .getNode(
-              cell, BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//a:lib"));
+              cell,
+              BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//a:lib"),
+              DependencyStack.root());
     }
   }
 
@@ -306,8 +314,8 @@ public class ParsePipelineTest {
             .getTargetNodeParsePipeline()
             .getNode(
                 cell,
-                BuildTargetFactory.newInstance(
-                    cell.getFilesystem().getRootPath(), "//error:error"));
+                BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//error:error"),
+                DependencyStack.root());
         Assert.fail("Expected BuildFileParseException");
       } catch (BuildFileParseException e) {
         assertThat(e.getMessage(), containsString("crash!"));
@@ -318,7 +326,8 @@ public class ParsePipelineTest {
           .getNode(
               cell,
               BuildTargetFactory.newInstance(
-                  cell.getFilesystem().getRootPath(), "//correct:correct"));
+                  cell.getFilesystem().getRootPath(), "//correct:correct"),
+              DependencyStack.root());
     }
   }
 

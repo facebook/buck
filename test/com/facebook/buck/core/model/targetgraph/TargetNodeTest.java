@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -170,6 +171,7 @@ public class TargetNodeTest {
                 createPopulatedConstructorArg(buildTarget, ImmutableMap.of("name", "bar")),
                 filesystem,
                 buildTarget,
+                DependencyStack.root(),
                 ImmutableSet.of(),
                 ImmutableSortedSet.of(configurationBuildTarget),
                 ImmutableSet.of(),
@@ -249,6 +251,7 @@ public class TargetNodeTest {
             createPopulatedConstructorArg(buildTarget, rawNode),
             filesystem,
             buildTarget,
+            DependencyStack.root(),
             declaredDeps,
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
@@ -277,6 +280,7 @@ public class TargetNodeTest {
           new ThrowingTargetConfigurationTransformer(),
           new ThrowingSelectableConfigurationContext(),
           buildTarget,
+          DependencyStack.root(),
           builder,
           ImmutableSet.builder(),
           ImmutableSet.builder(),

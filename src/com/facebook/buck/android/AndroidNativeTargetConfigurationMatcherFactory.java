@@ -17,6 +17,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.android.toolchain.platform.AndroidMultiPlatform;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.NamedPlatform;
@@ -46,11 +47,12 @@ class AndroidNativeTargetConfigurationMatcherFactory {
   public static AndroidNativeTargetConfigurationMatcher create(
       ConfigurationRuleRegistry configurationRuleRegistry,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       Set<TargetCpuType> cpuFilters) {
     Platform platform =
         configurationRuleRegistry
             .getTargetPlatformResolver()
-            .getTargetPlatform(buildTarget.getTargetConfiguration());
+            .getTargetPlatform(buildTarget.getTargetConfiguration(), dependencyStack);
     if (!(platform instanceof AndroidMultiPlatform)) {
       return new NoopAndroidNativeTargetConfigurationMatcher();
     }

@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
@@ -118,7 +119,11 @@ public class RawTargetNodePipeline implements AutoCloseable {
                               cell.getRoot(), cell.getCanonicalName(), from, buildFile));
                   allNodeJobs.add(
                       cache.getJobWithCacheLookup(
-                          cell, target, () -> dispatchComputeNode(cell, target, from), eventBus));
+                          cell,
+                          target,
+                          () ->
+                              dispatchComputeNode(cell, target, DependencyStack.top(target), from),
+                          eventBus));
                 }
 
                 return Futures.allAsList(allNodeJobs.build());
@@ -133,20 +138,24 @@ public class RawTargetNodePipeline implements AutoCloseable {
 
   /** Get build target by name, load if necessary */
   public ListenableFuture<RawTargetNode> getNodeJob(
-      Cell cell, UnconfiguredBuildTargetView buildTarget) throws BuildTargetException {
+      Cell cell, UnconfiguredBuildTargetView buildTarget, DependencyStack dependencyStack)
+      throws BuildTargetException {
     return cache.getJobWithCacheLookup(
         cell,
         buildTarget,
         () ->
             Futures.transformAsync(
                 buildTargetRawNodeParsePipeline.getNodeJob(cell, buildTarget),
-                from -> dispatchComputeNode(cell, buildTarget, from),
+                from -> dispatchComputeNode(cell, buildTarget, dependencyStack, from),
                 executorService),
         eventBus);
   }
 
   private ListenableFuture<RawTargetNode> dispatchComputeNode(
-      Cell cell, UnconfiguredBuildTargetView buildTarget, Map<String, Object> from)
+      Cell cell,
+      UnconfiguredBuildTargetView buildTarget,
+      DependencyStack dependencyStack,
+      Map<String, Object> from)
       throws BuildTargetException {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
@@ -168,6 +177,7 @@ public class RawTargetNodePipeline implements AutoCloseable {
               cell.getBuckConfigView(ParserConfig.class)
                   .getAbsolutePathToBuildFile(cell, buildTarget),
               buildTarget,
+              dependencyStack,
               from);
     }
     return Futures.immediateFuture(result);

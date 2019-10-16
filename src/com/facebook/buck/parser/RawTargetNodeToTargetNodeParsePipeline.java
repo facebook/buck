@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.model.AbstractRuleType;
@@ -113,6 +114,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
   private TargetNode<?> computeNodeInScope(
       Cell cell,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       RawTargetNode rawNode,
       Function<PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException {
@@ -122,6 +124,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
             cell.getBuckConfigView(ParserConfig.class)
                 .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTargetView()),
             buildTarget,
+            dependencyStack,
             rawNode,
             perfEventScopeFunction);
 
@@ -133,9 +136,13 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
               Cell depCell = cell.getCellIgnoringVisibilityCheck(depTarget.getCellPath());
               try {
                 if (depTarget.isFlavored()) {
-                  getNodeJob(depCell, depTarget.withoutFlavors());
+                  BuildTarget depTargetWithoutFlavors = depTarget.withoutFlavors();
+                  getNodeJob(
+                      depCell,
+                      depTargetWithoutFlavors,
+                      dependencyStack.child(depTargetWithoutFlavors));
                 }
-                getNodeJob(depCell, depTarget);
+                getNodeJob(depCell, depTarget, dependencyStack.child(depTarget));
               } catch (BuildTargetException e) {
                 // No biggie, we'll hit the error again in the non-speculative path.
                 LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
@@ -147,14 +154,16 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
   }
 
   private ListenableFuture<TargetNode<?>> dispatchComputeNode(
-      Cell cell, BuildTarget buildTarget, RawTargetNode from) throws BuildTargetException {
+      Cell cell, BuildTarget buildTarget, DependencyStack dependencyStack, RawTargetNode from)
+      throws BuildTargetException {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
     }
-    return Futures.immediateFuture(computeNode(cell, buildTarget, from));
+    return Futures.immediateFuture(computeNode(cell, buildTarget, dependencyStack, from));
   }
 
-  private TargetNode<?> computeNode(Cell cell, BuildTarget buildTarget, RawTargetNode from) {
+  private TargetNode<?> computeNode(
+      Cell cell, BuildTarget buildTarget, DependencyStack dependencyStack, RawTargetNode from) {
     try (Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
             eventBus,
@@ -169,7 +178,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
               SimplePerfEvent.scopeIgnoringShortEvents(
                   eventBus, perfEventId1, scope, minimumPerfEventTimeMs, TimeUnit.MILLISECONDS);
 
-      return computeNodeInScope(cell, buildTarget, from, perfEventScopeFunction);
+      return computeNodeInScope(cell, buildTarget, dependencyStack, from, perfEventScopeFunction);
     }
   }
 
@@ -182,7 +191,8 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
       UnconfiguredBuildTargetView unconfiguredTarget,
       TargetConfiguration globalTargetConfiguration) {
     ListenableFuture<RawTargetNode> rawTargetNodeFuture =
-        rawTargetNodePipeline.getNodeJob(cell, unconfiguredTarget);
+        rawTargetNodePipeline.getNodeJob(
+            cell, unconfiguredTarget, DependencyStack.top(unconfiguredTarget));
     return Futures.transformAsync(
         rawTargetNodeFuture,
         rawTargetNode ->
@@ -299,17 +309,22 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
       }
     }
     BuildTarget configuredTarget = unconfiguredTarget.configure(targetConfiguration);
-    return getNodeJobWithRawNode(cell, configuredTarget, Optional.of(rawTargetNode));
+    return getNodeJobWithRawNode(
+        cell, configuredTarget, DependencyStack.top(configuredTarget), Optional.of(rawTargetNode));
   }
 
   /** Get build target by name, load if necessary */
-  public ListenableFuture<TargetNode<?>> getNodeJob(Cell cell, BuildTarget buildTarget)
+  public ListenableFuture<TargetNode<?>> getNodeJob(
+      Cell cell, BuildTarget buildTarget, DependencyStack dependencyStack)
       throws BuildTargetException {
-    return getNodeJobWithRawNode(cell, buildTarget, Optional.empty());
+    return getNodeJobWithRawNode(cell, buildTarget, dependencyStack, Optional.empty());
   }
 
   private ListenableFuture<TargetNode<?>> getNodeJobWithRawNode(
-      Cell cell, BuildTarget buildTarget, Optional<RawTargetNode> rawNodeIfKnown)
+      Cell cell,
+      BuildTarget buildTarget,
+      DependencyStack dependencyStack,
+      Optional<RawTargetNode> rawNodeIfKnown)
       throws BuildTargetException {
     return cache.getJobWithCacheLookup(
         cell,
@@ -317,13 +332,13 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
         () -> {
           if (rawNodeIfKnown.isPresent()) {
             return Futures.submitAsync(
-                () -> dispatchComputeNode(cell, buildTarget, rawNodeIfKnown.get()),
+                () -> dispatchComputeNode(cell, buildTarget, dependencyStack, rawNodeIfKnown.get()),
                 executorService);
           } else {
             return Futures.transformAsync(
                 rawTargetNodePipeline.getNodeJob(
-                    cell, buildTarget.getUnconfiguredBuildTargetView()),
-                from -> dispatchComputeNode(cell, buildTarget, from),
+                    cell, buildTarget.getUnconfiguredBuildTargetView(), dependencyStack),
+                from -> dispatchComputeNode(cell, buildTarget, dependencyStack, from),
                 executorService);
           }
         },
@@ -339,12 +354,12 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
    * @throws BuildFileParseException for syntax errors in the build file.
    * @throws BuildTargetException if the buildTarget is malformed
    */
-  public TargetNode<?> getNode(Cell cell, BuildTarget buildTarget)
+  public TargetNode<?> getNode(Cell cell, BuildTarget buildTarget, DependencyStack dependencyStack)
       throws BuildFileParseException, BuildTargetException {
     Preconditions.checkState(!shuttingDown.get());
 
     try {
-      return getNodeJob(cell, buildTarget).get();
+      return getNodeJob(cell, buildTarget, dependencyStack).get();
     } catch (Exception e) {
       throw handleFutureGetException(e);
     }

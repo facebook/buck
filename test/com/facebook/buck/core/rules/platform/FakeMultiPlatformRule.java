@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.NamedPlatform;
@@ -42,12 +43,17 @@ public class FakeMultiPlatformRule implements MultiPlatformRule {
   }
 
   @Override
-  public Platform createPlatform(RuleBasedPlatformResolver ruleBasedPlatformResolver) {
-    NamedPlatform basePlatform = ruleBasedPlatformResolver.getPlatform(this.basePlatform);
+  public Platform createPlatform(
+      RuleBasedPlatformResolver ruleBasedPlatformResolver, DependencyStack dependencyStack) {
+    NamedPlatform basePlatform =
+        ruleBasedPlatformResolver.getPlatform(this.basePlatform, dependencyStack);
 
     ImmutableList<NamedPlatform> nestedPlatforms =
         this.nestedPlatforms.stream()
-            .map(ruleBasedPlatformResolver::getPlatform)
+            .map(
+                (BuildTarget buildTarget1) ->
+                    ruleBasedPlatformResolver.getPlatform(
+                        buildTarget1, dependencyStack.child(buildTarget1)))
             .collect(ImmutableList.toImmutableList());
 
     return new FakeMultiPlatform(buildTarget, basePlatform, nestedPlatforms);

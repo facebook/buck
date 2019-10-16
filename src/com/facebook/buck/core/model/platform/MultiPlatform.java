@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.model.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Collection;
 
@@ -29,8 +30,9 @@ import java.util.Collection;
 public interface MultiPlatform extends NamedPlatform {
 
   @Override
-  default boolean matchesAll(Collection<ConstraintValue> constraintValues) {
-    return getBasePlatform().matchesAll(constraintValues);
+  default boolean matchesAll(
+      Collection<ConstraintValue> constraintValues, DependencyStack dependencyStack) {
+    return getBasePlatform().matchesAll(constraintValues, dependencyStack);
   }
 
   /** Access base platform of this platform, for example, CPU-neutral Android platform */

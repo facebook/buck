@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -42,20 +43,23 @@ public class MultiPlatformTargetConfigurationTransformerTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//:platform");
     MultiPlatformTargetConfigurationTransformer transformer =
         new MultiPlatformTargetConfigurationTransformer(
-            configuration -> new ConstraintBasedPlatform(platformBuildTarget, ImmutableSet.of()));
+            (configuration, dependencyStack) ->
+                new ConstraintBasedPlatform(platformBuildTarget, ImmutableSet.of()));
 
     assertFalse(
         transformer.needsTransformation(
-            ImmutableRuleBasedTargetConfiguration.of(platformBuildTarget)));
+            ImmutableRuleBasedTargetConfiguration.of(platformBuildTarget), DependencyStack.root()));
   }
 
   @Test
   public void noTransformationForEmptyPlatform() {
     MultiPlatformTargetConfigurationTransformer transformer =
         new MultiPlatformTargetConfigurationTransformer(
-            configuration -> UnconfiguredPlatform.INSTANCE);
+            (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
 
-    assertFalse(transformer.needsTransformation(UnconfiguredTargetConfiguration.INSTANCE));
+    assertFalse(
+        transformer.needsTransformation(
+            UnconfiguredTargetConfiguration.INSTANCE, DependencyStack.root()));
   }
 
   @Test
@@ -64,7 +68,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//:multi_platform");
     MultiPlatformTargetConfigurationTransformer transformer =
         new MultiPlatformTargetConfigurationTransformer(
-            configuration ->
+            (configuration, dependencyStack) ->
                 new FakeMultiPlatform(
                     multiPlatformBuildTarget,
                     new ConstraintBasedPlatform(
@@ -74,7 +78,8 @@ public class MultiPlatformTargetConfigurationTransformerTest {
 
     assertTrue(
         transformer.needsTransformation(
-            ImmutableRuleBasedTargetConfiguration.of(multiPlatformBuildTarget)));
+            ImmutableRuleBasedTargetConfiguration.of(multiPlatformBuildTarget),
+            DependencyStack.root()));
   }
 
   @Test
@@ -83,11 +88,13 @@ public class MultiPlatformTargetConfigurationTransformerTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//:platform");
     MultiPlatformTargetConfigurationTransformer transformer =
         new MultiPlatformTargetConfigurationTransformer(
-            configuration -> new ConstraintBasedPlatform(platformBuildTarget, ImmutableSet.of()));
+            (configuration, dependencyStack) ->
+                new ConstraintBasedPlatform(platformBuildTarget, ImmutableSet.of()));
 
     thrown.expectMessage("Not multi platform: //:platform");
 
-    transformer.transform(ImmutableRuleBasedTargetConfiguration.of(platformBuildTarget));
+    transformer.transform(
+        ImmutableRuleBasedTargetConfiguration.of(platformBuildTarget), DependencyStack.root());
   }
 
   @Test
@@ -103,7 +110,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
 
     MultiPlatformTargetConfigurationTransformer transformer =
         new MultiPlatformTargetConfigurationTransformer(
-            configuration ->
+            (configuration, dependencyStack) ->
                 new FakeMultiPlatform(
                     multiPlatformTarget,
                     new ConstraintBasedPlatform(basePlatformTarget, ImmutableSet.of()),
@@ -112,7 +119,8 @@ public class MultiPlatformTargetConfigurationTransformerTest {
                         new ConstraintBasedPlatform(nestedPlatform2Target, ImmutableSet.of()))));
 
     ImmutableList<TargetConfiguration> configurations =
-        transformer.transform(ImmutableRuleBasedTargetConfiguration.of(multiPlatformTarget));
+        transformer.transform(
+            ImmutableRuleBasedTargetConfiguration.of(multiPlatformTarget), DependencyStack.root());
 
     assertEquals(
         ImmutableList.of(

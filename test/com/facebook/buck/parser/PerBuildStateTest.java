@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -139,7 +140,7 @@ public class PerBuildStateTest {
 
     // First, only load one target from the build file so the file is parsed, but only one of the
     // TargetNodes will be cached.
-    TargetNode<?> targetNode = perBuildState.getTargetNode(fooLib1Target);
+    TargetNode<?> targetNode = perBuildState.getTargetNode(fooLib1Target, DependencyStack.root());
     assertThat(targetNode.getBuildTarget(), equalTo(fooLib1Target));
 
     // Now, try to load the entire build file and get all TargetNodes.

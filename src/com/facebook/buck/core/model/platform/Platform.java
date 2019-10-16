@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import java.util.Collection;
 
 /**
@@ -28,5 +29,5 @@ import java.util.Collection;
 public interface Platform {
 
   /** @return {@code true} if the current platform matches the provided constraints. */
-  boolean matchesAll(Collection<ConstraintValue> constraintValues);
+  boolean matchesAll(Collection<ConstraintValue> constraintValues, DependencyStack dependencyStack);
 }

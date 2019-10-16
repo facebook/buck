@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.Platform;
@@ -36,13 +37,15 @@ public class RuleBasedMultiPlatformResolver implements PlatformResolver {
   }
 
   @Override
-  public Platform getPlatform(BuildTarget buildTarget) {
-    MultiPlatformRule multiPlatformRule = getMultiPlatformRule(buildTarget);
-    return multiPlatformRule.createPlatform(ruleBasedPlatformResolver);
+  public Platform getPlatform(BuildTarget buildTarget, DependencyStack dependencyStack) {
+    MultiPlatformRule multiPlatformRule = getMultiPlatformRule(buildTarget, dependencyStack);
+    return multiPlatformRule.createPlatform(ruleBasedPlatformResolver, dependencyStack);
   }
 
-  private MultiPlatformRule getMultiPlatformRule(BuildTarget buildTarget) {
-    ConfigurationRule configurationRule = configurationRuleResolver.getRule(buildTarget);
+  private MultiPlatformRule getMultiPlatformRule(
+      BuildTarget buildTarget, DependencyStack dependencyStack) {
+    ConfigurationRule configurationRule =
+        configurationRuleResolver.getRule(buildTarget, dependencyStack);
     if (!(configurationRule instanceof MultiPlatformRule)) {
       throw new HumanReadableException(
           "%s is used as a multiplatform, but not declared using an appropriate rule",

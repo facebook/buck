@@ -15,10 +15,11 @@
  */
 package com.facebook.buck.core.model.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 
 /** An interface to access a platform using a build target. */
 public interface PlatformResolver {
   /** @return {@link Platform} for a given build target. */
-  Platform getPlatform(BuildTarget buildTarget);
+  Platform getPlatform(BuildTarget buildTarget, DependencyStack dependencyStack);
 }

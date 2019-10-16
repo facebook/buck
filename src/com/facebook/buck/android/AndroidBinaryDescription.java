@@ -30,6 +30,7 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -158,6 +159,8 @@ public class AndroidBinaryDescription
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
+    // TODO(nga): obtain proper dependency stack
+    DependencyStack dependencyStack = DependencyStack.top(buildTarget);
     AndroidBinaryGraphEnhancer graphEnhancer =
         androidBinaryGraphEnhancerFactory.create(
             toolchainProvider,
@@ -168,6 +171,7 @@ public class AndroidBinaryDescription
             cellRoots,
             context.getTargetGraph(),
             buildTarget,
+            dependencyStack,
             projectFilesystem,
             params,
             graphBuilder,

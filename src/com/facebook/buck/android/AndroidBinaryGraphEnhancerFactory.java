@@ -22,6 +22,7 @@ import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -60,6 +61,7 @@ public class AndroidBinaryGraphEnhancerFactory {
       CellPathResolver cellPathResolver,
       TargetGraph targetGraph,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
@@ -200,7 +202,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         rulesToExcludeFromDex,
         useProtoFormat,
         AndroidNativeTargetConfigurationMatcherFactory.create(
-            configurationRuleRegistry, buildTarget, args.getCpuFilters()));
+            configurationRuleRegistry, buildTarget, dependencyStack, args.getCpuFilters()));
   }
 
   private ImmutableSet<String> addFallbackLocales(ImmutableSet<String> locales) {

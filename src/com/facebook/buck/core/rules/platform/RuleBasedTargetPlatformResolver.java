@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.RuleBasedTargetConfiguration;
@@ -39,7 +40,8 @@ public class RuleBasedTargetPlatformResolver implements TargetPlatformResolver {
   }
 
   @Override
-  public Platform getTargetPlatform(TargetConfiguration targetConfiguration) {
+  public Platform getTargetPlatform(
+      TargetConfiguration targetConfiguration, DependencyStack dependencyStack) {
     Preconditions.checkState(
         targetConfiguration instanceof RuleBasedTargetConfiguration,
         "Wrong target configuration type: " + targetConfiguration);
@@ -47,6 +49,6 @@ public class RuleBasedTargetPlatformResolver implements TargetPlatformResolver {
     BuildTarget buildTarget =
         ((RuleBasedTargetConfiguration) targetConfiguration).getTargetPlatform();
 
-    return platformResolver.getPlatform(buildTarget);
+    return platformResolver.getPlatform(buildTarget, dependencyStack);
   }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.select.impl;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.select.AbstractSelectorListResolver;
 import com.facebook.buck.core.select.Selectable;
@@ -43,10 +44,11 @@ public class DefaultSelectorListResolver extends AbstractSelectorListResolver {
   protected <T> T resolveSelector(
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       String attributeName,
       Selector<T> selector) {
     Map<Selectable, Object> matchingConditions =
-        findMatchingConditions(configurationContext, selector);
+        findMatchingConditions(configurationContext, selector, dependencyStack);
 
     Object matchingResult = null;
     assertNotMultipleMatches(matchingConditions, attributeName, buildTarget);

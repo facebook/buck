@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -59,16 +60,18 @@ public class PerBuildState implements AutoCloseable {
     this.configurationRuleRegistry = configurationRuleRegistry;
   }
 
-  TargetNode<?> getTargetNode(BuildTarget target) throws BuildFileParseException {
+  TargetNode<?> getTargetNode(BuildTarget target, DependencyStack dependencyStack)
+      throws BuildFileParseException {
     Cell owningCell = cellManager.getCell(target);
 
-    return targetNodeParsePipeline.getNode(owningCell, target);
+    return targetNodeParsePipeline.getNode(owningCell, target, dependencyStack);
   }
 
-  ListenableFuture<TargetNode<?>> getTargetNodeJob(BuildTarget target) throws BuildTargetException {
+  ListenableFuture<TargetNode<?>> getTargetNodeJob(
+      BuildTarget target, DependencyStack dependencyStack) throws BuildTargetException {
     Cell owningCell = cellManager.getCell(target);
 
-    return targetNodeParsePipeline.getNodeJob(owningCell, target);
+    return targetNodeParsePipeline.getNodeJob(owningCell, target, dependencyStack);
   }
 
   ImmutableList<TargetNode<?>> getAllTargetNodes(

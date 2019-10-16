@@ -16,6 +16,7 @@
 package com.facebook.buck.android.toolchain.platform;
 
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.NamedPlatform;
 import com.facebook.buck.core.model.platform.Platform;
@@ -46,13 +47,17 @@ public class AndroidMultiPlatformRule implements MultiPlatformRule {
   }
 
   @Override
-  public Platform createPlatform(RuleBasedPlatformResolver ruleBasedPlatformResolver) {
-    Platform basePlatform = ruleBasedPlatformResolver.getPlatform(this.basePlatform);
+  public Platform createPlatform(
+      RuleBasedPlatformResolver ruleBasedPlatformResolver, DependencyStack dependencyStack) {
+    Platform basePlatform =
+        ruleBasedPlatformResolver.getPlatform(this.basePlatform, dependencyStack);
 
     ImmutableSortedMap.Builder<TargetCpuType, NamedPlatform> nestedPlatforms =
         ImmutableSortedMap.naturalOrder();
     for (Map.Entry<TargetCpuType, BuildTarget> e : this.nestedPlatforms.entrySet()) {
-      nestedPlatforms.put(e.getKey(), ruleBasedPlatformResolver.getPlatform(e.getValue()));
+      nestedPlatforms.put(
+          e.getKey(),
+          ruleBasedPlatformResolver.getPlatform(e.getValue(), dependencyStack.child(e.getValue())));
     }
 
     return new AndroidMultiPlatform(buildTarget, basePlatform, nestedPlatforms.build());

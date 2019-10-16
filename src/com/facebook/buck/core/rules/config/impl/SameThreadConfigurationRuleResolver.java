@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.config.impl;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -26,6 +27,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.base.Preconditions;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -33,15 +35,16 @@ import javax.annotation.Nullable;
  * Provides a mechanism for mapping between a {@link UnconfiguredBuildTargetView} and the {@link
  * ConfigurationRule} it represents.
  *
- * <p>This resolver performs all computations on the same thread {@link #getRule} was called from.
+ * <p>This resolver performs all computations on the same thread {@link
+ * ConfigurationRuleResolver#getRule} was called from.
  */
 public class SameThreadConfigurationRuleResolver implements ConfigurationRuleResolver {
 
-  private final Function<BuildTarget, TargetNode<?>> targetNodeSupplier;
+  private final BiFunction<BuildTarget, DependencyStack, TargetNode<?>> targetNodeSupplier;
   private final ConcurrentHashMap<BuildTarget, ConfigurationRule> configurationRuleIndex;
 
   public SameThreadConfigurationRuleResolver(
-      Function<BuildTarget, TargetNode<?>> targetNodeSupplier) {
+      BiFunction<BuildTarget, DependencyStack, TargetNode<?>> targetNodeSupplier) {
     this.targetNodeSupplier = targetNodeSupplier;
     this.configurationRuleIndex = new ConcurrentHashMap<>();
   }
@@ -58,17 +61,18 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
   }
 
   @Override
-  public ConfigurationRule getRule(BuildTarget buildTarget) {
-    return computeIfAbsent(buildTarget, this::createConfigurationRule);
+  public ConfigurationRule getRule(BuildTarget buildTarget, DependencyStack dependencyStack) {
+    return computeIfAbsent(buildTarget, t -> createConfigurationRule(t, dependencyStack));
   }
 
   private <T extends ConfigurationRuleArg> ConfigurationRule createConfigurationRule(
-      BuildTarget buildTarget) {
+      BuildTarget buildTarget, DependencyStack dependencyStack) {
     Preconditions.checkArgument(
         buildTarget.getTargetConfiguration() == ConfigurationForConfigurationTargets.INSTANCE);
 
     @SuppressWarnings("unchecked")
-    TargetNode<T> targetNode = (TargetNode<T>) targetNodeSupplier.apply(buildTarget);
+    TargetNode<T> targetNode =
+        (TargetNode<T>) targetNodeSupplier.apply(buildTarget, dependencyStack);
     ConfigurationRuleDescription<T> configurationRuleDescription =
         (ConfigurationRuleDescription<T>) targetNode.getDescription();
     ConfigurationRule configurationRule =

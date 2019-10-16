@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -125,7 +126,8 @@ public class TargetGraphHashingTest {
                 ParsingContext.builder(cell, MoreExecutors.newDirectExecutorService()).build(),
                 parser.getPermState());
     targetNodeRawAttributesProvider =
-        node -> parser.getTargetNodeRawAttributesJob(parserState, cell, node);
+        node ->
+            parser.getTargetNodeRawAttributesJob(parserState, cell, node, DependencyStack.root());
   }
 
   @Test

@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.model.platform.impl;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import java.util.Collection;
@@ -38,7 +39,8 @@ public class EmptyPlatform implements Platform {
   private EmptyPlatform() {}
 
   @Override
-  public boolean matchesAll(Collection<ConstraintValue> constraintValues) {
+  public boolean matchesAll(
+      Collection<ConstraintValue> constraintValues, DependencyStack dependencyStack) {
     return constraintValues.isEmpty();
   }
 

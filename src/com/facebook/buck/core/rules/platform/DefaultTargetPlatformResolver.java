@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -38,12 +39,14 @@ public class DefaultTargetPlatformResolver implements TargetPlatformResolver {
   }
 
   @Override
-  public Platform getTargetPlatform(TargetConfiguration targetConfiguration) {
+  public Platform getTargetPlatform(
+      TargetConfiguration targetConfiguration, DependencyStack dependencyStack) {
     if (targetConfiguration instanceof UnconfiguredTargetConfiguration
         || targetConfiguration instanceof ConfigurationForConfigurationTargets) {
       return UnconfiguredPlatform.INSTANCE;
     } else if (targetConfiguration instanceof RuleBasedTargetConfiguration) {
-      return ruleBasedTargetPlatformResolver.getTargetPlatform(targetConfiguration);
+      return ruleBasedTargetPlatformResolver.getTargetPlatform(
+          targetConfiguration, dependencyStack);
     }
     throw new HumanReadableException(
         "Cannot determine target platform for configuration: " + targetConfiguration);

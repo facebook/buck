@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.files.DirectoryListComputation;
 import com.facebook.buck.core.files.FileTreeComputation;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
@@ -148,7 +149,8 @@ public class GraphEngineFactory {
     // COMPUTATION: raw target node to raw target node with deps
 
     // TODO: replace with TargetPlatformResolver
-    TargetPlatformResolver targetPlatformResolver = targetConfiguration -> EmptyPlatform.INSTANCE;
+    TargetPlatformResolver targetPlatformResolver =
+        (targetConfiguration, dependencyStack) -> EmptyPlatform.INSTANCE;
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
             params.getTypeCoercerFactory(),
@@ -167,19 +169,22 @@ public class GraphEngineFactory {
                   SelectableConfigurationContext configurationContext,
                   BuildTarget buildTarget,
                   String attributeName,
-                  SelectorList<T> selectorList) {
+                  SelectorList<T> selectorList,
+                  DependencyStack dependencyStack) {
                 return selectorList.getSelectors().get(0).getDefaultConditionValue();
               }
             },
             // TODO: replace with RuleBasedConstraintResolver
             new ConstraintResolver() {
               @Override
-              public ConstraintSetting getConstraintSetting(BuildTarget buildTarget) {
+              public ConstraintSetting getConstraintSetting(
+                  BuildTarget buildTarget, DependencyStack dependencyStack) {
                 return ConstraintSetting.of(buildTarget);
               }
 
               @Override
-              public ConstraintValue getConstraintValue(BuildTarget buildTarget) {
+              public ConstraintValue getConstraintValue(
+                  BuildTarget buildTarget, DependencyStack dependencyStack) {
                 return ConstraintValue.of(buildTarget, ConstraintSetting.of(buildTarget));
               }
             },

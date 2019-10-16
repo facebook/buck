@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -66,7 +67,12 @@ public class DefaultSelectorListResolverTest {
     SelectorList<ImmutableList<Flavor>> selectorList = createSelectorListForListsOfFlavors();
 
     ImmutableList<Flavor> flavors =
-        resolver.resolveList(configurationContext, buildTarget, "some_attribute", selectorList);
+        resolver.resolveList(
+            configurationContext,
+            buildTarget,
+            "some_attribute",
+            selectorList,
+            DependencyStack.root());
 
     assertTrue(flavors.isEmpty());
   }
@@ -84,7 +90,12 @@ public class DefaultSelectorListResolverTest {
                 ImmutableList.of(new TestSelectable(selectableTarget, true))));
 
     Flavor flavor =
-        resolver.resolveList(configurationContext, keyTarget, "some_attribute", selectorList);
+        resolver.resolveList(
+            configurationContext,
+            keyTarget,
+            "some_attribute",
+            selectorList,
+            DependencyStack.root());
 
     assertEquals("flavor2", flavor.getName());
   }
@@ -104,7 +115,12 @@ public class DefaultSelectorListResolverTest {
             ImmutableMap.of("DEFAULT", "flavor3", "//x:y", "flavor4"));
 
     Flavor flavor =
-        resolver.resolveList(configurationContext, keyTarget, "some_attribute", selectorList);
+        resolver.resolveList(
+            configurationContext,
+            keyTarget,
+            "some_attribute",
+            selectorList,
+            DependencyStack.root());
 
     assertNull(flavor);
   }
@@ -132,7 +148,12 @@ public class DefaultSelectorListResolverTest {
                 Lists.newArrayList("flavor41", "flavor42")));
 
     ImmutableList<Flavor> flavors =
-        resolver.resolveList(configurationContext, keyTarget, "some_attribute", selectorList);
+        resolver.resolveList(
+            configurationContext,
+            keyTarget,
+            "some_attribute",
+            selectorList,
+            DependencyStack.root());
 
     assertEquals(
         Lists.newArrayList("flavor21", "flavor22", "flavor41", "flavor42"),
@@ -162,7 +183,12 @@ public class DefaultSelectorListResolverTest {
                 Lists.newArrayList("flavor41", "flavor42")));
 
     ImmutableList<Flavor> flavors =
-        resolver.resolveList(configurationContext, keyTarget, "some_attribute", selectorList);
+        resolver.resolveList(
+            configurationContext,
+            keyTarget,
+            "some_attribute",
+            selectorList,
+            DependencyStack.root());
 
     assertEquals(
         Lists.newArrayList("flavor11", "flavor12", "flavor31", "flavor32"),
@@ -191,7 +217,12 @@ public class DefaultSelectorListResolverTest {
                 Lists.newArrayList("flavor21", "flavor22")));
 
     ImmutableList<Flavor> flavors =
-        resolver.resolveList(configurationContext, keyTarget, "some_attribute", selectorList);
+        resolver.resolveList(
+            configurationContext,
+            keyTarget,
+            "some_attribute",
+            selectorList,
+            DependencyStack.root());
 
     assertEquals(
         Lists.newArrayList("flavor21", "flavor22"),
@@ -219,7 +250,8 @@ public class DefaultSelectorListResolverTest {
                 Lists.newArrayList("flavor21", "flavor22")));
 
     try {
-      resolver.resolveList(configurationContext, keyTarget, "some_attribute", selectorList);
+      resolver.resolveList(
+          configurationContext, keyTarget, "some_attribute", selectorList, DependencyStack.root());
     } catch (HumanReadableException e) {
       assertEquals(
           "Multiple matches found when resolving configurable attribute \"some_attribute\" in //a:b:\n"
@@ -243,7 +275,8 @@ public class DefaultSelectorListResolverTest {
             ImmutableMap.of("//x:y", Lists.newArrayList("flavor11", "flavor12")));
 
     try {
-      resolver.resolveList(configurationContext, keyTarget, "some_attribute", selectorList);
+      resolver.resolveList(
+          configurationContext, keyTarget, "some_attribute", selectorList, DependencyStack.root());
     } catch (HumanReadableException e) {
       assertEquals(
           "None of the conditions in attribute \"some_attribute\" of //a:b match the configuration.\nChecked conditions:\n"
@@ -280,7 +313,8 @@ public class DefaultSelectorListResolverTest {
         new SelectorList<>(flavorListTypeCoercer, ImmutableList.of(selector));
 
     try {
-      resolver.resolveList(configurationContext, keyTarget, "some_attribute", selectorList);
+      resolver.resolveList(
+          configurationContext, keyTarget, "some_attribute", selectorList, DependencyStack.root());
     } catch (HumanReadableException e) {
       assertEquals(
           "None of the conditions in attribute \"some_attribute\" of //a:b match the configuration: Custom message",

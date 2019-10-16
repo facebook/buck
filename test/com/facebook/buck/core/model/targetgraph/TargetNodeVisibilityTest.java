@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -247,6 +248,7 @@ public class TargetNodeVisibilityTest {
             arg,
             filesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             visibilities.stream()

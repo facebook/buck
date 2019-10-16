@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import java.nio.file.Path;
@@ -31,12 +32,13 @@ public interface RawTargetNodeFactory {
    * @param cell {@Cell} object that current build target belongs to
    * @param buildFile An absolute path to a build file that has the corresponding build target
    * @param buildTarget A build target that uniquely identifies created {@link RawTargetNode}
+   * @param dependencyStack
    * @param rawNode Raw attributes that forms the node, a Map where a key is attribute name as
-   *     string and value is attribute value as object.
    */
   RawTargetNode create(
       Cell cell,
       Path buildFile,
       UnconfiguredBuildTargetView buildTarget,
+      DependencyStack dependencyStack,
       Map<String, Object> rawNode);
 }

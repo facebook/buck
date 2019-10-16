@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.google.common.collect.ImmutableList;
@@ -26,13 +27,15 @@ public class ThrowingTargetConfigurationTransformer implements TargetConfigurati
 
   /** Throw unconditionally */
   @Override
-  public ImmutableList<TargetConfiguration> transform(TargetConfiguration targetConfiguration) {
+  public ImmutableList<TargetConfiguration> transform(
+      TargetConfiguration targetConfiguration, DependencyStack dependencyStack) {
     throw new IllegalStateException();
   }
 
   /** Throw unconditionally */
   @Override
-  public boolean needsTransformation(TargetConfiguration targetConfiguration) {
+  public boolean needsTransformation(
+      TargetConfiguration targetConfiguration, DependencyStack dependencyStack) {
     throw new IllegalStateException();
   }
 }

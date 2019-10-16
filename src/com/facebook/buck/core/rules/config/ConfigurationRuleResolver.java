@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.config;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 
@@ -26,5 +27,5 @@ public interface ConfigurationRuleResolver {
    *
    * @throws HumanReadableException if no rule is associated with the target.
    */
-  ConfigurationRule getRule(BuildTarget buildTarget);
+  ConfigurationRule getRule(BuildTarget buildTarget, DependencyStack dependencyStack);
 }

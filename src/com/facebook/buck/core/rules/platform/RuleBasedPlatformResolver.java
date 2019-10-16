@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
@@ -24,13 +25,13 @@ import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayloadAndDependencyStack;
 import com.facebook.buck.core.util.graph.CycleException;
-import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
+import com.facebook.buck.core.util.graph.GraphTraversableWithPayloadAndDependencyStack;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Streams;
+import java.util.LinkedHashMap;
 
 public class RuleBasedPlatformResolver implements PlatformResolver {
 
@@ -44,17 +45,20 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
   }
 
   @Override
-  public NamedPlatform getPlatform(BuildTarget buildTarget) {
-    GraphTraversableWithPayload<BuildTarget, PlatformRule> traversable =
-        target -> {
-          PlatformRule platformRule = getPlatformRule(target);
+  public NamedPlatform getPlatform(BuildTarget buildTarget, DependencyStack dependencyStack) {
+
+    GraphTraversableWithPayloadAndDependencyStack<BuildTarget, PlatformRule> traversable =
+        (target, dependencyStack1) -> {
+          PlatformRule platformRule = getPlatformRule(target, dependencyStack1);
           return new Pair<>(platformRule, platformRule.getDeps().iterator());
         };
 
-    AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, PlatformRule> platformTraversal =
-        new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
+    AcyclicDepthFirstPostOrderTraversalWithPayloadAndDependencyStack<BuildTarget, PlatformRule>
+        platformTraversal =
+            new AcyclicDepthFirstPostOrderTraversalWithPayloadAndDependencyStack<>(
+                traversable, DependencyStack::child);
 
-    Iterable<Pair<BuildTarget, PlatformRule>> platformTargets;
+    LinkedHashMap<BuildTarget, Pair<PlatformRule, DependencyStack>> platformTargets;
     try {
       platformTargets = platformTraversal.traverse(ImmutableList.of(buildTarget));
     } catch (CycleException e) {
@@ -62,16 +66,20 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
     }
 
     ImmutableSet<ConstraintValue> constraintValues =
-        Streams.stream(platformTargets)
-            .flatMap(rule -> rule.getSecond().getConstrainValues().stream())
-            .map(constraintResolver::getConstraintValue)
+        platformTargets.values().stream()
+            .flatMap(t -> t.getFirst().getConstrainValues().stream())
+            .map(
+                buildTarget1 ->
+                    constraintResolver.getConstraintValue(
+                        buildTarget1, dependencyStack.child(buildTarget1)))
             .collect(ImmutableSet.toImmutableSet());
 
     return new ConstraintBasedPlatform(buildTarget, constraintValues);
   }
 
-  private PlatformRule getPlatformRule(BuildTarget buildTarget) {
-    ConfigurationRule configurationRule = configurationRuleResolver.getRule(buildTarget);
+  private PlatformRule getPlatformRule(BuildTarget buildTarget, DependencyStack dependencyStack) {
+    ConfigurationRule configurationRule =
+        configurationRuleResolver.getRule(buildTarget, dependencyStack);
     if (!(configurationRule instanceof PlatformRule)) {
       throw new HumanReadableException(
           "%s is used as a target platform, but not declared using `platform` rule",

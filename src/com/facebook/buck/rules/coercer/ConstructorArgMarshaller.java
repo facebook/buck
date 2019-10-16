@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
@@ -74,6 +75,7 @@ public interface ConstructorArgMarshaller {
       TargetConfigurationTransformer targetConfigurationTransformer,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       ConstructorArgBuilder<T> constructorArgBuilder,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,

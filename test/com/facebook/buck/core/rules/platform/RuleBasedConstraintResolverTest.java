@@ -17,6 +17,7 @@ package com.facebook.buck.core.rules.platform;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
@@ -34,23 +35,25 @@ public class RuleBasedConstraintResolverTest {
   @Test
   public void testGettingConstraintSettingThrowsWithWrongRuleType() {
     RuleBasedConstraintResolver ruleBasedConstraintResolver =
-        new RuleBasedConstraintResolver(DummyConfigurationRule::of);
+        new RuleBasedConstraintResolver(
+            (buildTarget, dependencyStack) -> DummyConfigurationRule.of(buildTarget));
 
     thrown.expectMessage("//dummy:target is used as constraint_setting, but has wrong type");
 
     ruleBasedConstraintResolver.getConstraintSetting(
-        BuildTargetFactory.newInstance("//dummy:target"));
+        BuildTargetFactory.newInstance("//dummy:target"), DependencyStack.root());
   }
 
   @Test
   public void testGettingConstraintValueThrowsWithWrongRuleType() {
     RuleBasedConstraintResolver ruleBasedConstraintResolver =
-        new RuleBasedConstraintResolver(DummyConfigurationRule::of);
+        new RuleBasedConstraintResolver(
+            (buildTarget, dependencyStack) -> DummyConfigurationRule.of(buildTarget));
 
     thrown.expectMessage("//dummy:target is used as constraint_value, but has wrong type");
 
     ruleBasedConstraintResolver.getConstraintValue(
-        BuildTargetFactory.newInstance("//dummy:target"));
+        BuildTargetFactory.newInstance("//dummy:target"), DependencyStack.root());
   }
 
   @Test
@@ -60,7 +63,7 @@ public class RuleBasedConstraintResolverTest {
 
     RuleBasedConstraintResolver ruleBasedConstraintResolver =
         new RuleBasedConstraintResolver(
-            buildTarget -> {
+            (buildTarget, dependencyStack) -> {
               if (buildTarget.equals(constraintSettingTarget)) {
                 return DummyConfigurationRule.of(buildTarget);
               } else {
@@ -71,7 +74,7 @@ public class RuleBasedConstraintResolverTest {
 
     thrown.expectMessage("//:setting is used as constraint_setting, but has wrong type");
 
-    ruleBasedConstraintResolver.getConstraintValue(constraintValueTarget);
+    ruleBasedConstraintResolver.getConstraintValue(constraintValueTarget, DependencyStack.root());
   }
 
   @Test
@@ -83,7 +86,7 @@ public class RuleBasedConstraintResolverTest {
 
     RuleBasedConstraintResolver ruleBasedConstraintResolver =
         new RuleBasedConstraintResolver(
-            buildTarget -> {
+            (buildTarget, dependencyStack) -> {
               if (buildTarget.equals(constraintSettingTarget)) {
                 return new ConstraintSettingRule(
                     buildTarget, buildTarget.getShortName(), Optional.empty());
@@ -94,9 +97,11 @@ public class RuleBasedConstraintResolverTest {
             });
 
     ConstraintValue constraintValue =
-        ruleBasedConstraintResolver.getConstraintValue(constraintValueTarget);
+        ruleBasedConstraintResolver.getConstraintValue(
+            constraintValueTarget, DependencyStack.root());
     ConstraintSetting constraintSetting =
-        ruleBasedConstraintResolver.getConstraintSetting(constraintSettingTarget);
+        ruleBasedConstraintResolver.getConstraintSetting(
+            constraintSettingTarget, DependencyStack.root());
 
     assertEquals(constraintSetting, constraintValue.getConstraintSetting());
     assertEquals(constraintSettingTarget, constraintSetting.getBuildTarget());

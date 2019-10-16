@@ -42,6 +42,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -371,7 +372,8 @@ public class InstallCommand extends BuildCommand {
               .first()
               .get();
 
-      TargetNode<?> node = params.getParser().getTargetNode(parsingContext, target);
+      TargetNode<?> node =
+          params.getParser().getTargetNode(parsingContext, target, DependencyStack.top(target));
 
       if (node != null
           && node.getRuleType()

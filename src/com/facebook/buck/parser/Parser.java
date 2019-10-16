@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -43,7 +44,8 @@ public interface Parser {
 
   PerBuildStateFactory getPerBuildStateFactory();
 
-  TargetNode<?> getTargetNode(ParsingContext parsingContext, BuildTarget target)
+  TargetNode<?> getTargetNode(
+      ParsingContext parsingContext, BuildTarget target, DependencyStack dependencyStack)
       throws BuildFileParseException;
 
   ImmutableList<TargetNode<?>> getAllTargetNodes(
@@ -57,27 +59,32 @@ public interface Parser {
       PerBuildState state, Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
       throws BuildFileParseException;
 
-  TargetNode<?> getTargetNode(PerBuildState perBuildState, BuildTarget target)
+  TargetNode<?> getTargetNode(
+      PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
       throws BuildFileParseException;
 
-  ListenableFuture<TargetNode<?>> getTargetNodeJob(PerBuildState perBuildState, BuildTarget target)
+  ListenableFuture<TargetNode<?>> getTargetNodeJob(
+      PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
       throws BuildTargetException;
 
   @Nullable
   SortedMap<String, Object> getTargetNodeRawAttributes(
-      PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException;
+      PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
+      throws BuildFileParseException;
 
   ListenableFuture<SortedMap<String, Object>> getTargetNodeRawAttributesJob(
-      PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException;
+      PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
+      throws BuildFileParseException;
 
   /**
-   * @deprecated Prefer {@link #getTargetNodeRawAttributes(PerBuildState, Cell, TargetNode)} and
-   *     reusing a PerBuildState instance, especially when calling in a loop.
+   * @deprecated Prefer {@link #getTargetNodeRawAttributes(PerBuildState, Cell, TargetNode,
+   *     DependencyStack)} and reusing a PerBuildState instance, especially when calling in a loop.
    */
   @Nullable
   @Deprecated
   SortedMap<String, Object> getTargetNodeRawAttributes(
-      ParsingContext parsingContext, TargetNode<?> targetNode) throws BuildFileParseException;
+      ParsingContext parsingContext, TargetNode<?> targetNode, DependencyStack dependencyStack)
+      throws BuildFileParseException;
 
   TargetGraphCreationResult buildTargetGraph(
       ParsingContext parsingContext, ImmutableSet<BuildTarget> toExplore)

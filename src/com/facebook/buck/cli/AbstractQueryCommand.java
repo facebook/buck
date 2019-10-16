@@ -16,6 +16,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -457,7 +458,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       CommandRunnerParams params, BuckQueryEnvironment env) {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
     return node ->
-        getAttributes(params, env, patternsMatcher, node)
+        getAttributes(
+                params, env, patternsMatcher, node, DependencyStack.top(node.getBuildTarget()))
             .map(
                 attrs ->
                     attrs.entrySet().stream()
@@ -671,7 +673,12 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
                       // potentially missing fields. Consider not returning a node in such case,
                       // since most likely an attempt to use that node would fail anyways.
                       SortedMap<String, Object> attributes =
-                          getAttributes(params, env, patternsMatcher, entry.getKey())
+                          getAttributes(
+                                  params,
+                                  env,
+                                  patternsMatcher,
+                                  entry.getKey(),
+                                  DependencyStack.top(entry.toString()))
                               .orElseGet(TreeMap::new);
                       return ImmutableSortedMap.<String, Object>naturalOrder()
                           .putAll(attributes)
@@ -759,7 +766,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       }
       TargetNode<?> node = env.getNode((QueryBuildTarget) target);
       try {
-        getAttributes(params, env, patternsMatcher, node)
+        getAttributes(
+                params, env, patternsMatcher, node, DependencyStack.top(node.getBuildTarget()))
             .ifPresent(attrMap -> attributesMap.put(toPresentationForm(node), attrMap));
 
       } catch (BuildFileParseException e) {
@@ -776,9 +784,13 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       PatternsMatcher patternsMatcher,
-      TargetNode<?> node) {
+      TargetNode<?> node,
+      DependencyStack dependencyStack) {
     SortedMap<String, Object> targetNodeAttributes =
-        params.getParser().getTargetNodeRawAttributes(env.getParserState(), params.getCell(), node);
+        params
+            .getParser()
+            .getTargetNodeRawAttributes(
+                env.getParserState(), params.getCell(), node, dependencyStack);
     if (targetNodeAttributes == null) {
       params
           .getConsole()

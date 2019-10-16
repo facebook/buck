@@ -60,7 +60,8 @@ public class BuildPackagePathToRawTargetNodePackageComputationTest {
     Cell cell = new TestCellBuilder().build();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    TargetPlatformResolver targetPlatformResolver = configuration -> UnconfiguredPlatform.INSTANCE;
+    TargetPlatformResolver targetPlatformResolver =
+        (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
             typeCoercerFactory,

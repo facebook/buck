@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.config.registry.impl;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.PlatformResolver;
@@ -32,18 +33,18 @@ import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedMultiPlatformResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedPlatformResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedTargetPlatformResolver;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 /** Creates {@link ConfigurationRuleRegistry}. */
 public class ConfigurationRuleRegistryFactory {
   private ConfigurationRuleRegistryFactory() {}
 
   public static ConfigurationRuleRegistry createRegistry(TargetGraph targetGraph) {
-    return createRegistry(targetGraph::get);
+    return createRegistry((t, c) -> targetGraph.get(t));
   }
 
   public static ConfigurationRuleRegistry createRegistry(
-      Function<BuildTarget, TargetNode<?>> targetNodeSupplier) {
+      BiFunction<BuildTarget, DependencyStack, TargetNode<?>> targetNodeSupplier) {
 
     ConfigurationRuleResolver configurationRuleResolver =
         new SameThreadConfigurationRuleResolver(targetNodeSupplier);

@@ -15,17 +15,20 @@
  */
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.google.common.collect.ImmutableList;
 
 /** Interface that allows transforming target configurations. */
 public interface TargetConfigurationTransformer {
 
   /** Transforms a single target configurations into multiple target configurations. */
-  ImmutableList<TargetConfiguration> transform(TargetConfiguration targetConfiguration);
+  ImmutableList<TargetConfiguration> transform(
+      TargetConfiguration targetConfiguration, DependencyStack dependencyStack);
 
   /**
    * @return {@code true} is the given target configuration can be transformed into other
    *     configurations.
    */
-  boolean needsTransformation(TargetConfiguration targetConfiguration);
+  boolean needsTransformation(
+      TargetConfiguration targetConfiguration, DependencyStack dependencyStack);
 }

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertSame;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -76,6 +77,7 @@ public class RuleAnalysisComputationTest {
             FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
@@ -118,6 +120,7 @@ public class RuleAnalysisComputationTest {
             FakeRuleDescriptionArg.builder().setName("target1").build(),
             projectFilesystem,
             buildTarget1,
+            DependencyStack.root(),
             ImmutableSet.of(buildTarget2, buildTarget3),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
@@ -129,6 +132,7 @@ public class RuleAnalysisComputationTest {
             FakeRuleDescriptionArg.builder().setName("target2").build(),
             projectFilesystem,
             buildTarget2,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
@@ -140,6 +144,7 @@ public class RuleAnalysisComputationTest {
             FakeRuleDescriptionArg.builder().setName("target3").build(),
             projectFilesystem,
             buildTarget3,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
@@ -192,6 +197,7 @@ public class RuleAnalysisComputationTest {
             FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
@@ -262,6 +268,7 @@ public class RuleAnalysisComputationTest {
             FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
@@ -273,6 +280,7 @@ public class RuleAnalysisComputationTest {
             FakeRuleDescriptionArg.builder().setName("target2").build(),
             projectFilesystem,
             buildTarget2,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),

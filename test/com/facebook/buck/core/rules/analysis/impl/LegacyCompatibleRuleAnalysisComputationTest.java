@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.model.BuildTarget;
@@ -140,6 +141,7 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
             FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
@@ -204,6 +206,7 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
             FakeTargetNodeArg.builder().setName("//my:target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),

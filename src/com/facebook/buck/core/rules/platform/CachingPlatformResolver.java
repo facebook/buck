@@ -15,12 +15,11 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * An implementation of {@link PlatformResolver} that caches platforms created by a given delegate.
@@ -29,22 +28,15 @@ public class CachingPlatformResolver implements PlatformResolver {
 
   private final PlatformResolver delegate;
 
-  private final LoadingCache<BuildTarget, Platform> platformCache =
-      CacheBuilder.newBuilder()
-          .build(
-              new CacheLoader<BuildTarget, Platform>() {
-                @Override
-                public Platform load(BuildTarget buildTarget) {
-                  return delegate.getPlatform(buildTarget);
-                }
-              });
+  private final ConcurrentHashMap<BuildTarget, Platform> platformCache = new ConcurrentHashMap<>();
 
   public CachingPlatformResolver(PlatformResolver delegate) {
     this.delegate = delegate;
   }
 
   @Override
-  public Platform getPlatform(BuildTarget buildTarget) {
-    return platformCache.getUnchecked(buildTarget);
+  public Platform getPlatform(BuildTarget buildTarget, DependencyStack dependencyStack) {
+    return platformCache.computeIfAbsent(
+        buildTarget, t -> delegate.getPlatform(t, dependencyStack));
   }
 }

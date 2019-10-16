@@ -26,6 +26,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
@@ -118,6 +119,7 @@ public class ConstructorArgMarshallerImmutableTest {
             new ThrowingTargetConfigurationTransformer(),
             new ThrowingSelectableConfigurationContext(),
             TARGET,
+            DependencyStack.root(),
             builder(constructorClass),
             declaredDeps,
             configurationDeps,
@@ -531,11 +533,13 @@ public class ConstructorArgMarshallerImmutableTest {
                 ImmutableSelectorValue.of(
                     ImmutableMap.of("DEFAULT", "string3", "//x:y", "string4"), "")),
             ImmutableMap.class);
-    TargetPlatformResolver targetPlatformResolver = configuration -> UnconfiguredPlatform.INSTANCE;
+    TargetPlatformResolver targetPlatformResolver =
+        (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
     SelectableConfigurationContext selectableConfigurationContext =
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
-            new RuleBasedConstraintResolver(DummyConfigurationRule::of),
+            new RuleBasedConstraintResolver(
+                (buildTarget, dependencyStack) -> DummyConfigurationRule.of(buildTarget)),
             UnconfiguredTargetConfiguration.INSTANCE,
             targetPlatformResolver);
     TargetConfigurationTransformer targetConfigurationTransformer =
@@ -551,6 +555,7 @@ public class ConstructorArgMarshallerImmutableTest {
             targetConfigurationTransformer,
             selectableConfigurationContext,
             TARGET,
+            DependencyStack.root(),
             builder(DtoWithString.class),
             declaredDeps,
             configurationDeps,
@@ -567,7 +572,7 @@ public class ConstructorArgMarshallerImmutableTest {
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(
-            configuration -> UnconfiguredPlatform.INSTANCE);
+            (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     DtoWithString dto =
         marshaller.populate(
@@ -577,6 +582,7 @@ public class ConstructorArgMarshallerImmutableTest {
             targetConfigurationTransformer,
             NonCopyingSelectableConfigurationContext.INSTANCE,
             TARGET,
+            DependencyStack.root(),
             builder(DtoWithString.class),
             declaredDeps,
             ImmutableSet.builder(),
@@ -591,7 +597,7 @@ public class ConstructorArgMarshallerImmutableTest {
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(
-            configuration -> UnconfiguredPlatform.INSTANCE);
+            (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     BuildTarget dep = BuildTargetFactory.newInstance("//a/b:c");
     marshaller.populate(
@@ -601,6 +607,7 @@ public class ConstructorArgMarshallerImmutableTest {
         targetConfigurationTransformer,
         NonCopyingSelectableConfigurationContext.INSTANCE,
         TARGET,
+        DependencyStack.root(),
         builder(DtoWithDepsAndNotDeps.class),
         declaredDeps,
         ImmutableSet.builder(),
@@ -614,7 +621,7 @@ public class ConstructorArgMarshallerImmutableTest {
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(
-            configuration -> UnconfiguredPlatform.INSTANCE);
+            (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
     DtoWithOptionalSetOfStrings dto =
         marshaller.populate(
             createCellRoots(filesystem),
@@ -623,6 +630,7 @@ public class ConstructorArgMarshallerImmutableTest {
             targetConfigurationTransformer,
             NonCopyingSelectableConfigurationContext.INSTANCE,
             TARGET,
+            DependencyStack.root(),
             builder(DtoWithOptionalSetOfStrings.class),
             ImmutableSet.builder(),
             ImmutableSet.builder(),
@@ -650,13 +658,15 @@ public class ConstructorArgMarshallerImmutableTest {
                 new ConstraintBasedPlatform(nestedPlatform2Target, ImmutableSet.of())));
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
-    TargetPlatformResolver targetPlatformResolver = configuration -> multiPlatform;
+    TargetPlatformResolver targetPlatformResolver =
+        (configuration, dependencyStack) -> multiPlatform;
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
     SelectableConfigurationContext selectableConfigurationContext =
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
-            new RuleBasedConstraintResolver(DummyConfigurationRule::of),
+            new RuleBasedConstraintResolver(
+                (buildTarget, dependencyStack) -> DummyConfigurationRule.of(buildTarget)),
             ImmutableRuleBasedTargetConfiguration.of(multiPlatformTarget),
             targetPlatformResolver);
 
@@ -668,6 +678,7 @@ public class ConstructorArgMarshallerImmutableTest {
             targetConfigurationTransformer,
             selectableConfigurationContext,
             TARGET,
+            DependencyStack.root(),
             builder(DtoWithSplit.class),
             ImmutableSet.builder(),
             ImmutableSet.builder(),

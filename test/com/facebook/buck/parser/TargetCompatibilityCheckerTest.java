@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
@@ -86,7 +87,7 @@ public class TargetCompatibilityCheckerTest {
             ImmutableSet.of(cs1v1));
     ConstraintResolver constraintResolver =
         new RuleBasedConstraintResolver(
-            buildTarget -> {
+            (buildTarget, dependencyStack) -> {
               if (buildTarget.equals(cs1.getBuildTarget())) {
                 return new ConstraintSettingRule(
                     buildTarget, buildTarget.getShortName(), Optional.empty());
@@ -106,7 +107,7 @@ public class TargetCompatibilityCheckerTest {
             ImmutableMap.of(),
             ImmutableSet.of(cs1v2.getBuildTarget()));
     ConfigurationRuleResolver configurationRuleResolver =
-        buildTarget -> {
+        (buildTarget, dependencyStack) -> {
           if (buildTarget.toString().equals(compatibleConfigSetting.getBuildTarget().toString())) {
             return compatibleConfigSetting;
           }
@@ -121,7 +122,7 @@ public class TargetCompatibilityCheckerTest {
         new ImmutableConfigurationRuleRegistry(
             configurationRuleResolver,
             constraintResolver,
-            configuration -> UnconfiguredPlatform.INSTANCE);
+            (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
   }
 
   @Test
@@ -129,7 +130,7 @@ public class TargetCompatibilityCheckerTest {
     ConstructorArg targetNodeArg = createTargetNodeArg(ImmutableMap.of());
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform, DependencyStack.root()));
   }
 
   @Test
@@ -141,7 +142,7 @@ public class TargetCompatibilityCheckerTest {
                 ImmutableList.of(cs1v1.getBuildTarget().getFullyQualifiedName())));
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform, DependencyStack.root()));
   }
 
   @Test
@@ -153,7 +154,7 @@ public class TargetCompatibilityCheckerTest {
                 ImmutableList.of(cs1v2.getBuildTarget().getFullyQualifiedName())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform, DependencyStack.root()));
   }
 
   @Test
@@ -168,7 +169,7 @@ public class TargetCompatibilityCheckerTest {
                 ImmutableList.of(cs1v2.getBuildTarget().getFullyQualifiedName())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform, DependencyStack.root()));
   }
 
   @Test
@@ -183,7 +184,7 @@ public class TargetCompatibilityCheckerTest {
                 ImmutableList.of(cs1v1.getBuildTarget().getFullyQualifiedName())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform, DependencyStack.root()));
   }
 
   @Test
@@ -198,7 +199,7 @@ public class TargetCompatibilityCheckerTest {
                 ImmutableList.of(cs1v2.getBuildTarget().getFullyQualifiedName())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform, DependencyStack.root()));
   }
 
   @Test
@@ -210,7 +211,7 @@ public class TargetCompatibilityCheckerTest {
                 ImmutableList.of(nonCompatibleConfigSetting.getBuildTarget().toString())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform, DependencyStack.root()));
   }
 
   @Test
@@ -224,7 +225,7 @@ public class TargetCompatibilityCheckerTest {
                     nonCompatibleConfigSetting.getBuildTarget().toString())));
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform, DependencyStack.root()));
   }
 
   @Test
@@ -239,7 +240,7 @@ public class TargetCompatibilityCheckerTest {
                 ImmutableList.of(cs1v1.getBuildTarget().getFullyQualifiedName())));
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry, targetNodeArg, platform));
+            configurationRuleRegistry, targetNodeArg, platform, DependencyStack.root()));
   }
 
   private ConstructorArg createTargetNodeArg(Map<String, Object> rawNode) throws Exception {
@@ -265,6 +266,7 @@ public class TargetCompatibilityCheckerTest {
         new ThrowingTargetConfigurationTransformer(),
         new ThrowingSelectableConfigurationContext(),
         buildTarget,
+        DependencyStack.root(),
         builder,
         ImmutableSet.builder(),
         ImmutableSet.builder(),

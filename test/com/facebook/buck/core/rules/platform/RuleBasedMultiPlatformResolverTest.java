@@ -17,6 +17,7 @@ package com.facebook.buck.core.rules.platform;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -41,7 +42,8 @@ public class RuleBasedMultiPlatformResolverTest {
   public void requestingPlatformForWrongTypeThrowsException() {
     BuildTarget constraint = BuildTargetFactory.newInstance("//constraint:setting");
     ConfigurationRuleResolver configurationRuleResolver =
-        target -> new ConstraintSettingRule(constraint, "setting", Optional.empty());
+        (target, dependencyStack) ->
+            new ConstraintSettingRule(constraint, "setting", Optional.empty());
     RuleBasedPlatformResolver resolver =
         new RuleBasedPlatformResolver(configurationRuleResolver, new ThrowingConstraintResolver());
     RuleBasedMultiPlatformResolver multiPlatformResolver =
@@ -51,7 +53,7 @@ public class RuleBasedMultiPlatformResolverTest {
     thrown.expectMessage(
         "//constraint:setting is used as a multiplatform, but not declared using an appropriate rule");
 
-    multiPlatformResolver.getPlatform(constraint);
+    multiPlatformResolver.getPlatform(constraint, DependencyStack.root());
   }
 
   @Test
@@ -74,7 +76,7 @@ public class RuleBasedMultiPlatformResolverTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
     ConfigurationRuleResolver configurationRuleResolver =
-        buildTarget -> {
+        (buildTarget, dependencyStack) -> {
           if (buildTarget.equals(multiPlatformTarget)) {
             return new FakeMultiPlatformRule(
                 multiPlatformTarget,
@@ -120,7 +122,8 @@ public class RuleBasedMultiPlatformResolverTest {
         new RuleBasedMultiPlatformResolver(configurationRuleResolver, resolver);
 
     FakeMultiPlatform platform =
-        (FakeMultiPlatform) multiPlatformResolver.getPlatform(multiPlatformTarget);
+        (FakeMultiPlatform)
+            multiPlatformResolver.getPlatform(multiPlatformTarget, DependencyStack.root());
 
     assertEquals(multiPlatformTarget, platform.getBuildTarget());
 

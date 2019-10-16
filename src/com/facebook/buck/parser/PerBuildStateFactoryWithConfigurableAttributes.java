@@ -181,8 +181,9 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
 
     ConfigurationRuleRegistry configurationRuleRegistry =
         ConfigurationRuleRegistryFactory.createRegistry(
-            target ->
-                nonResolvingTargetNodeParsePipeline.getNode(cellManager.getCell(target), target));
+            (target, callerContext) ->
+                nonResolvingTargetNodeParsePipeline.getNode(
+                    cellManager.getCell(target), target, callerContext));
 
     SelectableResolver selectableResolver =
         new ConfigurationRuleSelectableResolver(

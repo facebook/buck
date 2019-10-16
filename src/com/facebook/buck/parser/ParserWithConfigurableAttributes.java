@@ -19,6 +19,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -113,7 +114,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   @Override
   @Nullable
   public SortedMap<String, Object> getTargetNodeRawAttributes(
-      PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException {
+      PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
+      throws BuildFileParseException {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     Cell owningCell = cell.getCell(buildTarget);
     BuildFileManifest buildFileManifest =
@@ -122,12 +124,13 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             owningCell,
             cell.getBuckConfigView(ParserConfig.class)
                 .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTargetView()));
-    return getTargetFromManifest(state, cell, targetNode, buildFileManifest);
+    return getTargetFromManifest(state, cell, targetNode, dependencyStack, buildFileManifest);
   }
 
   @Override
   public ListenableFuture<SortedMap<String, Object>> getTargetNodeRawAttributesJob(
-      PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException {
+      PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
+      throws BuildFileParseException {
     Cell owningCell = cell.getCell(targetNode.getBuildTarget());
     ListenableFuture<BuildFileManifest> buildFileManifestFuture =
         state.getBuildFileManifestJob(
@@ -137,7 +140,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                     cell, targetNode.getBuildTarget().getUnconfiguredBuildTargetView()));
     return Futures.transform(
         buildFileManifestFuture,
-        buildFileManifest -> getTargetFromManifest(state, cell, targetNode, buildFileManifest),
+        buildFileManifest ->
+            getTargetFromManifest(state, cell, targetNode, dependencyStack, buildFileManifest),
         MoreExecutors.directExecutor());
   }
 
@@ -146,6 +150,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       PerBuildState state,
       Cell cell,
       TargetNode<?> targetNode,
+      DependencyStack dependencyStack,
       BuildFileManifest buildFileManifest) {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     String shortName = buildTarget.getShortName();
@@ -157,7 +162,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     Map<String, Object> attributes = buildFileManifest.getTargets().get(shortName);
 
     SortedMap<String, Object> convertedAttributes =
-        copyWithResolvingConfigurableAttributes(state, cell, buildTarget, attributes);
+        copyWithResolvingConfigurableAttributes(
+            state, cell, buildTarget, attributes, dependencyStack);
 
     convertedAttributes.put(
         InternalTargetAttributeNames.DIRECT_DEPENDENCIES,
@@ -168,7 +174,11 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   }
 
   private SortedMap<String, Object> copyWithResolvingConfigurableAttributes(
-      PerBuildState state, Cell cell, BuildTarget buildTarget, Map<String, Object> attributes) {
+      PerBuildState state,
+      Cell cell,
+      BuildTarget buildTarget,
+      Map<String, Object> attributes,
+      DependencyStack dependencyStack) {
     SelectableConfigurationContext configurationContext =
         DefaultSelectableConfigurationContext.of(
             cell.getBuckConfig(),
@@ -191,7 +201,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                 buildTarget,
                 state.getSelectorListFactory(),
                 attributeName,
-                attribute.getValue()));
+                attribute.getValue(),
+                dependencyStack));
       } catch (CoerceFailedException e) {
         throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
       }
@@ -209,7 +220,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       BuildTarget buildTarget,
       SelectorListFactory selectorListFactory,
       String attributeName,
-      Object jsonObject)
+      Object jsonObject,
+      DependencyStack dependencyStack)
       throws CoerceFailedException {
     if (!(jsonObject instanceof ListWithSelects)) {
       return jsonObject;
@@ -227,7 +239,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             JsonTypeConcatenatingCoercerFactory.createForType(list.getType()));
 
     return selectorListResolver.resolveList(
-        configurationContext, buildTarget, attributeName, selectorList);
+        configurationContext, buildTarget, attributeName, selectorList, dependencyStack);
   }
 
   @Override
@@ -249,14 +261,18 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   private Stream<TargetNode<?>> filterIncompatibleTargetNodes(
       PerBuildState state, Stream<TargetNode<?>> targetNodes) {
     return targetNodes.filter(
-        targetNode ->
-            TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-                state.getConfigurationRuleRegistry(),
-                targetNode.getConstructorArg(),
-                state
-                    .getConfigurationRuleRegistry()
-                    .getTargetPlatformResolver()
-                    .getTargetPlatform(targetNode.getBuildTarget().getTargetConfiguration())));
+        targetNode -> {
+          return TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
+              state.getConfigurationRuleRegistry(),
+              targetNode.getConstructorArg(),
+              state
+                  .getConfigurationRuleRegistry()
+                  .getTargetPlatformResolver()
+                  .getTargetPlatform(
+                      targetNode.getBuildTarget().getTargetConfiguration(),
+                      DependencyStack.top(targetNode.getBuildTarget())),
+              DependencyStack.top(targetNode.getBuildTarget()));
+        });
   }
 
   @Override
@@ -289,7 +305,12 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       return buildTargets.stream()
           .map(
               targets ->
-                  filterIncompatibleTargetNodes(state, targets.stream().map(state::getTargetNode))
+                  filterIncompatibleTargetNodes(
+                          state,
+                          targets.stream()
+                              .map(
+                                  (BuildTarget target) ->
+                                      state.getTargetNode(target, DependencyStack.top(target))))
                       .map(TargetNode::getBuildTarget)
                       .collect(ImmutableSet.toImmutableSet()))
           .collect(ImmutableList.toImmutableList());
@@ -331,7 +352,12 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       return ImmutableSet.copyOf(Iterables.concat(buildTargets));
     }
     return filterIncompatibleTargetNodes(
-            state, buildTargets.stream().flatMap(ImmutableSet::stream).map(state::getTargetNode))
+            state,
+            buildTargets.stream()
+                .flatMap(ImmutableSet::stream)
+                .map(
+                    (BuildTarget target) ->
+                        state.getTargetNode(target, DependencyStack.top(target))))
         .map(TargetNode::getBuildTarget)
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -341,7 +367,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   }
 
   @Override
-  public void assertTargetIsCompatible(PerBuildState state, TargetNode<?> targetNode) {
+  public void assertTargetIsCompatible(
+      PerBuildState state, TargetNode<?> targetNode, DependencyStack dependencyStack) {
     if (!state.getParsingContext().enableTargetCompatibilityChecks()) {
       return;
     }
@@ -350,9 +377,13 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         state
             .getConfigurationRuleRegistry()
             .getTargetPlatformResolver()
-            .getTargetPlatform(targetNode.getBuildTarget().getTargetConfiguration());
+            .getTargetPlatform(
+                targetNode.getBuildTarget().getTargetConfiguration(), dependencyStack);
     if (!TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-        state.getConfigurationRuleRegistry(), targetNode.getConstructorArg(), targetPlatform)) {
+        state.getConfigurationRuleRegistry(),
+        targetNode.getConstructorArg(),
+        targetPlatform,
+        dependencyStack)) {
       BuildRuleArg argWithTargetCompatible = (BuildRuleArg) targetNode.getConstructorArg();
 
       StringBuilder diagnostics = new StringBuilder();

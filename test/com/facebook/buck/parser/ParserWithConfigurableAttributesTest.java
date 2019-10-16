@@ -45,6 +45,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
@@ -422,7 +423,7 @@ public class ParserWithConfigurableAttributesTest {
         "genrule(name = 'cake', out = 'file.txt', cmd = '$(exe ////cake:walk) > $OUT')"
             .getBytes(UTF_8));
 
-    parser.getTargetNode(parsingContext, buildTarget);
+    parser.getTargetNode(parsingContext, buildTarget, DependencyStack.root());
   }
 
   @Test
@@ -459,7 +460,7 @@ public class ParserWithConfigurableAttributesTest {
                 + "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')\n")
             .getBytes(UTF_8));
 
-    parser.getTargetNode(parsingContext, buildTarget);
+    parser.getTargetNode(parsingContext, buildTarget, DependencyStack.root());
   }
 
   @Test
@@ -470,7 +471,9 @@ public class ParserWithConfigurableAttributesTest {
         StandardOpenOption.APPEND);
     Files.write(testBuildFile, "foo(name='BUCK')\n".getBytes(UTF_8), StandardOpenOption.APPEND);
     parser.getTargetNode(
-        parsingContext, BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook:foo"));
+        parsingContext,
+        BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook:foo"),
+        DependencyStack.root());
   }
 
   @Test
@@ -482,7 +485,7 @@ public class ParserWithConfigurableAttributesTest {
     Files.write(
         buckFile, ("genrule(name = None, out = 'file.txt', cmd = 'touch $OUT')\n").getBytes(UTF_8));
 
-    parser.getTargetNode(parsingContext, buildTarget);
+    parser.getTargetNode(parsingContext, buildTarget, DependencyStack.root());
   }
 
   @Test
@@ -644,7 +647,7 @@ public class ParserWithConfigurableAttributesTest {
             .getBytes(UTF_8),
         StandardOpenOption.APPEND);
 
-    parser.getTargetNode(parsingContext, buildTarget);
+    parser.getTargetNode(parsingContext, buildTarget, DependencyStack.root());
 
     assertEquals(2, counter.calls);
 
@@ -655,7 +658,7 @@ public class ParserWithConfigurableAttributesTest {
             MorePaths.relativize(tempDir.getRoot().toRealPath(), configBuckFile));
     parser.getPermState().invalidateBasedOn(event);
 
-    parser.getTargetNode(parsingContext, buildTarget);
+    parser.getTargetNode(parsingContext, buildTarget, DependencyStack.root());
 
     // Test that the second call triggers re-parsing of all files.
     assertEquals("Should have invalidated cache.", 4, counter.calls);
@@ -697,7 +700,7 @@ public class ParserWithConfigurableAttributesTest {
             .getBytes(UTF_8),
         StandardOpenOption.APPEND);
 
-    parser.getTargetNode(parsingContext, buildTarget);
+    parser.getTargetNode(parsingContext, buildTarget, DependencyStack.root());
 
     assertEquals(2, counter.calls);
 
@@ -708,7 +711,7 @@ public class ParserWithConfigurableAttributesTest {
             MorePaths.relativize(tempDir.getRoot().toRealPath(), defsFile));
     parser.getPermState().invalidateBasedOn(event);
 
-    parser.getTargetNode(parsingContext, buildTarget);
+    parser.getTargetNode(parsingContext, buildTarget, DependencyStack.root());
 
     // Test that the second call triggers re-parsing of all files.
     assertEquals("Should have invalidated cache.", 4, counter.calls);
@@ -1877,11 +1880,12 @@ public class ParserWithConfigurableAttributesTest {
     Files.write(testFooBuckFile, "java_library(name = 'lib')\n".getBytes(UTF_8));
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
 
-    TargetNode<?> targetNode = parser.getTargetNode(parsingContext, fooLibTarget);
+    TargetNode<?> targetNode =
+        parser.getTargetNode(parsingContext, fooLibTarget, DependencyStack.root());
     assertThat(targetNode.getBuildTarget(), equalTo(fooLibTarget));
 
     SortedMap<String, Object> targetNodeAttributes =
-        parser.getTargetNodeRawAttributes(parsingContext, targetNode);
+        parser.getTargetNodeRawAttributes(parsingContext, targetNode, DependencyStack.root());
     assertThat(targetNodeAttributes, Matchers.hasKey("name"));
     assertThat(
         targetNodeAttributes.get("name"), equalTo(targetNode.getBuildTarget().getShortName()));
@@ -2102,7 +2106,8 @@ public class ParserWithConfigurableAttributesTest {
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     TargetNode<GenruleDescriptionArg> node =
         TargetNodes.castArg(
-                parser.getTargetNode(parsingContext.withCell(cell), buildTarget),
+                parser.getTargetNode(
+                    parsingContext.withCell(cell), buildTarget, DependencyStack.root()),
                 GenruleDescriptionArg.class)
             .get();
 
@@ -2129,11 +2134,11 @@ public class ParserWithConfigurableAttributesTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getTargetNode(parsingContext.withCell(cell), buildTarget);
+    parser.getTargetNode(parsingContext.withCell(cell), buildTarget, DependencyStack.root());
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getTargetNode(parsingContext.withCell(cell), buildTarget);
+    parser.getTargetNode(parsingContext.withCell(cell), buildTarget, DependencyStack.root());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated.", 1, counter.calls);
@@ -2389,7 +2394,7 @@ public class ParserWithConfigurableAttributesTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getTargetNode(parsingContext.withCell(cell), buildTarget);
+    parser.getTargetNode(parsingContext.withCell(cell), buildTarget, DependencyStack.root());
 
     // Call filterAllTargetsInProject to request cached rules.
     config =
@@ -2404,7 +2409,7 @@ public class ParserWithConfigurableAttributesTest {
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getTargetNode(parsingContext.withCell(cell), buildTarget);
+    parser.getTargetNode(parsingContext.withCell(cell), buildTarget, DependencyStack.root());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated.", 2, counter.calls);
@@ -2427,7 +2432,7 @@ public class ParserWithConfigurableAttributesTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getTargetNode(parsingContext.withCell(cell), buildTarget);
+    parser.getTargetNode(parsingContext.withCell(cell), buildTarget, DependencyStack.root());
 
     // Call filterAllTargetsInProject to request cached rules.
     config =
@@ -2442,7 +2447,7 @@ public class ParserWithConfigurableAttributesTest {
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getTargetNode(parsingContext.withCell(cell), buildTarget);
+    parser.getTargetNode(parsingContext.withCell(cell), buildTarget, DependencyStack.root());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated.", 2, counter.calls);
@@ -2473,14 +2478,14 @@ public class ParserWithConfigurableAttributesTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getTargetNode(parsingContext.withCell(cell), buildTarget);
+    parser.getTargetNode(parsingContext.withCell(cell), buildTarget, DependencyStack.root());
 
     // Call filterAllTargetsInProject to request cached rules.
     config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getTargetNode(parsingContext.withCell(cell), buildTarget);
+    parser.getTargetNode(parsingContext.withCell(cell), buildTarget, DependencyStack.root());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated.", 2, counter.calls);
@@ -2512,7 +2517,7 @@ public class ParserWithConfigurableAttributesTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getTargetNode(parsingContext.withCell(cell), buildTarget);
+    parser.getTargetNode(parsingContext.withCell(cell), buildTarget, DependencyStack.root());
 
     // Call filterAllTargetsInProject to request cached rules.
     config =
@@ -2528,7 +2533,7 @@ public class ParserWithConfigurableAttributesTest {
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    parser.getTargetNode(parsingContext.withCell(cell), buildTarget);
+    parser.getTargetNode(parsingContext.withCell(cell), buildTarget, DependencyStack.root());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated.", 1, counter.calls);
@@ -2554,7 +2559,7 @@ public class ParserWithConfigurableAttributesTest {
             .build();
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-    parser.getTargetNode(parsingContext.withCell(cell), buildTarget);
+    parser.getTargetNode(parsingContext.withCell(cell), buildTarget, DependencyStack.root());
   }
 
   @Test
@@ -2577,7 +2582,9 @@ public class ParserWithConfigurableAttributesTest {
 
     TargetNode<?> targetNode =
         parser.getTargetNode(
-            parsingContext.withCell(cell), BuildTargetFactory.newInstance(cellRoot, "//:string"));
+            parsingContext.withCell(cell),
+            BuildTargetFactory.newInstance(cellRoot, "//:string"),
+            DependencyStack.root());
     // in Skylark the type of str is "string" and in Python DSL it's "<type 'str'>"
     assertEquals(targetNode.getBuildTarget().getShortName(), "string");
   }
@@ -2686,7 +2693,10 @@ public class ParserWithConfigurableAttributesTest {
             buildTarget,
             Preconditions.checkNotNull(
                 parser.getTargetNodeRawAttributes(
-                    state, cell, parser.getTargetNode(parsingContext, buildTarget))));
+                    state,
+                    cell,
+                    parser.getTargetNode(parsingContext, buildTarget, DependencyStack.root()),
+                    DependencyStack.root())));
       }
 
       return attributesByTarget.build();

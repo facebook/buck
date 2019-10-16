@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.select;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
@@ -30,10 +31,12 @@ import com.facebook.buck.core.model.platform.Platform;
 public interface Selectable {
 
   /** @return <code>true</code> if this condition matches the configuration */
-  boolean matches(SelectableConfigurationContext configurationContext);
+  boolean matches(
+      SelectableConfigurationContext configurationContext, DependencyStack dependencyStack);
 
   /** @return <code>true</code> if this condition matches the platform */
-  boolean matchesPlatform(Platform platform, ConstraintResolver constraintResolver);
+  boolean matchesPlatform(
+      Platform platform, ConstraintResolver constraintResolver, DependencyStack dependencyStack);
 
   /** @return <code>true</code> if this condition is more specialized than the given one */
   boolean refines(Selectable other);

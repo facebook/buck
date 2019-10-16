@@ -16,14 +16,15 @@
 
 package com.facebook.buck.core.model.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 
 /** An interface to access constraints using {@link BuildTarget}. */
 public interface ConstraintResolver {
 
   /** @return {@link ConstraintSetting} identified by a given {@link BuildTarget}. */
-  ConstraintSetting getConstraintSetting(BuildTarget buildTarget);
+  ConstraintSetting getConstraintSetting(BuildTarget buildTarget, DependencyStack dependencyStack);
 
   /** @return {@link ConstraintValue} identified by a given {@link BuildTarget}. */
-  ConstraintValue getConstraintValue(BuildTarget buildTarget);
+  ConstraintValue getConstraintValue(BuildTarget buildTarget, DependencyStack dependencyStack);
 }

@@ -17,6 +17,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -42,7 +43,8 @@ class TargetCompatibilityChecker {
   public static boolean targetNodeArgMatchesPlatform(
       ConfigurationRuleRegistry configurationRuleRegistry,
       ConstructorArg targetNodeArg,
-      Platform platform) {
+      Platform platform,
+      DependencyStack dependencyStack) {
     if (!(targetNodeArg instanceof BuildRuleArg)) {
       return true;
     }
@@ -53,11 +55,14 @@ class TargetCompatibilityChecker {
         argWithTargetCompatible.getTargetCompatibleWith().stream()
             .map(BuildTarget::getUnconfiguredBuildTargetView)
             .map(ConfigurationBuildTargets::convert)
-            .map(constraintResolver::getConstraintValue)
+            .map(
+                buildTarget ->
+                    constraintResolver.getConstraintValue(
+                        buildTarget, dependencyStack.child(buildTarget)))
             .collect(Collectors.toList());
     if (!targetCompatibleWithConstraints.isEmpty()) {
       // Empty `target_compatible_with` means target is compatible.
-      if (!platform.matchesAll(targetCompatibleWithConstraints)) {
+      if (!platform.matchesAll(targetCompatibleWithConstraints, dependencyStack)) {
         return false;
       }
     }
@@ -71,9 +76,13 @@ class TargetCompatibilityChecker {
         ConfigSettingRule configSettingRule =
             (ConfigSettingRule)
                 configurationRuleResolver.getRule(
-                    ConfigurationBuildTargets.convert(compatibleConfigTarget));
+                    ConfigurationBuildTargets.convert(compatibleConfigTarget),
+                    dependencyStack.child(compatibleConfigTarget));
 
-        if (configSettingRule.getSelectable().matchesPlatform(platform, constraintResolver)) {
+        if (configSettingRule
+            .getSelectable()
+            .matchesPlatform(
+                platform, constraintResolver, dependencyStack.child(compatibleConfigTarget))) {
           compatible = true;
           break;
         }

@@ -17,6 +17,7 @@ package com.facebook.buck.core.rules.platform;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
@@ -45,11 +46,13 @@ public class DefaultTargetPlatformResolverTest {
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(
-                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())));
+                new RuleBasedPlatformResolver(
+                    (target, dependencyStack) -> null, new ThrowingConstraintResolver())));
 
     assertEquals(
         emptyTargetConfigurationPlatform,
-        targetPlatformResolver.getTargetPlatform(UnconfiguredTargetConfiguration.INSTANCE));
+        targetPlatformResolver.getTargetPlatform(
+            UnconfiguredTargetConfiguration.INSTANCE, DependencyStack.root()));
   }
 
   @Test
@@ -58,11 +61,13 @@ public class DefaultTargetPlatformResolverTest {
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(
-                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())));
+                new RuleBasedPlatformResolver(
+                    (target, dependencyStack) -> null, new ThrowingConstraintResolver())));
 
     assertEquals(
         emptyTargetConfigurationPlatform,
-        targetPlatformResolver.getTargetPlatform(ConfigurationForConfigurationTargets.INSTANCE));
+        targetPlatformResolver.getTargetPlatform(
+            ConfigurationForConfigurationTargets.INSTANCE, DependencyStack.root()));
   }
 
   @Test
@@ -75,7 +80,7 @@ public class DefaultTargetPlatformResolverTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
     ConfigurationRuleResolver configurationRuleResolver =
-        buildTarget -> {
+        (buildTarget, dependencyStack) -> {
           if (buildTarget.equals(platformTarget)) {
             return PlatformRule.of(
                 platformTarget,
@@ -106,7 +111,7 @@ public class DefaultTargetPlatformResolverTest {
     ConstraintBasedPlatform platform =
         (ConstraintBasedPlatform)
             targetPlatformResolver.getTargetPlatform(
-                ImmutableRuleBasedTargetConfiguration.of(platformTarget));
+                ImmutableRuleBasedTargetConfiguration.of(platformTarget), DependencyStack.root());
 
     assertEquals("//platform:platform", platform.toString());
     assertEquals(1, platform.getConstraintValues().size());
@@ -119,7 +124,8 @@ public class DefaultTargetPlatformResolverTest {
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(
-                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())));
+                new RuleBasedPlatformResolver(
+                    (target, dependencyStack) -> null, new ThrowingConstraintResolver())));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("Cannot determine target platform for configuration:");
@@ -130,6 +136,7 @@ public class DefaultTargetPlatformResolverTest {
           public Optional<BuildTarget> getConfigurationTarget() {
             return Optional.empty();
           }
-        });
+        },
+        DependencyStack.root());
   }
 }

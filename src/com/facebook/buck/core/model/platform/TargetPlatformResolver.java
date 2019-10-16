@@ -15,10 +15,12 @@
  */
 package com.facebook.buck.core.model.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.TargetConfiguration;
 
 /** An interface to access a platform using {@link TargetConfiguration}. */
 public interface TargetPlatformResolver {
   /** @return {@link Platform} for a given {@link TargetConfiguration}. */
-  Platform getTargetPlatform(TargetConfiguration targetConfiguration);
+  Platform getTargetPlatform(
+      TargetConfiguration targetConfiguration, DependencyStack dependencyStack);
 }

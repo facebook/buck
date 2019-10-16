@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.model.platform.impl;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
@@ -35,7 +36,8 @@ public class UnconfiguredPlatform implements Platform {
   private UnconfiguredPlatform() {}
 
   @Override
-  public boolean matchesAll(Collection<ConstraintValue> constraintValues) {
+  public boolean matchesAll(
+      Collection<ConstraintValue> constraintValues, DependencyStack dependencyStack) {
     throw new HumanReadableException(
         "Cannot use select() expression when target platform is not specified");
   }

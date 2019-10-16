@@ -21,6 +21,7 @@ import static org.junit.Assert.assertSame;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -102,6 +103,7 @@ public class RuleAnalysisGraphImplTest {
             FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
@@ -170,6 +172,7 @@ public class RuleAnalysisGraphImplTest {
             FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(buildTarget2),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
@@ -181,6 +184,7 @@ public class RuleAnalysisGraphImplTest {
             FakeRuleDescriptionArg.builder().setName("target2").build(),
             projectFilesystem,
             buildTarget2,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
@@ -247,6 +251,7 @@ public class RuleAnalysisGraphImplTest {
             FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(buildTarget2),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
@@ -258,6 +263,7 @@ public class RuleAnalysisGraphImplTest {
             FakeTargetNodeArg.builder().setName("target2").build(),
             projectFilesystem,
             buildTarget2,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),

@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.targetnode;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -92,6 +93,7 @@ public class BuildTargetToRawTargetNodeComputation
         cell,
         cell.getRoot().resolve(unconfiguredBuildTargetView.getBasePath()).resolve(buildFileName),
         unconfiguredBuildTargetView,
+        DependencyStack.root(),
         rawAttributes);
   }
 

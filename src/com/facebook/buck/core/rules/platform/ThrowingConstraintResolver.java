@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
@@ -24,13 +25,15 @@ import com.facebook.buck.core.model.platform.ConstraintValue;
 public class ThrowingConstraintResolver implements ConstraintResolver {
   /** Unconditionally throw */
   @Override
-  public ConstraintSetting getConstraintSetting(BuildTarget buildTarget) {
+  public ConstraintSetting getConstraintSetting(
+      BuildTarget buildTarget, DependencyStack dependencyStack) {
     throw new UnsupportedOperationException();
   }
 
   /** Unconditionally throw */
   @Override
-  public ConstraintValue getConstraintValue(BuildTarget buildTarget) {
+  public ConstraintValue getConstraintValue(
+      BuildTarget buildTarget, DependencyStack dependencyStack) {
     throw new UnsupportedOperationException();
   }
 }

@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
@@ -89,6 +90,7 @@ public class TargetNodeFactory implements NodeCopier {
       Object constructorArg,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
@@ -100,6 +102,7 @@ public class TargetNodeFactory implements NodeCopier {
         (T) constructorArg,
         filesystem,
         buildTarget,
+        dependencyStack,
         declaredDeps,
         configurationDeps,
         visibilityPatterns,
@@ -113,6 +116,7 @@ public class TargetNodeFactory implements NodeCopier {
       T constructorArg,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
@@ -127,12 +131,16 @@ public class TargetNodeFactory implements NodeCopier {
         .equals(ConfigurationForConfigurationTargets.INSTANCE)) {
       if (!isConfigurationRule) {
         throw new HumanReadableException(
-            "%s was used to resolve a configuration rule but it is a build rule", buildTarget);
+            dependencyStack,
+            "%s was used to resolve a configuration rule but it is a build rule",
+            buildTarget);
       }
     } else {
       if (isConfigurationRule) {
         throw new HumanReadableException(
-            "%s was used to resolve a build rule but it is a configuration rule", buildTarget);
+            dependencyStack,
+            "%s was used to resolve a build rule but it is a configuration rule",
+            buildTarget);
       }
     }
 
@@ -257,6 +265,7 @@ public class TargetNodeFactory implements NodeCopier {
           originalNode.getConstructorArg(),
           originalNode.getFilesystem(),
           originalNode.getBuildTarget().withFlavors(flavors),
+          DependencyStack.top(originalNode.getBuildTarget()),
           originalNode.getDeclaredDeps(),
           originalNode.getConfigurationDeps(),
           originalNode.getVisibilityPatterns(),

@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.Platform;
@@ -39,13 +40,14 @@ public class CombinedPlatformResolver implements PlatformResolver {
   }
 
   @Override
-  public Platform getPlatform(BuildTarget buildTarget) {
-    ConfigurationRule configurationRule = configurationRuleResolver.getRule(buildTarget);
+  public Platform getPlatform(BuildTarget buildTarget, DependencyStack dependencyStack) {
+    ConfigurationRule configurationRule =
+        configurationRuleResolver.getRule(buildTarget, dependencyStack);
     if (configurationRule instanceof PlatformRule) {
-      return ruleBasedPlatformResolver.getPlatform(buildTarget);
+      return ruleBasedPlatformResolver.getPlatform(buildTarget, dependencyStack);
     }
     if (configurationRule instanceof MultiPlatformRule) {
-      return ruleBasedMultiPlatformResolver.getPlatform(buildTarget);
+      return ruleBasedMultiPlatformResolver.getPlatform(buildTarget, dependencyStack);
     }
     throw new HumanReadableException(
         "%s is used as a target platform, but not declared using a platform rule", buildTarget);

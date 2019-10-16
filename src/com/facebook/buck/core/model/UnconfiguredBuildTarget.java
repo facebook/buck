@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -44,7 +45,7 @@ import org.immutables.value.Value;
  */
 @JsonDeserialize
 public abstract class UnconfiguredBuildTarget
-    implements Comparable<UnconfiguredBuildTarget>, QueryTarget {
+    implements Comparable<UnconfiguredBuildTarget>, QueryTarget, DependencyStack.Element {
 
   private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
       Ordering.<Flavor>natural().lexicographical();
@@ -156,5 +157,11 @@ public abstract class UnconfiguredBuildTarget
   @JsonIgnore
   public String getCellRelativeName() {
     return getBaseName() + ":" + getName() + getFlavorPostfix();
+  }
+
+  @Override
+  @JsonIgnore
+  public DependencyStack.Element getElement() {
+    return this;
   }
 }

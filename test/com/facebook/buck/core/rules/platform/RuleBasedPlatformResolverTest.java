@@ -17,6 +17,7 @@ package com.facebook.buck.core.rules.platform;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -40,14 +41,15 @@ public class RuleBasedPlatformResolverTest {
     BuildTarget constraint = BuildTargetFactory.newInstance("//constraint:setting");
     RuleBasedPlatformResolver resolver =
         new RuleBasedPlatformResolver(
-            target -> new ConstraintSettingRule(constraint, "setting", Optional.empty()),
+            (target, dependencyStack) ->
+                new ConstraintSettingRule(constraint, "setting", Optional.empty()),
             new ThrowingConstraintResolver());
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         "//constraint:setting is used as a target platform, but not declared using `platform` rule");
 
-    resolver.getPlatform(constraint);
+    resolver.getPlatform(constraint, DependencyStack.root());
   }
 
   @Test
@@ -61,7 +63,7 @@ public class RuleBasedPlatformResolverTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
     ConfigurationRuleResolver configurationRuleResolver =
-        buildTarget -> {
+        (buildTarget, dependencyStack) -> {
           if (buildTarget.equals(platformTarget)) {
             return PlatformRule.of(
                 platformTarget,
@@ -83,7 +85,7 @@ public class RuleBasedPlatformResolverTest {
             configurationRuleResolver, new RuleBasedConstraintResolver(configurationRuleResolver));
 
     ConstraintBasedPlatform platform =
-        (ConstraintBasedPlatform) resolver.getPlatform(platformTarget);
+        (ConstraintBasedPlatform) resolver.getPlatform(platformTarget, DependencyStack.root());
 
     assertEquals("//platform:platform", platform.toString());
     assertEquals(1, platform.getConstraintValues().size());

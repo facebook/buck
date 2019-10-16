@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.AbstractBuildTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
@@ -152,5 +153,11 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
     return ImmutableBuildTarget.of(
         getUnconfiguredBuildTargetView().withUnflavoredBuildTarget(target),
         getTargetConfiguration());
+  }
+
+  @Override
+  @JsonIgnore
+  public DependencyStack.Element getElement() {
+    return this;
   }
 }

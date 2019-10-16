@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.platform.impl;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
@@ -54,7 +55,7 @@ public class ConstraintBasedPlatformTest {
     ConstraintBasedPlatform platform =
         new ConstraintBasedPlatform(buildTarget, ImmutableSet.of(cs1v1, cs2v1, cs3v1));
 
-    assertTrue(platform.matchesAll(Arrays.asList(cs1v1, cs2v1)));
+    assertTrue(platform.matchesAll(Arrays.asList(cs1v1, cs2v1), DependencyStack.root()));
   }
 
   @Test
@@ -62,7 +63,7 @@ public class ConstraintBasedPlatformTest {
     ConstraintBasedPlatform platform =
         new ConstraintBasedPlatform(buildTarget, ImmutableSet.of(cs1v1, cs2v1, cs3v1));
 
-    assertTrue(platform.matchesAll(Arrays.asList(cs1v1, cs2v1, cs3v1)));
+    assertTrue(platform.matchesAll(Arrays.asList(cs1v1, cs2v1, cs3v1), DependencyStack.root()));
   }
 
   @Test
@@ -70,7 +71,7 @@ public class ConstraintBasedPlatformTest {
     ConstraintBasedPlatform platform =
         new ConstraintBasedPlatform(buildTarget, ImmutableSet.of(cs1v1, cs2v1, cs3v1));
 
-    assertTrue(platform.matchesAll(Collections.emptyList()));
+    assertTrue(platform.matchesAll(Collections.emptyList(), DependencyStack.root()));
   }
 
   @Test
@@ -78,6 +79,6 @@ public class ConstraintBasedPlatformTest {
     ConstraintBasedPlatform platform =
         new ConstraintBasedPlatform(buildTarget, ImmutableSet.of(cs1v1, cs2v1));
 
-    assertFalse(platform.matchesAll(Arrays.asList(cs1v1, cs2v1, cs3v1)));
+    assertFalse(platform.matchesAll(Arrays.asList(cs1v1, cs2v1, cs3v1), DependencyStack.root()));
   }
 }

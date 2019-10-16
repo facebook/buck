@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
@@ -88,7 +89,8 @@ public class AuditFlavorsCommand extends AbstractCommand {
                     params.getParser().getPermState())) {
 
       for (BuildTarget target : targets) {
-        TargetNode<?> targetNode = params.getParser().getTargetNode(parserState, target);
+        TargetNode<?> targetNode =
+            params.getParser().getTargetNode(parserState, target, DependencyStack.top(target));
         builder.add(targetNode);
       }
     } catch (BuildFileParseException e) {

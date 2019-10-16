@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.event.PerfEventId;
@@ -34,6 +35,7 @@ public interface ParserTargetNodeFromAttrMapFactory {
       Cell cell,
       Path buildFile,
       BuildTarget target,
+      DependencyStack dependencyStack,
       Map<String, Object> rawNode,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope);
 }

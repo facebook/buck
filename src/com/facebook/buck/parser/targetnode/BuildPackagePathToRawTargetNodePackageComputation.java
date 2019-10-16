@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.targetnode;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -119,8 +120,10 @@ public class BuildPackagePathToRawTargetNodePackageComputation
       RawTargetNode rawTargetNode = entry.getValue();
 
       try {
+        // TODO(nga): obtain proper dependency stack
+        DependencyStack dependencyStack = DependencyStack.top(rawTargetNode.getBuildTarget());
         ImmutableSet<UnconfiguredBuildTarget> deps =
-            getTargetDeps(rawTargetNode, buildFileAbsolutePath);
+            getTargetDeps(rawTargetNode, dependencyStack, buildFileAbsolutePath);
         RawTargetNodeWithDeps rawTargetNodeWithDeps =
             ImmutableRawTargetNodeWithDeps.of(rawTargetNode, deps);
         builder.put(unconfiguredBuildTarget.getName(), rawTargetNodeWithDeps);
@@ -164,7 +167,7 @@ public class BuildPackagePathToRawTargetNodePackageComputation
   }
 
   private ImmutableSet<UnconfiguredBuildTarget> getTargetDeps(
-      RawTargetNode rawTargetNode, Path buildFileAbsolutePath) {
+      RawTargetNode rawTargetNode, DependencyStack dependencyStack, Path buildFileAbsolutePath) {
     // To discover dependencies, we coerce RawTargetNode to TargetNode, get dependencies out of it,
     // then trash target node
     // THIS SOLUTION IS TEMPORARY and not 100% correct in general, because we have to resolve
@@ -185,6 +188,7 @@ public class BuildPackagePathToRawTargetNodePackageComputation
             cell,
             buildFileAbsolutePath,
             buildTarget,
+            dependencyStack,
             rawTargetNode,
             id -> SimplePerfEvent.scope(Optional.empty(), PerfEventId.of("raw_to_targetnode")));
 

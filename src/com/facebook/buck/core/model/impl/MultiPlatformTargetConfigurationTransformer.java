@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.MultiPlatform;
@@ -46,8 +47,10 @@ public class MultiPlatformTargetConfigurationTransformer implements TargetConfig
   }
 
   @Override
-  public ImmutableList<TargetConfiguration> transform(TargetConfiguration targetConfiguration) {
-    Platform platform = targetPlatformResolver.getTargetPlatform(targetConfiguration);
+  public ImmutableList<TargetConfiguration> transform(
+      TargetConfiguration targetConfiguration, DependencyStack dependencyStack) {
+    Platform platform =
+        targetPlatformResolver.getTargetPlatform(targetConfiguration, dependencyStack);
     Preconditions.checkState(platform instanceof MultiPlatform, "Not multi platform: %s", platform);
     MultiPlatform multiPlatform = (MultiPlatform) platform;
 
@@ -71,8 +74,10 @@ public class MultiPlatformTargetConfigurationTransformer implements TargetConfig
   }
 
   @Override
-  public boolean needsTransformation(TargetConfiguration targetConfiguration) {
-    Platform platform = targetPlatformResolver.getTargetPlatform(targetConfiguration);
+  public boolean needsTransformation(
+      TargetConfiguration targetConfiguration, DependencyStack dependencyStack) {
+    Platform platform =
+        targetPlatformResolver.getTargetPlatform(targetConfiguration, dependencyStack);
     return platform instanceof MultiPlatform;
   }
 }

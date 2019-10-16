@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
@@ -930,7 +931,13 @@ public class TargetsCommand extends AbstractCommand {
         TargetNode<?> targetNode = targetNodeIterator.next();
         @Nullable
         Map<String, Object> targetNodeAttributes =
-            params.getParser().getTargetNodeRawAttributes(state, params.getCell(), targetNode);
+            params
+                .getParser()
+                .getTargetNodeRawAttributes(
+                    state,
+                    params.getCell(),
+                    targetNode,
+                    DependencyStack.top(targetNode.getBuildTarget()));
         if (targetNodeAttributes == null) {
           printWarning(
               params,
@@ -1329,7 +1336,11 @@ public class TargetsCommand extends AbstractCommand {
                   node ->
                       params
                           .getParser()
-                          .getTargetNodeRawAttributesJob(state, params.getCell(), node),
+                          .getTargetNodeRawAttributesJob(
+                              state,
+                              params.getCell(),
+                              node,
+                              DependencyStack.top(node.getBuildTarget())),
                   getHashFunction())
               .hashTargetGraph();
     }

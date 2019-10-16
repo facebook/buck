@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.select;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 
 /** Provides access to instances of {@link Selectable}. */
@@ -24,5 +25,5 @@ public interface SelectableResolver {
   /**
    * @return a {@link Selectable} or throws an exception if it's not registered in this resolver.
    */
-  Selectable getSelectable(BuildTarget target);
+  Selectable getSelectable(BuildTarget target, DependencyStack dependencyStack);
 }
