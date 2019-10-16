@@ -785,7 +785,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testMinApiDrivesDxToProduceHigherVersionedBytecode() throws Exception {
-    AssumeAndroidPlatform.assumeBuildToolsIsNewer("28.0.0");
+    AssumeAndroidPlatform.assumeBuildToolsVersionIsAtLeast("28");
     Path outputApk = workspace.buildAndReturnOutput("//apps/sample:app_with_min_28");
     workspace
         .getBuildLog()

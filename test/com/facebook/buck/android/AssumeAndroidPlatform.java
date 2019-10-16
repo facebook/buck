@@ -113,7 +113,7 @@ public class AssumeAndroidPlatform {
    * version of build tools, it doesn't run aapt2 to verify it actually supports the option.
    */
   public static void assumeAapt2WithOutputTextSymbolsIsAvailable() {
-    verifyAndroidSkdVersionIsAboveSpecified("26.0.2");
+    assumeBuildToolsVersionIsAtLeast("26.0.2");
     assumeAapt2IsAvailable();
   }
 
@@ -135,61 +135,28 @@ public class AssumeAndroidPlatform {
   }
 
   /**
-   * Checks that Android build tools have version that matches the provided or is newer.
+   * Checks that the Android build tools version is newer than or equal to the given version.
    *
-   * <p>Versions are expected to be in format like "25.0.2".
+   * @param expectedVersion a build tools version in a valid format, e.g. "25.0.2".
    */
-  public static void assumeBuildToolsIsNewer(String expectedBuildToolsVersion) {
-    assumeBuildToolsIsNewer(getAndroidSdkLocation(), expectedBuildToolsVersion);
-  }
-
-  private static void assumeBuildToolsIsNewer(
-      AndroidSdkLocation androidSdkLocation, String expectedBuildToolsVersion) {
+  public static void assumeBuildToolsVersionIsAtLeast(String expectedVersion) {
     AndroidBuildToolsResolver buildToolsResolver =
         new AndroidBuildToolsResolver(
             AndroidNdkHelper.DEFAULT_CONFIG,
-            AndroidSdkLocation.of(androidSdkLocation.getSdkRootPath()));
-    Optional<String> sdkBuildToolsVersion = buildToolsResolver.getBuildToolsVersion();
+            AndroidSdkLocation.of(getAndroidSdkLocation().getSdkRootPath()));
+    Optional<String> actualVersion = buildToolsResolver.getBuildToolsVersion();
 
-    assumeTrue(sdkBuildToolsVersion.isPresent());
-
-    assumeVersionIsNewer(
-        sdkBuildToolsVersion.get(),
-        expectedBuildToolsVersion,
-        "Version "
-            + sdkBuildToolsVersion.get()
-            + " is less then requested version "
-            + expectedBuildToolsVersion);
-  }
-
-  private static void assumeVersionIsNewer(
-      String actualVersion, String expectedVersion, String message) {
-    String[] actualVersionParts = actualVersion.split("\\.");
-    String[] expectedVersionParts = expectedVersion.split("\\.");
-
-    int currentPart = 0;
-    while (currentPart < actualVersionParts.length || currentPart < expectedVersionParts.length) {
-      int actualVersionPart =
-          currentPart < actualVersionParts.length
-              ? Integer.parseInt(actualVersionParts[currentPart])
-              : 0;
-      int expectedVersionPart =
-          currentPart < expectedVersionParts.length
-              ? Integer.parseInt(expectedVersionParts[currentPart])
-              : 0;
-
-      assumeTrue(message, expectedVersionPart <= actualVersionPart);
-
-      currentPart++;
-    }
+    assumeTrue(actualVersion.isPresent());
+    assumeTrue(
+        "Build tools version "
+            + actualVersion.get()
+            + " is less than expected version "
+            + expectedVersion,
+        VERSION_STRING_COMPARATOR.compare(actualVersion.get(), expectedVersion) >= 0);
   }
 
   public static void assumeBundleBuildIsSupported() {
-    verifyAndroidSkdVersionIsAboveSpecified("28.0.0");
+    assumeBuildToolsVersionIsAtLeast("28");
     assumeAapt2IsAvailable();
-  }
-
-  public static void verifyAndroidSkdVersionIsAboveSpecified(String expectedBuildToolsVersion) {
-    assumeBuildToolsIsNewer(getAndroidSdkLocation(), expectedBuildToolsVersion);
   }
 }
