@@ -30,7 +30,7 @@ import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.LinkedHashMap;
+import com.google.common.collect.Streams;
 
 public class RuleBasedPlatformResolver implements PlatformResolver {
 
@@ -54,7 +54,7 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
     AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, PlatformRule> platformTraversal =
         new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
 
-    LinkedHashMap<BuildTarget, PlatformRule> platformTargets;
+    Iterable<Pair<BuildTarget, PlatformRule>> platformTargets;
     try {
       platformTargets = platformTraversal.traverse(ImmutableList.of(buildTarget));
     } catch (CycleException e) {
@@ -62,8 +62,8 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
     }
 
     ImmutableSet<ConstraintValue> constraintValues =
-        platformTargets.values().stream()
-            .flatMap(rule -> rule.getConstrainValues().stream())
+        Streams.stream(platformTargets)
+            .flatMap(rule -> rule.getSecond().getConstrainValues().stream())
             .map(constraintResolver::getConstraintValue)
             .collect(ImmutableSet.toImmutableSet());
 

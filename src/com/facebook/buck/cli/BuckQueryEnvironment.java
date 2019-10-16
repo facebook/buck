@@ -417,9 +417,8 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, TargetNode<?>> targetNodeTraversal =
         new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
     try {
-      for (Map.Entry<BuildTarget, TargetNode<?>> entry :
-          targetNodeTraversal.traverse(newBuildTargets).entrySet()) {
-        TargetNode<?> node = entry.getValue();
+      for (Pair<BuildTarget, TargetNode<?>> entry : targetNodeTraversal.traverse(newBuildTargets)) {
+        TargetNode<?> node = entry.getSecond();
         graph.addNode(node);
         for (BuildTarget dep : node.getParseDeps()) {
           graph.addEdge(
