@@ -76,14 +76,23 @@ public class PythonTestIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   public ProjectWorkspace workspace;
 
+  private String echoTestRunner = "echo";
+
   @Before
   public void setUp() throws IOException {
-    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+    if (packageStyle == PythonBuckConfig.PackageStyle.INPLACE
+        || packageStyle == PythonBuckConfig.PackageStyle.INPLACE_LITE) {
+      assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+    }
 
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_test", tmp);
     workspace.setUp();
     workspace.writeContentsToPath(
         "[python]\npackage_style = " + packageStyle.toString().toLowerCase() + "\n", ".buckconfig");
+    if (Platform.detect().equals(Platform.WINDOWS)) {
+      workspace.writeContentsToPath("echo %*", workspace.getPath("echo.bat"));
+      echoTestRunner = workspace.resolve("echo.bat").toAbsolutePath().toString();
+    }
     PythonBuckConfig config = getPythonBuckConfig();
     assertThat(config.getPackageStyle(), equalTo(packageStyle));
   }
@@ -92,7 +101,7 @@ public class PythonTestIntegrationTest {
   public void testXProtocolRuleWithoutFailures() throws IOException, InterruptedException {
     ProcessResult result =
         workspace.runBuckCommand(
-            "test", "--config", "test.external_runner=echo", "//:testx_success");
+            "test", "--config", "test.external_runner=" + echoTestRunner, "//:testx_success");
     result.assertSuccess();
 
     Path specOutput =
@@ -122,7 +131,7 @@ public class PythonTestIntegrationTest {
   public void testXProtocolRuleWithFailures() throws IOException, InterruptedException {
     ProcessResult result =
         workspace.runBuckCommand(
-            "test", "--config", "test.external_runner=echo", "//:testx_failure");
+            "test", "--config", "test.external_runner=" + echoTestRunner, "//:testx_failure");
     result.assertSuccess();
 
     Path specOutput =
@@ -162,7 +171,10 @@ public class PythonTestIntegrationTest {
   public void testXProtocolRuleWithBadTestMainModule() throws IOException, InterruptedException {
     ProcessResult result =
         workspace.runBuckCommand(
-            "test", "--config", "test.external_runner=echo", "//:testx_failure_with_test_main");
+            "test",
+            "--config",
+            "test.external_runner=" + echoTestRunner,
+            "//:testx_failure_with_test_main");
     result.assertSuccess();
 
     Path specOutput =
@@ -343,8 +355,11 @@ public class PythonTestIntegrationTest {
 
   private ProcessExecutor.Result executeCmd(JsonNode spec)
       throws IOException, InterruptedException {
-    String cmd = spec.get("cmd").textValue();
-    Path script = Files.createTempFile("bash", "script");
+    String testScriptName = Platform.detect() == Platform.WINDOWS ? "script.bat" : "script.sh";
+    String cmdKey = Platform.detect() == Platform.WINDOWS ? "cmd_win" : "cmd";
+
+    String cmd = spec.get(cmdKey).textValue();
+    Path script = Files.createTempFile("bash", testScriptName);
     Files.write(script, cmd.getBytes(Charsets.UTF_8));
     MostFiles.makeExecutable(script);
     DefaultProcessExecutor processExecutor =

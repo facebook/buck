@@ -1,3 +1,12 @@
+CMD_UNIX = "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && python $out"
+
+CMD_WIN = "\r\n".join([
+    "set out=\"$(abs_output testbin)\"",
+    "for %%F in (\"%out%\") do set out_dir=%%~dpF",
+    "cd \"%out_dir%\"",
+    "python \"%out%\"",
+])
+
 python_test(
     name = "test-success",
     srcs = [
@@ -69,14 +78,14 @@ python_test(
     ],
 )
 
-sh_binary(
-    name = "sh_binary1",
-    main = "sh_binary1.sh",
+export_file(
+    name = "file1.txt",
+    src = "file1.txt",
 )
 
-sh_binary(
-    name = "sh_binary2",
-    main = "sh_binary2.sh",
+export_file(
+    name = "file2.txt",
+    src = "file2.txt",
 )
 
 python_test(
@@ -85,7 +94,7 @@ python_test(
         "test_deps_with_env_macros.py",
     ],
     env = {
-        "TESTING_BINARIES": "$(location :sh_binary1) -- $(location :sh_binary2)",
+        "TESTING_BINARIES": "$(location :file1.txt) -- $(location :file2.txt)",
     },
 )
 
@@ -111,7 +120,8 @@ python_test(
                 "boolean": True,
             },
         ],
-        "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && python $out",
+        "cmd": CMD_UNIX,
+        "cmd_win": CMD_WIN,
     },
 )
 
@@ -131,7 +141,8 @@ python_test(
                 "boolean": True,
             },
         ],
-        "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && python $out",
+        "cmd": CMD_UNIX,
+        "cmd_win": CMD_WIN,
     },
 )
 
@@ -157,6 +168,7 @@ python_test(
                 "boolean": True,
             },
         ],
-        "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && python $out",
+        "cmd": CMD_UNIX,
+        "cmd_win": CMD_WIN,
     },
 )
