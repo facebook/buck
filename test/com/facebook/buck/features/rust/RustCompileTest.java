@@ -61,7 +61,7 @@ public class RustCompileTest {
     RustCompileRule linkable =
         FakeRustCompileRule.from(
             "//:donotcare", ImmutableSortedSet.of(FakeSourcePath.of("main.rs")));
-    assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("main.rs"));
+    assertThat(linkable.getCrateRoot(), Matchers.endsWith("main.rs"));
   }
 
   @Test
@@ -69,7 +69,7 @@ public class RustCompileTest {
     RustCompileRule linkable =
         FakeRustCompileRule.from(
             "//:myname", ImmutableSortedSet.of(FakeSourcePath.of("myname.rs")));
-    assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("myname.rs"));
+    assertThat(linkable.getCrateRoot(), Matchers.endsWith("myname.rs"));
   }
 
   // Test that there's only one valid candidate root source file.
@@ -228,7 +228,7 @@ public class RustCompileTest {
     private FakeRustCompileRule(
         BuildTarget target,
         ImmutableSortedSet<SourcePath> srcs,
-        SourcePath rootModule,
+        String rootModule,
         SourcePathRuleFinder ruleFinder) {
       super(
           target,
@@ -258,12 +258,12 @@ public class RustCompileTest {
 
       SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
 
-      Optional<SourcePath> root =
+      Optional<String> root =
           RustCompileUtils.getCrateRoot(
               ruleFinder.getSourcePathResolver(),
               buildTarget.getShortName(),
               ImmutableSet.of("main.rs", "lib.rs"),
-              srcs.stream());
+              srcs.stream().map(sp -> ruleFinder.getSourcePathResolver().getRelativePath(sp)));
 
       if (!root.isPresent()) {
         throw new HumanReadableException("No crate root source identified");

@@ -376,6 +376,93 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void binaryWithGeneratedMain() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:generated_top").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:generated_top");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve("buck-out/gen/generated_top#binary,default/generated_top")
+                .toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("generated main, included I WAS INCLUDED"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void binaryWithGeneratedMainCrateRoot() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:generated_top_crateroot").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:generated_top_crateroot");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve(
+                    "buck-out/gen/generated_top_crateroot#binary,default/generated_top_crateroot")
+                .toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("generated main, included I WAS INCLUDED"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void binaryWithSubdirGeneratedMain() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//subdir:subdir_generated_top").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//subdir:subdir_generated_top");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve(
+                    "buck-out/gen/subdir/subdir_generated_top#binary,default/subdir_generated_top")
+                .toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("generated main, included I WAS INCLUDED"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void binaryWithSubdirGeneratedMainCrateRoot() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//subdir:subdir_generated_top_crateroot").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//subdir:subdir_generated_top_crateroot");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve(
+                    "buck-out/gen/subdir/subdir_generated_top_crateroot#binary,default/subdir_generated_top_crateroot")
+                .toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("generated main, included I WAS INCLUDED"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
   public void binaryWithGeneratedModule() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);

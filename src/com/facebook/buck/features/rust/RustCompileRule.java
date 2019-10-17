@@ -83,7 +83,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedMap<String, Arg> environment,
       ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
-      SourcePath rootModule,
+      String rootModule,
       RemapSrcPaths remapSrcPaths,
       Optional<Path> xcrunSdkPath) {
     super(
@@ -117,7 +117,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedMap<String, Arg> environment,
       ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
-      SourcePath rootModule,
+      String rootModule,
       RemapSrcPaths remapSrcPaths,
       Optional<Path> xcrunSdkPath) {
     return new RustCompileRule(
@@ -146,7 +146,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
     return getSourcePath(getBuildable().output);
   }
 
-  SourcePath getCrateRoot() {
+  String getCrateRoot() {
     return getBuildable().rootModule;
   }
 
@@ -162,7 +162,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
     @AddToRuleKey private final ImmutableList<Arg> linkerArgs;
     @AddToRuleKey private final ImmutableSortedMap<String, Arg> environment;
 
-    @AddToRuleKey private final SourcePath rootModule;
+    @AddToRuleKey private final String rootModule;
     @AddToRuleKey private final OutputPath output;
 
     @AddToRuleKey private final ImmutableSortedMap<SourcePath, Optional<String>> mappedSources;
@@ -183,7 +183,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         ImmutableList<Arg> depArgs,
         ImmutableList<Arg> linkerArgs,
         ImmutableSortedMap<String, Arg> environment,
-        SourcePath rootModule,
+        String rootModule,
         String outputName,
         ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
         RemapSrcPaths remapSrcPaths,
@@ -267,7 +267,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
 
               dedupArgs.addAll(Arg.stringify(depArgs, buildContext.getSourcePathResolver()));
 
-              Path src = scratchDir.resolve(resolver.getRelativePath(rootModule));
+              Path src = scratchDir.resolve(rootModule);
               cmd.addAll(compiler.getCommandPrefix(resolver));
               if (executionContext.getAnsi().isAnsiTerminal()) {
                 cmd.add("--color=always");

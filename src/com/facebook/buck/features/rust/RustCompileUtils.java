@@ -120,7 +120,7 @@ public class RustCompileUtils {
       LinkableDepType depType,
       boolean rpath,
       ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
-      SourcePath rootModule,
+      String rootModule,
       boolean forceRlib,
       boolean preferStatic,
       Iterable<BuildRule> ruledeps,
@@ -291,7 +291,7 @@ public class RustCompileUtils {
         linkerArgs.build(),
         environment,
         mappedSources,
-        CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, rootModule),
+        rootModule,
         rustConfig.getRemapSrcPaths(),
         rustPlatform.getXcrunSdkPath());
   }
@@ -334,7 +334,7 @@ public class RustCompileUtils {
       Optional<String> edition,
       LinkableDepType depType,
       ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
-      SourcePath rootModule,
+      String rootModule,
       boolean forceRlib,
       boolean preferStatic,
       Iterable<BuildRule> deps,
@@ -433,7 +433,7 @@ public class RustCompileUtils {
       boolean rpath,
       ImmutableSortedSet<SourcePath> sources,
       ImmutableSortedMap<SourcePath, String> mappedSources,
-      Optional<SourcePath> crateRoot,
+      Optional<String> crateRoot,
       ImmutableSet<String> defaultRoots,
       CrateType crateType,
       Iterable<BuildRule> deps,
@@ -452,7 +452,7 @@ public class RustCompileUtils {
 
     CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
 
-    Pair<SourcePath, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
+    Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
         getRootModuleAndSources(
             buildTarget,
             graphBuilder,
@@ -579,38 +579,6 @@ public class RustCompileUtils {
     };
   }
 
-  /**
-   * Given a list of sources, return the one which is the root based on the defaults and user
-   * parameters.
-   *
-   * @param resolver SourcePathResolver for rule
-   * @param crate Name of crate
-   * @param defaults Default names for this rule (library, binary, etc)
-   * @param sources List of sources
-   * @return The matching source
-   */
-  public static Optional<SourcePath> getCrateRoot(
-      SourcePathResolver resolver,
-      String crate,
-      ImmutableSet<String> defaults,
-      Stream<SourcePath> sources) {
-    String crateName = String.format("%s.rs", crate);
-    ImmutableList<SourcePath> res =
-        sources
-            .filter(
-                src -> {
-                  String name = resolver.getRelativePath(src).getFileName().toString();
-                  return defaults.contains(name) || name.equals(crateName);
-                })
-            .collect(ImmutableList.toImmutableList());
-
-    if (res.size() == 1) {
-      return Optional.of(res.get(0));
-    } else {
-      return Optional.empty();
-    }
-  }
-
   public static void addFeatures(
       BuildTarget buildTarget, Iterable<String> features, ImmutableList.Builder<Arg> args) {
     for (String feature : features) {
@@ -662,12 +630,51 @@ public class RustCompileUtils {
     return libs.build();
   }
 
-  static Pair<SourcePath, ImmutableSortedMap<SourcePath, Optional<String>>> getRootModuleAndSources(
+  /**
+   * Given a list of sources, return the one which is the root based on the defaults and user
+   * parameters.
+   *
+   * @param resolver SourcePathResolver for rule
+   * @param crate Name of crate
+   * @param defaults Default names for this rule (library, binary, etc)
+   * @param sources List of sources
+   * @return The unique matching source - if there are not exactly one, return Optional.empty
+   */
+  public static Optional<String> getCrateRoot(
+      SourcePathResolver resolver,
+      String crate,
+      ImmutableSet<String> defaults,
+      Stream<Path> sources) {
+    String crateName = String.format("%s.rs", crate);
+    ImmutableList<String> res =
+        sources
+            .filter(
+                src -> {
+                  String name = src.getFileName().toString();
+                  return defaults.contains(name) || name.equals(crateName);
+                })
+            .map(src -> src.toString())
+            .collect(ImmutableList.toImmutableList());
+
+    if (res.size() == 1) {
+      return Optional.of(res.get(0));
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  /**
+   * Returns the path to the root module source, and the complete set of sources. The sources are
+   * always turned into a map, though unmapped sources are mapped to Optional.empty(). The root
+   * module is what's passed to rustc as a parameter, and may not exist until the symlinking phase
+   * happens.
+   */
+  static Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> getRootModuleAndSources(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       String crate,
-      Optional<SourcePath> crateRoot,
+      Optional<String> crateRoot,
       ImmutableSet<String> defaultRoots,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedMap<SourcePath, String> mappedSrcs) {
@@ -688,15 +695,19 @@ public class RustCompileUtils {
 
     ImmutableSortedMap<SourcePath, Optional<String>> fixed = fixedBuilder.build();
 
-    Optional<SourcePath> rootModule =
+    SourcePathResolver resolver = graphBuilder.getSourcePathResolver();
+    Stream<Path> filenames =
+        Stream.concat(
+            srcs.stream()
+                .map(src -> CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, src))
+                .map(sp -> resolver.getRelativePath(sp)),
+            mappedSrcs.values().stream().map(path -> target.getBasePath().resolve(path)));
+
+    Optional<String> rootModule =
         crateRoot
+            .map(name -> target.getBasePath().resolve(name).toString())
             .map(Optional::of)
-            .orElse(
-                getCrateRoot(
-                    graphBuilder.getSourcePathResolver(),
-                    crate,
-                    defaultRoots,
-                    fixed.keySet().stream()));
+            .orElseGet(() -> getCrateRoot(resolver, crate, defaultRoots, filenames));
 
     return new Pair<>(
         rootModule.orElseThrow(

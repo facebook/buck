@@ -45,7 +45,7 @@ public interface RustCommonArgs
 
   Optional<String> getCrate();
 
-  Optional<SourcePath> getCrateRoot();
+  Optional<String> getCrateRoot();
 
   @Value.Default
   default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
