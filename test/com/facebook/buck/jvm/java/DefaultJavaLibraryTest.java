@@ -32,7 +32,6 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -1365,7 +1364,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                 new ToolchainProviderBuilder().build(),
                 buildRuleParams,
                 graphBuilder,
-                TestCellBuilder.createCellRoots(filesystem),
                 new JavaConfiguredCompilerFactory(
                     testJavaBuckConfig, JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
                 testJavaBuckConfig,
@@ -1696,7 +1694,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                   new ToolchainProviderBuilder().build(),
                   buildRuleParams,
                   graphBuilder,
-                  TestCellBuilder.createCellRoots(projectFilesystem),
                   new JavaConfiguredCompilerFactory(
                       testJavaBuckConfig,
                       JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),

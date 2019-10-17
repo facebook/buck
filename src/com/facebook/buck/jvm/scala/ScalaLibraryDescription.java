@@ -135,7 +135,6 @@ public class ScalaLibraryDescription
                 context.getToolchainProvider(),
                 rawParams,
                 context.getActionGraphBuilder(),
-                context.getCellPathResolver(),
                 scalaBuckConfig,
                 javaBuckConfig,
                 args,

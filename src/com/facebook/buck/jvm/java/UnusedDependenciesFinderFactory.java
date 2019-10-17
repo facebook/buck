@@ -16,7 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+
 /** The factory is used to avoid creation of {@link UnusedDependenciesFinder} when */
 public interface UnusedDependenciesFinderFactory {
-  UnusedDependenciesFinder create();
+  UnusedDependenciesFinder create(
+      ProjectFilesystem projectFilesystem, SourcePathResolver sourcePathResolver);
 }

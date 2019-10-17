@@ -145,7 +145,6 @@ public class JavaTestDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                cellRoots,
                 new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
                 javaBuckConfig,
                 args)

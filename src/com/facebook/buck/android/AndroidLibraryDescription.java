@@ -145,7 +145,6 @@ public class AndroidLibraryDescription
             toolchainProvider,
             params,
             context.getActionGraphBuilder(),
-            context.getCellPathResolver(),
             javaBuckConfig,
             javacFactory,
             javacOptions,

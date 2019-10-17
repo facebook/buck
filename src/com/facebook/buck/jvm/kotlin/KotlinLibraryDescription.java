@@ -140,7 +140,6 @@ public class KotlinLibraryDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                context.getCellPathResolver(),
                 kotlinBuckConfig,
                 javaBuckConfig,
                 args,

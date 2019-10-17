@@ -203,7 +203,6 @@ public class RobolectricTestDescription
 
     BuildTarget testLibraryBuildTarget =
         buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
-    CellPathResolver cellRoots = context.getCellPathResolver();
 
     JavaLibrary testsLibrary =
         graphBuilder.addToIndex(
@@ -213,7 +212,6 @@ public class RobolectricTestDescription
                     context.getToolchainProvider(),
                     params,
                     graphBuilder,
-                    cellRoots,
                     compilerFactory.getCompiler(
                         args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA),
                         javacFactory),

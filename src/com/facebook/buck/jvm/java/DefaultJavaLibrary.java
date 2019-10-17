@@ -130,7 +130,6 @@ public class DefaultJavaLibrary
       ToolchainProvider toolchainProvider,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      CellPathResolver cellPathResolver,
       ConfiguredCompilerFactory compilerFactory,
       @Nullable JavaBuckConfig javaBuckConfig,
       @Nullable JavaLibraryDescription.CoreArg args) {
@@ -140,7 +139,6 @@ public class DefaultJavaLibrary
         toolchainProvider,
         params,
         graphBuilder,
-        cellPathResolver,
         compilerFactory,
         javaBuckConfig,
         args);

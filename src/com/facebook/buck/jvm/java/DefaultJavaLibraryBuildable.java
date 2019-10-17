@@ -133,7 +133,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     ImmutableList.Builder<Step> steps =
         ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1);
     steps.addAll(factoryBuildSteps);
-    unusedDependenciesFinderFactory.ifPresent(factory -> steps.add(factory.create()));
+    unusedDependenciesFinderFactory.ifPresent(
+        factory -> steps.add(factory.create(filesystem, buildContext.getSourcePathResolver())));
     addMakeMissingOutputsStep(filesystem, outputPathResolver, steps);
     return steps.build();
   }

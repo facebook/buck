@@ -118,7 +118,6 @@ public class AndroidBinaryGraphEnhancer {
   private final boolean ignoreAaptProguardConfig;
   private final Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
   private final ActionGraphBuilder graphBuilder;
-  private final CellPathResolver cellPathResolver;
   private final PackageType packageType;
   private final boolean shouldPreDex;
   private final DexSplitMode dexSplitMode;
@@ -219,7 +218,6 @@ public class AndroidBinaryGraphEnhancer {
     this.originalBuildTarget = originalBuildTarget;
     this.originalDeps = originalParams.getBuildDeps();
     this.graphBuilder = graphBuilder;
-    this.cellPathResolver = cellPathResolver;
     this.packageType = packageType;
     this.shouldPreDex = shouldPreDex;
     this.dexSplitMode = dexSplitMode;
@@ -377,7 +375,6 @@ public class AndroidBinaryGraphEnhancer {
                   toolchainProvider,
                   paramsForCompileGenCode,
                   graphBuilder,
-                  cellPathResolver,
                   new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
                   javaBuckConfig,
                   null)
@@ -528,7 +525,6 @@ public class AndroidBinaryGraphEnhancer {
                 toolchainProvider,
                 paramsForCompileUberRDotJava,
                 graphBuilder,
-                cellPathResolver,
                 new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
                 javaBuckConfig,
                 null)

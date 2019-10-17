@@ -215,7 +215,6 @@ public class JavaLibraryDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                context.getCellPathResolver(),
                 defaultJavaCompilerFactory,
                 javaBuckConfig,
                 args)

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -97,9 +96,6 @@ public abstract class DefaultJavaLibraryRules {
 
   @org.immutables.builder.Builder.Parameter
   abstract ActionGraphBuilder getActionGraphBuilder();
-
-  @org.immutables.builder.Builder.Parameter
-  abstract CellPathResolver getCellPathResolver();
 
   @Value.Lazy
   SourcePathResolver getSourcePathResolver() {
@@ -409,19 +405,16 @@ public abstract class DefaultJavaLibraryRules {
 
     if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE
         && getConfiguredCompilerFactory().trackClassUsage(getJavacOptions())) {
-      ProjectFilesystem projectFilesystem = getProjectFilesystem();
       BuildTarget buildTarget = getLibraryTarget();
-      SourcePathResolver sourcePathResolver = getSourcePathResolver();
       BuildRuleResolver buildRuleResolver = getActionGraphBuilder();
 
       unusedDependenciesFinderFactory =
           Optional.of(
-              () ->
+              (projectFilesystem, sourcePathResolver) ->
                   UnusedDependenciesFinder.of(
                       buildTarget,
                       projectFilesystem,
                       buildRuleResolver,
-                      getCellPathResolver(),
                       CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem),
                       Objects.requireNonNull(getDeps()),
                       sourcePathResolver,
@@ -692,7 +685,6 @@ public abstract class DefaultJavaLibraryRules {
         ToolchainProvider toolchainProvider,
         BuildRuleParams initialParams,
         ActionGraphBuilder graphBuilder,
-        CellPathResolver cellPathResolver,
         ConfiguredCompilerFactory configuredCompilerFactory,
         @Nullable JavaBuckConfig javaBuckConfig,
         @Nullable JavaLibraryDescription.CoreArg args) {
@@ -702,7 +694,6 @@ public abstract class DefaultJavaLibraryRules {
           toolchainProvider,
           initialParams,
           graphBuilder,
-          cellPathResolver,
           configuredCompilerFactory,
           getUnusedDependenciesAction(javaBuckConfig, args),
           javaBuckConfig,

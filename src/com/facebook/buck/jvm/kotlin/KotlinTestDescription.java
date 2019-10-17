@@ -105,7 +105,6 @@ public class KotlinTestDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                context.getCellPathResolver(),
                 kotlinBuckConfig,
                 javaBuckConfig,
                 args,

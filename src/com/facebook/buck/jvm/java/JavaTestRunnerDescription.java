@@ -88,7 +88,6 @@ public class JavaTestRunnerDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                context.getCellPathResolver(),
                 defaultJavaCompilerFactory,
                 javaBuckConfig,
                 args)

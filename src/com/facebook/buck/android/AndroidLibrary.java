@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.AndroidLibraryDescription.CoreArg;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -57,7 +56,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ToolchainProvider toolchainProvider,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      CellPathResolver cellPathResolver,
       JavaBuckConfig javaBuckConfig,
       JavacFactory javacFactory,
       JavacOptions javacOptions,
@@ -69,7 +67,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         toolchainProvider,
         params,
         graphBuilder,
-        cellPathResolver,
         javaBuckConfig,
         javacFactory,
         javacOptions,
@@ -169,7 +166,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         ToolchainProvider toolchainProvider,
         BuildRuleParams params,
         ActionGraphBuilder graphBuilder,
-        CellPathResolver cellPathResolver,
         JavaBuckConfig javaBuckConfig,
         JavacFactory javacFactory,
         JavacOptions javacOptions,
@@ -183,7 +179,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               toolchainProvider,
               params,
               graphBuilder,
-              cellPathResolver,
               compilerFactory,
               javaBuckConfig,
               args);

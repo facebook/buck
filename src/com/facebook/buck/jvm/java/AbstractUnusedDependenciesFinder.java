@@ -67,8 +67,6 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
 
   public abstract BuildRuleResolver getBuildRuleResolver();
 
-  public abstract CellPathResolver getCellPathResolver();
-
   public abstract Path getDepFileRelativePath();
 
   public abstract JavaLibraryDeps getJavaLibraryDeps();
@@ -81,7 +79,7 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Preconditions.checkState(getUnusedDependenciesAction() != UnusedDependenciesAction.IGNORE);
 
-    ImmutableSet<Path> usedJars = loadUsedJarPaths();
+    ImmutableSet<Path> usedJars = loadUsedJarPaths(context.getCellPathResolver());
     MessageHandler messageHandler = chooseMessageHandler(context);
 
     findUnusedDependenciesAndProcessMessages(messageHandler, usedJars);
@@ -99,14 +97,15 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
     }
   }
 
-  private ImmutableSet<Path> loadUsedJarPaths() throws IOException {
+  private ImmutableSet<Path> loadUsedJarPaths(CellPathResolver cellPathResolver)
+      throws IOException {
     Path depFile = getProjectFilesystem().getPathForRelativePath(getDepFileRelativePath());
     if (!depFile.toFile().exists()) {
       return ImmutableSet.of();
     }
 
     return DefaultClassUsageFileReader.loadUsedJarsFromFile(
-        getProjectFilesystem(), getCellPathResolver(), depFile);
+        getProjectFilesystem(), cellPathResolver, depFile);
   }
 
   private MessageHandler chooseMessageHandler(ExecutionContext executionContext) {

@@ -116,7 +116,6 @@ public class ScalaTestDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                cellRoots,
                 config,
                 javaBuckConfig,
                 args,

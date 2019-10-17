@@ -103,7 +103,6 @@ public class GroovyTestDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                cellRoots,
                 new GroovyConfiguredCompilerFactory(groovyBuckConfig),
                 javaBuckConfig,
                 args)

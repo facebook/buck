@@ -86,7 +86,6 @@ public class GroovyLibraryDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                context.getCellPathResolver(),
                 compilerFactory,
                 javaBuckConfig,
                 args)

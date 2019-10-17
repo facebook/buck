@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -35,7 +34,6 @@ final class KotlinLibraryBuilder {
       ToolchainProvider toolchainProvider,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      CellPathResolver cellPathResolver,
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig,
       KotlinLibraryDescription.CoreArg args,
@@ -46,7 +44,6 @@ final class KotlinLibraryBuilder {
         toolchainProvider,
         params,
         graphBuilder,
-        cellPathResolver,
         new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javacFactory),
         javaBuckConfig,
         args);
