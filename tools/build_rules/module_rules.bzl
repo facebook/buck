@@ -70,6 +70,10 @@ def buck_module(
             "mkdir $OUT && ",
             "cp $(location :{}) $OUT/module-binary-hash.txt".format(calculate_module_hash_name),
         ]),
+        cmd_exe = " && ".join([
+            "mkdir %OUT%",
+            "copy $(location :{}) %OUT%\\module-binary-hash.txt".format(calculate_module_hash_name),
+        ]),
     )
 
     module_name = name + "-module"
