@@ -92,10 +92,11 @@ public class AppleBundleIntegrationTest {
         new DefaultProcessExecutor(new TestConsole()), absoluteBundlePath);
   }
 
-  private void runSimpleApplicationBundleTestWithScenarioAndBuildTarget(
-      String scenario, String fqtn) throws IOException, InterruptedException {
+  private void runSimpleApplicationBundleTestWithBuildTarget(String fqtn)
+      throws IOException, InterruptedException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_no_debug", tmp);
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget(fqtn);
@@ -121,12 +122,6 @@ public class AppleBundleIntegrationTest {
 
     // Non-Swift target shouldn't include Frameworks/
     assertFalse(Files.exists(appPath.resolve("Frameworks")));
-  }
-
-  private void runSimpleApplicationBundleTestWithBuildTarget(String fqtn)
-      throws IOException, InterruptedException {
-    runSimpleApplicationBundleTestWithScenarioAndBuildTarget(
-        "simple_application_bundle_no_debug", fqtn);
   }
 
   @Test
@@ -180,12 +175,6 @@ public class AppleBundleIntegrationTest {
       throws IOException, InterruptedException {
     runSimpleApplicationBundleTestWithBuildTarget(
         "//:DemoApp#iphonesimulator-x86_64,no-debug,no-linkermap");
-  }
-
-  @Test
-  public void applicationBundleWithDefaultPlatform() throws IOException, InterruptedException {
-    runSimpleApplicationBundleTestWithScenarioAndBuildTarget(
-        "default_platform_in_rules", "//:DemoApp#no-debug");
   }
 
   @Test

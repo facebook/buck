@@ -162,7 +162,6 @@ public class AppleBundleDescription
     }
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
 
-    Optional<Flavor> platform = args.getDefaultPlatform();
     return AppleDescriptions.createAppleBundle(
         xcodeDescriptions,
         cxxPlatformsProvider,
@@ -178,7 +177,6 @@ public class AppleBundleDescription
             ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
         args.getBinary(),
         args.getPlatformBinary(),
-        platform,
         args.getExtension(),
         args.getProductName(),
         args.getInfoPlist(),
@@ -336,7 +334,6 @@ public class AppleBundleDescription
             cxxPlatformsProvider,
             appleCxxPlatforms,
             buildTarget,
-            args.getDefaultPlatform(),
             MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
     BuildTarget binaryTarget =
         AppleDescriptions.getTargetPlatformBinary(

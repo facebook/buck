@@ -325,7 +325,6 @@ public class AppleTestDescription
                             ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
                         Optional.of(library.getBuildTarget()),
                         Optional.empty(),
-                        args.getDefaultPlatform(),
                         args.getExtension(),
                         Optional.empty(),
                         args.getInfoPlist(),
