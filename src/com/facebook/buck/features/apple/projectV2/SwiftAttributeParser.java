@@ -60,20 +60,14 @@ public class SwiftAttributeParser {
   /** Parse Swift specific attributes for the {@code targetNode}. */
   public SwiftAttributes parseSwiftAttributes(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
-    SwiftAttributes.Builder builder = SwiftAttributes.builder();
-
-    String moduleName = Utils.getModuleName(targetNode);
-    builder.setModuleName(moduleName);
+    SwiftAttributes.Builder builder = SwiftAttributes.builder().setTargetNode(targetNode);
 
     Optional<String> swiftVersion = getSwiftVersionForTargetNode(targetNode);
     builder.setSwiftVersion(swiftVersion);
 
-    String objCbjCGeneratedHeaderName =
-        getSwiftObjCGeneratedHeaderName(targetNode, Optional.of(moduleName));
-    builder.setObjCGeneratedHeaderName(objCbjCGeneratedHeaderName);
-
     ImmutableMap<Path, Path> publicHeaderMapEntries =
-        getPublicHeaderMapEntries(targetNode, swiftVersion.isPresent(), objCbjCGeneratedHeaderName);
+        getPublicHeaderMapEntries(
+            targetNode, swiftVersion.isPresent(), builder.build().objCGeneratedHeaderName());
     builder.setPublicHeaderMapEntries(publicHeaderMapEntries);
 
     return builder.build();

@@ -28,10 +28,7 @@ import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
-import com.facebook.buck.apple.AppleDescriptions;
-import com.facebook.buck.apple.AppleHeaderVisibilities;
 import com.facebook.buck.apple.AppleLibraryDescription;
-import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
@@ -44,12 +41,6 @@ import com.facebook.buck.apple.InfoPlistSubstitution;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescriptionArg;
 import com.facebook.buck.apple.XCodeDescriptions;
-import com.facebook.buck.apple.clang.HeaderMap;
-import com.facebook.buck.apple.clang.ModuleMapFactory;
-import com.facebook.buck.apple.clang.ModuleMapMode;
-import com.facebook.buck.apple.clang.UmbrellaHeader;
-import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
-import com.facebook.buck.apple.clang.VFSOverlay;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
@@ -65,7 +56,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -79,7 +69,6 @@ import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetLanguageConst
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
@@ -99,7 +88,6 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription.CommonArg;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderTemplate;
-import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescriptionArg;
@@ -114,7 +102,6 @@ import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.features.apple.common.Utils;
 import com.facebook.buck.features.halide.HalideBuckConfig;
-import com.facebook.buck.features.halide.HalideCompile;
 import com.facebook.buck.features.halide.HalideLibraryDescription;
 import com.facebook.buck.features.halide.HalideLibraryDescriptionArg;
 import com.facebook.buck.io.MoreProjectFilesystems;
@@ -157,9 +144,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -167,7 +151,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -180,7 +163,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.Executors;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -204,23 +186,6 @@ public class ProjectGenerator {
   private static final String BUCK_CELL_RELATIVE_PATH = "BUCK_CELL_RELATIVE_PATH";
   private static final String BUILD_TARGET = "BUILD_TARGET";
 
-  private static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
-      APPLE_NATIVE_DESCRIPTION_CLASSES =
-          ImmutableSet.of(
-              AppleBinaryDescription.class,
-              AppleLibraryDescription.class,
-              CxxLibraryDescription.class);
-
-  private static final ImmutableSet<AppleBundleExtension> APPLE_NATIVE_BUNDLE_EXTENSIONS =
-      ImmutableSet.of(AppleBundleExtension.APP, AppleBundleExtension.FRAMEWORK);
-
-  private static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
-      APPLE_NATIVE_LIBRARY_DESCRIPTION_CLASSES =
-          ImmutableSet.of(AppleLibraryDescription.class, CxxLibraryDescription.class);
-
-  private static final ImmutableSet<AppleBundleExtension> APPLE_NATIVE_LIBRARY_BUNDLE_EXTENSIONS =
-      ImmutableSet.of(AppleBundleExtension.FRAMEWORK);
-
   private final XcodeProjectWriteOptions xcodeProjectWriteOptions;
   private final XCodeDescriptions xcodeDescriptions;
   private final TargetGraph targetGraph;
@@ -236,11 +201,10 @@ public class ProjectGenerator {
   private final CxxPlatform defaultCxxPlatform;
 
   // These fields are created/filled when creating the projects.
-  private final List<Path> headerSymlinkTrees;
+  private final ImmutableList.Builder<Path> headerSymlinkTreesBuilder;
   private final Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode;
   private final SourcePathResolver defaultPathResolver;
   private final BuckEventBus buckEventBus;
-  private final RuleKeyConfiguration ruleKeyConfiguration;
 
   private final GidGenerator gidGenerator;
   private final ImmutableSet<Flavor> appleCxxFlavors;
@@ -253,6 +217,10 @@ public class ProjectGenerator {
   private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
 
   private final SwiftAttributeParser swiftAttributeParser;
+
+  private final ProjectSourcePathResolver projectSourcePathResolver;
+
+  private final HeaderSearchPaths headerSearchPaths;
 
   /**
    * Mapping from an apple_library target to the associated apple_bundle which names it as its
@@ -292,7 +260,6 @@ public class ProjectGenerator {
     this.projectFilesystem = cell.getFilesystem();
     this.buildFileName = buildFileName;
     this.options = options;
-    this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.workspaceTarget = workspaceTarget;
     this.targetsInRequiredProjects = targetsInRequiredProjects;
     this.defaultCxxPlatform = defaultCxxPlatform;
@@ -319,8 +286,13 @@ public class ProjectGenerator {
         };
     this.buckEventBus = buckEventBus;
 
+    this.projectSourcePathResolver =
+        new ProjectSourcePathResolver(
+            projectCell, defaultPathResolver, targetGraph, actionGraphBuilderForNode);
+
     this.pathRelativizer =
-        new PathRelativizer(xcodeProjectWriteOptions.sourceRoot(), this::resolveSourcePath);
+        new PathRelativizer(
+            xcodeProjectWriteOptions.sourceRoot(), projectSourcePathResolver::resolveSourcePath);
     this.sharedLibraryToBundle = sharedLibraryToBundle;
 
     LOG.debug(
@@ -329,7 +301,7 @@ public class ProjectGenerator {
         projectFilesystem.getRootPath(),
         this.pathRelativizer.outputDirToRootRelative(Paths.get(".")));
 
-    this.headerSymlinkTrees = new ArrayList<>();
+    this.headerSymlinkTreesBuilder = ImmutableList.builder();
 
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -339,6 +311,21 @@ public class ProjectGenerator {
 
     this.swiftAttributeParser =
         new SwiftAttributeParser(swiftBuckConfig, projGenerationStateCache, projectFilesystem);
+
+    this.headerSearchPaths =
+        new HeaderSearchPaths(
+            projectCell,
+            appleConfig,
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            ruleKeyConfiguration,
+            xcodeDescriptions,
+            targetGraph,
+            actionGraphBuilderForNode,
+            dependenciesCache,
+            projectSourcePathResolver,
+            pathRelativizer,
+            swiftAttributeParser);
 
     gidGenerator = new GidGenerator();
   }
@@ -350,7 +337,7 @@ public class ProjectGenerator {
 
   @VisibleForTesting
   List<Path> getGeneratedHeaderSymlinkTrees() {
-    return headerSymlinkTrees;
+    return headerSymlinkTreesBuilder.build();
   }
 
   public Path getXcodeProjPath() {
@@ -448,7 +435,9 @@ public class ProjectGenerator {
         XCodeNativeTargetAttributes nativeTargetAttributes = result.targetAttributes;
         XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
             new XcodeNativeTargetProjectWriter(
-                pathRelativizer, this::resolveSourcePath, options.shouldUseShortNamesForTargets());
+                pathRelativizer,
+                projectSourcePathResolver::resolveSourcePath,
+                options.shouldUseShortNamesForTargets());
         XcodeNativeTargetProjectWriter.Result targetWriteResult =
             nativeTargetProjectWriter.writeTargetToProject(
                 nativeTargetAttributes, xcodeProjectWriteOptions.project());
@@ -477,7 +466,11 @@ public class ProjectGenerator {
 
       buckEventBus.post(ProjectGenerationEvent.processed());
 
-      createMergedHeaderMap(requiredBuildTargetsBuilder);
+      ImmutableList<SourcePath> sourcePathsToBuild =
+          headerSearchPaths.createMergedHeaderMap(targetsInRequiredProjects);
+      for (SourcePath sourcePath : sourcePathsToBuild) {
+        addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder);
+      }
 
       PBXProject project = xcodeProjectWriteOptions.project();
       for (String configName : targetConfigNamesBuilder.build()) {
@@ -1377,28 +1370,6 @@ public class ProjectGenerator {
     return new Pair<>(sdkWithoutVersion, arch);
   }
 
-  /** @return a map of all exported platform headers without matching a specific platform. */
-  public static ImmutableMap<Path, SourcePath> parseAllPlatformHeaders(
-      BuildTarget buildTarget,
-      SourcePathResolver sourcePathResolver,
-      ImmutableList<SourceSortedSet> platformHeaders,
-      boolean export,
-      CommonArg args) {
-    Builder<String, SourcePath> parsed = ImmutableMap.builder();
-
-    String parameterName = (export) ? "exported_platform_headers" : "platform_headers";
-
-    // Include all platform specific headers.
-    for (SourceSortedSet sourceList : platformHeaders) {
-      parsed.putAll(
-          sourceList.toNameMap(
-              buildTarget, sourcePathResolver, parameterName, path -> true, path -> path));
-    }
-    return CxxPreprocessables.resolveHeaderMap(
-        args.getHeaderNamespace().map(Paths::get).orElse(buildTarget.getBasePath()),
-        parsed.build());
-  }
-
   private ImmutableList<BuildTarget> generateBinaryTarget(
       XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
@@ -1474,7 +1445,7 @@ public class ProjectGenerator {
                 buildTargetName,
                 Paths.get(String.format(productOutputFormat, buildTargetName)))));
 
-    boolean isModularAppleLibrary = isModularAppleLibrary(targetNode);
+    boolean isModularAppleLibrary = NodeHelper.isModularAppleLibrary(targetNode);
     xcodeNativeTargetAttributesBuilder.setFrameworkHeadersEnabled(isModularAppleLibrary);
 
     Builder<String, String> swiftDepsSettingsBuilder = ImmutableMap.builder();
@@ -1633,14 +1604,18 @@ public class ProjectGenerator {
     setLaunchImageSettings(
         recursiveAssetCatalogs, directAssetCatalogs, buildTarget, defaultSettingsBuilder);
 
-    ImmutableSortedMap<Path, SourcePath> publicCxxHeaders = getPublicCxxHeaders(targetNode);
+    HeaderSearchPathAttributes headerSearchPathAttributes =
+        headerSearchPaths.getHeaderSearchPathAttributes(targetNode);
+
+    ImmutableSortedMap<Path, SourcePath> publicCxxHeaders =
+        headerSearchPathAttributes.publicCxxHeaders();
     publicCxxHeaders
         .values()
         .forEach(
             sourcePath ->
                 addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
 
-    if (isModularAppleLibrary(targetNode) && isFrameworkProductType(productType)) {
+    if (NodeHelper.isModularAppleLibrary(targetNode) && isFrameworkProductType(productType)) {
       // Modular frameworks should not include Buck-generated hmaps as they break the VFS overlay
       // that's generated by Xcode and consequently, all headers part of a framework's umbrella
       // header fail the modularity test, as they're expected to be mapped by the VFS layer under
@@ -1839,10 +1814,7 @@ public class ProjectGenerator {
     }
 
     Set<Path> recursivePublicSystemIncludeDirectories =
-        collectRecursivePublicSystemIncludeDirectories(targetNode);
-    Set<Path> recursivePublicIncludeDirectories =
-        collectRecursivePublicIncludeDirectories(targetNode);
-    Set<Path> includeDirectories = extractIncludeDirectories(targetNode);
+        headerSearchPathAttributes.recursivePublicSystemIncludeDirectories();
 
     // Explicitly add system include directories to compile flags to mute warnings,
     // XCode seems to not support system include directories directly.
@@ -1854,8 +1826,6 @@ public class ProjectGenerator {
             .map(path -> "-isystem" + path)
             .collect(Collectors.toList());
 
-    ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
-
     Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
     appendConfigsBuilder.putAll(
         getFrameworkAndLibrarySearchPathConfigs(
@@ -1865,16 +1835,15 @@ public class ProjectGenerator {
         Joiner.on(' ')
             .join(
                 Iterables.concat(
-                    recursiveHeaderSearchPaths,
+                    headerSearchPathAttributes.recursiveHeaderSearchPaths(),
                     recursivePublicSystemIncludeDirectories,
-                    recursivePublicIncludeDirectories,
-                    includeDirectories)));
+                    headerSearchPathAttributes.recursivePublicIncludeDirectories(),
+                    headerSearchPathAttributes.includeDirectories())));
     if (hasSwiftVersionArg) {
-      ImmutableSet<Path> swiftIncludePaths = collectRecursiveSwiftIncludePaths(targetNode);
       Stream<String> allValues =
           Streams.concat(
               Stream.of("$BUILT_PRODUCTS_DIR"),
-              Streams.stream(swiftIncludePaths)
+              Streams.stream(headerSearchPathAttributes.swiftIncludePaths())
                   .map((path) -> path.toString())
                   .map(Escaper.BASH_ESCAPER));
       appendConfigsBuilder.put("SWIFT_INCLUDE_PATHS", allValues.collect(Collectors.joining(" ")));
@@ -2086,22 +2055,16 @@ public class ProjectGenerator {
         targetConfigNamesBuilder,
         xcconfigPathsBuilder);
 
-    if (arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
-        || isModularAppleLibrary) {
-      createPublicHeaderSymlinkTree(
-          targetNode,
-          publicCxxHeaders,
-          requiredBuildTargetsBuilder,
-          isModularAppleLibrary,
-          swiftAttributes,
-          options.shouldGenerateMissingUmbrellaHeader());
+    ImmutableList<SourcePath> sourcePathsToBuild =
+        headerSearchPaths.createHeaderSearchPaths(
+            headerSearchPathAttributes,
+            swiftAttributes,
+            isModularAppleLibrary,
+            options.shouldGenerateMissingUmbrellaHeader(),
+            headerSymlinkTreesBuilder);
+    for (SourcePath sourcePath : sourcePathsToBuild) {
+      addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder);
     }
-
-    createPrivateHeaderSymlinkTree(
-        targetNode,
-        requiredBuildTargetsBuilder,
-        arg.getXcodePrivateHeadersSymlinks()
-            .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled()));
 
     if (bundle.isPresent()) {
       addEntitlementsPlistIntoTarget(bundle.get(), xcodeNativeTargetAttributesBuilder);
@@ -2405,18 +2368,19 @@ public class ProjectGenerator {
   private ImmutableList<String> getFlagsForExcludesForModulesUnderTests(
       TargetNode<? extends CommonArg> testingTarget) {
     ImmutableList.Builder<String> testingOverlayBuilder = new ImmutableList.Builder<>();
-    visitRecursivePrivateHeaderSymlinkTreesForTests(
+    headerSearchPaths.visitRecursivePrivateHeaderSymlinkTreesForTests(
         testingTarget,
         (targetUnderTest, headerVisibility) -> {
           // If we are testing a modular apple_library, we expose it non-modular. This allows the
           // testing target to see both the public and private interfaces of the tested target
           // without triggering header errors related to modules. We hide the module definition by
           // using a filesystem overlay that overrides the module.modulemap with an empty file.
-          if (isModularAppleLibrary(targetUnderTest)) {
+          if (NodeHelper.isModularAppleLibrary(targetUnderTest)) {
             testingOverlayBuilder.add("-ivfsoverlay");
             Path vfsOverlay =
-                getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(
-                    getPathToHeaderSymlinkTree(targetUnderTest, HeaderVisibility.PUBLIC));
+                HeaderSearchPaths.getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(
+                    headerSearchPaths.getPathToHeaderSymlinkTree(
+                        targetUnderTest, HeaderVisibility.PUBLIC));
             testingOverlayBuilder.add("$REPO_ROOT/" + vfsOverlay);
           }
         });
@@ -2527,7 +2491,7 @@ public class ProjectGenerator {
                   .map(
                       frameworkPath ->
                           FrameworkPath.getUnexpandedSearchPath(
-                                  this::resolveSourcePath,
+                                  projectSourcePathResolver::resolveSourcePath,
                                   pathRelativizer::outputDirToRootRelative,
                                   frameworkPath)
                               .toString())
@@ -2538,7 +2502,7 @@ public class ProjectGenerator {
                   .map(
                       libraryPath ->
                           FrameworkPath.getUnexpandedSearchPath(
-                                  this::resolveSourcePath,
+                                  projectSourcePathResolver::resolveSourcePath,
                                   pathRelativizer::outputDirToRootRelative,
                                   libraryPath)
                               .toString())
@@ -2618,142 +2582,6 @@ public class ProjectGenerator {
     return results.build();
   }
 
-  private ImmutableSortedMap<Path, SourcePath> getPublicCxxHeaders(
-      TargetNode<? extends CommonArg> targetNode) {
-    CommonArg arg = targetNode.getConstructorArg();
-    if (arg instanceof AppleNativeTargetDescriptionArg) {
-      Path headerPathPrefix =
-          AppleDescriptions.getHeaderPathPrefix(
-              (AppleNativeTargetDescriptionArg) arg, targetNode.getBuildTarget());
-
-      ImmutableSortedMap.Builder<String, SourcePath> exportedHeadersBuilder =
-          ImmutableSortedMap.naturalOrder();
-      exportedHeadersBuilder.putAll(
-          AppleDescriptions.convertHeadersToPublicCxxHeaders(
-              targetNode.getBuildTarget(),
-              this::resolveSourcePath,
-              headerPathPrefix,
-              arg.getExportedHeaders()));
-
-      for (Pair<Pattern, SourceSortedSet> patternMatchedHeader :
-          arg.getExportedPlatformHeaders().getPatternsAndValues()) {
-        exportedHeadersBuilder.putAll(
-            AppleDescriptions.convertHeadersToPublicCxxHeaders(
-                targetNode.getBuildTarget(),
-                this::resolveSourcePath,
-                headerPathPrefix,
-                patternMatchedHeader.getSecond()));
-      }
-
-      ImmutableSortedMap<String, SourcePath> fullExportedHeaders = exportedHeadersBuilder.build();
-      return convertMapKeysToPaths(fullExportedHeaders);
-    } else {
-      ActionGraphBuilder graphBuilder = actionGraphBuilderForNode.apply(targetNode);
-      ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
-          ImmutableSortedMap.naturalOrder();
-      String platform = defaultCxxPlatform.getFlavor().toString();
-      ImmutableList<SourceSortedSet> platformHeaders =
-          arg.getExportedPlatformHeaders().getMatchingValues(platform);
-
-      return allHeadersBuilder
-          .putAll(
-              CxxDescriptionEnhancer.parseExportedHeaders(
-                  targetNode.getBuildTarget(), graphBuilder, Optional.empty(), arg))
-          .putAll(
-              ProjectGenerator.parseAllPlatformHeaders(
-                  targetNode.getBuildTarget(),
-                  graphBuilder.getSourcePathResolver(),
-                  platformHeaders,
-                  true,
-                  arg))
-          .build();
-    }
-  }
-
-  private ImmutableSortedMap<Path, SourcePath> getPrivateCxxHeaders(
-      TargetNode<? extends CommonArg> targetNode) {
-    CommonArg arg = targetNode.getConstructorArg();
-    if (arg instanceof AppleNativeTargetDescriptionArg) {
-      Path headerPathPrefix =
-          AppleDescriptions.getHeaderPathPrefix(
-              (AppleNativeTargetDescriptionArg) arg, targetNode.getBuildTarget());
-
-      ImmutableSortedMap.Builder<String, SourcePath> fullHeadersBuilder =
-          ImmutableSortedMap.naturalOrder();
-      fullHeadersBuilder.putAll(
-          AppleDescriptions.convertHeadersToPrivateCxxHeaders(
-              targetNode.getBuildTarget(),
-              this::resolveSourcePath,
-              headerPathPrefix,
-              arg.getHeaders(),
-              arg.getExportedHeaders()));
-
-      for (Pair<Pattern, SourceSortedSet> patternMatchedHeader :
-          arg.getExportedPlatformHeaders().getPatternsAndValues()) {
-        fullHeadersBuilder.putAll(
-            AppleDescriptions.convertHeadersToPrivateCxxHeaders(
-                targetNode.getBuildTarget(),
-                this::resolveSourcePath,
-                headerPathPrefix,
-                SourceSortedSet.ofNamedSources(ImmutableSortedMap.of()),
-                patternMatchedHeader.getSecond()));
-      }
-
-      for (Pair<Pattern, SourceSortedSet> patternMatchedHeader :
-          arg.getPlatformHeaders().getPatternsAndValues()) {
-        fullHeadersBuilder.putAll(
-            AppleDescriptions.convertHeadersToPrivateCxxHeaders(
-                targetNode.getBuildTarget(),
-                this::resolveSourcePath,
-                headerPathPrefix,
-                patternMatchedHeader.getSecond(),
-                SourceSortedSet.ofNamedSources(ImmutableSortedMap.of())));
-      }
-
-      ImmutableSortedMap<String, SourcePath> fullHeaders = fullHeadersBuilder.build();
-      return convertMapKeysToPaths(fullHeaders);
-    } else {
-      ActionGraphBuilder graphBuilder = actionGraphBuilderForNode.apply(targetNode);
-      ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
-          ImmutableSortedMap.naturalOrder();
-      String platform = defaultCxxPlatform.getFlavor().toString();
-      ImmutableList<SourceSortedSet> platformHeaders =
-          arg.getPlatformHeaders().getMatchingValues(platform);
-
-      return allHeadersBuilder
-          .putAll(
-              CxxDescriptionEnhancer.parseHeaders(
-                  targetNode.getBuildTarget(), graphBuilder, Optional.empty(), arg))
-          .putAll(
-              ProjectGenerator.parseAllPlatformHeaders(
-                  targetNode.getBuildTarget(),
-                  graphBuilder.getSourcePathResolver(),
-                  platformHeaders,
-                  false,
-                  arg))
-          .build();
-    }
-  }
-
-  private ModuleMapMode getModuleMapMode(
-      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
-    Optional<ModuleMapMode> moduleMapMode =
-        (targetNode instanceof AppleNativeTargetDescriptionArg)
-            ? ((AppleNativeTargetDescriptionArg) targetNode).getModulemapMode()
-            : Optional.empty();
-
-    return moduleMapMode.orElse(appleConfig.moduleMapMode());
-  }
-
-  private ImmutableSortedMap<Path, SourcePath> convertMapKeysToPaths(
-      ImmutableSortedMap<String, SourcePath> input) {
-    ImmutableSortedMap.Builder<Path, SourcePath> output = ImmutableSortedMap.naturalOrder();
-    for (Map.Entry<String, SourcePath> entry : input.entrySet()) {
-      output.put(Paths.get(entry.getKey()), entry.getValue());
-    }
-    return output.build();
-  }
-
   private void addEntitlementsPlistIntoTarget(
       TargetNode<? extends HasAppleBundleFields> targetNode,
       XCodeNativeTargetAttributes.Builder nativeTargetBuilder) {
@@ -2784,338 +2612,6 @@ public class ProjectGenerator {
     } else {
       return headers.getNamedSources().get().values();
     }
-  }
-
-  /** Adds the set of headers defined by headerVisibility to the merged header maps. */
-  private void addToMergedHeaderMap(
-      TargetNode<? extends CommonArg> targetNode,
-      HeaderMap.Builder headerMapBuilder,
-      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder) {
-    CommonArg arg = targetNode.getConstructorArg();
-    // If the target uses header symlinks, we need to use symlinks in the header map to support
-    // accurate indexing/mapping of headers.
-    boolean shouldCreateHeadersSymlinks =
-        arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled());
-    Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC);
-
-    Path basePath;
-    if (shouldCreateHeadersSymlinks) {
-      basePath = getCellPathForTarget(targetNode.getBuildTarget()).resolve(headerSymlinkTreeRoot);
-    } else {
-      basePath = projectFilesystem.getRootPath();
-    }
-    ImmutableSortedMap<Path, SourcePath> publicCxxHeaders = getPublicCxxHeaders(targetNode);
-    publicCxxHeaders
-        .values()
-        .forEach(
-            sourcePath ->
-                addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
-    for (Map.Entry<Path, SourcePath> entry : publicCxxHeaders.entrySet()) {
-      Path path;
-      if (shouldCreateHeadersSymlinks) {
-        path = basePath.resolve(entry.getKey());
-      } else {
-        path = basePath.resolve(resolveSourcePath(entry.getValue()));
-      }
-      headerMapBuilder.add(entry.getKey().toString(), path);
-    }
-
-    SwiftAttributes swiftAttributes = swiftAttributeParser.parseSwiftAttributes(targetNode);
-
-    ImmutableMap<Path, Path> swiftHeaderMapEntries = swiftAttributes.publicHeaderMapEntries();
-    for (Map.Entry<Path, Path> entry : swiftHeaderMapEntries.entrySet()) {
-      headerMapBuilder.add(entry.getKey().toString(), entry.getValue());
-    }
-  }
-
-  private Path getCellPathForTarget(BuildTarget buildTarget) {
-    return projectCell.getNewCellPathResolver().getCellPath(buildTarget.getCell());
-  }
-
-  /** Generates the merged header maps and write it to the public header symlink tree location. */
-  private void createMergedHeaderMap(ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder)
-      throws IOException {
-    HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
-
-    Set<TargetNode<? extends CommonArg>> processedNodes = new HashSet<>();
-
-    for (TargetNode<?> targetNode : targetGraph.getAll(targetsInRequiredProjects)) {
-      // Includes the public headers of the dependencies in the merged header map.
-      getAppleNativeNode(targetGraph, targetNode)
-          .ifPresent(
-              argTargetNode ->
-                  visitRecursiveHeaderSymlinkTrees(
-                      argTargetNode,
-                      (depNativeNode, headerVisibility) -> {
-                        // Skip nodes we've already processed and headers that are not public
-                        if (processedNodes.contains(depNativeNode)
-                            || headerVisibility != HeaderVisibility.PUBLIC) {
-                          return;
-                        }
-                        addToMergedHeaderMap(
-                            depNativeNode, headerMapBuilder, requiredBuildTargetsBuilder);
-                        processedNodes.add(depNativeNode);
-                      }));
-    }
-
-    // Writes the resulting header map.
-    Path mergedHeaderMapRoot = getPathToMergedHeaderMap();
-    Path headerMapLocation = getHeaderMapLocationFromSymlinkTreeRoot(mergedHeaderMapRoot);
-    Cell workspaceCell = projectCell.getCell(workspaceTarget);
-    workspaceCell.getFilesystem().mkdirs(mergedHeaderMapRoot);
-    workspaceCell
-        .getFilesystem()
-        .writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
-  }
-
-  private ImmutableSortedMap<Path, Path> resolveHeaderContent(
-      Map<Path, SourcePath> contents,
-      ImmutableMap<Path, Path> nonSourcePaths,
-      Path headerSymlinkTreeRoot,
-      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder) {
-    ImmutableSortedMap.Builder<Path, Path> resolvedContentsBuilder =
-        ImmutableSortedMap.naturalOrder();
-    for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
-      Path link = headerSymlinkTreeRoot.resolve(entry.getKey());
-      Path existing = projectFilesystem.resolve(resolveSourcePath(entry.getValue()));
-      addRequiredBuildTargetFromSourcePath(entry.getValue(), requiredBuildTargetsBuilder);
-      resolvedContentsBuilder.put(link, existing);
-    }
-    for (Map.Entry<Path, Path> entry : nonSourcePaths.entrySet()) {
-      Path link = headerSymlinkTreeRoot.resolve(entry.getKey());
-      resolvedContentsBuilder.put(link, entry.getValue());
-    }
-    ImmutableSortedMap<Path, Path> resolvedContents = resolvedContentsBuilder.build();
-    return resolvedContents;
-  }
-
-  private boolean shouldUpdateSymlinkTree(
-      Path headerSymlinkTreeRoot,
-      ImmutableSortedMap<Path, Path> resolvedContents,
-      Optional<String> moduleName,
-      boolean shouldCreateHeadersSymlinks)
-      throws IOException {
-    Path hashCodeFilePath = headerSymlinkTreeRoot.resolve(".contents-hash");
-    Optional<String> currentHashCode = projectFilesystem.readFileIfItExists(hashCodeFilePath);
-    String newHashCode =
-        getHeaderSymlinkTreeHashCode(resolvedContents, moduleName, true, false).toString();
-
-    headerSymlinkTrees.add(headerSymlinkTreeRoot);
-    if (Optional.of(newHashCode).equals(currentHashCode)) {
-      LOG.debug(
-          "Symlink tree at %s is up to date, not regenerating (key %s).",
-          headerSymlinkTreeRoot, newHashCode);
-      return false;
-    }
-    LOG.debug(
-        "Updating symlink tree at %s (old key %s, new key %s).",
-        headerSymlinkTreeRoot, currentHashCode, newHashCode);
-    projectFilesystem.deleteRecursivelyIfExists(headerSymlinkTreeRoot);
-    projectFilesystem.mkdirs(headerSymlinkTreeRoot);
-    if (shouldCreateHeadersSymlinks) {
-      for (Map.Entry<Path, Path> entry : resolvedContents.entrySet()) {
-        Path link = entry.getKey();
-        Path existing = entry.getValue();
-        projectFilesystem.createParentDirs(link);
-        projectFilesystem.createSymLink(link, existing, /* force */ false);
-      }
-    }
-
-    projectFilesystem.writeContentsToPath(newHashCode, hashCodeFilePath);
-
-    return true;
-  }
-
-  private void createPublicHeaderSymlinkTree(
-      TargetNode<? extends CommonArg> targetNode,
-      Map<Path, SourcePath> contents,
-      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
-      boolean isModularAppleLibrary,
-      SwiftAttributes swiftAttributes,
-      boolean shouldGenerateUmbrellaHeaderIfMissing)
-      throws IOException {
-
-    Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC);
-
-    Optional<String> moduleName =
-        isModularAppleLibrary ? Optional.of(swiftAttributes.moduleName()) : Optional.empty();
-    ModuleMapMode moduleMapMode = getModuleMapMode(targetNode);
-    ImmutableMap<Path, Path> nonSourcePaths = swiftAttributes.publicHeaderMapEntries();
-
-    LOG.verbose(
-        "Building header symlink tree at %s with contents %s", headerSymlinkTreeRoot, contents);
-
-    ImmutableSortedMap<Path, Path> resolvedContents =
-        resolveHeaderContent(
-            contents, nonSourcePaths, headerSymlinkTreeRoot, requiredBuildTargetsBuilder);
-
-    if (!shouldUpdateSymlinkTree(headerSymlinkTreeRoot, resolvedContents, moduleName, true)) {
-      return;
-    }
-
-    if (moduleName.isPresent() && resolvedContents.size() > 0) {
-      if (shouldGenerateUmbrellaHeaderIfMissing) {
-        writeUmbrellaHeaderIfNeeded(
-            moduleName.get(), resolvedContents.keySet(), headerSymlinkTreeRoot);
-      }
-      boolean containsSwift = !nonSourcePaths.isEmpty();
-      if (containsSwift) {
-        projectFilesystem.writeContentsToPath(
-            ModuleMapFactory.createModuleMap(
-                    moduleName.get(),
-                    moduleMapMode,
-                    UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER)
-                .render(),
-            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
-        projectFilesystem.writeContentsToPath(
-            ModuleMapFactory.createModuleMap(
-                    moduleName.get(),
-                    moduleMapMode,
-                    UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER)
-                .render(),
-            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
-
-        Path absoluteModuleRoot =
-            projectFilesystem
-                .getRootPath()
-                .resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
-        VFSOverlay vfsOverlay =
-            new VFSOverlay(
-                ImmutableSortedMap.of(
-                    absoluteModuleRoot.resolve("module.modulemap"),
-                    absoluteModuleRoot.resolve("objc.modulemap")));
-
-        projectFilesystem.writeContentsToPath(
-            vfsOverlay.render(),
-            getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
-      } else {
-        projectFilesystem.writeContentsToPath(
-            ModuleMapFactory.createModuleMap(
-                    moduleName.get(), moduleMapMode, UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT)
-                .render(),
-            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
-      }
-      Path absoluteModuleRoot =
-          projectFilesystem.getRootPath().resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
-      VFSOverlay vfsOverlay =
-          new VFSOverlay(
-              ImmutableSortedMap.of(
-                  absoluteModuleRoot.resolve("module.modulemap"),
-                  absoluteModuleRoot.resolve("testing.modulemap")));
-
-      projectFilesystem.writeContentsToPath(
-          vfsOverlay.render(),
-          getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
-      projectFilesystem.writeContentsToPath(
-          "", // empty modulemap to allow non-modular imports for testing
-          headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("testing.modulemap"));
-    }
-  }
-
-  private void createPrivateHeaderSymlinkTree(
-      TargetNode<? extends CommonArg> targetNode,
-      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
-      boolean shouldCreateHeadersSymlinks)
-      throws IOException {
-
-    ImmutableSortedMap<Path, SourcePath> contents = getPrivateCxxHeaders(targetNode);
-    contents
-        .values()
-        .forEach(
-            sourcePath ->
-                addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
-
-    Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE);
-
-    LOG.verbose(
-        "Building header symlink tree at %s with contents %s", headerSymlinkTreeRoot, contents);
-
-    ImmutableSortedMap<Path, Path> resolvedContents =
-        resolveHeaderContent(
-            contents, ImmutableMap.of(), headerSymlinkTreeRoot, requiredBuildTargetsBuilder);
-
-    if (!shouldUpdateSymlinkTree(
-        headerSymlinkTreeRoot, resolvedContents, Optional.empty(), shouldCreateHeadersSymlinks)) {
-      return;
-    }
-
-    HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
-    for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
-      if (shouldCreateHeadersSymlinks) {
-        headerMapBuilder.add(
-            entry.getKey().toString(),
-            getHeaderMapRelativeSymlinkPathForEntry(entry, headerSymlinkTreeRoot));
-      } else {
-        headerMapBuilder.add(
-            entry.getKey().toString(),
-            projectFilesystem.resolve(resolveSourcePath(entry.getValue())));
-      }
-    }
-
-    Path headerMapLocation = getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot);
-    projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
-  }
-
-  private void writeUmbrellaHeaderIfNeeded(
-      String moduleName, ImmutableSortedSet<Path> headerPaths, Path headerSymlinkTreeRoot)
-      throws IOException {
-    ImmutableList<String> headerPathStrings =
-        headerPaths.stream()
-            .map(Path::getFileName)
-            .map(Path::toString)
-            .collect(ImmutableList.toImmutableList());
-    if (!headerPathStrings.contains(moduleName + ".h")) {
-      Path umbrellaPath = headerSymlinkTreeRoot.resolve(Paths.get(moduleName, moduleName + ".h"));
-      Preconditions.checkState(!projectFilesystem.exists(umbrellaPath));
-      projectFilesystem.writeContentsToPath(
-          new UmbrellaHeader(moduleName, headerPathStrings).render(), umbrellaPath);
-    }
-  }
-
-  private Path getHeaderMapRelativeSymlinkPathForEntry(
-      Map.Entry<Path, ?> entry, Path headerSymlinkTreeRoot) {
-    return projectCell
-        .getFilesystem()
-        .resolve(projectCell.getFilesystem().getBuckPaths().getConfiguredBuckOut())
-        .normalize()
-        .relativize(
-            projectCell
-                .getFilesystem()
-                .resolve(headerSymlinkTreeRoot)
-                .resolve(entry.getKey())
-                .normalize());
-  }
-
-  private HashCode getHeaderSymlinkTreeHashCode(
-      ImmutableSortedMap<Path, Path> contents,
-      Optional<String> moduleName,
-      boolean shouldCreateHeadersSymlinks,
-      boolean shouldCreateHeaderMap) {
-    Hasher hasher = Hashing.sha1().newHasher();
-    hasher.putBytes(ruleKeyConfiguration.getCoreKey().getBytes(Charsets.UTF_8));
-    String symlinkState = shouldCreateHeadersSymlinks ? "symlinks-enabled" : "symlinks-disabled";
-    byte[] symlinkStateValue = symlinkState.getBytes(Charsets.UTF_8);
-    hasher.putInt(symlinkStateValue.length);
-    hasher.putBytes(symlinkStateValue);
-    String hmapState = shouldCreateHeaderMap ? "hmap-enabled" : "hmap-disabled";
-    byte[] hmapStateValue = hmapState.getBytes(Charsets.UTF_8);
-    hasher.putInt(hmapStateValue.length);
-    hasher.putBytes(hmapStateValue);
-    if (moduleName.isPresent()) {
-      byte[] moduleNameValue = moduleName.get().getBytes(Charsets.UTF_8);
-      hasher.putInt(moduleNameValue.length);
-      hasher.putBytes(moduleNameValue);
-    }
-    hasher.putInt(0);
-    for (Map.Entry<Path, Path> entry : contents.entrySet()) {
-      byte[] key = entry.getKey().toString().getBytes(Charsets.UTF_8);
-      byte[] value = entry.getValue().toString().getBytes(Charsets.UTF_8);
-      hasher.putInt(key.length);
-      hasher.putBytes(key);
-      hasher.putInt(value.length);
-      hasher.putBytes(value);
-    }
-    return hasher.hash();
   }
 
   /** Create the project bundle structure and write {@code project.pbxproj}. */
@@ -3151,7 +2647,7 @@ public class ProjectGenerator {
   }
 
   private String getProductNameForBuildTargetNode(TargetNode<?> targetNode) {
-    Optional<TargetNode<CommonArg>> library = getLibraryNode(targetGraph, targetNode);
+    Optional<TargetNode<CommonArg>> library = NodeHelper.getLibraryNode(targetGraph, targetNode);
     boolean isStaticLibrary =
         library.isPresent()
             && !AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(library.get());
@@ -3165,30 +2661,6 @@ public class ProjectGenerator {
     } else {
       return targetNode.getBuildTarget().getShortName();
     }
-  }
-
-  /** @param targetNode Must have a header symlink tree or an exception will be thrown. */
-  private Path getHeaderSymlinkTreePath(
-      TargetNode<? extends CommonArg> targetNode, HeaderVisibility headerVisibility) {
-    Path treeRoot = getAbsolutePathToHeaderSymlinkTree(targetNode, headerVisibility);
-    return treeRoot;
-  }
-
-  private Path getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
-    return headerSymlinkTreeRoot.resolve("objc-module-overlay.yaml");
-  }
-
-  private Path getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(
-      Path headerSymlinkTreeRoot) {
-    return headerSymlinkTreeRoot.resolve("testing-overlay.yaml");
-  }
-
-  private Path getHeaderMapLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
-    return headerSymlinkTreeRoot.resolve(".hmap");
-  }
-
-  private Path getHeaderSearchPathFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
-    return getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot);
   }
 
   private String getBuiltProductsRelativeTargetOutputPath(TargetNode<?> targetNode) {
@@ -3212,177 +2684,6 @@ public class ProjectGenerator {
         .join("$BUILT_PRODUCTS_DIR", getBuiltProductsRelativeTargetOutputPath(targetNode));
   }
 
-  /**
-   * @return The {@code targetNode} if it is of an description type contained within {@nodeTypes} or
-   *     the node set as the binary if {@code targetNode} is a valid bundle contained in {@code
-   *     bundleExtensions}.
-   */
-  private static Optional<TargetNode<CommonArg>> getAppleNativeNodeOfType(
-      TargetGraph targetGraph,
-      TargetNode<?> targetNode,
-      Set<Class<? extends DescriptionWithTargetGraph<?>>> nodeTypes,
-      Set<AppleBundleExtension> bundleExtensions) {
-    if (nodeTypes.contains(targetNode.getDescription().getClass())) {
-      return TargetNodes.castArg(targetNode, CommonArg.class);
-    } else if (targetNode.getDescription() instanceof AppleBundleDescription) {
-      TargetNode<AppleBundleDescriptionArg> bundle =
-          TargetNodes.castArg(targetNode, AppleBundleDescriptionArg.class).get();
-      Either<AppleBundleExtension, String> extension = bundle.getConstructorArg().getExtension();
-      if (extension.isLeft() && bundleExtensions.contains(extension.getLeft())) {
-        return TargetNodes.castArg(
-            targetGraph.get(XcodeNativeTargetGenerator.getBundleBinaryTarget(bundle)),
-            CommonArg.class);
-      }
-    }
-    return Optional.empty();
-  }
-
-  /**
-   * @return The Apple description compatible target node, which may be the @{code targetNode} or a
-   *     node set as the binary if {@code targetNode} is a bundle description type.
-   */
-  private static Optional<TargetNode<CommonArg>> getAppleNativeNode(
-      TargetGraph targetGraph, TargetNode<?> targetNode) {
-    return getAppleNativeNodeOfType(
-        targetGraph, targetNode, APPLE_NATIVE_DESCRIPTION_CLASSES, APPLE_NATIVE_BUNDLE_EXTENSIONS);
-  }
-
-  /**
-   * @return The Apple library description compatible target node, which may be the @{code
-   *     targetNode} or a node set as the binary if {@code targetNode} is a bundle description type.
-   */
-  private static Optional<TargetNode<CommonArg>> getLibraryNode(
-      TargetGraph targetGraph, TargetNode<?> targetNode) {
-    return getAppleNativeNodeOfType(
-        targetGraph,
-        targetNode,
-        APPLE_NATIVE_LIBRARY_DESCRIPTION_CLASSES,
-        APPLE_NATIVE_LIBRARY_BUNDLE_EXTENSIONS);
-  }
-
-  private ImmutableSet<Path> collectRecursiveHeaderSearchPaths(
-      TargetNode<? extends CommonArg> targetNode) {
-    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-
-    builder.add(
-        getHeaderSearchPathFromSymlinkTreeRoot(
-            getHeaderSymlinkTreePath(targetNode, HeaderVisibility.PRIVATE)));
-    Cell workspaceCell = projectCell.getCell(workspaceTarget);
-    Path absolutePath = workspaceCell.getFilesystem().resolve(getPathToMergedHeaderMap());
-    builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
-    visitRecursivePrivateHeaderSymlinkTreesForTests(
-        targetNode,
-        (nativeNode, headerVisibility) -> {
-          builder.add(
-              getHeaderSearchPathFromSymlinkTreeRoot(
-                  getHeaderSymlinkTreePath(nativeNode, headerVisibility)));
-        });
-
-    for (Path halideHeaderPath : collectRecursiveHalideLibraryHeaderPaths(targetNode)) {
-      builder.add(halideHeaderPath);
-    }
-
-    return builder.build();
-  }
-
-  private ImmutableSet<Path> collectRecursiveHalideLibraryHeaderPaths(
-      TargetNode<? extends CommonArg> targetNode) {
-    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-    for (TargetNode<?> input :
-        AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-            xcodeDescriptions,
-            targetGraph,
-            Optional.of(dependenciesCache),
-            RecursiveDependenciesMode.BUILDING,
-            targetNode,
-            Optional.of(ImmutableSet.of(HalideLibraryDescription.class)))) {
-      TargetNode<HalideLibraryDescriptionArg> halideNode =
-          TargetNodes.castArg(input, HalideLibraryDescriptionArg.class).get();
-      BuildTarget buildTarget = halideNode.getBuildTarget();
-      builder.add(
-          pathRelativizer.outputDirToRootRelative(
-              HalideCompile.headerOutputPath(
-                      buildTarget.withFlavors(
-                          HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
-                          defaultCxxPlatform.getFlavor()),
-                      projectFilesystem,
-                      halideNode.getConstructorArg().getFunctionName())
-                  .getParent()));
-    }
-    return builder.build();
-  }
-
-  private void visitRecursiveHeaderSymlinkTrees(
-      TargetNode<? extends CommonArg> targetNode,
-      BiConsumer<TargetNode<? extends CommonArg>, HeaderVisibility> visitor) {
-    // Visits public and private headers from current target.
-    visitor.accept(targetNode, HeaderVisibility.PRIVATE);
-    visitor.accept(targetNode, HeaderVisibility.PUBLIC);
-
-    // Visits public headers from dependencies.
-    for (TargetNode<?> input :
-        AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-            xcodeDescriptions,
-            targetGraph,
-            Optional.of(dependenciesCache),
-            RecursiveDependenciesMode.BUILDING,
-            targetNode,
-            Optional.of(xcodeDescriptions.getXCodeDescriptions()))) {
-      getAppleNativeNode(targetGraph, input)
-          .ifPresent(argTargetNode -> visitor.accept(argTargetNode, HeaderVisibility.PUBLIC));
-    }
-
-    visitRecursivePrivateHeaderSymlinkTreesForTests(targetNode, visitor);
-  }
-
-  private void visitRecursivePrivateHeaderSymlinkTreesForTests(
-      TargetNode<? extends CommonArg> targetNode,
-      BiConsumer<TargetNode<? extends CommonArg>, HeaderVisibility> visitor) {
-    // Visits headers of source under tests.
-    ImmutableSet<TargetNode<?>> directDependencies =
-        ImmutableSet.copyOf(targetGraph.getAll(targetNode.getBuildDeps()));
-    for (TargetNode<?> dependency : directDependencies) {
-      Optional<TargetNode<CommonArg>> nativeNode = getAppleNativeNode(targetGraph, dependency);
-      if (nativeNode.isPresent() && isSourceUnderTest(nativeNode.get(), dependency, targetNode)) {
-        visitor.accept(nativeNode.get(), HeaderVisibility.PRIVATE);
-      }
-    }
-  }
-
-  private ImmutableSet<Path> collectRecursiveSwiftIncludePaths(
-      TargetNode<? extends CommonArg> targetNode) {
-    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-    visitRecursiveHeaderSymlinkTrees(
-        targetNode,
-        (nativeNode, headerVisibility) -> {
-          if (headerVisibility.equals(HeaderVisibility.PUBLIC)
-              && isModularAppleLibrary(nativeNode)) {
-            builder.add(getHeaderSymlinkTreePath(nativeNode, headerVisibility));
-          }
-        });
-    return builder.build();
-  }
-
-  /**
-   * @return Whether the {@code testNode} is listed as a test of {@code nativeNode} or {@code
-   *     dependencyNode}.
-   */
-  private boolean isSourceUnderTest(
-      TargetNode<CommonArg> nativeNode, TargetNode<?> dependencyNode, TargetNode<?> testNode) {
-    boolean isSourceUnderTest =
-        nativeNode.getConstructorArg().getTests().contains(testNode.getBuildTarget());
-
-    if (dependencyNode != nativeNode && dependencyNode.getConstructorArg() instanceof HasTests) {
-      ImmutableSortedSet<BuildTarget> tests =
-          ((HasTests) dependencyNode.getConstructorArg()).getTests();
-      if (tests.contains(testNode.getBuildTarget())) {
-        isSourceUnderTest = true;
-      }
-    }
-
-    return isSourceUnderTest;
-  }
-
   /** List of frameworks and libraries that goes into the "Link Binary With Libraries" phase. */
   private Iterable<FrameworkPath> collectRecursiveFrameworkDependencies(TargetNode<?> targetNode) {
     return FluentIterable.from(
@@ -3399,7 +2700,8 @@ public class ProjectGenerator {
         .transformAndConcat(
             input -> {
               // Libraries and bundles which has system frameworks and libraries.
-              Optional<TargetNode<CommonArg>> library = getLibraryNode(targetGraph, input);
+              Optional<TargetNode<CommonArg>> library =
+                  NodeHelper.getLibraryNode(targetGraph, input);
               if (library.isPresent()
                   && !AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(library.get())) {
                 return Iterables.concat(
@@ -3553,73 +2855,6 @@ public class ProjectGenerator {
             });
   }
 
-  private Set<Path> collectRecursivePublicIncludeDirectories(TargetNode<?> targetNode) {
-    return FluentIterable.from(
-            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-                xcodeDescriptions,
-                targetGraph,
-                Optional.of(dependenciesCache),
-                RecursiveDependenciesMode.BUILDING,
-                targetNode,
-                ImmutableSet.of(CxxLibraryDescription.class, AppleLibraryDescription.class)))
-        .append(targetNode)
-        .transformAndConcat(this::extractPublicIncludeDirectories)
-        .toSet();
-  }
-
-  private Set<Path> collectRecursivePublicSystemIncludeDirectories(TargetNode<?> targetNode) {
-    return FluentIterable.from(
-            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-                xcodeDescriptions,
-                targetGraph,
-                Optional.of(dependenciesCache),
-                RecursiveDependenciesMode.BUILDING,
-                targetNode,
-                ImmutableSet.of(CxxLibraryDescription.class, AppleLibraryDescription.class)))
-        .append(targetNode)
-        .transformAndConcat(this::extractPublicSystemIncludeDirectories)
-        .toSet();
-  }
-
-  private Set<Path> extractIncludeDirectories(TargetNode<?> targetNode) {
-    Path basePath =
-        getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
-            .resolve(targetNode.getBuildTarget().getBasePath());
-    ImmutableSortedSet<String> includeDirectories =
-        TargetNodes.castArg(targetNode, CommonArg.class)
-            .map(input -> input.getConstructorArg().getIncludeDirectories())
-            .orElse(ImmutableSortedSet.of());
-    return FluentIterable.from(includeDirectories)
-        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize())
-        .toSet();
-  }
-
-  private Set<Path> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
-    Path basePath =
-        getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
-            .resolve(targetNode.getBuildTarget().getBasePath());
-    ImmutableSortedSet<String> includeDirectories =
-        TargetNodes.castArg(targetNode, CommonArg.class)
-            .map(input -> input.getConstructorArg().getPublicIncludeDirectories())
-            .orElse(ImmutableSortedSet.of());
-    return FluentIterable.from(includeDirectories)
-        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize())
-        .toSet();
-  }
-
-  private Set<Path> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
-    Path basePath =
-        getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
-            .resolve(targetNode.getBuildTarget().getBasePath());
-    ImmutableSortedSet<String> includeDirectories =
-        TargetNodes.castArg(targetNode, CommonArg.class)
-            .map(input -> input.getConstructorArg().getPublicSystemIncludeDirectories())
-            .orElse(ImmutableSortedSet.of());
-    return FluentIterable.from(includeDirectories)
-        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize())
-        .toSet();
-  }
-
   private ImmutableList<StringWithMacros> collectRecursiveExportedLinkerFlags(
       TargetNode<?> targetNode) {
     return FluentIterable.from(
@@ -3685,8 +2920,8 @@ public class ProjectGenerator {
     ImmutableList.Builder<String> targetSpecificSwiftFlags = ImmutableList.builder();
     targetSpecificSwiftFlags.add("-import-underlying-module");
     Path vfsOverlay =
-        getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(
-            getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC));
+        HeaderSearchPaths.getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(
+            headerSearchPaths.getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC));
     targetSpecificSwiftFlags.add("-Xcc");
     targetSpecificSwiftFlags.add("-ivfsoverlay");
     targetSpecificSwiftFlags.add("-Xcc");
@@ -3708,7 +2943,7 @@ public class ProjectGenerator {
   }
 
   private boolean isLibraryWithForceLoad(TargetNode<?> input) {
-    Optional<TargetNode<CommonArg>> library = getLibraryNode(targetGraph, input);
+    Optional<TargetNode<CommonArg>> library = NodeHelper.getLibraryNode(targetGraph, input);
 
     if (!library.isPresent()) {
       return false;
@@ -4033,17 +3268,6 @@ public class ProjectGenerator {
         && arg.getExtension().getLeft().equals(AppleBundleExtension.FRAMEWORK);
   }
 
-  private static boolean isModularAppleLibrary(TargetNode<?> libraryNode) {
-    Optional<TargetNode<AppleLibraryDescriptionArg>> appleLibNode =
-        TargetNodes.castArg(libraryNode, AppleLibraryDescriptionArg.class);
-    if (appleLibNode.isPresent()) {
-      AppleLibraryDescriptionArg constructorArg = appleLibNode.get().getConstructorArg();
-      return constructorArg.isModular();
-    }
-
-    return false;
-  }
-
   private static boolean bundleRequiresRemovalOfAllTransitiveFrameworks(
       TargetNode<? extends HasAppleBundleFields> targetNode) {
     return isFrameworkBundle(targetNode.getConstructorArg());
@@ -4058,36 +3282,7 @@ public class ProjectGenerator {
   }
 
   private Path resolveSourcePath(SourcePath sourcePath) {
-    if (sourcePath instanceof PathSourcePath) {
-      return projectFilesystem.relativize(defaultPathResolver.getAbsolutePath(sourcePath));
-    }
-    Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
-    BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
-    BuildTarget buildTarget = buildTargetSourcePath.getTarget();
-    TargetNode<?> node = targetGraph.get(buildTarget);
-    Optional<TargetNode<ExportFileDescriptionArg>> exportFileNode =
-        TargetNodes.castArg(node, ExportFileDescriptionArg.class);
-    if (!exportFileNode.isPresent()) {
-      BuildRuleResolver resolver = actionGraphBuilderForNode.apply(node);
-      Path output = resolver.getSourcePathResolver().getAbsolutePath(sourcePath);
-      if (output == null) {
-        throw new HumanReadableException(
-            "The target '%s' does not have an output.", node.getBuildTarget());
-      }
-
-      return projectFilesystem.relativize(output);
-    }
-
-    Optional<SourcePath> src = exportFileNode.get().getConstructorArg().getSrc();
-    if (!src.isPresent()) {
-      Path output =
-          getCellPathForTarget(buildTarget)
-              .resolve(buildTarget.getBasePath())
-              .resolve(buildTarget.getShortNameAndFlavorPostfix());
-      return projectFilesystem.relativize(output);
-    }
-
-    return resolveSourcePath(src.get());
+    return projectSourcePathResolver.resolveSourcePath(sourcePath);
   }
 
   private boolean isLibraryWithSourcesToCompile(TargetNode<?> input) {
@@ -4095,7 +3290,7 @@ public class ProjectGenerator {
       return true;
     }
 
-    Optional<TargetNode<CommonArg>> library = getLibraryNode(targetGraph, input);
+    Optional<TargetNode<CommonArg>> library = NodeHelper.getLibraryNode(targetGraph, input);
 
     if (!library.isPresent()) {
       return false;
@@ -4107,7 +3302,7 @@ public class ProjectGenerator {
   }
 
   private boolean isLibraryWithSwiftSources(TargetNode<?> input) {
-    Optional<TargetNode<CommonArg>> library = getLibraryNode(targetGraph, input);
+    Optional<TargetNode<CommonArg>> library = NodeHelper.getLibraryNode(targetGraph, input);
     return library.filter(projGenerationStateCache::targetContainsSwiftSourceCode).isPresent();
   }
 
@@ -4149,59 +3344,5 @@ public class ProjectGenerator {
     Preconditions.checkArgument(rule instanceof CxxPrecompiledHeaderTemplate);
     CxxPrecompiledHeaderTemplate pch = (CxxPrecompiledHeaderTemplate) rule;
     return Optional.of(pch.getHeaderSourcePath());
-  }
-
-  private ProjectFilesystem getFilesystemForTarget(Optional<BuildTarget> target) {
-    if (target.isPresent()) {
-      // TODO(T47190884): Look the path up with the cell name.
-      Path cellPath = target.get().getCellPath();
-      Cell cell = projectCell.getCellProvider().getCellByPath(cellPath);
-      return cell.getFilesystem();
-    } else {
-      return projectFilesystem;
-    }
-  }
-
-  private Path getPathToHeaderMapsRoot(Optional<BuildTarget> target) {
-    ProjectFilesystem filesystem = getFilesystemForTarget(target);
-    return filesystem.getBuckPaths().getGenDir().resolve("_p");
-  }
-
-  private Path getFilenameToHeadersPath(TargetNode<? extends CommonArg> targetNode, String suffix) {
-    String hashedPath =
-        BaseEncoding.base64Url()
-            .omitPadding()
-            .encode(
-                Hashing.sha1()
-                    .hashString(
-                        targetNode
-                            .getBuildTarget()
-                            .getUnflavoredBuildTarget()
-                            .getFullyQualifiedName(),
-                        Charsets.UTF_8)
-                    .asBytes())
-            .substring(0, 10);
-    return Paths.get(hashedPath + suffix);
-  }
-
-  private Path getPathToHeadersPath(TargetNode<? extends CommonArg> targetNode, String suffix) {
-    return getPathToHeaderMapsRoot(Optional.of(targetNode.getBuildTarget()))
-        .resolve(getFilenameToHeadersPath(targetNode, suffix));
-  }
-
-  private Path getAbsolutePathToHeaderSymlinkTree(
-      TargetNode<? extends CommonArg> targetNode, HeaderVisibility headerVisibility) {
-    ProjectFilesystem filesystem = getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()));
-    return filesystem.resolve(getPathToHeaderSymlinkTree(targetNode, headerVisibility));
-  }
-
-  private Path getPathToHeaderSymlinkTree(
-      TargetNode<? extends CommonArg> targetNode, HeaderVisibility headerVisibility) {
-    return getPathToHeadersPath(
-        targetNode, AppleHeaderVisibilities.getHeaderSymlinkTreeSuffix(headerVisibility));
-  }
-
-  private Path getPathToMergedHeaderMap() {
-    return getPathToHeaderMapsRoot(Optional.of(workspaceTarget)).resolve("pub-hmap");
   }
 }

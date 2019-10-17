@@ -15,7 +15,9 @@
  */
 package com.facebook.buck.features.apple.projectV2;
 
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -26,18 +28,30 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractSwiftAttributes {
 
+  @Value.Parameter
+  abstract TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode();
+
   /** The module name of the Swift target. */
-  public abstract String moduleName();
+  @Value.Derived
+  String moduleName() {
+    return Utils.getModuleName(targetNode());
+  }
 
   /** Swift compiler version that the target supports. */
-  public abstract Optional<String> swiftVersion();
+  abstract Optional<String> swiftVersion();
 
   /**
-   * The generated bridging header name for Objectice C code. Typically the @{code
-   * moduleName}-Swift.h.
+   * The generated bridging header name for Objective C code. Typically @{code moduleName}-Swift.h.
    */
-  public abstract String objCGeneratedHeaderName();
+  @Value.Derived
+  String objCGeneratedHeaderName() {
+    return SwiftAttributeParser.getSwiftObjCGeneratedHeaderName(
+        targetNode(), Optional.of(moduleName()));
+  }
 
   /** Map of target relative generated bridging header path to absolute path in the filesystem. */
-  public abstract ImmutableMap<Path, Path> publicHeaderMapEntries();
+  @Value.Default
+  ImmutableMap<Path, Path> publicHeaderMapEntries() {
+    return ImmutableMap.of();
+  };
 }
