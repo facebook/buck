@@ -45,7 +45,9 @@ public class ConfigurationRuleSelectableResolver implements SelectableResolver {
         configurationRuleResolver.getRule(buildTarget, dependencyStack);
     if (!(configurationRule instanceof ProvidesSelectable)) {
       throw new HumanReadableException(
-          "%s is used to resolve configurable attributes but it has the wrong type", buildTarget);
+          dependencyStack,
+          "%s is used to resolve configurable attributes but it has the wrong type",
+          buildTarget);
     }
     return ((ProvidesSelectable) configurationRule).getSelectable();
   }

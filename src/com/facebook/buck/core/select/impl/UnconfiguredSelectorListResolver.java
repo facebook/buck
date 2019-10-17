@@ -59,7 +59,7 @@ public class UnconfiguredSelectorListResolver extends AbstractSelectorListResolv
     }
 
     if (matchingResult == null) {
-      assertSelectorHasDefault(buildTarget, attributeName, selector);
+      assertSelectorHasDefault(buildTarget, dependencyStack, attributeName, selector);
       matchingResult = selector.hasDefaultCondition() ? selector.getDefaultConditionValue() : null;
     }
 

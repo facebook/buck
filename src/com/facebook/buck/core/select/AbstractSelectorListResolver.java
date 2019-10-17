@@ -139,7 +139,10 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
 
   /** Assertion for the selector to contain "DEFAULT" as key inside the dictionary. */
   protected static void assertSelectorHasDefault(
-      BuildTarget buildTarget, String attributeName, Selector<?> selector) {
+      BuildTarget buildTarget,
+      DependencyStack dependencyStack,
+      String attributeName,
+      Selector<?> selector) {
     if (selector.hasDefaultCondition()) {
       return;
     }
@@ -160,6 +163,6 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
     } else {
       noMatchMessage += ": " + selector.getNoMatchMessage();
     }
-    throw new HumanReadableException(noMatchMessage);
+    throw new HumanReadableException(dependencyStack, noMatchMessage);
   }
 }

@@ -62,7 +62,7 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
     try {
       platformTargets = platformTraversal.traverse(ImmutableList.of(buildTarget));
     } catch (CycleException e) {
-      throw new HumanReadableException(e.getMessage());
+      throw new HumanReadableException(dependencyStack, e.getMessage());
     }
 
     ImmutableSet<ConstraintValue> constraintValues =
@@ -82,6 +82,7 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
         configurationRuleResolver.getRule(buildTarget, dependencyStack);
     if (!(configurationRule instanceof PlatformRule)) {
       throw new HumanReadableException(
+          dependencyStack,
           "%s is used as a target platform, but not declared using `platform` rule",
           buildTarget.getFullyQualifiedName());
     }

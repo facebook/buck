@@ -50,6 +50,8 @@ public class CombinedPlatformResolver implements PlatformResolver {
       return ruleBasedMultiPlatformResolver.getPlatform(buildTarget, dependencyStack);
     }
     throw new HumanReadableException(
-        "%s is used as a target platform, but not declared using a platform rule", buildTarget);
+        dependencyStack,
+        "%s is used as a target platform, but not declared using a platform rule",
+        buildTarget);
   }
 }

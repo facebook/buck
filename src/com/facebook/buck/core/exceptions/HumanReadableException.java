@@ -46,6 +46,14 @@ public class HumanReadableException extends RuntimeException
     this.dependencyStack = dependencyStack;
   }
 
+  public HumanReadableException(
+      @Nullable Throwable cause,
+      DependencyStack dependencyStack,
+      String humanReadableFormatString,
+      Object... args) {
+    this(cause, dependencyStack, String.format(humanReadableFormatString, args));
+  }
+
   public HumanReadableException(String humanReadableFormatString, Object... args) {
     this(String.format(humanReadableFormatString, args));
   }

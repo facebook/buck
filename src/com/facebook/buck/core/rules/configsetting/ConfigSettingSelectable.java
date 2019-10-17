@@ -75,7 +75,7 @@ public class ConfigSettingSelectable implements Selectable {
       // It should be relatively easy to add buckconfig matching,
       // but we probably don't want to open this door.
       throw new HumanReadableException(
-          "config_setting with values cannot be used to match platforms");
+          dependencyStack, "config_setting with values cannot be used to match platforms");
     }
     ImmutableList<ConstraintValue> constraintValues =
         this.constraintValues.stream()

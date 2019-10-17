@@ -48,6 +48,7 @@ public class RuleBasedMultiPlatformResolver implements PlatformResolver {
         configurationRuleResolver.getRule(buildTarget, dependencyStack);
     if (!(configurationRule instanceof MultiPlatformRule)) {
       throw new HumanReadableException(
+          dependencyStack,
           "%s is used as a multiplatform, but not declared using an appropriate rule",
           buildTarget.getFullyQualifiedName());
     }

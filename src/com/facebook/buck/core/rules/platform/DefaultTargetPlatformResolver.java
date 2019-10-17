@@ -49,6 +49,7 @@ public class DefaultTargetPlatformResolver implements TargetPlatformResolver {
           targetConfiguration, dependencyStack);
     }
     throw new HumanReadableException(
+        dependencyStack,
         "Cannot determine target platform for configuration: " + targetConfiguration);
   }
 }
