@@ -199,7 +199,12 @@ abstract class AbstractParser implements Parser {
             } catch (BuildFileParseException e) {
               throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
             } catch (HumanReadableException e) {
-              throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
+              if (e.getDependencyStack().isEmpty()) {
+                // we don't have a proper stack, use simple message as fallback
+                throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
+              } else {
+                throw e;
+              }
             }
           }
           return new Pair<>(node, node.getTotalDeps().iterator());

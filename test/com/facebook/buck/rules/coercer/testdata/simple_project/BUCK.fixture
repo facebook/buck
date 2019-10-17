@@ -1,0 +1,11 @@
+java_library(
+    name = "a",
+    srcs = 1,
+)
+
+java_library(
+    name = "b",
+    deps = [
+        ":a",
+    ],
+)

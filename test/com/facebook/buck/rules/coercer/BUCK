@@ -30,6 +30,8 @@ standard_java_test(
         "//test/com/facebook/buck/io/file:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/rules/macros:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/util:testutil",
         "//test/com/facebook/buck/versions:testutil",
         "//third-party/java/junit:junit",
     ],

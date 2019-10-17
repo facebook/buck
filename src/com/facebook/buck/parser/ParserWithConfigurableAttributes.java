@@ -204,7 +204,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                 attribute.getValue(),
                 dependencyStack));
       } catch (CoerceFailedException e) {
-        throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
+        throw new HumanReadableException(e, dependencyStack, e.getMessage());
       }
     }
 

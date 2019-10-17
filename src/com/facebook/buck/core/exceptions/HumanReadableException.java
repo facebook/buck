@@ -37,7 +37,7 @@ public class HumanReadableException extends RuntimeException
     this(null, dependencyStack, humanReadableErrorMessage);
   }
 
-  private HumanReadableException(
+  public HumanReadableException(
       @Nullable Throwable cause,
       DependencyStack dependencyStack,
       String humanReadableErrorMessage) {
