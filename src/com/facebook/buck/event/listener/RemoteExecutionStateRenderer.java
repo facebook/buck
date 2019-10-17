@@ -23,6 +23,7 @@ import com.google.common.collect.ContiguousSet;
 import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Range;
 import java.util.Optional;
 import java.util.function.Function;
@@ -45,6 +46,7 @@ public class RemoteExecutionStateRenderer implements MultiStateRenderer {
   private final int maxConcurrentExecutions;
   private final CommonThreadStateRenderer commonThreadStateRenderer;
   private final ImmutableList<RemoteExecutionActionEvent.Started> remotelyBuildingTargets;
+  private final ImmutableSet<String> stolenTargets;
 
   public RemoteExecutionStateRenderer(
       Ansi ansi,
@@ -53,7 +55,8 @@ public class RemoteExecutionStateRenderer implements MultiStateRenderer {
       int outputMaxColumns,
       long minimumDurationMillis,
       int maxConcurrentExecutions,
-      ImmutableList<RemoteExecutionActionEvent.Started> remotelyBuildingTargets) {
+      ImmutableList<RemoteExecutionActionEvent.Started> remotelyBuildingTargets,
+      ImmutableSet<String> stolenTargets) {
     this.currentTimeMillis = currentTimeMillis;
     this.maxConcurrentExecutions = maxConcurrentExecutions;
     this.commonThreadStateRenderer =
@@ -65,6 +68,7 @@ public class RemoteExecutionStateRenderer implements MultiStateRenderer {
             /* threadInformationMap= */ ImmutableMap.of());
     this.remotelyBuildingTargets =
         filterByElapsedTime(remotelyBuildingTargets, minimumDurationMillis);
+    this.stolenTargets = stolenTargets;
   }
 
   @Override
@@ -90,7 +94,7 @@ public class RemoteExecutionStateRenderer implements MultiStateRenderer {
   @Override
   public String renderStatusLine(long targetId) {
     RemoteExecutionActionEvent.Started event = getEventByTargetId(targetId);
-    return REMOTE_EXECUTION_PREFIX
+    return getPrefix(event)
         + commonThreadStateRenderer.renderLine(
             Optional.of(event.getBuildTarget()),
             Optional.of(event),
@@ -126,5 +130,11 @@ public class RemoteExecutionStateRenderer implements MultiStateRenderer {
         targetId >= 0 && targetId < remotelyBuildingTargets.size(), "Received invalid targetId.");
     return Preconditions.checkNotNull(
         remotelyBuildingTargets.get(Math.toIntExact(targetId)), "Build target unexpectedly null.");
+  }
+
+  private String getPrefix(RemoteExecutionActionEvent.Started event) {
+    return stolenTargets.contains(event.getBuildTarget().getFullyQualifiedName())
+        ? ""
+        : REMOTE_EXECUTION_PREFIX;
   }
 }

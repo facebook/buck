@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.util.Ansi;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.Locale;
 import java.util.function.Function;
 import org.easymock.EasyMock;
@@ -45,19 +46,19 @@ public class RemoteExecutionStateRendererTest {
 
   @Test
   public void testGetSortedIds_NonEmptyTargets() {
-    testRenderer = createTestRenderer(createBuildTargets(4));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(4)), ImmutableSet.of());
     assertEquals(ImmutableList.of(0L, 1L, 2L, 3L), testRenderer.getSortedIds(/* unused= */ false));
   }
 
   @Test
   public void testGetSortedIds_EmptyTargets() {
-    testRenderer = createTestRenderer(createBuildTargets(0));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(0)), ImmutableSet.of());
     assertEquals(ImmutableList.of(), testRenderer.getSortedIds(/* unused= */ false));
   }
 
   @Test
   public void testTargetsGetFilteredByElapsedTime() {
-    testRenderer = createTestRenderer(createBuildTargets(9));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(9)), ImmutableSet.of());
     // Timestamps are 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900; last three should be
     // filtered out
     assertEquals(
@@ -67,7 +68,7 @@ public class RemoteExecutionStateRendererTest {
   @Test
   public void testRenderStatusLine() {
     int numTargets = 4;
-    testRenderer = createTestRenderer(createBuildTargets(numTargets));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(numTargets)), ImmutableSet.of());
 
     for (int i = 0; i < numTargets; i++) {
       // e.g. [RE]  - //:target0... 0.9s
@@ -78,10 +79,34 @@ public class RemoteExecutionStateRendererTest {
   }
 
   @Test
+  public void testRenderStatusLine_DoesNotAppendRePrefixToStolenTargets() {
+    int numTargets = 4;
+    ImmutableList<BuildTargetWrapper> targets = createBuildTargets(numTargets);
+    ImmutableSet.Builder<String> stolenTargets = new ImmutableSet.Builder<>();
+    for (int i = 1; i < numTargets; i += 2) {
+      stolenTargets.add(targets.get(i).target.getFullyQualifiedName());
+    }
+    testRenderer = createTestRenderer(getEvents(targets), stolenTargets.build());
+
+    for (int i = 0; i < numTargets; i++) {
+      if (i % 2 == 0) {
+        // e.g. [RE]  - //:target0... 0.9s
+        assertEquals(
+            "[RE]  - //:target" + i + "... 0." + (9 - i) + "s",
+            testRenderer.renderStatusLine(Long.valueOf(i)));
+      } else {
+        assertEquals(
+            " - //:target" + i + "... 0." + (9 - i) + "s",
+            testRenderer.renderStatusLine(Long.valueOf(i)));
+      }
+    }
+  }
+
+  @Test
   public void testRenderStatusLine_ThrowsExceptionIfGivenIdIsInvalid() {
     expectedException.expect(IllegalArgumentException.class);
     expectedException.expectMessage("Received invalid targetId.");
-    testRenderer = createTestRenderer(createBuildTargets(4));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(4)), ImmutableSet.of());
 
     testRenderer.renderStatusLine(4L);
   }
@@ -90,7 +115,7 @@ public class RemoteExecutionStateRendererTest {
   public void testRenderShortStatus_ThrowsExceptionIfGivenIdIsInvalid() {
     expectedException.expect(IllegalArgumentException.class);
     expectedException.expectMessage("Received invalid targetId.");
-    testRenderer = createTestRenderer(createBuildTargets(4));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(4)), ImmutableSet.of());
 
     testRenderer.renderStatusLine(-1L);
   }
@@ -98,15 +123,15 @@ public class RemoteExecutionStateRendererTest {
   @Test
   public void testRenderShortStatus() {
     int numTargets = 4;
-    testRenderer = createTestRenderer(createBuildTargets(numTargets));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(numTargets)), ImmutableSet.of());
 
     for (int i = 0; i < numTargets; i++) {
       assertEquals("[RE] [.]", testRenderer.renderShortStatus(Long.valueOf(i)));
     }
   }
 
-  private ImmutableList<RemoteExecutionActionEvent.Started> createBuildTargets(int numTargets) {
-    ImmutableList.Builder<RemoteExecutionActionEvent.Started> builder = ImmutableList.builder();
+  private ImmutableList<BuildTargetWrapper> createBuildTargets(int numTargets) {
+    ImmutableList.Builder<BuildTargetWrapper> builder = ImmutableList.builder();
 
     long startTimeMillis = 2100;
     for (int i = 0; i < numTargets; i++) {
@@ -117,14 +142,15 @@ public class RemoteExecutionStateRendererTest {
       EasyMock.expect(mockEvent.getBuildTarget()).andReturn(target).anyTimes();
       EasyMock.replay(mockEvent);
       startTimeMillis += 100L;
-      builder.add(mockEvent);
+      builder.add(new BuildTargetWrapper(target, mockEvent));
     }
 
     return builder.build();
   }
 
   private RemoteExecutionStateRenderer createTestRenderer(
-      ImmutableList<RemoteExecutionActionEvent.Started> buildTargets) {
+      ImmutableList<RemoteExecutionActionEvent.Started> buildTargets,
+      ImmutableSet<String> stolenTargets) {
     return new RemoteExecutionStateRenderer(
         ANSI,
         FORMAT_TIME_FUNCTION,
@@ -132,6 +158,23 @@ public class RemoteExecutionStateRendererTest {
         OUTPUT_MAX_COLUMNS,
         MINIMUM_DURATION_MILLIS,
         MAX_CONCURRENT_EXECUTIONS,
-        buildTargets);
+        buildTargets,
+        stolenTargets);
+  }
+
+  private ImmutableList<RemoteExecutionActionEvent.Started> getEvents(
+      ImmutableList<BuildTargetWrapper> wrappers) {
+    return ImmutableList.copyOf(
+        wrappers.stream().map(w -> w.event).toArray(RemoteExecutionActionEvent.Started[]::new));
+  }
+
+  private static class BuildTargetWrapper {
+    private final BuildTarget target;
+    private final RemoteExecutionActionEvent.Started event;
+
+    private BuildTargetWrapper(BuildTarget target, RemoteExecutionActionEvent.Started event) {
+      this.target = target;
+      this.event = event;
+    }
   }
 }

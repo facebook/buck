@@ -35,6 +35,7 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.event.listener.util.EventInterval;
+import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestResultSummary;
@@ -88,6 +89,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private final ConcurrentMap<Long, ConcurrentLinkedDeque<LeafEvent>> threadsToRunningStep;
   private final ConcurrentMap<BuildTarget, RemoteExecutionActionEvent.Started> eventsByTargets;
+  private final Set<String> stolenTargets;
 
   private final ConcurrentMap<Long, Optional<? extends TestSummaryEvent>>
       threadsToRunningTestSummaryEvent;
@@ -211,6 +213,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
     this.threadsToRunningStep = new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
     this.eventsByTargets = new ConcurrentHashMap<>();
+    this.stolenTargets = ConcurrentHashMap.newKeySet();
 
     this.testFormatter =
         new TestResultFormatter(
@@ -392,7 +395,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               outputMaxColumns,
               buildRuleMinimumDurationMillis,
               maxConcurrentReExecutions,
-              ImmutableList.copyOf(eventsByTargets.values())),
+              ImmutableList.copyOf(eventsByTargets.values()),
+              ImmutableSet.copyOf(stolenTargets)),
           lines,
           maxThreadLines);
     }
@@ -847,6 +851,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void onActionEventTerminated(RemoteExecutionActionEvent.Terminal event) {
     eventsByTargets.remove(event.getBuildTarget());
+  }
+
+  @Subscribe
+  public void onLocalFallbackEventStarted(LocalFallbackEvent.Started event) {
+    stolenTargets.add(event.getBuildTarget());
   }
 
   @Override
