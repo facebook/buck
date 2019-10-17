@@ -373,7 +373,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Optional<BuildTarget> getAbiJar() {
     if (!generateAbi) {
-      return Optional.empty();
+      return Optional.of(getBuildTarget());
     }
 
     return JavaLibrary.super.getAbiJar();
