@@ -39,7 +39,7 @@ public class UnconfiguredPlatform implements Platform {
   public boolean matchesAll(
       Collection<ConstraintValue> constraintValues, DependencyStack dependencyStack) {
     throw new HumanReadableException(
-        "Cannot use select() expression when target platform is not specified");
+        dependencyStack, "Cannot use select() expression when target platform is not specified");
   }
 
   @Override

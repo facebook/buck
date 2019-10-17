@@ -166,7 +166,8 @@ public class ConfigurationsIntegrationTest {
     MatcherAssert.assertThat(
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
-            "//:test-library: Cannot use select() expression when target platform is not specified"));
+            "Cannot use select() expression when target platform is not specified\n"
+                + "    At //:test-library"));
   }
 
   @Test
@@ -312,8 +313,11 @@ public class ConfigurationsIntegrationTest {
     // but the error message is incorrect.
     assertThat(
         result.getStderr(),
-        Matchers.containsString(
-            "Cannot use select() expression when target platform is not specified"));
+        MoreStringsForTests.containsIgnoringPlatformNewlines(
+            "Cannot use select() expression when target platform is not specified\n"
+                + "    At //default_platform_only_leaf:dep\n"
+                + "    At //default_platform_only_leaf:intermediate\n"
+                + "    At //default_platform_only_leaf:leaf"));
   }
 
   @Test
