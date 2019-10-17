@@ -55,54 +55,51 @@ public class RobolectricTestRuleIntegrationTest {
 
   @Test
   public void testRobolectricTestBuildsWithDummyR() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
   }
 
   @Test
   public void testRobolectricTestWithExternalRunnerWithPassingDirectoriesInArgument()
       throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
   }
 
   @Test
   public void testRobolectricTestWithExternalRunnerWithPassingDirectoriesInFile()
       throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
   }
 
   @Test
   public void testRobolectricTestWithExternalRunnerWithRobolectricRuntimeDependencyArgument()
       throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+
     workspace.runBuckTest("//java/com/sample/lib:test_robolectric_runtime_dep").assertSuccess();
   }
 
   @Test
   public void robolectricTestXWithExternalRunner() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
     workspace.runBuckTest("//java/com/sample/runner:robolectric_with_runner").assertSuccess();
     Path specOutput =
@@ -135,11 +132,10 @@ public class RobolectricTestRuleIntegrationTest {
   @Test
   public void robolectricTestXWithExternalRunnerWithRobolectricRuntimeDependencyArgument()
       throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
     workspace.runBuckTest("//java/com/sample/runner:robolectric_with_runner_runtime_dep");
     Path specOutput =
@@ -172,11 +168,10 @@ public class RobolectricTestRuleIntegrationTest {
   @Test
   public void robolectricTestXWithExternalRunnerWithoutRobolectricRuntimeDependencyArgument()
       throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
     workspace.runBuckTest("//java/com/sample/runner:robolectric_without_runner_runtime_dep_failed");
     Path specOutput =

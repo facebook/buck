@@ -33,11 +33,11 @@ public class MergeAssetsIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_multi_cell_resource", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
   }
 
   @Test

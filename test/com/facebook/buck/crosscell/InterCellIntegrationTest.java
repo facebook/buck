@@ -620,7 +620,7 @@ public class InterCellIntegrationTest {
 
   @Test
   public void testCrossCellAndroidLibrary() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/android/primary", "inter-cell/android/secondary");
@@ -633,8 +633,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void testCrossCellAndroidLibraryMerge() throws IOException, InterruptedException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/android/primary", "inter-cell/android/secondary");
@@ -677,8 +677,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void testCrossCellDependencyMerge() throws IOException, InterruptedException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/android/primary", "inter-cell/android/secondary");

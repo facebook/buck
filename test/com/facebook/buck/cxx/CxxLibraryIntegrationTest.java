@@ -219,11 +219,11 @@ public class CxxLibraryIntegrationTest {
   @Test
   public void testCxxLibraryWithDefaultsInFlagBuildsSomething() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:library_with_header");
     ProcessResult result =

@@ -39,10 +39,10 @@ public class AndroidResourceParsePackageFromManifestIntegrationTest {
    */
   @Test
   public void testParsePackageFromManifest() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "parse_package_from_manifest", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckBuild("//:library").assertSuccess();
 
     // Modify ExampleActivity.java and rebuild //:library. This will verify that //:res is hydrated

@@ -48,9 +48,9 @@ public class AndroidInstrumentationTestEndToEndTest {
   private static final Logger LOG = Logger.get(AndroidInstrumentationTestEndToEndTest.class);
 
   @Before
-  public void assumeEnvironment() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+  public void assumeEnvironment() throws Exception {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
 
     // This test requires a real device or an emulator
     Assume.assumeTrue(

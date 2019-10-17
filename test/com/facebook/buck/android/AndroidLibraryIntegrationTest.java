@@ -46,8 +46,8 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testAndroidLibraryDoesNotUseTransitiveResources() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testAndroidLibraryDoesNotUseTransitiveResources() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result =
         workspace.runBuckBuild("//java/com/sample/lib:lib_using_transitive_empty_res");
     result.assertFailure();
@@ -56,7 +56,7 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testAndroidKotlinBinaryDoesNotUseTransitiveResources() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
     ProcessResult result =
         workspace.runBuckBuild("//kotlin/com/sample/lib:lib_using_transitive_empty_res");
@@ -66,7 +66,7 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testAndroidKotlinLibraryCompilation() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
     ProcessResult result =
         workspace.runBuckBuild("//kotlin/com/sample/lib:lib_depending_on_main_lib");
@@ -75,7 +75,7 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testAndroidKotlinLibraryExtraArgumentsCompilation() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
     ProcessResult result =
         workspace.runBuckBuild("//kotlin/com/sample/lib:lib_extra_kotlinc_arguments");
@@ -84,7 +84,7 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testAndroidKotlinLibraryMixedSourcesCompilation() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
     ProcessResult result = workspace.runBuckBuild("//kotlin/com/sample/lib:lib_mixed_sources");
     result.assertSuccess();
@@ -92,7 +92,7 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testAndroidKotlinLibraryNoKotlinSourcesCompilation() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
     ProcessResult result =
         workspace.runBuckBuild("//kotlin/com/sample/lib:lib_mixed_no_kotlin_sources");
@@ -100,8 +100,8 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test(timeout = (3 * 60 * 1000))
-  public void testAndroidScalaLibraryDoesNotUseTransitiveResources() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testAndroidScalaLibraryDoesNotUseTransitiveResources() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result =
         workspace.runBuckBuild("//scala/com/sample/lib:lib_using_transitive_empty_res");
     result.assertFailure();
@@ -109,16 +109,16 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test(timeout = (3 * 60 * 1000))
-  public void testAndroidScalaLibraryCompilation() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testAndroidScalaLibraryCompilation() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result =
         workspace.runBuckBuild("//scala/com/sample/lib:lib_depending_on_main_lib");
     result.assertSuccess();
   }
 
   @Test
-  public void testAndroidLibraryBuildFailsWithInvalidLanguageParam() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testAndroidLibraryBuildFailsWithInvalidLanguageParam() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult processResult =
         workspace.runBuckBuild("//scala/com/sample/invalid_lang:lib_with_invalid_language_param");
     processResult.assertFailure();

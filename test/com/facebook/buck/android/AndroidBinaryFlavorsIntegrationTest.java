@@ -42,11 +42,11 @@ public class AndroidBinaryFlavorsIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", temporaryFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
   }
 
   @Test

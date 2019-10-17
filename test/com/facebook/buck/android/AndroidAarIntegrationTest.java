@@ -54,9 +54,9 @@ public class AndroidAarIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void setUp() throws Exception {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    AssumeAndroidPlatform.get(filesystem).assumeSdkIsAvailable();
   }
 
   @Test
@@ -213,11 +213,11 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testCxxLibraryDependent() throws IOException {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_aar_native_deps/cxx_deps", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     String target = "//:app";
     workspace.runBuckBuild(target).assertSuccess();
 
@@ -230,7 +230,7 @@ public class AndroidAarIntegrationTest {
     zipInspector.assertFileExists("classes.jar");
     zipInspector.assertFileExists("R.txt");
     zipInspector.assertFileExists("res/");
-    if (AssumeAndroidPlatform.isArmAvailable()) {
+    if (AssumeAndroidPlatform.get(workspace).isArmAvailable()) {
       zipInspector.assertFileExists("jni/armeabi/libdep.so");
       zipInspector.assertFileExists("jni/armeabi/libnative.so");
     }
@@ -242,11 +242,11 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testNativeLibraryDependent() throws IOException {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_aar_native_deps/ndk_deps", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     String target = "//:app";
     workspace.runBuckBuild(target).assertSuccess();
 
@@ -267,10 +267,10 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testNativeLibraryRelinker() throws IOException, InterruptedException {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     String target = "//apps/aar_build_config:app_with_relinker";
     workspace.runBuckBuild(target).assertSuccess();
     SymbolGetter syms = AndroidNdkHelper.getSymbolGetter(filesystem, tmp);
@@ -299,12 +299,12 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testNativeLibraryDependentWithNDKPrior17() throws IOException {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
-    AssumeAndroidPlatform.assumeArmIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_aar_native_deps/ndk_deps", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeArmIsAvailable();
     String target = "//:app-16";
     workspace.runBuckBuild(target).assertSuccess();
 
@@ -327,19 +327,19 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testEmptyExceptManifest() throws IOException {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     workspace.runBuckBuild("//apps/sample:nearly_empty_aar").assertSuccess();
   }
 
   @Test
   public void testResultIsRecorded() throws IOException {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:nearly_empty_aar").assertSuccess();
     workspace.runBuckCommand("clean", "--keep-cache");

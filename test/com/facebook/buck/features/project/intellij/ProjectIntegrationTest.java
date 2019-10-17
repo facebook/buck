@@ -388,11 +388,11 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testOutputDir() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "min_sdk_version_from_binary_manifest", temporaryFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     workspace.runBuckCommand("project").assertSuccess("buck project should exit cleanly");
     Path outPath = temporaryFolder2.getRoot();
@@ -417,11 +417,11 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testOutputDirNoProjectWrite() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "min_sdk_version_from_binary_manifest", temporaryFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     Path projPath = temporaryFolder.getRoot();
     Path outPath = temporaryFolder2.getRoot();
@@ -443,11 +443,11 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testDifferentOutputDirSameProject() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "min_sdk_version_from_binary_manifest", temporaryFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     Path out1Path = temporaryFolder2.newFolder("project1");
     // Make sure buck project creates a dir if it doesn't exist
@@ -474,11 +474,11 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckModuleRegenerateSubproject() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
                 this, "incrementalProject", temporaryFolder.newFolder())
             .setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     final String extraModuleFilePath = "modules/extra/modules_extra.iml";
     final File extraModuleFile = workspace.getPath(extraModuleFilePath).toFile();
     workspace
@@ -504,11 +504,11 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckModuleRegenerateSubprojectNoOp() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
                 this, "incrementalProject", temporaryFolder.newFolder())
             .setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace
         .runBuckCommand(
             "project",
@@ -527,11 +527,11 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckModuleRegenerateWithExportedLibs() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
                 this, "incrementalProject", temporaryFolder.newFolder())
             .setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     final String libraryFilePath = ".idea/libraries/__modules_lib_guava.xml";
     final File libraryFile = workspace.getPath(libraryFilePath).toFile();
     workspace
@@ -551,12 +551,12 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testCrossCellIntelliJProject() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     ProjectWorkspace primary =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "inter-cell/primary", temporaryFolder.newFolder());
     primary.setUp();
+    AssumeAndroidPlatform.get(primary).assumeSdkIsAvailable();
 
     ProjectWorkspace secondary =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
@@ -607,12 +607,12 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testGeneratingModulesInMultiCells() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     ProjectWorkspace primary =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "modules_in_multi_cells/primary", temporaryFolder.newFolder("primary"));
     primary.setUp();
+    AssumeAndroidPlatform.get(primary).assumeSdkIsAvailable();
 
     ProjectWorkspace secondary =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
@@ -644,11 +644,11 @@ public class ProjectIntegrationTest {
 
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, folderWithTestData, temporaryFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     ProcessResult result =
         workspace.runBuckCommand(Lists.asList("project", commandArgs).toArray(new String[0]));

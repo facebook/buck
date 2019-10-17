@@ -93,12 +93,12 @@ public class AndroidBinaryInstallIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
 
     projectWorkspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "exopackage_integration", tmpFolder);
     projectWorkspace.setUp();
+    AssumeAndroidPlatform.get(projectWorkspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(projectWorkspace).assumeNdkIsAvailable();
     projectWorkspace.addBuckConfigLocalOption(
         "install", "concurrent_install", concurrentInstallType.toString());
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());

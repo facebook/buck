@@ -34,9 +34,9 @@ public class NdkToolchainIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
-  public void setUp() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+  public void setUp() throws Exception {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
   }
 
   @Test

@@ -140,10 +140,10 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void outputPathShownWithTargetPlatform() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     ProcessResult result =
         workspace.runBuckCommand(

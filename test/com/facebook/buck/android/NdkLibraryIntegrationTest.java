@@ -50,8 +50,8 @@ public class NdkLibraryIntegrationTest {
   @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
 
   @Before
-  public void setUp() {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+  public void setUp() throws Exception {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
   }
 
   @Test

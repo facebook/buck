@@ -44,10 +44,10 @@ public class GenAidlIntegrationTest {
 
   @Test
   public void buildingWithAidlSrcsDeclared() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "gen_aidl_missing_src", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.enableDirCache();
 
     ProcessResult result = workspace.runBuckBuild("//:android-lib");
@@ -60,10 +60,10 @@ public class GenAidlIntegrationTest {
 
   @Test
   public void buildingCleaningAndThenRebuildingFromCacheShouldWorkAsExpected() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cached_build", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.enableDirCache();
 
     // Populate the cache
@@ -79,10 +79,10 @@ public class GenAidlIntegrationTest {
 
   @Test
   public void rootDirectoryDoesntChangeBuild() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cached_build", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     Path outputOne = workspace.buildAndReturnOutput("//:AService");
 
     ProjectWorkspace workspaceTwo =

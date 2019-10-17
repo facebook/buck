@@ -48,8 +48,8 @@ public class Aapt2PackageResourcesIntegrationTest {
 
   @Test
   public void aapt2CompileInvokesAfterResourceChange() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeBundleBuildIsSupported();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeBundleBuildIsSupported();
     workspace.runBuckdCommand(BUILD, AAPT2_BUILD_TARGET);
     verifyAapt2RuleInvocation(workspace.getBuildLog());
 

@@ -62,12 +62,12 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
 
   @Before
   public void setUp() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             new AndroidBinaryNativeIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
@@ -387,7 +387,7 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
 
     Symbols unstrippedSyms = syms.getNormalSymbolsFromFile(filesystem.resolve(unstrippedPath));
     assertThat(unstrippedSyms.global, hasItem("get_value"));
-    if (AssumeAndroidPlatform.isGnuStlAvailable()) {
+    if (AssumeAndroidPlatform.get(workspace).isGnuStlAvailable()) {
       assertThat(unstrippedSyms.all, hasItem("supply_value"));
     } else {
       assertThat(unstrippedSyms.all, hasItem("ndk_version"));
@@ -411,8 +411,8 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void canBuildNativeMergedLibraryWithPrecompiledHeader() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void canBuildNativeMergedLibraryWithPrecompiledHeader() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//apps/sample:native_merge_lib_with_pch");
     result.assertSuccess();
   }

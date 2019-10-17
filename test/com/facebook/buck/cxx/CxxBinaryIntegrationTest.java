@@ -1934,11 +1934,11 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void ndkCxxPlatforms() throws IOException {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
-    boolean isPriorNdk17 = AssumeAndroidPlatform.isArmAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
+    boolean isPriorNdk17 = AssumeAndroidPlatform.get(workspace).isArmAvailable();
     String armAbiString = isPriorNdk17 ? "arm, " : "";
     workspace.writeContentsToPath(
         "[ndk]\n"

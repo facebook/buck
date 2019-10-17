@@ -30,12 +30,12 @@ public class AndroidInstrumentationTestIntegrationTest extends AbiCompilationMod
 
   @Test
   public void testBuildWithBrokenRuntimeDep() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_instrumentation_test_integration_test", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
 
     String testTarget = "//:test";

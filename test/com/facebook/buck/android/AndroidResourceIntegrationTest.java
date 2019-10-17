@@ -83,7 +83,7 @@ public class AndroidResourceIntegrationTest {
 
   @Test
   public void testAndroidResourceIndex() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     // Verify we correctly build the json file using a generated input resource directory.
     String buildTarget =

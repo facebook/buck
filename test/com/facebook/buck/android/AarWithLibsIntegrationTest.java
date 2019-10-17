@@ -36,9 +36,9 @@ public class AarWithLibsIntegrationTest {
 
   @Test
   public void testLibsInAarAreIncludedInApk() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.setUp();
 
     // More importantly, the content of the libs/ should end up in the .apk of an android_binary()

@@ -63,7 +63,7 @@ public class GenerateStringResourcesIntegrationTest {
             "%s#%s",
             AAPT1_BUILD_TARGET,
             AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.enableDirCache();
     workspace.runBuckBuild(buildTarget).assertSuccess();
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
@@ -78,7 +78,7 @@ public class GenerateStringResourcesIntegrationTest {
   @Test
   public void testExpectedOutputsAreAllAvailableWithAapt2() throws IOException {
     // TODO(dreiss): Remove this when aapt2 is everywhere.
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult foundAapt2 = workspace.runBuckBuild("//apps/sample:check_for_aapt2");
     Assume.assumeTrue(foundAapt2.getExitCode().getCode() == 0);
     String buildTarget =
@@ -86,7 +86,6 @@ public class GenerateStringResourcesIntegrationTest {
             "%s#%s",
             AAPT2_BUILD_TARGET,
             AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.enableDirCache();
     Path output = workspace.buildAndReturnOutput(buildTarget);
     verifyOutput(output, ImmutableSet.of("0000/values/strings.xml", "0001/values/strings.xml"));

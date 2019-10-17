@@ -60,12 +60,14 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
 
   @Before
   public void setUp() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
-    AssumeAndroidPlatform.assumeBundleBuildIsSupported();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeBundleBuildIsSupported();
+
     setWorkspaceCompilationMode(workspace);
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }

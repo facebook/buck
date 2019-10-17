@@ -56,12 +56,12 @@ public class AndroidBinaryRDotJavaIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             new AndroidBinaryRDotJavaIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
@@ -72,14 +72,14 @@ public class AndroidBinaryRDotJavaIntegrationTest {
   }
 
   @Test
-  public void testApkWithNoResourcesBuildsCorrectlyWithAapt2() {
-    AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
+  public void testApkWithNoResourcesBuildsCorrectlyWithAapt2() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeAapt2WithOutputTextSymbolsIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_aapt2_with_no_res").assertSuccess();
   }
 
   @Test
   public void testSimpleAapt2App() throws Exception {
-    AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeAapt2WithOutputTextSymbolsIsAvailable();
 
     ImmutableMap<String, Path> outputs =
         workspace.buildMultipleAndReturnOutputs(

@@ -43,22 +43,22 @@ public class AndroidLibraryGraphEnhancerIntegrationTest {
   }
 
   @Test
-  public void testPullsResourcesFromDeps() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testPullsResourcesFromDeps() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//:lib_with_direct_dep");
     result.assertSuccess();
   }
 
   @Test
-  public void testPullsResourcesFromProvidedDeps() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testPullsResourcesFromProvidedDeps() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//:lib_with_provided_dep");
     result.assertSuccess();
   }
 
   @Test
-  public void testDoesNotPullResourcesFromJavaResources() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testDoesNotPullResourcesFromJavaResources() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//:lib_with_java_resources_dep");
     result.assertFailure();
     assertThat(
@@ -71,8 +71,8 @@ public class AndroidLibraryGraphEnhancerIntegrationTest {
   }
 
   @Test
-  public void testDoesNotPullResourcesFromLicenses() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testDoesNotPullResourcesFromLicenses() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//:lib_with_licenses_dep");
     result.assertFailure();
     assertThat(

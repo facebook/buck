@@ -30,13 +30,12 @@ public class AndroidBinaryCrossCellIntegrationTest extends AbiCompilationModeTes
 
   @Test
   public void testCrossRepositoryDexMerge() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
-
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_binary_cross_cell_test", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
 
     workspace.runBuckCommand("build", "//:app", "other_repo//:app").assertSuccess();
@@ -44,13 +43,12 @@ public class AndroidBinaryCrossCellIntegrationTest extends AbiCompilationModeTes
 
   @Test
   public void testCrossRepositoryDexMergeWithSplitDex() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
-
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_binary_cross_cell_test", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
 
     workspace
@@ -60,13 +58,12 @@ public class AndroidBinaryCrossCellIntegrationTest extends AbiCompilationModeTes
 
   @Test
   public void testBuildingBinariesSeparately() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
-
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_binary_cross_cell_test", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     workspace.enableDirCache();
     setWorkspaceCompilationMode(workspace);
 

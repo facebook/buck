@@ -56,9 +56,9 @@ public class AndroidEndToEndTest {
   private static final String mainTarget = "//android:demo-app";
 
   @Before
-  public void assumeEnvironment() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+  public void assumeEnvironment() throws Exception {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
   }
 
   @Environment

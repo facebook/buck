@@ -39,13 +39,13 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
 
   @Test
   public void testCxxLibraryDep() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_instrumentation_apk_integration_test", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -58,13 +58,13 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
-    if (AssumeAndroidPlatform.isArmAvailable()) {
+    if (AssumeAndroidPlatform.get(workspace).isArmAvailable()) {
       zipInspector.assertFileExists("lib/armeabi/libcxx.so");
       zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
     }
     zipInspector.assertFileExists("lib/armeabi-v7a/libcxx.so");
     zipInspector.assertFileExists("lib/x86/libcxx.so");
-    if (AssumeAndroidPlatform.isGnuStlAvailable()) {
+    if (AssumeAndroidPlatform.get(workspace).isGnuStlAvailable()) {
       zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
       zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
     } else {
@@ -75,13 +75,13 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
 
   @Test
   public void instrumentationApkCannotTestAnotherInstrumentationApk() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_instrumentation_apk_integration_test", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
 
     ProcessResult result =

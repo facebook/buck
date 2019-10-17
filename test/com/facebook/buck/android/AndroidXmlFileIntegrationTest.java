@@ -40,11 +40,11 @@ public class AndroidXmlFileIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
 
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
     result.assertSuccess();
   }

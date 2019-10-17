@@ -37,12 +37,12 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
 
   @Before
   public void setUp() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_library_as_ap_host", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.enableDirCache();
     workspace.addBuckConfigLocalOption("build", "depfiles", "cache");
     setWorkspaceCompilationMode(workspace);

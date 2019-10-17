@@ -47,11 +47,11 @@ public class ExopackageSymlinkTreeTest {
 
   @Before
   public void setUp() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             new ModuleExoHelperTest(), "exo_symlink_tree", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 

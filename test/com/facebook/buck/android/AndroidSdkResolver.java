@@ -22,9 +22,11 @@ import com.facebook.buck.android.toolchain.TestAndroidSdkLocationFactory;
 import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
 import com.facebook.buck.android.toolchain.impl.AndroidPlatformTargetProducer;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.util.VersionStringComparator;
+import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -39,25 +41,47 @@ final class AndroidSdkResolver {
   private final AndroidSdkLocation sdkLocation;
   private final AndroidBuildToolsResolver toolsResolver;
   private final AndroidPlatformTarget platformTarget;
+  private final AndroidBuildToolsLocation buildToolsLocation;
 
-  AndroidSdkResolver(ProjectWorkspace projectWorkspace) throws IOException {
-    this(projectWorkspace.getProjectFileSystem());
-  }
-
-  AndroidSdkResolver(ProjectFilesystem fileSystem) throws IOException {
+  private AndroidSdkResolver(ProjectFilesystem fileSystem) throws IOException {
     sdkLocation = TestAndroidSdkLocationFactory.create(fileSystem);
     toolsResolver = new AndroidBuildToolsResolver(AndroidNdkHelper.DEFAULT_CONFIG, sdkLocation);
-
-    AndroidBuildToolsLocation buildToolsLocation =
-        AndroidBuildToolsLocation.of(toolsResolver.getBuildToolsPath());
+    buildToolsLocation = AndroidBuildToolsLocation.of(toolsResolver.getBuildToolsPath());
     platformTarget =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
             fileSystem, buildToolsLocation, sdkLocation, Optional.empty(), Optional.empty());
   }
 
+  /** Gets a resolver for the given workspace, if the sdk is available. */
+  public static Optional<AndroidSdkResolver> get(ProjectWorkspace workspace) throws IOException {
+    return get(workspace.getProjectFileSystem());
+  }
+
+  /** Gets a resolver for the given filesystem, if the sdk is available. */
+  public static Optional<AndroidSdkResolver> get(ProjectFilesystem filesystem) throws IOException {
+    try {
+      return Optional.of(new AndroidSdkResolver(filesystem));
+    } catch (HumanReadableException e) {
+      return Optional.empty();
+    }
+  }
+
   /** Returns the {@link AndroidPlatformTarget} foer the current workspace. */
   public AndroidPlatformTarget getAndroidPlatformTarget() {
     return platformTarget;
+  }
+
+  public AndroidSdkLocation getAndroidSdkLocation() {
+    return sdkLocation;
+  }
+
+  public boolean hasAapt2() {
+    return getAapt2().exists();
+  }
+
+  private File getAapt2() {
+    // AndroidPlatformTarget ensures that aapt2 exists when getting the Tool.
+    return sdkLocation.getSdkRootPath().resolve(buildToolsLocation.getAapt2Path()).toFile();
   }
 
   /**

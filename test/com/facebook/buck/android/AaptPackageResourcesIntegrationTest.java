@@ -57,14 +57,14 @@ public class AaptPackageResourcesIntegrationTest {
   }
 
   @Test
-  public void testIgnoredFileIsIgnoredByAapt() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testIgnoredFileIsIgnoredByAapt() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_deps_resource_with_ignored_file").assertSuccess();
   }
 
   @Test
   public void testAaptPackageIsScrubbed() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckBuild(MAIN_BUILD_TARGET).assertSuccess();
     Path aaptOutput =
         workspace.getPath(

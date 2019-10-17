@@ -37,10 +37,10 @@ public class MultipleBuildConfigIntegrationTest {
   /** Regression test for https://github.com/facebook/buck/issues/187. */
   @Test
   public void testAndroidBinarySupportsMultipleBuildConfigs() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     Path outputFile = workspace.buildAndReturnOutput("//java/com/buildconfigs:extract-classes-dex");
     String smali = new String(Files.readAllBytes(outputFile), UTF_8);

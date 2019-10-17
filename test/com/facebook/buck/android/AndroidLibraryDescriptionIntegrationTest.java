@@ -50,7 +50,7 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
 
   @Test
   public void testQueryDepsNotInvalidatedWhenRuleKeyHit() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     // Build once to warm cache
     workspace.runBuckBuild("//:android_resources").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:android_resources");
@@ -69,7 +69,7 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
 
   @Test
   public void testDepQueryResultsAreInvalidatedWhenDirectDepChanges() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     // Build once to warm cache
     workspace.runBuckBuild("//:android_libraries").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:android_libraries");
@@ -95,7 +95,7 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
 
   @Test
   public void testDepQueryResultsAreInvalidatedWhenTransitiveDepChanges() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     // Build once to warm cache
     workspace.runBuckBuild("//:android_libraries").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:android_libraries");
@@ -109,7 +109,7 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
 
   @Test
   public void testDepQueryResultsAreUpdatedWhenAttributesChange() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     // Build once to warm cache
     workspace.runBuckBuild("//:has_proc_params").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:has_proc_params");
@@ -122,7 +122,7 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
 
   @Test
   public void testDepQueryResultsCanTakeAdvantageOfDepFileRuleKey() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     // Build once to warm cache
     workspace.runBuckBuild("//:java_libraries").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:java_libraries");
@@ -135,15 +135,15 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
   }
 
   @Test
-  public void testDepQueryCanApplyToResources() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testDepQueryCanApplyToResources() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     // Build once to warm cache
     workspace.runBuckBuild("//:resources_from_query").assertSuccess();
   }
 
   @Test
-  public void testDepQueryWithClasspathDoesNotTraverseProvidedDeps() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testDepQueryWithClasspathDoesNotTraverseProvidedDeps() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     // Should succeed because lib_c is a provided dep
     workspace.runBuckBuild("//:provided_only");
 
@@ -152,15 +152,15 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
   }
 
   @Test
-  public void testProvidedDepsQuery() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testProvidedDepsQuery() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     // Should succeed because required dep (lib_c) will be added as provided
     workspace.runBuckBuild("//:has_lib_c_from_provided_query").assertSuccess();
   }
 
   @Test
   public void testProvidedDepsQueryDoesNotAffectPackaging() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckBuild("//:check_output_of_does_not_package_lib_c").assertSuccess();
     String[] outputs =
         workspace
@@ -174,14 +174,14 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
   }
 
   @Test
-  public void testClasspathQueryCanTraverseAndroidResource() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testClasspathQueryCanTraverseAndroidResource() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckBuild("//:needs_b_has_res").assertSuccess();
   }
 
   @Test
-  public void testClasspathQueryOnAndroidResourceRespectsDepth() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testClasspathQueryOnAndroidResourceRespectsDepth() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     // Check that we have b in our resolved deps, but not c, due to the depth limiting
     workspace.runBuckBuild("//:needs_c_has_res").assertFailure();
   }

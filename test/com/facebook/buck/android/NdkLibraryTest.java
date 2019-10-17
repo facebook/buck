@@ -54,11 +54,11 @@ public class NdkLibraryTest {
   private ProjectFilesystem projectFilesystem;
 
   @Before
-  public void setUp() {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+  public void setUp() throws Exception {
 
     projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
+    AssumeAndroidPlatform.get(projectFilesystem).assumeNdkIsAvailable();
 
     executionContext = TestExecutionContext.newBuilder().build();
   }

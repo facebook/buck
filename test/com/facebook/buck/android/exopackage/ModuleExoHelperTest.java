@@ -52,11 +52,11 @@ public class ModuleExoHelperTest {
 
   @Before
   public void setUp() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             new ModuleExoHelperTest(), "modular_exo", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     moduleOutputPath = Paths.get("module_name");
     metadataOutputPath = moduleOutputPath.resolve("metadata");

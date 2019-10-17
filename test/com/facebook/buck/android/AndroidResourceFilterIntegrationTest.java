@@ -75,11 +75,11 @@ public class AndroidResourceFilterIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
-    sdkResolver = new AndroidSdkResolver(workspace);
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    sdkResolver = AndroidSdkResolver.get(workspace).get();
 
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }

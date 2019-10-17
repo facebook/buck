@@ -76,16 +76,16 @@ import org.junit.runners.Parameterized;
 public class NdkCxxPlatformIntegrationTest {
 
   @Parameterized.Parameters(name = "{0},{1},{2}")
-  public static Collection<Object[]> data() {
+  public static Collection<Object[]> data() throws IOException {
     ImmutableList.Builder<TargetCpuType> targetCpuTypes = ImmutableList.builder();
-    if (AssumeAndroidPlatform.isArmAvailable()) {
+    if (AssumeAndroidPlatform.getForDefaultFilesystem().isArmAvailable()) {
       targetCpuTypes.add(TargetCpuType.ARM);
     }
     targetCpuTypes.add(
         TargetCpuType.ARMV7, TargetCpuType.ARM64, TargetCpuType.X86, TargetCpuType.X86_64);
     List<Object[]> data = new ArrayList<>();
     for (TargetCpuType targetCpuType : targetCpuTypes.build()) {
-      if (AssumeAndroidPlatform.isGnuStlAvailable()) {
+      if (AssumeAndroidPlatform.getForDefaultFilesystem().isGnuStlAvailable()) {
         data.add(new Object[] {NdkCompilerType.GCC, NdkCxxRuntime.GNUSTL, targetCpuType});
         // We don't support 64-bit clang yet.
         if (targetCpuType != TargetCpuType.ARM64 && targetCpuType != TargetCpuType.X86_64) {
@@ -143,9 +143,9 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   @Before
-  public void setUp() {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
-    if (AssumeAndroidPlatform.isArmAvailable()) {
+  public void setUp() throws Exception {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
+    if (AssumeAndroidPlatform.getForDefaultFilesystem().isArmAvailable()) {
       architectures = "arm, armv7, arm64, x86, x86_64";
     } else {
       architectures = "armv7, arm64, x86, x86_64";
@@ -154,7 +154,7 @@ public class NdkCxxPlatformIntegrationTest {
 
   @Test
   public void runtimeSupportsStl() throws IOException {
-    assumeFalse(AssumeAndroidPlatform.isUnifiedHeadersAvailable());
+    assumeFalse(AssumeAndroidPlatform.getForDefaultFilesystem().isUnifiedHeadersAvailable());
     assumeTrue(
         "libcxx is unsupported with this ndk",
         NdkCxxPlatforms.isSupportedConfiguration(getNdkRoot(), cxxRuntime));
