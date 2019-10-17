@@ -55,7 +55,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -105,7 +104,6 @@ import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.features.halide.HalideLibraryDescription;
 import com.facebook.buck.features.halide.HalideLibraryDescriptionArg;
 import com.facebook.buck.io.MoreProjectFilesystems;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -152,7 +150,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1965,8 +1962,9 @@ public class ProjectGenerator {
             .addAll(swiftDebugLinkerFlagsBuilder.build())
             .build();
 
-    updateOtherLinkerFlagsForOptions(
-        targetNode, bundleLoaderNode, appendConfigsBuilder, otherLdFlags);
+    Stream<String> otherLdFlagsStream = Streams.stream(otherLdFlags).map(Escaper.BASH_ESCAPER);
+
+    appendConfigsBuilder.put("OTHER_LDFLAGS", otherLdFlagsStream.collect(Collectors.joining(" ")));
 
     ImmutableMultimap<String, ImmutableList<String>> platformFlags =
         convertPlatformFlags(
@@ -2112,184 +2110,6 @@ public class ProjectGenerator {
       FluentIterable<TargetNode<?>> targetDeps,
       ImmutableMap<BuildTarget, TargetNode<?>> sharedLibrariesToBundles) {
     return targetDeps.transform(t -> sharedLibrariesToBundles.getOrDefault(t.getBuildTarget(), t));
-  }
-
-  private ImmutableSet<FrameworkPath> getSytemFrameworksLibsForTargetNode(
-      TargetNode<? extends CommonArg> targetNode) {
-    ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
-    frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(targetNode));
-    frameworksBuilder.addAll(targetNode.getConstructorArg().getFrameworks());
-    frameworksBuilder.addAll(targetNode.getConstructorArg().getLibraries());
-    return frameworksBuilder.build();
-  }
-
-  /**
-   * Subdivide the various deps and write out to the xcconfig file for scripts to post process if
-   * needed*
-   */
-  private void updateOtherLinkerFlagsForOptions(
-      TargetNode<? extends CommonArg> targetNode,
-      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode,
-      Builder<String, String> appendConfigsBuilder,
-      Iterable<String> otherLdFlags) {
-
-    // Local: Local to the current project and built by Xcode.
-    // Focused: Included in the workspace and built by Xcode but not in current project.
-    // Other: Not included in the workspace to be built by Xcode.
-    FluentIterable<TargetNode<?>> depTargetNodes = collectRecursiveLibraryDepTargets(targetNode);
-
-    // Don't duplicate linker flags for the bundle loader.
-    FluentIterable<TargetNode<?>> filteredDeps =
-        collectRecursiveLibraryDepsMinusBundleLoaderDeps(
-            targetNode, depTargetNodes, bundleLoaderNode);
-
-    ImmutableSet<FrameworkPath> systemFwkOrLibs = getSytemFrameworksLibsForTargetNode(targetNode);
-    ImmutableList<String> systemFwkOrLibFlags =
-        collectSystemLibraryAndFrameworkLinkerFlags(systemFwkOrLibs);
-
-    if (options.shouldForceLoadLinkWholeLibraries() || options.shouldAddLinkedLibrariesAsFlags()) {
-      ImmutableList<String> forceLoadLocal =
-          collectForceLoadLinkerFlags(
-              filterRecursiveLibraryDepsIterable(
-                  filteredDeps, FilterFlags.LIBRARY_CURRENT_PROJECT_WITH_FORCE_LOAD));
-      ImmutableList<String> forceLoadFocused =
-          collectForceLoadLinkerFlags(
-              filterRecursiveLibraryDepsIterable(
-                  filteredDeps, FilterFlags.LIBRARY_FOCUSED_WITH_FORCE_LOAD));
-      ImmutableList<String> forceLoadOther =
-          collectForceLoadLinkerFlags(
-              filterRecursiveLibraryDepsIterable(
-                  filteredDeps, FilterFlags.LIBRARY_OTHER_WITH_FORCE_LOAD));
-
-      appendConfigsBuilder.put(
-          "BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL",
-          Streams.stream(forceLoadLocal)
-              .map(Escaper.BASH_ESCAPER)
-              .collect(Collectors.joining(" ")));
-
-      appendConfigsBuilder.put(
-          "BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_FOCUSED",
-          Streams.stream(forceLoadFocused)
-              .map(Escaper.BASH_ESCAPER)
-              .collect(Collectors.joining(" ")));
-
-      appendConfigsBuilder.put(
-          "BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER",
-          Streams.stream(forceLoadOther)
-              .map(Escaper.BASH_ESCAPER)
-              .collect(Collectors.joining(" ")));
-    }
-
-    if (options.shouldAddLinkedLibrariesAsFlags()) {
-      // If force load enabled, then don't duplicate the flags in the OTHER flags, otherwise they
-      // will just be included like normal dependencies.
-      boolean shouldLimitByForceLoad = options.shouldForceLoadLinkWholeLibraries();
-      Iterable<String> localLibraryFlags =
-          collectLibraryLinkerFlags(
-              filterRecursiveLibraryDepsIterable(
-                  filteredDeps,
-                  shouldLimitByForceLoad
-                      ? FilterFlags.LIBRARY_CURRENT_PROJECT_WITHOUT_FORCE_LOAD
-                      : FilterFlags.LIBRARY_CURRENT_PROJECT));
-      Iterable<String> focusedLibraryFlags =
-          collectLibraryLinkerFlags(
-              filterRecursiveLibraryDepsIterable(
-                  filteredDeps,
-                  shouldLimitByForceLoad
-                      ? FilterFlags.LIBRARY_FOCUSED_WITHOUT_FORCE_LOAD
-                      : FilterFlags.LIBRARY_FOCUSED));
-      Iterable<String> otherLibraryFlags =
-          collectLibraryLinkerFlags(
-              filterRecursiveLibraryDepsIterable(
-                  filteredDeps,
-                  shouldLimitByForceLoad
-                      ? FilterFlags.LIBRARY_OTHER_WITHOUT_FORCE_LOAD
-                      : FilterFlags.LIBRARY_OTHER));
-
-      Iterable<String> localFrameworkFlags =
-          collectFrameworkLinkerFlags(
-              filterRecursiveLibraryDepsIterable(
-                  depTargetNodes, FilterFlags.FRAMEWORK_CURRENT_PROJECT));
-
-      Iterable<String> focusedFrameworkFlags =
-          collectFrameworkLinkerFlags(
-              filterRecursiveLibraryDepsIterable(depTargetNodes, FilterFlags.FRAMEWORK_FOCUSED));
-      Iterable<String> otherFrameworkFlags =
-          collectFrameworkLinkerFlags(
-              filterRecursiveLibraryDepsIterable(depTargetNodes, FilterFlags.FRAMEWORK_OTHER));
-
-      appendConfigsBuilder
-          .put(
-              "BUCK_LINKER_FLAGS_LIBRARY_LOCAL",
-              Streams.stream(localLibraryFlags).collect(Collectors.joining(" ")))
-          .put(
-              "BUCK_LINKER_FLAGS_LIBRARY_FOCUSED",
-              Streams.stream(focusedLibraryFlags).collect(Collectors.joining(" ")))
-          .put(
-              "BUCK_LINKER_FLAGS_LIBRARY_OTHER",
-              Streams.stream(otherLibraryFlags).collect(Collectors.joining(" ")))
-          .put(
-              "BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL",
-              Streams.stream(localFrameworkFlags).collect(Collectors.joining(" ")))
-          .put(
-              "BUCK_LINKER_FLAGS_FRAMEWORK_FOCUSED",
-              Streams.stream(focusedFrameworkFlags).collect(Collectors.joining(" ")))
-          .put(
-              "BUCK_LINKER_FLAGS_FRAMEWORK_OTHER",
-              Streams.stream(otherFrameworkFlags).collect(Collectors.joining(" ")))
-          .put(
-              "BUCK_LINKER_FLAGS_SYSTEM",
-              Streams.stream(systemFwkOrLibFlags).collect(Collectors.joining(" ")));
-    }
-
-    Stream<String> otherLdFlagsStream = Streams.stream(otherLdFlags).map(Escaper.BASH_ESCAPER);
-
-    if (options.shouldForceLoadLinkWholeLibraries() && options.shouldAddLinkedLibrariesAsFlags()) {
-      appendConfigsBuilder.put(
-          "OTHER_LDFLAGS",
-          Streams.concat(
-                  otherLdFlagsStream,
-                  Stream.of(
-                      "$BUCK_LINKER_FLAGS_SYSTEM",
-                      "$BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL",
-                      "$BUCK_LINKER_FLAGS_FRAMEWORK_FOCUSED",
-                      "$BUCK_LINKER_FLAGS_FRAMEWORK_OTHER",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_FOCUSED",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_LOCAL",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_FOCUSED",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_OTHER"))
-              .collect(Collectors.joining(" ")));
-    } else if (options.shouldForceLoadLinkWholeLibraries()
-        && !options.shouldAddLinkedLibrariesAsFlags()) {
-      appendConfigsBuilder.put(
-          "OTHER_LDFLAGS",
-          Streams.concat(
-                  otherLdFlagsStream,
-                  Stream.of(
-                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_FOCUSED",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER"))
-              .collect(Collectors.joining(" ")));
-    } else if (options.shouldAddLinkedLibrariesAsFlags()) {
-      appendConfigsBuilder.put(
-          "OTHER_LDFLAGS",
-          Streams.concat(
-                  otherLdFlagsStream,
-                  Stream.of(
-                      "$BUCK_LINKER_FLAGS_SYSTEM",
-                      "$BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL",
-                      "$BUCK_LINKER_FLAGS_FRAMEWORK_FOCUSED",
-                      "$BUCK_LINKER_FLAGS_FRAMEWORK_OTHER",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_LOCAL",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_FOCUSED",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_OTHER"))
-              .collect(Collectors.joining(" ")));
-    } else {
-      appendConfigsBuilder.put(
-          "OTHER_LDFLAGS", otherLdFlagsStream.collect(Collectors.joining(" ")));
-    }
   }
 
   private void setAppIconSettings(
@@ -2684,73 +2504,6 @@ public class ProjectGenerator {
         .join("$BUILT_PRODUCTS_DIR", getBuiltProductsRelativeTargetOutputPath(targetNode));
   }
 
-  /** List of frameworks and libraries that goes into the "Link Binary With Libraries" phase. */
-  private Iterable<FrameworkPath> collectRecursiveFrameworkDependencies(TargetNode<?> targetNode) {
-    return FluentIterable.from(
-            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-                xcodeDescriptions,
-                targetGraph,
-                Optional.of(dependenciesCache),
-                RecursiveDependenciesMode.LINKING,
-                targetNode,
-                ImmutableSet.<Class<? extends BaseDescription<?>>>builder()
-                    .addAll(xcodeDescriptions.getXCodeDescriptions())
-                    .add(PrebuiltAppleFrameworkDescription.class)
-                    .build()))
-        .transformAndConcat(
-            input -> {
-              // Libraries and bundles which has system frameworks and libraries.
-              Optional<TargetNode<CommonArg>> library =
-                  NodeHelper.getLibraryNode(targetGraph, input);
-              if (library.isPresent()
-                  && !AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(library.get())) {
-                return Iterables.concat(
-                    library.get().getConstructorArg().getFrameworks(),
-                    library.get().getConstructorArg().getLibraries());
-              }
-
-              Optional<TargetNode<PrebuiltAppleFrameworkDescriptionArg>> prebuilt =
-                  TargetNodes.castArg(input, PrebuiltAppleFrameworkDescriptionArg.class);
-              if (prebuilt.isPresent()) {
-                return Iterables.concat(
-                    prebuilt.get().getConstructorArg().getFrameworks(),
-                    prebuilt.get().getConstructorArg().getLibraries(),
-                    ImmutableList.of(
-                        FrameworkPath.ofSourcePath(
-                            prebuilt.get().getConstructorArg().getFramework())));
-              }
-              Optional<TargetNode<PrebuiltCxxLibraryDescriptionArg>> prebuiltCxxLib =
-                  TargetNodes.castArg(input, PrebuiltCxxLibraryDescriptionArg.class);
-              if (prebuiltCxxLib.isPresent()) {
-                Iterable<FrameworkPath> deps =
-                    Iterables.concat(
-                        prebuiltCxxLib.get().getConstructorArg().getFrameworks(),
-                        prebuiltCxxLib.get().getConstructorArg().getLibraries());
-                if (prebuiltCxxLib.get().getConstructorArg().getSharedLib().isPresent()) {
-                  return Iterables.concat(
-                      deps,
-                      ImmutableList.of(
-                          FrameworkPath.ofSourcePath(
-                              prebuiltCxxLib.get().getConstructorArg().getSharedLib().get())));
-                } else if (prebuiltCxxLib.get().getConstructorArg().getStaticLib().isPresent()) {
-                  return Iterables.concat(
-                      deps,
-                      ImmutableList.of(
-                          FrameworkPath.ofSourcePath(
-                              prebuiltCxxLib.get().getConstructorArg().getStaticLib().get())));
-                } else if (prebuiltCxxLib.get().getConstructorArg().getStaticPicLib().isPresent()) {
-                  return Iterables.concat(
-                      deps,
-                      ImmutableList.of(
-                          FrameworkPath.ofSourcePath(
-                              prebuiltCxxLib.get().getConstructorArg().getStaticPicLib().get())));
-                }
-              }
-
-              return ImmutableList.of();
-            });
-  }
-
   private Iterable<StringWithMacros> collectRecursiveExportedPreprocessorFlags(
       TargetNode<?> targetNode) {
     return FluentIterable.from(
@@ -2929,32 +2682,6 @@ public class ProjectGenerator {
     return targetSpecificSwiftFlags.build();
   }
 
-  private boolean isTargetNodeApplicationTestTarget(
-      TargetNode<?> targetNode, Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode) {
-    // This is an application test if it is not a UI test and has a bundle loader.
-    Optional<TargetNode<AppleTestDescriptionArg>> testNode =
-        TargetNodes.castArg(targetNode, AppleTestDescriptionArg.class);
-    if (testNode.isPresent() && bundleLoaderNode.isPresent()) {
-      AppleTestDescriptionArg testArg = testNode.get().getConstructorArg();
-      return !testArg.getIsUiTest();
-    } else {
-      return false;
-    }
-  }
-
-  private boolean isLibraryWithForceLoad(TargetNode<?> input) {
-    Optional<TargetNode<CommonArg>> library = NodeHelper.getLibraryNode(targetGraph, input);
-
-    if (!library.isPresent()) {
-      return false;
-    } else {
-
-      TargetNode<CommonArg> target = library.get();
-      CommonArg arg = target.getConstructorArg();
-      return arg.getLinkWhole().orElse(false);
-    }
-  }
-
   private boolean shouldExcludeLibraryFromProject(TargetNode<?> targetNode) {
     // targets with flavor #compilation-database are not meant to be built by Xcode, they are used
     // only to generate the compile commands for a library during buck build
@@ -2962,10 +2689,6 @@ public class ProjectGenerator {
         .getBuildTarget()
         .getFlavors()
         .contains(CxxCompilationDatabase.COMPILATION_DATABASE);
-  }
-
-  private boolean isLibraryBuiltByCurrentProject(TargetNode<?> targetNode) {
-    return isBuiltByCurrentProject(targetNode.getBuildTarget());
   }
 
   private FluentIterable<TargetNode<?>> collectRecursiveLibraryDepTargets(
@@ -2985,206 +2708,6 @@ public class ProjectGenerator {
   private FluentIterable<TargetNode<?>> filterRecursiveLibraryDepTargetsWithSwiftSources(
       FluentIterable<TargetNode<?>> targetNodes) {
     return targetNodes.filter(this::isLibraryWithSwiftSources);
-  }
-
-  boolean isFrameworkTarget(TargetNode<?> targetNode) {
-    if (targetNode.getDescription() instanceof AppleBundleDescription
-        || targetNode.getDescription() instanceof AppleTestDescription) {
-      HasAppleBundleFields arg = (HasAppleBundleFields) targetNode.getConstructorArg();
-      return isFrameworkBundle(arg);
-    }
-    return false;
-  }
-
-  /** Filter Flags for subdividing dependencies */
-  public enum FilterFlags {
-    CURRENT_PROJECT, // Refers to deps that are built within the current project.
-    OTHER_FOCUSED, // Refers to deps that are built within the workspace but not by the current
-    // project.
-    OTHER_NON_FOCUSED, // Refers to deps that not built by the workspace.
-    FRAMEWORK, // Dependency built as a framework.
-    LIBRARY, // Dependency built as a library.
-    WITH_FORCE_LOAD, // Dependency with link_whole = True
-    WITHOUT_FORCE_LOAD; // Dependency with link_whole = False
-
-    /** Filter deps for the current project * */
-    public static final EnumSet<FilterFlags> LIBRARY_CURRENT_PROJECT =
-        EnumSet.of(LIBRARY, CURRENT_PROJECT);
-
-    public static final EnumSet<FilterFlags> LIBRARY_CURRENT_PROJECT_WITH_FORCE_LOAD =
-        EnumSet.of(LIBRARY, CURRENT_PROJECT, WITH_FORCE_LOAD);
-    public static final EnumSet<FilterFlags> LIBRARY_CURRENT_PROJECT_WITHOUT_FORCE_LOAD =
-        EnumSet.of(LIBRARY, CURRENT_PROJECT, WITHOUT_FORCE_LOAD);
-
-    /** Filter deps for within the workspace and built by Xcode but not in the current project * */
-    public static final EnumSet<FilterFlags> LIBRARY_FOCUSED = EnumSet.of(LIBRARY, OTHER_FOCUSED);
-
-    public static final EnumSet<FilterFlags> LIBRARY_FOCUSED_WITH_FORCE_LOAD =
-        EnumSet.of(LIBRARY, OTHER_FOCUSED, WITH_FORCE_LOAD);
-    public static final EnumSet<FilterFlags> LIBRARY_FOCUSED_WITHOUT_FORCE_LOAD =
-        EnumSet.of(LIBRARY, OTHER_FOCUSED, WITHOUT_FORCE_LOAD);
-
-    /** Filter deps not included within the workspace * */
-    public static final EnumSet<FilterFlags> LIBRARY_OTHER = EnumSet.of(LIBRARY, OTHER_NON_FOCUSED);
-
-    public static final EnumSet<FilterFlags> LIBRARY_OTHER_WITH_FORCE_LOAD =
-        EnumSet.of(LIBRARY, OTHER_NON_FOCUSED, WITH_FORCE_LOAD);
-    public static final EnumSet<FilterFlags> LIBRARY_OTHER_WITHOUT_FORCE_LOAD =
-        EnumSet.of(LIBRARY, OTHER_NON_FOCUSED, WITHOUT_FORCE_LOAD);
-
-    /** Filter framework deps * */
-    public static final EnumSet<FilterFlags> FRAMEWORK_CURRENT_PROJECT =
-        EnumSet.of(FRAMEWORK, CURRENT_PROJECT);
-
-    public static final EnumSet<FilterFlags> FRAMEWORK_FOCUSED =
-        EnumSet.of(FRAMEWORK, OTHER_FOCUSED);
-    public static final EnumSet<FilterFlags> FRAMEWORK_OTHER =
-        EnumSet.of(FRAMEWORK, OTHER_NON_FOCUSED);
-  }
-
-  private FluentIterable<TargetNode<?>> filterRecursiveDeps(
-      FluentIterable<TargetNode<?>> targetNodes, EnumSet<FilterFlags> filters) {
-
-    FluentIterable<TargetNode<?>> filtered = targetNodes;
-    boolean shouldBeFramework = filters.contains(FilterFlags.FRAMEWORK);
-    filtered = targetNodes.filter(dep -> shouldBeFramework == isFrameworkTarget(dep));
-
-    if (filters.contains(FilterFlags.CURRENT_PROJECT)) {
-      filtered = filtered.filter(dep -> isLibraryBuiltByCurrentProject(dep));
-    } else if (filters.contains(FilterFlags.OTHER_FOCUSED)) {
-      filtered = filtered.filter(dep -> !isLibraryBuiltByCurrentProject(dep));
-    } else if (filters.contains(FilterFlags.OTHER_NON_FOCUSED)) {
-      filtered = FluentIterable.of();
-    }
-
-    // If neither is specified then do not limit by force_load at all.
-    if (filters.contains(FilterFlags.WITH_FORCE_LOAD)
-        || filters.contains(FilterFlags.WITHOUT_FORCE_LOAD)) {
-      boolean shouldBeForceLoad = filters.contains(FilterFlags.WITH_FORCE_LOAD);
-      filtered = filtered.filter(dep -> shouldBeForceLoad == isLibraryWithForceLoad(dep));
-    }
-
-    return filtered;
-  }
-
-  private FluentIterable<TargetNode<?>> filterRecursiveLibraryDepsIterable(
-      FluentIterable<TargetNode<?>> targetNodes, EnumSet<FilterFlags> filters) {
-    return filterRecursiveDeps(targetNodes, filters);
-  }
-
-  private ImmutableList<String> collectSystemLibraryAndFrameworkLinkerFlags(
-      ImmutableSet<FrameworkPath> paths) {
-    FluentIterable<FrameworkPath> pathList = FluentIterable.from(paths);
-    return pathList
-        .transform(fwkOrLib -> getSystemFrameworkOrLibraryLinkerFlag(fwkOrLib))
-        .filter(Optional::isPresent)
-        .transform(input -> input.get())
-        .toList();
-  }
-
-  private ImmutableList<String> collectLibraryLinkerFlags(
-      FluentIterable<TargetNode<?>> targetNodes) {
-    return targetNodes
-        .transform(dep -> getLibraryLinkerFlag(dep))
-        .filter(Optional::isPresent)
-        .transform(input -> input.get())
-        .toList();
-  }
-
-  private ImmutableList<String> collectFrameworkLinkerFlags(
-      FluentIterable<TargetNode<?>> targetNodes) {
-    return targetNodes
-        .transform(
-            input ->
-                TargetNodes.castArg(input, AppleBundleDescriptionArg.class)
-                    .flatMap(this::getFrameworkLinkerFlag))
-        .filter(Optional::isPresent)
-        .transform(input -> input.get())
-        .toList();
-  }
-
-  private FluentIterable<TargetNode<?>> collectRecursiveLibraryDepsMinusBundleLoaderDeps(
-      TargetNode<?> targetNode,
-      FluentIterable<TargetNode<?>> targetNodes,
-      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode) {
-
-    // Don't duplicate force_load params from the test host app if this is an app test.
-    if (isTargetNodeApplicationTestTarget(targetNode, bundleLoaderNode)
-        && bundleLoaderNode.isPresent()) {
-      FluentIterable<TargetNode<?>> bundleLoaderDeps =
-          collectRecursiveLibraryDepTargets(bundleLoaderNode.get());
-
-      Set<TargetNode<?>> directDeps =
-          Sets.difference(targetNodes.toSet(), bundleLoaderDeps.toSet());
-      return FluentIterable.from(ImmutableSet.copyOf(directDeps));
-    }
-    return targetNodes;
-  }
-
-  private ImmutableList<String> collectForceLoadLinkerFlags(
-      FluentIterable<TargetNode<?>> targetNodes) {
-    return targetNodes
-        .transform(
-            input ->
-                TargetNodes.castArg(input, CommonArg.class).flatMap(this::getForceLoadLinkerFlag))
-        .filter(Optional::isPresent)
-        .transform(input -> input.get())
-        .toList();
-  }
-
-  private Optional<String> getFrameworkLinkerFlag(
-      TargetNode<? extends AppleBundleDescriptionArg> targetNode) {
-    if (isFrameworkBundle(targetNode.getConstructorArg())) {
-      return Optional.of("-framework " + getProductOutputBaseName(targetNode));
-    } else {
-      return Optional.empty();
-    }
-  }
-
-  private Optional<String> getSystemFrameworkOrLibraryLinkerFlag(FrameworkPath framework) {
-
-    SourceTreePath sourceTreePath;
-    if (framework.getSourceTreePath().isPresent()) {
-      sourceTreePath = framework.getSourceTreePath().get();
-    } else if (framework.getSourcePath().isPresent()) {
-      sourceTreePath =
-          new SourceTreePath(
-              PBXReference.SourceTree.SOURCE_ROOT,
-              pathRelativizer.outputPathToSourcePath(framework.getSourcePath().get()),
-              Optional.empty());
-    } else {
-      return Optional.empty();
-    }
-
-    String nameWithoutExtension = MorePaths.getNameWithoutExtension(sourceTreePath.getPath());
-
-    if (nameWithoutExtension.length() > 0) {
-      String libraryPrefix = "lib";
-      if (nameWithoutExtension.startsWith(libraryPrefix)) {
-        return Optional.of("-l" + nameWithoutExtension.substring(libraryPrefix.length()));
-      } else {
-        return Optional.of("-framework " + nameWithoutExtension);
-      }
-    }
-    return Optional.empty();
-  }
-
-  private Optional<String> getLibraryLinkerFlag(TargetNode<?> targetNode) {
-    return Optional.of("-l" + getProductOutputBaseName(targetNode));
-  }
-
-  private Optional<String> getForceLoadLinkerFlag(TargetNode<? extends CommonArg> targetNode) {
-    CommonArg arg = targetNode.getConstructorArg();
-    if (arg.getLinkWhole().orElse(false)) {
-      String flag =
-          "-Wl,-force_load,"
-              + appleConfig.getForceLoadLibraryPath(true)
-              + "/"
-              + getProductOutputNameWithExtension(targetNode);
-      return Optional.of(flag);
-    } else {
-      return Optional.empty();
-    }
   }
 
   private String getProductOutputBaseName(TargetNode<?> targetNode) {
