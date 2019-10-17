@@ -1725,4 +1725,19 @@ public class QueryCommandIntegrationTest {
     }
     fail(stderr + " contained none of " + Joiner.on('\n').join(cycleCandidates));
   }
+
+  @Test
+  public void dependencyStackInConfigurationsInRdeps() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command_configurations", tmp);
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckCommand("query", "rdeps(set(//:b), set(//:c))");
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsIgnoringPlatformNewlines(
+            "Cannot use select() expression when target platform is not specified\n"
+                + "    At //:a\n"
+                + "    At //:b"));
+  }
 }
