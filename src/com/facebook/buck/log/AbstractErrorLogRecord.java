@@ -21,6 +21,7 @@ import static com.facebook.buck.util.MoreThrowables.getThrowableOrigin;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.concurrent.ThreadIdToCommandIdMapper;
 import com.facebook.buck.util.environment.BuckBuildType;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
@@ -62,6 +63,8 @@ abstract class AbstractErrorLogRecord {
     Optional<String> initialError =
         Optional.ofNullable(getRecord().getThrown())
             .map(t -> getInitialCause(t).getClass().getName());
+    Optional<ErrorLogger.DeconstructedException> deconstructedException =
+        Optional.ofNullable(getRecord().getThrown()).map(ErrorLogger::deconstruct);
     return ImmutableMap.<String, String>builder()
         .put("severity", getRecord().getLevel().toString())
         .put("logger", logger != null ? logger : "unknown")
@@ -78,6 +81,13 @@ abstract class AbstractErrorLogRecord {
         .put("isRemoteExecution", getIsRemoteExecution().map(Object::toString).orElse("null"))
         .put("initialError", initialError.orElse("null"))
         .put("repository", GlobalStateManager.singleton().getRepository())
+        .put(
+            "isUserError",
+            String.valueOf(
+                deconstructedException
+                    .map(ErrorLogger.DeconstructedException::isUserError)
+                    .orElse(false)))
+        .put("rootCause", deconstructedException.map(t -> t.getMessage(true)).orElse("unknown"))
         .build();
   }
 

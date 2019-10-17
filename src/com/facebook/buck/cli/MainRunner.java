@@ -510,7 +510,7 @@ public final class MainRunner {
                         || e instanceof ClosedByInterruptException) {
                       message = "Command was interrupted:";
                     }
-                    LOG.info(e, message);
+                    LOG.warn(e, message);
                   }
                 },
                 augmentor);

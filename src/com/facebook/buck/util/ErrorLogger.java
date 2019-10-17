@@ -101,7 +101,6 @@ public class ErrorLogger {
    * The result of exception "deconstruction". Provides access to the user-friendly message with
    * context.
    */
-  @VisibleForTesting
   public static class DeconstructedException {
     private final Throwable rootCause;
     @Nullable private final Throwable parent;
@@ -232,7 +231,6 @@ public class ErrorLogger {
   }
 
   /** Deconstructs an exception to assist in creating user-friendly messages. */
-  @VisibleForTesting
   public static DeconstructedException deconstruct(Throwable e) {
     Throwable parent = null;
 
