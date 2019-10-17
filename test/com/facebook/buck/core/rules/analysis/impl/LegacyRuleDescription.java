@@ -27,7 +27,7 @@ import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.LegacyProviderCompatibleDescription;
 import com.facebook.buck.core.rules.ProviderCreationContext;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
@@ -58,7 +58,8 @@ import java.util.SortedSet;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-public class LegacyRuleDescription implements DescriptionWithTargetGraph<LegacyRuleDescriptionArg> {
+public class LegacyRuleDescription
+    implements LegacyProviderCompatibleDescription<LegacyRuleDescriptionArg> {
 
   @Override
   public Class<LegacyRuleDescriptionArg> getConstructorArgType() {

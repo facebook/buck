@@ -27,7 +27,7 @@ import org.immutables.value.Value;
 
 /**
  * An implementation of the {@link RuleAnalysisResult} for legacy provider results from {@link
- * com.facebook.buck.core.rules.DescriptionWithTargetGraph#createProviders(ProviderCreationContext,
+ * com.facebook.buck.core.rules.LegacyProviderCompatibleDescription#createProviders(ProviderCreationContext,
  * BuildTarget, ConstructorArg)}
  *
  * <p>This implementation throws on any operation relating to {@link ActionAnalysisData}.

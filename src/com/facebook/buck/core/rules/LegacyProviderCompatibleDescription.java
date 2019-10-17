@@ -18,24 +18,20 @@ package com.facebook.buck.core.rules;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.collect.ImmutableMap;
 
 /**
- * The context given to {@link
- * LegacyProviderCompatibleDescription#createProviders(ProviderCreationContext, BuildTarget,
- * ConstructorArg)}.
- *
- * <p>This is to be a subset of {@link BuildRuleCreationContextWithTargetGraph}, plus the {@link
- * ProviderInfoCollection} of all the dependencies.
+ * Marks a {@link DescriptionWithTargetGraph} as compatible with {@link
+ * com.facebook.buck.core.rules.providers.Provider}s.
  */
-@BuckStyleValue
-public interface ProviderCreationContext {
+public interface LegacyProviderCompatibleDescription<T extends ConstructorArg>
+    extends DescriptionWithTargetGraph<T> {
 
-  /** @return {@link ProviderInfoCollection} of the parse time dependencies */
-  ImmutableMap<BuildTarget, ProviderInfoCollection> dependencies();
-
-  /** @return the {@link ProjectFilesystem} for the rule */
-  ProjectFilesystem getProjectFilesystem();
+  /**
+   * @param context the {@link ProviderCreationContext} that the implementation has access to
+   * @param buildTarget the current {@link BuildTarget}, with flavours
+   * @param args A constructor argument, of type as returned by {@link #getConstructorArgType()}
+   * @return the {@link ProviderInfoCollection} of this rule.
+   */
+  ProviderInfoCollection createProviders(
+      ProviderCreationContext context, BuildTarget buildTarget, T args);
 }

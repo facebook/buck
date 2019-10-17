@@ -45,7 +45,7 @@ import com.google.common.base.Verify;
  * {@link RuleAnalysisLegacyBuildRuleView} is returned for that target.
  *
  * <p>For any legacy rules, the {@link com.facebook.buck.core.rules.providers.Provider}s from {@link
- * com.facebook.buck.core.rules.DescriptionWithTargetGraph#createProviders(ProviderCreationContext,
+ * com.facebook.buck.core.rules.LegacyProviderCompatibleDescription#createProviders(ProviderCreationContext,
  * BuildTarget, ConstructorArg)} will be supplied to the {@link
  * com.facebook.buck.core.rules.DescriptionWithTargetGraph#createBuildRule(BuildRuleCreationContextWithTargetGraph,
  * BuildTarget, BuildRuleParams, ConstructorArg)}

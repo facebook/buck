@@ -58,7 +58,7 @@ public interface BuildRuleCreationContextWithTargetGraph extends BuildRuleCreati
 
   /**
    * @return the {@link ProviderInfoCollection} that was created by the rules {@link
-   *     DescriptionWithTargetGraph#createProviders(ProviderCreationContext, BuildTarget,
+   *     LegacyProviderCompatibleDescription#createProviders(ProviderCreationContext, BuildTarget,
    *     ConstructorArg)}
    */
   @Value.Parameter

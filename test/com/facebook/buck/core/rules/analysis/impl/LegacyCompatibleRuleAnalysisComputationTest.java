@@ -64,12 +64,69 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
   private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
   @Test
-  public void getDepsDiscoveryDelegates() {
+  public void getDepsReturnsEmptyForLegacyRules() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
+
+    TargetNode<?> targetNode =
+        FakeTargetNodeBuilder.newBuilder(new FakeTargetNodeBuilder.FakeDescription(), buildTarget)
+            .build();
+
+    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
+    ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
+        ImmutableMap.of(buildTarget, targetNode);
+    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+
+    LegacyCompatibleRuleAnalysisComputation transformer =
+        new LegacyCompatibleRuleAnalysisComputation(
+            new RuleAnalysisComputation(targetGraph, eventBus) {
+              @Override
+              public ImmutableSet<RuleAnalysisKey> discoverPreliminaryDeps(RuleAnalysisKey key) {
+                fail("Should not call into delegate");
+                return ImmutableSet.of();
+              }
+
+              @Override
+              public ImmutableSet<RuleAnalysisKey> discoverDeps(
+                  RuleAnalysisKey key, ComputationEnvironment env) {
+                fail("Should not call into delegate");
+                return ImmutableSet.of();
+              }
+            },
+            targetGraph);
+
+    assertEquals(
+        ImmutableSet.of(),
+        transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKey.of(buildTarget)));
+
+    assertEquals(
+        ImmutableSet.of(),
+        transformer.discoverDeps(
+            ImmutableRuleAnalysisKey.of(buildTarget),
+            new FakeComputationEnvironment(ImmutableMap.of())));
+  }
+
+  @Test
+  public void getDepsDiscoveryDelegatesForCompatibleRules() {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
 
+    TargetNode<?> targetNode =
+        FakeTargetNodeBuilder.newBuilder(
+                new FakeTargetNodeBuilder.LegacyProviderFakeRuleDescription() {
+                  @Override
+                  public ProviderInfoCollection createProviders(
+                      ProviderCreationContext context,
+                      BuildTarget buildTarget,
+                      FakeTargetNodeArg args) {
+                    return TestProviderInfoCollectionImpl.builder().build();
+                  }
+                },
+                buildTarget)
+            .build();
+
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex = ImmutableMap.of();
+    ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
+        ImmutableMap.of(buildTarget, targetNode);
     TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
 
     AtomicBoolean pdepsCalled = new AtomicBoolean();
@@ -191,7 +248,7 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
 
     AtomicBoolean createProvidersCalled = new AtomicBoolean();
     DescriptionWithTargetGraph<?> descriptionWithTargetGraph =
-        new FakeTargetNodeBuilder.FakeDescription() {
+        new FakeTargetNodeBuilder.LegacyProviderFakeRuleDescription() {
           @Override
           public ProviderInfoCollection createProviders(
               ProviderCreationContext context, BuildTarget buildTarget, FakeTargetNodeArg args) {

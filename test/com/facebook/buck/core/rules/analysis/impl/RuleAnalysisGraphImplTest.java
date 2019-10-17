@@ -237,7 +237,7 @@ public class RuleAnalysisGraphImplTest {
           }
         };
     FakeTargetNodeBuilder.FakeDescription legacyDescription =
-        new FakeTargetNodeBuilder.FakeDescription() {
+        new FakeTargetNodeBuilder.LegacyProviderFakeRuleDescription() {
           @Override
           public ProviderInfoCollection createProviders(
               ProviderCreationContext context, BuildTarget buildTarget, FakeTargetNodeArg args) {

@@ -49,7 +49,7 @@ public interface TargetNodeToBuildRuleTransformer {
   /**
    * Converts a given {@link TargetNode} to a {@link BuildRule} as part of action graph
    * construction. The providers computed from {@link
-   * com.facebook.buck.core.rules.DescriptionWithTargetGraph#createProviders(ProviderCreationContext,
+   * com.facebook.buck.core.rules.LegacyProviderCompatibleDescription#createProviders(ProviderCreationContext,
    * BuildTarget, ConstructorArg)} will be passed to this function to be used to construct the
    * {@link BuildRule}
    */

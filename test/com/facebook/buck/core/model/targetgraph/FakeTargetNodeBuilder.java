@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.LegacyProviderCompatibleDescription;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
@@ -157,4 +158,8 @@ public class FakeTargetNodeBuilder
       return producesCacheableSubgraph;
     }
   }
+
+  public abstract static class LegacyProviderFakeRuleDescription
+      extends FakeTargetNodeBuilder.FakeDescription
+      implements LegacyProviderCompatibleDescription<FakeTargetNodeArg> {}
 }
