@@ -580,6 +580,7 @@ public class AppleDescriptions {
                       cxxPlatformsProvider,
                       appleCxxPlatforms,
                       unstrippedBinaryRule.getBuildTarget(),
+                      Optional.empty(),
                       MultiarchFileInfos.create(
                           appleCxxPlatforms, unstrippedBinaryRule.getBuildTarget()));
               return new AppleDsym(
@@ -611,6 +612,7 @@ public class AppleDescriptions {
       ProvisioningProfileStore provisioningProfileStore,
       Optional<BuildTarget> binary,
       Optional<PatternMatchedCollection<BuildTarget>> platformBinary,
+      Optional<Flavor> defaultPlatform,
       Either<AppleBundleExtension, String> extension,
       Optional<String> productName,
       SourcePath infoPlist,
@@ -637,9 +639,11 @@ public class AppleDescriptions {
             cxxPlatformsProvider,
             appleCxxPlatforms,
             buildTarget,
+            defaultPlatform,
             MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
     BuildTarget binaryTarget =
-        getTargetPlatformBinary(binary, platformBinary, appleCxxPlatform.getFlavor());
+        getTargetPlatformBinary(
+            binary, platformBinary, defaultPlatform.orElse(appleCxxPlatform.getFlavor()));
 
     AppleBundleDestinations destinations;
 
@@ -699,7 +703,14 @@ public class AppleDescriptions {
     ImmutableSet<SourcePath> frameworks = frameworksBuilder.build();
 
     BuildTarget buildTargetWithoutBundleSpecificFlavors = stripBundleSpecificFlavors(buildTarget);
-
+    Sets.SetView<Flavor> buildTargetFlavors =
+        Sets.intersection(
+            appleCxxPlatforms.getFlavors(), buildTargetWithoutBundleSpecificFlavors.getFlavors());
+    // If buildTargetWithoutBundleSpecificFlavors has no cxx flavors, then add it
+    if (buildTargetFlavors.size() == 0 && defaultPlatform.isPresent()) {
+      buildTargetWithoutBundleSpecificFlavors =
+          buildTargetWithoutBundleSpecificFlavors.withFlavors(defaultPlatform.get());
+    }
     Optional<AppleAssetCatalog> assetCatalog =
         createBuildRuleForTransitiveAssetCatalogDependencies(
             xcodeDescriptions,

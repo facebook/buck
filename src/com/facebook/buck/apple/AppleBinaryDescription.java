@@ -388,6 +388,7 @@ public class AppleBinaryDescription
             ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
         Optional.of(binaryTarget),
         Optional.empty(),
+        args.getDefaultPlatform(),
         Either.ofLeft(AppleBundleExtension.APP),
         Optional.empty(),
         args.getInfoPlist().get(),

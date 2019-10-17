@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -45,6 +46,7 @@ public class ApplePlatforms {
       CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       BuildTarget target,
+      Optional<Flavor> defaultPlatform,
       Optional<MultiarchFileInfo> fatBinaryInfo) {
     AppleCxxPlatform appleCxxPlatform;
     if (fatBinaryInfo.isPresent()) {
@@ -54,7 +56,8 @@ public class ApplePlatforms {
           getCxxPlatformForBuildTarget(cxxPlatformsProvider, target)
               .resolve(ruleResolver, target.getTargetConfiguration());
       try {
-        appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
+        appleCxxPlatform =
+            appleCxxPlatformFlavorDomain.getValue(defaultPlatform.orElse(cxxPlatform.getFlavor()));
       } catch (FlavorDomainException e) {
         throw new HumanReadableException(
             e,
