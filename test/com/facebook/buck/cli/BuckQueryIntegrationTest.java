@@ -42,13 +42,6 @@ public class BuckQueryIntegrationTest {
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
-
-    // We can't have symlinks checked into the Buck repo, so we have to create the one we're using
-    // for the test below here.
-    workspace.move("symlinks/a/BUCK.disabled", "symlinks/a/BUCK");
-    CreateSymlinksForTests.createSymLink(
-        workspace.resolve("symlinks/a/inputs"),
-        workspace.getDestPath().getFileSystem().getPath("real_inputs"));
   }
 
   /**
@@ -58,7 +51,13 @@ public class BuckQueryIntegrationTest {
    * build target.
    */
   @Test
-  public void testRdepsWithSymlinks() {
+  public void testRdepsWithSymlinks() throws Exception {
+    // We can't have symlinks checked into the Buck repo, so we have to create the one we're using
+    // for the test below here.
+    workspace.move("symlinks/a/BUCK.disabled", "symlinks/a/BUCK");
+    CreateSymlinksForTests.createSymLink(
+        workspace.resolve("symlinks/a/inputs"),
+        workspace.getDestPath().getFileSystem().getPath("real_inputs"));
     workspace.runBuckCommand("query", "rdeps(//symlinks/..., //symlinks/a:a)");
   }
 
