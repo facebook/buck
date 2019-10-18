@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
@@ -53,7 +52,6 @@ class TargetCompatibilityChecker {
 
     List<ConstraintValue> targetCompatibleWithConstraints =
         argWithTargetCompatible.getTargetCompatibleWith().stream()
-            .map(BuildTarget::getUnconfiguredBuildTargetView)
             .map(ConfigurationBuildTargets::convert)
             .map(
                 buildTarget ->

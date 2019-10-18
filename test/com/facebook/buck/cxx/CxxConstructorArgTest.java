@@ -200,7 +200,7 @@ public class CxxConstructorArgTest {
     }
 
     @Override
-    public ImmutableList<BuildTarget> getTargetCompatibleWith() {
+    public ImmutableList<UnconfiguredBuildTargetView> getTargetCompatibleWith() {
       return ImmutableList.of();
     }
 

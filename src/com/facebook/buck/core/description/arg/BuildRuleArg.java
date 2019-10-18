@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.description.arg;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableList;
@@ -55,7 +54,7 @@ public interface BuildRuleArg extends ConstructorArg {
    * #getCompatibleWith()}.
    */
   @Hint(isDep = false)
-  ImmutableList<BuildTarget> getTargetCompatibleWith();
+  ImmutableList<UnconfiguredBuildTargetView> getTargetCompatibleWith();
 
   /** A list of {@code config_setting} a target is compatible with. */
   @Hint(isDep = false, isConfigurable = false)
