@@ -802,7 +802,11 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testMinApiDrivesDxToProduceHigherVersionedBytecode() throws Exception {
-    AssumeAndroidPlatform.get(workspace).assumeBuildToolsVersionIsAtLeast("28");
+    // min api level 28 causes dex to produce version 39 dex files. However, dexdump 28.0.x
+    // produces this error when trying to read them:
+    //   E/libdex  (93235): ERROR: unsupported dex version (30 33 39 00)
+    // This has been fixed in build tools 29+
+    AssumeAndroidPlatform.get(workspace).assumeBuildToolsVersionIsAtLeast("29");
     Path outputApk = workspace.buildAndReturnOutput("//apps/sample:app_with_min_28");
     workspace
         .getBuildLog()
@@ -817,10 +821,12 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path dexdumpLocation = buildToolsLocation.getBuildToolsPath().resolve("dexdump");
     ProcessExecutor.Result result =
         workspace.runCommand(dexdumpLocation.toString(), "-f", outputApk.toString());
-    assertTrue("dexdump did not produce output", result.getStdout().isPresent());
-    Matcher matcher = Pattern.compile("DEX version\\s*'(\\d+)'").matcher(result.getStdout().get());
-    assertTrue("Unable to find a match for the DEX version message", matcher.find());
+    String stderr = result.getStderr().orElse("");
+    Matcher matcher =
+        Pattern.compile("DEX version\\s*'(\\d+)'").matcher(result.getStdout().orElse(""));
+    assertTrue(
+        "Unable to find a match for the DEX version message. Stderr:\n " + stderr, matcher.find());
     int dexVersion = Integer.parseInt(matcher.group(1));
-    assertThat(dexVersion, Matchers.greaterThanOrEqualTo(38));
+    assertThat(dexVersion, Matchers.greaterThanOrEqualTo(39));
   }
 }
