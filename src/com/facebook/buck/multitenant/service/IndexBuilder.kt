@@ -136,7 +136,7 @@ private fun parsePackages(
     while (parser.nextToken() != JsonToken.END_ARRAY) {
         val packageNode = parser.readValueAsTree<JsonNode>()
         // 'removeNode' is an Object which is a fully parsed package node
-        // with the same structure as RawTargetNodeWithDepsPackage
+        // with the same structure as UnconfiguredTargetNodeWithDepsPackage
         if (packageNode !is NullNode) {
             list.add(packageParser(packageNode))
         }
@@ -236,6 +236,6 @@ private fun createRawRule(
     deps: Set<UnconfiguredBuildTarget>,
     attrs: ImmutableMap<String, Any>
 ): RawBuildRule {
-    val node = ServiceRawTargetNode(target, RuleTypeFactory.createBuildRule(ruleType), attrs)
+    val node = ServiceUnconfiguredTargetNode(target, RuleTypeFactory.createBuildRule(ruleType), attrs)
     return RawBuildRule(node, deps)
 }

@@ -138,21 +138,22 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     boolean enableSpeculativeParsing =
         parserConfig.getEnableParallelParsing()
             && parsingContext.getSpeculativeParsing() == SpeculativeParsing.ENABLED;
-    RawTargetNodePipeline rawTargetNodePipeline =
-        new RawTargetNodePipeline(
+    UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline =
+        new UnconfiguredTargetNodePipeline(
             pipelineExecutorService,
             daemonicParserState.getOrCreateNodeCache(
                 DaemonicParserState.RAW_TARGET_NODE_CACHE_TYPE),
             eventBus,
             buildFileRawNodeParsePipeline,
             buildTargetRawNodeParsePipeline,
-            new DefaultRawTargetNodeFactory(knownRuleTypesProvider, new BuiltTargetVerifier()));
+            new DefaultUnconfiguredTargetNodeFactory(
+                knownRuleTypesProvider, new BuiltTargetVerifier()));
 
     PackageBoundaryChecker packageBoundaryChecker =
         new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
 
-    ParserTargetNodeFromRawTargetNodeFactory nonResolvingRawTargetNodeToTargetNodeFactory =
-        new RawTargetNodeToTargetNodeFactory(
+    ParserTargetNodeFromUnconfiguredTargetNodeFactory nonResolvingRawTargetNodeToTargetNodeFactory =
+        new UnconfiguredTargetNodeToTargetNodeFactory(
             typeCoercerFactory,
             knownRuleTypesProvider,
             marshaller,
@@ -168,11 +169,11 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     // deadlocks happening when too many node are requested from targetNodeParsePipeline.
     // That pipeline does blocking calls to get nodes from nonResolvingTargetNodeParsePipeline
     // which can lead to deadlocks.
-    RawTargetNodeToTargetNodeParsePipeline nonResolvingTargetNodeParsePipeline =
-        new RawTargetNodeToTargetNodeParsePipeline(
+    UnconfiguredTargetNodeToTargetNodeParsePipeline nonResolvingTargetNodeParsePipeline =
+        new UnconfiguredTargetNodeToTargetNodeParsePipeline(
             daemonicParserState.getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
             MoreExecutors.newDirectExecutorService(),
-            rawTargetNodePipeline,
+            unconfiguredTargetNodePipeline,
             eventBus,
             "nonresolving_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
@@ -196,8 +197,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
       selectorListResolver = new DefaultSelectorListResolver(selectableResolver);
     }
 
-    RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
-        new RawTargetNodeToTargetNodeFactory(
+    UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory =
+        new UnconfiguredTargetNodeToTargetNodeFactory(
             typeCoercerFactory,
             knownRuleTypesProvider,
             marshaller,
@@ -214,21 +215,21 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         MoreExecutors.listeningDecorator(
             createExecutorService(rootCell.getBuckConfig(), "configured-pipeline"));
 
-    RawTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline =
-        new RawTargetNodeToTargetNodeParsePipeline(
+    UnconfiguredTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline =
+        new UnconfiguredTargetNodeToTargetNodeParsePipeline(
             daemonicParserState.getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
             configuredPipelineExecutor,
-            rawTargetNodePipeline,
+            unconfiguredTargetNodePipeline,
             eventBus,
             "configured_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
-            rawTargetNodeToTargetNodeFactory,
+            unconfiguredTargetNodeToTargetNodeFactory,
             unconfiguredBuildTargetFactory) {
           @Override
           public void close() {
             super.close();
             nonResolvingTargetNodeParsePipeline.close();
-            rawTargetNodePipeline.close();
+            unconfiguredTargetNodePipeline.close();
             try {
               MostExecutors.shutdown(configuredPipelineExecutor, 1, TimeUnit.MINUTES);
             } catch (InterruptedException e) {

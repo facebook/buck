@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
+import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.parser.exceptions.ImmutableParsingError;
 import com.facebook.buck.parser.exceptions.ParsingError;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -36,9 +36,9 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import org.junit.Test;
 
-public class RawTargetNodeWithDepsPackageTest {
+public class UnconfiguredTargetNodeWithDepsPackageTest {
 
-  private RawTargetNodeWithDepsPackage getData() {
+  private UnconfiguredTargetNodeWithDepsPackage getData() {
     ImmutableMap<String, Object> rawAttributes1 =
         ImmutableMap.of(
             "name",
@@ -53,8 +53,8 @@ public class RawTargetNodeWithDepsPackageTest {
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         ImmutableUnconfiguredBuildTarget.of(
             CanonicalCellName.rootCell(), "//base", "target1", UnconfiguredBuildTarget.NO_FLAVORS);
-    RawTargetNode rawTargetNode1 =
-        ImmutableRawTargetNode.of(
+    UnconfiguredTargetNode unconfiguredTargetNode1 =
+        ImmutableUnconfiguredTargetNode.of(
             unconfiguredBuildTarget1,
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes1,
@@ -67,49 +67,53 @@ public class RawTargetNodeWithDepsPackageTest {
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
         ImmutableUnconfiguredBuildTarget.of(
             CanonicalCellName.rootCell(), "//base", "target2", UnconfiguredBuildTarget.NO_FLAVORS);
-    RawTargetNode rawTargetNode2 =
-        ImmutableRawTargetNode.of(
+    UnconfiguredTargetNode unconfiguredTargetNode2 =
+        ImmutableUnconfiguredTargetNode.of(
             unconfiguredBuildTarget2,
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes2,
             ImmutableSet.of(),
             ImmutableSet.of());
 
-    RawTargetNodeWithDeps rawTargetNodeWithDeps1 =
-        ImmutableRawTargetNodeWithDeps.of(
-            rawTargetNode1, ImmutableSet.of(unconfiguredBuildTarget2));
-    RawTargetNodeWithDeps rawTargetNodeWithDeps2 =
-        ImmutableRawTargetNodeWithDeps.of(rawTargetNode2, ImmutableSet.of());
+    UnconfiguredTargetNodeWithDeps unconfiguredTargetNodeWithDeps1 =
+        ImmutableUnconfiguredTargetNodeWithDeps.of(
+            unconfiguredTargetNode1, ImmutableSet.of(unconfiguredBuildTarget2));
+    UnconfiguredTargetNodeWithDeps unconfiguredTargetNodeWithDeps2 =
+        ImmutableUnconfiguredTargetNodeWithDeps.of(unconfiguredTargetNode2, ImmutableSet.of());
 
     ParsingError error = ImmutableParsingError.of("error1", ImmutableList.of("stacktrace1"));
 
-    return new ImmutableRawTargetNodeWithDepsPackage(
+    return new ImmutableUnconfiguredTargetNodeWithDepsPackage(
         Paths.get("base"),
-        ImmutableMap.of("target1", rawTargetNodeWithDeps1, "target2", rawTargetNodeWithDeps2),
+        ImmutableMap.of(
+            "target1", unconfiguredTargetNodeWithDeps1, "target2", unconfiguredTargetNodeWithDeps2),
         ImmutableList.of(error),
         ImmutableSet.of(Paths.get("test1.bzl"), Paths.get("test2.bzl")));
   }
 
   @Test
   public void canSerializeAndDeserializeJson() throws IOException {
-    RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackage = getData();
-    byte[] data = ObjectMappers.WRITER_WITH_TYPE.writeValueAsBytes(rawTargetNodeWithDepsPackage);
-    RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackageDeserialized =
+    UnconfiguredTargetNodeWithDepsPackage unconfiguredTargetNodeWithDepsPackage = getData();
+    byte[] data =
+        ObjectMappers.WRITER_WITH_TYPE.writeValueAsBytes(unconfiguredTargetNodeWithDepsPackage);
+    UnconfiguredTargetNodeWithDepsPackage unconfiguredTargetNodeWithDepsPackageDeserialized =
         ObjectMappers.READER_WITH_TYPE
-            .forType(ImmutableRawTargetNodeWithDepsPackage.class)
+            .forType(ImmutableUnconfiguredTargetNodeWithDepsPackage.class)
             .readValue(data);
 
-    assertEquals(rawTargetNodeWithDepsPackage, rawTargetNodeWithDepsPackageDeserialized);
+    assertEquals(
+        unconfiguredTargetNodeWithDepsPackage, unconfiguredTargetNodeWithDepsPackageDeserialized);
   }
 
   @Test
   public void canSerializeWithoutTypeAndFlatten() throws IOException {
-    RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackage = getData();
-    String data = ObjectMappers.WRITER.writeValueAsString(rawTargetNodeWithDepsPackage);
+    UnconfiguredTargetNodeWithDepsPackage unconfiguredTargetNodeWithDepsPackage = getData();
+    String data = ObjectMappers.WRITER.writeValueAsString(unconfiguredTargetNodeWithDepsPackage);
     ObjectMapper mapper = new ObjectMapper();
     JsonNode node = mapper.readTree(data);
 
-    // Validate property from RawTargetNode ("buildTarget") is flattened so it is at the same level
+    // Validate property from UnconfiguredTargetNode ("buildTarget") is flattened so it is at the
+    // same level
     // as non-flattened property ("deps")
     assertNotNull(node.get("nodes").get("target1").get("buildTarget"));
     assertNotNull(node.get("nodes").get("target1").get("deps"));

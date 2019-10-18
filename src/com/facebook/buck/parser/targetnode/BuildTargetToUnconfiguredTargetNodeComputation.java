@@ -26,8 +26,8 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
-import com.facebook.buck.parser.RawTargetNodeFactory;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.parser.UnconfiguredTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -38,17 +38,19 @@ import java.nio.file.Path;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-/** Transforms one target from specific {@link BuildFileManifest} to {@link RawTargetNode} */
-public class BuildTargetToRawTargetNodeComputation
-    implements GraphComputation<BuildTargetToRawTargetNodeKey, RawTargetNode> {
+/**
+ * Transforms one target from specific {@link BuildFileManifest} to {@link UnconfiguredTargetNode}
+ */
+public class BuildTargetToUnconfiguredTargetNodeComputation
+    implements GraphComputation<BuildTargetToUnconfiguredTargetNodeKey, UnconfiguredTargetNode> {
 
-  private final RawTargetNodeFactory rawTargetNodeFactory;
+  private final UnconfiguredTargetNodeFactory unconfiguredTargetNodeFactory;
   private final Cell cell;
   private final Path buildFileName;
 
-  private BuildTargetToRawTargetNodeComputation(
-      RawTargetNodeFactory rawTargetNodeFactory, Cell cell) {
-    this.rawTargetNodeFactory = rawTargetNodeFactory;
+  private BuildTargetToUnconfiguredTargetNodeComputation(
+      UnconfiguredTargetNodeFactory unconfiguredTargetNodeFactory, Cell cell) {
+    this.unconfiguredTargetNodeFactory = unconfiguredTargetNodeFactory;
     this.cell = cell;
     buildFileName =
         cell.getRoot()
@@ -57,26 +59,27 @@ public class BuildTargetToRawTargetNodeComputation
   }
 
   /**
-   * Create new instance of {@link BuildTargetToRawTargetNodeComputation}
+   * Create new instance of {@link BuildTargetToUnconfiguredTargetNodeComputation}
    *
-   * @param rawTargetNodeFactory An actual factory that will create {@link RawTargetNode} from raw
-   *     attributes containing in {@link BuildFileManifest}
+   * @param unconfiguredTargetNodeFactory An actual factory that will create {@link
+   *     UnconfiguredTargetNode} from raw attributes containing in {@link BuildFileManifest}
    * @param cell A {@link Cell} object that contains targets used in this transformation, it is
    *     mostly used to resolve paths to absolute paths
    * @return
    */
-  public static BuildTargetToRawTargetNodeComputation of(
-      RawTargetNodeFactory rawTargetNodeFactory, Cell cell) {
-    return new BuildTargetToRawTargetNodeComputation(rawTargetNodeFactory, cell);
+  public static BuildTargetToUnconfiguredTargetNodeComputation of(
+      UnconfiguredTargetNodeFactory unconfiguredTargetNodeFactory, Cell cell) {
+    return new BuildTargetToUnconfiguredTargetNodeComputation(unconfiguredTargetNodeFactory, cell);
   }
 
   @Override
-  public ComputationIdentifier<RawTargetNode> getIdentifier() {
-    return BuildTargetToRawTargetNodeKey.IDENTIFIER;
+  public ComputationIdentifier<UnconfiguredTargetNode> getIdentifier() {
+    return BuildTargetToUnconfiguredTargetNodeKey.IDENTIFIER;
   }
 
   @Override
-  public RawTargetNode transform(BuildTargetToRawTargetNodeKey key, ComputationEnvironment env) {
+  public UnconfiguredTargetNode transform(
+      BuildTargetToUnconfiguredTargetNodeKey key, ComputationEnvironment env) {
     UnconfiguredBuildTarget buildTarget = key.getBuildTarget();
 
     BuildFileManifest manifest = env.getDep(getManifestKey(key));
@@ -89,7 +92,7 @@ public class BuildTargetToRawTargetNodeComputation
     UnconfiguredBuildTargetView unconfiguredBuildTargetView =
         ImmutableUnconfiguredBuildTargetView.of(cell.getRoot(), buildTarget);
 
-    return rawTargetNodeFactory.create(
+    return unconfiguredTargetNodeFactory.create(
         cell,
         cell.getRoot().resolve(unconfiguredBuildTargetView.getBasePath()).resolve(buildFileName),
         unconfiguredBuildTargetView,
@@ -99,19 +102,20 @@ public class BuildTargetToRawTargetNodeComputation
 
   @Override
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
-      BuildTargetToRawTargetNodeKey key, ComputationEnvironment env) {
+      BuildTargetToUnconfiguredTargetNodeKey key, ComputationEnvironment env) {
     return ImmutableSet.of();
   }
 
   @Override
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverPreliminaryDeps(
-      BuildTargetToRawTargetNodeKey key) {
+      BuildTargetToUnconfiguredTargetNodeKey key) {
     // To construct raw target node, we first need to parse a build file and obtain corresponding
     // manifest, so require it as a dependency
     return ImmutableSet.of(getManifestKey(key));
   }
 
-  private BuildPackagePathToBuildFileManifestKey getManifestKey(BuildTargetToRawTargetNodeKey key) {
+  private BuildPackagePathToBuildFileManifestKey getManifestKey(
+      BuildTargetToUnconfiguredTargetNodeKey key) {
     UnconfiguredBuildTarget buildTarget = key.getBuildTarget();
 
     /** TODO: do it directly not using {@link UnconfiguredBuildTargetView} */

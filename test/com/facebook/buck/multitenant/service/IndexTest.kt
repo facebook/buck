@@ -344,7 +344,7 @@ private fun buildPackageOf(
     deps: List<String> = listOf("//java/com/facebook/buck/base:base")
 ): BuildPackage {
     return BuildPackage(buildFileDirectory = FsAgnosticPath.of(packagePath), rules = setOf(
-        RawBuildRule(targetNode = ServiceRawTargetNode(
+        RawBuildRule(targetNode = ServiceUnconfiguredTargetNode(
             buildTarget = UnconfiguredBuildTargetParser.parse("//$packagePath:$targetName", true),
             ruleType = RuleTypeFactory.createBuildRule("java_library"),
             attributes = ImmutableMap.copyOf(attributes)),
@@ -370,8 +370,8 @@ private fun String.buildTarget(): UnconfiguredBuildTarget {
 private fun createTargetNode(
     target: String,
     attributes: Map<String, Any> = mapOf()
-): ServiceRawTargetNode =
-    ServiceRawTargetNode(target.buildTarget(), JAVA_LIBRARY, ImmutableMap.copyOf(attributes))
+): ServiceUnconfiguredTargetNode =
+    ServiceUnconfiguredTargetNode(target.buildTarget(), JAVA_LIBRARY, ImmutableMap.copyOf(attributes))
 
 @SuppressWarnings("SpreadOperator")
 private fun createRawRule(

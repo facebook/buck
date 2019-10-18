@@ -30,7 +30,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -58,14 +58,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 /** Asynchronous loader/converter of raw target nodes to configured target nodes */
-public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
+public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
 
-  private static final Logger LOG = Logger.get(RawTargetNodeToTargetNodeParsePipeline.class);
+  private static final Logger LOG =
+      Logger.get(UnconfiguredTargetNodeToTargetNodeParsePipeline.class);
 
   protected final ListeningExecutorService executorService;
   private final boolean speculativeDepsTraversal;
-  private final RawTargetNodePipeline rawTargetNodePipeline;
-  private final ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory;
+  private final UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline;
+  private final ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory;
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
   private final BuckEventBus eventBus;
@@ -83,17 +84,17 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
   private final long minimumPerfEventTimeMs;
 
   /** Create new pipeline for parsing Buck files. */
-  public RawTargetNodeToTargetNodeParsePipeline(
+  public UnconfiguredTargetNodeToTargetNodeParsePipeline(
       Cache<BuildTarget, TargetNode<?>> cache,
       ListeningExecutorService executorService,
-      RawTargetNodePipeline rawTargetNodePipeline,
+      UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline,
       BuckEventBus eventBus,
       String pipelineName,
       boolean speculativeDepsTraversal,
-      ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory,
+      ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory) {
     this.executorService = executorService;
-    this.rawTargetNodePipeline = rawTargetNodePipeline;
+    this.unconfiguredTargetNodePipeline = unconfiguredTargetNodePipeline;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
     this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
@@ -102,7 +103,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
     this.eventBus = eventBus;
     this.cache =
         new PipelineNodeCache<>(
-            cache, RawTargetNodeToTargetNodeParsePipeline::targetNodeIsConfiguration);
+            cache, UnconfiguredTargetNodeToTargetNodeParsePipeline::targetNodeIsConfiguration);
     this.unconfiguredBuildTargetViewFactory = unconfiguredBuildTargetViewFactory;
   }
 
@@ -115,7 +116,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
       Cell cell,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
-      RawTargetNode rawNode,
+      UnconfiguredTargetNode rawNode,
       Function<PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException {
     TargetNode<?> targetNode =
@@ -154,7 +155,10 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
   }
 
   private ListenableFuture<TargetNode<?>> dispatchComputeNode(
-      Cell cell, BuildTarget buildTarget, DependencyStack dependencyStack, RawTargetNode from)
+      Cell cell,
+      BuildTarget buildTarget,
+      DependencyStack dependencyStack,
+      UnconfiguredTargetNode from)
       throws BuildTargetException {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
@@ -163,7 +167,10 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
   }
 
   private TargetNode<?> computeNode(
-      Cell cell, BuildTarget buildTarget, DependencyStack dependencyStack, RawTargetNode from) {
+      Cell cell,
+      BuildTarget buildTarget,
+      DependencyStack dependencyStack,
+      UnconfiguredTargetNode from) {
     try (Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
             eventBus,
@@ -190,8 +197,8 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
       Cell cell,
       UnconfiguredBuildTargetView unconfiguredTarget,
       TargetConfiguration globalTargetConfiguration) {
-    ListenableFuture<RawTargetNode> rawTargetNodeFuture =
-        rawTargetNodePipeline.getNodeJob(
+    ListenableFuture<UnconfiguredTargetNode> rawTargetNodeFuture =
+        unconfiguredTargetNodePipeline.getNodeJob(
             cell, unconfiguredTarget, DependencyStack.top(unconfiguredTarget));
     return Futures.transformAsync(
         rawTargetNodeFuture,
@@ -219,7 +226,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
     try {
       ListenableFuture<List<TargetNode<?>>> allNodesListJob =
           Futures.transformAsync(
-              rawTargetNodePipeline.getAllNodesJob(cell, buildFile),
+              unconfiguredTargetNodePipeline.getAllNodesJob(cell, buildFile),
               allToConvert -> {
                 if (shuttingDown()) {
                   return Futures.immediateCancelledFuture();
@@ -228,7 +235,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
                 ImmutableList.Builder<ListenableFuture<TargetNode<?>>> allNodeJobs =
                     ImmutableList.builderWithExpectedSize(allToConvert.size());
 
-                for (RawTargetNode from : allToConvert) {
+                for (UnconfiguredTargetNode from : allToConvert) {
                   UnconfiguredBuildTargetView unconfiguredTarget =
                       ImmutableUnconfiguredBuildTargetView.of(
                           cell.getRoot(), from.getBuildTarget());
@@ -277,13 +284,15 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
       Cell cell,
       UnconfiguredBuildTargetView unconfiguredTarget,
       TargetConfiguration globalTargetConfiguration,
-      RawTargetNode rawTargetNode) {
+      UnconfiguredTargetNode unconfiguredTargetNode) {
     TargetConfiguration targetConfiguration;
-    if (rawTargetNode.getRuleType().getKind() == AbstractRuleType.Kind.CONFIGURATION) {
+    if (unconfiguredTargetNode.getRuleType().getKind() == AbstractRuleType.Kind.CONFIGURATION) {
       targetConfiguration = ConfigurationForConfigurationTargets.INSTANCE;
       String defaultTargetPlatform =
           (String)
-              rawTargetNode.getAttributes().get(BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
+              unconfiguredTargetNode
+                  .getAttributes()
+                  .get(BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
       if (defaultTargetPlatform != null && !defaultTargetPlatform.isEmpty()) {
         throw new HumanReadableException(
             "configuration target %s cannot specify %s",
@@ -295,7 +304,9 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
         // We use `default_target_platform` only when global platform is not specified
         String defaultTargetPlatform =
             (String)
-                rawTargetNode.getAttributes().get(BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
+                unconfiguredTargetNode
+                    .getAttributes()
+                    .get(BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
         if (defaultTargetPlatform != null && !defaultTargetPlatform.isEmpty()) {
           UnconfiguredBuildTargetView configurationTarget =
               unconfiguredBuildTargetViewFactory.createForBaseName(
@@ -310,7 +321,10 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
     }
     BuildTarget configuredTarget = unconfiguredTarget.configure(targetConfiguration);
     return getNodeJobWithRawNode(
-        cell, configuredTarget, DependencyStack.top(configuredTarget), Optional.of(rawTargetNode));
+        cell,
+        configuredTarget,
+        DependencyStack.top(configuredTarget),
+        Optional.of(unconfiguredTargetNode));
   }
 
   /** Get build target by name, load if necessary */
@@ -324,7 +338,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
       Cell cell,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
-      Optional<RawTargetNode> rawNodeIfKnown)
+      Optional<UnconfiguredTargetNode> rawNodeIfKnown)
       throws BuildTargetException {
     return cache.getJobWithCacheLookup(
         cell,
@@ -336,7 +350,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
                 executorService);
           } else {
             return Futures.transformAsync(
-                rawTargetNodePipeline.getNodeJob(
+                unconfiguredTargetNodePipeline.getNodeJob(
                     cell, buildTarget.getUnconfiguredBuildTargetView(), dependencyStack),
                 from -> dispatchComputeNode(cell, buildTarget, dependencyStack, from),
                 executorService);

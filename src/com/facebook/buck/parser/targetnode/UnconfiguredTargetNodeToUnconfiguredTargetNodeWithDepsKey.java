@@ -19,31 +19,40 @@ package com.facebook.buck.parser.targetnode;
 import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /**
- * Transformation key containing a path to a build package to get parsed {@link
- * RawTargetNodeWithDepsPackage} from it
+ * Transformation key containing {@link UnconfiguredTargetNode} to translate it to {@link
+ * UnconfiguredTargetNodeWithDeps}.
  */
 @Value.Immutable(builder = false, copy = false, prehash = true)
-public abstract class BuildPackagePathToRawTargetNodePackageKey
-    implements ComputeKey<RawTargetNodeWithDepsPackage> {
+public abstract class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey
+    implements ComputeKey<UnconfiguredTargetNodeWithDeps> {
 
-  public static final ComputationIdentifier<RawTargetNodeWithDepsPackage> IDENTIFIER =
+  public static final ComputationIdentifier<UnconfiguredTargetNodeWithDeps> IDENTIFIER =
       ClassBasedComputationIdentifier.of(
-          BuildPackagePathToRawTargetNodePackageKey.class, RawTargetNodeWithDepsPackage.class);
+          UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey.class,
+          UnconfiguredTargetNodeWithDeps.class);
 
   /**
-   * A path to a package root directory, i.e. a directory containing build file, relative to some
-   * root (usually cell folder root)
+   * {@link UnconfiguredTargetNode} which should be translated to {@link
+   * UnconfiguredTargetNodeWithDeps}
    */
   @Value.Parameter
-  public abstract Path getPath();
+  public abstract UnconfiguredTargetNode getUnconfiguredTargetNode();
+
+  /**
+   * {@link Path} to the root of a package that has this {@link UnconfiguredTargetNode}, relative to
+   * parse root, usually cell root
+   */
+  @Value.Parameter
+  public abstract Path getPackagePath();
 
   @Override
-  public ComputationIdentifier<RawTargetNodeWithDepsPackage> getIdentifier() {
+  public ComputationIdentifier<UnconfiguredTargetNodeWithDeps> getIdentifier() {
     return IDENTIFIER;
   }
 }

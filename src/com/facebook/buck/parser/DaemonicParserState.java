@@ -24,7 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.IntegerCounter;
@@ -271,8 +271,8 @@ public class DaemonicParserState {
 
   private final DaemonicCacheView<BuildTarget, TargetNode<?>> targetNodeCache =
       new DaemonicCacheView<>(DaemonicCellState.TARGET_NODE_CACHE_TYPE);
-  private final DaemonicCacheView<UnconfiguredBuildTargetView, RawTargetNode> rawTargetNodeCache =
-      new DaemonicCacheView<>(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
+  private final DaemonicCacheView<UnconfiguredBuildTargetView, UnconfiguredTargetNode>
+      rawTargetNodeCache = new DaemonicCacheView<>(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
   /**
    * Build files that contain configuration targets.
@@ -363,7 +363,7 @@ public class DaemonicParserState {
 
   public static final CacheType<BuildTarget, TargetNode<?>> TARGET_NODE_CACHE_TYPE =
       new CacheType<>(state -> state.targetNodeCache);
-  public static final CacheType<UnconfiguredBuildTargetView, RawTargetNode>
+  public static final CacheType<UnconfiguredBuildTargetView, UnconfiguredTargetNode>
       RAW_TARGET_NODE_CACHE_TYPE = new CacheType<>(state -> state.rawTargetNodeCache);
 
   /**

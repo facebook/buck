@@ -27,7 +27,7 @@ import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
@@ -45,8 +45,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Function;
 
-/** Creates {@link TargetNode} from {@link RawTargetNode}. */
-public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFromRawTargetNodeFactory {
+/** Creates {@link TargetNode} from {@link UnconfiguredTargetNode}. */
+public class UnconfiguredTargetNodeToTargetNodeFactory
+    implements ParserTargetNodeFromUnconfiguredTargetNodeFactory {
 
   private final TypeCoercerFactory typeCoercerFactory;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
@@ -59,7 +60,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFromRaw
   private final TargetPlatformResolver targetPlatformResolver;
   private final TargetConfigurationTransformer targetConfigurationTransformer;
 
-  public RawTargetNodeToTargetNodeFactory(
+  public UnconfiguredTargetNodeToTargetNodeFactory(
       TypeCoercerFactory typeCoercerFactory,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
@@ -88,11 +89,11 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFromRaw
       Path buildFile,
       BuildTarget target,
       DependencyStack dependencyStack,
-      RawTargetNode rawTargetNode,
+      UnconfiguredTargetNode unconfiguredTargetNode,
       Function<PerfEventId, Scope> perfEventScope) {
 
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
-    RuleType ruleType = rawTargetNode.getRuleType();
+    RuleType ruleType = unconfiguredTargetNode.getRuleType();
     BaseDescription<?> description = knownRuleTypes.getDescription(ruleType);
     Cell targetCell = cell.getCell(target);
 
@@ -122,7 +123,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFromRaw
               builder,
               declaredDeps,
               configurationDeps,
-              rawTargetNode.getAttributes());
+              unconfiguredTargetNode.getAttributes());
     } catch (CoerceFailedException e) {
       throw new HumanReadableException(e, dependencyStack, e.getMessage());
     }
@@ -138,8 +139,8 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFromRaw
             dependencyStack,
             declaredDeps.build(),
             configurationDeps.build(),
-            rawTargetNode.getVisibilityPatterns(),
-            rawTargetNode.getWithinViewPatterns(),
+            unconfiguredTargetNode.getVisibilityPatterns(),
+            unconfiguredTargetNode.getWithinViewPatterns(),
             targetCell.getCellPathResolver());
 
     packageBoundaryChecker.enforceBuckPackageBoundaries(targetCell, target, targetNode.getInputs());

@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -166,7 +166,7 @@ class DaemonicCellState {
     }
   }
 
-  static final CellCacheType<UnconfiguredBuildTargetView, RawTargetNode>
+  static final CellCacheType<UnconfiguredBuildTargetView, UnconfiguredTargetNode>
       RAW_TARGET_NODE_CACHE_TYPE =
           new CellCacheType<>(
               state -> state.rawTargetNodeCache,
@@ -185,7 +185,7 @@ class DaemonicCellState {
   /** Keeps caches by the object type supported by the cache. */
   private final Cache<BuildTarget, TargetNode<?>> targetNodeCache;
 
-  private final Cache<UnconfiguredBuildTargetView, RawTargetNode> rawTargetNodeCache;
+  private final Cache<UnconfiguredBuildTargetView, UnconfiguredTargetNode> rawTargetNodeCache;
 
   private final AutoCloseableReadWriteUpdateLock rawAndComputedNodesLock;
   private final int parsingThreads;

@@ -31,11 +31,11 @@ internal typealias BuildTargetId = Int
 internal typealias BuildTargetSet = IntArray
 
 /**
- * This is a RawTargetNode paired with its deps as determined by configuring the RawTargetNode with
+ * This is a UnconfiguredTargetNode paired with its deps as determined by configuring the UnconfiguredTargetNode with
  * the empty configuration.
  */
 data class RawBuildRule(
-    val targetNode: ServiceRawTargetNode,
+    val targetNode: ServiceUnconfiguredTargetNode,
     val deps: Set<UnconfiguredBuildTarget>
 )
 
@@ -48,7 +48,7 @@ data class BuildPackageParsingError(val message: String, val stacktrace: List<St
  * @param[deps] must be sorted in ascending order!!!
  */
 internal data class InternalRawBuildRule(
-    val targetNode: ServiceRawTargetNode,
+    val targetNode: ServiceUnconfiguredTargetNode,
     val deps: BuildTargetSet
 ) {
     /*

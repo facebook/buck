@@ -20,19 +20,19 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import java.nio.file.Path;
 import java.util.function.Function;
 
-/** Convert {@link RawTargetNode} to {@link TargetNode} for the parser. */
-public interface ParserTargetNodeFromRawTargetNodeFactory {
+/** Convert {@link UnconfiguredTargetNode} to {@link TargetNode} for the parser. */
+public interface ParserTargetNodeFromUnconfiguredTargetNodeFactory {
   TargetNode<?> createTargetNode(
       Cell cell,
       Path buildFile,
       BuildTarget target,
       DependencyStack dependencyStack,
-      RawTargetNode rawNode,
+      UnconfiguredTargetNode rawNode,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope);
 }

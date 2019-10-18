@@ -34,7 +34,7 @@ import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
 import com.facebook.buck.core.parser.BuildPackagePaths;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathComputation;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
@@ -43,18 +43,18 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.parser.BuiltTargetVerifier;
 import com.facebook.buck.parser.DefaultProjectBuildFileParserFactory;
-import com.facebook.buck.parser.DefaultRawTargetNodeFactory;
+import com.facebook.buck.parser.DefaultUnconfiguredTargetNodeFactory;
 import com.facebook.buck.parser.NoopPackageBoundaryChecker;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ProjectBuildFileParserFactory;
-import com.facebook.buck.parser.RawTargetNodeToTargetNodeFactory;
+import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestComputation;
-import com.facebook.buck.parser.targetnode.BuildPackagePathToRawTargetNodePackageComputation;
-import com.facebook.buck.parser.targetnode.BuildTargetToRawTargetNodeComputation;
-import com.facebook.buck.parser.targetnode.ImmutableBuildPackagePathToRawTargetNodePackageKey;
-import com.facebook.buck.parser.targetnode.RawTargetNodeToRawTargetNodeWithDepsComputation;
+import com.facebook.buck.parser.targetnode.BuildPackagePathToUnconfiguredTargetNodePackageComputation;
+import com.facebook.buck.parser.targetnode.BuildTargetToUnconfiguredTargetNodeComputation;
+import com.facebook.buck.parser.targetnode.ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey;
+import com.facebook.buck.parser.targetnode.UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
@@ -139,20 +139,20 @@ public class GraphEngineFactory {
             Composition.asComposition(BuildPackagePaths.class, patternToPackagePathComputation);
 
     // COMPUTATION: Unconfigured build target to raw target node computation
-    DefaultRawTargetNodeFactory rawTargetNodeFactory =
-        new DefaultRawTargetNodeFactory(
+    DefaultUnconfiguredTargetNodeFactory rawTargetNodeFactory =
+        new DefaultUnconfiguredTargetNodeFactory(
             params.getKnownRuleTypesProvider(), new BuiltTargetVerifier());
 
-    BuildTargetToRawTargetNodeComputation buildTargetToRawTargetNodeComputation =
-        BuildTargetToRawTargetNodeComputation.of(rawTargetNodeFactory, cell);
+    BuildTargetToUnconfiguredTargetNodeComputation buildTargetToUnconfiguredTargetNodeComputation =
+        BuildTargetToUnconfiguredTargetNodeComputation.of(rawTargetNodeFactory, cell);
 
     // COMPUTATION: raw target node to raw target node with deps
 
     // TODO: replace with TargetPlatformResolver
     TargetPlatformResolver targetPlatformResolver =
         (targetConfiguration, dependencyStack) -> EmptyPlatform.INSTANCE;
-    RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
-        new RawTargetNodeToTargetNodeFactory(
+    UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory =
+        new UnconfiguredTargetNodeToTargetNodeFactory(
             params.getTypeCoercerFactory(),
             params.getKnownRuleTypesProvider(),
             new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
@@ -191,28 +191,32 @@ public class GraphEngineFactory {
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver));
 
-    RawTargetNodeToRawTargetNodeWithDepsComputation
-        rawTargetNodeToRawTargetNodeWithDepsComputation =
-            RawTargetNodeToRawTargetNodeWithDepsComputation.of(
-                rawTargetNodeToTargetNodeFactory, cell);
+    UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
+        unconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation =
+            UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation.of(
+                unconfiguredTargetNodeToTargetNodeFactory, cell);
 
     // COMPUTATION: path to a package to a list of raw target nodes with deps
     // this computation is workaround because left compositions are very slow
     // TODO: Use right compositions instead
-    BuildPackagePathToRawTargetNodePackageComputation
-        buildPackagePathToRawTargetNodePackageComputation =
-            BuildPackagePathToRawTargetNodePackageComputation.of(
-                rawTargetNodeToTargetNodeFactory, cell, false);
+    BuildPackagePathToUnconfiguredTargetNodePackageComputation
+        buildPackagePathToUnconfiguredTargetNodePackageComputation =
+            BuildPackagePathToUnconfiguredTargetNodePackageComputation.of(
+                unconfiguredTargetNodeToTargetNodeFactory, cell, false);
 
     // COMPOSITION: build target pattern to raw target node package
-    ComposedComputation<BuildTargetPatternToBuildPackagePathKey, RawTargetNodeWithDepsPackage>
+    ComposedComputation<
+            BuildTargetPatternToBuildPackagePathKey, UnconfiguredTargetNodeWithDepsPackage>
         patternToRawTargetNodeWithDepsPackageComputation =
             Composition.composeLeft(
-                RawTargetNodeWithDepsPackage.class,
+                UnconfiguredTargetNodeWithDepsPackage.class,
                 patternToPathComputation,
                 (key, result) ->
                     result.getPackageRoots().stream()
-                        .map(path -> ImmutableBuildPackagePathToRawTargetNodePackageKey.of(path))
+                        .map(
+                            path ->
+                                ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey.of(
+                                    path))
                         .collect(ImmutableSet.toImmutableSet()));
 
     // ENGINE: bind computations to caches and feed them to Graph Engine
@@ -235,9 +239,11 @@ public class GraphEngineFactory {
                         .getGlobalState()
                         .getBuildFileManifestCaches()
                         .getUnchecked(cell.getRoot())),
-                new GraphComputationStage<>(buildTargetToRawTargetNodeComputation),
-                new GraphComputationStage<>(rawTargetNodeToRawTargetNodeWithDepsComputation),
-                new GraphComputationStage<>(buildPackagePathToRawTargetNodePackageComputation),
+                new GraphComputationStage<>(buildTargetToUnconfiguredTargetNodeComputation),
+                new GraphComputationStage<>(
+                    unconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation),
+                new GraphComputationStage<>(
+                    buildPackagePathToUnconfiguredTargetNodePackageComputation),
                 patternToRawTargetNodeWithDepsPackageComputation.asStage()),
             16,
             params.getDepsAwareExecutorSupplier().get());

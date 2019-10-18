@@ -29,62 +29,67 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.ImmutableRawTargetNodeWithDeps;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDeps;
+import com.facebook.buck.core.model.targetgraph.raw.ImmutableUnconfiguredTargetNodeWithDeps;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.parser.RawTargetNodeToTargetNodeFactory;
+import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/** Transforms {@link RawTargetNode} to {@link RawTargetNodeWithDeps} */
-public class RawTargetNodeToRawTargetNodeWithDepsComputation
-    implements GraphComputation<RawTargetNodeToRawTargetNodeWithDepsKey, RawTargetNodeWithDeps> {
+/** Transforms {@link UnconfiguredTargetNode} to {@link UnconfiguredTargetNodeWithDeps} */
+public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
+    implements GraphComputation<
+        UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey, UnconfiguredTargetNodeWithDeps> {
 
-  private final RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory;
+  private final UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory;
   private final Cell cell;
 
-  private RawTargetNodeToRawTargetNodeWithDepsComputation(
-      RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory, Cell cell) {
-    this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
+  private UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation(
+      UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory,
+      Cell cell) {
+    this.unconfiguredTargetNodeToTargetNodeFactory = unconfiguredTargetNodeToTargetNodeFactory;
     this.cell = cell;
   }
 
   /**
-   * Create new instance of {@link RawTargetNodeToRawTargetNodeWithDepsComputation}
+   * Create new instance of {@link
+   * UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation}
    *
-   * @param rawTargetNodeToTargetNodeFactory An actual factory that will create {@link TargetNode}
-   *     from {@link RawTargetNode} in order to resolve deps
+   * @param unconfiguredTargetNodeToTargetNodeFactory An actual factory that will create {@link
+   *     TargetNode} from {@link UnconfiguredTargetNode} in order to resolve deps
    * @param cell A {@link Cell} object that contains targets used in this transformation, it is
    *     mostly used to resolve paths to absolute paths
    * @return
    */
-  public static RawTargetNodeToRawTargetNodeWithDepsComputation of(
-      RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory, Cell cell) {
-    return new RawTargetNodeToRawTargetNodeWithDepsComputation(
-        rawTargetNodeToTargetNodeFactory, cell);
+  public static UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation of(
+      UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory,
+      Cell cell) {
+    return new UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation(
+        unconfiguredTargetNodeToTargetNodeFactory, cell);
   }
 
   @Override
-  public ComputationIdentifier<RawTargetNodeWithDeps> getIdentifier() {
-    return RawTargetNodeToRawTargetNodeWithDepsKey.IDENTIFIER;
+  public ComputationIdentifier<UnconfiguredTargetNodeWithDeps> getIdentifier() {
+    return UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey.IDENTIFIER;
   }
 
   @Override
-  public RawTargetNodeWithDeps transform(
-      RawTargetNodeToRawTargetNodeWithDepsKey key, ComputationEnvironment env) {
+  public UnconfiguredTargetNodeWithDeps transform(
+      UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey key, ComputationEnvironment env) {
 
     Path buildFileAbsolutePath =
         cell.getRoot()
             .resolve(key.getPackagePath())
             .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName());
 
-    UnconfiguredBuildTarget unconfiguredBuildTarget = key.getRawTargetNode().getBuildTarget();
+    UnconfiguredBuildTarget unconfiguredBuildTarget =
+        key.getUnconfiguredTargetNode().getBuildTarget();
 
-    // To discover dependencies, we coerce RawTargetNode to TargetNode, get
+    // To discover dependencies, we coerce UnconfiguredTargetNode to TargetNode, get
     // dependencies out of
     // it, then trash target node
     // THIS SOLUTION IS TEMPORARY and not 100% correct in general, because we have
@@ -100,17 +105,18 @@ public class RawTargetNodeToRawTargetNodeWithDepsComputation
         unconfiguredBuildTargetView.configure(UnconfiguredTargetConfiguration.INSTANCE);
 
     // TODO(nga): obtain proper dependency stack
-    DependencyStack dependencyStack = DependencyStack.top(key.getRawTargetNode().getBuildTarget());
+    DependencyStack dependencyStack =
+        DependencyStack.top(key.getUnconfiguredTargetNode().getBuildTarget());
 
     // All target nodes are created sequentially from raw target nodes
     // TODO: use RawTargetNodeToTargetNode transformation
     TargetNode<?> targetNode =
-        rawTargetNodeToTargetNodeFactory.createTargetNode(
+        unconfiguredTargetNodeToTargetNodeFactory.createTargetNode(
             cell,
             buildFileAbsolutePath,
             buildTarget,
             dependencyStack,
-            key.getRawTargetNode(),
+            key.getUnconfiguredTargetNode(),
             id -> SimplePerfEvent.scope(Optional.empty(), PerfEventId.of("raw_to_targetnode")));
 
     ImmutableSet<UnconfiguredBuildTarget> deps =
@@ -120,18 +126,18 @@ public class RawTargetNodeToRawTargetNodeWithDepsComputation
 
     // END TEMPORARY
 
-    return ImmutableRawTargetNodeWithDeps.of(key.getRawTargetNode(), deps);
+    return ImmutableUnconfiguredTargetNodeWithDeps.of(key.getUnconfiguredTargetNode(), deps);
   }
 
   @Override
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
-      RawTargetNodeToRawTargetNodeWithDepsKey key, ComputationEnvironment env) {
+      UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey key, ComputationEnvironment env) {
     return ImmutableSet.of();
   }
 
   @Override
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverPreliminaryDeps(
-      RawTargetNodeToRawTargetNodeWithDepsKey key) {
+      UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey key) {
     return ImmutableSet.of();
   }
 }

@@ -29,7 +29,7 @@ import org.junit.Test
 class BuildPackageTest {
     @Test fun canSerializeAndDeserializeBuildPackage() {
         val buildPackage = BuildPackage(buildFileDirectory = FsAgnosticPath.of("foo/bar"),
-            rules = setOf(RawBuildRule(targetNode = ServiceRawTargetNode(
+            rules = setOf(RawBuildRule(targetNode = ServiceUnconfiguredTargetNode(
                 buildTarget = UnconfiguredBuildTargetParser.parse("cell//foo/bar:baz", true),
                 ruleType = RuleType.of("java_library", AbstractRuleType.Kind.BUILD),
                 attributes = ImmutableMap.of("attr1", "va1", "attr2", "val2")),

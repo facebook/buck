@@ -41,7 +41,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphHashing;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
 import com.facebook.buck.core.parser.ImmutableBuildTargetPatternToBuildPackagePathKey;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
@@ -392,7 +392,7 @@ public class TargetsCommand extends AbstractCommand {
         buildTargetPatterns.stream().collect(Collectors.groupingBy(pattern -> pattern.getCell()));
 
     // Build graph engines for each cell in provided specs and evaluate
-    List<RawTargetNodeWithDepsPackage> nodes = new ArrayList<>();
+    List<UnconfiguredTargetNodeWithDepsPackage> nodes = new ArrayList<>();
     Closer closer = Closer.create();
     try {
       // For each cell, build a Graph Engine which will parse that cell's targets
@@ -409,7 +409,8 @@ public class TargetsCommand extends AbstractCommand {
         GraphTransformationEngine engine = enginesPerCell.get(cellAndPatterns.getKey());
 
         ImmutableSet<
-                ComposedKey<BuildTargetPatternToBuildPackagePathKey, RawTargetNodeWithDepsPackage>>
+                ComposedKey<
+                    BuildTargetPatternToBuildPackagePathKey, UnconfiguredTargetNodeWithDepsPackage>>
             keys =
                 cellAndPatterns.getValue().stream()
                     .map(
@@ -417,13 +418,15 @@ public class TargetsCommand extends AbstractCommand {
                             ImmutableComposedKey.of(
                                 (BuildTargetPatternToBuildPackagePathKey)
                                     ImmutableBuildTargetPatternToBuildPackagePathKey.of(pattern),
-                                RawTargetNodeWithDepsPackage.class))
+                                UnconfiguredTargetNodeWithDepsPackage.class))
                     .collect(ImmutableSet.toImmutableSet());
 
         ImmutableMap<
-                ComposedKey<BuildTargetPatternToBuildPackagePathKey, RawTargetNodeWithDepsPackage>,
+                ComposedKey<
+                    BuildTargetPatternToBuildPackagePathKey, UnconfiguredTargetNodeWithDepsPackage>,
                 ComposedResult<
-                    ComputeKey<RawTargetNodeWithDepsPackage>, RawTargetNodeWithDepsPackage>>
+                    ComputeKey<UnconfiguredTargetNodeWithDepsPackage>,
+                    UnconfiguredTargetNodeWithDepsPackage>>
             results = engine.computeAllUnchecked(keys);
 
         results.values().forEach(result -> nodes.addAll(result.resultMap().values()));

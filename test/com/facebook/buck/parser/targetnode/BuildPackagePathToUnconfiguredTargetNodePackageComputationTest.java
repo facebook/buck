@@ -27,18 +27,18 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
-import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
+import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDeps;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.platform.ThrowingConstraintResolver;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.parser.NoopPackageBoundaryChecker;
-import com.facebook.buck.parser.RawTargetNodeToTargetNodeFactory;
+import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileManifestKey;
@@ -53,7 +53,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Test;
 
-public class BuildPackagePathToRawTargetNodePackageComputationTest {
+public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
 
   @Test
   public void canParseDeps() {
@@ -62,8 +62,8 @@ public class BuildPackagePathToRawTargetNodePackageComputationTest {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     TargetPlatformResolver targetPlatformResolver =
         (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
-    RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
-        new RawTargetNodeToTargetNodeFactory(
+    UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory =
+        new UnconfiguredTargetNodeToTargetNodeFactory(
             typeCoercerFactory,
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
@@ -88,8 +88,8 @@ public class BuildPackagePathToRawTargetNodePackageComputationTest {
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         ImmutableUnconfiguredBuildTarget.of(
             cell.getCanonicalName(), "//", "target1", UnconfiguredBuildTarget.NO_FLAVORS);
-    RawTargetNode rawTargetNode1 =
-        ImmutableRawTargetNode.of(
+    UnconfiguredTargetNode unconfiguredTargetNode1 =
+        ImmutableUnconfiguredTargetNode.of(
             unconfiguredBuildTarget1,
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes1,
@@ -101,8 +101,8 @@ public class BuildPackagePathToRawTargetNodePackageComputationTest {
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
         ImmutableUnconfiguredBuildTarget.of(
             cell.getCanonicalName(), "//", "target2", UnconfiguredBuildTarget.NO_FLAVORS);
-    RawTargetNode rawTargetNode2 =
-        ImmutableRawTargetNode.of(
+    UnconfiguredTargetNode unconfiguredTargetNode2 =
+        ImmutableUnconfiguredTargetNode.of(
             unconfiguredBuildTarget2,
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes2,
@@ -118,32 +118,32 @@ public class BuildPackagePathToRawTargetNodePackageComputationTest {
             ImmutableList.of(),
             ImmutableList.of());
 
-    BuildPackagePathToRawTargetNodePackageComputation transformer =
-        BuildPackagePathToRawTargetNodePackageComputation.of(
-            rawTargetNodeToTargetNodeFactory, cell, false);
-    RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackage =
+    BuildPackagePathToUnconfiguredTargetNodePackageComputation transformer =
+        BuildPackagePathToUnconfiguredTargetNodePackageComputation.of(
+            unconfiguredTargetNodeToTargetNodeFactory, cell, false);
+    UnconfiguredTargetNodeWithDepsPackage unconfiguredTargetNodeWithDepsPackage =
         transformer.transform(
-            ImmutableBuildPackagePathToRawTargetNodePackageKey.of(Paths.get("")),
+            ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey.of(Paths.get("")),
             new FakeComputationEnvironment(
                 ImmutableMap.of(
                     ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("")),
                     buildFileManifest,
-                    ImmutableBuildTargetToRawTargetNodeKey.of(
+                    ImmutableBuildTargetToUnconfiguredTargetNodeKey.of(
                         unconfiguredBuildTarget1, Paths.get("")),
-                    rawTargetNode1,
-                    ImmutableBuildTargetToRawTargetNodeKey.of(
+                    unconfiguredTargetNode1,
+                    ImmutableBuildTargetToUnconfiguredTargetNodeKey.of(
                         unconfiguredBuildTarget2, Paths.get("")),
-                    rawTargetNode2)));
+                    unconfiguredTargetNode2)));
 
-    ImmutableMap<String, RawTargetNodeWithDeps> allTargets =
-        rawTargetNodeWithDepsPackage.getRawTargetNodesWithDeps();
+    ImmutableMap<String, UnconfiguredTargetNodeWithDeps> allTargets =
+        unconfiguredTargetNodeWithDepsPackage.getUnconfiguredTargetNodesWithDeps();
 
     assertEquals(2, allTargets.size());
 
-    RawTargetNodeWithDeps target1 = allTargets.get("target1");
+    UnconfiguredTargetNodeWithDeps target1 = allTargets.get("target1");
     assertNotNull(target1);
 
-    RawTargetNodeWithDeps target2 = allTargets.get("target2");
+    UnconfiguredTargetNodeWithDeps target2 = allTargets.get("target2");
     assertNotNull(target2);
 
     ImmutableSet<UnconfiguredBuildTarget> deps = target1.getDeps();

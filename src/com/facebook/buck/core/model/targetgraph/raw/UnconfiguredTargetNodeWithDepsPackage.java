@@ -26,22 +26,26 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 
-/** Represents all {@link RawTargetNodeWithDeps} that result from parsing a single build file */
+/**
+ * Represents all {@link UnconfiguredTargetNodeWithDeps} that result from parsing a single build
+ * file
+ */
 @BuckStyleValue
 @JsonDeserialize
-public abstract class RawTargetNodeWithDepsPackage implements ComputeResult {
+public abstract class UnconfiguredTargetNodeWithDepsPackage implements ComputeResult {
 
   /** Package path, relative to parse root, usually cell root */
   @JsonProperty("path")
   public abstract Path getPackagePath();
 
   /**
-   * All {@link RawTargetNodeWithDeps} which comes from the same build package, i.e. result from
-   * parsing a single build file. Key is a string representing short build target name (last part of
-   * the name after the colon) and value is corresponding target.
+   * All {@link UnconfiguredTargetNodeWithDeps} which comes from the same build package, i.e. result
+   * from parsing a single build file. Key is a string representing short build target name (last
+   * part of the name after the colon) and value is corresponding target.
    */
   @JsonProperty("nodes")
-  public abstract ImmutableMap<String, RawTargetNodeWithDeps> getRawTargetNodesWithDeps();
+  public abstract ImmutableMap<String, UnconfiguredTargetNodeWithDeps>
+      getUnconfiguredTargetNodesWithDeps();
 
   /**
    * Errors that occurred parsing this package. If errors exist, package may be incomplete, i.e.

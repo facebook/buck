@@ -24,7 +24,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -35,15 +35,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import org.junit.Test;
 
-public class DefaultRawTargetNodeFactoryTest {
+public class DefaultUnconfiguredTargetNodeFactoryTest {
 
   @Test
   public void testCreatePopulatesNode() {
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
 
-    DefaultRawTargetNodeFactory factory =
-        new DefaultRawTargetNodeFactory(knownRuleTypesProvider, new BuiltTargetVerifier());
+    DefaultUnconfiguredTargetNodeFactory factory =
+        new DefaultUnconfiguredTargetNodeFactory(knownRuleTypesProvider, new BuiltTargetVerifier());
 
     Cell cell = new TestCellBuilder().build();
 
@@ -71,7 +71,7 @@ public class DefaultRawTargetNodeFactoryTest {
             .put("visibility", ImmutableList.of("//a/..."))
             .put("within_view", ImmutableList.of("//b/..."))
             .build();
-    RawTargetNode rawTargetNode =
+    UnconfiguredTargetNode unconfiguredTargetNode =
         factory.create(
             cell,
             cell.getRoot().resolve("a/b/BUCK"),
@@ -79,16 +79,19 @@ public class DefaultRawTargetNodeFactoryTest {
             DependencyStack.root(),
             attributes);
 
-    assertEquals(RuleType.of("java_library", RuleType.Kind.BUILD), rawTargetNode.getRuleType());
-    assertEquals(buildTarget.getData(), rawTargetNode.getBuildTarget());
+    assertEquals(
+        RuleType.of("java_library", RuleType.Kind.BUILD), unconfiguredTargetNode.getRuleType());
+    assertEquals(buildTarget.getData(), unconfiguredTargetNode.getBuildTarget());
 
-    assertEquals(attributes, rawTargetNode.getAttributes());
+    assertEquals(attributes, unconfiguredTargetNode.getAttributes());
 
     assertEquals(
         "//a/...",
-        Iterables.getFirst(rawTargetNode.getVisibilityPatterns(), null).getRepresentation());
+        Iterables.getFirst(unconfiguredTargetNode.getVisibilityPatterns(), null)
+            .getRepresentation());
     assertEquals(
         "//b/...",
-        Iterables.getFirst(rawTargetNode.getWithinViewPatterns(), null).getRepresentation());
+        Iterables.getFirst(unconfiguredTargetNode.getWithinViewPatterns(), null)
+            .getRepresentation());
   }
 }

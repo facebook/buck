@@ -21,7 +21,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
@@ -42,15 +42,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** Converts nodes in a raw form (taken from build file parsers) into {@link RawTargetNode}. */
-public class RawTargetNodePipeline implements AutoCloseable {
-  private static final Logger LOG = Logger.get(RawTargetNodePipeline.class);
+/**
+ * Converts nodes in a raw form (taken from build file parsers) into {@link UnconfiguredTargetNode}.
+ */
+public class UnconfiguredTargetNodePipeline implements AutoCloseable {
+  private static final Logger LOG = Logger.get(UnconfiguredTargetNodePipeline.class);
 
   private final ListeningExecutorService executorService;
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
   private final BuckEventBus eventBus;
-  private final PipelineNodeCache<UnconfiguredBuildTargetView, RawTargetNode> cache;
-  private final ConcurrentHashMap<Path, ListenableFuture<ImmutableList<RawTargetNode>>>
+  private final PipelineNodeCache<UnconfiguredBuildTargetView, UnconfiguredTargetNode> cache;
+  private final ConcurrentHashMap<Path, ListenableFuture<ImmutableList<UnconfiguredTargetNode>>>
       allNodeCache = new ConcurrentHashMap<>();
   private final Scope perfEventScope;
   private final PerfEventId perfEventId;
@@ -63,35 +65,37 @@ public class RawTargetNodePipeline implements AutoCloseable {
 
   private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
   private final BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline;
-  private final RawTargetNodeFactory rawTargetNodeFactory;
+  private final UnconfiguredTargetNodeFactory unconfiguredTargetNodeFactory;
 
-  public RawTargetNodePipeline(
+  public UnconfiguredTargetNodePipeline(
       ListeningExecutorService executorService,
-      Cache<UnconfiguredBuildTargetView, RawTargetNode> cache,
+      Cache<UnconfiguredBuildTargetView, UnconfiguredTargetNode> cache,
       BuckEventBus eventBus,
       BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
       BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline,
-      RawTargetNodeFactory rawTargetNodeFactory) {
+      UnconfiguredTargetNodeFactory unconfiguredTargetNodeFactory) {
     this.executorService = executorService;
     this.eventBus = eventBus;
     this.buildFileRawNodeParsePipeline = buildFileRawNodeParsePipeline;
     this.buildTargetRawNodeParsePipeline = buildTargetRawNodeParsePipeline;
-    this.rawTargetNodeFactory = rawTargetNodeFactory;
+    this.unconfiguredTargetNodeFactory = unconfiguredTargetNodeFactory;
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
     this.perfEventId = PerfEventId.of("GetRawTargetNode");
     this.perfEventScope =
         SimplePerfEvent.scope(eventBus, PerfEventId.of("raw_target_node_parse_pipeline"));
-    this.cache = new PipelineNodeCache<>(cache, RawTargetNodePipeline::targetNodeIsConfiguration);
+    this.cache =
+        new PipelineNodeCache<>(cache, UnconfiguredTargetNodePipeline::targetNodeIsConfiguration);
   }
 
-  private static boolean targetNodeIsConfiguration(RawTargetNode targetNode) {
+  private static boolean targetNodeIsConfiguration(UnconfiguredTargetNode targetNode) {
     return targetNode.getRuleType().getKind() == AbstractRuleType.Kind.CONFIGURATION;
   }
 
   /** Get or load all raw target nodes from a build file */
-  public ListenableFuture<ImmutableList<RawTargetNode>> getAllNodesJob(Cell cell, Path buildFile) {
-    SettableFuture<ImmutableList<RawTargetNode>> future = SettableFuture.create();
-    ListenableFuture<ImmutableList<RawTargetNode>> cachedFuture =
+  public ListenableFuture<ImmutableList<UnconfiguredTargetNode>> getAllNodesJob(
+      Cell cell, Path buildFile) {
+    SettableFuture<ImmutableList<UnconfiguredTargetNode>> future = SettableFuture.create();
+    ListenableFuture<ImmutableList<UnconfiguredTargetNode>> cachedFuture =
         allNodeCache.putIfAbsent(buildFile, future);
 
     if (cachedFuture != null) {
@@ -99,7 +103,7 @@ public class RawTargetNodePipeline implements AutoCloseable {
     }
 
     try {
-      ListenableFuture<List<RawTargetNode>> allNodesListJob =
+      ListenableFuture<List<UnconfiguredTargetNode>> allNodesListJob =
           Futures.transformAsync(
               buildFileRawNodeParsePipeline.getAllNodesJob(cell, buildFile),
               buildFileManifest -> {
@@ -109,7 +113,7 @@ public class RawTargetNodePipeline implements AutoCloseable {
                   return Futures.immediateCancelledFuture();
                 }
 
-                ImmutableList.Builder<ListenableFuture<RawTargetNode>> allNodeJobs =
+                ImmutableList.Builder<ListenableFuture<UnconfiguredTargetNode>> allNodeJobs =
                     ImmutableList.builderWithExpectedSize(allToConvert.size());
 
                 for (Map<String, Object> from : allToConvert) {
@@ -137,7 +141,7 @@ public class RawTargetNodePipeline implements AutoCloseable {
   }
 
   /** Get build target by name, load if necessary */
-  public ListenableFuture<RawTargetNode> getNodeJob(
+  public ListenableFuture<UnconfiguredTargetNode> getNodeJob(
       Cell cell, UnconfiguredBuildTargetView buildTarget, DependencyStack dependencyStack)
       throws BuildTargetException {
     return cache.getJobWithCacheLookup(
@@ -151,7 +155,7 @@ public class RawTargetNodePipeline implements AutoCloseable {
         eventBus);
   }
 
-  private ListenableFuture<RawTargetNode> dispatchComputeNode(
+  private ListenableFuture<UnconfiguredTargetNode> dispatchComputeNode(
       Cell cell,
       UnconfiguredBuildTargetView buildTarget,
       DependencyStack dependencyStack,
@@ -160,7 +164,7 @@ public class RawTargetNodePipeline implements AutoCloseable {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
     }
-    RawTargetNode result;
+    UnconfiguredTargetNode result;
 
     try (Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
@@ -172,7 +176,7 @@ public class RawTargetNodePipeline implements AutoCloseable {
             minimumPerfEventTimeMs,
             TimeUnit.MILLISECONDS)) {
       result =
-          rawTargetNodeFactory.create(
+          unconfiguredTargetNodeFactory.create(
               cell,
               cell.getBuckConfigView(ParserConfig.class)
                   .getAbsolutePathToBuildFile(cell, buildTarget),

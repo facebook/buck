@@ -18,7 +18,7 @@ package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,11 +27,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
-/** Immutable implementation of {@link RawTargetNode}. */
+/** Immutable implementation of {@link UnconfiguredTargetNode}. */
 @Value.Immutable(builder = false, copy = false, prehash = true)
 @BuckStyleImmutable
 @JsonDeserialize
-public abstract class AbstractImmutableRawTargetNode implements RawTargetNode {
+public abstract class AbstractImmutableUnconfiguredTargetNode implements UnconfiguredTargetNode {
   @Override
   @Value.Parameter
   @JsonProperty("buildTarget")
@@ -48,7 +48,7 @@ public abstract class AbstractImmutableRawTargetNode implements RawTargetNode {
   public abstract ImmutableMap<String, Object> getAttributes();
 
   // Visibility patterns might not really serialize/deserialize well
-  // TODO: should we move them out of RawTargetNode to TargetNode ?
+  // TODO: should we move them out of UnconfiguredTargetNode to TargetNode ?
 
   @Override
   @Value.Parameter

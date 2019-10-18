@@ -17,20 +17,20 @@ package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode
 import com.facebook.buck.rules.visibility.VisibilityPattern
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 
 /**
- * Simplified implementation of [RawTargetNode] that is sufficient for the multitenant service's
+ * Simplified implementation of [UnconfiguredTargetNode] that is sufficient for the multitenant service's
  * needs.
  */
-data class ServiceRawTargetNode(
+data class ServiceUnconfiguredTargetNode(
     private val buildTarget: UnconfiguredBuildTarget,
     private val ruleType: RuleType,
     private val attributes: ImmutableMap<String, Any>
-) : RawTargetNode {
+) : UnconfiguredTargetNode {
 
     override fun getBuildTarget(): UnconfiguredBuildTarget = buildTarget
 

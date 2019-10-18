@@ -136,7 +136,7 @@ private fun createBuildTarget(shortName: String): UnconfiguredBuildTarget {
 private fun createRule(shortName: String, deps: BuildTargetSet): InternalRawBuildRule {
     val buildTarget = createBuildTarget(shortName)
     val node =
-        ServiceRawTargetNode(buildTarget, FAKE_RULE_TYPE,
+        ServiceUnconfiguredTargetNode(buildTarget, FAKE_RULE_TYPE,
             ImmutableMap.of())
     return InternalRawBuildRule(node, deps)
 }

@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableSet;
  * <p>The main purpose of having such nodes is to perform additional processing before storing them
  * in a structured constructor arguments.
  */
-public interface RawTargetNode extends ComputeResult {
+public interface UnconfiguredTargetNode extends ComputeResult {
 
   /** Build target of this node. */
   UnconfiguredBuildTarget getBuildTarget();

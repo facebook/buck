@@ -31,9 +31,9 @@ import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransfo
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
+import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.platform.ThrowingConstraintResolver;
@@ -60,7 +60,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Test;
 
-public class RawTargetNodeToTargetNodeFactoryTest {
+public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
 
   @Test
   public void testTargetNodeCreatedWithAttributes() {
@@ -93,8 +93,8 @@ public class RawTargetNodeToTargetNodeFactoryTest {
             .put("srcs", ImmutableList.of("src1", "src2"))
             .put("source", selectorList)
             .build();
-    RawTargetNode node =
-        ImmutableRawTargetNode.of(
+    UnconfiguredTargetNode node =
+        ImmutableUnconfiguredTargetNode.of(
             buildTarget.getUnconfiguredBuildTargetView().getData(),
             RuleType.of("java_library", RuleType.Kind.BUILD),
             attributes,
@@ -104,8 +104,8 @@ public class RawTargetNodeToTargetNodeFactoryTest {
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
     TargetPlatformResolver targetPlatformResolver =
         (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
-    RawTargetNodeToTargetNodeFactory factory =
-        new RawTargetNodeToTargetNodeFactory(
+    UnconfiguredTargetNodeToTargetNodeFactory factory =
+        new UnconfiguredTargetNodeToTargetNodeFactory(
             typeCoercerFactory,
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
             new DefaultConstructorArgMarshaller(typeCoercerFactory),

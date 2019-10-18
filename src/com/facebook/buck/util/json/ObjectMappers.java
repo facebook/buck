@@ -18,7 +18,7 @@ package com.facebook.buck.util.json;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDeps;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -245,11 +245,13 @@ public class ObjectMappers {
   }
 
   private static ObjectMapper addCustomModules(ObjectMapper mapper, boolean intern) {
-    // with this mixin RawTargetNode properties are flattened with RawTargetNodeWithDeps properties
+    // with this mixin UnconfiguredTargetNode properties are flattened with
+    // UnconfiguredTargetNodeWithDeps
+    // properties
     // for prettier view. It only works for non-typed serialization.
     mapper.addMixIn(
-        RawTargetNodeWithDeps.class,
-        RawTargetNodeWithDeps.RawTargetNodeWithDepsUnwrappedMixin.class);
+        UnconfiguredTargetNodeWithDeps.class,
+        UnconfiguredTargetNodeWithDeps.UnconfiguredTargetNodeWithDepsUnwrappedMixin.class);
 
     // Serialize and deserialize UnconfiguredBuildTarget as string
     SimpleModule buildTargetModule = new SimpleModule("BuildTarget");

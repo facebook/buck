@@ -26,7 +26,7 @@ import com.facebook.buck.multitenant.service.FsToBuildPackageChangeTranslator
 import com.facebook.buck.multitenant.service.IndexFactory
 import com.facebook.buck.multitenant.service.RawBuildRule
 import com.facebook.buck.multitenant.service.RuleTypeFactory
-import com.facebook.buck.multitenant.service.ServiceRawTargetNode
+import com.facebook.buck.multitenant.service.ServiceUnconfiguredTargetNode
 import com.facebook.buck.multitenant.service.buckJsonToBuildPackageParser
 import com.facebook.buck.multitenant.service.populateIndexFromStream
 import com.google.common.collect.ImmutableMap
@@ -109,7 +109,7 @@ private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTrans
                     BUCK_RULE_WITH_DEPS.toByteArray())) {
                 addedBuildPackageChanges.add(BuildPackage(FsAgnosticPath.of("java/com/newpkg"),
                     setOf(RawBuildRule(
-                        ServiceRawTargetNode(BuildTargets.parseOrThrow("//java/com/newpkg:buck"),
+                        ServiceUnconfiguredTargetNode(BuildTargets.parseOrThrow("//java/com/newpkg:buck"),
                             RuleTypeFactory.createBuildRule("java_binary"), ImmutableMap.of()),
                         setOf(BuildTargets.parseOrThrow("//java/com/example:B"))))))
             }
@@ -122,7 +122,7 @@ private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTrans
                     BUCK_RULE_WITH_DEPS.toByteArray())) {
                 modifiedBuildPackageChanges.add(
                     BuildPackage(FsAgnosticPath.of("java/com/facebook/buck"), setOf(RawBuildRule(
-                        ServiceRawTargetNode(
+                        ServiceUnconfiguredTargetNode(
                             BuildTargets.parseOrThrow("//java/com/facebook/buck:buck"),
                             RuleTypeFactory.createBuildRule("java_binary"), ImmutableMap.of()),
                         setOf(BuildTargets.parseOrThrow("//java/com/example:B"))))))

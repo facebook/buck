@@ -22,8 +22,8 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectorList;
@@ -39,22 +39,22 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Creates {@link RawTargetNode} instances from raw data coming in form the {@link
+ * Creates {@link UnconfiguredTargetNode} instances from raw data coming in form the {@link
  * ProjectBuildFileParser}.
  */
-public class DefaultRawTargetNodeFactory implements RawTargetNodeFactory {
+public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetNodeFactory {
 
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final BuiltTargetVerifier builtTargetVerifier;
 
-  public DefaultRawTargetNodeFactory(
+  public DefaultUnconfiguredTargetNodeFactory(
       KnownRuleTypesProvider knownRuleTypesProvider, BuiltTargetVerifier builtTargetVerifier) {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.builtTargetVerifier = builtTargetVerifier;
   }
 
   @Override
-  public RawTargetNode create(
+  public UnconfiguredTargetNode create(
       Cell cell,
       Path buildFile,
       UnconfiguredBuildTargetView target,
@@ -86,7 +86,7 @@ public class DefaultRawTargetNodeFactory implements RawTargetNodeFactory {
             rawAttributes.get("within_view"),
             target.getData());
 
-    return ImmutableRawTargetNode.of(
+    return ImmutableUnconfiguredTargetNode.of(
         target.getData(),
         ruleType,
         ImmutableMap.copyOf(rawAttributes),

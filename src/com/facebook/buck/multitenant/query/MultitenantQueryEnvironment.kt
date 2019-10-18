@@ -18,7 +18,7 @@ package com.facebook.buck.multitenant.query
 import com.facebook.buck.core.exceptions.BuildTargetParseException
 import com.facebook.buck.core.model.QueryTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser
 import com.facebook.buck.multitenant.collect.Generation
@@ -231,12 +231,12 @@ private class TargetEvaluator(private val index: Index, private val generation: 
 /**
  * HACK! List of build rule attributes that, if present, is known to correspond to a list of
  * SourcePaths. As noted in extractInputs(), this should go away once we move to using
- * RawTargetNodeToTargetNodeFactory.
+ * UnconfiguredTargetNodeToTargetNodeFactory.
  */
 val SRC_LIST_ATTRIBUTES = listOf("resources", "srcs", "exported_headers")
 
-private fun extractInputs(targetNode: RawTargetNode): Set<QueryFileTarget> {
-    // Ideally, we would use RawTargetNodeToTargetNodeFactory and invoke its getInputs() method.
+private fun extractInputs(targetNode: UnconfiguredTargetNode): Set<QueryFileTarget> {
+    // Ideally, we would use UnconfiguredTargetNodeToTargetNodeFactory and invoke its getInputs() method.
     // Currently, that is a difficult thing to do because it would pull in far more dependencies
     // than we can manage cleanly. For now, we use some heuristics so we can at least provide some
     // value.
@@ -266,7 +266,7 @@ private fun toBasePath(target: UnconfiguredBuildTarget): FsAgnosticPath {
     return FsAgnosticPath.of(target.baseName.substring(2))
 }
 
-private fun extractTests(targetNode: RawTargetNode): Set<UnconfiguredBuildTarget> {
+private fun extractTests(targetNode: UnconfiguredTargetNode): Set<UnconfiguredBuildTarget> {
     val testsAttr = targetNode.attributes["tests"] as? List<*> ?: return setOf()
     val out = HashSet<UnconfiguredBuildTarget>(testsAttr.size)
     val basePath = toBasePath(targetNode.buildTarget)

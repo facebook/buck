@@ -20,30 +20,32 @@ import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationId
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
-/** Transformation key containing build target to get {@link RawTargetNode} for. */
+/** Transformation key containing build target to get {@link UnconfiguredTargetNode} for. */
 @Value.Immutable(builder = false, copy = false, prehash = true)
-public abstract class BuildTargetToRawTargetNodeKey implements ComputeKey<RawTargetNode> {
+public abstract class BuildTargetToUnconfiguredTargetNodeKey
+    implements ComputeKey<UnconfiguredTargetNode> {
 
-  public static final ComputationIdentifier<RawTargetNode> IDENTIFIER =
-      ClassBasedComputationIdentifier.of(BuildTargetToRawTargetNodeKey.class, RawTargetNode.class);
+  public static final ComputationIdentifier<UnconfiguredTargetNode> IDENTIFIER =
+      ClassBasedComputationIdentifier.of(
+          BuildTargetToUnconfiguredTargetNodeKey.class, UnconfiguredTargetNode.class);
 
-  /** Build target that uniquely identifies {@link RawTargetNode} */
+  /** Build target that uniquely identifies {@link UnconfiguredTargetNode} */
   @Value.Parameter
   public abstract UnconfiguredBuildTarget getBuildTarget();
 
   /**
-   * {@link Path} to the root of a package that has this {@link RawTargetNode}, relative to parse
-   * root, usually cell root
+   * {@link Path} to the root of a package that has this {@link UnconfiguredTargetNode}, relative to
+   * parse root, usually cell root
    */
   @Value.Parameter
   public abstract Path getPackagePath();
 
   @Override
-  public ComputationIdentifier<RawTargetNode> getIdentifier() {
+  public ComputationIdentifier<UnconfiguredTargetNode> getIdentifier() {
     return IDENTIFIER;
   }
 }

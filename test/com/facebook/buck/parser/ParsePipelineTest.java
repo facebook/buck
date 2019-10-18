@@ -369,7 +369,7 @@ public class ParsePipelineTest {
     private final ProjectWorkspace workspace;
     private final BuckEventBus eventBus;
     private final TestConsole console;
-    private final RawTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline;
+    private final UnconfiguredTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline;
     private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
     private final ProjectBuildFileParserPool projectBuildFileParserPool;
     private final Cell cell;
@@ -448,16 +448,17 @@ public class ParsePipelineTest {
 
       KnownRuleTypesProvider knownRuleTypesProvider =
           TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
-      RawTargetNodePipeline rawTargetNodePipeline =
-          new RawTargetNodePipeline(
+      UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline =
+          new UnconfiguredTargetNodePipeline(
               executorService,
               new TypedParsePipelineCache<>(),
               eventBus,
               buildFileRawNodeParsePipeline,
               buildTargetRawNodeParsePipeline,
-              new DefaultRawTargetNodeFactory(knownRuleTypesProvider, new BuiltTargetVerifier()));
-      ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory =
-          new RawTargetNodeToTargetNodeFactory(
+              new DefaultUnconfiguredTargetNodeFactory(
+                  knownRuleTypesProvider, new BuiltTargetVerifier()));
+      ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory =
+          new UnconfiguredTargetNodeToTargetNodeFactory(
               coercerFactory,
               knownRuleTypesProvider,
               constructorArgMarshaller,
@@ -469,10 +470,10 @@ public class ParsePipelineTest {
               new ThrowingPlatformResolver(),
               new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()));
       this.targetNodeParsePipeline =
-          new RawTargetNodeToTargetNodeParsePipeline(
+          new UnconfiguredTargetNodeToTargetNodeParsePipeline(
               this.targetNodeParsePipelineCache,
               this.executorService,
-              rawTargetNodePipeline,
+              unconfiguredTargetNodePipeline,
               this.eventBus,
               "raw_target_node_parse_pipeline",
               speculativeParsing == SpeculativeParsing.ENABLED,
@@ -480,7 +481,7 @@ public class ParsePipelineTest {
               new ParsingUnconfiguredBuildTargetViewFactory());
     }
 
-    public RawTargetNodeToTargetNodeParsePipeline getTargetNodeParsePipeline() {
+    public UnconfiguredTargetNodeToTargetNodeParsePipeline getTargetNodeParsePipeline() {
       return targetNodeParsePipeline;
     }
 

@@ -19,36 +19,32 @@ package com.facebook.buck.parser.targetnode;
 import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDeps;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /**
- * Transformation key containing {@link RawTargetNode} to translate it to {@link
- * RawTargetNodeWithDeps}.
+ * Transformation key containing a path to a build package to get parsed {@link
+ * UnconfiguredTargetNodeWithDepsPackage} from it
  */
 @Value.Immutable(builder = false, copy = false, prehash = true)
-public abstract class RawTargetNodeToRawTargetNodeWithDepsKey
-    implements ComputeKey<RawTargetNodeWithDeps> {
+public abstract class BuildPackagePathToUnconfiguredTargetNodePackageKey
+    implements ComputeKey<UnconfiguredTargetNodeWithDepsPackage> {
 
-  public static final ComputationIdentifier<RawTargetNodeWithDeps> IDENTIFIER =
+  public static final ComputationIdentifier<UnconfiguredTargetNodeWithDepsPackage> IDENTIFIER =
       ClassBasedComputationIdentifier.of(
-          RawTargetNodeToRawTargetNodeWithDepsKey.class, RawTargetNodeWithDeps.class);
-
-  /** {@link RawTargetNode} which should be translated to {@link RawTargetNodeWithDeps} */
-  @Value.Parameter
-  public abstract RawTargetNode getRawTargetNode();
+          BuildPackagePathToUnconfiguredTargetNodePackageKey.class,
+          UnconfiguredTargetNodeWithDepsPackage.class);
 
   /**
-   * {@link Path} to the root of a package that has this {@link RawTargetNode}, relative to parse
-   * root, usually cell root
+   * A path to a package root directory, i.e. a directory containing build file, relative to some
+   * root (usually cell folder root)
    */
   @Value.Parameter
-  public abstract Path getPackagePath();
+  public abstract Path getPath();
 
   @Override
-  public ComputationIdentifier<RawTargetNodeWithDeps> getIdentifier() {
+  public ComputationIdentifier<UnconfiguredTargetNodeWithDepsPackage> getIdentifier() {
     return IDENTIFIER;
   }
 }

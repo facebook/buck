@@ -24,37 +24,39 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
-/** A pair of {@link RawTargetNode} and its dependencies */
+/** A pair of {@link UnconfiguredTargetNode} and its dependencies */
 @Value.Immutable(builder = false, copy = false)
 @JsonDeserialize
-public abstract class RawTargetNodeWithDeps implements ComputeResult {
+public abstract class UnconfiguredTargetNodeWithDeps implements ComputeResult {
 
   /** Raw target node, i.e. a target node with partially resolved attributes */
   @Value.Parameter
   @JsonProperty("node")
-  public abstract RawTargetNode getRawTargetNode();
+  public abstract UnconfiguredTargetNode getUnconfiguredTargetNode();
 
   /**
-   * List of build targets that this node depends on. Because {@link RawTargetNode} may have
-   * unresolved configuration, this list is excessive, i.e. may contain all possible dependents for
-   * all possible configurations.
+   * List of build targets that this node depends on. Because {@link UnconfiguredTargetNode} may
+   * have unresolved configuration, this list is excessive, i.e. may contain all possible dependents
+   * for all possible configurations.
    */
   @Value.Parameter
   @JsonProperty("deps")
   public abstract ImmutableSet<UnconfiguredBuildTarget> getDeps();
 
-  public static RawTargetNodeWithDeps of(
-      RawTargetNode rawTargetNode, Iterable<? extends UnconfiguredBuildTarget> deps) {
-    return ImmutableRawTargetNodeWithDeps.of(rawTargetNode, deps);
+  public static UnconfiguredTargetNodeWithDeps of(
+      UnconfiguredTargetNode unconfiguredTargetNode,
+      Iterable<? extends UnconfiguredBuildTarget> deps) {
+    return ImmutableUnconfiguredTargetNodeWithDeps.of(unconfiguredTargetNode, deps);
   }
 
   /**
-   * This mixin is used by JSON serializer to flatten {@link RawTargetNode} properties We cannot use
-   * {@link JsonUnwrapped} directly on {@link RawTargetNodeWithDeps#getRawTargetNode()} because it
-   * is not supported by typed deserializer
+   * This mixin is used by JSON serializer to flatten {@link UnconfiguredTargetNode} properties We
+   * cannot use {@link JsonUnwrapped} directly on {@link
+   * UnconfiguredTargetNodeWithDeps#getUnconfiguredTargetNode()} because it is not supported by
+   * typed deserializer
    */
-  public interface RawTargetNodeWithDepsUnwrappedMixin {
+  public interface UnconfiguredTargetNodeWithDepsUnwrappedMixin {
     @JsonUnwrapped
-    RawTargetNode getRawTargetNode();
+    UnconfiguredTargetNode getUnconfiguredTargetNode();
   }
 }

@@ -19,23 +19,24 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import java.nio.file.Path;
 import java.util.Map;
 
-/** Generic factory to create {@link RawTargetNode} */
-public interface RawTargetNodeFactory {
+/** Generic factory to create {@link UnconfiguredTargetNode} */
+public interface UnconfiguredTargetNodeFactory {
 
   /**
-   * Create new {@link RawTargetNode}
+   * Create new {@link UnconfiguredTargetNode}
    *
    * @param cell {@Cell} object that current build target belongs to
    * @param buildFile An absolute path to a build file that has the corresponding build target
-   * @param buildTarget A build target that uniquely identifies created {@link RawTargetNode}
+   * @param buildTarget A build target that uniquely identifies created {@link
+   *     UnconfiguredTargetNode}
    * @param dependencyStack
    * @param rawNode Raw attributes that forms the node, a Map where a key is attribute name as
    */
-  RawTargetNode create(
+  UnconfiguredTargetNode create(
       Cell cell,
       Path buildFile,
       UnconfiguredBuildTargetView buildTarget,
