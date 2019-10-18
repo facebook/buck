@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
@@ -67,6 +68,7 @@ import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.Types;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -87,6 +89,8 @@ import java.util.regex.Pattern;
  * types.
  */
 public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
+
+  private final CoercedTypeCache coercedTypeCache = new CoercedTypeCache(this);
 
   private final TypeCoercer<UnconfiguredBuildTargetView> unconfiguredBuildTargetTypeCoercer;
   private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();
@@ -328,8 +332,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           && Types.getSupertypes(rawClass).stream()
               .anyMatch(c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
         selectedTypeCoercer =
-            new ImmutableTypeCoercer<>(
-                rawClass, CoercedTypeCache.INSTANCE.getAllParamInfo(this, rawClass).values());
+            new ImmutableTypeCoercer<>(rawClass, getAllParamInfo(rawClass).values());
       }
       if (selectedTypeCoercer != null) {
         return selectedTypeCoercer;
@@ -416,6 +419,17 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     }
   }
 
+  @Override
+  public ImmutableMap<String, ParamInfo> getAllParamInfo(Class<?> coercableType) {
+    return coercedTypeCache.getAllParamInfo(coercableType);
+  }
+
+  @Override
+  public <T extends ConstructorArg> ConstructorArgBuilder<T> instantiateSkeleton(
+      Class<T> dtoType, BuildTarget buildTarget) {
+    return coercedTypeCache.instantiateSkeleton(dtoType, buildTarget);
+  }
+
   private <T extends Comparable<T>> TypeCoercer<T> typeCoercerForComparableType(Type type) {
     Preconditions.checkState(
         type instanceof Class && Comparable.class.isAssignableFrom((Class<?>) type),
@@ -431,5 +445,10 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     Preconditions.checkState(
         actualTypeArguments.length == 1, "expected type '%s' to have one parameter", typeName);
     return actualTypeArguments[0];
+  }
+
+  @VisibleForTesting
+  CoercedTypeCache getCoercedTypeCache() {
+    return coercedTypeCache;
   }
 }

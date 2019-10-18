@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -245,10 +244,7 @@ public abstract class TargetNodeTranslator {
       Object newConstructorArgOrBuilder) {
     boolean modified = false;
 
-    for (ParamInfo param :
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(typeCoercerFactory, constructorArg.getClass())
-            .values()) {
+    for (ParamInfo param : typeCoercerFactory.getAllParamInfo(constructorArg.getClass()).values()) {
       Object value = param.get(constructorArg);
       Optional<Object> newValue = translate(cellPathResolver, targetBaseName, value);
       modified |= newValue.isPresent();
@@ -261,10 +257,8 @@ public abstract class TargetNodeTranslator {
       CellPathResolver cellPathResolver, String targetBaseName, TargetNode<A> node) {
     A constructorArg = node.getConstructorArg();
     ConstructorArgBuilder<A> newArgAndBuild =
-        CoercedTypeCache.instantiateSkeleton(
-            typeCoercerFactory,
-            node.getDescription().getConstructorArgType(),
-            node.getBuildTarget());
+        typeCoercerFactory.instantiateSkeleton(
+            node.getDescription().getConstructorArgType(), node.getBuildTarget());
     boolean modified =
         translateConstructorArg(
             cellPathResolver, targetBaseName, constructorArg, newArgAndBuild.getBuilder());

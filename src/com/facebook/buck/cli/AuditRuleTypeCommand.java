@@ -20,7 +20,6 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Console;
@@ -61,8 +60,7 @@ public class AuditRuleTypeCommand extends AbstractCommand {
       Console console, BaseDescription<?> description, TypeCoercerFactory typeCoercerFactory) {
     PrintStream printStream = console.getStdOut();
     ImmutableMap<String, ParamInfo> allParamInfo =
-        CoercedTypeCache.INSTANCE.getAllParamInfo(
-            typeCoercerFactory, description.getConstructorArgType());
+        typeCoercerFactory.getAllParamInfo(description.getConstructorArgType());
     String name = DescriptionCache.getRuleType(description).getName();
     printStream.println("def " + name + " (");
     allParamInfo.values().stream()

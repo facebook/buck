@@ -16,6 +16,9 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.model.BuildTarget;
+import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.Type;
 
 public interface TypeCoercerFactory {
@@ -33,4 +36,14 @@ public interface TypeCoercerFactory {
    */
   TypeCoercer<?> typeCoercerForParameterizedType(
       String typeName, Type rawType, Type[] actualTypeArguments);
+
+  /** @return All {@link ParamInfo}s for coercableType. */
+  ImmutableMap<String, ParamInfo> getAllParamInfo(Class<?> coercableType);
+
+  /**
+   * Returns an unpopulated DTO object, and the build method which must be called with it when it is
+   * finished being populated.
+   */
+  <T extends ConstructorArg> ConstructorArgBuilder<T> instantiateSkeleton(
+      Class<T> dtoType, BuildTarget buildTarget);
 }

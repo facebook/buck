@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Preconditions;
@@ -97,7 +96,7 @@ public abstract class AbstractKnownNativeRuleTypes implements KnownRuleTypes {
       RuleType ruleType,
       Class<T> dtoClass,
       BuildTarget buildTarget) {
-    return CoercedTypeCache.instantiateSkeleton(typeCoercerFactory, dtoClass, buildTarget);
+    return typeCoercerFactory.instantiateSkeleton(dtoClass, buildTarget);
   }
 
   // Verify that there are no duplicate rule types being defined.

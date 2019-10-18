@@ -26,7 +26,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryFileTarget;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableSet;
@@ -42,10 +41,7 @@ public class QueryTargetAccessor {
   public static <T extends ConstructorArg> ImmutableSet<QueryTarget> getTargetsInAttribute(
       TypeCoercerFactory typeCoercerFactory, TargetNode<T> node, String attribute) {
     Class<?> constructorArgClass = node.getConstructorArg().getClass();
-    ParamInfo info =
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(typeCoercerFactory, constructorArgClass)
-            .get(attribute);
+    ParamInfo info = typeCoercerFactory.getAllParamInfo(constructorArgClass).get(attribute);
     if (info == null) {
       // Ignore if the field does not exist in this rule.
       return ImmutableSet.of();
@@ -83,10 +79,7 @@ public class QueryTargetAccessor {
       String attribute,
       Predicate<Object> predicate) {
     Class<?> constructorArgClass = node.getConstructorArg().getClass();
-    ParamInfo info =
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(typeCoercerFactory, constructorArgClass)
-            .get(attribute);
+    ParamInfo info = typeCoercerFactory.getAllParamInfo(constructorArgClass).get(attribute);
     if (info == null) {
       // Ignore if the field does not exist in this rule.
       return ImmutableSet.of();

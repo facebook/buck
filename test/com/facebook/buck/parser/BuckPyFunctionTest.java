@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.parser.function.BuckPyFunction;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -42,7 +41,7 @@ public class BuckPyFunctionTest {
 
   @Before
   public void setUpMarshaller() {
-    buckPyFunction = new BuckPyFunction(new DefaultTypeCoercerFactory(), CoercedTypeCache.INSTANCE);
+    buckPyFunction = new BuckPyFunction(new DefaultTypeCoercerFactory());
   }
 
   @BuckStyleImmutable

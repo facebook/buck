@@ -35,7 +35,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.PathTypeCoercer.PathExistenceVerificationMode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -153,9 +152,7 @@ public class TargetNodeFactory implements NodeCopier {
     if (constructorArg instanceof SkylarkDescriptionArg) {
       paramInfos = ((SkylarkDescriptionArg) constructorArg).getRule().getAllParamInfo();
     } else {
-      paramInfos =
-          CoercedTypeCache.INSTANCE.getAllParamInfo(
-              typeCoercerFactory, description.getConstructorArgType());
+      paramInfos = typeCoercerFactory.getAllParamInfo(description.getConstructorArgType());
     }
 
     // Scan the input to find possible BuildTargetPaths, necessary for loading dependent rules.

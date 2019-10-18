@@ -20,7 +20,6 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableMap;
@@ -50,8 +49,8 @@ class TargetGraphVersionTransformations {
   public static ImmutableMap<BuildTarget, Optional<Constraint>> getVersionedDeps(
       TypeCoercerFactory typeCoercerFactory, TargetNode<?> node) {
     ParamInfo versionedDepsParam =
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(typeCoercerFactory, node.getConstructorArg().getClass())
+        typeCoercerFactory
+            .getAllParamInfo(node.getConstructorArg().getClass())
             .get("versioned_deps");
     if (versionedDepsParam == null) {
       return ImmutableMap.of();

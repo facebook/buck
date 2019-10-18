@@ -45,9 +45,7 @@ public class BuilderParamInfoTest {
   @Test
   public void failedCoercionIncludesClassAndFieldNames() {
     try {
-      CoercedTypeCache.INSTANCE
-          .getAllParamInfo(new DefaultTypeCoercerFactory(), DtoWithBadField.class)
-          .values();
+      new DefaultTypeCoercerFactory().getAllParamInfo(DtoWithBadField.class).values();
       fail("Expected exception.");
     } catch (Exception e) {
       String message = ErrorLogger.getUserFriendlyMessage(e);
@@ -62,9 +60,7 @@ public class BuilderParamInfoTest {
   @Test
   public void optionalsForAbstractClass() {
     for (ParamInfo param :
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(new DefaultTypeCoercerFactory(), DtoWithOptionals.class)
-            .values()) {
+        new DefaultTypeCoercerFactory().getAllParamInfo(DtoWithOptionals.class).values()) {
       assertTrue("Expected param " + param.getName() + " to be optional", param.isOptional());
     }
   }
@@ -72,8 +68,8 @@ public class BuilderParamInfoTest {
   @Test
   public void optionalsForInterface() {
     for (ParamInfo param :
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(new DefaultTypeCoercerFactory(), DtoWithOptionalsFromInterface.class)
+        new DefaultTypeCoercerFactory()
+            .getAllParamInfo(DtoWithOptionalsFromInterface.class)
             .values()) {
       assertTrue("Expected param " + param.getName() + " to be optional", param.isOptional());
     }
@@ -112,9 +108,7 @@ public class BuilderParamInfoTest {
 
   private ParamInfo getParamInfo() {
     return Iterables.getOnlyElement(
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(new DefaultTypeCoercerFactory(), DtoWithOneParameter.class)
-            .values());
+        new DefaultTypeCoercerFactory().getAllParamInfo(DtoWithOneParameter.class).values());
   }
 
   class BadFieldType {}

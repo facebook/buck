@@ -29,6 +29,9 @@ import org.immutables.value.Value;
 import org.junit.Test;
 
 public class CoercedTypeCacheTest {
+  private final CoercedTypeCache coercedTypeCache =
+      new DefaultTypeCoercerFactory().getCoercedTypeCache();
+
   @Test
   public void requiredIsNotOptional() {
     assertFalse(getParamInfo("required").isOptional());
@@ -72,9 +75,7 @@ public class CoercedTypeCacheTest {
             "nonInput",
             "required"),
         ImmutableSortedSet.copyOf(
-            CoercedTypeCache.extractForImmutableBuilder(
-                    Dto.Builder.class, new DefaultTypeCoercerFactory())
-                .keySet()));
+            coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).keySet()));
   }
 
   @Test
@@ -94,9 +95,7 @@ public class CoercedTypeCacheTest {
             "non_dep",
             "non_input",
             "required"),
-        CoercedTypeCache.extractForImmutableBuilder(
-                Dto.Builder.class, new DefaultTypeCoercerFactory())
-            .values().stream()
+        coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).values().stream()
             .map(ParamInfo::getPythonName)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
@@ -189,9 +188,7 @@ public class CoercedTypeCacheTest {
     public abstract String getConsistentOverriddenInterfaceNonInput();
   }
 
-  private static ParamInfo getParamInfo(String name) {
-    return CoercedTypeCache.extractForImmutableBuilder(
-            Dto.Builder.class, new DefaultTypeCoercerFactory())
-        .get(name);
+  private ParamInfo getParamInfo(String name) {
+    return coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).get(name);
   }
 }
