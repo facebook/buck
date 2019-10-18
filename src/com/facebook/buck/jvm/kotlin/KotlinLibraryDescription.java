@@ -198,7 +198,8 @@ public class KotlinLibraryDescription
 
     Optional<AnnotationProcessingTool> getAnnotationProcessingTool();
 
-    ImmutableList<SourcePath> getFriendPaths();
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getFriendPaths();
 
     ImmutableMap<String, String> getKaptApOptions();
 

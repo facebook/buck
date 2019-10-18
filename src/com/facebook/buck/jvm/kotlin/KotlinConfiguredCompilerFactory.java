@@ -16,9 +16,13 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -29,6 +33,8 @@ import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.CoreArg;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -72,7 +78,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         pathToAbiGenerationPluginJar,
         kotlinArgs.getExtraKotlincArguments(),
         kotlinArgs.getKotlincPlugins(),
-        kotlinArgs.getFriendPaths(),
+        getFriendSourcePaths(buildRuleResolver, kotlinArgs.getFriendPaths(), kotlinBuckConfig),
         kotlinArgs.getAnnotationProcessingTool().orElse(AnnotationProcessingTool.KAPT),
         kotlinArgs.getKaptApOptions(),
         extraClasspathProviderSupplier.apply(toolchainProvider),
@@ -114,5 +120,36 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   @Override
   public boolean sourceAbiCopiesFromLibraryTargetOutput() {
     return true;
+  }
+
+  private static ImmutableList<SourcePath> getFriendSourcePaths(
+      BuildRuleResolver buildRuleResolver,
+      ImmutableSortedSet<BuildTarget> friendPaths,
+      KotlinBuckConfig kotlinBuckConfig) {
+    ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
+    boolean shouldCompileAgainstAbis = kotlinBuckConfig.shouldCompileAgainstAbis();
+
+    for (BuildRule rule : buildRuleResolver.getAllRules(friendPaths)) {
+      if (shouldCompileAgainstAbis && rule instanceof HasJavaAbi) {
+        Optional<BuildTarget> abiJarTarget = ((HasJavaAbi) rule).getAbiJar();
+        if (abiJarTarget.isPresent()) {
+          Optional<BuildRule> abiJarRule = buildRuleResolver.getRuleOptional(abiJarTarget.get());
+          if (abiJarRule.isPresent()) {
+            SourcePath abiJarPath = abiJarRule.get().getSourcePathToOutput();
+            if (abiJarPath != null) {
+              sourcePaths.add(abiJarPath);
+              continue;
+            }
+          }
+        }
+      }
+
+      SourcePath fullJarPath = rule.getSourcePathToOutput();
+      if (fullJarPath != null) {
+        sourcePaths.add(fullJarPath);
+      }
+    }
+
+    return sourcePaths.build();
   }
 }

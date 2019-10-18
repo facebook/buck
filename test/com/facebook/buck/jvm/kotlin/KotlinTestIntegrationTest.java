@@ -72,4 +72,12 @@ public class KotlinTestIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("test", "//com/example/friend_paths:passing");
     result.assertSuccess("Build should've succeeded.");
   }
+
+  @Test
+  public void weCanAccessAnotherModuleInternalModuleByAddingItToFriendPathsWithClassAbis() {
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test", "//com/example/friend_paths:passing", "-c", "kotlin.compile_against_abis=true");
+    result.assertSuccess("Build should've succeeded.");
+  }
 }
