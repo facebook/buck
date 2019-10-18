@@ -385,7 +385,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
             "machine_readable_log",
             args.getTraceUploadURI().get(),
             args.getLogDirectoryPath().resolve("upload-machine-readable-log.log"),
-            CompressionType.NONE);
+            CompressionType.GZIP);
       }
 
       // Allow SHUTDOWN_TIMEOUT_SECONDS seconds for already scheduled writeToLog calls
