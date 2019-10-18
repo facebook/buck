@@ -57,7 +57,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
-import java.util.Optional;
 import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Test;
@@ -89,8 +88,7 @@ public class TargetCompatibilityCheckerTest {
         new RuleBasedConstraintResolver(
             (buildTarget, dependencyStack) -> {
               if (buildTarget.equals(cs1.getBuildTarget())) {
-                return new ConstraintSettingRule(
-                    buildTarget, buildTarget.getShortName(), Optional.empty());
+                return new ConstraintSettingRule(buildTarget, buildTarget.getShortName());
               } else {
                 return new ConstraintValueRule(
                     buildTarget, buildTarget.getShortName(), cs1.getBuildTarget());

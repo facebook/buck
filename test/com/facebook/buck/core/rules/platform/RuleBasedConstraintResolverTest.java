@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
-import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -88,8 +87,7 @@ public class RuleBasedConstraintResolverTest {
         new RuleBasedConstraintResolver(
             (buildTarget, dependencyStack) -> {
               if (buildTarget.equals(constraintSettingTarget)) {
-                return new ConstraintSettingRule(
-                    buildTarget, buildTarget.getShortName(), Optional.empty());
+                return new ConstraintSettingRule(buildTarget, buildTarget.getShortName());
               } else {
                 return new ConstraintValueRule(
                     buildTarget, buildTarget.getShortName(), constraintSettingTarget);

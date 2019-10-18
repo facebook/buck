@@ -94,7 +94,7 @@ public class DefaultTargetPlatformResolverTest {
             return new ConstraintValueRule(constraintValue, "value", constraintSetting);
           }
           if (buildTarget.equals(constraintSetting)) {
-            return new ConstraintSettingRule(constraintValue, "value", Optional.empty());
+            return new ConstraintSettingRule(constraintValue, "value");
           }
           throw new IllegalArgumentException("Invalid build target: " + buildTarget);
         };

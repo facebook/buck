@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -42,8 +41,7 @@ public class RuleBasedMultiPlatformResolverTest {
   public void requestingPlatformForWrongTypeThrowsException() {
     BuildTarget constraint = BuildTargetFactory.newInstance("//constraint:setting");
     ConfigurationRuleResolver configurationRuleResolver =
-        (target, dependencyStack) ->
-            new ConstraintSettingRule(constraint, "setting", Optional.empty());
+        (target, dependencyStack) -> new ConstraintSettingRule(constraint, "setting");
     RuleBasedPlatformResolver resolver =
         new RuleBasedPlatformResolver(configurationRuleResolver, new ThrowingConstraintResolver());
     RuleBasedMultiPlatformResolver multiPlatformResolver =
@@ -105,7 +103,7 @@ public class RuleBasedMultiPlatformResolverTest {
                 ImmutableSortedSet.of());
           }
           if (buildTarget.equals(constraintSetting)) {
-            return new ConstraintSettingRule(constraintSetting, "value", Optional.empty());
+            return new ConstraintSettingRule(constraintSetting, "value");
           }
           if (buildTarget.equals(baseConstraintValue)
               || buildTarget.equals(nestedConstraintValue1)
