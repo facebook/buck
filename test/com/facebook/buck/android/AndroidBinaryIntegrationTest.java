@@ -47,7 +47,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DexInspector;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -98,7 +97,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   @Before
   public void setUp() throws IOException {
     workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        AndroidProjectWorkspace.create(
             new AndroidBinaryIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();

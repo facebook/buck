@@ -1,0 +1,16 @@
+prebuilt_jar(
+    name = "proguard-lib",
+    binary_jar = "proguard-5.3.3.jar",
+    licenses = [
+        "LICENSE",
+    ],
+)
+
+java_binary(
+    name = "proguard",
+    main_class = "proguard.ProGuard",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [":proguard-lib"],
+)
