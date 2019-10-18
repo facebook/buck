@@ -479,6 +479,24 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testExplicitDxApp() throws IOException {
+    // Make sure --config java.use_d8=true doesn't override `dex_tool = dx`
+    workspace
+        .runBuckBuild("//apps/sample:app_with_dx", "--config", "java.use_d8=true")
+        .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dex");
+  }
+
+  @Test
+  public void testConfigControlsDefaultDexer() throws IOException {
+    // Make sure --config java.use_d8=true does override when `dex_tool` is not specified
+    workspace.runBuckBuild("//apps/sample:app", "--config", "java.use_d8=true").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#d8");
+  }
+
+  @Test
   public void testD8AppWithMultidexContainsCanaryClasses() throws IOException {
     workspace.runBuckBuild("//apps/multidex:app_with_d8").assertSuccess();
     final Path path =

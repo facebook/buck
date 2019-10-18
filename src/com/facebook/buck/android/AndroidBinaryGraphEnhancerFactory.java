@@ -196,13 +196,23 @@ public class AndroidBinaryGraphEnhancerFactory {
         cxxBuckConfig,
         apkModuleGraph,
         dxConfig,
-        args.getDexTool(),
+        chooseDexTool(args.getDexTool(), javaBuckConfig),
         getPostFilterResourcesArgs(args, buildTarget, graphBuilder, cellPathResolver),
         nonPreDexedDexBuildableArgs,
         rulesToExcludeFromDex,
         useProtoFormat,
         AndroidNativeTargetConfigurationMatcherFactory.create(
             configurationRuleRegistry, buildTarget, dependencyStack, args.getCpuFilters()));
+  }
+
+  public static String chooseDexTool(String dexTool, JavaBuckConfig javaBuckConfig) {
+    if (dexTool != DxStep.DEFAULT) {
+      return dexTool;
+    } else if (javaBuckConfig.useD8()) {
+      return DxStep.D8;
+    } else {
+      return DxStep.DX;
+    }
   }
 
   private ImmutableSet<String> addFallbackLocales(ImmutableSet<String> locales) {

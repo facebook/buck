@@ -227,6 +227,11 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getInteger(SECTION, "dx_threads");
   }
 
+  /** Dex with D8 (instead of DX), if `android_binary` does not specify `dex_tool`. */
+  public boolean useD8() {
+    return delegate.getBooleanValue(SECTION, "use_d8", false);
+  }
+
   /**
    * Controls a special verification mode that generates ABIs both from source and from class files
    * and diffs them. This is a test hook for use during development of the source ABI feature. This

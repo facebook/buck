@@ -86,6 +86,9 @@ public class DxStep extends ShellStep {
 
   public static final String D8 = "d8";
 
+  /** --config java.use_d8 will decide which dexer default resolves to */
+  public static final String DEFAULT = "default";
+
   /**
    * this is nothing more than a heuristic based on looking around for ARG_MAX values. a proper way
    * might be to determine this value from the OS somehow (like sysconf(_SC_ARG_MAX)), but I haven't

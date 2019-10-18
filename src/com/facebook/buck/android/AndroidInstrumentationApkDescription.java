@@ -244,7 +244,7 @@ public class AndroidInstrumentationApkDescription
             cxxBuckConfig,
             new APKModuleGraph(context.getTargetGraph(), buildTarget),
             dxConfig,
-            args.getDexTool(),
+            AndroidBinaryGraphEnhancerFactory.chooseDexTool(args.getDexTool(), javaBuckConfig),
             /* postFilterResourcesCommands */ Optional.empty(),
             nonPreDexedDexBuildableArgs,
             createRulesToExcludeFromDexSupplier(
