@@ -55,6 +55,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.URISyntaxException;
@@ -200,6 +201,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
       SourcePathResolver resolver = buildContext.getSourcePathResolver();
       String friendPathsArg = getFriendsPath(resolver, friendPaths);
+      String moduleName = getModuleName(invokingRule);
 
       if (generatingCode && annotationProcessingTool.equals(AnnotationProcessingTool.KAPT)) {
         addKaptGenFolderStep(
@@ -212,6 +214,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             allClasspaths,
             extraKotlincArguments,
             friendPathsArg,
+            moduleName,
             kaptApOptions,
             kaptGeneratedOutput,
             stubsOutput,
@@ -248,6 +251,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               .addAll(extraKotlincArguments)
               .add(friendPathsArg)
               .addAll(getKotlincPluginsArgs(resolver))
+              .add(MODULE_NAME)
+              .add(moduleName)
               .add(NO_STDLIB)
               .add(NO_REFLECT)
               .add(VERBOSE);
@@ -351,6 +356,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       Iterable<? extends Path> declaredClasspathEntries,
       ImmutableList<String> extraKotlincArguments,
       String friendPathsArg,
+      String moduleName,
       ImmutableMap<String, String> kaptApOptions,
       Path kaptGenerated,
       Path stubsOutput,
@@ -411,7 +417,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .addAll(extraKotlincArguments)
                 .add(friendPathsArg)
                 .add(MODULE_NAME)
-                .add(invokingRule.getShortNameAndFlavorPostfix())
+                .add(moduleName)
                 .add(PLUGIN)
                 .add(KAPT3_PLUGIN + APT_MODE + "stubs," + join)
                 .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath(resolver))
@@ -438,7 +444,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .addAll(extraKotlincArguments)
                 .add(friendPathsArg)
                 .add(MODULE_NAME)
-                .add(invokingRule.getShortNameAndFlavorPostfix())
+                .add(moduleName)
                 .add(PLUGIN)
                 .add(KAPT3_PLUGIN + APT_MODE + "apt," + join)
                 .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath(resolver))
@@ -511,6 +517,14 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         // the kotlin_library() rule being defined.
         .map(path -> "-Xplugin=" + sourcePathResolver.getAbsolutePath(path).toString())
         .collect(ImmutableList.toImmutableList());
+  }
+
+  private static String getModuleName(BuildTarget invokingRule) {
+    return new StringBuilder()
+        .append(invokingRule.getBasePath().toString().replace(File.separatorChar, '.'))
+        .append(".")
+        .append(invokingRule.getShortName())
+        .toString();
   }
 
   @Override
