@@ -63,7 +63,7 @@ data class PotentiallyAffectedBuildPackages(
 fun getPotentiallyAffectedBuildPackages(
     fsChanges: FsChanges,
     buildFileName: FsAgnosticPath,
-    includesProvider: (includePath: Include) -> Set<FsAgnosticPath>,
+    includesProvider: (includePath: Include) -> Iterable<FsAgnosticPath>,
     cellPathNormalizer: (path: FsAgnosticPath) -> FsAgnosticPath?,
     packageExists: (path: FsAgnosticPath) -> Boolean
 ): PotentiallyAffectedBuildPackages {

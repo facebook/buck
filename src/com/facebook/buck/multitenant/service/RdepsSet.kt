@@ -15,275 +15,265 @@
  */
 package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.multitenant.collect.Generation
 import io.vavr.collection.HashSet
 import io.vavr.collection.Set
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntCollection
 
 /**
- * A set of rdeps. Note that the type of storage we use depends on a combination of (1) the size of
+ * A set of [Int] objects. Note that the type of storage we use depends on a combination of (1) the size of
  * the set and (2) how frequently it is updated.
  */
-internal sealed class RdepsSet : Iterable<BuildTargetId> {
+sealed class MemorySharingIntSet : Iterable<Int> {
+
     abstract val size: Int
 
     /**
      * Custom method for adding the values in this set to an [IntCollection]. This gives the
      * implementation the opportunity to avoid boxing and unboxing integers.
      */
-    abstract fun addAllTo(destination: IntCollection)
+    fun addAllTo(destination: IntCollection) {
+        /**
+        Although it might be slightly more efficient to wrap the [IntArray] as an [IntCollection]
+        so that we can use [IntCollection.addAll], as it does some some capacity checks
+        before calling [IntCollection.add] in a loop, but [IntCollection] is a little annoying to implement, so we
+        should only bother if profiling proves it is worth it.
+
+        Incidentally, [it.unimi.dsi.fastutil.ints.IntIterators.wrap] (int[]) almost does what we need
+        except [addAll] requires an [IntCollection] rather than an [IntListIterator].
+         */
+        for (value in iterator()) {
+            destination.add(value)
+        }
+    }
 
     /**
-     * Unique representation of a set of rdeps that does not share any memory with another RdepsSet.
+     * Returns [true] if the [MemorySharingIntSet] is empty (contains no elements), [false] otherwise.
      */
-    class Unique(val rdeps: BuildTargetSet) : RdepsSet() {
-        override val size: Int get() = rdeps.size
-        override fun iterator(): Iterator<BuildTargetId> = IntArrayList.wrap(rdeps).iterator()
-        override fun addAllTo(destination: IntCollection) {
-            addBuildTargetSetToCollection(rdeps, destination)
-        }
+    fun isEmpty() = size == 0
+
+    /**
+     * Unique representation of a [IntArray] that does not share any memory with another [MemorySharingIntSet].
+     */
+    class Unique(val values: IntArray) : MemorySharingIntSet() {
+        override val size: Int get() = values.size
+        override fun iterator(): Iterator<Int> = IntArrayList.wrap(values).iterator()
     }
 
     /**
      * Note this is backed by a persistent collection, which for a single instance, we expect to
-     * take up more memory than if it were represented as a BuildTargetSet.
+     * take up more memory than if it were represented as a [IntArray].
      */
-    class Persistent(val rdeps: Set<BuildTargetId>) : RdepsSet() {
-        override val size: Int get() = rdeps.size()
-        override fun iterator(): Iterator<BuildTargetId> = rdeps.iterator()
-        override fun addAllTo(destination: IntCollection) {
-            for (buildTargetId in rdeps) {
-                destination.add(buildTargetId)
-            }
-        }
-    }
-}
-
-internal fun addBuildTargetSetToCollection(source: BuildTargetSet, destination: IntCollection) {
-    // Although it might be slightly more efficient to wrap the BuildTargetSet as an IntCollection
-    // so that we can use IntCollection.addAll(IntCollection), as it does some some capacity checks
-    // before calling add() in a loop, but IntCollection is a little annoying to implement, so we
-    // should only bother if profiling proves it is worth it.
-    //
-    // Incidentally, it.unimi.dsi.fastutil.ints.IntIterators.wrap(int[]) almost does what we need
-    // except addAll() requires an IntCollection rather than an IntListIterator.
-    for (buildTargetId in source) {
-        destination.add(buildTargetId)
+    class Persistent(val values: Set<Int>) : MemorySharingIntSet() {
+        override val size: Int get() = values.size()
+        override fun iterator(): Iterator<Int> = values.iterator()
     }
 }
 
 /**
- * Enum type that represents either an "add" or a "remove" to a [BuildTargetSet]. These can be
+ * Enum type that represents either an "add" or a "remove" to a [MemorySharingIntSet]. These can be
  * computed independently and later "applied" to a persistent collection to derive a new version.
  */
-internal sealed class BuildTargetSetDelta : Comparable<BuildTargetSetDelta> {
-    abstract val buildTargetId: BuildTargetId
-    override fun compareTo(other: BuildTargetSetDelta): Int = buildTargetId.compareTo(other.buildTargetId)
-    data class Add(override val buildTargetId: BuildTargetId) : BuildTargetSetDelta()
-    data class Remove(override val buildTargetId: BuildTargetId) : BuildTargetSetDelta()
+sealed class SetDelta : Comparable<SetDelta> {
+    abstract val value: Int
+    override fun compareTo(other: SetDelta): Int = value.compareTo(other.value)
+
+    data class Add(override val value: Int) : SetDelta()
+    data class Remove(override val value: Int) : SetDelta()
 }
 
 /**
- * Takes a list of individual rdeps updates applied to a repo at a point in time and computes the
- * aggregate changes that need to be made to an rdepsMap.
+ * Takes a list of individual updates applied to a repo at a point in time and computes the
+ * aggregate changes that need to be made.
  */
-internal fun deriveRdepsDeltas(
-    rdepsUpdates: List<Pair<BuildTargetId, BuildTargetSetDelta>>,
-    generation: Generation,
-    indexGenerationData: IndexGenerationData
-): Map<BuildTargetId, RdepsSet?> {
-    val deltasByTarget = collectDeltasByTarget(rdepsUpdates)
-    val deltaDeriveInfos = indexGenerationData.withRdepsMap { rdepsMap ->
-        deltasByTarget.map { (buildTargetId, buildTargetSetDeltas) ->
-            val oldRdeps = rdepsMap.getVersion(buildTargetId, generation)
-            DeltaDeriveInfo(buildTargetId, oldRdeps, buildTargetSetDeltas)
-        }
+fun <T> deriveDeltas(
+    updates: List<Pair<T, SetDelta>>,
+    loadPreviousState: (value: T) -> MemorySharingIntSet?
+): Map<T, MemorySharingIntSet?> {
+    val deltasByKey = groupDeltasByKey(updates)
+    val deltaDeriveInfos = deltasByKey.map { (value, setDeltas) ->
+        DeltaDeriveInfo(value, loadPreviousState(value), setDeltas)
     }
-
     return aggregateDeltaDeriveInfos(deltaDeriveInfos)
 }
 
 /**
- * Iterates the `deltas` and for each [BuildTargetId], collects its corresponding deltas into its
- * own [List]. In the returned [List], every [Pair] will have a distinct [BuildTargetId].
+ * Iterates the `deltas` and for each key, collects its corresponding deltas into its
+ * own [List]. Returns [Map], grouped by a distinct key.
  */
-private fun collectDeltasByTarget(
-    deltas: List<Pair<BuildTargetId, BuildTargetSetDelta>>
-): List<Pair<BuildTargetId, MutableList<BuildTargetSetDelta>>> {
-    // targetToRdepsUpdates is effectively a multimap, but none of the Guava ListMultimap
-    // implementations work for us here because we want to be able to sort the List for each
-    // entry when we are done populating the map and Guava's ListMultimap returns the List for
-    // each entry as an unmodifiable view.
-    val targetToRdepsUpdates = mutableMapOf<BuildTargetId, MutableList<BuildTargetSetDelta>>()
-    deltas.forEach { (buildTargetId, buildTargetSetDelta) ->
-        val rdepsUpdates = targetToRdepsUpdates[buildTargetId] ?: mutableListOf()
-        if (rdepsUpdates.isEmpty()) {
-            targetToRdepsUpdates[buildTargetId] = rdepsUpdates
-        }
-        rdepsUpdates.add(buildTargetSetDelta)
+private fun <T> groupDeltasByKey(deltas: List<Pair<T, SetDelta>>): Map<T, MutableList<SetDelta>> {
+    /**
+     [out] is effectively a multimap, but none of the Guava [ListMultimap]
+     implementations work for us here because we want to be able to sort the [List] for each
+     entry when we are done populating the map and Guava's [ListMultimap] returns the [List] for
+     each entry as an unmodifiable view.
+     */
+    val out = mutableMapOf<T, MutableList<SetDelta>>()
+    deltas.forEach { (value, setDelta) ->
+        out.getOrPut(value, { mutableListOf() }).add(setDelta)
     }
-    return targetToRdepsUpdates.toList()
+    return out
 }
 
 /**
- * Information needed to derive a new RdepsSet from an existing one.
- * @property buildTargetId target whose rdeps this represents
- * @property oldRdeps previous version of rdeps for the target
- * @property deltas on top of old rdeps. This is not guaranteed to be sorted! Though it is a
- *     MutableList so a client is free to sort it.
+ * Information needed to derive a new [MemorySharingIntSet] from an existing one.
+ * @property value target whose [MemorySharingIntSet] this represents
+ * @property previousState previous version of [MemorySharingIntSet] for the [value]
+ * @property deltas on top of old [MemorySharingIntSet]. This is not guaranteed to be sorted! Though it is a
+ * [MutableList] so a client is free to sort it.
  */
-internal data class DeltaDeriveInfo(
-    val buildTargetId: BuildTargetId,
-    val oldRdeps: RdepsSet?,
-    val deltas: MutableList<BuildTargetSetDelta>
+internal data class DeltaDeriveInfo<T>(
+    val value: T,
+    val previousState: MemorySharingIntSet?,
+    val deltas: MutableList<SetDelta>
 )
 
 /**
- * Takes a list of build targets whose rdeps have changed and produces the new version of the rdeps
- * for each build target. Where it makes sense, persistent collections are used to make more
+ * Takes a list of values whose [MemorySharingIntSet]s have changed and produces the new version of the [MemorySharingIntSet]s
+ * for each value. Where it makes sense, persistent collections are used to make more
  * efficient use of memory, as they make it possible to share information between old and new
- * versions of a set of rdeps.
+ * versions of [MemorySharingIntSet].
  */
-internal fun aggregateDeltaDeriveInfos(
-    deltaDeriveInfos: List<DeltaDeriveInfo>
-): Map<BuildTargetId, RdepsSet?> {
-    // We use java.util.HashMap so we can specify the initialCapacity. We use the fully qualified
-    // name here to clarify that this is NOT a io.vavr.collection.HashMap.
-    val out = java.util.HashMap<BuildTargetId, RdepsSet?>(deltaDeriveInfos.size)
-    deltaDeriveInfos.forEach { (buildTargetId, oldRdeps, deltas) ->
-        out[buildTargetId] = if (oldRdeps == null) {
-            // No one was depending on this rule at the previous generation. All of the
+internal fun <T> aggregateDeltaDeriveInfos(
+    deltaDeriveInfos: List<DeltaDeriveInfo<T>>
+): Map<T, MemorySharingIntSet?> {
+    /**
+    We use [java.util.HashMap] so we can specify the [initialCapacity]. We use the fully qualified
+    name here to clarify that this is NOT a [io.vavr.collection.HashMap].
+     */
+    val out = java.util.HashMap<T, MemorySharingIntSet?>(deltaDeriveInfos.size)
+    deltaDeriveInfos.forEach { (value, previousState, deltas) ->
+        out[value] = if (previousState == null) {
+            // No one was depending on this value at the previous generation. All of the
             // deltas must be of type Add.
-            check(deltas.all { it is BuildTargetSetDelta.Add }) {
+            check(deltas.all { it is SetDelta.Add }) {
                 "There was a 'Remove' delta for a non-existent set."
             }
             deltas.sort()
-            val buildTargetIds = IntArray(deltas.size) { index ->
-                deltas[index].buildTargetId
+            val values = IntArray(deltas.size) { index ->
+                deltas[index].value
             }
-            // Even though buildTargetIds might be large, we create a unique copy of the data
-            // because we would prefer to use a more compact storage format if it turns out
-            // that it is not going to be updated very frequently.
-            RdepsSet.Unique(buildTargetIds)
+            /**
+            Even though [values] might be large, we create a unique copy of the data
+            because we would prefer to use a more compact storage format if it turns out
+            that it is not going to be updated very frequently.
+             */
+            MemorySharingIntSet.Unique(values)
         } else {
-            applyDeltas(oldRdeps, deltas)
+            applyDeltas(previousState, deltas)
         }
     }
     return out
 }
 
 /**
- * If the size of the rdeps set is below this size, we always choose Unique over Persistent.
+ * If the size of the [MemorySharingIntSet] is below this size, we always choose Unique over Persistent.
  * NOTE: we should use telemetry to determine the right value for this constant. Currently, it is
  * completely pulled out of thin air.
  */
 internal const val THRESHOLD_FOR_UNIQUE_VS_PERSISTENT = 10
 
 /**
- * Derives a new RdepsSet from an existing one by applying some deltas. If applying all of the
- * deltas results in an empty set, returns null.
- * @param oldRdeps original set
+ * Derives a new [MemorySharingIntSet] from an existing one by applying some deltas. If applying all of the
+ * deltas results in an empty set, returns [null].
+ * @param previousState original set
  * @param deltas is not required to be sorted, but it may be sorted as a result of invoking this
  *     method. By construction, it should also be non-empty.
  */
-private fun applyDeltas(oldRdeps: RdepsSet, deltas: MutableList<BuildTargetSetDelta>): RdepsSet? {
-    val size = deltas.fold(oldRdeps.size) { acc, delta ->
+private fun applyDeltas(
+    previousState: MemorySharingIntSet,
+    deltas: MutableList<SetDelta>
+): MemorySharingIntSet? {
+    val size = deltas.fold(previousState.size) { acc, delta ->
         when (delta) {
-            is BuildTargetSetDelta.Add -> acc + 1
-            is BuildTargetSetDelta.Remove -> acc - 1
+            is SetDelta.Add -> acc + 1
+            is SetDelta.Remove -> acc - 1
         }
     }
     return when {
         size == 0 -> null
-        size < THRESHOLD_FOR_UNIQUE_VS_PERSISTENT -> createSimpleSet(oldRdeps, deltas, size)
+        size < THRESHOLD_FOR_UNIQUE_VS_PERSISTENT -> createSimpleSet(previousState, deltas, size)
         else -> {
-            val existingRdeps = when (oldRdeps) {
-                is RdepsSet.Unique -> {
-                    // The old version was Unique, but now we have exceeded
-                    // THRESHOLD_FOR_UNIQUE_VS_PERSISTENT, so now we want to use Persistent for the new
-                    // version.
-                    HashSet.ofAll(oldRdeps)
+            val existingSet = when (previousState) {
+                is MemorySharingIntSet.Unique -> {
+                    /**
+                    The old version was [MemorySharingIntSet.Unique], but now we have exceeded [THRESHOLD_FOR_UNIQUE_VS_PERSISTENT],
+                    so now we want to use [MemorySharingIntSet.Persistent] for the new version.
+                     */
+                    HashSet.ofAll(previousState)
                 }
-                is RdepsSet.Persistent -> {
-                    oldRdeps.rdeps
+                is MemorySharingIntSet.Persistent -> {
+                    previousState.values
                 }
             }
-            deriveNewPersistentSet(existingRdeps, deltas)
+            deriveNewPersistentSet(existingSet, deltas)
         }
     }
 }
 
 private fun createSimpleSet(
-    oldRdeps: RdepsSet,
-    deltas: MutableList<BuildTargetSetDelta>,
+    previousState: MemorySharingIntSet,
+    deltas: MutableList<SetDelta>,
     expectedSize: Int
-): RdepsSet.Unique {
-    val oldRdepsSorted: IntArray = when (oldRdeps) {
-        is RdepsSet.Unique -> oldRdeps.rdeps
-        is RdepsSet.Persistent -> {
-            val array = oldRdeps.rdeps.toMutableList().toIntArray()
+): MemorySharingIntSet.Unique {
+    val oldSetSorted: IntArray = when (previousState) {
+        is MemorySharingIntSet.Unique -> previousState.values
+        is MemorySharingIntSet.Persistent -> {
+            val array = previousState.values.toMutableList().toIntArray()
             array.sort()
             array
         }
     }
     deltas.sort()
-    val newBuildTargetSet = IntArray(expectedSize)
+    val newSet = IntArray(expectedSize)
 
-    // Now that both oldRdeps and deltas are sorted, we walk forward and populate newBuildTargetSet,
-    // as appropriate.
+    /**
+    Now that both [oldSetSorted] and deltas are sorted, we walk forward and populate [newSet],
+    as appropriate.
+     */
     var oldIndex = 0
     var deltaIndex = 0
     var index = 0
-    while (oldIndex < oldRdepsSorted.size && deltaIndex < deltas.size) {
-        val oldBuildTargetId = oldRdepsSorted[oldIndex]
+    while (oldIndex < oldSetSorted.size && deltaIndex < deltas.size) {
+        val oldValue = oldSetSorted[oldIndex]
         val delta = deltas[deltaIndex]
-        val deltaBuildTargetId = delta.buildTargetId
+        val value = delta.value
         when {
-            oldBuildTargetId < deltaBuildTargetId -> {
-                // Next delta does not affect oldBuildTargetId, so add oldBuildTargetId to the
-                // output.
-                newBuildTargetSet[index++] = oldBuildTargetId
+            oldValue < value -> {
+                // Next delta does not affect oldValue, so add oldValue to the output.
+                newSet[index++] = oldValue
                 ++oldIndex
             }
-            oldBuildTargetId > deltaBuildTargetId -> {
-                when (delta) {
-                    is BuildTargetSetDelta.Add -> {
-                        newBuildTargetSet[index++] = deltaBuildTargetId
-                        ++deltaIndex
-                    }
-                    is BuildTargetSetDelta.Remove -> {
-                        error(
-                            "Should not Remove when $deltaBuildTargetId does not exist in oldRdeps.")
-                    }
+            oldValue > value -> when (delta) {
+                is SetDelta.Add -> {
+                    newSet[index++] = value
+                    ++deltaIndex
+                }
+                is SetDelta.Remove -> error("Should not Remove when $value does not exist in the previous set.")
+            }
+
+            oldValue == value -> when (delta) {
+                is SetDelta.Add -> {
+                    error("Should not Add when $value already exists in the previous set.")
+                }
+                is SetDelta.Remove -> {
+                    // We should omit this value from the output, so
+                    ++oldIndex
+                    ++deltaIndex
                 }
             }
-            else /* oldBuildTargetId == deltaBuildTargetId */ -> {
-                when (delta) {
-                    is BuildTargetSetDelta.Add -> {
-                        error("Should not Add when $deltaBuildTargetId already exists in oldRdeps.")
-                    }
-                    is BuildTargetSetDelta.Remove -> {
-                        // We should omit this buildTargetId from the output, so
-                        ++oldIndex
-                        ++deltaIndex
-                    }
-                }
-            }
+
+            else -> error("Case not yet implemented")
         }
     }
 
-    while (oldIndex < oldRdepsSorted.size) {
-        newBuildTargetSet[index++] = oldRdepsSorted[oldIndex++]
+    while (oldIndex < oldSetSorted.size) {
+        newSet[index++] = oldSetSorted[oldIndex++]
     }
     while (deltaIndex < deltas.size) {
         when (val delta = deltas[deltaIndex++]) {
-            is BuildTargetSetDelta.Add -> {
-                newBuildTargetSet[index++] = delta.buildTargetId
-            }
-            is BuildTargetSetDelta.Remove -> {
-                error("Should not Remove when ${delta.buildTargetId} does not exist in oldReps.")
-            }
+            is SetDelta.Add -> newSet[index++] = delta.value
+            is SetDelta.Remove -> error("Should not Remove when ${delta.value} does not exist in the previous set.")
         }
     }
 
@@ -291,19 +281,19 @@ private fun createSimpleSet(
         error("Only assigned $index out of $expectedSize slots in output.")
     }
 
-    return RdepsSet.Unique(newBuildTargetSet)
+    return MemorySharingIntSet.Unique(newSet)
 }
 
 private fun deriveNewPersistentSet(
-    oldRdeps: Set<BuildTargetId>,
-    deltas: List<BuildTargetSetDelta>
-): RdepsSet.Persistent {
-    var out = oldRdeps
+    previousState: Set<Int>,
+    deltas: List<SetDelta>
+): MemorySharingIntSet.Persistent {
+    var out = previousState
     deltas.forEach { delta ->
         out = when (delta) {
-            is BuildTargetSetDelta.Add -> out.add(delta.buildTargetId)
-            is BuildTargetSetDelta.Remove -> out.remove(delta.buildTargetId)
+            is SetDelta.Add -> out.add(delta.value)
+            is SetDelta.Remove -> out.remove(delta.value)
         }
     }
-    return RdepsSet.Persistent(out)
+    return MemorySharingIntSet.Persistent(out)
 }

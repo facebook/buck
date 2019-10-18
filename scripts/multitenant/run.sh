@@ -15,8 +15,8 @@
 
 # Start multitenant service locally and load provided parse state file
 
-# Usage 1 (from file): ./scripts/multitenant/run.sh corpus@parse_state.json
-# Usage 2 (from HTTP): ./scripts/multitenant/run.sh corpus@http://www.some.site/parse_state.json
+# Usage 1 (from file): ./scripts/multitenant/run.sh corpus@parse_state.json@/path/to/checkout
+# Usage 2 (from HTTP): ./scripts/multitenant/run.sh corpus@http://www.some.site/parse_state.json@/path/to/checkout
 
 # some useful Java command line options:
 

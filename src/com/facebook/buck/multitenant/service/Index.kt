@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.cache.AppendOnlyBidirectionalCache
 import com.facebook.buck.multitenant.collect.Generation
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue
@@ -201,7 +202,7 @@ class Index internal constructor(
         // addAllByIndex().
         val union = IntOpenHashSet()
         rules.forEach { rule ->
-            addBuildTargetSetToCollection(rule.deps, union)
+            rule.deps.forEach { union.add(it) }
         }
 
         return buildTargetCache.resolveIndexes(union)
@@ -313,16 +314,15 @@ class Index internal constructor(
     }
 
     /**
-     * Return set of [FsAgnosticPath] (relative to the cell path) that includes [includePath] file (relative to the repo) for the specified [generation]
+     * Return [Iterable] representation of [FsAgnosticPath]s (relative to the cell path) that includes [includePath] file (relative to the repo) for the specified [generation]
      *
      * @param includePath is relative to the repo path to an include file
      * @param generation [Generation] that defines a current state of [Index]
      */
-    fun getReverseIncludes(generation: Generation, includePath: Include): Set<FsAgnosticPath> {
-        return indexGenerationData.withIncludesMap { (_, reverseMap) ->
+    fun getReverseIncludes(generation: Generation, includePath: Include): Iterable<FsAgnosticPath> =
+        indexGenerationData.withIncludesMap { (_, reverseMap) ->
             reverseMap.getVersion(includePath, generation)
-        } ?: setOf()
-    }
+        }?.mapNotNull { FsAgnosticPath.fromIndex(it) } ?: setOf()
 
     /**
      * Return true if index contains the specified (equality-wise) [BuildPackage] at specified

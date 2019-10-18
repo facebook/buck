@@ -1,0 +1,13 @@
+kotlin_library(
+    name = "cache",
+    srcs = glob(["*.kt"]),
+    visibility = [
+        "//src/com/facebook/buck/multitenant/...",
+        "//test/com/facebook/buck/multitenant/...",
+    ],
+    deps = [
+        "//third-party/java/fastutil:fastutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.cache.AppendOnlyBidirectionalCache
 import com.facebook.buck.multitenant.collect.Generation
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -42,7 +43,7 @@ class DefaultIndexAppender internal constructor(
     private val generation = AtomicInteger()
 
     /** Stores commit to generation mappings created by [addCommitData]. */
-    private val commitToGeneration = ConcurrentHashMap<Commit, Int>()
+    private val commitToGeneration = ConcurrentHashMap<Commit, Generation>()
 
     /**
      * Stores all commits in the order of insertion
@@ -55,7 +56,7 @@ class DefaultIndexAppender internal constructor(
      * @return the generation that corresponds to the specified commit or `null` if no such
      *     generation is available
      */
-    override fun getGeneration(commit: Commit): Int? = commitToGeneration[commit]
+    override fun getGeneration(commit: Commit): Generation? = commitToGeneration[commit]
 
     /**
      * @return the commit most recently added to the index or `null` if no commits have been added.

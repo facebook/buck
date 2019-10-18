@@ -169,6 +169,5 @@ private fun output(data: List<String>, where: String) {
 private fun createIndex(stream: InputStream): IndexComponents {
     val (index, appender) = IndexFactory.createIndex()
     populateIndexFromStream(appender, stream, ::multitenantJsonToBuildPackageParser)
-
     return IndexComponents(index, appender, mapOf("" to "BUCK"))
 }

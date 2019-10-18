@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.multitenant.service
 
+import com.facebook.buck.multitenant.collect.Generation
+
 /**
  * Appends data that backs an [Index].
  */
@@ -24,7 +26,7 @@ interface IndexAppender {
      * @return the generation that corresponds to the specified commit or `null` if no such
      *     generation is available
      */
-    fun getGeneration(commit: Commit): Int?
+    fun getGeneration(commit: Commit): Generation?
 
     /**
      * @return the commit most recently added to the index or `null` if no commits have been added.

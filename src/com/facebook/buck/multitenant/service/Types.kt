@@ -90,13 +90,15 @@ data class BuildPackage(
     val buildFileDirectory: FsAgnosticPath,
     val rules: Set<RawBuildRule>,
     val errors: List<BuildPackageParsingError> = emptyList(),
-    val includes: Set<FsAgnosticPath> = setOf()
+    /** Note that [HashSet] type used intentionally instead of [Set] to compare with existing includes in the generation map
+     * Check [IncludesMapChangeBuilder.processModifiedPackage] for more details */
+    val includes: HashSet<FsAgnosticPath> = hashSetOf()
 )
 
 internal data class InternalBuildPackage(
     val buildFileDirectory: FsAgnosticPath,
     val rules: Set<InternalRawBuildRule>,
-    val includes: Set<FsAgnosticPath>
+    val includes: HashSet<FsAgnosticPath>
 )
 
 /**

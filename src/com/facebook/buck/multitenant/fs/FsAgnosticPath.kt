@@ -16,6 +16,7 @@
 package com.facebook.buck.multitenant.fs
 
 import com.facebook.buck.io.pathformat.PathFormatter
+import com.facebook.buck.multitenant.cache.AppendOnlyBidirectionalCache
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
@@ -25,7 +26,20 @@ import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import java.nio.file.Path
 
-private val PATH_CACHE: Cache<String, FsAgnosticPath> = CacheBuilder.newBuilder().softValues().build()
+/**
+ * Cache between path [String] and [FsAgnosticPath] wrapper around this [String] value.
+ * Soft references are used.
+ * Softly-referenced objects will be garbage-collected in a <i>globally</i> least-recently-used manner,
+ * in response to memory demand.
+ */
+private val PATH_CACHE: Cache<String, FsAgnosticPath> =
+    CacheBuilder.newBuilder().softValues().build()
+
+/**
+ * Cache between [FsAgnosticPath] to unique [Int] value.
+ */
+private val PATH_TO_INDEX_CACHE =
+    AppendOnlyBidirectionalCache<FsAgnosticPath>()
 
 /**
  * Prefer this to [java.nio.file.Path] in the multitenant packages. Whereas a [java.nio.file.Path]
@@ -44,28 +58,34 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
          * @param path must be a normalized, relative path.
          */
         fun of(path: String): FsAgnosticPath {
-            val cachedPath = PATH_CACHE.getIfPresent(path)
-            if (cachedPath != null) {
-                return cachedPath
+            return PATH_CACHE.getIfPresent(path) ?: run {
+                verifyPath(path)
+                createWithoutVerification(path)
             }
-
-            verifyPath(path)
-            return createWithoutVerification(path)
         }
 
         /**
          * @param path must be a normalized, relative path.
          */
-        fun of(path: Path): FsAgnosticPath {
-            return of(PathFormatter.pathWithUnixSeparators(path))
-        }
+        fun of(path: Path): FsAgnosticPath = of(PathFormatter.pathWithUnixSeparators(path))
 
         /** Caller is responsible for verifying that the string is well-formed. */
         private fun createWithoutVerification(verifiedPath: String): FsAgnosticPath {
-            val newPath = FsAgnosticPath(verifiedPath.intern())
-            PATH_CACHE.put(verifiedPath, newPath)
-            return newPath
+            val internedPath = verifiedPath.intern()
+            val fsAgnosticPath = FsAgnosticPath(internedPath)
+            PATH_CACHE.put(internedPath, fsAgnosticPath)
+            return fsAgnosticPath
         }
+
+        /**
+         * Returns [FsAgnosticPath] associated with the given [index]
+         */
+        fun fromIndex(index: Int): FsAgnosticPath = PATH_TO_INDEX_CACHE.getByIndex(index)
+
+        /**
+         * Returns index value associated with the given [FsAgnosticPath]
+         */
+        fun toIndex(fsAgnosticPath: FsAgnosticPath): Int = PATH_TO_INDEX_CACHE.get(fsAgnosticPath)
     }
 
     override fun compareTo(other: FsAgnosticPath): Int {
@@ -105,11 +125,7 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
      */
     fun name(): FsAgnosticPath {
         val lastIndex = path.lastIndexOf('/')
-        return if (lastIndex == -1) {
-            this
-        } else {
-            createWithoutVerification(path.substring(lastIndex + 1))
-        }
+        return if (lastIndex == -1) this else createWithoutVerification(path.substring(lastIndex + 1))
     }
 
     /**
@@ -118,11 +134,7 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
      */
     fun dirname(): FsAgnosticPath {
         val lastIndex = path.lastIndexOf('/')
-        return if (lastIndex == -1) {
-            return createWithoutVerification("")
-        } else {
-            return createWithoutVerification(path.substring(0, lastIndex))
-        }
+        return createWithoutVerification(if (lastIndex == -1) "" else path.substring(0, lastIndex))
     }
 
     override fun equals(other: Any?): Boolean {
@@ -147,23 +159,13 @@ private fun verifyPath(path: String) {
         return
     }
 
-    if (path.startsWith('/')) {
-        throw IllegalArgumentException("'$path' must be relative but starts with '/'")
-    }
-    if (path.endsWith('/')) {
-        throw IllegalArgumentException("'$path' cannot have a trailing slash")
-    }
+    require(!path.startsWith('/')) { "'$path' must be relative but starts with '/'" }
+    require(!path.endsWith('/')) { "'$path' cannot have a trailing slash" }
 
     for (component in path.split("/")) {
-        if (component == "") {
-            throw IllegalArgumentException("'$path' contained an empty path component")
-        }
-        if (component == ".") {
-            throw IllegalArgumentException("'$path' contained illegal path component: '.'")
-        }
-        if (component == "..") {
-            throw IllegalArgumentException("'$path' contained illegal path component: '..'")
-        }
+        require(component != "") { "'$path' contained an empty path component" }
+        require(component != ".") { "'$path' contained illegal path component: '.'" }
+        require(component != "..") { "'$path' contained illegal path component: '..'" }
     }
 }
 

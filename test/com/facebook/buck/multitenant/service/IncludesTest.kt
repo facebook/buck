@@ -49,8 +49,8 @@ internal class IncludesTest {
 
     @Test
     fun processIncludesWithEmptyPackages() {
-        val includesMapChange = processIncludes(generation = CURRENT_GENERATION,
-            internalChanges = emptyInternalChanges(),
+        val includesMapChange = processIncludes(internalChanges = emptyInternalChanges(),
+            generation = CURRENT_GENERATION,
             indexGenerationData = getIndexGenerationData(emptyIncludesMapHolder()))
 
         assertThat(includesMapChange.isEmpty(), equalTo(true))
@@ -68,12 +68,12 @@ internal class IncludesTest {
         val internalChanges = emptyInternalChanges().copy(
             addedBuildPackages = listOf(internalBuildPackage(packageA, include1, include2)))
         val includesMapsHolder = emptyIncludesMapHolder().copy(forwardMap = createGenerationMap(
-            mapOf(packageA to setOf(FsAgnosticPath.of("foo_bar.bzl")))))
+            mapOf(packageA to uniqueSet(FsAgnosticPath.of("foo_bar.bzl")))))
 
         thrown.expect(IllegalArgumentException::class.java)
         thrown.expectMessage("New package $packageA already existed")
 
-        processIncludes(generation = CURRENT_GENERATION, internalChanges = internalChanges,
+        processIncludes(internalChanges = internalChanges, generation = CURRENT_GENERATION,
             indexGenerationData = getIndexGenerationData(includesMapsHolder))
     }
 
@@ -87,17 +87,16 @@ internal class IncludesTest {
             addedBuildPackages = listOf(internalBuildPackage(packageA, include1, include2)))
 
         val includesMapChange =
-            processIncludes(generation = CURRENT_GENERATION, internalChanges = internalChanges,
+            processIncludes(internalChanges = internalChanges, generation = CURRENT_GENERATION,
                 indexGenerationData = getIndexGenerationData(emptyIncludesMapHolder()))
 
         assertThat(includesMapChange.isEmpty(), equalTo(false))
-        verifyMap(includesMapChange.forwardMap, packageA to setOf(include1, include2))
-        verifyMap(includesMapChange.reverseMap, include1 to setOf(packageA),
-            include2 to setOf(packageA))
+        verifyMap(includesMapChange.forwardMap, packageA to uniqueSet(include1, include2))
+        verifyMap(includesMapChange.reverseMap, include1 to uniqueSet(packageA),
+            include2 to uniqueSet(packageA))
     }
 
-    @Test
-    fun processIncludesWithMultipleAddedPackages() {
+    @Test fun processIncludesWithMultipleAddedPackages() {
         /**
          * changes (added)
          * a -> include 1.bzl and 2.bzl
@@ -108,18 +107,17 @@ internal class IncludesTest {
                 internalBuildPackage(packageB, include1, include3)))
 
         val includesMapChange =
-            processIncludes(generation = CURRENT_GENERATION, internalChanges = internalChanges,
+            processIncludes(internalChanges = internalChanges, generation = CURRENT_GENERATION,
                 indexGenerationData = getIndexGenerationData(emptyIncludesMapHolder()))
 
         assertThat(includesMapChange.isEmpty(), equalTo(false))
-        verifyMap(includesMapChange.forwardMap, packageA to setOf(include1, include2),
-            packageB to setOf(include1, include3))
-        verifyMap(includesMapChange.reverseMap, include1 to setOf(packageA, packageB),
-            include2 to setOf(packageA), include3 to setOf(packageB))
+        verifyMap(includesMapChange.forwardMap, packageA to uniqueSet(include1, include2),
+            packageB to uniqueSet(include1, include3))
+        verifyMap(includesMapChange.reverseMap, include1 to uniqueSet(packageA, packageB),
+            include2 to uniqueSet(packageA), include3 to uniqueSet(packageB))
     }
 
-    @Test
-    fun processIncludesWithModifiedPackages() {
+    @Test fun processIncludesWithModifiedPackages() {
         /**
          * a -> include 1.bzl and 2.bzl
          * b -> include 2.bzl and 3.bzl
@@ -131,10 +129,12 @@ internal class IncludesTest {
          * c -> include 2.bzl and 3.bzl
          */
         val includesMapsHolder = IncludesMapsHolder(forwardMap = createGenerationMap(
-            mapOf(packageA to setOf(include1, include2), packageB to setOf(include2, include3),
-                packageC to setOf(include2, include3))), reverseMap = createGenerationMap(
-            mapOf(include1 to setOf(packageA), include2 to setOf(packageA, packageB, packageC),
-                include3 to setOf(packageB, packageC))))
+            mapOf(packageA to uniqueSet(include1, include2),
+                packageB to uniqueSet(include2, include3),
+                packageC to uniqueSet(include2, include3))), reverseMap = createGenerationMap(
+            mapOf(include1 to uniqueSet(packageA),
+                include2 to uniqueSet(packageA, packageB, packageC),
+                include3 to uniqueSet(packageB, packageC))))
 
         val internalChanges = emptyInternalChanges().copy(modifiedBuildPackages = listOf(
             internalBuildPackage(packageA, include1, include2, include3),
@@ -142,15 +142,15 @@ internal class IncludesTest {
             internalBuildPackage(packageC, include2, include3)))
 
         val includesMapChange =
-            processIncludes(generation = CURRENT_GENERATION, internalChanges = internalChanges,
+            processIncludes(internalChanges = internalChanges, generation = CURRENT_GENERATION,
                 indexGenerationData = getIndexGenerationData(includesMapsHolder))
 
         assertThat(includesMapChange.isEmpty(), equalTo(false))
-        verifyMap(includesMapChange.forwardMap, packageA to setOf(include1, include2, include3),
-            packageB to setOf(include3, include4), packageC to setOf(include2, include3))
-        verifyMap(includesMapChange.reverseMap, include1 to setOf(packageA),
-            include2 to setOf(packageA, packageC), include3 to setOf(packageA, packageB, packageC),
-            include4 to setOf(packageB))
+        verifyMap(includesMapChange.forwardMap, packageA to uniqueSet(include1, include2, include3),
+            packageB to uniqueSet(include3, include4), packageC to uniqueSet(include2, include3))
+        verifyMap(includesMapChange.reverseMap, include1 to uniqueSet(packageA),
+            include2 to uniqueSet(packageA, packageC),
+            include3 to uniqueSet(packageA, packageB, packageC), include4 to uniqueSet(packageB))
     }
 
     @Test
@@ -163,26 +163,28 @@ internal class IncludesTest {
          * changes (removed): package b
          */
         val includesMapsHolder = IncludesMapsHolder(forwardMap = createGenerationMap(
-            mapOf(packageA to setOf(include1, include2), packageB to setOf(include2, include3),
-                packageC to setOf(include2, include3))), reverseMap = createGenerationMap(
-            mapOf(include1 to setOf(packageA), include2 to setOf(packageA, packageB, packageC),
-                include3 to setOf(packageB, packageC))))
+            mapOf(packageA to uniqueSet(include1, include2),
+                packageB to uniqueSet(include2, include3),
+                packageC to uniqueSet(include2, include3))), reverseMap = createGenerationMap(
+            mapOf(include1 to uniqueSet(packageA),
+                include2 to uniqueSet(packageA, packageB, packageC),
+                include3 to uniqueSet(packageB, packageC))))
 
         val internalChanges = emptyInternalChanges().copy(removedBuildPackages = listOf(packageB))
 
         val includesMapChange =
-            processIncludes(generation = CURRENT_GENERATION, internalChanges = internalChanges,
+            processIncludes(internalChanges = internalChanges, generation = CURRENT_GENERATION,
                 indexGenerationData = getIndexGenerationData(includesMapsHolder))
 
         assertThat(includesMapChange.isEmpty(), equalTo(false))
-        verifyMap(includesMapChange.forwardMap, packageA to setOf(include1, include2),
-            packageC to setOf(include2, include3))
-        verifyMap(includesMapChange.reverseMap, include1 to setOf(packageA),
-            include2 to setOf(packageA, packageC), include3 to setOf(packageC))
+        verifyMap(includesMapChange.forwardMap, packageA to uniqueSet(include1, include2),
+            packageB to null,
+            packageC to uniqueSet(include2, include3))
+        verifyMap(includesMapChange.reverseMap, include1 to uniqueSet(packageA),
+            include2 to uniqueSet(packageA, packageC), include3 to uniqueSet(packageC))
     }
 
-    @Test
-    fun processIncludesWithAddedModifiedAndRemovedPackages() {
+    @Test fun processIncludesWithAddedModifiedAndRemovedPackages() {
         /**
          * initial state
          * a -> include 1.bzl and 2.bzl
@@ -202,10 +204,12 @@ internal class IncludesTest {
          * c
          */
         val includesMapsHolder = IncludesMapsHolder(forwardMap = createGenerationMap(
-            mapOf(packageA to setOf(include1, include2), packageB to setOf(include2, include3),
-                packageC to setOf(include2, include3, include6))), reverseMap = createGenerationMap(
-            mapOf(include1 to setOf(packageA), include2 to setOf(packageA, packageB, packageC),
-                include3 to setOf(packageB, packageC), include6 to setOf(packageC))))
+            mapOf(packageA to uniqueSet(include1, include2),
+                packageB to uniqueSet(include2, include3),
+                packageC to uniqueSet(include2, include3, include6))),
+            reverseMap = createGenerationMap(mapOf(include1 to uniqueSet(packageA),
+                include2 to uniqueSet(packageA, packageB, packageC),
+                include3 to uniqueSet(packageB, packageC), include6 to uniqueSet(packageC))))
 
         val internalChanges = InternalChanges(
             addedBuildPackages = listOf(internalBuildPackage(packageD, include2, include4),
@@ -214,16 +218,23 @@ internal class IncludesTest {
             removedBuildPackages = listOf(packageC))
 
         val includesMapChange =
-            processIncludes(generation = CURRENT_GENERATION, internalChanges = internalChanges,
+            processIncludes(internalChanges = internalChanges, generation = CURRENT_GENERATION,
                 indexGenerationData = getIndexGenerationData(includesMapsHolder))
 
         assertThat(includesMapChange.isEmpty(), equalTo(false))
-        verifyMap(includesMapChange.forwardMap, packageA to setOf(include1, include2),
-            packageB to setOf(include1, include3, include5), packageD to setOf(include2, include4),
-            packageE to setOf(include1))
-        verifyMap(includesMapChange.reverseMap, include1 to setOf(packageA, packageB, packageE),
-            include2 to setOf(packageA, packageD), include3 to setOf(packageB),
-            include4 to setOf(packageD), include5 to setOf(packageB))
+        verifyMap(includesMapChange.forwardMap,
+            packageA to uniqueSet(include1, include2),
+            packageB to uniqueSet(include1, include3, include5),
+            packageC to null,
+            packageD to uniqueSet(include2, include4),
+            packageE to uniqueSet(include1))
+        verifyMap(includesMapChange.reverseMap,
+            include1 to uniqueSet(packageA, packageB, packageE),
+            include2 to uniqueSet(packageA, packageD),
+            include3 to uniqueSet(packageB),
+            include4 to uniqueSet(packageD),
+            include5 to uniqueSet(packageB),
+            include6 to null)
     }
 
     @SuppressWarnings("SpreadOperator")
@@ -232,7 +243,7 @@ internal class IncludesTest {
         vararg includes: Include
     ): InternalBuildPackage =
         InternalBuildPackage(buildFileDirectory = packageA, rules = setOf(),
-            includes = setOf(*includes))
+            includes = hashSetOf(*includes))
 
     private fun emptyInternalChanges() =
         InternalChanges(addedBuildPackages = listOf(), modifiedBuildPackages = listOf(),
@@ -242,8 +253,8 @@ internal class IncludesTest {
         IncludesMapsHolder(forwardMap = createGenerationMap(), reverseMap = createGenerationMap())
 
     private fun createGenerationMap(
-        localChanges: Map<FsAgnosticPath, Includes> = mapOf()
-    ): ForwardingGenerationMap<FsAgnosticPath, Includes> =
+        localChanges: Map<FsAgnosticPath, MemorySharingIntSet> = mapOf()
+    ): ForwardingGenerationMap<FsAgnosticPath, MemorySharingIntSet> =
         ForwardingGenerationMap(CURRENT_GENERATION, localChanges, DefaultGenerationMap { it })
 
     private fun getIndexGenerationData(
@@ -259,15 +270,20 @@ internal class IncludesTest {
     }
 
     private fun verifyMap(
-        map: Map<FsAgnosticPath, Includes>,
-        vararg expectedValues: Pair<FsAgnosticPath, Includes>
+        map: Map<FsAgnosticPath, MemorySharingIntSet?>,
+        vararg expectedValues: Pair<FsAgnosticPath, MemorySharingIntSet?>
     ) {
         assertThat("Number of expected values must be the same as map size", map.size,
             equalTo(expectedValues.size))
         assertThat("All expected values are unique",
             expectedValues.asSequence().map { p -> p.first }.distinct().count(), equalTo(map.size))
         for ((path, includes) in expectedValues) {
-            assertThat(map[path], equalTo(includes))
+            assertThat(map[path]?.toHashSet(), equalTo(includes?.toHashSet()))
         }
     }
+
+    private fun uniqueSet(vararg values: FsAgnosticPath): MemorySharingIntSet.Unique =
+        MemorySharingIntSet.Unique(values.map {
+            checkNotNull(FsAgnosticPath.toIndex(it))
+        }.toIntArray())
 }

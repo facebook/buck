@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.cache.AppendOnlyBidirectionalCache
 import com.facebook.buck.multitenant.collect.Generation
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
@@ -27,7 +28,7 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 internal data class Deltas(
     val buildPackageDeltas: List<BuildPackageDelta>,
     val ruleDeltas: List<RuleDelta>,
-    val rdepsDeltas: Map<BuildTargetId, RdepsSet?>,
+    val rdepsDeltas: Map<BuildTargetId, MemorySharingIntSet?>,
     val includesDeltas: IncludesMapChange
 ) {
     fun isEmpty(): Boolean = buildPackageDeltas.isEmpty() && ruleDeltas.isEmpty() && rdepsDeltas.isEmpty() && includesDeltas.isEmpty()
@@ -54,7 +55,7 @@ internal fun determineDeltas(
         indexGenerationData, buildTargetCache)
 
     val ruleDeltas = mutableListOf<RuleDelta>()
-    val rdepsUpdates = mutableListOf<Pair<BuildTargetId, BuildTargetSetDelta>>()
+    val rdepsUpdates = mutableListOf<Pair<BuildTargetId, SetDelta>>()
     val buildPackageDeltas = mutableListOf<BuildPackageDelta>()
     internalChanges.addedBuildPackages.forEach { added ->
         val ruleNames = ArrayList<String>(added.rules.size)
@@ -62,7 +63,7 @@ internal fun determineDeltas(
             val buildTarget = rule.targetNode.buildTarget
             ruleNames.add(buildTarget.name)
             ruleDeltas.add(RuleDelta.Added(rule))
-            val add = BuildTargetSetDelta.Add(buildTargetCache.get(buildTarget))
+            val add = SetDelta.Add(buildTargetCache.get(buildTarget))
             rule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, add) }
         }
         buildPackageDeltas.add(BuildPackageDelta.Updated(added.buildFileDirectory,
@@ -90,7 +91,7 @@ internal fun determineDeltas(
 
     removedRulesToProcess.forEach { (buildTargetId, removedRule) ->
         ruleDeltas.add(RuleDelta.Removed(removedRule))
-        val remove = BuildTargetSetDelta.Remove(buildTargetId)
+        val remove = SetDelta.Remove(buildTargetId)
         removedRule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, remove) }
     }
 
@@ -108,7 +109,7 @@ internal fun determineDeltas(
                     is RuleDelta.Added -> {
                         val buildTarget = ruleChange.rule.targetNode.buildTarget
                         newRuleNames = newRuleNames.add(buildTarget.name)
-                        val add = BuildTargetSetDelta.Add(buildTargetCache.get(buildTarget))
+                        val add = SetDelta.Add(buildTargetCache.get(buildTarget))
                         ruleChange.rule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, add) }
                     }
                     is RuleDelta.Modified -> {
@@ -120,7 +121,7 @@ internal fun determineDeltas(
                     is RuleDelta.Removed -> {
                         val buildTarget = ruleChange.rule.targetNode.buildTarget
                         newRuleNames = newRuleNames.remove(buildTarget.name)
-                        val remove = BuildTargetSetDelta.Remove(buildTargetCache.get(buildTarget))
+                        val remove = SetDelta.Remove(buildTargetCache.get(buildTarget))
                         ruleChange.rule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, remove) }
                     }
                 }
@@ -131,12 +132,13 @@ internal fun determineDeltas(
         }
     }
 
-    val includesMapChange = processIncludes(generation, internalChanges, indexGenerationData)
-
+    val includesMapChange = processIncludes(internalChanges, generation, indexGenerationData)
     return Deltas(
         buildPackageDeltas = buildPackageDeltas,
         ruleDeltas = ruleDeltas,
-        rdepsDeltas = deriveRdepsDeltas(rdepsUpdates, generation, indexGenerationData),
+        rdepsDeltas = deriveDeltas(rdepsUpdates) { key ->
+            indexGenerationData.withRdepsMap { it.getVersion(key, generation) }
+        },
         includesDeltas = includesMapChange
     )
 }
@@ -232,7 +234,7 @@ private fun lookupBuildRules(
 private fun diffDeps(
     old: BuildTargetSet,
     new: BuildTargetSet,
-    rdepsUpdates: MutableList<Pair<BuildTargetId, BuildTargetSetDelta>>,
+    rdepsUpdates: MutableList<Pair<BuildTargetId, SetDelta>>,
     buildTargetId: BuildTargetId
 ) {
     // We exploit the fact that the ids in a BuildTargetSet are sorted.
@@ -244,12 +246,12 @@ private fun diffDeps(
         when {
             oldBuildTargetId < newBuildTargetId -> {
                 // oldBuildTargetId does not exist in new.
-                rdepsUpdates.add(Pair(oldBuildTargetId, BuildTargetSetDelta.Remove(buildTargetId)))
+                rdepsUpdates.add(Pair(oldBuildTargetId, SetDelta.Remove(buildTargetId)))
                 ++oldIndex
             }
             oldBuildTargetId > newBuildTargetId -> {
                 // newBuildTargetId does not exist in old.
-                rdepsUpdates.add(Pair(newBuildTargetId, BuildTargetSetDelta.Add(buildTargetId)))
+                rdepsUpdates.add(Pair(newBuildTargetId, SetDelta.Add(buildTargetId)))
                 ++newIndex
             }
             else /* oldBuildTargetId == newBuildTargetId */ -> {
@@ -262,12 +264,12 @@ private fun diffDeps(
 
     // If there is anything left in old, it must have been removed in new.
     while (oldIndex < old.size) {
-        rdepsUpdates.add(Pair(old[oldIndex++], BuildTargetSetDelta.Remove(buildTargetId)))
+        rdepsUpdates.add(Pair(old[oldIndex++], SetDelta.Remove(buildTargetId)))
     }
 
     // If there is anything left in new, it must have been added in new.
     while (newIndex < new.size) {
-        rdepsUpdates.add(Pair(new[newIndex++], BuildTargetSetDelta.Add(buildTargetId)))
+        rdepsUpdates.add(Pair(new[newIndex++], SetDelta.Add(buildTargetId)))
     }
 }
 

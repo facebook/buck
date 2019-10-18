@@ -49,7 +49,7 @@ class DefaultFsToBuildPackageChangeTranslator(
     private val projectRoot: Path,
     private val existenceChecker: (packagePath: FsAgnosticPath) -> Boolean,
     private val equalityChecker: (buildPackage: BuildPackage) -> Boolean,
-    private val includesProvider: (includePath: Include) -> Set<FsAgnosticPath>
+    private val includesProvider: (includePath: Include) -> Iterable<FsAgnosticPath>
 ) : FsToBuildPackageChangeTranslator {
     override fun translateChanges(fsChanges: FsChanges): BuildPackageChanges {
 

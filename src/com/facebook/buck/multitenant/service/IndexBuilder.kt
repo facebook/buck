@@ -185,7 +185,7 @@ fun buckJsonToBuildPackageParser(nodes: JsonNode): BuildPackage {
 
     val includes = nodes.mapIterable("includes") {
         FsAgnosticPath.of(it.asText())
-    }?.toSortedSet() ?: sortedSetOf()
+    }?.toHashSet() ?: hashSetOf()
 
     return BuildPackage(
         buildFileDirectory = path,

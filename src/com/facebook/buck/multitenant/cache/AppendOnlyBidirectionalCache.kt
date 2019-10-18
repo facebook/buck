@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.multitenant.service
+package com.facebook.buck.multitenant.cache
 
 import it.unimi.dsi.fastutil.ints.IntIterable
 import java.util.ArrayList
@@ -32,16 +32,18 @@ import kotlin.concurrent.write
  *
  * This class is threadsafe.
  */
-internal class AppendOnlyBidirectionalCache<K> {
-    // Note that we rely on the specific implementation of ConcurrentHashMap.computeIfAbsent()
-    // because it provides stronger guarantees than ConcurrentMap.computeIfAbsent(). Specifically,
-    // ConcurrentMap.computeIfAbsent() says that it can potentially call the mapping function
-    // multiple times whereas ConcurrentHashMap.computeIfAbsent() guarantees that the mapping
-    // function is applied at most once per key. We need the "at most once" guarantee to ensure
-    // inserts into the forward and reverse maps are one-to-one.
+class AppendOnlyBidirectionalCache<K> {
+    /**
+     Note that we rely on the specific implementation of [ConcurrentHashMap.computeIfAbsent]
+     because it provides stronger guarantees than [ConcurrentMap.computeIfAbsent]. Specifically,
+     [ConcurrentMap.computeIfAbsent] says that it can potentially call the mapping function
+     multiple times whereas [ConcurrentHashMap.computeIfAbsent] guarantees that the mapping
+     function is applied at most once per key. We need the "at most once" guarantee to ensure
+     inserts into the forward and reverse maps are one-to-one.
+     */
     private val forward = ConcurrentHashMap<K, Int>()
 
-    private val lock: ReentrantReadWriteLock = ReentrantReadWriteLock()
+    private val lock = ReentrantReadWriteLock()
     @GuardedBy("lock")
     private val reverse = ArrayList<K>()
 
@@ -58,22 +60,15 @@ internal class AppendOnlyBidirectionalCache<K> {
         }
     }
 
-    fun getByIndex(index: Int): K {
-        return lock.read {
+    fun getByIndex(index: Int): K = lock.read {
             reverse[index]
         }
-    }
 
     /**
      * Maps each index in `iterable` to the corresponding value and adds it to a [Set].
      */
     fun resolveIndexes(iterable: Iterable<Int>): Set<K> {
-        val destination: HashSet<K> = if (iterable is java.util.Collection<*>) {
-            HashSet(iterable.size())
-        } else {
-            HashSet()
-        }
-
+        val destination: HashSet<K> = if (iterable is Collection<*>) HashSet(iterable.size) else hashSetOf()
         resolveIndexes(iterable, destination)
         return destination
     }
@@ -82,7 +77,7 @@ internal class AppendOnlyBidirectionalCache<K> {
      * Maps each index in `iterable` to the corresponding value and adds it to `destination`.
      */
     fun resolveIndexes(iterable: Iterable<Int>, destination: MutableCollection<K>) {
-        // Note that this takes advantage of it.unimi.dsi.fastutil, if appropriate.
+        /** Note that this takes advantage of [it.unimi.dsi.fastutil], if appropriate.*/
         if (iterable is IntIterable) {
             val indexes = iterable.iterator()
             lock.read {

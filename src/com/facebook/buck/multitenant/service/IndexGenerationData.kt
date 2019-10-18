@@ -31,23 +31,18 @@ internal typealias MutableBuildPackageMap = MutableGenerationMap<FsAgnosticPath,
 internal typealias RuleMap = GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>
 internal typealias MutableRuleMap = MutableGenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>
 
-internal typealias RdepsMap = GenerationMap<BuildTargetId, RdepsSet, BuildTargetId>
-internal typealias MutableRdepsMap = MutableGenerationMap<BuildTargetId, RdepsSet, BuildTargetId>
+internal typealias RdepsMap = GenerationMap<BuildTargetId, MemorySharingIntSet, BuildTargetId>
+internal typealias MutableRdepsMap = MutableGenerationMap<BuildTargetId, MemorySharingIntSet, BuildTargetId>
 
-internal typealias IncludesMap = GenerationMap<FsAgnosticPath, Includes, FsAgnosticPath>
-internal typealias ReverseIncludesMap = GenerationMap<Include, Set<FsAgnosticPath>, Include>
-internal typealias MutableIncludesMap = MutableGenerationMap<FsAgnosticPath, Includes, FsAgnosticPath>
-internal typealias ReverseMutableIncludesMap = MutableGenerationMap<Include, Set<FsAgnosticPath>, Include>
+internal typealias IncludesMap = GenerationMap<Include, MemorySharingIntSet, Include>
+internal typealias MutableIncludesMap = MutableGenerationMap<Include, MemorySharingIntSet, Include>
 
-fun GenerationMap<FsAgnosticPath, Set<FsAgnosticPath>, FsAgnosticPath>.toMutableMap(
-    generation: Generation
-) =
-    getEntries(generation).map { p -> p.first to p.second.toMutableSet() }.toMap(mutableMapOf())
+fun GenerationMap<Include, MemorySharingIntSet, Include>.toMap(generation: Generation) = getEntries(generation).toMap()
 
-data class IncludesMapsHolder(val forwardMap: IncludesMap, val reverseMap: ReverseIncludesMap)
+data class IncludesMapsHolder(val forwardMap: IncludesMap, val reverseMap: IncludesMap)
 data class MutableIncludesMapHolder(
     val forwardMap: MutableIncludesMap,
-    val reverseMap: ReverseMutableIncludesMap
+    val reverseMap: MutableIncludesMap
 )
 
 /**
@@ -58,8 +53,8 @@ data class MutableIncludesMapHolder(
  * @param reverseMap from include file to set of build files
  */
 data class IncludesMapChange(
-    val forwardMap: Map<FsAgnosticPath, Includes>,
-    val reverseMap: Map<Include, Set<FsAgnosticPath>>
+    val forwardMap: Map<Include, MemorySharingIntSet?>,
+    val reverseMap: Map<Include, MemorySharingIntSet?>
 ) {
     fun isEmpty(): Boolean = forwardMap.isEmpty() && reverseMap.isEmpty()
 }
@@ -96,7 +91,7 @@ internal interface IndexGenerationData {
         generation: Generation,
         localBuildPackageChanges: Map<FsAgnosticPath, BuildRuleNames?>,
         localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>,
-        localRdepsRuleMapChanges: Map<BuildTargetId, RdepsSet?>,
+        localRdepsRuleMapChanges: Map<BuildTargetId, MemorySharingIntSet?>,
         localIncludesMapChange: IncludesMapChange
     ): IndexGenerationData
 }
@@ -160,7 +155,7 @@ internal open class DefaultIndexGenerationData(
         generation: Generation,
         localBuildPackageChanges: Map<FsAgnosticPath, BuildRuleNames?>,
         localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>,
-        localRdepsRuleMapChanges: Map<BuildTargetId, RdepsSet?>,
+        localRdepsRuleMapChanges: Map<BuildTargetId, MemorySharingIntSet?>,
         localIncludesMapChange: IncludesMapChange
     ): IndexGenerationData =
         DefaultIndexGenerationData(
@@ -216,10 +211,10 @@ internal class DefaultMutableIndexGenerationData : DefaultIndexGenerationData(),
         action: (MutableIncludesMapHolder) -> T
     ): T {
         val lock = includesMapPairWithLock.second
-        val (forwardMap: IncludesMap, reverseMap: ReverseIncludesMap) = includesMapPairWithLock.first
+        val (forwardMap: IncludesMap, reverseMap: IncludesMap) = includesMapPairWithLock.first
         return lock.write {
             action(MutableIncludesMapHolder(forwardMap = forwardMap as MutableIncludesMap,
-                reverseMap = reverseMap as ReverseMutableIncludesMap))
+                reverseMap = reverseMap as MutableIncludesMap))
         }
     }
 }
