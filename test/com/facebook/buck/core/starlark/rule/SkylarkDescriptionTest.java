@@ -82,6 +82,7 @@ public class SkylarkDescriptionTest {
 
     SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
     args.setPostCoercionValue("name", "a");
+    args.setPostCoercionValue("baz", "");
     args.build();
     ProviderInfoCollection infos = description.ruleImpl(context, target, args);
     Path expectedShortPath = BuildPaths.getBaseDir(target).resolve("baz.sh");
@@ -116,6 +117,7 @@ public class SkylarkDescriptionTest {
 
     SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
     args.setPostCoercionValue("name", "a");
+    args.setPostCoercionValue("baz", "");
     args.build();
     ProviderInfoCollection infos = description.ruleImpl(context, target, args);
     Path expectedShortPath = BuildPaths.getBaseDir(target).resolve("baz1.sh");

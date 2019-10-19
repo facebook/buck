@@ -25,15 +25,21 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
+import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import org.junit.Test;
 
 public class SkylarkRuleContextAttrTest {
+
+  private final StringAttribute placeholdeStringAttr =
+      new ImmutableStringAttribute("", "", true, ImmutableList.of());
 
   static class TestAttribute extends Attribute<BuildTarget> {
 
@@ -73,10 +79,10 @@ public class SkylarkRuleContextAttrTest {
   @Test
   public void getsValue() {
     SkylarkRuleContextAttr attr =
-        new SkylarkRuleContextAttr(
+        SkylarkRuleContextAttr.of(
             "some_method",
             ImmutableMap.of("foo", "foo_value"),
-            ImmutableMap.of(),
+            ImmutableMap.of("foo", placeholdeStringAttr),
             ImmutableMap.of());
 
     assertEquals("foo_value", attr.getValue("foo"));
@@ -86,10 +92,10 @@ public class SkylarkRuleContextAttrTest {
   @Test
   public void returnsAllFieldsInSortedOrder() {
     SkylarkRuleContextAttr attr =
-        new SkylarkRuleContextAttr(
+        SkylarkRuleContextAttr.of(
             "some_method",
             ImmutableMap.of("foo", "foo_value", "bar", "bar_value"),
-            ImmutableMap.of(),
+            ImmutableMap.of("foo", placeholdeStringAttr, "bar", placeholdeStringAttr),
             ImmutableMap.of());
 
     assertEquals(ImmutableSet.of("bar", "foo"), attr.getFieldNames());
@@ -101,10 +107,10 @@ public class SkylarkRuleContextAttrTest {
     ProviderInfoCollection providerInfos = TestProviderInfoCollectionImpl.builder().build();
     TestAttribute attr = new TestAttribute();
     SkylarkRuleContextAttr ctxAttr =
-        new SkylarkRuleContextAttr(
+        SkylarkRuleContextAttr.of(
             "some_method",
             ImmutableMap.of("foo", "foo_value", "bar", "//foo:bar"),
-            ImmutableMap.of("bar", attr),
+            ImmutableMap.of("foo", placeholdeStringAttr, "bar", attr),
             ImmutableMap.of(target, providerInfos));
 
     assertEquals("foo_value", ctxAttr.getValue("foo"));

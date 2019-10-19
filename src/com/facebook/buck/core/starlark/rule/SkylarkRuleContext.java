@@ -50,8 +50,7 @@ public class SkylarkRuleContext implements SkylarkRuleContextApi {
       ImmutableMap<String, Attribute<?>> attributes) {
     this.label = label;
     this.registry = new CapturingActionRegistry(context.actionRegistry());
-    this.attr =
-        new SkylarkRuleContextAttr(methodName, methodParameters, attributes, context.deps());
+    this.attr = SkylarkRuleContextAttr.of(methodName, methodParameters, attributes, context.deps());
     this.actions = new SkylarkRuleContextActions(registry);
   }
 

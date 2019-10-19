@@ -50,7 +50,7 @@ public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
    * @param attributes
    * @param deps
    */
-  public SkylarkRuleContextAttr(
+  private SkylarkRuleContextAttr(
       String methodName,
       Map<String, Object> methodParameters,
       ImmutableMap<String, Attribute<?>> attributes,
@@ -71,6 +71,18 @@ public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
                         .postCoercionTransform(coercedValue, deps);
                   }
                 });
+  }
+
+  static SkylarkRuleContextAttr of(
+      String methodName,
+      Map<String, Object> methodParameters,
+      ImmutableMap<String, Attribute<?>> attributes,
+      ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+    Preconditions.checkState(
+        attributes.keySet().equals(methodParameters.keySet()),
+        "Coerced attr values should have the same keys as rule attrs");
+
+    return new SkylarkRuleContextAttr(methodName, methodParameters, attributes, deps);
   }
 
   @Nullable
