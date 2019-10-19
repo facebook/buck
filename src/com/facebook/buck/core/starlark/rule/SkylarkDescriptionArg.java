@@ -85,6 +85,9 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Cons
   }
 
   Map<String, Object> getCoercedAttrValues() {
+    Preconditions.checkState(
+        !attrValuesAreMutable,
+        "Should not get Coerced Attrs until after the DescriptionArg is frozen.");
     return java.util.Collections.unmodifiableMap(coercedAttrValues);
   }
 

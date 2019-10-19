@@ -80,8 +80,10 @@ public class SkylarkDescriptionTest {
               return Runtime.NONE;
             });
 
-    ProviderInfoCollection infos =
-        description.ruleImpl(context, target, new SkylarkDescriptionArg(rule));
+    SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
+    args.setPostCoercionValue("name", "a");
+    args.build();
+    ProviderInfoCollection infos = description.ruleImpl(context, target, args);
     Path expectedShortPath = BuildPaths.getBaseDir(target).resolve("baz.sh");
 
     DefaultInfo info = infos.get(DefaultInfo.PROVIDER).get();
@@ -112,8 +114,10 @@ public class SkylarkDescriptionTest {
               }
             });
 
-    ProviderInfoCollection infos =
-        description.ruleImpl(context, target, new SkylarkDescriptionArg(rule));
+    SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
+    args.setPostCoercionValue("name", "a");
+    args.build();
+    ProviderInfoCollection infos = description.ruleImpl(context, target, args);
     Path expectedShortPath = BuildPaths.getBaseDir(target).resolve("baz1.sh");
 
     DefaultInfo info = infos.get(DefaultInfo.PROVIDER).get();
