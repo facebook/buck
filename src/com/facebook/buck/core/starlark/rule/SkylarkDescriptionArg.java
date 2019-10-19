@@ -16,8 +16,11 @@
 package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgBuilder;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -84,11 +87,14 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Cons
     return rule;
   }
 
-  Map<String, Object> getCoercedAttrValues() {
+  SkylarkRuleContextAttr getCoercedAttrValues(
+      ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     Preconditions.checkState(
         !attrValuesAreMutable,
         "Should not get Coerced Attrs until after the DescriptionArg is frozen.");
-    return java.util.Collections.unmodifiableMap(coercedAttrValues);
+
+    return SkylarkRuleContextAttr.of(
+        rule.getExportedName(), coercedAttrValues, rule.getAttrs(), deps);
   }
 
   @Override

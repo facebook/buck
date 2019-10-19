@@ -17,12 +17,9 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
-import com.facebook.buck.core.starlark.rule.attr.Attribute;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
-import java.util.Map;
 
 /** The context passed to user defined rules' implementation functions */
 public class SkylarkRuleContext implements SkylarkRuleContextApi {
@@ -38,19 +35,14 @@ public class SkylarkRuleContext implements SkylarkRuleContextApi {
    * @param context the context for the analysing this rule. Used primarily for creating and
    *     manipulating actions
    * @param label the label of the new rule being evaluated
-   * @param methodName the name of the implementation method in the extension file
-   * @param methodParameters a mapping of field names to values for a given rule
-   * @param attributes a mapping of field names to attributes for a given rule
+   * @param skylarkRuleContextAttr a mapping-like representation of field names to
+   *     coerced-transformed values for a given rule
    */
   public SkylarkRuleContext(
-      RuleAnalysisContext context,
-      Label label,
-      String methodName,
-      Map<String, Object> methodParameters,
-      ImmutableMap<String, Attribute<?>> attributes) {
+      RuleAnalysisContext context, Label label, SkylarkRuleContextAttr skylarkRuleContextAttr) {
     this.label = label;
     this.registry = new CapturingActionRegistry(context.actionRegistry());
-    this.attr = SkylarkRuleContextAttr.of(methodName, methodParameters, attributes, context.deps());
+    this.attr = skylarkRuleContextAttr;
     this.actions = new SkylarkRuleContextActions(registry);
   }
 
