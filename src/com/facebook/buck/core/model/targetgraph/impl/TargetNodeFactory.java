@@ -150,7 +150,7 @@ public class TargetNodeFactory implements NodeCopier {
 
     ImmutableMap<String, ParamInfo> paramInfos;
     if (constructorArg instanceof SkylarkDescriptionArg) {
-      paramInfos = ((SkylarkDescriptionArg) constructorArg).getRule().getAllParamInfo();
+      paramInfos = ((SkylarkDescriptionArg) constructorArg).getAllParamInfo();
     } else {
       paramInfos = typeCoercerFactory.getAllParamInfo(description.getConstructorArgType());
     }

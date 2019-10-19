@@ -19,8 +19,10 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgBuilder;
+import com.facebook.buck.rules.coercer.ParamInfo;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.syntax.BaseFunction;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -100,5 +102,13 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Cons
   @Override
   public String getName() {
     return Preconditions.checkNotNull(name);
+  }
+
+  public ImmutableMap<String, ParamInfo> getAllParamInfo() {
+    return rule.getAllParamInfo();
+  }
+
+  public BaseFunction getImplementation() {
+    return rule.getImplementation();
   }
 }

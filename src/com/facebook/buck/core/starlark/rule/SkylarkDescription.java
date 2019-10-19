@@ -82,7 +82,7 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
                       new HumanReadableExceptionAugmentor(ImmutableMap.of())))
               .build();
 
-      BaseFunction implementation = args.getRule().getImplementation();
+      BaseFunction implementation = args.getImplementation();
       Object implResult = implementation.call(ImmutableList.of(ctx), ImmutableMap.of(), null, env);
 
       List<SkylarkProviderInfo> returnedProviders =
