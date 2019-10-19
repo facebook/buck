@@ -36,6 +36,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Event;
@@ -515,17 +516,18 @@ public class SkylarkUserDefinedRulesParserTest {
     ImmutableMap<String, ImmutableMap<String, Object>> expected =
         ImmutableMap.of(
             "target1",
-            ImmutableMap.of(
-                "name",
-                "target1",
-                "buck.base_path",
-                "subdir",
-                "buck.type",
-                "//subdir:foo.bzl:some_rule",
-                "attr1",
-                3,
-                "attr2",
-                2));
+            ImmutableMap.<String, Object>builder()
+                .put("name", "target1")
+                .put("buck.base_path", "subdir")
+                .put("buck.type", "//subdir:foo.bzl:some_rule")
+                .put("attr1", 3)
+                .put("attr2", 2)
+                .put("licenses", ImmutableList.of())
+                .put("labels", ImmutableList.of())
+                .put("default_target_platform", "")
+                .put("target_compatible_with", ImmutableList.of())
+                .put("compatible_with", ImmutableList.of())
+                .build());
 
     parser = createParser(eventCollector);
 
@@ -545,29 +547,31 @@ public class SkylarkUserDefinedRulesParserTest {
     ImmutableMap<String, ImmutableMap<String, Object>> expected =
         ImmutableMap.of(
             "target1",
-            ImmutableMap.of(
-                "name",
-                "target1",
-                "buck.base_path",
-                "subdir",
-                "buck.type",
-                "//subdir:foo.bzl:some_rule",
-                "attr1",
-                3,
-                "attr2",
-                2),
+            ImmutableMap.<String, Object>builder()
+                .put("name", "target1")
+                .put("buck.base_path", "subdir")
+                .put("buck.type", "//subdir:foo.bzl:some_rule")
+                .put("attr1", 3)
+                .put("attr2", 2)
+                .put("licenses", ImmutableList.of())
+                .put("labels", ImmutableList.of())
+                .put("default_target_platform", "")
+                .put("target_compatible_with", ImmutableList.of())
+                .put("compatible_with", ImmutableList.of())
+                .build(),
             "target2",
-            ImmutableMap.of(
-                "name",
-                "target2",
-                "buck.base_path",
-                "subdir",
-                "buck.type",
-                "//subdir:foo.bzl:some_rule",
-                "attr1",
-                4,
-                "attr2",
-                5));
+            ImmutableMap.<String, Object>builder()
+                .put("name", "target2")
+                .put("buck.base_path", "subdir")
+                .put("buck.type", "//subdir:foo.bzl:some_rule")
+                .put("attr1", 4)
+                .put("attr2", 5)
+                .put("licenses", ImmutableList.of())
+                .put("labels", ImmutableList.of())
+                .put("default_target_platform", "")
+                .put("target_compatible_with", ImmutableList.of())
+                .put("compatible_with", ImmutableList.of())
+                .build());
 
     parser = createParser(eventCollector);
 

@@ -15,13 +15,21 @@
  */
 package com.facebook.buck.core.starlark.rule;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgBuilder;
+import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,11 +40,13 @@ import javax.annotation.Nullable;
  * uses a backing store of attribute names -> coerced values, and makes the user's implementation
  * function available
  */
-public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, ConstructorArg {
+public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, BuildRuleArg {
+
   private boolean attrValuesAreMutable = true;
   private final SkylarkUserDefinedRule rule;
   private final Map<String, Object> coercedAttrValues;
   @Nullable private String name;
+  @Nullable private ImmutableList<UnconfiguredBuildTargetView> compatibleWith;
 
   /**
    * Create an instance of {@link SkylarkDescriptionArg}
@@ -76,9 +86,21 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Cons
    * 'Build' the {@link SkylarkDescriptionArg}. After this has been called, {@link
    * #setPostCoercionValue(String, Object)} may not be called.
    */
+  @SuppressWarnings("unchecked")
   public void build() {
     attrValuesAreMutable = false;
     name = (String) Preconditions.checkNotNull(coercedAttrValues.get("name"));
+    compatibleWith =
+        (ImmutableList<UnconfiguredBuildTargetView>)
+            Preconditions.checkNotNull(
+                coercedAttrValues.getOrDefault("compatible_with", ImmutableList.of()));
+    ImmutableList<?> targetCompatibleWith =
+        (ImmutableList<?>)
+            coercedAttrValues.getOrDefault("target_compatible_with", ImmutableList.of());
+    if (!targetCompatibleWith.isEmpty()) {
+      // and likely won't be implemented, because `target_compatible_with` attribute is deprecated
+      throw new IllegalStateException("target_compatible_with is not implemented for UDR");
+    }
   }
 
   /**
@@ -95,8 +117,15 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Cons
         !attrValuesAreMutable,
         "Should not get Coerced Attrs until after the DescriptionArg is frozen.");
 
+    Map<String, Object> filteredCoercedAttrs =
+        Maps.filterKeys(
+            coercedAttrValues, Predicates.not(rule.getHiddenImplicitAttributes()::contains));
+    Map<String, Attribute<?>> filteredAttrs =
+        Maps.filterKeys(
+            rule.getAttrs(), Predicates.not(rule.getHiddenImplicitAttributes()::contains));
+
     return SkylarkRuleContextAttr.of(
-        rule.getExportedName(), coercedAttrValues, rule.getAttrs(), deps);
+        rule.getExportedName(), filteredCoercedAttrs, filteredAttrs, deps);
   }
 
   @Override
@@ -110,5 +139,25 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Cons
 
   public BaseFunction getImplementation() {
     return rule.getImplementation();
+  }
+
+  @Override
+  public ImmutableSet<SourcePath> getLicenses() {
+    throw new AssertionError("not implemented");
+  }
+
+  @Override
+  public ImmutableSortedSet<String> getLabels() {
+    throw new AssertionError("not implemented");
+  }
+
+  @Override
+  public ImmutableList<UnconfiguredBuildTargetView> getTargetCompatibleWith() {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public ImmutableList<UnconfiguredBuildTargetView> getCompatibleWith() {
+    return Preconditions.checkNotNull(compatibleWith);
   }
 }

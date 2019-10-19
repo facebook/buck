@@ -21,11 +21,10 @@ import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.cmdline.LabelValidator;
@@ -39,6 +38,7 @@ import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 /** Provides APIs for creating build rules. */
@@ -48,10 +48,15 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
 
   /** The attributes that are applicable to all rules. This will expand over time. */
   // TODO: Once list attributes are added, ensure visibility exists
-  public static ImmutableMap<String, Attribute<?>> IMPLICIT_ATTRIBUTES =
-      ImmutableMap.of(
-          "name",
-          new ImmutableStringAttribute("", "The name of the target", true, ImmutableList.of()));
+  public static final ImmutableMap<String, Attribute<?>> IMPLICIT_ATTRIBUTES =
+      SkylarkRuleFunctionImplicitAttributes.compute();
+
+  /**
+   * The hidden attributes from IMPLICIT_ATTRIBUTES that are hidden from user's for user defined
+   * rules
+   */
+  public static final Set<String> HIDDEN_IMPLICIT_ATTRIBUTES =
+      Sets.filter(IMPLICIT_ATTRIBUTES.keySet(), attr -> !attr.equals("name"));
 
   public SkylarkRuleFunctions(LoadingCache<String, Label> labelCache) {
     this.labelCache = labelCache;
@@ -92,7 +97,8 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
     Map<String, AttributeHolder> checkedAttributes =
         attrs.getContents(String.class, AttributeHolder.class, "attrs keyword of rule()");
 
-    return SkylarkUserDefinedRule.of(loc, implementation, IMPLICIT_ATTRIBUTES, checkedAttributes);
+    return SkylarkUserDefinedRule.of(
+        loc, implementation, IMPLICIT_ATTRIBUTES, HIDDEN_IMPLICIT_ATTRIBUTES, checkedAttributes);
   }
 
   @Override

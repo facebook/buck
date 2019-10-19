@@ -6,6 +6,7 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/rules/providers/lib:lib",
         "//src/com/facebook/buck/core/starlark/coercer:coercer",
         "//src/com/facebook/buck/core/starlark/compatible:compatible",

@@ -7,6 +7,7 @@ standard_java_test(
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/rules/providers/lib:lib",
         "//src/com/facebook/buck/core/starlark/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/starlark/rule:rule",
         "//src/com/facebook/buck/core/starlark/rule/attr/impl:impl",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io/filesystem/skylark:skylark",

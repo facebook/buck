@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -56,13 +57,15 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   @Nullable private String exportedName = null;
   private final BaseFunction implementation;
   private final ImmutableMap<String, Attribute<?>> attrs;
+  private final Set<String> hiddenImplicitAttributes;
   private final ImmutableMap<String, ParamInfo> params;
 
   private SkylarkUserDefinedRule(
       FunctionSignature.WithValues<Object, SkylarkType> signature,
       Location location,
       BaseFunction implementation,
-      ImmutableMap<String, Attribute<?>> attrs) {
+      ImmutableMap<String, Attribute<?>> attrs,
+      Set<String> hiddenImplicitAttributes) {
     /**
      * The name is incomplete until {@link #export(Label, String)} is called, so we know what is on
      * the left side of the assignment operator to create a function name
@@ -70,6 +73,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     super("<incomplete rule>", signature, location);
     this.implementation = implementation;
     this.attrs = attrs;
+    this.hiddenImplicitAttributes = hiddenImplicitAttributes;
     this.params =
         getAttrs().entrySet().stream()
             .collect(
@@ -137,6 +141,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       Location location,
       BaseFunction implementation,
       ImmutableMap<String, Attribute<?>> implicitAttributes,
+      Set<String> hiddenImplicitAttributes,
       Map<String, AttributeHolder> attrs)
       throws EvalException {
 
@@ -147,7 +152,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
 
     FunctionSignature.WithValues<Object, SkylarkType> signature =
         createSignature(validatedAttrs, location);
-    return new SkylarkUserDefinedRule(signature, location, implementation, validatedAttrs);
+    return new SkylarkUserDefinedRule(
+        signature, location, implementation, validatedAttrs, hiddenImplicitAttributes);
   }
 
   private static void validateImplementation(Location location, BaseFunction implementation)
@@ -297,6 +303,10 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   /** Get ParamInfo objects for all of the {@link Attribute}s provided to this instance */
   public ImmutableMap<String, ParamInfo> getAllParamInfo() {
     return params;
+  }
+
+  public Set<String> getHiddenImplicitAttributes() {
+    return hiddenImplicitAttributes;
   }
 
   private static class MandatoryComparator implements Comparator<Map.Entry<String, Attribute<?>>> {

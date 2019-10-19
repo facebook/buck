@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.skylark.function;
 
+import static com.facebook.buck.skylark.function.SkylarkRuleFunctions.HIDDEN_IMPLICIT_ATTRIBUTES;
 import static com.facebook.buck.skylark.function.SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES;
 
 import com.facebook.buck.core.starlark.rule.SkylarkRuleContext;
@@ -93,7 +94,11 @@ public class FakeSkylarkUserDefinedRuleFactory {
         };
     SkylarkUserDefinedRule ret =
         SkylarkUserDefinedRule.of(
-            Location.BUILTIN, implementation, IMPLICIT_ATTRIBUTES, ImmutableMap.of(attrName, attr));
+            Location.BUILTIN,
+            implementation,
+            IMPLICIT_ATTRIBUTES,
+            HIDDEN_IMPLICIT_ATTRIBUTES,
+            ImmutableMap.of(attrName, attr));
     ret.export(Label.parseAbsolute(label, ImmutableMap.of()), exportedName);
 
     return ret;

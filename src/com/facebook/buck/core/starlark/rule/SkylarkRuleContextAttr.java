@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
 public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
 
   private final String methodName;
-  private final ImmutableMap<String, Attribute<?>> attributes;
+  private final Map<String, Attribute<?>> attributes;
   private final LoadingCache<String, Object> postCoercionTransformValues;
 
   /**
@@ -52,7 +52,7 @@ public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
   private SkylarkRuleContextAttr(
       String methodName,
       Map<String, Object> methodParameters,
-      ImmutableMap<String, Attribute<?>> attributes,
+      Map<String, Attribute<?>> attributes,
       ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     this.methodName = methodName;
     this.attributes = attributes;
@@ -74,7 +74,7 @@ public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
   static SkylarkRuleContextAttr of(
       String methodName,
       Map<String, Object> methodParameters,
-      ImmutableMap<String, Attribute<?>> attributes,
+      Map<String, Attribute<?>> attributes,
       ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     Preconditions.checkState(
         attributes.keySet().equals(methodParameters.keySet()),

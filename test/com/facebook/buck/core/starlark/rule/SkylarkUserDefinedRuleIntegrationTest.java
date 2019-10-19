@@ -43,6 +43,7 @@ import java.nio.file.Paths;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
+import org.hamcrest.junit.MatcherAssert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -553,5 +554,31 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertEquals(
         "from_root content + from_middle content",
         filesystem.readFileIfItExists(expectedLeafPath).get());
+  }
+
+  @Test
+  public void compatibleWith() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "compatible_with", tmp);
+    workspace.setUp();
+
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+
+    ProcessResult result = workspace.runBuckBuild("//:file");
+    result.assertFailure();
+
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "Cannot use select() expression when target platform is not specified"));
+
+    ProcessResult result2 = workspace.runBuckBuild("--target-platforms=//:red-p", "//:file");
+    result2.assertSuccess();
+
+    Path expectedLeafPath =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:file"))
+            .resolve("out.txt");
+
+    assertEquals("contents", filesystem.readFileIfItExists(expectedLeafPath).get());
   }
 }
