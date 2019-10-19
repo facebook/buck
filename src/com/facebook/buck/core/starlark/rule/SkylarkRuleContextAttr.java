@@ -39,7 +39,6 @@ import javax.annotation.Nullable;
  */
 public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
 
-  private final Map<String, Object> methodParameters;
   private final String methodName;
   private final ImmutableMap<String, Attribute<?>> attributes;
   private final LoadingCache<String, Object> postCoercionTransformValues;
@@ -55,7 +54,6 @@ public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
       Map<String, Object> methodParameters,
       ImmutableMap<String, Attribute<?>> attributes,
       ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
-    this.methodParameters = methodParameters;
     this.methodName = methodName;
     this.attributes = attributes;
     this.postCoercionTransformValues =
@@ -88,19 +86,20 @@ public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
   @Nullable
   @Override
   public Object getValue(String name) {
-    if (attributes.containsKey(name)) {
-      try {
-        return postCoercionTransformValues.get(name);
-      } catch (ExecutionException e) {
-        throw new BuckUncheckedExecutionException(e);
-      }
+    if (!attributes.containsKey(name)) {
+      // loading cache can't store null, so we exit early
+      return null;
     }
-    return methodParameters.get(name);
+    try {
+      return postCoercionTransformValues.get(name);
+    } catch (ExecutionException e) {
+      throw new BuckUncheckedExecutionException(e);
+    }
   }
 
   @Override
   public ImmutableCollection<String> getFieldNames() {
-    return ImmutableSortedSet.copyOf(methodParameters.keySet());
+    return ImmutableSortedSet.copyOf(attributes.keySet());
   }
 
   @Nullable
