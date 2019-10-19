@@ -56,7 +56,7 @@ fun main(args: Array<String>) {
 
                 val start = System.nanoTime()
                 val indexComponents = InputSource.from(sourceUri).use { inputSource ->
-                    msg("Loading index '$corpus' from $source (${inputSource.getSize()} bytes)")
+                    msg("Loading index '$corpus' from $source (${inputSource.getHumanReadableSize()})")
                     createIndex(inputSource.getInputStream())
                 }
 

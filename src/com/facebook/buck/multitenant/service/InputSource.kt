@@ -21,6 +21,10 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
+import kotlin.math.ln
+import kotlin.math.pow
+
+private const val KB_IN_BYTES = 1024
 
 /**
  * Abstracts away physical source of index data, like file or network.
@@ -37,6 +41,20 @@ sealed class InputSource : Closeable {
      * Size of index data in bytes, if available, otherwise -1
      */
     abstract fun getSize(): Long
+
+    /**
+     * @return human readable representation of index data size
+     *
+     *[Copied_from](https://programming.guide/java/formatting-byte-size-to-human-readable-format.html)
+     */
+    fun getHumanReadableSize(): String {
+        val bytes = getSize()
+        if (bytes < KB_IN_BYTES) return "$bytes B"
+        val unit = KB_IN_BYTES.toDouble()
+        val exp = (ln(bytes.toDouble()) / ln(unit)).toInt()
+        val pre = "KMGTPE"[exp - 1].toString()
+        return String.format("%.1f %sB", bytes / unit.pow(exp.toDouble()), pre)
+    }
 
     companion object {
         fun from(uri: URI): InputSource {
@@ -55,12 +73,8 @@ sealed class InputSource : Closeable {
      * Reads index data from a file on the machine
      */
     data class File(val path: String) : InputSource() {
-        private val javaFile: java.io.File
+        private val javaFile: java.io.File = java.io.File(path)
         private var stream: InputStream? = null
-
-        init {
-            javaFile = java.io.File(path)
-        }
 
         private fun ensureOpened() {
             if (stream != null) {
