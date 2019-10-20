@@ -16,13 +16,15 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
-import java.util.function.Function;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 /** Class that contains the values needed to build a DescriptionArg */
 @BuckStyleValue
-public abstract class ConstructorArgBuilder<T extends ConstructorArg> {
+public abstract class ConstructorArgDescriptor<T extends ConstructorArg> {
 
   /** Reified {@code <T>} */
   public abstract Class<T> constructorArgClass();
@@ -33,24 +35,24 @@ public abstract class ConstructorArgBuilder<T extends ConstructorArg> {
    * <p>This is either the ImmutableValue.Builder class for {@code T}, or {@link
    * com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg}
    */
-  public abstract Object getBuilder();
+  public abstract Supplier<Object> getBuilderFactory();
 
   /** The param infos needed to populate this object */
   public abstract ImmutableMap<String, ParamInfo> getParamInfos();
 
   /**
-   * A function that takes the result of {@link #getBuilder()}, and calls its 'build' function to
-   * return description args of type {@code T}
+   * A function that takes the result of {@link #getBuilderFactory()}}, and calls its 'build'
+   * function to return description args of type {@code T}
    */
-  protected abstract Function<Object, T> getBuildFunction();
+  protected abstract BiFunction<Object, BuildTarget, T> getBuildFunction();
 
   /**
-   * Builds the partially constructed object returned by {@link #getBuilder()}
+   * Builds the partially constructed object returned by {@link #getBuilderFactory()}
    *
    * @return A fully constructed ConstructorArg of type {@code T} obtained by applying {@link
-   *     #getBuildFunction()} to {@link #getBuilder()}
+   *     #getBuildFunction()} to {@link #getBuilderFactory()}
    */
-  public T build() {
-    return getBuildFunction().apply(getBuilder());
+  public T build(Object builder, BuildTarget buildTarget) {
+    return getBuildFunction().apply(builder, buildTarget);
   }
 }

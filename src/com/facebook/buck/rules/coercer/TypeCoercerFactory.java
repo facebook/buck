@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.description.arg.ConstructorArg;
-import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.Type;
 
@@ -44,6 +43,6 @@ public interface TypeCoercerFactory {
    * Returns an unpopulated DTO object, and the build method which must be called with it when it is
    * finished being populated.
    */
-  <T extends ConstructorArg> ConstructorArgBuilder<T> instantiateSkeleton(
-      Class<T> dtoType, BuildTarget buildTarget);
+  <T extends ConstructorArg> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+      Class<T> dtoType);
 }

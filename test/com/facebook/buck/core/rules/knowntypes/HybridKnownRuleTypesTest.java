@@ -28,7 +28,7 @@ import com.facebook.buck.core.starlark.rule.SkylarkDescription;
 import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
-import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
+import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.google.common.collect.ImmutableList;
@@ -107,13 +107,15 @@ public class HybridKnownRuleTypesTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
 
-    ConstructorArgBuilder<SkylarkDescriptionArg> builder =
-        knownTypes.getConstructorArgBuilder(factory, ruleType, SkylarkDescriptionArg.class, target);
-    ((SkylarkDescriptionArgBuilder) builder.getBuilder()).setPostCoercionValue("baz", "value");
-    ((SkylarkDescriptionArgBuilder) builder.getBuilder()).setPostCoercionValue("name", "thename");
+    ConstructorArgDescriptor<SkylarkDescriptionArg> argDescriptor =
+        knownTypes.getConstructorArgDescriptor(factory, ruleType, SkylarkDescriptionArg.class);
+    SkylarkDescriptionArgBuilder builder =
+        (SkylarkDescriptionArgBuilder) argDescriptor.getBuilderFactory().get();
+    builder.setPostCoercionValue("baz", "value");
+    builder.setPostCoercionValue("name", "thename");
 
     // Ensure that we can cast back properly
-    SkylarkDescriptionArg built = builder.build();
+    SkylarkDescriptionArg built = argDescriptor.build(builder, target);
 
     assertEquals("value", built.getPostCoercionValue("baz"));
   }
@@ -125,12 +127,14 @@ public class HybridKnownRuleTypesTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
 
-    ConstructorArgBuilder<KnownRuleTestDescriptionArg> builder =
-        knownTypes.getConstructorArgBuilder(
-            factory, ruleType, KnownRuleTestDescriptionArg.class, target);
+    ConstructorArgDescriptor<KnownRuleTestDescriptionArg> argDescriptor =
+        knownTypes.getConstructorArgDescriptor(
+            factory, ruleType, KnownRuleTestDescriptionArg.class);
 
-    ((KnownRuleTestDescriptionArg.Builder) builder.getBuilder()).setName("that_rule");
-    KnownRuleTestDescriptionArg ret = builder.build();
+    KnownRuleTestDescriptionArg.Builder builder =
+        (KnownRuleTestDescriptionArg.Builder) argDescriptor.getBuilderFactory().get();
+    builder.setName("that_rule");
+    KnownRuleTestDescriptionArg ret = argDescriptor.build(builder, target);
     assertEquals("that_rule", ret.getName());
   }
 }

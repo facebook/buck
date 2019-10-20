@@ -18,10 +18,9 @@ package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
-import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
+import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 
 /** Provides access to rule types and descriptions for both native and user defined rules. */
@@ -67,17 +66,13 @@ public class HybridKnownRuleTypes implements KnownRuleTypes {
   }
 
   @Override
-  public <T extends ConstructorArg> ConstructorArgBuilder<T> getConstructorArgBuilder(
-      TypeCoercerFactory typeCoercerFactory,
-      RuleType ruleType,
-      Class<T> dtoClass,
-      BuildTarget buildTarget) {
+  public <T extends ConstructorArg> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+      TypeCoercerFactory typeCoercerFactory, RuleType ruleType, Class<T> dtoClass) {
     if (UserDefinedRuleNames.isUserDefinedRuleIdentifier(ruleType.getName())) {
-      return userDefinedRuleTypes.getConstructorArgBuilder(
-          typeCoercerFactory, ruleType, dtoClass, buildTarget);
+      return userDefinedRuleTypes.getConstructorArgDescriptor(
+          typeCoercerFactory, ruleType, dtoClass);
     } else {
-      return nativeRuleTypes.getConstructorArgBuilder(
-          typeCoercerFactory, ruleType, dtoClass, buildTarget);
+      return nativeRuleTypes.getConstructorArgDescriptor(typeCoercerFactory, ruleType, dtoClass);
     }
   }
 }

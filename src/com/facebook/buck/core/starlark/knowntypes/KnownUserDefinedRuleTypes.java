@@ -18,15 +18,14 @@ package com.facebook.buck.core.starlark.knowntypes;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.AbstractRuleType;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.starlark.rule.SkylarkDescription;
 import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
-import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
-import com.facebook.buck.rules.coercer.ImmutableConstructorArgBuilder;
+import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
+import com.facebook.buck.rules.coercer.ImmutableConstructorArgDescriptor;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -100,18 +99,15 @@ public class KnownUserDefinedRuleTypes implements KnownRuleTypes {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T extends ConstructorArg> ConstructorArgBuilder<T> getConstructorArgBuilder(
-      TypeCoercerFactory typeCoercerFactory,
-      RuleType ruleType,
-      Class<T> dtoClass,
-      BuildTarget buildTarget) {
+  public <T extends ConstructorArg> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+      TypeCoercerFactory typeCoercerFactory, RuleType ruleType, Class<T> dtoClass) {
     Preconditions.checkArgument(dtoClass.isAssignableFrom(SkylarkDescriptionArg.class));
     SkylarkUserDefinedRule rule = Objects.requireNonNull(getRule(ruleType.getName()));
-    return new ImmutableConstructorArgBuilder<T>(
+    return new ImmutableConstructorArgDescriptor<>(
         dtoClass,
-        new SkylarkDescriptionArg(rule),
+        () -> new SkylarkDescriptionArg(rule),
         rule.getAllParamInfo(),
-        args -> {
+        (args, buildTarget) -> {
           ((SkylarkDescriptionArg) args).build();
           // Terrible cast here, but java doesn't have useful generic type constraints
           return (T) args;

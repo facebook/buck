@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
+import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.types.Pair;
@@ -256,16 +256,16 @@ public abstract class TargetNodeTranslator {
   private <A extends ConstructorArg> Optional<A> translateConstructorArg(
       CellPathResolver cellPathResolver, String targetBaseName, TargetNode<A> node) {
     A constructorArg = node.getConstructorArg();
-    ConstructorArgBuilder<A> newArgAndBuild =
-        typeCoercerFactory.instantiateSkeleton(
-            node.getDescription().getConstructorArgType(), node.getBuildTarget());
+    ConstructorArgDescriptor<A> newArgAndBuild =
+        typeCoercerFactory.getConstructorArgDescriptor(
+            node.getDescription().getConstructorArgType());
+    Object builder = newArgAndBuild.getBuilderFactory().get();
     boolean modified =
-        translateConstructorArg(
-            cellPathResolver, targetBaseName, constructorArg, newArgAndBuild.getBuilder());
+        translateConstructorArg(cellPathResolver, targetBaseName, constructorArg, builder);
     if (!modified) {
       return Optional.empty();
     }
-    return Optional.of(newArgAndBuild.build());
+    return Optional.of(newArgAndBuild.build(builder, node.getBuildTarget()));
   }
 
   /**

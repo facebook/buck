@@ -425,9 +425,9 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   }
 
   @Override
-  public <T extends ConstructorArg> ConstructorArgBuilder<T> instantiateSkeleton(
-      Class<T> dtoType, BuildTarget buildTarget) {
-    return coercedTypeCache.instantiateSkeleton(dtoType, buildTarget);
+  public <T extends ConstructorArg> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+      Class<T> dtoType) {
+    return coercedTypeCache.getConstructorArgDescriptor(dtoType);
   }
 
   private <T extends Comparable<T>> TypeCoercer<T> typeCoercerForComparableType(Type type) {

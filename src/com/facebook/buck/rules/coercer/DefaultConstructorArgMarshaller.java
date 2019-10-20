@@ -78,17 +78,18 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
-      ConstructorArgBuilder<T> constructorArgBuilder,
+      ConstructorArgDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       Map<String, ?> attributes)
       throws CoerceFailedException {
 
-    ImmutableMap<String, ParamInfo> allParamInfo = constructorArgBuilder.getParamInfos();
+    ImmutableMap<String, ParamInfo> allParamInfo = constructorArgDescriptor.getParamInfos();
 
     boolean isConfigurationRule =
-        ConfigurationRuleArg.class.isAssignableFrom(constructorArgBuilder.constructorArgClass());
+        ConfigurationRuleArg.class.isAssignableFrom(constructorArgDescriptor.constructorArgClass());
 
+    Object builder = constructorArgDescriptor.getBuilderFactory().get();
     for (ParamInfo info : allParamInfo.values()) {
       Object attribute = attributes.get(info.getName());
       if (attribute == null) {
@@ -141,10 +142,10 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 attribute);
       }
       if (attributeValue != null) {
-        info.setCoercedValue(constructorArgBuilder.getBuilder(), attributeValue);
+        info.setCoercedValue(builder, attributeValue);
       }
     }
-    T dto = constructorArgBuilder.build();
+    T dto = constructorArgDescriptor.build(builder, buildTarget);
     collectDeclaredDeps(cellPathResolver, allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
   }

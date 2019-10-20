@@ -36,7 +36,7 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
+import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableSet;
@@ -108,9 +108,9 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     Object constructorArg;
     try (SimplePerfEvent.Scope scope =
         perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
-      ConstructorArgBuilder<?> builder =
-          knownRuleTypes.getConstructorArgBuilder(
-              typeCoercerFactory, ruleType, description.getConstructorArgType(), target);
+      ConstructorArgDescriptor<?> builder =
+          knownRuleTypes.getConstructorArgDescriptor(
+              typeCoercerFactory, ruleType, description.getConstructorArgType());
       constructorArg =
           marshaller.populate(
               targetCell.getCellPathResolver(),

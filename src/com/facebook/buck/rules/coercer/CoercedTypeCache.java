@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.Types;
@@ -63,8 +62,8 @@ class CoercedTypeCache {
    * finished being populated.
    */
   @SuppressWarnings("unchecked")
-  <T extends ConstructorArg> ConstructorArgBuilder<T> instantiateSkeleton(
-      Class<T> dtoType, BuildTarget buildTarget) {
+  <T extends ConstructorArg> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+      Class<T> dtoType) {
 
     boolean isBuildRule = BuildRuleArg.class.isAssignableFrom(dtoType);
     boolean isConfiguration = ConfigurationRuleArg.class.isAssignableFrom(dtoType);
@@ -74,13 +73,23 @@ class CoercedTypeCache {
         dtoType.getName());
 
     try {
-      Object builder = dtoType.getMethod("builder").invoke(null);
-      Method buildMethod = builder.getClass().getMethod("build");
-      return new ImmutableConstructorArgBuilder<T>(
+      Method builderMethod = dtoType.getMethod("builder");
+      Method buildMethod = builderMethod.getReturnType().getMethod("build");
+      return new ImmutableConstructorArgDescriptor<>(
           dtoType,
-          builder,
+          () -> {
+            try {
+              return builderMethod.invoke(null);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+              throw new IllegalStateException(
+                  String.format(
+                      "Could not instantiate immutable constructor arg type %s: %s",
+                      dtoType, e.getMessage()),
+                  e);
+            }
+          },
           getAllParamInfo(dtoType),
-          x -> {
+          (x, buildTarget) -> {
             try {
               return (T) buildMethod.invoke(x);
             } catch (IllegalAccessException e) {
@@ -109,7 +118,7 @@ class CoercedTypeCache {
                   e.getCause());
             }
           });
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+    } catch (NoSuchMethodException e) {
       throw new IllegalStateException(
           String.format(
               "Could not instantiate immutable constructor arg type %s: %s",
