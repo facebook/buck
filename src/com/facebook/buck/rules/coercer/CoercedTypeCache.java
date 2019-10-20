@@ -54,7 +54,7 @@ class CoercedTypeCache {
 
   /** @return All {@link ParamInfo}s for coercableType. */
   ImmutableMap<String, ParamInfo> getAllParamInfo(Class<?> coercableType) {
-    return coercedTypeCache.getUnchecked(coercableType);
+    return paramInfoCache.getUnchecked(coercableType);
   }
 
   /**
@@ -64,7 +64,39 @@ class CoercedTypeCache {
   @SuppressWarnings("unchecked")
   <T extends ConstructorArg> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
       Class<T> dtoType) {
+    return (ConstructorArgDescriptor<T>) constructorArgDescriptorCache.getUnchecked(dtoType);
+  }
 
+  private final LoadingCache<Class<?>, ImmutableMap<String, ParamInfo>> paramInfoCache;
+  private final LoadingCache<Class<? extends ConstructorArg>, ConstructorArgDescriptor<?>>
+      constructorArgDescriptorCache;
+
+  CoercedTypeCache(TypeCoercerFactory typeCoercerFactory) {
+    this.typeCoercerFactory = typeCoercerFactory;
+
+    constructorArgDescriptorCache =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<Class<? extends ConstructorArg>, ConstructorArgDescriptor<?>>() {
+                  @Override
+                  public ConstructorArgDescriptor<?> load(Class<? extends ConstructorArg> dtoType) {
+                    return newConstructorArgDescriptor(dtoType);
+                  }
+                });
+    paramInfoCache =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<Class<?>, ImmutableMap<String, ParamInfo>>() {
+                  @Override
+                  public ImmutableMap<String, ParamInfo> load(Class<?> key) {
+                    return paramTypes(key);
+                  }
+                });
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T extends ConstructorArg> ConstructorArgDescriptor<T> newConstructorArgDescriptor(
+      Class<T> dtoType) {
     boolean isBuildRule = BuildRuleArg.class.isAssignableFrom(dtoType);
     boolean isConfiguration = ConfigurationRuleArg.class.isAssignableFrom(dtoType);
     Preconditions.checkArgument(
@@ -88,7 +120,7 @@ class CoercedTypeCache {
                   e);
             }
           },
-          getAllParamInfo(dtoType),
+          paramInfoCache.getUnchecked(dtoType),
           (x, buildTarget) -> {
             try {
               return (T) buildMethod.invoke(x);
@@ -127,41 +159,28 @@ class CoercedTypeCache {
     }
   }
 
-  private final LoadingCache<Class<?>, ImmutableMap<String, ParamInfo>> coercedTypeCache;
-
-  CoercedTypeCache(TypeCoercerFactory typeCoercerFactory) {
-    this.typeCoercerFactory = typeCoercerFactory;
-
-    coercedTypeCache =
-        CacheBuilder.newBuilder()
-            .build(
-                new CacheLoader<Class<?>, ImmutableMap<String, ParamInfo>>() {
-                  @Override
-                  public ImmutableMap<String, ParamInfo> load(Class<?> coercableType) {
-
-                    if (Types.getSupertypes(coercableType).stream()
-                        .noneMatch(c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
-                      // Sniff for @BuckStyleImmutable not @Value.Immutable because the
-                      // latter isn't retained at runtime.
-                      throw new IllegalArgumentException(
-                          String.format(
-                              "Tried to coerce non-Immutable type %s - all args should be "
-                                  + "immutable, in which case its super-class should be annotated @BuckStyleImmutable",
-                              coercableType.getName()));
-                    }
-                    Class<?> builderType;
-                    try {
-                      builderType = coercableType.getMethod("builder").getReturnType();
-                    } catch (NoSuchMethodException e) {
-                      throw new IllegalArgumentException(
-                          String.format(
-                              "Tried to coerce non-Immutable type %s - be "
-                                  + "immutable, in which case they should have a builder method",
-                              coercableType.getName()));
-                    }
-                    return extractForImmutableBuilder(builderType);
-                  }
-                });
+  private ImmutableMap<String, ParamInfo> paramTypes(Class<?> coercableType) {
+    if (Types.getSupertypes(coercableType).stream()
+        .noneMatch(c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
+      // Sniff for @BuckStyleImmutable not @Value.Immutable because the
+      // latter isn't retained at runtime.
+      throw new IllegalArgumentException(
+          String.format(
+              "Tried to coerce non-Immutable type %s - all args should be "
+                  + "immutable, in which case its super-class should be annotated @BuckStyleImmutable",
+              coercableType.getName()));
+    }
+    Class<?> builderType;
+    try {
+      builderType = coercableType.getMethod("builder").getReturnType();
+    } catch (NoSuchMethodException e) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Tried to coerce non-Immutable type %s - be "
+                  + "immutable, in which case they should have a builder method",
+              coercableType.getName()));
+    }
+    return extractForImmutableBuilder(builderType);
   }
 
   @VisibleForTesting
