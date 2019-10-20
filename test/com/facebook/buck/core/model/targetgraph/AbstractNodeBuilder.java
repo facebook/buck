@@ -18,7 +18,7 @@ package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -58,7 +58,7 @@ import java.util.Optional;
  */
 public abstract class AbstractNodeBuilder<
     TArgBuilder,
-    TArg extends ConstructorArg,
+    TArg extends BuildRuleArg,
     TDescription extends DescriptionWithTargetGraph<TArg>,
     TBuildRule extends BuildRule> {
   protected static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();

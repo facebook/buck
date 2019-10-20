@@ -16,12 +16,12 @@
 
 package com.facebook.buck.features.js;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 
 /**
  * Empty interface to mark {@link DescriptionWithTargetGraph} subclasses that return {@link
  * JsBundleOutputs} instances from their {@link DescriptionWithTargetGraph#createBuildRule} method.
  */
-public interface JsBundleOutputsDescription<T extends ConstructorArg>
+public interface JsBundleOutputsDescription<T extends BuildRuleArg>
     extends DescriptionWithTargetGraph<T> {}

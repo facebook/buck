@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis.impl;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ProviderCreationContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
@@ -28,7 +28,7 @@ import org.immutables.value.Value;
 /**
  * An implementation of the {@link RuleAnalysisResult} for legacy provider results from {@link
  * com.facebook.buck.core.rules.LegacyProviderCompatibleDescription#createProviders(ProviderCreationContext,
- * BuildTarget, ConstructorArg)}
+ * BuildTarget, BuildRuleArg)}.
  *
  * <p>This implementation throws on any operation relating to {@link ActionAnalysisData}.
  */

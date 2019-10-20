@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -174,7 +174,7 @@ public class BuiltTargetVerifierTest {
   }
 
   private static class FlavoredDescription
-      implements DescriptionWithTargetGraph<ConstructorArg>, Flavored {
+      implements DescriptionWithTargetGraph<BuildRuleArg>, Flavored {
 
     private final ImmutableSet<FlavorDomain<?>> flavorDomains;
 
@@ -187,12 +187,12 @@ public class BuiltTargetVerifierTest {
         BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
-        ConstructorArg args) {
+        BuildRuleArg args) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public Class<ConstructorArg> getConstructorArgType() {
+    public Class<BuildRuleArg> getConstructorArgType() {
       throw new UnsupportedOperationException();
     }
 
@@ -202,20 +202,19 @@ public class BuiltTargetVerifierTest {
     }
   }
 
-  private static class NonFlavoredDescription
-      implements DescriptionWithTargetGraph<ConstructorArg> {
+  private static class NonFlavoredDescription implements DescriptionWithTargetGraph<BuildRuleArg> {
 
     @Override
     public BuildRule createBuildRule(
         BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
-        ConstructorArg args) {
+        BuildRuleArg args) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public Class<ConstructorArg> getConstructorArgType() {
+    public Class<BuildRuleArg> getConstructorArgType() {
       throw new UnsupportedOperationException();
     }
   }

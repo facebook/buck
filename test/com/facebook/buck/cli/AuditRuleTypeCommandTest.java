@@ -19,18 +19,15 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 import org.junit.Test;
@@ -55,12 +52,7 @@ public class AuditRuleTypeCommandTest {
 
     @BuckStyleImmutable
     @Value.Immutable
-    interface AbstractBuildRuleDescriptionArg extends ConstructorArg {
-      ImmutableSet<SourcePath> getLicenses();
-
-      @Value.NaturalOrder
-      ImmutableSortedSet<String> getLabels();
-
+    interface AbstractBuildRuleDescriptionArg extends BuildRuleArg {
       Optional<String> getOptionalString();
     }
   }
@@ -78,9 +70,12 @@ public class AuditRuleTypeCommandTest {
         equalToIgnoringPlatformNewlines(
             "def build_rule (\n"
                 + "    name,\n"
+                + "    compatible_with = None,\n"
+                + "    default_target_platform = None,\n"
                 + "    labels = None,\n"
                 + "    licenses = None,\n"
                 + "    optional_string = None,\n"
+                + "    target_compatible_with = None,\n"
                 + "):\n"
                 + "    ...\n"));
   }

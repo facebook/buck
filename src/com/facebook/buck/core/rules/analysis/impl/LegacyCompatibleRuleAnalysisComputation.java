@@ -17,7 +17,7 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableSet;
  * The {@link GraphComputation} for performing the target graph to provider and action graph
  * transformation, with legacy compatible behaviour where we delegate to the {@link
  * com.facebook.buck.core.rules.LegacyProviderCompatibleDescription#createProviders(ProviderCreationContext,
- * BuildTarget, ConstructorArg)}.
+ * BuildTarget, BuildRuleArg)}
  */
 public class LegacyCompatibleRuleAnalysisComputation
     implements GraphComputation<RuleAnalysisKey, RuleAnalysisResult> {
@@ -65,7 +65,7 @@ public class LegacyCompatibleRuleAnalysisComputation
   @Override
   public RuleAnalysisResult transform(RuleAnalysisKey key, ComputationEnvironment env)
       throws ActionCreationException, RuleAnalysisException {
-    return transformImpl(key, targetGraph.get(key.getBuildTarget()), env);
+    return transformImpl(key, targetGraph.get(key.getBuildTarget()).cast(BuildRuleArg.class), env);
   }
 
   @Override
@@ -86,7 +86,7 @@ public class LegacyCompatibleRuleAnalysisComputation
     return delegate.discoverPreliminaryDeps(key);
   }
 
-  private <T extends ConstructorArg> RuleAnalysisResult transformImpl(
+  private <T extends BuildRuleArg> RuleAnalysisResult transformImpl(
       RuleAnalysisKey key, TargetNode<T> targetNode, ComputationEnvironment env)
       throws ActionCreationException, RuleAnalysisException {
     BaseDescription<T> description = targetNode.getDescription();
@@ -104,7 +104,7 @@ public class LegacyCompatibleRuleAnalysisComputation
         String.format("Unknown Description type %s", description.getClass()));
   }
 
-  private <T extends ConstructorArg> RuleAnalysisResult computeLegacyProviders(
+  private <T extends BuildRuleArg> RuleAnalysisResult computeLegacyProviders(
       RuleAnalysisKey key,
       ComputationEnvironment env,
       TargetNode<T> targetNode,

@@ -25,7 +25,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -212,7 +212,7 @@ public class ActionGraphBuilderTest {
             targetGraph,
             new TargetNodeToBuildRuleTransformer() {
               @Override
-              public <T extends ConstructorArg> BuildRule transform(
+              public <T extends BuildRuleArg> BuildRule transform(
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
                   ConfigurationRuleRegistry configurationRuleRegistry,
@@ -245,7 +245,7 @@ public class ActionGraphBuilderTest {
             targetGraph,
             new TargetNodeToBuildRuleTransformer() {
               @Override
-              public <T extends ConstructorArg> BuildRule transform(
+              public <T extends BuildRuleArg> BuildRule transform(
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
                   ConfigurationRuleRegistry configurationRuleRegistry,

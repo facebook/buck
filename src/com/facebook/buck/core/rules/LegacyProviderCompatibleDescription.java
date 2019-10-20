@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 
@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
  * Marks a {@link DescriptionWithTargetGraph} as compatible with {@link
  * com.facebook.buck.core.rules.providers.Provider}s.
  */
-public interface LegacyProviderCompatibleDescription<T extends ConstructorArg>
+public interface LegacyProviderCompatibleDescription<T extends BuildRuleArg>
     extends DescriptionWithTargetGraph<T> {
 
   /**

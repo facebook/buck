@@ -16,13 +16,13 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.google.common.collect.ImmutableSet;
 
 /** A node which is the root of a version sub-graph. */
-public interface VersionRoot<A extends ConstructorArg> extends DescriptionWithTargetGraph<A> {
+public interface VersionRoot<A extends BuildRuleArg> extends DescriptionWithTargetGraph<A> {
 
   default boolean isVersionRoot(@SuppressWarnings("unused") ImmutableSet<Flavor> flavors) {
     return true;

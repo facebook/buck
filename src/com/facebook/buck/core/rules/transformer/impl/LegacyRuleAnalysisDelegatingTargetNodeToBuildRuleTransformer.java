@@ -17,7 +17,7 @@ package com.facebook.buck.core.rules.transformer.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -55,7 +55,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
   }
 
   @Override
-  public <T extends ConstructorArg> BuildRule transform(
+  public <T extends BuildRuleArg> BuildRule transform(
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
       ConfigurationRuleRegistry configurationRuleRegistry,

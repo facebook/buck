@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.resolver.impl;
 
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -242,7 +243,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
                                     targetGraph,
                                     configurationRuleRegistry,
                                     this,
-                                    targetGraph.get(target)))
+                                    targetGraph.get(target).cast(BuildRuleArg.class)))
                         .apply(target)));
   }
 

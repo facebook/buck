@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -81,7 +81,8 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
   @Test
   public void transformDelegatesWithProvidersWhenOldDescription() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
-    TargetNode<?> targetNode = FakeTargetNodeBuilder.newBuilder(target).build();
+    TargetNode<? extends BuildRuleArg> targetNode =
+        FakeTargetNodeBuilder.newBuilder(target).build();
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
     ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();
@@ -107,7 +108,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
     TargetNodeToBuildRuleTransformer delegate =
         new TargetNodeToBuildRuleTransformer() {
           @Override
-          public <T extends ConstructorArg> BuildRule transform(
+          public <T extends BuildRuleArg> BuildRule transform(
               ToolchainProvider tool,
               TargetGraph targetGraph,
               ConfigurationRuleRegistry configurationRuleRegistry,
@@ -155,7 +156,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
           }
         };
 
-    TargetNode<?> targetNode =
+    TargetNode<? extends BuildRuleArg> targetNode =
         nodeCopier.createFromObject(
             description,
             FakeTargetNodeArg.builder().setName("name").build(),
@@ -206,7 +207,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
     TargetNodeToBuildRuleTransformer delegate =
         new TargetNodeToBuildRuleTransformer() {
           @Override
-          public <T extends ConstructorArg> BuildRule transform(
+          public <T extends BuildRuleArg> BuildRule transform(
               ToolchainProvider tool,
               TargetGraph targetGraph,
               ConfigurationRuleRegistry configurationRuleRegistry,

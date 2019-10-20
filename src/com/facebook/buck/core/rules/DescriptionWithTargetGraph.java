@@ -17,7 +17,7 @@
 package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.description.Description;
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 
@@ -30,7 +30,7 @@ import com.facebook.buck.core.model.Flavor;
  *     is processed is described in the class level javadoc of {@link
  *     com.facebook.buck.rules.coercer.ConstructorArgMarshaller}.
  */
-public interface DescriptionWithTargetGraph<T extends ConstructorArg> extends Description<T> {
+public interface DescriptionWithTargetGraph<T extends BuildRuleArg> extends Description<T> {
 
   /**
    * Create a {@link BuildRule} for the given {@link BuildRuleParams}. Note that the {@link

@@ -17,7 +17,7 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -64,14 +64,14 @@ public class RuleAnalysisComputation
   @Override
   public RuleAnalysisResult transform(RuleAnalysisKey key, ComputationEnvironment env)
       throws ActionCreationException, RuleAnalysisException {
-    return transformImpl(targetGraph.get(key.getBuildTarget()), env);
+    return transformImpl(targetGraph.get(key.getBuildTarget()).cast(BuildRuleArg.class), env);
   }
 
   /**
    * Performs the rule analysis for the rule matching the given {@link BuildTarget}. This will
    * trigger its corresponding {@link
    * com.facebook.buck.core.description.RuleDescription#ruleImpl(RuleAnalysisContext, BuildTarget,
-   * ConstructorArg)}, which will create the rule's exported {@link ProviderInfoCollection} and
+   * BuildRuleArg)}, which will create the rule's exported {@link ProviderInfoCollection} and
    * register it's corresponding Actions.
    *
    * <p>This method is similar in functionality to Bazel's {@code
@@ -80,7 +80,7 @@ public class RuleAnalysisComputation
    *
    * @return an {@link RuleAnalysisResult} containing information about the rule analyzed
    */
-  private <T extends ConstructorArg> RuleAnalysisResult transformImpl(
+  private <T extends BuildRuleArg> RuleAnalysisResult transformImpl(
       TargetNode<T> targetNode, ComputationEnvironment env)
       throws ActionCreationException, RuleAnalysisException {
     BaseDescription<T> baseDescription = targetNode.getDescription();

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.rules.transformer;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -31,7 +31,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 public interface TargetNodeToBuildRuleTransformer {
 
   /** Transform target node to build rule. */
-  default <T extends ConstructorArg> BuildRule transform(
+  default <T extends BuildRuleArg> BuildRule transform(
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
       ConfigurationRuleRegistry configurationRuleRegistry,
@@ -50,10 +50,10 @@ public interface TargetNodeToBuildRuleTransformer {
    * Converts a given {@link TargetNode} to a {@link BuildRule} as part of action graph
    * construction. The providers computed from {@link
    * com.facebook.buck.core.rules.LegacyProviderCompatibleDescription#createProviders(ProviderCreationContext,
-   * BuildTarget, ConstructorArg)} will be passed to this function to be used to construct the
-   * {@link BuildRule}
+   * BuildTarget, BuildRuleArg)} will be passed to this function to be used to construct the {@link
+   * BuildRule}
    */
-  <T extends ConstructorArg> BuildRule transform(
+  <T extends BuildRuleArg> BuildRule transform(
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
       ConfigurationRuleRegistry configurationRuleRegistry,

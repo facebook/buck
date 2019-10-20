@@ -29,6 +29,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.visibility.ObeysVisibility;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.versions.Version;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -148,5 +149,11 @@ public interface TargetNode<T extends ConstructorArg>
   @Override
   default DependencyStack.Element getElement() {
     return getBuildTarget();
+  }
+
+  @SuppressWarnings("unchecked")
+  default <U extends ConstructorArg> TargetNode<U> cast(Class<U> newArgClass) {
+    Preconditions.checkState(newArgClass.isInstance(this.getConstructorArg()));
+    return (TargetNode<U>) this;
   }
 }

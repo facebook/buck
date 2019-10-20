@@ -17,7 +17,7 @@ package com.facebook.buck.core.build.action.resolver;
 
 import static org.junit.Assert.assertSame;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
@@ -45,7 +45,7 @@ public class BuildTargetToBuildEngineActionResolverTest {
             TargetGraphFactory.newInstance(FakeTargetNodeBuilder.newBuilder(target).build()),
             new TargetNodeToBuildRuleTransformer() {
               @Override
-              public <T extends ConstructorArg> BuildRule transform(
+              public <T extends BuildRuleArg> BuildRule transform(
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
                   ConfigurationRuleRegistry configurationRuleRegistry,
