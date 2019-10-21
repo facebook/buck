@@ -107,7 +107,7 @@ public class KnownUserDefinedRuleTypes implements KnownRuleTypes {
         dtoClass,
         () -> new SkylarkDescriptionArg(rule),
         rule.getAllParamInfo(),
-        (args, buildTarget) -> {
+        args -> {
           ((SkylarkDescriptionArg) args).build();
           // Terrible cast here, but java doesn't have useful generic type constraints
           return (T) args;

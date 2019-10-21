@@ -335,10 +335,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
               .anyMatch(c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
         selectedTypeCoercer =
             new ImmutableTypeCoercer<>(
-                rawClass,
-                getConstructorArgDescriptor((Class<? extends DataTransferObject>) rawClass)
-                    .getParamInfos()
-                    .values());
+                getConstructorArgDescriptor((Class<? extends DataTransferObject>) rawClass));
       }
       if (selectedTypeCoercer != null) {
         return selectedTypeCoercer;

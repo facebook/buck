@@ -16,10 +16,9 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.description.arg.DataTransferObject;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
-import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 /** Class that contains the values needed to build a DescriptionArg */
@@ -44,7 +43,7 @@ public abstract class ConstructorArgDescriptor<T extends DataTransferObject> {
    * A function that takes the result of {@link #getBuilderFactory()}}, and calls its 'build'
    * function to return description args of type {@code T}
    */
-  protected abstract BiFunction<Object, BuildTarget, T> getBuildFunction();
+  protected abstract BuilderBuildFunction<T> getBuildFunction();
 
   /**
    * Builds the partially constructed object returned by {@link #getBuilderFactory()}
@@ -52,7 +51,30 @@ public abstract class ConstructorArgDescriptor<T extends DataTransferObject> {
    * @return A fully constructed ConstructorArg of type {@code T} obtained by applying {@link
    *     #getBuildFunction()} to {@link #getBuilderFactory()}
    */
-  public T build(Object builder, BuildTarget buildTarget) {
-    return getBuildFunction().apply(builder, buildTarget);
+  public T build(Object builder, Object context) {
+    try {
+      return getBuildFunction().build(builder);
+    } catch (BuilderBuildFailedException e) {
+      throw new HumanReadableException(String.format("%s %s", context, e.getMessage()));
+    } catch (Exception e) {
+      throw new IllegalStateException(String.format("%s: %s", context, e.getMessage()), e);
+    }
+  }
+
+  /**
+   * Checked exception thrown by {@link BuilderBuildFunction} when a user error (not internal error)
+   * occurs.
+   */
+  public static class BuilderBuildFailedException extends Exception {
+    public BuilderBuildFailedException(String message) {
+      super(message);
+    }
+  }
+
+  /**
+   * A function to build a builder returned by {@link ConstructorArgDescriptor#getBuilderFactory()}
+   */
+  public interface BuilderBuildFunction<T> {
+    T build(Object buildObject) throws BuilderBuildFailedException;
   }
 }

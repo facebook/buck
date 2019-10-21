@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.description.arg.DataTransferObject;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.Types;
 import com.google.common.annotations.VisibleForTesting;
@@ -98,15 +97,12 @@ class CoercedTypeCache {
             }
           },
           paramTypes(dtoType),
-          (x, buildTarget) -> {
+          x -> {
             try {
               return (T) buildMethod.invoke(x);
             } catch (IllegalAccessException e) {
               throw new IllegalStateException(
-                  String.format(
-                      "Error building immutable constructor arg for %s: %s",
-                      buildTarget, e.getMessage()),
-                  e);
+                  String.format("Error building immutable constructor arg: %s", e.getMessage()), e);
             } catch (InvocationTargetException e) {
               if (e.getCause() instanceof IllegalStateException) {
                 IllegalStateException cause = (IllegalStateException) e.getCause();
@@ -115,15 +111,14 @@ class CoercedTypeCache {
                   List<String> matches =
                       Splitter.on(CharMatcher.anyOf("[]")).splitToList(cause.getMessage());
                   if (matches.size() >= 2) {
-                    throw new HumanReadableException(
-                        "%s missing required argument(s): %s", buildTarget, matches.get(1));
+                    throw new ConstructorArgDescriptor.BuilderBuildFailedException(
+                        String.format("missing required argument(s): %s", matches.get(1)));
                   }
                 }
               }
               throw new RuntimeException(
                   String.format(
-                      "Error building immutable constructor arg for %s: %s",
-                      buildTarget, e.getCause().getMessage()),
+                      "Error building immutable constructor: %s", e.getCause().getMessage()),
                   e.getCause());
             }
           });
