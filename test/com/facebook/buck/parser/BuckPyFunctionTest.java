@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
@@ -46,7 +47,7 @@ public class BuckPyFunctionTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractNoName {
+  abstract static class AbstractNoName implements DataTransferObject {
     abstract String getRandom();
   }
 
@@ -61,7 +62,7 @@ public class BuckPyFunctionTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractNoVis {
+  abstract static class AbstractNoVis implements DataTransferObject {
     abstract String getRandom();
   }
 
@@ -75,9 +76,7 @@ public class BuckPyFunctionTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractNamed {
-    abstract String getName();
-  }
+  abstract static class AbstractNamed implements DataTransferObject {}
 
   @Test
   public void shouldOnlyIncludeTheNameFieldOnce() {
@@ -102,7 +101,7 @@ public class BuckPyFunctionTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractLotsOfOptions {
+  abstract static class AbstractLotsOfOptions implements DataTransferObject {
     abstract Optional<String> getThing();
 
     abstract Optional<List<BuildTarget>> getTargets();
@@ -134,7 +133,7 @@ public class BuckPyFunctionTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractEither {
+  abstract static class AbstractEither implements DataTransferObject {
     // Alphabetical ordering is deliberate.
     abstract Optional<String> getCat();
 
@@ -176,7 +175,7 @@ public class BuckPyFunctionTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractVisible {
+  abstract static class AbstractVisible implements DataTransferObject {
     abstract Set<BuildTargetMatcher> getVisibility();
   }
 
@@ -187,7 +186,7 @@ public class BuckPyFunctionTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDto {
+  abstract static class AbstractDto implements DataTransferObject {
     abstract String getSomeField();
   }
 

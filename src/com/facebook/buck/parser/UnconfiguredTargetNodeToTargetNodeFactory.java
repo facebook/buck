@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -108,7 +109,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     Object constructorArg;
     try (SimplePerfEvent.Scope scope =
         perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
-      ConstructorArgDescriptor<?> builder =
+      ConstructorArgDescriptor<? extends ConstructorArg> builder =
           knownRuleTypes.getConstructorArgDescriptor(
               typeCoercerFactory, ruleType, description.getConstructorArgType());
       constructorArg =

@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 
 /** Class that contains the values needed to build a DescriptionArg */
 @BuckStyleValue
-public abstract class ConstructorArgDescriptor<T extends ConstructorArg> {
+public abstract class ConstructorArgDescriptor<T extends DataTransferObject> {
 
   /** Reified {@code <T>} */
   public abstract Class<T> constructorArgClass();

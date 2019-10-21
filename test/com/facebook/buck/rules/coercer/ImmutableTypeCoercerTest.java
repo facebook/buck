@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -66,7 +67,7 @@ public class ImmutableTypeCoercerTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoAttributeWithCollections {
+  abstract static class AbstractDtoAttributeWithCollections implements DataTransferObject {
     abstract Set<BuildTarget> getDeps();
 
     abstract Set<BuildTarget> getNotDeps();
@@ -74,7 +75,7 @@ public class ImmutableTypeCoercerTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithImmutableAttribute {
+  abstract static class AbstractDtoWithImmutableAttribute implements DataTransferObject {
     abstract DtoAttributeWithCollections getDto();
 
     abstract Set<BuildTarget> getDeps();

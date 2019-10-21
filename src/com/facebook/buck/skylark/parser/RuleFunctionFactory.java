@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -85,7 +86,10 @@ public class RuleFunctionFactory {
                         .getPathString())
                 .put("buck.type", name);
         ImmutableMap<String, ParamInfo> allParamInfo =
-            typeCoercerFactory.getAllParamInfo(ruleClass.getConstructorArgType());
+            typeCoercerFactory
+                .getConstructorArgDescriptor(
+                    (Class<? extends ConstructorArg>) ruleClass.getConstructorArgType())
+                .getParamInfos();
         populateAttributes(kwargs, builder, allParamInfo);
         throwOnMissingRequiredAttribute(kwargs, allParamInfo, getName(), ast);
         parseContext.recordRule(builder.build(), ast);

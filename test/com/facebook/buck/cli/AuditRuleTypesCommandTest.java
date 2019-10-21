@@ -45,7 +45,7 @@ public class AuditRuleTypesCommandTest {
 
     @Override
     public Class<BuildRuleArg> getConstructorArgType() {
-      return null;
+      return BuildRuleArg.class;
     }
 
     @Override

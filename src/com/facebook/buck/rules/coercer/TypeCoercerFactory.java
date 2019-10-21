@@ -16,8 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import java.lang.reflect.Type;
 
 public interface TypeCoercerFactory {
@@ -36,13 +35,10 @@ public interface TypeCoercerFactory {
   TypeCoercer<?> typeCoercerForParameterizedType(
       String typeName, Type rawType, Type[] actualTypeArguments);
 
-  /** @return All {@link ParamInfo}s for coercableType. */
-  ImmutableMap<String, ParamInfo> getAllParamInfo(Class<?> coercableType);
-
   /**
    * Returns an unpopulated DTO object, and the build method which must be called with it when it is
    * finished being populated.
    */
-  <T extends ConstructorArg> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+  <T extends DataTransferObject> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
       Class<T> dtoType);
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.function;
 
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.rules.coercer.ParamInfo;
@@ -67,11 +68,15 @@ public class BuckPyFunction {
     this.typeCoercerFactory = typeCoercerFactory;
   }
 
-  public String toPythonFunction(RuleType type, Class<?> dtoClass) {
+  /**
+   * Create a Python function definition for given rule type and parameters described by DTO type.
+   */
+  public String toPythonFunction(RuleType type, Class<? extends DataTransferObject> dtoClass) {
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
     for (ParamInfo param :
-        ImmutableSortedSet.copyOf(typeCoercerFactory.getAllParamInfo(dtoClass).values())) {
+        ImmutableSortedSet.copyOf(
+            typeCoercerFactory.getConstructorArgDescriptor(dtoClass).getParamInfos().values())) {
       if (isSkippable(param)) {
         continue;
       }

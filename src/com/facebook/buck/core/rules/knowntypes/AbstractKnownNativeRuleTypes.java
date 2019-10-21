@@ -18,10 +18,12 @@ package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.Description;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
@@ -100,10 +102,22 @@ public abstract class AbstractKnownNativeRuleTypes implements KnownRuleTypes {
   protected void check() {
     Set<RuleType> types = new HashSet<>();
     for (BaseDescription<?> description : getDescriptions()) {
+      checkDescription(description);
+
       RuleType type = DescriptionCache.getRuleType(description);
       if (!types.add(DescriptionCache.getRuleType(description))) {
         throw new IllegalStateException(String.format("multiple descriptions with type %s", type));
       }
     }
+  }
+
+  private static void checkDescription(BaseDescription<?> description) {
+    boolean isBuildRule = BuildRuleArg.class.isAssignableFrom(description.getConstructorArgType());
+    boolean isConfiguration =
+        ConfigurationRuleArg.class.isAssignableFrom(description.getConstructorArgType());
+    Preconditions.checkArgument(
+        isBuildRule != isConfiguration,
+        "constructor arg must be either build or configuration: %s",
+        description.getConstructorArgType().getName());
   }
 }

@@ -240,11 +240,15 @@ public abstract class TargetNodeTranslator {
   private boolean translateConstructorArg(
       CellPathResolver cellPathResolver,
       String targetBaseName,
-      Object constructorArg,
+      ConstructorArg constructorArg,
       Object newConstructorArgOrBuilder) {
     boolean modified = false;
 
-    for (ParamInfo param : typeCoercerFactory.getAllParamInfo(constructorArg.getClass()).values()) {
+    for (ParamInfo param :
+        typeCoercerFactory
+            .getConstructorArgDescriptor(constructorArg.getClass())
+            .getParamInfos()
+            .values()) {
       Object value = param.get(constructorArg);
       Optional<Object> newValue = translate(cellPathResolver, targetBaseName, value);
       modified |= newValue.isPresent();

@@ -48,15 +48,16 @@ class TargetGraphVersionTransformations {
   @SuppressWarnings("unchecked")
   public static ImmutableMap<BuildTarget, Optional<Constraint>> getVersionedDeps(
       TypeCoercerFactory typeCoercerFactory, TargetNode<?> node) {
+    ConstructorArg constructorArg = node.getConstructorArg();
     ParamInfo versionedDepsParam =
         typeCoercerFactory
-            .getAllParamInfo(node.getConstructorArg().getClass())
+            .getConstructorArgDescriptor(constructorArg.getClass())
+            .getParamInfos()
             .get("versioned_deps");
     if (versionedDepsParam == null) {
       return ImmutableMap.of();
     }
-    return (ImmutableMap<BuildTarget, Optional<Constraint>>)
-        versionedDepsParam.get(node.getConstructorArg());
+    return (ImmutableMap<BuildTarget, Optional<Constraint>>) versionedDepsParam.get(constructorArg);
   }
 
   public static <A extends ConstructorArg> Iterable<BuildTarget> getDeps(

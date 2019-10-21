@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
@@ -296,6 +296,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public TypeCoercer<?> typeCoercerForType(Type type) {
     if (type instanceof TypeVariable) {
       type = ((TypeVariable<?>) type).getBounds()[0];
@@ -329,10 +330,15 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         }
       }
       if (selectedTypeCoercer == null
+          && DataTransferObject.class.isAssignableFrom(rawClass)
           && Types.getSupertypes(rawClass).stream()
               .anyMatch(c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
         selectedTypeCoercer =
-            new ImmutableTypeCoercer<>(rawClass, getAllParamInfo(rawClass).values());
+            new ImmutableTypeCoercer<>(
+                rawClass,
+                getConstructorArgDescriptor((Class<? extends DataTransferObject>) rawClass)
+                    .getParamInfos()
+                    .values());
       }
       if (selectedTypeCoercer != null) {
         return selectedTypeCoercer;
@@ -420,12 +426,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   }
 
   @Override
-  public ImmutableMap<String, ParamInfo> getAllParamInfo(Class<?> coercableType) {
-    return coercedTypeCache.getAllParamInfo(coercableType);
-  }
-
-  @Override
-  public <T extends ConstructorArg> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+  public <T extends DataTransferObject> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
       Class<T> dtoType) {
     return coercedTypeCache.getConstructorArgDescriptor(dtoType);
   }

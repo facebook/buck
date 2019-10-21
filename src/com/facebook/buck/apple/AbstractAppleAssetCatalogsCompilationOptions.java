@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -25,7 +26,8 @@ import org.immutables.value.Value;
 /** Argument type for asset_catalogs_compilation_options used in apple_bundle */
 @BuckStyleImmutable
 @Value.Immutable
-abstract class AbstractAppleAssetCatalogsCompilationOptions implements AddsToRuleKey {
+abstract class AbstractAppleAssetCatalogsCompilationOptions
+    implements AddsToRuleKey, DataTransferObject {
 
   /** Argument type for AppleAssetCatalogsCompilationOptions used in Actool */
   public enum Optimization {

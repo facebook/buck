@@ -152,7 +152,11 @@ public class TargetNodeFactory implements NodeCopier {
     if (constructorArg instanceof SkylarkDescriptionArg) {
       paramInfos = ((SkylarkDescriptionArg) constructorArg).getAllParamInfo();
     } else {
-      paramInfos = typeCoercerFactory.getAllParamInfo(description.getConstructorArgType());
+      paramInfos =
+          typeCoercerFactory
+              .getConstructorArgDescriptor(
+                  (Class<? extends ConstructorArg>) description.getConstructorArgType())
+              .getParamInfos();
     }
 
     // Scan the input to find possible BuildTargetPaths, necessary for loading dependent rules.

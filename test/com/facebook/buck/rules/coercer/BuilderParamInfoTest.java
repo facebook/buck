@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -45,7 +46,10 @@ public class BuilderParamInfoTest {
   @Test
   public void failedCoercionIncludesClassAndFieldNames() {
     try {
-      new DefaultTypeCoercerFactory().getAllParamInfo(DtoWithBadField.class).values();
+      ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
+          .getConstructorArgDescriptor(DtoWithBadField.class)
+          .getParamInfos()
+          .values();
       fail("Expected exception.");
     } catch (Exception e) {
       String message = ErrorLogger.getUserFriendlyMessage(e);
@@ -60,7 +64,10 @@ public class BuilderParamInfoTest {
   @Test
   public void optionalsForAbstractClass() {
     for (ParamInfo param :
-        new DefaultTypeCoercerFactory().getAllParamInfo(DtoWithOptionals.class).values()) {
+        ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
+            .getConstructorArgDescriptor(DtoWithOptionals.class)
+            .getParamInfos()
+            .values()) {
       assertTrue("Expected param " + param.getName() + " to be optional", param.isOptional());
     }
   }
@@ -68,8 +75,9 @@ public class BuilderParamInfoTest {
   @Test
   public void optionalsForInterface() {
     for (ParamInfo param :
-        new DefaultTypeCoercerFactory()
-            .getAllParamInfo(DtoWithOptionalsFromInterface.class)
+        ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
+            .getConstructorArgDescriptor(DtoWithOptionalsFromInterface.class)
+            .getParamInfos()
             .values()) {
       assertTrue("Expected param " + param.getName() + " to be optional", param.isOptional());
     }
@@ -108,20 +116,23 @@ public class BuilderParamInfoTest {
 
   private ParamInfo getParamInfo() {
     return Iterables.getOnlyElement(
-        new DefaultTypeCoercerFactory().getAllParamInfo(DtoWithOneParameter.class).values());
+        ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
+            .getConstructorArgDescriptor(DtoWithOneParameter.class)
+            .getParamInfos()
+            .values());
   }
 
   class BadFieldType {}
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithBadField {
+  abstract static class AbstractDtoWithBadField implements DataTransferObject {
     abstract BadFieldType getBadFieldType();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithOptionals {
+  abstract static class AbstractDtoWithOptionals implements DataTransferObject {
     abstract Optional<String> getOptional();
 
     abstract Optional<ImmutableSet<String>> getOptionalImmutableSet();
@@ -145,7 +156,7 @@ public class BuilderParamInfoTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractDtoWithOptionalsFromInterface {
+  interface AbstractDtoWithOptionalsFromInterface extends DataTransferObject {
     Optional<String> getOptional();
 
     Optional<ImmutableSet<String>> getOptionalImmutableSet();
@@ -169,7 +180,7 @@ public class BuilderParamInfoTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithOneParameter {
+  abstract static class AbstractDtoWithOneParameter implements DataTransferObject {
     abstract String getSomeString();
   }
 }

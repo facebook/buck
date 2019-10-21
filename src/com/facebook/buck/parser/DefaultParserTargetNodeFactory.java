@@ -110,7 +110,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFromAttrM
       ImmutableSet<VisibilityPattern> withinViewPatterns;
       try (SimplePerfEvent.Scope scope =
           perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
-        ConstructorArgDescriptor<?> builder =
+        ConstructorArgDescriptor<? extends ConstructorArg> builder =
             knownRuleTypes.getConstructorArgDescriptor(
                 typeCoercerFactory, buildRuleType, description.getConstructorArgType());
         constructorArg =

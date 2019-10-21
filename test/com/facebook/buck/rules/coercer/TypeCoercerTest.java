@@ -27,6 +27,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -773,11 +774,11 @@ public class TypeCoercerTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractSomeImmutable {
+  interface AbstractSomeImmutable extends DataTransferObject {
     AnotherImmutable getAnotherImmutable();
   }
 
-  interface AnotherImmutableInterface {
+  interface AnotherImmutableInterface extends DataTransferObject {
     Optional<String> getInterfaceOptional();
 
     @Value.Default

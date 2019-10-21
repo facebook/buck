@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.core.description.arg;
 
-/** Marker interface for all rule args including configuration rules. */
-public interface ConstructorArg extends DataTransferObject {
-  /** Each rule has a name */
-  @Hint(isConfigurable = false)
-  String getName();
-}
+/**
+ * Immutable object is marked with this marker, and this object has a builder companion, e. g. for
+ * {@code MyData} there's {@code MyData.Builder}, that builder is created with static {@code
+ * builder()} method, and the builder has {@code build()} method to build {@code MyData}.
+ */
+public interface DataTransferObject {}

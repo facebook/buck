@@ -40,8 +40,12 @@ public class QueryTargetAccessor {
   /** Get targets in attribute. */
   public static <T extends ConstructorArg> ImmutableSet<QueryTarget> getTargetsInAttribute(
       TypeCoercerFactory typeCoercerFactory, TargetNode<T> node, String attribute) {
-    Class<?> constructorArgClass = node.getConstructorArg().getClass();
-    ParamInfo info = typeCoercerFactory.getAllParamInfo(constructorArgClass).get(attribute);
+    Class<? extends ConstructorArg> constructorArgClass = node.getConstructorArg().getClass();
+    ParamInfo info =
+        typeCoercerFactory
+            .getConstructorArgDescriptor(constructorArgClass)
+            .getParamInfos()
+            .get(attribute);
     if (info == null) {
       // Ignore if the field does not exist in this rule.
       return ImmutableSet.of();
@@ -78,8 +82,12 @@ public class QueryTargetAccessor {
       TargetNode<T> node,
       String attribute,
       Predicate<Object> predicate) {
-    Class<?> constructorArgClass = node.getConstructorArg().getClass();
-    ParamInfo info = typeCoercerFactory.getAllParamInfo(constructorArgClass).get(attribute);
+    Class<? extends ConstructorArg> constructorArgClass = node.getConstructorArg().getClass();
+    ParamInfo info =
+        typeCoercerFactory
+            .getConstructorArgDescriptor(constructorArgClass)
+            .getParamInfos()
+            .get(attribute);
     if (info == null) {
       // Ignore if the field does not exist in this rule.
       return ImmutableSet.of();

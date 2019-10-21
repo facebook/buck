@@ -16,15 +16,12 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.description.arg.BuildRuleArg;
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.Types;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -52,23 +49,17 @@ class CoercedTypeCache {
 
   private final TypeCoercerFactory typeCoercerFactory;
 
-  /** @return All {@link ParamInfo}s for coercableType. */
-  ImmutableMap<String, ParamInfo> getAllParamInfo(Class<?> coercableType) {
-    return paramInfoCache.getUnchecked(coercableType);
-  }
-
   /**
    * Returns an unpopulated DTO object, and the build method which must be called with it when it is
    * finished being populated.
    */
   @SuppressWarnings("unchecked")
-  <T extends ConstructorArg> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+  <T extends DataTransferObject> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
       Class<T> dtoType) {
     return (ConstructorArgDescriptor<T>) constructorArgDescriptorCache.getUnchecked(dtoType);
   }
 
-  private final LoadingCache<Class<?>, ImmutableMap<String, ParamInfo>> paramInfoCache;
-  private final LoadingCache<Class<? extends ConstructorArg>, ConstructorArgDescriptor<?>>
+  private final LoadingCache<Class<? extends DataTransferObject>, ConstructorArgDescriptor<?>>
       constructorArgDescriptorCache;
 
   CoercedTypeCache(TypeCoercerFactory typeCoercerFactory) {
@@ -77,33 +68,19 @@ class CoercedTypeCache {
     constructorArgDescriptorCache =
         CacheBuilder.newBuilder()
             .build(
-                new CacheLoader<Class<? extends ConstructorArg>, ConstructorArgDescriptor<?>>() {
+                new CacheLoader<
+                    Class<? extends DataTransferObject>, ConstructorArgDescriptor<?>>() {
                   @Override
-                  public ConstructorArgDescriptor<?> load(Class<? extends ConstructorArg> dtoType) {
+                  public ConstructorArgDescriptor<?> load(
+                      Class<? extends DataTransferObject> dtoType) {
                     return newConstructorArgDescriptor(dtoType);
-                  }
-                });
-    paramInfoCache =
-        CacheBuilder.newBuilder()
-            .build(
-                new CacheLoader<Class<?>, ImmutableMap<String, ParamInfo>>() {
-                  @Override
-                  public ImmutableMap<String, ParamInfo> load(Class<?> key) {
-                    return paramTypes(key);
                   }
                 });
   }
 
   @SuppressWarnings("unchecked")
-  private <T extends ConstructorArg> ConstructorArgDescriptor<T> newConstructorArgDescriptor(
+  private <T extends DataTransferObject> ConstructorArgDescriptor<T> newConstructorArgDescriptor(
       Class<T> dtoType) {
-    boolean isBuildRule = BuildRuleArg.class.isAssignableFrom(dtoType);
-    boolean isConfiguration = ConfigurationRuleArg.class.isAssignableFrom(dtoType);
-    Preconditions.checkArgument(
-        isBuildRule != isConfiguration,
-        "constructor arg must be either build or configuration: %s",
-        dtoType.getName());
-
     try {
       Method builderMethod = dtoType.getMethod("builder");
       Method buildMethod = builderMethod.getReturnType().getMethod("build");
@@ -120,7 +97,7 @@ class CoercedTypeCache {
                   e);
             }
           },
-          paramInfoCache.getUnchecked(dtoType),
+          paramTypes(dtoType),
           (x, buildTarget) -> {
             try {
               return (T) buildMethod.invoke(x);
