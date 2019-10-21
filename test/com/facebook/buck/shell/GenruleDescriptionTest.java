@@ -39,8 +39,8 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.macros.ClasspathMacro;
@@ -71,7 +71,7 @@ public class GenruleDescriptionTest {
         KnownNativeRuleTypes.of(ImmutableList.of(genruleDescription), ImmutableList.of());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    ConstructorArgDescriptor<GenruleDescriptionArg> builder =
+    DataTransferObjectDescriptor<GenruleDescriptionArg> builder =
         knownRuleTypes.getConstructorArgDescriptor(
             typeCoercerFactory,
             knownRuleTypes.getRuleType("genrule"),

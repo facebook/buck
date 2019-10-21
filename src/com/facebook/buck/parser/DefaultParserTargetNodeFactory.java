@@ -36,8 +36,8 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
@@ -110,7 +110,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFromAttrM
       ImmutableSet<VisibilityPattern> withinViewPatterns;
       try (SimplePerfEvent.Scope scope =
           perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
-        ConstructorArgDescriptor<? extends ConstructorArg> builder =
+        DataTransferObjectDescriptor<? extends ConstructorArg> builder =
             knownRuleTypes.getConstructorArgDescriptor(
                 typeCoercerFactory, buildRuleType, description.getConstructorArgType());
         constructorArg =

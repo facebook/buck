@@ -46,8 +46,8 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -266,7 +266,7 @@ public class TargetNodeTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     KnownNativeRuleTypes knownRuleTypes =
         KnownNativeRuleTypes.of(ImmutableList.of(new ExampleDescription()), ImmutableList.of());
-    ConstructorArgDescriptor<ExampleDescriptionArg> builder =
+    DataTransferObjectDescriptor<ExampleDescriptionArg> builder =
         knownRuleTypes.getConstructorArgDescriptor(
             coercerFactory, knownRuleTypes.getRuleType("example"), ExampleDescriptionArg.class);
     try {

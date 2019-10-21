@@ -37,8 +37,8 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -109,7 +109,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     Object constructorArg;
     try (SimplePerfEvent.Scope scope =
         perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
-      ConstructorArgDescriptor<? extends ConstructorArg> builder =
+      DataTransferObjectDescriptor<? extends ConstructorArg> builder =
           knownRuleTypes.getConstructorArgDescriptor(
               typeCoercerFactory, ruleType, description.getConstructorArgType());
       constructorArg =

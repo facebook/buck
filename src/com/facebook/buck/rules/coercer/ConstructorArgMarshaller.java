@@ -76,7 +76,7 @@ public interface ConstructorArgMarshaller {
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
-      ConstructorArgDescriptor<T> constructorArgDescriptor,
+      DataTransferObjectDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       Map<String, ?> attributes)

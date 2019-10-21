@@ -27,10 +27,10 @@ import java.util.Map;
 /** A coercer for Immutables using the same flow as Description's args */
 public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeCoercer<T> {
 
-  private final ConstructorArgDescriptor<T> constructorArgDescriptor;
+  private final DataTransferObjectDescriptor<T> constructorArgDescriptor;
   private final ImmutableMap<String, ParamInfo> paramInfos;
 
-  ImmutableTypeCoercer(ConstructorArgDescriptor<T> constructorArgDescriptor) {
+  ImmutableTypeCoercer(DataTransferObjectDescriptor<T> constructorArgDescriptor) {
     this.constructorArgDescriptor = constructorArgDescriptor;
     // Translate keys from lowerCamel to lower_hyphen
     this.paramInfos =
@@ -42,7 +42,7 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
 
   @Override
   public Class<T> getOutputClass() {
-    return constructorArgDescriptor.constructorArgClass();
+    return constructorArgDescriptor.objectClass();
   }
 
   @Override

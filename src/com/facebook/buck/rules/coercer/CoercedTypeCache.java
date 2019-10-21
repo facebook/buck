@@ -53,12 +53,12 @@ class CoercedTypeCache {
    * finished being populated.
    */
   @SuppressWarnings("unchecked")
-  <T extends DataTransferObject> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+  <T extends DataTransferObject> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
       Class<T> dtoType) {
-    return (ConstructorArgDescriptor<T>) constructorArgDescriptorCache.getUnchecked(dtoType);
+    return (DataTransferObjectDescriptor<T>) constructorArgDescriptorCache.getUnchecked(dtoType);
   }
 
-  private final LoadingCache<Class<? extends DataTransferObject>, ConstructorArgDescriptor<?>>
+  private final LoadingCache<Class<? extends DataTransferObject>, DataTransferObjectDescriptor<?>>
       constructorArgDescriptorCache;
 
   CoercedTypeCache(TypeCoercerFactory typeCoercerFactory) {
@@ -68,9 +68,9 @@ class CoercedTypeCache {
         CacheBuilder.newBuilder()
             .build(
                 new CacheLoader<
-                    Class<? extends DataTransferObject>, ConstructorArgDescriptor<?>>() {
+                    Class<? extends DataTransferObject>, DataTransferObjectDescriptor<?>>() {
                   @Override
-                  public ConstructorArgDescriptor<?> load(
+                  public DataTransferObjectDescriptor<?> load(
                       Class<? extends DataTransferObject> dtoType) {
                     return newConstructorArgDescriptor(dtoType);
                   }
@@ -78,12 +78,12 @@ class CoercedTypeCache {
   }
 
   @SuppressWarnings("unchecked")
-  private <T extends DataTransferObject> ConstructorArgDescriptor<T> newConstructorArgDescriptor(
-      Class<T> dtoType) {
+  private <T extends DataTransferObject>
+      DataTransferObjectDescriptor<T> newConstructorArgDescriptor(Class<T> dtoType) {
     try {
       Method builderMethod = dtoType.getMethod("builder");
       Method buildMethod = builderMethod.getReturnType().getMethod("build");
-      return new ImmutableConstructorArgDescriptor<>(
+      return new ImmutableDataTransferObjectDescriptor<>(
           dtoType,
           () -> {
             try {
@@ -111,7 +111,7 @@ class CoercedTypeCache {
                   List<String> matches =
                       Splitter.on(CharMatcher.anyOf("[]")).splitToList(cause.getMessage());
                   if (matches.size() >= 2) {
-                    throw new ConstructorArgDescriptor.BuilderBuildFailedException(
+                    throw new DataTransferObjectDescriptor.BuilderBuildFailedException(
                         String.format("missing required argument(s): %s", matches.get(1)));
                   }
                 }

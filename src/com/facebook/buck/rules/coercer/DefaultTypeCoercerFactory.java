@@ -423,7 +423,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   }
 
   @Override
-  public <T extends DataTransferObject> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+  public <T extends DataTransferObject> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
       Class<T> dtoType) {
     return coercedTypeCache.getConstructorArgDescriptor(dtoType);
   }

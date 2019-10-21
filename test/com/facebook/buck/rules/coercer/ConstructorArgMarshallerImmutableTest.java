@@ -142,7 +142,7 @@ public class ConstructorArgMarshallerImmutableTest {
         AbstractRuleType.Kind.BUILD);
   }
 
-  <T extends ConstructorArg> ConstructorArgDescriptor<T> builder(Class<T> dtoClass) {
+  <T extends ConstructorArg> DataTransferObjectDescriptor<T> builder(Class<T> dtoClass) {
     return knownRuleTypes.getConstructorArgDescriptor(
         new DefaultTypeCoercerFactory(), ruleType(dtoClass), dtoClass);
   }

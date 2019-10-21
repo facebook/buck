@@ -78,7 +78,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
-      ConstructorArgDescriptor<T> constructorArgDescriptor,
+      DataTransferObjectDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       Map<String, ?> attributes)
@@ -87,7 +87,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
     ImmutableMap<String, ParamInfo> allParamInfo = constructorArgDescriptor.getParamInfos();
 
     boolean isConfigurationRule =
-        ConfigurationRuleArg.class.isAssignableFrom(constructorArgDescriptor.constructorArgClass());
+        ConfigurationRuleArg.class.isAssignableFrom(constructorArgDescriptor.objectClass());
 
     Object builder = constructorArgDescriptor.getBuilderFactory().get();
     for (ParamInfo info : allParamInfo.values()) {

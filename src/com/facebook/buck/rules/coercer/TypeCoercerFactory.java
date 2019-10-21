@@ -39,6 +39,6 @@ public interface TypeCoercerFactory {
    * Returns an unpopulated DTO object, and the build method which must be called with it when it is
    * finished being populated.
    */
-  <T extends DataTransferObject> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+  <T extends DataTransferObject> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
       Class<T> dtoType);
 }

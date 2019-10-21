@@ -24,8 +24,8 @@ import com.facebook.buck.core.starlark.rule.SkylarkDescription;
 import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
-import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
-import com.facebook.buck.rules.coercer.ImmutableConstructorArgDescriptor;
+import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
+import com.facebook.buck.rules.coercer.ImmutableDataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -99,11 +99,11 @@ public class KnownUserDefinedRuleTypes implements KnownRuleTypes {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T extends ConstructorArg> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+  public <T extends ConstructorArg> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
       TypeCoercerFactory typeCoercerFactory, RuleType ruleType, Class<T> dtoClass) {
     Preconditions.checkArgument(dtoClass.isAssignableFrom(SkylarkDescriptionArg.class));
     SkylarkUserDefinedRule rule = Objects.requireNonNull(getRule(ruleType.getName()));
-    return new ImmutableConstructorArgDescriptor<>(
+    return new ImmutableDataTransferObjectDescriptor<>(
         dtoClass,
         () -> new SkylarkDescriptionArg(rule),
         rule.getAllParamInfo(),

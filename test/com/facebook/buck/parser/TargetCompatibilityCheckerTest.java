@@ -49,8 +49,8 @@ import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
@@ -250,7 +250,7 @@ public class TargetCompatibilityCheckerTest {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance(projectFilesystem, "//:target");
 
-    ConstructorArgDescriptor<TestDescriptionArg> builder =
+    DataTransferObjectDescriptor<TestDescriptionArg> builder =
         knownRuleTypes.getConstructorArgDescriptor(
             typeCoercerFactory, knownRuleTypes.getRuleType("test_rule"), TestDescriptionArg.class);
 

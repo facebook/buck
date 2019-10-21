@@ -28,7 +28,7 @@ import com.facebook.buck.core.starlark.rule.SkylarkDescription;
 import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
-import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
+import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.google.common.collect.ImmutableList;
@@ -107,7 +107,7 @@ public class HybridKnownRuleTypesTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
 
-    ConstructorArgDescriptor<SkylarkDescriptionArg> argDescriptor =
+    DataTransferObjectDescriptor<SkylarkDescriptionArg> argDescriptor =
         knownTypes.getConstructorArgDescriptor(factory, ruleType, SkylarkDescriptionArg.class);
     SkylarkDescriptionArgBuilder builder =
         (SkylarkDescriptionArgBuilder) argDescriptor.getBuilderFactory().get();
@@ -127,7 +127,7 @@ public class HybridKnownRuleTypesTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
 
-    ConstructorArgDescriptor<KnownRuleTestDescriptionArg> argDescriptor =
+    DataTransferObjectDescriptor<KnownRuleTestDescriptionArg> argDescriptor =
         knownTypes.getConstructorArgDescriptor(
             factory, ruleType, KnownRuleTestDescriptionArg.class);
 

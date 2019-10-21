@@ -26,7 +26,7 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.coercer.ConstructorArgDescriptor;
+import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -92,7 +92,7 @@ public abstract class AbstractKnownNativeRuleTypes implements KnownRuleTypes {
   }
 
   @Override
-  public <T extends ConstructorArg> ConstructorArgDescriptor<T> getConstructorArgDescriptor(
+  public <T extends ConstructorArg> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
       TypeCoercerFactory typeCoercerFactory, RuleType ruleType, Class<T> dtoClass) {
     return typeCoercerFactory.getConstructorArgDescriptor(dtoClass);
   }

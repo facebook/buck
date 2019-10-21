@@ -23,10 +23,10 @@ import java.util.function.Supplier;
 
 /** Class that contains the values needed to build a DescriptionArg */
 @BuckStyleValue
-public abstract class ConstructorArgDescriptor<T extends DataTransferObject> {
+public abstract class DataTransferObjectDescriptor<T extends DataTransferObject> {
 
   /** Reified {@code <T>} */
-  public abstract Class<T> constructorArgClass();
+  public abstract Class<T> objectClass();
 
   /**
    * Get the builder for a constructor arg.
@@ -72,7 +72,8 @@ public abstract class ConstructorArgDescriptor<T extends DataTransferObject> {
   }
 
   /**
-   * A function to build a builder returned by {@link ConstructorArgDescriptor#getBuilderFactory()}
+   * A function to build a builder returned by {@link
+   * DataTransferObjectDescriptor#getBuilderFactory()}
    */
   public interface BuilderBuildFunction<T> {
     T build(Object buildObject) throws BuilderBuildFailedException;
