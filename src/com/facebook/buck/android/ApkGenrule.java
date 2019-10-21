@@ -27,12 +27,17 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.LegacyGenrule;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -53,7 +58,8 @@ import java.util.stream.Stream;
  * )
  * </pre>
  */
-public class ApkGenrule extends LegacyGenrule implements HasInstallableApk, HasRuntimeDeps {
+public class ApkGenrule extends LegacyGenrule
+    implements HasInstallableApk, HasRuntimeDeps, HasClasspathEntries {
 
   @AddToRuleKey private final BuildTargetSourcePath apk;
   private final HasInstallableApk hasInstallableApk;
@@ -123,5 +129,30 @@ public class ApkGenrule extends LegacyGenrule implements HasInstallableApk, HasR
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, buildRuleResolver);
+  }
+
+  @Override
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
+    // This is used primarily for buck audit classpath.
+    return JavaLibraryClasspathProvider.getClasspathsFromLibraries(getTransitiveClasspathDeps());
+  }
+
+  @Override
+  public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
+    return JavaLibraryClasspathProvider.getClasspathDeps(
+        getBuildDeps().stream()
+            .filter(rule -> rule instanceof HasInstallableApk)
+            .collect(ImmutableList.toImmutableList()));
+  }
+
+  @Override
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
+    // The apk has no exported deps or classpath contributions of its own
+    return ImmutableSet.of();
   }
 }
