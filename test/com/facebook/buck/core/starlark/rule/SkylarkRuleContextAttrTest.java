@@ -38,7 +38,7 @@ import org.junit.Test;
 
 public class SkylarkRuleContextAttrTest {
 
-  private final StringAttribute placeholdeStringAttr =
+  private final StringAttribute placeholderStringAttr =
       new ImmutableStringAttribute("", "", true, ImmutableList.of());
 
   static class TestAttribute extends Attribute<BuildTarget> {
@@ -82,7 +82,7 @@ public class SkylarkRuleContextAttrTest {
         SkylarkRuleContextAttr.of(
             "some_method",
             ImmutableMap.of("foo", "foo_value"),
-            ImmutableMap.of("foo", placeholdeStringAttr),
+            ImmutableMap.of("foo", placeholderStringAttr),
             ImmutableMap.of());
 
     assertEquals("foo_value", attr.getValue("foo"));
@@ -95,7 +95,7 @@ public class SkylarkRuleContextAttrTest {
         SkylarkRuleContextAttr.of(
             "some_method",
             ImmutableMap.of("foo", "foo_value", "bar", "bar_value"),
-            ImmutableMap.of("foo", placeholdeStringAttr, "bar", placeholdeStringAttr),
+            ImmutableMap.of("foo", placeholderStringAttr, "bar", placeholderStringAttr),
             ImmutableMap.of());
 
     assertEquals(ImmutableSet.of("bar", "foo"), attr.getFieldNames());
@@ -110,7 +110,7 @@ public class SkylarkRuleContextAttrTest {
         SkylarkRuleContextAttr.of(
             "some_method",
             ImmutableMap.of("foo", "foo_value", "bar", "//foo:bar"),
-            ImmutableMap.of("foo", placeholdeStringAttr, "bar", attr),
+            ImmutableMap.of("foo", placeholderStringAttr, "bar", attr),
             ImmutableMap.of(target, providerInfos));
 
     assertEquals("foo_value", ctxAttr.getValue("foo"));
