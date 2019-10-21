@@ -59,6 +59,20 @@ public class OptionalTypeCoercerTest {
   }
 
   @Test
+  public void emptyIsEmpty() throws CoerceFailedException {
+    OptionalTypeCoercer<Unit> coercer =
+        new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Unit.class));
+    Optional<Unit> result =
+        coercer.coerce(
+            TestCellBuilder.createCellRoots(FILESYSTEM),
+            FILESYSTEM,
+            PATH_RELATIVE_TO_PROJECT_ROOT,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            Optional.empty());
+    assertThat(result, Matchers.equalTo(Optional.empty()));
+  }
+
+  @Test
   public void nonNullIsPresent() throws CoerceFailedException {
     OptionalTypeCoercer<String> coercer = new OptionalTypeCoercer<>(new StringTypeCoercer());
     Optional<String> result =

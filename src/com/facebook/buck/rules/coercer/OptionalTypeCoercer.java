@@ -62,7 +62,7 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
-    if (object == null) {
+    if (object == null || (object instanceof Optional<?> && !((Optional<?>) object).isPresent())) {
       return Optional.empty();
     }
     return Optional.of(
