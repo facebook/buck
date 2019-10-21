@@ -56,4 +56,8 @@ public abstract class InferConfig implements ConfigView<BuckConfig> {
   public ImmutableList<String> getNullsafeArgs() {
     return getDelegate().getListWithoutComments(INFER_CONFIG_SECTION, "nullsafe_args");
   }
+
+  public Boolean getPrettyPrint() {
+    return getDelegate().getBoolean(INFER_CONFIG_SECTION, "pretty_print").orElse(false);
+  }
 }

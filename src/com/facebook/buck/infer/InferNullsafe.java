@@ -123,7 +123,8 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
             directClasspath,
             javacOptions,
             extraClasspathProvider,
-            outputJar));
+            outputJar,
+            config.getPrettyPrint()));
   }
 
   /** {@link Buildable} that is responsible for running Nullsafe. */
@@ -159,6 +160,11 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     @AddToRuleKey private final OutputPath reportJson = reportsDir.resolve(INFER_JSON_REPORT_FILE);
     @AddToRuleKey private final OutputPath reportTxt = reportsDir.resolve(INFER_TXT_REPORT_FILE);
 
+    // Whether to pretty print a list of issues to console and report.txt.
+    // Pretty printing every time during build is distracting and incurs
+    // ~10% overhead, so we don't want to do it, unless explicitly asked.
+    @AddToRuleKey private final Boolean prettyPrint;
+
     Impl(
         InferPlatform inferPlatform,
         ImmutableList<String> nullsafeArgs,
@@ -166,7 +172,8 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
         ImmutableSortedSet<SourcePath> classpath,
         JavacOptions javacOptions,
         Optional<ExtraClasspathProvider> extraClasspathProvider,
-        @Nullable SourcePath generatedClasses) {
+        @Nullable SourcePath generatedClasses,
+        Boolean prettyPrint) {
       this.inferPlatform = inferPlatform;
 
       // Ensure sensible default behavior
@@ -181,6 +188,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
       this.javacOptions = javacOptions;
       this.extraClasspathProvider = extraClasspathProvider;
       this.generatedClasses = generatedClasses;
+      this.prettyPrint = prettyPrint;
     }
 
     @Override
@@ -215,9 +223,13 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
       steps.add(
           new DefaultShellStep(filesystem.getRootPath(), cmd, cmdEnv) {
             @Override
+            protected boolean shouldPrintStdout(Verbosity verbosity) {
+              return verbosity.shouldPrintBinaryRunInformation();
+            }
+
+            @Override
             protected boolean shouldPrintStderr(Verbosity verbosity) {
-              // nullsafe is expected to produce output akin to compilation warnings
-              return true;
+              return verbosity.shouldPrintBinaryRunInformation();
             }
           });
 
@@ -262,9 +274,13 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
           "--jobs",
           "1",
           "--results-dir",
-          inferOutPath.toString(),
-          "--issues-txt",
-          outputPathResolver.resolvePath(reportTxt).toString());
+          inferOutPath.toString());
+
+      if (prettyPrint) {
+        argsBuilder.add("--issues-txt", outputPathResolver.resolvePath(reportTxt).toString());
+      } else {
+        argsBuilder.add("--report-hook-reset");
+      }
 
       sources.stream()
           .map(s -> filesystem.relativize(sourcePathResolver.getAbsolutePath(s)))
