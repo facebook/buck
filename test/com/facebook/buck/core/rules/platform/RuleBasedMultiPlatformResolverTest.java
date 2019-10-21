@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.NamedPlatform;
@@ -39,7 +38,8 @@ public class RuleBasedMultiPlatformResolverTest {
 
   @Test
   public void requestingPlatformForWrongTypeThrowsException() {
-    BuildTarget constraint = BuildTargetFactory.newInstance("//constraint:setting");
+    BuildTarget constraint =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
     ConfigurationRuleResolver configurationRuleResolver =
         (target, dependencyStack) -> new ConstraintSettingRule(constraint, "setting");
     RuleBasedPlatformResolver resolver =

@@ -20,11 +20,11 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.NamedPlatform;
 import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.rules.config.AbstractConfigurationRule;
 import com.google.common.collect.ImmutableList;
 
-public class FakeMultiPlatformRule implements MultiPlatformRule {
+public class FakeMultiPlatformRule extends AbstractConfigurationRule implements MultiPlatformRule {
 
-  private final BuildTarget buildTarget;
   private final BuildTarget basePlatform;
   private final ImmutableList<BuildTarget> nestedPlatforms;
 
@@ -32,14 +32,9 @@ public class FakeMultiPlatformRule implements MultiPlatformRule {
       BuildTarget buildTarget,
       BuildTarget basePlatform,
       ImmutableList<BuildTarget> nestedPlatforms) {
-    this.buildTarget = buildTarget;
+    super(buildTarget);
     this.basePlatform = basePlatform;
     this.nestedPlatforms = nestedPlatforms;
-  }
-
-  @Override
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   @Override
@@ -56,6 +51,6 @@ public class FakeMultiPlatformRule implements MultiPlatformRule {
                         buildTarget1, dependencyStack.child(buildTarget1)))
             .collect(ImmutableList.toImmutableList());
 
-    return new FakeMultiPlatform(buildTarget, basePlatform, nestedPlatforms);
+    return new FakeMultiPlatform(getBuildTarget(), basePlatform, nestedPlatforms);
   }
 }

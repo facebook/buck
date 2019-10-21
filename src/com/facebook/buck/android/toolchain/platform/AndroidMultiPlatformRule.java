@@ -20,15 +20,16 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.NamedPlatform;
 import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.rules.config.AbstractConfigurationRule;
 import com.facebook.buck.core.rules.platform.MultiPlatformRule;
 import com.facebook.buck.core.rules.platform.RuleBasedPlatformResolver;
 import com.google.common.collect.ImmutableSortedMap;
 import java.util.Map;
 
 /** Buck rule representing Android multiplatform definition */
-public class AndroidMultiPlatformRule implements MultiPlatformRule {
+public class AndroidMultiPlatformRule extends AbstractConfigurationRule
+    implements MultiPlatformRule {
 
-  private final BuildTarget buildTarget;
   private final BuildTarget basePlatform;
   private final ImmutableSortedMap<TargetCpuType, BuildTarget> nestedPlatforms;
 
@@ -36,14 +37,9 @@ public class AndroidMultiPlatformRule implements MultiPlatformRule {
       BuildTarget buildTarget,
       BuildTarget basePlatform,
       ImmutableSortedMap<TargetCpuType, BuildTarget> nestedPlatforms) {
-    this.buildTarget = buildTarget;
+    super(buildTarget);
     this.basePlatform = basePlatform;
     this.nestedPlatforms = nestedPlatforms;
-  }
-
-  @Override
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   @Override
@@ -60,6 +56,6 @@ public class AndroidMultiPlatformRule implements MultiPlatformRule {
           ruleBasedPlatformResolver.getPlatform(e.getValue(), dependencyStack.child(e.getValue())));
     }
 
-    return new AndroidMultiPlatform(buildTarget, basePlatform, nestedPlatforms.build());
+    return new AndroidMultiPlatform(getBuildTarget(), basePlatform, nestedPlatforms.build());
   }
 }

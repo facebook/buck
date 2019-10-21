@@ -57,8 +57,10 @@ public class RuleBasedConstraintResolverTest {
 
   @Test
   public void testGettingConstraintValueThrowsWithWrongConstraintSettingRuleType() {
-    BuildTarget constraintSettingTarget = BuildTargetFactory.newInstance("//:setting");
-    BuildTarget constraintValueTarget = BuildTargetFactory.newInstance("//:value");
+    BuildTarget constraintSettingTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//:setting");
+    BuildTarget constraintValueTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//:value");
 
     RuleBasedConstraintResolver ruleBasedConstraintResolver =
         new RuleBasedConstraintResolver(

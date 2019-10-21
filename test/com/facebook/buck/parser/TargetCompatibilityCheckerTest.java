@@ -96,12 +96,12 @@ public class TargetCompatibilityCheckerTest {
             });
     compatibleConfigSetting =
         new ConfigSettingRule(
-            BuildTargetFactory.newInstance("//configs:c1"),
+            ConfigurationBuildTargetFactoryForTests.newInstance("//configs:c1"),
             ImmutableMap.of(),
             ImmutableSet.of(cs1v1.getBuildTarget()));
     nonCompatibleConfigSetting =
         new ConfigSettingRule(
-            BuildTargetFactory.newInstance("//configs:c2"),
+            ConfigurationBuildTargetFactoryForTests.newInstance("//configs:c2"),
             ImmutableMap.of(),
             ImmutableSet.of(cs1v2.getBuildTarget()));
     ConfigurationRuleResolver configurationRuleResolver =
