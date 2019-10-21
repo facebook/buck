@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
@@ -66,14 +65,17 @@ class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
       // so we can reference it as a library.
       Path scratchPath =
           BuildTargetPaths.getScratchPath(
-              projectFilesystem, buildTarget, "__uber_classes_%s__/classes.jar");
+              targetNode.getFilesystem(), buildTarget, "__uber_classes_%s__/classes.jar");
       toReturn =
           Optional.of(
               ExplicitBuildTargetSourcePath.of(
                   buildTarget.withFlavors(AndroidPrebuiltAarDescription.AAR_UNZIP_FLAVOR),
                   scratchPath));
     } else if (IjProjectSourcePathResolver.isJvmLanguageTargetNode(targetNode)) {
-      return Optional.of(DefaultBuildTargetSourcePath.of(buildTarget));
+      toReturn =
+          IjProjectSourcePathResolver.getOutputPathFromJavaTargetNode(
+                  targetNode, buildTarget, targetNode.getFilesystem())
+              .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path));
     } else {
       toReturn = Optional.empty();
     }

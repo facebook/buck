@@ -22,6 +22,7 @@ import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -100,14 +101,14 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       return getOutputPathForAndroidResource(buildTarget, filesystem);
     } else if (description instanceof AndroidBuildConfigDescription) {
       // AndroidBuildConfig is just a library made of generated sources under the hood
-      return getOutputPathFromJavaBuildTarget(buildTarget, filesystem);
+      return getOutputPathFromJavaTargetNode(targetNode, buildTarget, filesystem);
     } else if (description instanceof PrebuiltJarDescription) {
       return getOutputPathForPrebuiltJar(
           (PrebuiltJarDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
     } else if (isJvmLanguageTargetNode(targetNode)) {
       // All the JVM languages currently use DefaultJavaLibrary under the hood, so we can share
       // the implementation for these languages here
-      return getOutputPathFromJavaBuildTarget(buildTarget, filesystem);
+      return getOutputPathFromJavaTargetNode(targetNode, buildTarget, filesystem);
     } else if (description instanceof AndroidManifestDescription) {
       return Optional.of(
           BuildTargetPaths.getGenPath(filesystem, buildTarget, "AndroidManifest__%s__.xml"));
@@ -116,7 +117,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       // TESTS_FLAVOR
       BuildTarget testTarget =
           buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
-      return getOutputPathFromJavaBuildTarget(testTarget, filesystem);
+      return getOutputPathFromJavaTargetNode(targetNode, testTarget, filesystem);
     } else if (description instanceof ExportFileDescription) {
       return getOutputPathForExportFile(
           (ExportFileDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
@@ -233,15 +234,13 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
    * @return the output path for the given buildTarget assuming that the buildTarget points to
    *     something like a JavaLibrary
    */
-  private Optional<Path> getOutputPathFromJavaBuildTarget(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
-    TargetNode<?> targetNode = targetGraph.get(buildTarget);
-    if (targetNode != null
-        && targetNode.getConstructorArg() instanceof JavaLibraryDescription.CoreArg) {
-      JavaLibraryDescription.CoreArg constructorArg =
-          (JavaLibraryDescription.CoreArg) targetNode.getConstructorArg();
+  public static Optional<Path> getOutputPathFromJavaTargetNode(
+      TargetNode<?> targetNode, BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
 
-      // This matches the implementation of JarBuildStepsFactory#producesJar()
+    // This matches the implementation of JarBuildStepsFactory#producesJar()
+    ConstructorArg arg = targetNode.getConstructorArg();
+    if (arg instanceof JavaLibraryDescription.CoreArg) {
+      JavaLibraryDescription.CoreArg constructorArg = (JavaLibraryDescription.CoreArg) arg;
       if (constructorArg.getSrcs().isEmpty()
           && constructorArg.getResources().isEmpty()
           && !constructorArg.getManifestFile().isPresent()) {
