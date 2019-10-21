@@ -43,14 +43,8 @@ import java.util.Optional;
 public class PublicAnnouncementManager {
 
   private static final Logger LOG = Logger.get(PublicAnnouncementManager.class);
-
-  @VisibleForTesting
-  static final String HEADER_MSG =
-      "**-------------------------------**\n"
-          + "**- Sticky Public Announcements -**\n"
-          + "**-------------------------------**";
-
-  @VisibleForTesting static final String ANNOUNCEMENT_TEMPLATE = "\n** %s Remediation: %s";
+  @VisibleForTesting static final String ANNOUNCEMENT_ERROR = " %s\n";
+  @VisibleForTesting static final String ANNOUNCEMENT_REMEDIATION = "   Remediation: %s\n";
 
   private Clock clock;
   private BuckEventBus eventBus;
@@ -90,7 +84,6 @@ public class PublicAnnouncementManager {
                   FrontendRequest request = new FrontendRequest();
                   request.setType(FrontendRequestType.ANNOUNCEMENT);
                   request.setAnnouncementRequest(announcementRequest);
-
                   FrontendResponse response = frontendService.makeRequest(request);
                   return ImmutableList.copyOf(response.announcementResponse.announcements);
                 } catch (IOException e) {
@@ -109,15 +102,21 @@ public class PublicAnnouncementManager {
           public void onSuccess(ImmutableList<Announcement> announcements) {
             LOG.info("Public announcements fetched successfully.");
             if (!announcements.isEmpty()) {
-              String announcement = HEADER_MSG;
+              String announcement = "";
               for (Announcement entry : announcements) {
                 announcement =
                     announcement.concat(
                         String.format(
-                            ANNOUNCEMENT_TEMPLATE,
-                            consoleEventBusListener.ansi.asErrorText(entry.getErrorMessage()),
-                            consoleEventBusListener.ansi.asInformationText(
-                                entry.getSolutionMessage())));
+                            ANNOUNCEMENT_ERROR,
+                            consoleEventBusListener.ansi.asErrorText(entry.getErrorMessage())));
+                if (entry.isSetSolutionMessage()) {
+                  announcement =
+                      announcement.concat(
+                          String.format(
+                              ANNOUNCEMENT_REMEDIATION,
+                              consoleEventBusListener.ansi.asInformationText(
+                                  entry.getSolutionMessage())));
+                }
               }
               consoleEventBusListener.setPublicAnnouncements(eventBus, Optional.of(announcement));
             }

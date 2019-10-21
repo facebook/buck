@@ -166,10 +166,7 @@ public class PublicAnnouncementManagerIntegrationTest {
       assertEquals(
           "The header and the message",
           announcements.get(),
-          "**-------------------------------**\n"
-              + "**- Sticky Public Announcements -**\n"
-              + "**-------------------------------**\n"
-              + "** This is the error message. Remediation: This is the solution message.");
+          " This is the error message.\n   Remediation: This is the solution message.\n");
     }
   }
 }
