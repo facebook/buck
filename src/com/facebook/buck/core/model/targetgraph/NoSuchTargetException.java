@@ -16,21 +16,30 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.core.model.BuildTarget;
 
 public class NoSuchTargetException extends RuntimeException
     implements ExceptionWithHumanReadableMessage {
 
-  public NoSuchTargetException(BuildTarget buildTarget) {
+  private final DependencyStack dependencyStack;
+
+  public NoSuchTargetException(DependencyStack dependencyStack, BuildTarget buildTarget) {
     super(
         String.format(
             "Required target for rule '%s' was not found in the target graph.",
             buildTarget.getFullyQualifiedName()));
+    this.dependencyStack = dependencyStack;
   }
 
   @Override
   public String getHumanReadableErrorMessage() {
     return getMessage();
+  }
+
+  @Override
+  public DependencyStack getDependencyStack() {
+    return dependencyStack;
   }
 }

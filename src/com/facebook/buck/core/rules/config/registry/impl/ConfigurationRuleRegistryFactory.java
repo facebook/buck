@@ -40,7 +40,7 @@ public class ConfigurationRuleRegistryFactory {
   private ConfigurationRuleRegistryFactory() {}
 
   public static ConfigurationRuleRegistry createRegistry(TargetGraph targetGraph) {
-    return createRegistry((t, c) -> targetGraph.get(t));
+    return createRegistry(targetGraph::get);
   }
 
   public static ConfigurationRuleRegistry createRegistry(

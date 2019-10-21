@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
@@ -73,10 +74,19 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
     return Optional.ofNullable(getInternal(target));
   }
 
+  /**
+   * Get a target from graph. Use of {@link #get(BuildTarget, DependencyStack)} is encouraged
+   * because it provides better diagnostics
+   */
   public TargetNode<?> get(BuildTarget target) {
+    return get(target, DependencyStack.root());
+  }
+
+  /** Get a target from graph */
+  public TargetNode<?> get(BuildTarget target, DependencyStack dependencyStack) {
     TargetNode<?> node = getInternal(target);
     if (node == null) {
-      throw new NoSuchTargetException(target);
+      throw new NoSuchTargetException(dependencyStack, target);
     }
     return node;
   }
