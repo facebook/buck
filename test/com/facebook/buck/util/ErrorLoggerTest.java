@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
+import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.WrapsException;
@@ -76,6 +77,45 @@ public class ErrorLoggerTest {
     assertNull(errors.userVisibleInternal);
     assertEquals(
         linesToText("message", "    At //bar:lib", "    At //foo:bin"), errors.userVisible);
+  }
+
+  private static class InternalExceptionWithDepStack extends RuntimeException
+      implements ExceptionWithHumanReadableMessage {
+
+    private final DependencyStack dependencyStack;
+
+    public InternalExceptionWithDepStack(DependencyStack dependencyStack, String message) {
+      super(message);
+
+      this.dependencyStack = dependencyStack;
+    }
+
+    @Override
+    public String getHumanReadableErrorMessage() {
+      return getMessage();
+    }
+
+    @Override
+    public DependencyStack getDependencyStack() {
+      return dependencyStack;
+    }
+  }
+
+  @Test
+  public void internalErrorWithDepStack() {
+    LoggedErrors errors =
+        logException(
+            new RuntimeException(
+                new InternalExceptionWithDepStack(
+                    DependencyStack.top("//foo:bin").child("//bar:lib"), "message")));
+    // Note that even though ExceptionWithHumanReadableMessage is meant to be
+    // a human-readable exception, it is treated as internal error.
+    assertThat(
+        errors.userVisibleInternal,
+        Matchers.allOf(
+            Matchers.containsString("InternalExceptionWithDepStack: message"),
+            Matchers.containsString("    At //bar:lib"),
+            Matchers.containsString("    At //foo:bin")));
   }
 
   private static class TestException extends Exception
