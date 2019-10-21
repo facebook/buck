@@ -48,6 +48,7 @@ public class KotlincStep implements Step {
   private final ImmutableSortedSet<Path> combinedClassPathEntries;
   private final Path outputDirectory;
   private final ImmutableList<String> extraArguments;
+  private final ImmutableList<String> verboseModeOnlyExtraArguments;
   private final ImmutableSortedSet<Path> sourceFilePaths;
   private final ProjectFilesystem filesystem;
   private final Path pathToSrcsList;
@@ -62,6 +63,7 @@ public class KotlincStep implements Step {
       ImmutableSortedSet<Path> combinedClassPathEntries,
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
+      ImmutableList<String> verboseModeOnlyExtraArguments,
       ProjectFilesystem filesystem,
       Optional<Path> workingDirectory) {
     this.invokingRule = invokingRule;
@@ -71,6 +73,7 @@ public class KotlincStep implements Step {
     this.kotlinc = kotlinc;
     this.combinedClassPathEntries = combinedClassPathEntries;
     this.extraArguments = extraArguments;
+    this.verboseModeOnlyExtraArguments = verboseModeOnlyExtraArguments;
     this.filesystem = filesystem;
     this.workingDirectory = workingDirectory;
   }
@@ -137,14 +140,6 @@ public class KotlincStep implements Step {
   @VisibleForTesting
   ImmutableList<String> getOptions(
       ExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
-    return getOptions(filesystem, outputDirectory, buildClasspathEntries);
-  }
-
-  private ImmutableList<String> getOptions(
-      ProjectFilesystem filesystem,
-      Path outputDirectory,
-      ImmutableSortedSet<Path> buildClasspathEntries) {
-
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     if (outputDirectory != null) {
@@ -167,6 +162,15 @@ public class KotlincStep implements Step {
 
     if (!extraArguments.isEmpty()) {
       for (String extraArgument : extraArguments) {
+        if (!extraArgument.isEmpty()) {
+          builder.add(extraArgument);
+        }
+      }
+    }
+
+    if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()
+        && !verboseModeOnlyExtraArguments.isEmpty()) {
+      for (String extraArgument : verboseModeOnlyExtraArguments) {
         if (!extraArgument.isEmpty()) {
           builder.add(extraArgument);
         }

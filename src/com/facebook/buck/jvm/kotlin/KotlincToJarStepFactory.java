@@ -254,8 +254,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               .add(MODULE_NAME)
               .add(moduleName)
               .add(NO_STDLIB)
-              .add(NO_REFLECT)
-              .add(VERBOSE);
+              .add(NO_REFLECT);
 
       Path tmpSourceAbiFolder;
       if (abiGenerationPlugin != null) {
@@ -274,6 +273,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               allClasspaths,
               kotlinc,
               extraArguments.build(),
+              ImmutableList.of(VERBOSE),
               projectFilesystem,
               Optional.of(parameters.getOutputPaths().getWorkingDirectory())));
 
@@ -394,7 +394,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             .add(JAVAC_ARG + encodeOptions(Collections.emptyMap()))
             .add(LIGHT_ANALYSIS + "true") // TODO: Provide value as argument
             .add(CORRECT_ERROR_TYPES + "false") // TODO: Provide value as argument
-            .add(VERBOSE_ARG + "true") // TODO: Provide value as argument
             .build();
     String join = Joiner.on(",").join(kaptPluginOptions);
 
@@ -422,6 +421,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .add(KAPT3_PLUGIN + APT_MODE + "stubs," + join)
                 .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath(resolver))
                 .build(),
+            ImmutableList.of(PLUGIN, VERBOSE_ARG + "true", VERBOSE),
             filesystem,
             Optional.of(workingDirectory)));
 
@@ -449,6 +449,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .add(KAPT3_PLUGIN + APT_MODE + "apt," + join)
                 .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath(resolver))
                 .build(),
+            ImmutableList.of(PLUGIN, VERBOSE_ARG + "true", VERBOSE),
             filesystem,
             Optional.of(workingDirectory)));
   }
