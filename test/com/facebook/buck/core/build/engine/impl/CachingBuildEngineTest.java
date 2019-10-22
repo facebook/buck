@@ -1103,7 +1103,7 @@ public class CachingBuildEngineTest {
     }
 
     @Test
-    public void failedRuntimeDepsAreNotPropagatedWithKeepGoing() throws Exception {
+    public void failedRuntimeDepsArePropagatedWithKeepGoing() throws Exception {
       buildContext = this.buildContext.withKeepGoing(true);
       String description = "failing step";
       Step failingStep =
@@ -1135,7 +1135,7 @@ public class CachingBuildEngineTest {
                 .getResult()
                 .get();
 
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.SUCCESS));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
       }
     }
 

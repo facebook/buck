@@ -389,12 +389,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         Futures.transformAsync(
             Futures.allAsList(runtimeDepResults),
             results -> {
-              if (!isKeepGoingEnabled(buildContext)) {
-                for (BuildResult buildResult : results) {
-                  if (!buildResult.isSuccess()) {
-                    return Futures.immediateFuture(
-                        BuildResult.canceled(rule, buildResult.getFailure()));
-                  }
+              for (BuildResult buildResult : results) {
+                if (!buildResult.isSuccess()) {
+                  return Futures.immediateFuture(
+                      BuildResult.canceled(rule, buildResult.getFailure()));
                 }
               }
               return result;

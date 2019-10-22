@@ -39,8 +39,7 @@ public class AndroidInstrumentationTestIntegrationTest extends AbiCompilationMod
     setWorkspaceCompilationMode(workspace);
 
     String testTarget = "//:test";
-    workspace.runBuckCommand("build", testTarget, "--keep-going").assertSuccess();
-
+    workspace.runBuckCommand("build", testTarget, "--keep-going").assertFailure();
     workspace.runBuckCommand("test", testTarget, "--keep-going").assertFailure();
   }
 }
