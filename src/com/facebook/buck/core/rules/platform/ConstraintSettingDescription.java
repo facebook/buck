@@ -46,6 +46,11 @@ public class ConstraintSettingDescription
   }
 
   @Override
+  public Class<ConstraintSettingRule> getRuleClass() {
+    return ConstraintSettingRule.class;
+  }
+
+  @Override
   public ConstraintSettingRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,

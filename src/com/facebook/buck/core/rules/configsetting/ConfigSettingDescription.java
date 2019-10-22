@@ -57,6 +57,11 @@ public class ConfigSettingDescription
   }
 
   @Override
+  public Class<ConfigSettingRule> getRuleClass() {
+    return ConfigSettingRule.class;
+  }
+
+  @Override
   public ConfigSettingRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,

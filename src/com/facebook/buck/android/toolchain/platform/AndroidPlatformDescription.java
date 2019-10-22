@@ -54,6 +54,11 @@ public class AndroidPlatformDescription
   }
 
   @Override
+  public Class<AndroidMultiPlatformRule> getRuleClass() {
+    return AndroidMultiPlatformRule.class;
+  }
+
+  @Override
   public AndroidMultiPlatformRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,

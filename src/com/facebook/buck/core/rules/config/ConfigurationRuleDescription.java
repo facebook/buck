@@ -26,6 +26,9 @@ import com.facebook.buck.core.model.BuildTarget;
 public interface ConfigurationRuleDescription<
         T extends ConfigurationRuleArg, R extends ConfigurationRule>
     extends BaseDescription<T> {
+  /** Reified type parameter */
+  Class<R> getRuleClass();
+
   /** Creates a {@link ConfigurationRule} */
   R createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver, BuildTarget buildTarget, T arg);

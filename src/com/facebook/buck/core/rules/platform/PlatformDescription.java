@@ -55,6 +55,11 @@ public class PlatformDescription
   }
 
   @Override
+  public Class<PlatformRule> getRuleClass() {
+    return PlatformRule.class;
+  }
+
+  @Override
   public PlatformRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,

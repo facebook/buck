@@ -50,6 +50,11 @@ public class ConstraintValueDescription
   }
 
   @Override
+  public Class<ConstraintValueRule> getRuleClass() {
+    return ConstraintValueRule.class;
+  }
+
+  @Override
   public ConstraintValueRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,
