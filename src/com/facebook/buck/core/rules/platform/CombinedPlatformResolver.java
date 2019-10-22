@@ -42,7 +42,7 @@ public class CombinedPlatformResolver implements PlatformResolver {
   @Override
   public Platform getPlatform(BuildTarget buildTarget, DependencyStack dependencyStack) {
     ConfigurationRule configurationRule =
-        configurationRuleResolver.getRule(buildTarget, dependencyStack);
+        configurationRuleResolver.getRule(buildTarget, ConfigurationRule.class, dependencyStack);
     if (configurationRule instanceof PlatformRule) {
       return ruleBasedPlatformResolver.getPlatform(buildTarget, dependencyStack);
     }

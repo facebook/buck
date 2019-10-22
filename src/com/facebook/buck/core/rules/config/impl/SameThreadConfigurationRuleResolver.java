@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.config.impl;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -25,6 +26,8 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.util.string.MoreStrings;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
@@ -61,13 +64,22 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
   }
 
   @Override
-  public ConfigurationRule getRule(BuildTarget buildTarget, DependencyStack dependencyStack) {
-    return computeIfAbsent(buildTarget, t -> createConfigurationRule(t, dependencyStack));
+  public <R extends ConfigurationRule> R getRule(
+      BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+    ConfigurationRule configurationRule =
+        computeIfAbsent(buildTarget, t -> createConfigurationRule(t, ruleClass, dependencyStack));
+    try {
+      return ruleClass.cast(configurationRule);
+    } catch (ClassCastException e) {
+      throw wrongRuleClassException(
+          buildTarget, dependencyStack, ruleClass, configurationRule.getClass());
+    }
   }
 
   @SuppressWarnings("unchecked")
-  private <T extends ConfigurationRuleArg> ConfigurationRule createConfigurationRule(
-      BuildTarget buildTarget, DependencyStack dependencyStack) {
+  private <T extends ConfigurationRuleArg, R extends ConfigurationRule>
+      ConfigurationRule createConfigurationRule(
+          BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
     Preconditions.checkArgument(
         buildTarget.getTargetConfiguration() == ConfigurationForConfigurationTargets.INSTANCE);
 
@@ -75,6 +87,12 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
         (TargetNode<T>) targetNodeSupplier.apply(buildTarget, dependencyStack);
     ConfigurationRuleDescription<T, ?> configurationRuleDescription =
         (ConfigurationRuleDescription<T, ?>) targetNode.getDescription();
+
+    if (!ruleClass.isAssignableFrom(configurationRuleDescription.getRuleClass())) {
+      throw wrongRuleClassException(
+          buildTarget, dependencyStack, ruleClass, configurationRuleDescription.getRuleClass());
+    }
+
     ConfigurationRule configurationRule =
         configurationRuleDescription.createConfigurationRule(
             this, buildTarget, targetNode.getConstructorArg());
@@ -84,5 +102,26 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
         configurationRule.getBuildTarget(),
         buildTarget);
     return configurationRule;
+  }
+
+  private <R extends ConfigurationRule> HumanReadableException wrongRuleClassException(
+      BuildTarget buildTarget,
+      DependencyStack dependencyStack,
+      Class<R> requestedRuleClass,
+      Class<? extends ConfigurationRule> actualRuleClass) {
+    return new HumanReadableException(
+        dependencyStack,
+        "requested rule %s of type %s, but it was %s",
+        buildTarget,
+        ruleNameFromRuleClass(requestedRuleClass),
+        ruleNameFromRuleClass(actualRuleClass));
+  }
+
+  private static String ruleNameFromRuleClass(Class<? extends ConfigurationRule> ruleClass) {
+    // TODO(nga): rule name is determined by descriptor class name, not rule class name
+    String result = ruleClass.getSimpleName();
+    result = MoreStrings.stripPrefix(result, "Abstract").orElse(result);
+    result = MoreStrings.stripSuffix(result, "Rule").orElse(result);
+    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, result);
   }
 }

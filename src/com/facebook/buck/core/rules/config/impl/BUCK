@@ -9,6 +9,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/util/string:string",
         "//third-party/java/jsr:jsr305",
     ],
 )

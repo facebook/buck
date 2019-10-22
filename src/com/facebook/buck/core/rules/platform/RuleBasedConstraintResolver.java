@@ -17,12 +17,10 @@
 package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
-import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,26 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RuleBasedConstraintResolver implements ConstraintResolver {
   private final ConfigurationRuleResolver configurationRuleResolver;
-
-  /**
-   * Returns the {@link ConfigurationRule} associated with the given {@link BuildTarget}, asserting
-   * that the rule has the requested type.
-   *
-   * @throws HumanReadableException if no rule is associated with the target.
-   */
-  private <T extends ConfigurationRule> T getRuleOfType(
-      BuildTarget buildTarget,
-      DependencyStack dependencyStack,
-      String ruleName,
-      Class<T> ruleClass) {
-    ConfigurationRule rule = configurationRuleResolver.getRule(buildTarget, dependencyStack);
-    try {
-      return ruleClass.cast(rule);
-    } catch (ClassCastException e) {
-      throw new HumanReadableException(
-          dependencyStack, "%s is used as %s, but has wrong type", buildTarget, ruleName);
-    }
-  }
 
   public RuleBasedConstraintResolver(ConfigurationRuleResolver configurationRuleResolver) {
     this.configurationRuleResolver = configurationRuleResolver;
@@ -70,8 +48,8 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
         buildTarget,
         t -> {
           // Validate rule exists
-          getRuleOfType(
-              buildTarget, dependencyStack, "constraint_setting", ConstraintSettingRule.class);
+          configurationRuleResolver.getRule(
+              buildTarget, ConstraintSettingRule.class, dependencyStack);
 
           return ConstraintSetting.of(buildTarget);
         });
@@ -87,8 +65,8 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
         buildTarget,
         t -> {
           ConstraintValueRule constraintValueRule =
-              getRuleOfType(
-                  buildTarget, dependencyStack, "constraint_value", ConstraintValueRule.class);
+              configurationRuleResolver.getRule(
+                  buildTarget, ConstraintValueRule.class, dependencyStack);
 
           return ConstraintValue.of(
               buildTarget,

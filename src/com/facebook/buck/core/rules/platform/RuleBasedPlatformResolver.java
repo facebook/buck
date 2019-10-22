@@ -79,7 +79,7 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
 
   private PlatformRule getPlatformRule(BuildTarget buildTarget, DependencyStack dependencyStack) {
     ConfigurationRule configurationRule =
-        configurationRuleResolver.getRule(buildTarget, dependencyStack);
+        configurationRuleResolver.getRule(buildTarget, ConfigurationRule.class, dependencyStack);
     if (!(configurationRule instanceof PlatformRule)) {
       throw new HumanReadableException(
           dependencyStack,

@@ -27,5 +27,6 @@ public interface ConfigurationRuleResolver {
    *
    * @throws HumanReadableException if no rule is associated with the target.
    */
-  ConfigurationRule getRule(BuildTarget buildTarget, DependencyStack dependencyStack);
+  <R extends ConfigurationRule> R getRule(
+      BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack);
 }

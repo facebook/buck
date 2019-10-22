@@ -72,10 +72,10 @@ class TargetCompatibilityChecker {
       for (UnconfiguredBuildTargetView compatibleConfigTarget :
           argWithTargetCompatible.getCompatibleWith()) {
         ConfigSettingRule configSettingRule =
-            (ConfigSettingRule)
-                configurationRuleResolver.getRule(
-                    ConfigurationBuildTargets.convert(compatibleConfigTarget),
-                    dependencyStack.child(compatibleConfigTarget));
+            configurationRuleResolver.getRule(
+                ConfigurationBuildTargets.convert(compatibleConfigTarget),
+                ConfigSettingRule.class,
+                dependencyStack.child(compatibleConfigTarget));
 
         if (configSettingRule
             .getSelectable()

@@ -376,4 +376,18 @@ public class ConfigurationsIntegrationTest {
       assertEquals("osx", osxOutput);
     }
   }
+
+  @Test
+  public void wrongRuleType() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "wrong_rule_type", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckBuild("--target-platforms=//:p", "//:j");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "requested rule //:c1 of type constraint_setting, but it was constraint_value"));
+  }
 }

@@ -42,7 +42,7 @@ public class ConfigurationRuleSelectableResolver implements SelectableResolver {
   @Override
   public Selectable getSelectable(BuildTarget buildTarget, DependencyStack dependencyStack) {
     ConfigurationRule configurationRule =
-        configurationRuleResolver.getRule(buildTarget, dependencyStack);
+        configurationRuleResolver.getRule(buildTarget, ConfigurationRule.class, dependencyStack);
     if (!(configurationRule instanceof ProvidesSelectable)) {
       throw new HumanReadableException(
           dependencyStack,

@@ -45,7 +45,7 @@ public class RuleBasedMultiPlatformResolver implements PlatformResolver {
   private MultiPlatformRule getMultiPlatformRule(
       BuildTarget buildTarget, DependencyStack dependencyStack) {
     ConfigurationRule configurationRule =
-        configurationRuleResolver.getRule(buildTarget, dependencyStack);
+        configurationRuleResolver.getRule(buildTarget, ConfigurationRule.class, dependencyStack);
     if (!(configurationRule instanceof MultiPlatformRule)) {
       throw new HumanReadableException(
           dependencyStack,

@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
+import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -39,7 +40,13 @@ public class CombinedPlatformResolverTest {
     BuildTarget constraint =
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
     ConfigurationRuleResolver configurationRuleResolver =
-        (target, dependencyStack) -> new ConstraintSettingRule(constraint, "setting");
+        new ConfigurationRuleResolver() {
+          @Override
+          public <R extends ConfigurationRule> R getRule(
+              BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+            return ruleClass.cast(new ConstraintSettingRule(constraint, "setting"));
+          }
+        };
     RuleBasedPlatformResolver resolver =
         new RuleBasedPlatformResolver(configurationRuleResolver, new ThrowingConstraintResolver());
     RuleBasedMultiPlatformResolver multiPlatformResolver =
@@ -74,43 +81,52 @@ public class CombinedPlatformResolverTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
     ConfigurationRuleResolver configurationRuleResolver =
-        (buildTarget, dependencyStack) -> {
-          if (buildTarget.equals(multiPlatformTarget)) {
-            return new FakeMultiPlatformRule(
-                multiPlatformTarget,
-                basePlatformTarget,
-                ImmutableList.of(nestedPlatform1Target, nestedPlatform2Target));
+        new ConfigurationRuleResolver() {
+          @Override
+          public <R extends ConfigurationRule> R getRule(
+              BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+            if (buildTarget.equals(multiPlatformTarget)) {
+              return ruleClass.cast(
+                  new FakeMultiPlatformRule(
+                      multiPlatformTarget,
+                      basePlatformTarget,
+                      ImmutableList.of(nestedPlatform1Target, nestedPlatform2Target)));
+            }
+            if (buildTarget.equals(basePlatformTarget)) {
+              return ruleClass.cast(
+                  PlatformRule.of(
+                      basePlatformTarget,
+                      "base_platform",
+                      ImmutableSortedSet.of(baseConstraintValue),
+                      ImmutableSortedSet.of()));
+            }
+            if (buildTarget.equals(nestedPlatform1Target)) {
+              return ruleClass.cast(
+                  PlatformRule.of(
+                      nestedPlatform1Target,
+                      "nested_platform_1",
+                      ImmutableSortedSet.of(nestedConstraintValue1),
+                      ImmutableSortedSet.of()));
+            }
+            if (buildTarget.equals(nestedPlatform2Target)) {
+              return ruleClass.cast(
+                  PlatformRule.of(
+                      nestedPlatform2Target,
+                      "nested_platform_2",
+                      ImmutableSortedSet.of(nestedConstraintValue2),
+                      ImmutableSortedSet.of()));
+            }
+            if (buildTarget.equals(constraintSetting)) {
+              return ruleClass.cast(new ConstraintSettingRule(constraintSetting, "value"));
+            }
+            if (buildTarget.equals(baseConstraintValue)
+                || buildTarget.equals(nestedConstraintValue1)
+                || buildTarget.equals(nestedConstraintValue2)) {
+              return ruleClass.cast(
+                  new ConstraintValueRule(buildTarget, "value", constraintSetting));
+            }
+            throw new IllegalArgumentException("Invalid build target: " + buildTarget);
           }
-          if (buildTarget.equals(basePlatformTarget)) {
-            return PlatformRule.of(
-                basePlatformTarget,
-                "base_platform",
-                ImmutableSortedSet.of(baseConstraintValue),
-                ImmutableSortedSet.of());
-          }
-          if (buildTarget.equals(nestedPlatform1Target)) {
-            return PlatformRule.of(
-                nestedPlatform1Target,
-                "nested_platform_1",
-                ImmutableSortedSet.of(nestedConstraintValue1),
-                ImmutableSortedSet.of());
-          }
-          if (buildTarget.equals(nestedPlatform2Target)) {
-            return PlatformRule.of(
-                nestedPlatform2Target,
-                "nested_platform_2",
-                ImmutableSortedSet.of(nestedConstraintValue2),
-                ImmutableSortedSet.of());
-          }
-          if (buildTarget.equals(constraintSetting)) {
-            return new ConstraintSettingRule(constraintSetting, "value");
-          }
-          if (buildTarget.equals(baseConstraintValue)
-              || buildTarget.equals(nestedConstraintValue1)
-              || buildTarget.equals(nestedConstraintValue2)) {
-            return new ConstraintValueRule(buildTarget, "value", constraintSetting);
-          }
-          throw new IllegalArgumentException("Invalid build target: " + buildTarget);
         };
 
     RuleBasedPlatformResolver resolver =

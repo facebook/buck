@@ -35,6 +35,7 @@ import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.config.registry.ImmutableConfigurationRuleRegistry;
@@ -86,12 +87,18 @@ public class TargetCompatibilityCheckerTest {
             ImmutableSet.of(cs1v1));
     ConstraintResolver constraintResolver =
         new RuleBasedConstraintResolver(
-            (buildTarget, dependencyStack) -> {
-              if (buildTarget.equals(cs1.getBuildTarget())) {
-                return new ConstraintSettingRule(buildTarget, buildTarget.getShortName());
-              } else {
-                return new ConstraintValueRule(
-                    buildTarget, buildTarget.getShortName(), cs1.getBuildTarget());
+            new ConfigurationRuleResolver() {
+              @Override
+              public <R extends ConfigurationRule> R getRule(
+                  BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+                if (buildTarget.equals(cs1.getBuildTarget())) {
+                  return ruleClass.cast(
+                      new ConstraintSettingRule(buildTarget, buildTarget.getShortName()));
+                } else {
+                  return ruleClass.cast(
+                      new ConstraintValueRule(
+                          buildTarget, buildTarget.getShortName(), cs1.getBuildTarget()));
+                }
               }
             });
     compatibleConfigSetting =
@@ -105,16 +112,22 @@ public class TargetCompatibilityCheckerTest {
             ImmutableMap.of(),
             ImmutableSet.of(cs1v2.getBuildTarget()));
     ConfigurationRuleResolver configurationRuleResolver =
-        (buildTarget, dependencyStack) -> {
-          if (buildTarget.toString().equals(compatibleConfigSetting.getBuildTarget().toString())) {
-            return compatibleConfigSetting;
+        new ConfigurationRuleResolver() {
+          @Override
+          public <R extends ConfigurationRule> R getRule(
+              BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+            if (buildTarget
+                .toString()
+                .equals(compatibleConfigSetting.getBuildTarget().toString())) {
+              return ruleClass.cast(compatibleConfigSetting);
+            }
+            if (buildTarget
+                .toString()
+                .equals(nonCompatibleConfigSetting.getBuildTarget().toString())) {
+              return ruleClass.cast(nonCompatibleConfigSetting);
+            }
+            throw new RuntimeException("Unknown configuration rule: " + buildTarget);
           }
-          if (buildTarget
-              .toString()
-              .equals(nonCompatibleConfigSetting.getBuildTarget().toString())) {
-            return nonCompatibleConfigSetting;
-          }
-          throw new RuntimeException("Unknown configuration rule: " + buildTarget);
         };
     configurationRuleRegistry =
         new ImmutableConfigurationRuleRegistry(

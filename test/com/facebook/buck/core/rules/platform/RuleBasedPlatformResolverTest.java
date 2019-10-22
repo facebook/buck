@@ -22,6 +22,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
+import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -40,7 +41,13 @@ public class RuleBasedPlatformResolverTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
     RuleBasedPlatformResolver resolver =
         new RuleBasedPlatformResolver(
-            (target, dependencyStack) -> new ConstraintSettingRule(constraint, "setting"),
+            new ConfigurationRuleResolver() {
+              @Override
+              public <R extends ConfigurationRule> R getRule(
+                  BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+                return ruleClass.cast(new ConstraintSettingRule(constraint, "setting"));
+              }
+            },
             new ThrowingConstraintResolver());
 
     thrown.expect(HumanReadableException.class);
@@ -61,21 +68,27 @@ public class RuleBasedPlatformResolverTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
     ConfigurationRuleResolver configurationRuleResolver =
-        (buildTarget, dependencyStack) -> {
-          if (buildTarget.equals(platformTarget)) {
-            return PlatformRule.of(
-                platformTarget,
-                "platform",
-                ImmutableSortedSet.of(constraintValue),
-                ImmutableSortedSet.of());
+        new ConfigurationRuleResolver() {
+          @Override
+          public <R extends ConfigurationRule> R getRule(
+              BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+            if (buildTarget.equals(platformTarget)) {
+              return ruleClass.cast(
+                  PlatformRule.of(
+                      platformTarget,
+                      "platform",
+                      ImmutableSortedSet.of(constraintValue),
+                      ImmutableSortedSet.of()));
+            }
+            if (buildTarget.equals(constraintValue)) {
+              return ruleClass.cast(
+                  new ConstraintValueRule(constraintValue, "value", constraintSetting));
+            }
+            if (buildTarget.equals(constraintSetting)) {
+              return ruleClass.cast(new ConstraintSettingRule(constraintSetting, "value"));
+            }
+            throw new IllegalArgumentException("Invalid build target: " + buildTarget);
           }
-          if (buildTarget.equals(constraintValue)) {
-            return new ConstraintValueRule(constraintValue, "value", constraintSetting);
-          }
-          if (buildTarget.equals(constraintSetting)) {
-            return new ConstraintSettingRule(constraintSetting, "value");
-          }
-          throw new IllegalArgumentException("Invalid build target: " + buildTarget);
         };
 
     RuleBasedPlatformResolver resolver =

@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
+import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -47,7 +48,16 @@ public class DefaultTargetPlatformResolverTest {
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(
                 new RuleBasedPlatformResolver(
-                    (target, dependencyStack) -> null, new ThrowingConstraintResolver())));
+                    new ConfigurationRuleResolver() {
+                      @Override
+                      public <R extends ConfigurationRule> R getRule(
+                          BuildTarget buildTarget,
+                          Class<R> ruleClass,
+                          DependencyStack dependencyStack) {
+                        return null;
+                      }
+                    },
+                    new ThrowingConstraintResolver())));
 
     assertEquals(
         emptyTargetConfigurationPlatform,
@@ -62,7 +72,16 @@ public class DefaultTargetPlatformResolverTest {
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(
                 new RuleBasedPlatformResolver(
-                    (target, dependencyStack) -> null, new ThrowingConstraintResolver())));
+                    new ConfigurationRuleResolver() {
+                      @Override
+                      public <R extends ConfigurationRule> R getRule(
+                          BuildTarget buildTarget,
+                          Class<R> ruleClass,
+                          DependencyStack dependencyStack) {
+                        return null;
+                      }
+                    },
+                    new ThrowingConstraintResolver())));
 
     assertEquals(
         emptyTargetConfigurationPlatform,
@@ -80,23 +99,29 @@ public class DefaultTargetPlatformResolverTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
     ConfigurationRuleResolver configurationRuleResolver =
-        (buildTarget, dependencyStack) -> {
-          if (buildTarget.equals(platformTarget)) {
-            return PlatformRule.of(
-                platformTarget,
-                "platform",
-                ImmutableSortedSet.of(constraintValue),
-                ImmutableSortedSet.of());
+        new ConfigurationRuleResolver() {
+          @Override
+          public <R extends ConfigurationRule> R getRule(
+              BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+            if (buildTarget.equals(platformTarget)) {
+              return ruleClass.cast(
+                  PlatformRule.of(
+                      platformTarget,
+                      "platform",
+                      ImmutableSortedSet.of(constraintValue),
+                      ImmutableSortedSet.of()));
+            }
+            if (buildTarget
+                .getUnconfiguredBuildTargetView()
+                .equals(constraintValue.getUnconfiguredBuildTargetView())) {
+              return ruleClass.cast(
+                  new ConstraintValueRule(constraintValue, "value", constraintSetting));
+            }
+            if (buildTarget.equals(constraintSetting)) {
+              return ruleClass.cast(new ConstraintSettingRule(constraintValue, "value"));
+            }
+            throw new IllegalArgumentException("Invalid build target: " + buildTarget);
           }
-          if (buildTarget
-              .getUnconfiguredBuildTargetView()
-              .equals(constraintValue.getUnconfiguredBuildTargetView())) {
-            return new ConstraintValueRule(constraintValue, "value", constraintSetting);
-          }
-          if (buildTarget.equals(constraintSetting)) {
-            return new ConstraintSettingRule(constraintValue, "value");
-          }
-          throw new IllegalArgumentException("Invalid build target: " + buildTarget);
         };
 
     RuleBasedTargetPlatformResolver ruleBasedTargetPlatformResolver =
@@ -125,7 +150,16 @@ public class DefaultTargetPlatformResolverTest {
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(
                 new RuleBasedPlatformResolver(
-                    (target, dependencyStack) -> null, new ThrowingConstraintResolver())));
+                    new ConfigurationRuleResolver() {
+                      @Override
+                      public <R extends ConfigurationRule> R getRule(
+                          BuildTarget buildTarget,
+                          Class<R> ruleClass,
+                          DependencyStack dependencyStack) {
+                        return null;
+                      }
+                    },
+                    new ThrowingConstraintResolver())));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("Cannot determine target platform for configuration:");

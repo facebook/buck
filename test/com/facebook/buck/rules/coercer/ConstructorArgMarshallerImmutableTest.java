@@ -43,6 +43,8 @@ import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
+import com.facebook.buck.core.rules.config.ConfigurationRule;
+import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
@@ -539,7 +541,15 @@ public class ConstructorArgMarshallerImmutableTest {
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
             new RuleBasedConstraintResolver(
-                (buildTarget, dependencyStack) -> DummyConfigurationRule.of(buildTarget)),
+                new ConfigurationRuleResolver() {
+                  @Override
+                  public <R extends ConfigurationRule> R getRule(
+                      BuildTarget buildTarget,
+                      Class<R> ruleClass,
+                      DependencyStack dependencyStack) {
+                    return ruleClass.cast(DummyConfigurationRule.of(buildTarget));
+                  }
+                }),
             UnconfiguredTargetConfiguration.INSTANCE,
             targetPlatformResolver);
     TargetConfigurationTransformer targetConfigurationTransformer =
@@ -666,7 +676,15 @@ public class ConstructorArgMarshallerImmutableTest {
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
             new RuleBasedConstraintResolver(
-                (buildTarget, dependencyStack) -> DummyConfigurationRule.of(buildTarget)),
+                new ConfigurationRuleResolver() {
+                  @Override
+                  public <R extends ConfigurationRule> R getRule(
+                      BuildTarget buildTarget,
+                      Class<R> ruleClass,
+                      DependencyStack dependencyStack) {
+                    return ruleClass.cast(DummyConfigurationRule.of(buildTarget));
+                  }
+                }),
             ImmutableRuleBasedTargetConfiguration.of(multiPlatformTarget),
             targetPlatformResolver);
 
