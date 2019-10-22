@@ -22,15 +22,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 
 /** A configuration rule that represents {@code config_setting} target. */
 public class ConstraintSettingRule extends AbstractConfigurationRule implements ConfigurationRule {
-
-  private final String name;
-
-  public ConstraintSettingRule(BuildTarget buildTarget, String name) {
+  public ConstraintSettingRule(BuildTarget buildTarget) {
     super(buildTarget);
-    this.name = name;
-  }
-
-  public String getName() {
-    return name;
   }
 }

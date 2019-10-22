@@ -57,7 +57,7 @@ public class ConstraintSettingDescription
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       ConstraintSettingArg arg) {
-    return new ConstraintSettingRule(buildTarget, arg.getName());
+    return new ConstraintSettingRule(buildTarget);
   }
 
   @Override

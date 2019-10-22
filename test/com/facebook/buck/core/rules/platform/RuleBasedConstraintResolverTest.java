@@ -46,12 +46,10 @@ public class RuleBasedConstraintResolverTest {
               public <R extends ConfigurationRule> R getRule(
                   BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
                 if (buildTarget.equals(constraintSettingTarget)) {
-                  return ruleClass.cast(
-                      new ConstraintSettingRule(buildTarget, buildTarget.getShortName()));
+                  return ruleClass.cast(new ConstraintSettingRule(buildTarget));
                 } else {
                   return ruleClass.cast(
-                      new ConstraintValueRule(
-                          buildTarget, buildTarget.getShortName(), constraintSettingTarget));
+                      new ConstraintValueRule(buildTarget, constraintSettingTarget));
                 }
               }
             });

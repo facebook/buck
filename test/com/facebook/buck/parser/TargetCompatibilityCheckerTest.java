@@ -92,12 +92,9 @@ public class TargetCompatibilityCheckerTest {
               public <R extends ConfigurationRule> R getRule(
                   BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
                 if (buildTarget.equals(cs1.getBuildTarget())) {
-                  return ruleClass.cast(
-                      new ConstraintSettingRule(buildTarget, buildTarget.getShortName()));
+                  return ruleClass.cast(new ConstraintSettingRule(buildTarget));
                 } else {
-                  return ruleClass.cast(
-                      new ConstraintValueRule(
-                          buildTarget, buildTarget.getShortName(), cs1.getBuildTarget()));
+                  return ruleClass.cast(new ConstraintValueRule(buildTarget, cs1.getBuildTarget()));
                 }
               }
             });

@@ -45,7 +45,7 @@ public class RuleBasedPlatformResolverTest {
               @Override
               public <R extends ConfigurationRule> R getRule(
                   BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
-                return ruleClass.cast(new ConstraintSettingRule(constraint, "setting"));
+                return ruleClass.cast(new ConstraintSettingRule(constraint));
               }
             },
             new ThrowingConstraintResolver());
@@ -81,11 +81,10 @@ public class RuleBasedPlatformResolverTest {
                       ImmutableSortedSet.of()));
             }
             if (buildTarget.equals(constraintValue)) {
-              return ruleClass.cast(
-                  new ConstraintValueRule(constraintValue, "value", constraintSetting));
+              return ruleClass.cast(new ConstraintValueRule(constraintValue, constraintSetting));
             }
             if (buildTarget.equals(constraintSetting)) {
-              return ruleClass.cast(new ConstraintSettingRule(constraintSetting, "value"));
+              return ruleClass.cast(new ConstraintSettingRule(constraintSetting));
             }
             throw new IllegalArgumentException("Invalid build target: " + buildTarget);
           }

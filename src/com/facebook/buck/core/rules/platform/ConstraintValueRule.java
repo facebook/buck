@@ -23,17 +23,11 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 /** {@code constraint_value} rule. */
 public class ConstraintValueRule extends AbstractConfigurationRule implements ConfigurationRule {
 
-  private final String name;
   private final BuildTarget constraintSetting;
 
-  public ConstraintValueRule(BuildTarget buildTarget, String name, BuildTarget constraintSetting) {
+  public ConstraintValueRule(BuildTarget buildTarget, BuildTarget constraintSetting) {
     super(buildTarget);
-    this.name = name;
     this.constraintSetting = constraintSetting;
-  }
-
-  public String getName() {
-    return name;
   }
 
   public BuildTarget getConstraintSetting() {

@@ -114,11 +114,10 @@ public class DefaultTargetPlatformResolverTest {
             if (buildTarget
                 .getUnconfiguredBuildTargetView()
                 .equals(constraintValue.getUnconfiguredBuildTargetView())) {
-              return ruleClass.cast(
-                  new ConstraintValueRule(constraintValue, "value", constraintSetting));
+              return ruleClass.cast(new ConstraintValueRule(constraintValue, constraintSetting));
             }
             if (buildTarget.equals(constraintSetting)) {
-              return ruleClass.cast(new ConstraintSettingRule(constraintValue, "value"));
+              return ruleClass.cast(new ConstraintSettingRule(constraintValue));
             }
             throw new IllegalArgumentException("Invalid build target: " + buildTarget);
           }

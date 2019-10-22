@@ -62,7 +62,7 @@ public class ConstraintValueDescription
       DependencyStack dependencyStack,
       ConstraintValueArg arg) {
     return new ConstraintValueRule(
-        buildTarget, arg.getName(), ConfigurationBuildTargets.convert(arg.getConstraintSetting()));
+        buildTarget, ConfigurationBuildTargets.convert(arg.getConstraintSetting()));
   }
 
   @Override
