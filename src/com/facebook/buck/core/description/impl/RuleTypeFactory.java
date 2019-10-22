@@ -14,15 +14,18 @@
  * under the License.
  */
 
-package com.facebook.buck.core.model.impl;
+package com.facebook.buck.core.description.impl;
 
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.base.CaseFormat;
 
+/** Utility to create {@link RuleType} */
 public class RuleTypeFactory {
 
-  public static RuleType create(Class<?> cls, RuleType.Kind ruleKind) {
+  /** Create a rule type from a rule implementation class */
+  public static RuleType create(Class<? extends BaseDescription<?>> cls, RuleType.Kind ruleKind) {
     String result = cls.getSimpleName();
     result = MoreStrings.stripPrefix(result, "Abstract").orElse(result);
     result = MoreStrings.stripSuffix(result, "Description").orElse(result);

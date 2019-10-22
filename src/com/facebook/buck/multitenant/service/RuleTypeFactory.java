@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.RuleType;
  * based on the {@code buck.type} it deserializes from JSON.
  *
  * <p><strong>This is not designed for general use in the Buck codebase. Consider {@code
- * com.facebook.buck.core.model.impl.RuleTypeFactory} instead.</strong>
+ * com.facebook.buck.core.description.impl.RuleTypeFactory} instead.</strong>
  */
 public class RuleTypeFactory {
 
