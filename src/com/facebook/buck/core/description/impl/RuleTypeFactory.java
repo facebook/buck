@@ -17,7 +17,10 @@
 package com.facebook.buck.core.description.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.base.CaseFormat;
 
@@ -25,10 +28,27 @@ import com.google.common.base.CaseFormat;
 public class RuleTypeFactory {
 
   /** Create a rule type from a rule implementation class */
-  public static RuleType create(Class<? extends BaseDescription<?>> cls, RuleType.Kind ruleKind) {
+  public static RuleType create(Class<? extends BaseDescription<?>> cls) {
     String result = cls.getSimpleName();
     result = MoreStrings.stripPrefix(result, "Abstract").orElse(result);
     result = MoreStrings.stripSuffix(result, "Description").orElse(result);
+
+    boolean isBuildRule =
+        DescriptionWithTargetGraph.class.isAssignableFrom(cls)
+            || RuleDescription.class.isAssignableFrom(cls);
+    boolean isConfigurationRule = ConfigurationRuleDescription.class.isAssignableFrom(cls);
+
+    RuleType.Kind ruleKind;
+    if (isBuildRule && !isConfigurationRule) {
+      ruleKind = RuleType.Kind.BUILD;
+    } else if (isConfigurationRule && !isBuildRule) {
+      ruleKind = RuleType.Kind.CONFIGURATION;
+    } else if (isBuildRule) {
+      throw new IllegalStateException(
+          "rule cannot be both build and configuration: " + cls.getName());
+    } else {
+      throw new IllegalStateException("cannot determine rule kind: " + cls.getName());
+    }
     return RuleType.of(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, result), ruleKind);
   }
 }

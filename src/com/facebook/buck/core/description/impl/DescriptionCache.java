@@ -17,11 +17,7 @@
 package com.facebook.buck.core.description.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.description.RuleDescription;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -35,27 +31,9 @@ public class DescriptionCache {
                   new CacheLoader<Class<? extends BaseDescription<?>>, RuleType>() {
                     @Override
                     public RuleType load(Class<? extends BaseDescription<?>> key) {
-                      return RuleTypeFactory.create(key, getRuleKindFromDescriptionClass(key));
+                      return RuleTypeFactory.create(key);
                     }
                   });
-
-  private static RuleType.Kind getRuleKindFromDescriptionClass(
-      Class<? extends BaseDescription<?>> cls) {
-    boolean isConfigurationRule = ConfigurationRuleDescription.class.isAssignableFrom(cls);
-    boolean isBuildRule =
-        DescriptionWithTargetGraph.class.isAssignableFrom(cls)
-            || RuleDescription.class.isAssignableFrom(cls);
-    if (isConfigurationRule && !isBuildRule) {
-      return RuleType.Kind.CONFIGURATION;
-    } else if (isBuildRule && !isConfigurationRule) {
-      return RuleType.Kind.BUILD;
-    } else if (isBuildRule) {
-      throw new HumanReadableException(
-          "Rule cannot be both build rule and configuration rule: %s", cls);
-    } else {
-      throw new HumanReadableException("Cannot determine rule kind for description class: %s", cls);
-    }
-  }
 
   /** @return The {@link RuleType} being described. */
   public static RuleType getRuleType(Class<? extends BaseDescription<?>> descriptionClass) {
