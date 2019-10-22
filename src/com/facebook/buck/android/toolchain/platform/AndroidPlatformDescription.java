@@ -18,6 +18,7 @@ package com.facebook.buck.android.toolchain.platform;
 
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -62,6 +63,7 @@ public class AndroidPlatformDescription
   public AndroidMultiPlatformRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       AndroidPlatformArg arg) {
     return new AndroidMultiPlatformRule(
         buildTarget,

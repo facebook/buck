@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -54,6 +55,7 @@ public class ConstraintSettingDescription
   public ConstraintSettingRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       ConstraintSettingArg arg) {
     return new ConstraintSettingRule(buildTarget, arg.getName());
   }

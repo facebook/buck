@@ -19,6 +19,7 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
@@ -71,6 +72,7 @@ public class RuleTypeFactoryTest {
     public ConfigurationRule createConfigurationRule(
         ConfigurationRuleResolver configurationRuleResolver,
         BuildTarget buildTarget,
+        DependencyStack dependencyStack,
         ConfigurationRuleArg arg) {
       throw new AssertionError();
     }
@@ -121,7 +123,10 @@ public class RuleTypeFactoryTest {
 
     @Override
     public ConfigurationRule createConfigurationRule(
-        ConfigurationRuleResolver configurationRuleResolver, BuildTarget buildTarget, BothArg arg) {
+        ConfigurationRuleResolver configurationRuleResolver,
+        BuildTarget buildTarget,
+        DependencyStack dependencyStack,
+        BothArg arg) {
       throw new AssertionError();
     }
 

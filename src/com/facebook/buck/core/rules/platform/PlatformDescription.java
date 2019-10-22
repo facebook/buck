@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -63,6 +64,7 @@ public class PlatformDescription
   public PlatformRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       PlatformArg arg) {
     return PlatformRule.of(
         buildTarget,

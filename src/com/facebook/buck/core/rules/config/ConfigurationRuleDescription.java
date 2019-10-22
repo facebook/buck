@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.config;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 
 /**
@@ -31,5 +32,8 @@ public interface ConfigurationRuleDescription<
 
   /** Creates a {@link ConfigurationRule} */
   R createConfigurationRule(
-      ConfigurationRuleResolver configurationRuleResolver, BuildTarget buildTarget, T arg);
+      ConfigurationRuleResolver configurationRuleResolver,
+      BuildTarget buildTarget,
+      DependencyStack dependencyStack,
+      T arg);
 }

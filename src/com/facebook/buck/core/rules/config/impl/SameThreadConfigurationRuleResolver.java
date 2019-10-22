@@ -95,7 +95,7 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
 
     ConfigurationRule configurationRule =
         configurationRuleDescription.createConfigurationRule(
-            this, buildTarget, targetNode.getConstructorArg());
+            this, buildTarget, dependencyStack, targetNode.getConstructorArg());
     Preconditions.checkState(
         configurationRule.getBuildTarget().equals(buildTarget),
         "Configuration rule description returned rule for '%s' instead of '%s'.",
