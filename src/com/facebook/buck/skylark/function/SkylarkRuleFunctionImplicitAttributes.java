@@ -23,6 +23,7 @@ import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableUnconfiguredDepListAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableUnconfiguredOptionalDepAttribute;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -95,6 +96,9 @@ class SkylarkRuleFunctionImplicitAttributes {
     } else if (new TypeToken<ImmutableList<UnconfiguredBuildTargetView>>() {}.getType()
         .equals(method.getGenericReturnType())) {
       return new ImmutableUnconfiguredDepListAttribute(ImmutableList.of(), "", false, true);
+    } else if (new TypeToken<Optional<UnconfiguredBuildTargetView>>() {}.getType()
+        .equals(method.getGenericReturnType())) {
+      return new ImmutableUnconfiguredOptionalDepAttribute(Optional.empty(), "", false, true);
     } else {
       throw new IllegalStateException("unknown type for method: " + method);
     }

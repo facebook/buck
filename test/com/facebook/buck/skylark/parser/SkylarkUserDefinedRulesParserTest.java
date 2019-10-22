@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -524,7 +525,7 @@ public class SkylarkUserDefinedRulesParserTest {
                 .put("attr2", 2)
                 .put("licenses", ImmutableList.of())
                 .put("labels", ImmutableList.of())
-                .put("default_target_platform", "")
+                .put("default_target_platform", Optional.empty())
                 .put("target_compatible_with", ImmutableList.of())
                 .put("compatible_with", ImmutableList.of())
                 .build());
@@ -555,7 +556,7 @@ public class SkylarkUserDefinedRulesParserTest {
                 .put("attr2", 2)
                 .put("licenses", ImmutableList.of())
                 .put("labels", ImmutableList.of())
-                .put("default_target_platform", "")
+                .put("default_target_platform", Optional.empty())
                 .put("target_compatible_with", ImmutableList.of())
                 .put("compatible_with", ImmutableList.of())
                 .build(),
@@ -568,7 +569,7 @@ public class SkylarkUserDefinedRulesParserTest {
                 .put("attr2", 5)
                 .put("licenses", ImmutableList.of())
                 .put("labels", ImmutableList.of())
-                .put("default_target_platform", "")
+                .put("default_target_platform", Optional.empty())
                 .put("target_compatible_with", ImmutableList.of())
                 .put("compatible_with", ImmutableList.of())
                 .build());

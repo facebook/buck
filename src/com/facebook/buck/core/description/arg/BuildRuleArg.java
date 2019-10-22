@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
 
@@ -42,10 +43,7 @@ public interface BuildRuleArg extends ConstructorArg {
    * actually called, but the attr is fetched by name from the raw (unconfigured) target node.
    */
   @Hint(isDep = false, isConfigurable = false)
-  @Value.Default
-  default String getDefaultTargetPlatform() {
-    return "";
-  }
+  Optional<UnconfiguredBuildTargetView> getDefaultTargetPlatform();
 
   /**
    * A list of {@code constraint_value} rules a target is compatible with.

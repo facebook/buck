@@ -210,6 +210,11 @@ public class CxxConstructorArgTest {
     }
 
     @Override
+    public Optional<UnconfiguredBuildTargetView> getDefaultTargetPlatform() {
+      return Optional.empty();
+    }
+
+    @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
       return ImmutableSortedSet.of();
     }

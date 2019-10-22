@@ -33,6 +33,7 @@ import com.google.common.collect.Maps;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -47,6 +48,7 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
   private final Map<String, Object> coercedAttrValues;
   @Nullable private String name;
   @Nullable private ImmutableList<UnconfiguredBuildTargetView> compatibleWith;
+  @Nullable private Optional<UnconfiguredBuildTargetView> defaultTargetPlatform;
 
   /**
    * Create an instance of {@link SkylarkDescriptionArg}
@@ -101,6 +103,9 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
       // and likely won't be implemented, because `target_compatible_with` attribute is deprecated
       throw new IllegalStateException("target_compatible_with is not implemented for UDR");
     }
+    defaultTargetPlatform =
+        (Optional<UnconfiguredBuildTargetView>)
+            coercedAttrValues.getOrDefault("default_target_platform", Optional.empty());
   }
 
   /**
@@ -131,6 +136,11 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
   @Override
   public String getName() {
     return Preconditions.checkNotNull(name);
+  }
+
+  @Override
+  public Optional<UnconfiguredBuildTargetView> getDefaultTargetPlatform() {
+    return Preconditions.checkNotNull(defaultTargetPlatform);
   }
 
   public ImmutableMap<String, ParamInfo> getAllParamInfo() {
