@@ -45,7 +45,7 @@ public abstract class AbstractKnownNativeRuleTypes implements KnownRuleTypes {
   public abstract ImmutableList<Description<?>> getKnownBuildDescriptions();
 
   @Value.Parameter
-  public abstract ImmutableList<ConfigurationRuleDescription<?>>
+  public abstract ImmutableList<ConfigurationRuleDescription<?, ?>>
       getKnownConfigurationDescriptions();
 
   @Value.Lazy

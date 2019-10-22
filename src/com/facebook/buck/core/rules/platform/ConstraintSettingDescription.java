@@ -17,7 +17,6 @@
 package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -39,7 +38,7 @@ import org.immutables.value.Value;
  * </pre>
  */
 public class ConstraintSettingDescription
-    implements ConfigurationRuleDescription<ConstraintSettingArg> {
+    implements ConfigurationRuleDescription<ConstraintSettingArg, ConstraintSettingRule> {
 
   @Override
   public Class<ConstraintSettingArg> getConstructorArgType() {
@@ -47,7 +46,7 @@ public class ConstraintSettingDescription
   }
 
   @Override
-  public ConfigurationRule createConfigurationRule(
+  public ConstraintSettingRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,
       ConstraintSettingArg arg) {

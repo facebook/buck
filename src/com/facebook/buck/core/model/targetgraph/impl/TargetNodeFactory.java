@@ -123,7 +123,7 @@ public class TargetNodeFactory implements NodeCopier {
       CellPathResolver cellRoots)
       throws NoSuchBuildTargetException {
 
-    boolean isConfigurationRule = description instanceof ConfigurationRuleDescription<?>;
+    boolean isConfigurationRule = description instanceof ConfigurationRuleDescription<?, ?>;
 
     if (buildTarget
         .getTargetConfiguration()

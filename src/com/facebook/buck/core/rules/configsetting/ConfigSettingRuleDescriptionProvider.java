@@ -25,7 +25,7 @@ import org.pf4j.Extension;
 @Extension
 public class ConfigSettingRuleDescriptionProvider implements ConfigurationRuleDescriptionProvider {
   @Override
-  public Collection<ConfigurationRuleDescription<?>> getDescriptions() {
+  public Collection<ConfigurationRuleDescription<?, ?>> getDescriptions() {
     return Collections.singleton(new ConfigSettingDescription());
   }
 }

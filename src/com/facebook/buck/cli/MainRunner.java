@@ -390,7 +390,7 @@ public final class MainRunner {
         ProcessExecutor executor,
         PluginManager pluginManager,
         SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory,
-        ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions);
+        ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions);
   }
 
   private final KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
@@ -804,7 +804,7 @@ public final class MainRunner {
       Watchman watchman =
           buildWatchman(context, parserConfig, projectWatchList, environment, console, clock);
 
-      ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions =
+      ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions =
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
 
       DefaultCellPathResolver rootCellCellPathResolver =

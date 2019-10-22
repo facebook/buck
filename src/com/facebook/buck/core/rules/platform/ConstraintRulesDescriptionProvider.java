@@ -25,7 +25,7 @@ import org.pf4j.Extension;
 @Extension
 public class ConstraintRulesDescriptionProvider implements ConfigurationRuleDescriptionProvider {
   @Override
-  public Collection<ConfigurationRuleDescription<?>> getDescriptions() {
+  public Collection<ConfigurationRuleDescription<?, ?>> getDescriptions() {
     return Arrays.asList(new ConstraintSettingDescription(), new ConstraintValueDescription());
   }
 }

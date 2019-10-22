@@ -65,16 +65,16 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
     return computeIfAbsent(buildTarget, t -> createConfigurationRule(t, dependencyStack));
   }
 
+  @SuppressWarnings("unchecked")
   private <T extends ConfigurationRuleArg> ConfigurationRule createConfigurationRule(
       BuildTarget buildTarget, DependencyStack dependencyStack) {
     Preconditions.checkArgument(
         buildTarget.getTargetConfiguration() == ConfigurationForConfigurationTargets.INSTANCE);
 
-    @SuppressWarnings("unchecked")
     TargetNode<T> targetNode =
         (TargetNode<T>) targetNodeSupplier.apply(buildTarget, dependencyStack);
-    ConfigurationRuleDescription<T> configurationRuleDescription =
-        (ConfigurationRuleDescription<T>) targetNode.getDescription();
+    ConfigurationRuleDescription<T, ?> configurationRuleDescription =
+        (ConfigurationRuleDescription<T, ?>) targetNode.getDescription();
     ConfigurationRule configurationRule =
         configurationRuleDescription.createConfigurationRule(
             this, buildTarget, targetNode.getConstructorArg());

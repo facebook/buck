@@ -21,5 +21,5 @@ import org.pf4j.ExtensionPoint;
 
 /** Extension point to load {@link ConfigurationRuleDescription} from plugins. */
 public interface ConfigurationRuleDescriptionProvider extends ExtensionPoint {
-  Collection<ConfigurationRuleDescription<?>> getDescriptions();
+  Collection<ConfigurationRuleDescription<?, ?>> getDescriptions();
 }

@@ -34,13 +34,13 @@ public class DefaultKnownNativeRuleTypesFactory implements KnownNativeRuleTypesF
   private final ProcessExecutor executor;
   private final PluginManager pluginManager;
   private final SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory;
-  private final ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions;
+  private final ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions;
 
   public DefaultKnownNativeRuleTypesFactory(
       ProcessExecutor executor,
       PluginManager pluginManager,
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory,
-      ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions) {
+      ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions) {
     this.executor = executor;
     this.pluginManager = pluginManager;
     this.sandboxExecutionStrategyFactory = sandboxExecutionStrategyFactory;

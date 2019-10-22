@@ -30,7 +30,8 @@ import org.pf4j.PluginManager;
  */
 public class PluginBasedKnownConfigurationDescriptionsFactory {
 
-  public static ImmutableList<ConfigurationRuleDescription<?>> createFromPlugins(
+  /** Create rule descriptors using provided plugin manager */
+  public static ImmutableList<ConfigurationRuleDescription<?, ?>> createFromPlugins(
       PluginManager pluginManager) {
 
     List<ConfigurationRuleDescriptionProvider> descriptionProviders =

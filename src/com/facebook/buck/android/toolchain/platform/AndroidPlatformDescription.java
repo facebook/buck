@@ -21,7 +21,6 @@ import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -47,7 +46,7 @@ import org.immutables.value.Value;
  * </pre>
  */
 public class AndroidPlatformDescription
-    implements ConfigurationRuleDescription<AndroidPlatformArg> {
+    implements ConfigurationRuleDescription<AndroidPlatformArg, AndroidMultiPlatformRule> {
 
   @Override
   public Class<AndroidPlatformArg> getConstructorArgType() {
@@ -55,7 +54,7 @@ public class AndroidPlatformDescription
   }
 
   @Override
-  public ConfigurationRule createConfigurationRule(
+  public AndroidMultiPlatformRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,
       AndroidPlatformArg arg) {

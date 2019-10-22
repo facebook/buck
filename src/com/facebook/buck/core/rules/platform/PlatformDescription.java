@@ -46,7 +46,8 @@ import org.immutables.value.Value;
  *   )
  * </pre>
  */
-public class PlatformDescription implements ConfigurationRuleDescription<PlatformArg> {
+public class PlatformDescription
+    implements ConfigurationRuleDescription<PlatformArg, PlatformRule> {
 
   @Override
   public Class<PlatformArg> getConstructorArgType() {
@@ -54,7 +55,7 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
   }
 
   @Override
-  public ConfigurationRule createConfigurationRule(
+  public PlatformRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,
       PlatformArg arg) {
