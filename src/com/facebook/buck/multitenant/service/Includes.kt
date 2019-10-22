@@ -137,18 +137,18 @@ class IncludesMapChangeBuilder(private val previousIncludesMapState: IncludesMap
     fun build(): IncludesMapChange =
         IncludesMapChange(forwardMap = getForwardMap(), reverseMap = getReverseMap())
 
-    private fun getForwardMap(): Map<Include, MemorySharingIntSet?> {
+    private fun getForwardMap(): Map<Include, MemorySharingIntSet> {
         return applyUpdates(previousIncludesMapState.forwardMap, forwardMapDeltas)
     }
 
-    private fun getReverseMap(): Map<Include, MemorySharingIntSet?> {
+    private fun getReverseMap(): Map<Include, MemorySharingIntSet> {
         return applyUpdates(previousIncludesMapState.reverseMap, reverseMapDeltas)
     }
 
     private fun applyUpdates(
-        previousState: Map<Include, MemorySharingIntSet?>,
+        previousState: Map<Include, MemorySharingIntSet>,
         updates: List<Pair<Include, SetDelta>>
-    ): Map<Include, MemorySharingIntSet?> {
+    ): Map<Include, MemorySharingIntSet> {
         if (updates.isEmpty()) {
             return previousState
         }
@@ -156,7 +156,11 @@ class IncludesMapChangeBuilder(private val previousIncludesMapState: IncludesMap
         val derivedDeltas = deriveDeltas(updates) { previousState[it] }
         val map = previousState.toMutableMap()
         derivedDeltas.forEach { (path, newSet) ->
-            map[path] = newSet
+            if (newSet == null) {
+                map.remove(path)
+            } else {
+                map[path] = newSet
+            }
         }
         return map
     }

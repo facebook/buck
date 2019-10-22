@@ -322,7 +322,7 @@ class Index internal constructor(
     fun getReverseIncludes(generation: Generation, includePath: Include): Iterable<FsAgnosticPath> =
         indexGenerationData.withIncludesMap { (_, reverseMap) ->
             reverseMap.getVersion(includePath, generation)
-        }?.mapNotNull { FsAgnosticPath.fromIndex(it) } ?: setOf()
+        }?.map { FsAgnosticPath.fromIndex(it) } ?: setOf()
 
     /**
      * Return true if index contains the specified (equality-wise) [BuildPackage] at specified

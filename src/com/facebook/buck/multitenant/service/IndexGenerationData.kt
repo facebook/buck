@@ -53,8 +53,8 @@ data class MutableIncludesMapHolder(
  * @param reverseMap from include file to set of build files
  */
 data class IncludesMapChange(
-    val forwardMap: Map<Include, MemorySharingIntSet?>,
-    val reverseMap: Map<Include, MemorySharingIntSet?>
+    val forwardMap: Map<Include, MemorySharingIntSet>,
+    val reverseMap: Map<Include, MemorySharingIntSet>
 ) {
     fun isEmpty(): Boolean = forwardMap.isEmpty() && reverseMap.isEmpty()
 }
