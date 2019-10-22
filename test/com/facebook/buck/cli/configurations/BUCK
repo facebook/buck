@@ -8,6 +8,7 @@ java_test(
         ["testdata/**"],
     ),
     deps = [
+        "//test/com/facebook/buck/android:testutil",
         "//test/com/facebook/buck/test:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",

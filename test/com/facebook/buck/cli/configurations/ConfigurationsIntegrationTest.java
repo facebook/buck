@@ -18,6 +18,7 @@ package com.facebook.buck.cli.configurations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -318,6 +319,20 @@ public class ConfigurationsIntegrationTest {
                 + "    At //default_platform_only_leaf:dep\n"
                 + "    At //default_platform_only_leaf:intermediate\n"
                 + "    At //default_platform_only_leaf:leaf"));
+  }
+
+  @Test
+  public void defaultTargetPlatformInAndroidBinaryWithVersions() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_binary_default_t_p_versions", tmp);
+
+    workspace.setUp();
+
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
+
+    ProcessResult result = workspace.runBuckBuild("//:b");
+    result.assertSuccess();
   }
 
   @Test

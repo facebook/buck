@@ -410,6 +410,14 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
                   subGraphKeys.add(ImmutableVersionTargetGraphKey.of(targetNode));
                 }
               });
+      root.getBuildTarget()
+          .getTargetConfiguration()
+          .getConfigurationTarget()
+          .ifPresent(
+              t -> {
+                TargetNode<?> targetNode = targetGraph.get(t);
+                subGraphKeys.add(ImmutableVersionTargetGraphKey.of(targetNode));
+              });
       return subGraphKeys.build();
     }
 

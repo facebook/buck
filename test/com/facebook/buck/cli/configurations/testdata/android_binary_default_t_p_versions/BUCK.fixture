@@ -1,0 +1,18 @@
+platform(
+    name = "p",
+    constraint_values = [
+    ],
+)
+
+android_binary(
+    name = "b",
+    default_target_platform = ":p",
+    keystore = ":ks",
+    manifest = "AndroidManifest.xml",
+)
+
+keystore(
+    name = "ks",
+    properties = "test.keystore.properties",
+    store = "test.keystore",
+)
