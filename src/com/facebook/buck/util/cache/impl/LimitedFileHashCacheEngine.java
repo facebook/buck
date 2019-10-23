@@ -82,7 +82,8 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
                     ImmutableMap.toImmutableMap(
                         entry -> entry.getKey(), entry -> entry.getValue().getHashCode()));
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        throw new RuntimeException(
+            String.format("Error while getting jar content hashes for %s", path), e);
       }
     }
 
