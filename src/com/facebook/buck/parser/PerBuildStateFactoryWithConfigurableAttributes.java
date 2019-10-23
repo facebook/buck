@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResol
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
-import com.facebook.buck.core.rules.platform.ThrowingConstraintResolver;
 import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
@@ -161,7 +160,6 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             packageBoundaryChecker,
             symlinkCheckers,
             new ThrowingSelectorListResolver(),
-            new ThrowingConstraintResolver(),
             new ThrowingPlatformResolver(),
             new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()));
 
@@ -206,7 +204,6 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             packageBoundaryChecker,
             symlinkCheckers,
             selectorListResolver,
-            configurationRuleRegistry.getConstraintResolver(),
             configurationRuleRegistry.getTargetPlatformResolver(),
             new MultiPlatformTargetConfigurationTransformer(
                 configurationRuleRegistry.getTargetPlatformResolver()));

@@ -36,6 +36,8 @@ public class RuleBasedConstraintResolverTest {
   public void testGettingConstraintsReturnCorrectObject() {
     BuildTarget constraintSettingTarget =
         ConfigurationBuildTargetFactoryForTests.newInstance("//:setting");
+    ConstraintSettingRule constraintSettingRule =
+        new ConstraintSettingRule(constraintSettingTarget);
     BuildTarget constraintValueTarget =
         ConfigurationBuildTargetFactoryForTests.newInstance("//:value");
 
@@ -49,7 +51,7 @@ public class RuleBasedConstraintResolverTest {
                   return ruleClass.cast(new ConstraintSettingRule(buildTarget));
                 } else {
                   return ruleClass.cast(
-                      new ConstraintValueRule(buildTarget, constraintSettingTarget));
+                      new ConstraintValueRule(buildTarget, constraintSettingRule));
                 }
               }
             });

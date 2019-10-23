@@ -66,6 +66,7 @@ public class RuleBasedPlatformResolverTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:value");
     BuildTarget constraintSetting =
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
+    ConstraintSettingRule constraintSettingRule = new ConstraintSettingRule(constraintSetting);
 
     ConfigurationRuleResolver configurationRuleResolver =
         new ConfigurationRuleResolver() {
@@ -81,10 +82,11 @@ public class RuleBasedPlatformResolverTest {
                       ImmutableSortedSet.of()));
             }
             if (buildTarget.equals(constraintValue)) {
-              return ruleClass.cast(new ConstraintValueRule(constraintValue, constraintSetting));
+              return ruleClass.cast(
+                  new ConstraintValueRule(constraintValue, constraintSettingRule));
             }
             if (buildTarget.equals(constraintSetting)) {
-              return ruleClass.cast(new ConstraintSettingRule(constraintSetting));
+              return ruleClass.cast(constraintSettingRule);
             }
             throw new IllegalArgumentException("Invalid build target: " + buildTarget);
           }

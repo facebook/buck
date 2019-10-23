@@ -61,8 +61,12 @@ public class ConstraintValueDescription
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       ConstraintValueArg arg) {
-    return new ConstraintValueRule(
-        buildTarget, ConfigurationBuildTargets.convert(arg.getConstraintSetting()));
+    ConstraintSettingRule constraintSettingRule =
+        configurationRuleResolver.getRule(
+            ConfigurationBuildTargets.convert(arg.getConstraintSetting()),
+            ConstraintSettingRule.class,
+            dependencyStack.child(arg.getConstraintSetting()));
+    return new ConstraintValueRule(buildTarget, constraintSettingRule);
   }
 
   @Override

@@ -24,7 +24,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -57,7 +56,6 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
   private final PackageBoundaryChecker packageBoundaryChecker;
   private final TargetNodeListener<TargetNode<?>> nodeListener;
   private final SelectorListResolver selectorListResolver;
-  private final ConstraintResolver constraintResolver;
   private final TargetPlatformResolver targetPlatformResolver;
   private final TargetConfigurationTransformer targetConfigurationTransformer;
 
@@ -69,7 +67,6 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
       PackageBoundaryChecker packageBoundaryChecker,
       TargetNodeListener<TargetNode<?>> nodeListener,
       SelectorListResolver selectorListResolver,
-      ConstraintResolver constraintResolver,
       TargetPlatformResolver targetPlatformResolver,
       TargetConfigurationTransformer targetConfigurationTransformer) {
     this.typeCoercerFactory = typeCoercerFactory;
@@ -79,7 +76,6 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     this.packageBoundaryChecker = packageBoundaryChecker;
     this.nodeListener = nodeListener;
     this.selectorListResolver = selectorListResolver;
-    this.constraintResolver = constraintResolver;
     this.targetPlatformResolver = targetPlatformResolver;
     this.targetConfigurationTransformer = targetConfigurationTransformer;
   }
@@ -100,10 +96,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
 
     SelectableConfigurationContext configurationContext =
         DefaultSelectableConfigurationContext.of(
-            cell.getBuckConfig(),
-            constraintResolver,
-            target.getTargetConfiguration(),
-            targetPlatformResolver);
+            cell.getBuckConfig(), target.getTargetConfiguration(), targetPlatformResolver);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSortedSet.Builder<BuildTarget> configurationDeps = ImmutableSortedSet.naturalOrder();
     Object constructorArg;

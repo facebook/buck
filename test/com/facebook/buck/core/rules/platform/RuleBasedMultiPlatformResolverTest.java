@@ -80,6 +80,7 @@ public class RuleBasedMultiPlatformResolverTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:nested_value2");
     BuildTarget constraintSetting =
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
+    ConstraintSettingRule constraintSettingRule = new ConstraintSettingRule(constraintSetting);
 
     ConfigurationRuleResolver configurationRuleResolver =
         new ConfigurationRuleResolver() {
@@ -123,7 +124,7 @@ public class RuleBasedMultiPlatformResolverTest {
             if (buildTarget.equals(baseConstraintValue)
                 || buildTarget.equals(nestedConstraintValue1)
                 || buildTarget.equals(nestedConstraintValue2)) {
-              return ruleClass.cast(new ConstraintValueRule(buildTarget, constraintSetting));
+              return ruleClass.cast(new ConstraintValueRule(buildTarget, constraintSettingRule));
             }
             throw new IllegalArgumentException("Invalid build target: " + buildTarget);
           }

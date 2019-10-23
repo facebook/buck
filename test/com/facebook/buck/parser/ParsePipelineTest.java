@@ -36,7 +36,6 @@ import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildT
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
-import com.facebook.buck.core.rules.platform.ThrowingConstraintResolver;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -466,7 +465,6 @@ public class ParsePipelineTest {
               new ThrowingPackageBoundaryChecker(buildFileTrees),
               nodeListener,
               new ThrowingSelectorListResolver(),
-              new ThrowingConstraintResolver(),
               new ThrowingPlatformResolver(),
               new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()));
       this.targetNodeParsePipeline =

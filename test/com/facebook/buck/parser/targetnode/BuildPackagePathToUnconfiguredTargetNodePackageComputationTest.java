@@ -34,7 +34,6 @@ import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDe
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
-import com.facebook.buck.core.rules.platform.ThrowingConstraintResolver;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.parser.NoopPackageBoundaryChecker;
@@ -71,7 +70,6 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             new NoopPackageBoundaryChecker(),
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(new TestSelectableResolver()),
-            new ThrowingConstraintResolver(),
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver));
 

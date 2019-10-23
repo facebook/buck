@@ -182,7 +182,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     SelectableConfigurationContext configurationContext =
         DefaultSelectableConfigurationContext.of(
             cell.getBuckConfig(),
-            state.getConfigurationRuleRegistry().getConstraintResolver(),
             buildTarget.getTargetConfiguration(),
             state.getConfigurationRuleRegistry().getTargetPlatformResolver());
 

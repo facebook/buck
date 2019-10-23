@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.configsetting;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.config.AbstractConfigurationRule;
+import com.facebook.buck.core.rules.platform.ConstraintValueRule;
 import com.facebook.buck.core.select.ProvidesSelectable;
 import com.facebook.buck.core.select.Selectable;
 import com.google.common.collect.ImmutableMap;
@@ -31,9 +32,15 @@ public class ConfigSettingRule extends AbstractConfigurationRule implements Prov
   public ConfigSettingRule(
       BuildTarget buildTarget,
       ImmutableMap<String, String> values,
-      ImmutableSet<BuildTarget> constraintValues) {
+      ImmutableSet<ConstraintValueRule> constraintValueRules) {
     super(buildTarget);
-    configSettingSelectable = new ConfigSettingSelectable(buildTarget, values, constraintValues);
+    this.configSettingSelectable =
+        new ConfigSettingSelectable(
+            buildTarget,
+            values,
+            constraintValueRules.stream()
+                .map(ConstraintValueRule::getConstraintValue)
+                .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Override

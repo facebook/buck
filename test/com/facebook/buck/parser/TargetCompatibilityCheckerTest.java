@@ -66,7 +66,8 @@ public class TargetCompatibilityCheckerTest {
 
   private final BuildTarget cs1target =
       ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1");
-  private final ConstraintSetting cs1 = ConstraintSetting.of(cs1target);
+  private final ConstraintSettingRule cs1r = new ConstraintSettingRule(cs1target);
+  private final ConstraintSetting cs1 = cs1r.getConstraintSetting();
   private final BuildTarget cs1v1target =
       ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1v1");
   private final ConstraintValue cs1v1 = ConstraintValue.of(cs1v1target, cs1);
@@ -94,7 +95,7 @@ public class TargetCompatibilityCheckerTest {
                 if (buildTarget.equals(cs1.getBuildTarget())) {
                   return ruleClass.cast(new ConstraintSettingRule(buildTarget));
                 } else {
-                  return ruleClass.cast(new ConstraintValueRule(buildTarget, cs1.getBuildTarget()));
+                  return ruleClass.cast(new ConstraintValueRule(buildTarget, cs1r));
                 }
               }
             });
@@ -102,12 +103,12 @@ public class TargetCompatibilityCheckerTest {
         new ConfigSettingRule(
             ConfigurationBuildTargetFactoryForTests.newInstance("//configs:c1"),
             ImmutableMap.of(),
-            ImmutableSet.of(cs1v1.getBuildTarget()));
+            ImmutableSet.of(new ConstraintValueRule(cs1v1.getBuildTarget(), cs1r)));
     nonCompatibleConfigSetting =
         new ConfigSettingRule(
             ConfigurationBuildTargetFactoryForTests.newInstance("//configs:c2"),
             ImmutableMap.of(),
-            ImmutableSet.of(cs1v2.getBuildTarget()));
+            ImmutableSet.of(new ConstraintValueRule(cs1v2.getBuildTarget(), cs1r)));
     ConfigurationRuleResolver configurationRuleResolver =
         new ConfigurationRuleResolver() {
           @Override

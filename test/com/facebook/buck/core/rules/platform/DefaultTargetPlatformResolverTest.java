@@ -97,6 +97,7 @@ public class DefaultTargetPlatformResolverTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:value");
     BuildTarget constraintSetting =
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
+    ConstraintSettingRule constraintSettingRule = new ConstraintSettingRule(constraintSetting);
 
     ConfigurationRuleResolver configurationRuleResolver =
         new ConfigurationRuleResolver() {
@@ -114,7 +115,8 @@ public class DefaultTargetPlatformResolverTest {
             if (buildTarget
                 .getUnconfiguredBuildTargetView()
                 .equals(constraintValue.getUnconfiguredBuildTargetView())) {
-              return ruleClass.cast(new ConstraintValueRule(constraintValue, constraintSetting));
+              return ruleClass.cast(
+                  new ConstraintValueRule(constraintValue, constraintSettingRule));
             }
             if (buildTarget.equals(constraintSetting)) {
               return ruleClass.cast(new ConstraintSettingRule(constraintValue));

@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.select.Selectable;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
@@ -41,12 +40,12 @@ public class ConfigSettingSelectable implements Selectable {
 
   private final BuildTarget buildTarget;
   private final ImmutableMap<String, String> values;
-  private final ImmutableSet<BuildTarget> constraintValues;
+  private final ImmutableSet<ConstraintValue> constraintValues;
 
   public ConfigSettingSelectable(
       BuildTarget buildTarget,
       ImmutableMap<String, String> values,
-      ImmutableSet<BuildTarget> constraintValues) {
+      ImmutableSet<ConstraintValue> constraintValues) {
     this.buildTarget = buildTarget;
     this.values = values;
     this.constraintValues = constraintValues;
@@ -59,7 +58,6 @@ public class ConfigSettingSelectable implements Selectable {
         (ConfigSettingSelectableConfigurationContext) configurationContext;
     return calculateMatches(
         context.getBuckConfig(),
-        context.getConstraintResolver(),
         context
             .getPlatformProvider()
             .getTargetPlatform(context.getTargetConfiguration(), dependencyStack),
@@ -77,13 +75,6 @@ public class ConfigSettingSelectable implements Selectable {
       throw new HumanReadableException(
           dependencyStack, "config_setting with values cannot be used to match platforms");
     }
-    ImmutableList<ConstraintValue> constraintValues =
-        this.constraintValues.stream()
-            .map(
-                buildTarget1 ->
-                    constraintResolver.getConstraintValue(
-                        buildTarget1, dependencyStack.child(buildTarget1)))
-            .collect(ImmutableList.toImmutableList());
     return platform.matchesAll(constraintValues, dependencyStack);
   }
 
@@ -129,24 +120,15 @@ public class ConfigSettingSelectable implements Selectable {
 
   private static boolean calculateMatches(
       BuckConfig buckConfig,
-      ConstraintResolver constraintResolver,
       Platform targetPlatform,
       DependencyStack dependencyStack,
-      Collection<BuildTarget> constraintValuesTargets,
+      Collection<ConstraintValue> constraintValues,
       ImmutableMap<String, String> values) {
     for (Map.Entry<String, String> entry : values.entrySet()) {
       if (!matches(buckConfig, entry.getKey(), entry.getValue())) {
         return false;
       }
     }
-    ImmutableList<ConstraintValue> constraintValues =
-        constraintValuesTargets.stream()
-            .map(
-                buildTarget1 ->
-                    constraintResolver.getConstraintValue(
-                        buildTarget1, dependencyStack.child(buildTarget1)))
-            .collect(ImmutableList.toImmutableList());
-
     if (constraintValues.isEmpty()) {
       // buckconfig only matcher, no need ask platform to match
       return true;

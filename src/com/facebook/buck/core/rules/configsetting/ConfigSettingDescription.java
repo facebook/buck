@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.platform.ConstraintValueRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -68,8 +69,17 @@ public class ConfigSettingDescription
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       ConfigSettingArg arg) {
-    return new ConfigSettingRule(
-        buildTarget, arg.getValues(), ConfigurationBuildTargets.convert(arg.getConstraintValues()));
+
+    ImmutableSet<ConstraintValueRule> constraintValueRules =
+        arg.getConstraintValues().stream()
+            .map(
+                constraintValue ->
+                    configurationRuleResolver.getRule(
+                        ConfigurationBuildTargets.convert(constraintValue),
+                        ConstraintValueRule.class,
+                        dependencyStack.child(constraintValue)))
+            .collect(ImmutableSet.toImmutableSet());
+    return new ConfigSettingRule(buildTarget, arg.getValues(), constraintValueRules);
   }
 
   @Override

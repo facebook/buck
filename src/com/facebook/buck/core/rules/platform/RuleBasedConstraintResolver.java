@@ -38,41 +38,35 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
     this.configurationRuleResolver = configurationRuleResolver;
   }
 
-  private final ConcurrentHashMap<BuildTarget, ConstraintSetting> constraintSettingCache =
+  private final ConcurrentHashMap<BuildTarget, ConstraintSettingRule> constraintSettingCache =
       new ConcurrentHashMap<>();
 
   @Override
   public ConstraintSetting getConstraintSetting(
       BuildTarget buildTarget, DependencyStack dependencyStack) {
-    return constraintSettingCache.computeIfAbsent(
-        buildTarget,
-        t -> {
-          // Validate rule exists
-          configurationRuleResolver.getRule(
-              buildTarget, ConstraintSettingRule.class, dependencyStack);
-
-          return ConstraintSetting.of(buildTarget);
-        });
+    return constraintSettingCache
+        .computeIfAbsent(
+            buildTarget,
+            t -> {
+              return configurationRuleResolver.getRule(
+                  buildTarget, ConstraintSettingRule.class, dependencyStack);
+            })
+        .getConstraintSetting();
   }
 
-  private final ConcurrentHashMap<BuildTarget, ConstraintValue> constraintValueCache =
+  private final ConcurrentHashMap<BuildTarget, ConstraintValueRule> constraintValueCache =
       new ConcurrentHashMap<>();
 
   @Override
   public ConstraintValue getConstraintValue(
       BuildTarget buildTarget, DependencyStack dependencyStack) {
-    return constraintValueCache.computeIfAbsent(
-        buildTarget,
-        t -> {
-          ConstraintValueRule constraintValueRule =
-              configurationRuleResolver.getRule(
+    return constraintValueCache
+        .computeIfAbsent(
+            buildTarget,
+            t -> {
+              return configurationRuleResolver.getRule(
                   buildTarget, ConstraintValueRule.class, dependencyStack);
-
-          return ConstraintValue.of(
-              buildTarget,
-              getConstraintSetting(
-                  constraintValueRule.getConstraintSetting(),
-                  dependencyStack.child(constraintValueRule.getConstraintSetting())));
-        });
+            })
+        .getConstraintValue();
   }
 }

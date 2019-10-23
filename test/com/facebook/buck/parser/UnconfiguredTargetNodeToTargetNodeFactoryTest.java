@@ -36,7 +36,6 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
-import com.facebook.buck.core.rules.platform.ThrowingConstraintResolver;
 import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
@@ -115,7 +114,6 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
             new DefaultSelectorListResolver(
                 new TestSelectableResolver(
                     ImmutableList.of(new TestSelectable(selectableTarget, true)))),
-            new ThrowingConstraintResolver(),
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver));
 

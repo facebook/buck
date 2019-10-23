@@ -28,9 +28,6 @@ import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.ConstraintSetting;
-import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -175,19 +172,6 @@ public class GraphEngineFactory {
               }
             },
             // TODO: replace with RuleBasedConstraintResolver
-            new ConstraintResolver() {
-              @Override
-              public ConstraintSetting getConstraintSetting(
-                  BuildTarget buildTarget, DependencyStack dependencyStack) {
-                return ConstraintSetting.of(buildTarget);
-              }
-
-              @Override
-              public ConstraintValue getConstraintValue(
-                  BuildTarget buildTarget, DependencyStack dependencyStack) {
-                return ConstraintValue.of(buildTarget, ConstraintSetting.of(buildTarget));
-              }
-            },
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver));
 
