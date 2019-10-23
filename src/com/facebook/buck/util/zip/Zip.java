@@ -129,7 +129,7 @@ public class Zip {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
               throws IOException {
-            if (!isSkipFile(file)) {
+            if (!file.equals(baseDir) && !isSkipFile(file)) {
               CustomZipEntry entry = getZipEntry(getEntryName(file), file, attrs);
               entries.put(entry.getName(), new Pair<>(entry, Optional.of(file)));
             }
