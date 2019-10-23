@@ -206,7 +206,12 @@ private fun <R> JsonNode.mapIterable(
     return get(iterableNodeName)?.elements()?.asSequence()?.map(transform)
 }
 
-private fun normalizeJsonValue(value: JsonNode): Any {
+/**
+ * Parse Json object into a primitive type object
+ * Maps and arrays are parsed recursively
+ * All strings are interned
+ */
+fun normalizeJsonValue(value: JsonNode): Any {
     // Note that if we need to support other values, such as null or Object, we will add support for
     // them as needed.
 
@@ -224,7 +229,7 @@ private fun normalizeJsonValue(value: JsonNode): Any {
             normalizeJsonValue(it)
         }
         value.isObject -> (value as ObjectNode).fields().asSequence().map {
-            it.key to normalizeJsonValue(it.value)
+            it.key.intern() to normalizeJsonValue(it.value)
         }.toMap()
         else -> value.asText().intern()
     }
