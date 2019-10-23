@@ -103,17 +103,7 @@ abstract class AbstractXCodeNativeTargetAttributes {
   public abstract Optional<Path> buckFilePath();
 
   @Value.Default
-  public ImmutableSet<AppleResourceDescriptionArg> recursiveResources() {
-    return ImmutableSet.of();
-  }
-
-  @Value.Default
   public ImmutableSet<AppleResourceDescriptionArg> directResources() {
-    return ImmutableSet.of();
-  }
-
-  @Value.Default
-  public ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs() {
     return ImmutableSet.of();
   }
 
@@ -122,6 +112,7 @@ abstract class AbstractXCodeNativeTargetAttributes {
     return ImmutableSet.of();
   }
 
+  /** Wrapper resources contain bundle resources, e.g. Scene Kit Assets. Similar to xcassets */
   @Value.Default
   public ImmutableSet<AppleWrapperResourceArg> wrapperResources() {
     return ImmutableSet.of();

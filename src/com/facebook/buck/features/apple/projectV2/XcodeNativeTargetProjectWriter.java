@@ -20,7 +20,6 @@ import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
-import com.facebook.buck.apple.AppleBundleDestination;
 import com.facebook.buck.apple.AppleHeaderVisibilities;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
@@ -57,13 +56,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Configures a PBXProject by adding a PBXNativeTarget and its associated dependencies into a
@@ -118,12 +114,7 @@ class XcodeNativeTargetProjectWriter {
         targetAttributes.directResources(),
         targetAttributes.directAssetCatalogs(),
         projectFileWriter);
-    addCopyResourcesToNonStdDestinations(targetAttributes.recursiveResources(), projectFileWriter);
-    addResourcesBuildPhase(
-        targetAttributes.recursiveResources(),
-        targetAttributes.recursiveAssetCatalogs(),
-        targetAttributes.wrapperResources(),
-        projectFileWriter);
+    addWrapperResources(projectFileWriter, targetAttributes.wrapperResources());
     addCoreDataModelBuildPhaseToProject(
         targetAttributes.coreDataResources(), project, sourcesBuildPhase);
 
@@ -435,66 +426,16 @@ class XcodeNativeTargetProjectWriter {
         variantResourceFiles.build());
   }
 
-  private void addCopyResourcesToNonStdDestinations(
-      ImmutableSet<AppleResourceDescriptionArg> recursiveResources,
-      ProjectFileWriter projectFileWriter) {
-    List<AppleBundleDestination> allNonStandardDestinations =
-        recursiveResources.stream()
-            .map(AppleResourceDescriptionArg::getDestination)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .distinct()
-            .filter(e -> e != AppleBundleDestination.RESOURCES)
-            .sorted(Comparator.naturalOrder())
-            .collect(Collectors.toList());
-    for (AppleBundleDestination destination : allNonStandardDestinations) {
-      addCopyResourcesToNonStdDestination(recursiveResources, projectFileWriter, destination);
-    }
-  }
-
-  private void addCopyResourcesToNonStdDestination(
-      ImmutableSet<AppleResourceDescriptionArg> recursiveResources,
-      ProjectFileWriter projectFileWriter,
-      AppleBundleDestination destination) {
-    Set<AppleResourceDescriptionArg> resourceDescriptionArgsForDestination =
-        recursiveResources.stream()
-            .filter(
-                e ->
-                    e.getDestination().orElse(AppleBundleDestination.defaultValue()) == destination)
-            .collect(Collectors.toSet());
-    addResourcePathsToBuildPhase(
-        projectFileWriter, resourceDescriptionArgsForDestination, new HashSet<>(), new HashSet<>());
-  }
-
-  private void addResourcesBuildPhase(
-      ImmutableSet<AppleResourceDescriptionArg> recursiveResources,
-      ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs,
-      ImmutableSet<AppleWrapperResourceArg> wrapperResources,
-      ProjectFileWriter projectFileWriter) {
-    Set<AppleResourceDescriptionArg> standardDestinationResources =
-        recursiveResources.stream()
-            .filter(
-                e ->
-                    e.getDestination().orElse(AppleBundleDestination.defaultValue())
-                        == AppleBundleDestination.RESOURCES)
-            .collect(Collectors.toSet());
-    addResourcePathsToBuildPhase(
-        projectFileWriter, standardDestinationResources, recursiveAssetCatalogs, wrapperResources);
-  }
-
-  private void addResourcePathsToBuildPhase(
-      ProjectFileWriter projectFileWriter,
-      Set<AppleResourceDescriptionArg> resourceArgs,
-      Set<AppleAssetCatalogDescriptionArg> assetCatalogArgs,
-      Set<AppleWrapperResourceArg> resourcePathArgs) {
+  private void addWrapperResources(
+      ProjectFileWriter projectFileWriter, Set<AppleWrapperResourceArg> wrapperResources) {
     ImmutableSet.Builder<Path> resourceFiles = ImmutableSet.builder();
     ImmutableSet.Builder<Path> resourceDirs = ImmutableSet.builder();
     ImmutableSet.Builder<Path> variantResourceFiles = ImmutableSet.builder();
 
     collectResourcePathsFromConstructorArgs(
-        resourceArgs,
-        assetCatalogArgs,
-        resourcePathArgs,
+        ImmutableSet.of(),
+        ImmutableSet.of(),
+        wrapperResources,
         resourceFiles,
         resourceDirs,
         variantResourceFiles);

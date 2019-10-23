@@ -19,7 +19,6 @@ package com.facebook.buck.features.apple.projectV2;
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
 import com.facebook.buck.apple.AppleBinaryDescription;
-import com.facebook.buck.apple.AppleBinaryDescriptionArg;
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.AppleBundle;
@@ -75,9 +74,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.core.util.graph.CycleException;
-import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -135,7 +131,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -681,9 +676,7 @@ public class ProjectGenerator {
             sourcePath ->
                 addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
 
-    Streams.concat(
-            nativeTargetAttributes.directResources().stream(),
-            nativeTargetAttributes.recursiveResources().stream())
+    nativeTargetAttributes.directResources().stream()
         .forEach(
             arg -> {
               arg.getFiles().stream()
@@ -703,9 +696,7 @@ public class ProjectGenerator {
                               sourcePath, requiredBuildTargetsBuilder));
             });
 
-    Streams.concat(
-            nativeTargetAttributes.directAssetCatalogs().stream(),
-            nativeTargetAttributes.recursiveAssetCatalogs().stream())
+    nativeTargetAttributes.directAssetCatalogs().stream()
         .forEach(
             arg ->
                 arg.getDirs().stream()
@@ -898,31 +889,6 @@ public class ProjectGenerator {
     Path infoPlistPath =
         Objects.requireNonNull(resolveSourcePath(targetNode.getConstructorArg().getInfoPlist()));
 
-    // -- copy any binary and bundle targets into this bundle
-    Iterable<TargetNode<?>> copiedRules =
-        AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-            xcodeDescriptions,
-            targetGraph,
-            Optional.of(dependenciesCache),
-            appleConfig.shouldIncludeSharedLibraryResources()
-                ? RecursiveDependenciesMode.COPYING_INCLUDE_SHARED_RESOURCES
-                : RecursiveDependenciesMode.COPYING,
-            targetNode,
-            Optional.of(xcodeDescriptions.getXCodeDescriptions()));
-    if (bundleRequiresRemovalOfAllTransitiveFrameworks(targetNode)) {
-      copiedRules = rulesWithoutFrameworkBundles(copiedRules);
-    } else if (bundleRequiresAllTransitiveFrameworks(binaryNode, bundleLoaderNode)) {
-      copiedRules =
-          ImmutableSet.<TargetNode<?>>builder()
-              .addAll(copiedRules)
-              .addAll(getTransitiveFrameworkNodes(targetNode))
-              .build();
-    }
-
-    if (bundleLoaderNode.isPresent()) {
-      copiedRules = rulesWithoutBundleLoader(copiedRules, bundleLoaderNode.get());
-    }
-
     RecursiveDependenciesMode mode =
         appleConfig.shouldIncludeSharedLibraryResources()
             ? RecursiveDependenciesMode.COPYING_INCLUDE_SHARED_RESOURCES
@@ -935,6 +901,7 @@ public class ProjectGenerator {
             Optional.of(dependenciesCache),
             ImmutableList.of(targetNode),
             mode);
+
     ImmutableSet<AppleWrapperResourceArg> coreDataResources =
         AppleBuildRules.collectTransitiveBuildRules(
             xcodeDescriptions,
@@ -966,15 +933,7 @@ public class ProjectGenerator {
             "%s." + getExtensionString(targetNode.getConstructorArg().getExtension()),
             Optional.of(infoPlistPath),
             /* includeFrameworks */ true,
-            AppleResources.collectRecursiveResources(
-                xcodeDescriptions, targetGraph, Optional.of(dependenciesCache), targetNode, mode),
             AppleResources.collectDirectResources(targetGraph, targetNode),
-            AppleBuildRules.collectRecursiveAssetCatalogs(
-                xcodeDescriptions,
-                targetGraph,
-                Optional.of(dependenciesCache),
-                ImmutableList.of(targetNode),
-                mode),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
             filteredWrapperResources,
             coreDataResources,
@@ -985,6 +944,7 @@ public class ProjectGenerator {
           "Generated iOS bundle target %s with binarynode: %s bundleLoadernode: %s",
           targetNode.getBuildTarget().getFullyQualifiedName(),
           binaryNode.getBuildTarget().getFullyQualifiedName(),
+          binaryNode.getBuildTarget().getFullyQualifiedName(),
           bundleLoaderNode.get().getBuildTarget().getFullyQualifiedName());
     } else {
       LOG.debug(
@@ -994,79 +954,6 @@ public class ProjectGenerator {
     }
 
     return result;
-  }
-
-  /**
-   * Traverses the graph to find all (non-system) frameworks that should be embedded into the
-   * target's bundle.
-   */
-  private ImmutableSet<TargetNode<?>> getTransitiveFrameworkNodes(
-      TargetNode<? extends HasAppleBundleFields> targetNode) {
-    GraphTraversable<TargetNode<?>> graphTraversable =
-        node -> {
-          if (!(node.getDescription() instanceof AppleResourceDescription)) {
-            Set<BuildTarget> buildDeps = node.getBuildDeps();
-            if (node.getDescription() instanceof AppleBundleDescription) {
-              AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) node.getConstructorArg();
-              // TODO: handle platform binaries in addition to regular binaries
-              if (arg.getBinary().isPresent()) {
-                buildDeps = Sets.union(buildDeps, ImmutableSet.of(arg.getBinary().get()));
-              }
-            }
-            return targetGraph.getAll(buildDeps).iterator();
-          } else {
-            return Collections.emptyIterator();
-          }
-        };
-
-    ImmutableSet.Builder<TargetNode<?>> filteredRules = ImmutableSet.builder();
-    AcyclicDepthFirstPostOrderTraversal<TargetNode<?>> traversal =
-        new AcyclicDepthFirstPostOrderTraversal<>(graphTraversable);
-    try {
-      for (TargetNode<?> node : traversal.traverse(ImmutableList.of(targetNode))) {
-        if (node != targetNode) {
-          TargetNodes.castArg(node, AppleBundleDescriptionArg.class)
-              .ifPresent(
-                  appleBundleNode -> {
-                    if (isFrameworkBundle(appleBundleNode.getConstructorArg())) {
-                      filteredRules.add(node);
-                    }
-                  });
-          TargetNodes.castArg(node, PrebuiltAppleFrameworkDescriptionArg.class)
-              .ifPresent(
-                  prebuiltFramework -> {
-                    // Technically (see Apple Tech Notes 2435), static frameworks are lies. In case
-                    // a static framework is used, they can escape the incorrect project generation
-                    // by marking its preferred linkage static (what does preferred linkage even
-                    // mean for a prebuilt thing? none of this makes sense anyways).
-                    if (prebuiltFramework.getConstructorArg().getPreferredLinkage()
-                        != Linkage.STATIC) {
-                      filteredRules.add(node);
-                    }
-                  });
-        }
-      }
-    } catch (CycleException e) {
-      throw new RuntimeException(e);
-    }
-    return filteredRules.build();
-  }
-
-  /** Returns a new list of rules which does not contain framework bundles. */
-  private ImmutableList<TargetNode<?>> rulesWithoutFrameworkBundles(
-      Iterable<TargetNode<?>> copiedRules) {
-    return RichStream.from(copiedRules)
-        .filter(
-            input ->
-                TargetNodes.castArg(input, AppleBundleDescriptionArg.class)
-                    .map(argTargetNode -> !isFrameworkBundle(argTargetNode.getConstructorArg()))
-                    .orElse(true))
-        .toImmutableList();
-  }
-
-  private ImmutableList<TargetNode<?>> rulesWithoutBundleLoader(
-      Iterable<TargetNode<?>> copiedRules, TargetNode<?> bundleLoader) {
-    return RichStream.from(copiedRules).filter(x -> !bundleLoader.equals(x)).toImmutableList();
   }
 
   private ImmutableList<BuildTarget> generateAppleBinaryTarget(
@@ -1087,9 +974,7 @@ public class ProjectGenerator {
             "%s",
             Optional.empty(),
             /* includeFrameworks */ true,
-            ImmutableSet.of(),
             AppleResources.collectDirectResources(targetGraph, targetNode),
-            ImmutableSet.of(),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
             ImmutableSet.of(),
             ImmutableSet.of(),
@@ -1147,9 +1032,7 @@ public class ProjectGenerator {
             AppleBuildRules.getOutputFileNameFormatForLibrary(isShared),
             Optional.empty(),
             /* includeFrameworks */ isShared,
-            ImmutableSet.of(),
             directResources,
-            ImmutableSet.of(),
             directAssetCatalogs,
             ImmutableSet.of(),
             ImmutableSet.of(),
@@ -1287,9 +1170,7 @@ public class ProjectGenerator {
       String productOutputFormat,
       Optional<Path> infoPlistOptional,
       boolean includeFrameworks,
-      ImmutableSet<AppleResourceDescriptionArg> recursiveResources,
       ImmutableSet<AppleResourceDescriptionArg> directResources,
-      ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs,
       ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
       ImmutableSet<AppleWrapperResourceArg> wrapperResources,
       ImmutableSet<AppleWrapperResourceArg> coreDataResources,
@@ -1426,7 +1307,6 @@ public class ProjectGenerator {
         .setPrefixHeader(getPrefixHeaderSourcePath(arg))
         .setSourcesWithFlags(ImmutableSet.copyOf(allSrcs))
         .setPrivateHeaders(headers)
-        .setRecursiveResources(recursiveResources)
         .setDirectResources(directResources)
         .setWrapperResources(wrapperResources)
         .setExtraXcodeSources(ImmutableSet.copyOf(arg.getExtraXcodeSources()))
@@ -1438,10 +1318,6 @@ public class ProjectGenerator {
     }
 
     xcodeNativeTargetAttributesBuilder.setBridgingHeader(arg.getBridgingHeader());
-
-    if (!recursiveAssetCatalogs.isEmpty()) {
-      xcodeNativeTargetAttributesBuilder.setRecursiveAssetCatalogs(recursiveAssetCatalogs);
-    }
 
     if (!directAssetCatalogs.isEmpty()) {
       xcodeNativeTargetAttributesBuilder.setDirectAssetCatalogs(directAssetCatalogs);
@@ -1500,11 +1376,6 @@ public class ProjectGenerator {
     ImmutableList.Builder<BuildTarget> dependencies = ImmutableList.builder();
 
     extraSettingsBuilder.putAll(swiftDepsSettingsBuilder.build());
-
-    setAppIconSettings(
-        recursiveAssetCatalogs, directAssetCatalogs, buildTarget, defaultSettingsBuilder);
-    setLaunchImageSettings(
-        recursiveAssetCatalogs, directAssetCatalogs, buildTarget, defaultSettingsBuilder);
 
     HeaderSearchPathAttributes headerSearchPathAttributes =
         headerSearchPaths.getHeaderSearchPathAttributes(targetNode);
@@ -1933,46 +1804,6 @@ public class ProjectGenerator {
 
               return ImmutableList.of();
             });
-  }
-
-  private void setAppIconSettings(
-      ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs,
-      ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
-      BuildTarget buildTarget,
-      Builder<String, String> defaultSettingsBuilder) {
-    ImmutableList<String> appIcon =
-        Stream.concat(directAssetCatalogs.stream(), recursiveAssetCatalogs.stream())
-            .map(x -> x.getAppIcon())
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(ImmutableList.toImmutableList());
-    if (appIcon.size() > 1) {
-      throw new HumanReadableException(
-          "At most one asset catalog in the dependencies of %s " + "can have a app_icon",
-          buildTarget);
-    } else if (appIcon.size() == 1) {
-      defaultSettingsBuilder.put("ASSETCATALOG_COMPILER_APPICON_NAME", appIcon.get(0));
-    }
-  }
-
-  private void setLaunchImageSettings(
-      ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs,
-      ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
-      BuildTarget buildTarget,
-      Builder<String, String> defaultSettingsBuilder) {
-    ImmutableList<String> launchImage =
-        Stream.concat(directAssetCatalogs.stream(), recursiveAssetCatalogs.stream())
-            .map(x -> x.getLaunchImage())
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(ImmutableList.toImmutableList());
-    if (launchImage.size() > 1) {
-      throw new HumanReadableException(
-          "At most one asset catalog in the dependencies of %s " + "can have a launch_image",
-          buildTarget);
-    } else if (launchImage.size() == 1) {
-      defaultSettingsBuilder.put("ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME", launchImage.get(0));
-    }
   }
 
   private boolean shouldEmbedSwiftRuntimeInBundleTarget(
@@ -2412,19 +2243,6 @@ public class ProjectGenerator {
   private static boolean isFrameworkBundle(HasAppleBundleFields arg) {
     return arg.getExtension().isLeft()
         && arg.getExtension().getLeft().equals(AppleBundleExtension.FRAMEWORK);
-  }
-
-  private static boolean bundleRequiresRemovalOfAllTransitiveFrameworks(
-      TargetNode<? extends HasAppleBundleFields> targetNode) {
-    return isFrameworkBundle(targetNode.getConstructorArg());
-  }
-
-  private static boolean bundleRequiresAllTransitiveFrameworks(
-      TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode,
-      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode) {
-    return TargetNodes.castArg(binaryNode, AppleBinaryDescriptionArg.class).isPresent()
-        || (!bundleLoaderNode.isPresent()
-            && TargetNodes.castArg(binaryNode, AppleTestDescriptionArg.class).isPresent());
   }
 
   private Path resolveSourcePath(SourcePath sourcePath) {
