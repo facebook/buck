@@ -1,6 +1,7 @@
 #!<PYTHON> <PYTHON_INTERPRETER_FLAGS>
 
 import os
+import platform
 import sys
 
 main_module = <MAIN_MODULE>
@@ -91,5 +92,14 @@ for item in reversed(warnings):
 # Same as above, because of -E we have to pass this down using the command line.
 if 'PYTHONDONTWRITEBYTECODE' in os.environ:
     args.insert(1, '-B')
+
+# Python 3.7 allows benchmarking import time with this variable. Similar issues to
+# PYTHONDONTWRITEBYTECODE above. If using an earlier version of python... dont set this
+# Make sure we only run this on cpython where it's supported (python2 will fail
+# if given an unknown -X)
+if ('PYTHONPROFILEIMPORTTIME' in os.environ and
+        platform.python_implementation() == 'CPython' and
+        (sys.version_info[0], sys.version_info[1]) >= (3, 7)):
+    args[1:1] = ['-X', 'importtime']
 
 os.execv(sys.executable, args + sys.argv[1:])
