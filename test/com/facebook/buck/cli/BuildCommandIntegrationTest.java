@@ -376,6 +376,51 @@ public class BuildCommandIntegrationTest {
     assertEquals(absolutePath, subdirRelativePath);
   }
 
+  @Test
+  public void printsAFriendlyErrorWhenRelativePathDoesNotExistInPwdButDoesInRoot()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+
+    String expectedWhenExists =
+        "%s references a non-existent directory "
+            + Paths.get("subdir1", "subdir3")
+            + " when run from subdir1";
+    String expectedWhenNotExists =
+        "%s references non-existent directory " + Paths.get("subdir1", "subdir4");
+
+    workspace.setRelativeWorkingDirectory(Paths.get("subdir1"));
+    Files.createDirectories(tmp.getRoot().resolve("subdir3").resolve("something"));
+
+    String recursiveTarget = workspace.runBuckBuild("subdir3/...").assertFailure().getStderr();
+    String packageTarget = workspace.runBuckBuild("subdir3:").assertFailure().getStderr();
+    String specificTarget = workspace.runBuckBuild("subdir3:target").assertFailure().getStderr();
+    String noRootDirRecursiveTarget =
+        workspace.runBuckBuild("subdir4/...").assertFailure().getStderr();
+    String noRootDirPackageTarget = workspace.runBuckBuild("subdir4:").assertFailure().getStderr();
+    String noRootDirSpecificTarget =
+        workspace.runBuckBuild("subdir4:target").assertFailure().getStderr();
+
+    assertThat(
+        recursiveTarget, Matchers.containsString(String.format(expectedWhenExists, "subdir3/...")));
+    assertThat(
+        packageTarget, Matchers.containsString(String.format(expectedWhenExists, "subdir3:")));
+    assertThat(
+        specificTarget,
+        Matchers.containsString(String.format(expectedWhenExists, "subdir3:target")));
+
+    assertThat(
+        noRootDirRecursiveTarget,
+        Matchers.containsString(String.format(expectedWhenNotExists, "subdir4/...")));
+    assertThat(
+        noRootDirPackageTarget,
+        Matchers.containsString(String.format(expectedWhenNotExists, "subdir4:")));
+    assertThat(
+        noRootDirSpecificTarget,
+        Matchers.containsString(String.format(expectedWhenNotExists, "subdir4:target")));
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractThrowInConstructorArg implements BuildRuleArg {}

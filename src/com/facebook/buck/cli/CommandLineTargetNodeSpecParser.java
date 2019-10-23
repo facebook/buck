@@ -29,6 +29,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 /**
@@ -156,6 +157,31 @@ public class CommandLineTargetNodeSpecParser {
     Path basePath = spec.getBuildFileSpec().getBasePath();
     Cell realCell = owningCell.getCell(cellPath);
     if (!realCell.getFilesystem().exists(basePath)) {
+      // If someone passes in bar:baz while in subdir foo, and foo/bar does not exist, BUT <root
+      // cell>/bar does, tell the user to fix their usage. We do not want to support too many
+      // extraneous build target patterns, so hard error, but at least try to help users along.
+      if (!rootRelativePackage.isEmpty() && owningCell.equals(realCell) && !arg.contains("//")) {
+        Path rootRelativePackagePath = Paths.get(rootRelativePackage);
+        if (basePath.startsWith(rootRelativePackagePath)
+            && owningCell.getFilesystem().exists(rootRelativePackagePath.relativize(basePath))) {
+          Path rootBasePath = rootRelativePackagePath.relativize(basePath);
+          String str =
+              "%s references a non-existent directory %s when run from %s\n"
+                  + "However, %s exists in your repository root (%s).\n"
+                  + "Non-absolute build targets are relative to your working directory.\n"
+                  + "Try either re-running your command the repository root, or re-running your "
+                  + " command with //%s instead of %s";
+          throw new HumanReadableException(
+              str,
+              arg,
+              basePath,
+              rootRelativePackage,
+              rootBasePath,
+              owningCell.getRoot(),
+              arg,
+              arg);
+        }
+      }
       throw new HumanReadableException("%s references non-existent directory %s", arg, basePath);
     }
   }
