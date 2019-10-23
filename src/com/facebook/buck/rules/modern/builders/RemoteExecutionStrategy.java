@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
@@ -493,9 +494,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         exitCode,
         actionDigest,
         result.getActionResultDigest());
+    Optional<String> stdout = result.getStdout();
+    Optional<String> stderr = result.getStderr();
     if (exitCode != StepExecutionResults.SUCCESS_EXIT_CODE) {
-      Optional<String> stdout = result.getStdout();
-      Optional<String> stderr = result.getStderr();
       LOG.info(
           "[RE] Failed to build target [%s] with exit code [%d]. "
               + "stdout: [%s] stderr: [%s] metadata: [%s] action: [%s]",
@@ -515,6 +516,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           strategyContext.getExecutionContext(),
           ImmutableStepExecutionResult.builder().setExitCode(exitCode).setStderr(stderr).build());
     }
+
+    stdout.ifPresent(x -> eventBus.post(ConsoleEvent.info(x)));
+    stderr.ifPresent(x -> eventBus.post(ConsoleEvent.severe(x)));
 
     try (Scope ignored1 =
         guardContext.enterState(State.DELETING_STALE_OUTPUTS, Optional.of(actionDigest))) {
