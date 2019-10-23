@@ -36,9 +36,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class MorePathsTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -231,11 +235,29 @@ public class MorePathsTest {
   }
 
   @Test
-  public void relativeWithEmptyPath() {
+  public void relativizeWithEmptyPath() {
     // Ensure workaround for Windows Path relativize bug
     Path p1 = Paths.get("");
     Path p2 = Paths.get("foo");
     assertThat(MorePaths.relativize(p1, p2), equalTo(Paths.get("foo")));
+  }
+
+  @Test
+  @Parameters({
+    ",,",
+    ",a,a",
+    "a,,..",
+    "a,a,",
+    "a/b/c,a/d/e,../../d/e",
+    "a/b,a,..",
+    "../a,b,../../b",
+    "a,../b,../../b",
+    "/a/b/c,/a/b/d,../d"
+  })
+  public void relativizeWithDotDotSupport(String basePath, String childPath, String expected) {
+    assertThat(
+        MorePaths.relativizeWithDotDotSupport(Paths.get(basePath), Paths.get(childPath)),
+        equalTo(Paths.get(expected)));
   }
 
   @Test

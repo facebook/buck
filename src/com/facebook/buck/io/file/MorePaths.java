@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.common.io.ByteSource;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
@@ -112,6 +113,58 @@ public class MorePaths {
       return path2;
     }
     return path1.relativize(path2);
+  }
+
+  /**
+   * Returns a child path relative to a base path. This is similar to `Path.relativize`, but
+   * supports base paths that start with "..", even in Java 11. JCL implementations of
+   * `Path.relativize` support base paths like this in Java 8, but not in Java 11.
+   *
+   * @param basePath the path against which childPath will be relativized
+   * @param childPath the path to relativize against {@code basePath}
+   * @return {@code childPath} relativized against {@code basePath}
+   */
+  public static Path relativizeWithDotDotSupport(Path basePath, Path childPath) {
+    if (basePath instanceof BuckUnixPath) {
+      // Call our more efficient implementation if using Buck's own filesystem provider.
+      return basePath.relativize(childPath);
+    }
+
+    if (basePath.equals(childPath)) {
+      return basePath.getFileSystem().getPath("");
+    }
+
+    if (basePath.isAbsolute() != childPath.isAbsolute()) {
+      throw new IllegalArgumentException("Expected paths to be of the same type");
+    }
+
+    // Skip past equal prefixes.
+    int idx = 0;
+    while (idx < basePath.getNameCount()
+        && idx < childPath.getNameCount()
+        && basePath.getName(idx).equals(childPath.getName(idx))) {
+      idx++;
+    }
+
+    // Add ".."s to get to the root of the remainder of the base path.
+    StringBuilder result = new StringBuilder();
+    for (int i = idx; i < basePath.getNameCount(); i++) {
+      if (!basePath.getName(i).toString().isEmpty()) {
+        result.append("..");
+        result.append(File.separatorChar);
+      }
+    }
+
+    // Now add the remainder of the child path.
+    if (idx < childPath.getNameCount()) {
+      result.append(childPath.getName(idx).toString());
+    }
+    for (int i = idx + 1; i < childPath.getNameCount(); i++) {
+      result.append(File.separatorChar);
+      result.append(childPath.getName(i).toString());
+    }
+
+    return basePath.getFileSystem().getPath(result.toString());
   }
 
   /**
