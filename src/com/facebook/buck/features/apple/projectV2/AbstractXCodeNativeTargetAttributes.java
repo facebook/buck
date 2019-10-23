@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -150,6 +151,11 @@ abstract class AbstractXCodeNativeTargetAttributes {
 
   @Value.Default
   public ImmutableList<SourcePath> genruleFiles() {
+    return ImmutableList.of();
+  }
+
+  @Value.Default
+  public ImmutableList<FrameworkPath> systemFrameworks() {
     return ImmutableList.of();
   }
 }

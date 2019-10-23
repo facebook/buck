@@ -3142,7 +3142,7 @@ public class ProjectGeneratorTest {
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals("libraries $BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
 
-    assertEquals("Should have exact number of build phases", 1, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
   }
 
   @Test

@@ -55,6 +55,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -66,6 +67,7 @@ import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetLanguageConst
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -1448,6 +1450,15 @@ public class ProjectGenerator {
     FluentIterable<TargetNode<?>> depTargetNodes = collectRecursiveLibraryDepTargets(targetNode);
 
     if (includeFrameworks) {
+      if (!options.shouldAddLinkedLibrariesAsFlags()) {
+        ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
+        frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(targetNode));
+        frameworksBuilder.addAll(targetNode.getConstructorArg().getFrameworks());
+        frameworksBuilder.addAll(targetNode.getConstructorArg().getLibraries());
+
+        xcodeNativeTargetAttributesBuilder.setSystemFrameworks(frameworksBuilder.build());
+      }
+
       if (sharedLibraryToBundle.isPresent()) {
         // Replace target nodes of libraries which are actually constituents of embedded
         // frameworks to the bundle representing the embedded framework.
@@ -1813,6 +1824,115 @@ public class ProjectGenerator {
       FluentIterable<TargetNode<?>> targetDeps,
       ImmutableMap<BuildTarget, TargetNode<?>> sharedLibrariesToBundles) {
     return targetDeps.transform(t -> sharedLibrariesToBundles.getOrDefault(t.getBuildTarget(), t));
+  }
+
+  private static BuildTarget getBundleBinaryTarget(TargetNode<AppleBundleDescriptionArg> bundle) {
+    return bundle
+        .getConstructorArg()
+        .getBinary()
+        .orElseThrow(
+            () ->
+                new HumanReadableException(
+                    "apple_bundle rules without binary attribute are not supported."));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Optional<TargetNode<CxxLibraryDescription.CommonArg>> getAppleNativeNodeOfType(
+      TargetGraph targetGraph,
+      TargetNode<?> targetNode,
+      Set<Class<? extends DescriptionWithTargetGraph<?>>> nodeTypes,
+      Set<AppleBundleExtension> bundleExtensions) {
+    Optional<TargetNode<CxxLibraryDescription.CommonArg>> nativeNode = Optional.empty();
+    if (nodeTypes.contains(targetNode.getDescription().getClass())) {
+      nativeNode = Optional.of((TargetNode<CxxLibraryDescription.CommonArg>) targetNode);
+    } else if (targetNode.getDescription() instanceof AppleBundleDescription) {
+      TargetNode<AppleBundleDescriptionArg> bundle =
+          (TargetNode<AppleBundleDescriptionArg>) targetNode;
+      Either<AppleBundleExtension, String> extension = bundle.getConstructorArg().getExtension();
+      if (extension.isLeft() && bundleExtensions.contains(extension.getLeft())) {
+        nativeNode =
+            Optional.of(
+                (TargetNode<CxxLibraryDescription.CommonArg>)
+                    targetGraph.get(getBundleBinaryTarget(bundle)));
+      }
+    }
+    return nativeNode;
+  }
+
+  private static Optional<TargetNode<CxxLibraryDescription.CommonArg>> getLibraryNode(
+      TargetGraph targetGraph, TargetNode<?> targetNode) {
+    return getAppleNativeNodeOfType(
+        targetGraph,
+        targetNode,
+        ImmutableSet.of(AppleLibraryDescription.class, CxxLibraryDescription.class),
+        ImmutableSet.of(AppleBundleExtension.FRAMEWORK));
+  }
+
+  /** List of frameworks and libraries that goes into the "Link Binary With Libraries" phase. */
+  private Iterable<FrameworkPath> collectRecursiveFrameworkDependencies(TargetNode<?> targetNode) {
+    return FluentIterable.from(
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
+                targetGraph,
+                Optional.of(dependenciesCache),
+                AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                targetNode,
+                ImmutableSet.<Class<? extends BaseDescription<?>>>builder()
+                    .addAll(xcodeDescriptions.getXCodeDescriptions())
+                    .add(PrebuiltAppleFrameworkDescription.class)
+                    .build()))
+        .transformAndConcat(
+            input -> {
+              // Libraries and bundles which has system frameworks and libraries.
+              Optional<TargetNode<CxxLibraryDescription.CommonArg>> library =
+                  getLibraryNode(targetGraph, input);
+              if (library.isPresent()
+                  && !AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(library.get())) {
+                return Iterables.concat(
+                    library.get().getConstructorArg().getFrameworks(),
+                    library.get().getConstructorArg().getLibraries());
+              }
+
+              Optional<TargetNode<PrebuiltAppleFrameworkDescriptionArg>> prebuilt =
+                  TargetNodes.castArg(input, PrebuiltAppleFrameworkDescriptionArg.class);
+              if (prebuilt.isPresent()) {
+                return Iterables.concat(
+                    prebuilt.get().getConstructorArg().getFrameworks(),
+                    prebuilt.get().getConstructorArg().getLibraries(),
+                    ImmutableList.of(
+                        FrameworkPath.ofSourcePath(
+                            prebuilt.get().getConstructorArg().getFramework())));
+              }
+              Optional<TargetNode<PrebuiltCxxLibraryDescriptionArg>> prebuiltCxxLib =
+                  TargetNodes.castArg(input, PrebuiltCxxLibraryDescriptionArg.class);
+              if (prebuiltCxxLib.isPresent()) {
+                Iterable<FrameworkPath> deps =
+                    Iterables.concat(
+                        prebuiltCxxLib.get().getConstructorArg().getFrameworks(),
+                        prebuiltCxxLib.get().getConstructorArg().getLibraries());
+                if (prebuiltCxxLib.get().getConstructorArg().getSharedLib().isPresent()) {
+                  return Iterables.concat(
+                      deps,
+                      ImmutableList.of(
+                          FrameworkPath.ofSourcePath(
+                              prebuiltCxxLib.get().getConstructorArg().getSharedLib().get())));
+                } else if (prebuiltCxxLib.get().getConstructorArg().getStaticLib().isPresent()) {
+                  return Iterables.concat(
+                      deps,
+                      ImmutableList.of(
+                          FrameworkPath.ofSourcePath(
+                              prebuiltCxxLib.get().getConstructorArg().getStaticLib().get())));
+                } else if (prebuiltCxxLib.get().getConstructorArg().getStaticPicLib().isPresent()) {
+                  return Iterables.concat(
+                      deps,
+                      ImmutableList.of(
+                          FrameworkPath.ofSourcePath(
+                              prebuiltCxxLib.get().getConstructorArg().getStaticPicLib().get())));
+                }
+              }
+
+              return ImmutableList.of();
+            });
   }
 
   private void setAppIconSettings(

@@ -28,6 +28,7 @@ import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.RuleUtils;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
@@ -47,6 +48,7 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -145,18 +147,23 @@ class XcodeNativeTargetProjectWriter {
 
                   // Using a buck build phase doesnt support having other build phases.
                   // TODO(chatatap): Find solutions around this, as this will likely break indexing.
+                  // TODO(chatatap): Need to handle dependencies for unit tests
                   targetAttributes
                       .product()
                       .ifPresent(
                           product -> {
                             if (ImmutableList.of(
                                     ProductTypes.APPLICATION,
-                                    ProductTypes.UNIT_TEST,
                                     ProductTypes.UI_TEST,
                                     ProductTypes.APP_EXTENSION,
                                     ProductTypes.WATCH_APPLICATION)
                                 .contains(product.getType())) {
                               nativeTarget.getBuildPhases().clear();
+                            }
+
+                            if (product.getType() == ProductTypes.UNIT_TEST) {
+                              addSystemFrameworksBuildPhase(
+                                  targetAttributes.systemFrameworks(), project, nativeTarget);
                             }
                           });
 
@@ -634,6 +641,38 @@ class XcodeNativeTargetProjectWriter {
         PBXBuildFile buildFile = new PBXBuildFile(fileRef);
         sourcesBuildPhase.getFiles().add(buildFile);
       }
+    }
+  }
+
+  private void addSystemFrameworksBuildPhase(
+      ImmutableList<FrameworkPath> systemFrameworkPaths,
+      PBXProject project,
+      PBXNativeTarget target) {
+    if (systemFrameworkPaths.isEmpty()) {
+      return;
+    }
+
+    PBXGroup sharedFrameworksGroup =
+        project.getMainGroup().getOrCreateChildGroupByName("Frameworks");
+    PBXFrameworksBuildPhase frameworksBuildPhase = new PBXFrameworksBuildPhase();
+    target.getBuildPhases().add(frameworksBuildPhase);
+
+    for (FrameworkPath framework : systemFrameworkPaths) {
+      SourceTreePath sourceTreePath;
+      if (framework.getSourceTreePath().isPresent()) {
+        sourceTreePath = framework.getSourceTreePath().get();
+      } else if (framework.getSourcePath().isPresent()) {
+        sourceTreePath =
+            new SourceTreePath(
+                PBXReference.SourceTree.SOURCE_ROOT,
+                pathRelativizer.outputPathToSourcePath(framework.getSourcePath().get()),
+                Optional.empty());
+      } else {
+        throw new RuntimeException();
+      }
+      PBXFileReference fileReference =
+          sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(sourceTreePath);
+      frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
     }
   }
 
