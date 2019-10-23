@@ -49,7 +49,7 @@ public class OutOfProcessIsolatedBuilder {
    */
   public static void main(String[] args)
       throws IOException, StepFailedException, InterruptedException {
-    LogManager.getLogManager().getLogger("").setLevel(Level.WARNING);
+    LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
 
     LOG.info(String.format("Started buck at time [%s].", new Date()));
     Thread.setDefaultUncaughtExceptionHandler(
