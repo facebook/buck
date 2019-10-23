@@ -53,7 +53,7 @@ public class ConfigurationRuleRegistryFactory {
         new RuleBasedConstraintResolver(configurationRuleResolver);
 
     RuleBasedPlatformResolver ruleBasedPlatformResolver =
-        new RuleBasedPlatformResolver(configurationRuleResolver, constraintResolver);
+        new RuleBasedPlatformResolver(configurationRuleResolver);
     PlatformResolver platformResolver =
         new CachingPlatformResolver(
             new CombinedPlatformResolver(

@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import org.junit.Rule;
@@ -47,8 +48,7 @@ public class RuleBasedPlatformResolverTest {
                   BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
                 return ruleClass.cast(new ConstraintSettingRule(constraint));
               }
-            },
-            new ThrowingConstraintResolver());
+            });
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -62,11 +62,13 @@ public class RuleBasedPlatformResolverTest {
 
     BuildTarget platformTarget =
         ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform");
-    BuildTarget constraintValue =
-        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:value");
     BuildTarget constraintSetting =
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
     ConstraintSettingRule constraintSettingRule = new ConstraintSettingRule(constraintSetting);
+    ConstraintValueRule constraintValue =
+        new ConstraintValueRule(
+            ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:value"),
+            constraintSettingRule);
 
     ConfigurationRuleResolver configurationRuleResolver =
         new ConfigurationRuleResolver() {
@@ -78,12 +80,11 @@ public class RuleBasedPlatformResolverTest {
                   PlatformRule.of(
                       platformTarget,
                       "platform",
-                      ImmutableSortedSet.of(constraintValue),
+                      ImmutableSet.of(constraintValue),
                       ImmutableSortedSet.of()));
             }
-            if (buildTarget.equals(constraintValue)) {
-              return ruleClass.cast(
-                  new ConstraintValueRule(constraintValue, constraintSettingRule));
+            if (buildTarget.equals(constraintValue.getBuildTarget())) {
+              return ruleClass.cast(constraintValue);
             }
             if (buildTarget.equals(constraintSetting)) {
               return ruleClass.cast(constraintSettingRule);
@@ -92,9 +93,7 @@ public class RuleBasedPlatformResolverTest {
           }
         };
 
-    RuleBasedPlatformResolver resolver =
-        new RuleBasedPlatformResolver(
-            configurationRuleResolver, new RuleBasedConstraintResolver(configurationRuleResolver));
+    RuleBasedPlatformResolver resolver = new RuleBasedPlatformResolver(configurationRuleResolver);
 
     ConstraintBasedPlatform platform =
         (ConstraintBasedPlatform) resolver.getPlatform(platformTarget, DependencyStack.root());
@@ -102,6 +101,7 @@ public class RuleBasedPlatformResolverTest {
     assertEquals("//platform:platform", platform.toString());
     assertEquals(1, platform.getConstraintValues().size());
     assertEquals(
-        constraintValue, Iterables.getOnlyElement(platform.getConstraintValues()).getBuildTarget());
+        constraintValue.getBuildTarget(),
+        Iterables.getOnlyElement(platform.getConstraintValues()).getBuildTarget());
   }
 }

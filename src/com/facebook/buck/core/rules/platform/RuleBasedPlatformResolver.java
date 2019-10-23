@@ -18,7 +18,6 @@ package com.facebook.buck.core.rules.platform;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.NamedPlatform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
@@ -36,12 +35,9 @@ import java.util.LinkedHashMap;
 public class RuleBasedPlatformResolver implements PlatformResolver {
 
   private final ConfigurationRuleResolver configurationRuleResolver;
-  private final ConstraintResolver constraintResolver;
 
-  public RuleBasedPlatformResolver(
-      ConfigurationRuleResolver configurationRuleResolver, ConstraintResolver constraintResolver) {
+  public RuleBasedPlatformResolver(ConfigurationRuleResolver configurationRuleResolver) {
     this.configurationRuleResolver = configurationRuleResolver;
-    this.constraintResolver = constraintResolver;
   }
 
   @Override
@@ -67,11 +63,8 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
 
     ImmutableSet<ConstraintValue> constraintValues =
         platformTargets.values().stream()
-            .flatMap(t -> t.getFirst().getConstrainValues().stream())
-            .map(
-                buildTarget1 ->
-                    constraintResolver.getConstraintValue(
-                        buildTarget1, dependencyStack.child(buildTarget1)))
+            .flatMap(t -> t.getFirst().getConstrainValuesRules().stream())
+            .map(ConstraintValueRule::getConstraintValue)
             .collect(ImmutableSet.toImmutableSet());
 
     return new ConstraintBasedPlatform(buildTarget, constraintValues);

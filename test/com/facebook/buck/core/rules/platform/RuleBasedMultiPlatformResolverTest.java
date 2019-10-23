@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import org.junit.Rule;
@@ -50,8 +51,7 @@ public class RuleBasedMultiPlatformResolverTest {
           }
         };
 
-    RuleBasedPlatformResolver resolver =
-        new RuleBasedPlatformResolver(configurationRuleResolver, new ThrowingConstraintResolver());
+    RuleBasedPlatformResolver resolver = new RuleBasedPlatformResolver(configurationRuleResolver);
     RuleBasedMultiPlatformResolver multiPlatformResolver =
         new RuleBasedMultiPlatformResolver(configurationRuleResolver, resolver);
 
@@ -60,6 +60,13 @@ public class RuleBasedMultiPlatformResolverTest {
         "//constraint:setting is used as a multiplatform, but not declared using an appropriate rule");
 
     multiPlatformResolver.getPlatform(constraint, DependencyStack.root());
+  }
+
+  private static ConstraintValueRule constraintValueRule(String target) {
+    return new ConstraintValueRule(
+        ConfigurationBuildTargetFactoryForTests.newInstance(target),
+        new ConstraintSettingRule(
+            ConfigurationBuildTargetFactoryForTests.newInstance(target + "-setting")));
   }
 
   @Test
@@ -72,12 +79,9 @@ public class RuleBasedMultiPlatformResolverTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//platform:nested_platform_1");
     BuildTarget nestedPlatform2Target =
         ConfigurationBuildTargetFactoryForTests.newInstance("//platform:nested_platform_2");
-    BuildTarget baseConstraintValue =
-        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:base_value");
-    BuildTarget nestedConstraintValue1 =
-        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:nested_value1");
-    BuildTarget nestedConstraintValue2 =
-        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:nested_value2");
+    ConstraintValueRule baseConstraintValue = constraintValueRule("//constraint:base_value");
+    ConstraintValueRule nestedConstraintValue1 = constraintValueRule("//constraint:nested_value1");
+    ConstraintValueRule nestedConstraintValue2 = constraintValueRule("//constraint:nested_value2");
     BuildTarget constraintSetting =
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
     ConstraintSettingRule constraintSettingRule = new ConstraintSettingRule(constraintSetting);
@@ -99,7 +103,7 @@ public class RuleBasedMultiPlatformResolverTest {
                   PlatformRule.of(
                       basePlatformTarget,
                       "base_platform",
-                      ImmutableSortedSet.of(baseConstraintValue),
+                      ImmutableSet.of(baseConstraintValue),
                       ImmutableSortedSet.of()));
             }
             if (buildTarget.equals(nestedPlatform1Target)) {
@@ -107,7 +111,7 @@ public class RuleBasedMultiPlatformResolverTest {
                   PlatformRule.of(
                       nestedPlatform1Target,
                       "nested_platform_1",
-                      ImmutableSortedSet.of(nestedConstraintValue1),
+                      ImmutableSet.of(nestedConstraintValue1),
                       ImmutableSortedSet.of()));
             }
             if (buildTarget.equals(nestedPlatform2Target)) {
@@ -115,24 +119,26 @@ public class RuleBasedMultiPlatformResolverTest {
                   PlatformRule.of(
                       nestedPlatform2Target,
                       "nested_platform_2",
-                      ImmutableSortedSet.of(nestedConstraintValue2),
+                      ImmutableSet.of(nestedConstraintValue2),
                       ImmutableSortedSet.of()));
             }
             if (buildTarget.equals(constraintSetting)) {
-              return ruleClass.cast(new ConstraintSettingRule(constraintSetting));
+              return ruleClass.cast(constraintSettingRule);
             }
-            if (buildTarget.equals(baseConstraintValue)
-                || buildTarget.equals(nestedConstraintValue1)
-                || buildTarget.equals(nestedConstraintValue2)) {
-              return ruleClass.cast(new ConstraintValueRule(buildTarget, constraintSettingRule));
+            if (buildTarget.equals(baseConstraintValue.getBuildTarget())) {
+              return ruleClass.cast(baseConstraintValue);
+            }
+            if (buildTarget.equals(nestedConstraintValue1.getBuildTarget())) {
+              return ruleClass.cast(nestedConstraintValue1);
+            }
+            if (buildTarget.equals(nestedConstraintValue2.getBuildTarget())) {
+              return ruleClass.cast(nestedConstraintValue2);
             }
             throw new IllegalArgumentException("Invalid build target: " + buildTarget);
           }
         };
 
-    RuleBasedPlatformResolver resolver =
-        new RuleBasedPlatformResolver(
-            configurationRuleResolver, new RuleBasedConstraintResolver(configurationRuleResolver));
+    RuleBasedPlatformResolver resolver = new RuleBasedPlatformResolver(configurationRuleResolver);
     RuleBasedMultiPlatformResolver multiPlatformResolver =
         new RuleBasedMultiPlatformResolver(configurationRuleResolver, resolver);
 
@@ -146,7 +152,7 @@ public class RuleBasedMultiPlatformResolverTest {
     assertEquals(basePlatformTarget, basedPlatform.getBuildTarget());
     assertEquals(1, basedPlatform.getConstraintValues().size());
     assertEquals(
-        baseConstraintValue,
+        baseConstraintValue.getBuildTarget(),
         Iterables.getOnlyElement(basedPlatform.getConstraintValues()).getBuildTarget());
 
     ImmutableList<NamedPlatform> nestedPlatforms = platform.getNestedPlatforms().asList();
@@ -155,14 +161,14 @@ public class RuleBasedMultiPlatformResolverTest {
     assertEquals(nestedPlatform1Target, nestedPlatform1.getBuildTarget());
     assertEquals(1, nestedPlatform1.getConstraintValues().size());
     assertEquals(
-        nestedConstraintValue1,
+        nestedConstraintValue1.getBuildTarget(),
         Iterables.getOnlyElement(nestedPlatform1.getConstraintValues()).getBuildTarget());
 
     ConstraintBasedPlatform nestedPlatform2 = (ConstraintBasedPlatform) nestedPlatforms.get(1);
     assertEquals(nestedPlatform2Target, nestedPlatform2.getBuildTarget());
     assertEquals(1, nestedPlatform2.getConstraintValues().size());
     assertEquals(
-        nestedConstraintValue2,
+        nestedConstraintValue2.getBuildTarget(),
         Iterables.getOnlyElement(nestedPlatform2.getConstraintValues()).getBuildTarget());
   }
 }

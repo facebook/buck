@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,8 +48,7 @@ public class CombinedPlatformResolverTest {
             return ruleClass.cast(new ConstraintSettingRule(constraint));
           }
         };
-    RuleBasedPlatformResolver resolver =
-        new RuleBasedPlatformResolver(configurationRuleResolver, new ThrowingConstraintResolver());
+    RuleBasedPlatformResolver resolver = new RuleBasedPlatformResolver(configurationRuleResolver);
     RuleBasedMultiPlatformResolver multiPlatformResolver =
         new RuleBasedMultiPlatformResolver(configurationRuleResolver, resolver);
     CombinedPlatformResolver combinedPlatformResolver =
@@ -61,6 +61,14 @@ public class CombinedPlatformResolverTest {
     combinedPlatformResolver.getPlatform(constraint, DependencyStack.root());
   }
 
+  private static ConstraintValueRule constraintValueRule(
+      String constraintValue, String constraintSetting) {
+    return new ConstraintValueRule(
+        ConfigurationBuildTargetFactoryForTests.newInstance(constraintValue),
+        new ConstraintSettingRule(
+            ConfigurationBuildTargetFactoryForTests.newInstance(constraintSetting)));
+  }
+
   @Test
   public void requestingPlatformForPlatformRuleCreatesPlatform() {
     BuildTarget multiPlatformTarget =
@@ -71,12 +79,12 @@ public class CombinedPlatformResolverTest {
         ConfigurationBuildTargetFactoryForTests.newInstance("//platform:nested_platform_1");
     BuildTarget nestedPlatform2Target =
         ConfigurationBuildTargetFactoryForTests.newInstance("//platform:nested_platform_2");
-    BuildTarget baseConstraintValue =
-        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:base_value");
-    BuildTarget nestedConstraintValue1 =
-        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:nested_value1");
-    BuildTarget nestedConstraintValue2 =
-        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:nested_value2");
+    ConstraintValueRule baseConstraintValue =
+        constraintValueRule("//constraint:base_value", "//constraints:base_setting");
+    ConstraintValueRule nestedConstraintValue1 =
+        constraintValueRule("//constraint:nested_value1", "//constraint:nested_setting1");
+    ConstraintValueRule nestedConstraintValue2 =
+        constraintValueRule("//constraint:nested_value2", "//constraint:nested_setting2");
     BuildTarget constraintSetting =
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
     ConstraintSettingRule constraintSettingRule = new ConstraintSettingRule(constraintSetting);
@@ -98,7 +106,7 @@ public class CombinedPlatformResolverTest {
                   PlatformRule.of(
                       basePlatformTarget,
                       "base_platform",
-                      ImmutableSortedSet.of(baseConstraintValue),
+                      ImmutableSet.of(baseConstraintValue),
                       ImmutableSortedSet.of()));
             }
             if (buildTarget.equals(nestedPlatform1Target)) {
@@ -106,7 +114,7 @@ public class CombinedPlatformResolverTest {
                   PlatformRule.of(
                       nestedPlatform1Target,
                       "nested_platform_1",
-                      ImmutableSortedSet.of(nestedConstraintValue1),
+                      ImmutableSet.of(nestedConstraintValue1),
                       ImmutableSortedSet.of()));
             }
             if (buildTarget.equals(nestedPlatform2Target)) {
@@ -114,24 +122,22 @@ public class CombinedPlatformResolverTest {
                   PlatformRule.of(
                       nestedPlatform2Target,
                       "nested_platform_2",
-                      ImmutableSortedSet.of(nestedConstraintValue2),
+                      ImmutableSet.of(nestedConstraintValue2),
                       ImmutableSortedSet.of()));
             }
             if (buildTarget.equals(constraintSetting)) {
               return ruleClass.cast(new ConstraintSettingRule(constraintSetting));
             }
-            if (buildTarget.equals(baseConstraintValue)
-                || buildTarget.equals(nestedConstraintValue1)
-                || buildTarget.equals(nestedConstraintValue2)) {
+            if (buildTarget.equals(baseConstraintValue.getBuildTarget())
+                || buildTarget.equals(nestedConstraintValue1.getBuildTarget())
+                || buildTarget.equals(nestedConstraintValue2.getBuildTarget())) {
               return ruleClass.cast(new ConstraintValueRule(buildTarget, constraintSettingRule));
             }
             throw new IllegalArgumentException("Invalid build target: " + buildTarget);
           }
         };
 
-    RuleBasedPlatformResolver resolver =
-        new RuleBasedPlatformResolver(
-            configurationRuleResolver, new RuleBasedConstraintResolver(configurationRuleResolver));
+    RuleBasedPlatformResolver resolver = new RuleBasedPlatformResolver(configurationRuleResolver);
     RuleBasedMultiPlatformResolver multiPlatformResolver =
         new RuleBasedMultiPlatformResolver(configurationRuleResolver, resolver);
     CombinedPlatformResolver combinedPlatformResolver =

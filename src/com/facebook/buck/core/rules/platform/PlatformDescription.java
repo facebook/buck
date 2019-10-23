@@ -66,10 +66,21 @@ public class PlatformDescription
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       PlatformArg arg) {
+
+    ImmutableSet<ConstraintValueRule> constraintValueRules =
+        arg.getConstraintValues().stream()
+            .map(
+                constraintValue ->
+                    configurationRuleResolver.getRule(
+                        ConfigurationBuildTargets.convert(constraintValue),
+                        ConstraintValueRule.class,
+                        dependencyStack.child(constraintValue)))
+            .collect(ImmutableSet.toImmutableSet());
+
     return PlatformRule.of(
         buildTarget,
         arg.getName(),
-        ConfigurationBuildTargets.convert(arg.getConstraintValues()),
+        constraintValueRules,
         ConfigurationBuildTargets.convert(arg.getDeps()));
   }
 
@@ -104,9 +115,8 @@ public class PlatformDescription
     @Value.Parameter
     String getName();
 
-    @Value.NaturalOrder
     @Value.Parameter
-    ImmutableSortedSet<BuildTarget> getConstrainValues();
+    ImmutableSet<ConstraintValueRule> getConstrainValuesRules();
 
     @Value.Parameter
     @Value.NaturalOrder
