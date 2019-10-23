@@ -173,11 +173,13 @@ import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
 import com.facebook.buck.util.AbstractCloseableWrapper;
 import com.facebook.buck.util.BgProcessKiller;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.DuplicatingConsole;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ErrorLogger.LogImpl;
 import com.facebook.buck.util.ExitCode;
@@ -324,7 +326,7 @@ public final class MainRunner {
   private static final AsynchronousDirectoryContentsCleaner TRASH_CLEANER =
       new AsynchronousDirectoryContentsCleaner();
 
-  private Console console;
+  private DuplicatingConsole printConsole;
 
   private Optional<NGContext> context;
 
@@ -442,7 +444,7 @@ public final class MainRunner {
       BackgroundTaskManager bgTaskManager,
       CommandMode commandMode,
       Optional<NGContext> context) {
-    this.console = console;
+    this.printConsole = new DuplicatingConsole(console);
     this.stdIn = stdIn;
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
     this.projectRoot = projectRoot;
@@ -486,7 +488,7 @@ public final class MainRunner {
                       .map(ErrorHandlingBuckConfig::getErrorMessageAugmentations)
                       .orElse(ImmutableMap.of()));
         } catch (HumanReadableException e) {
-          console.printErrorText(e.getHumanReadableErrorMessage());
+          printConsole.printErrorText(e.getHumanReadableErrorMessage());
           augmentor = new HumanReadableExceptionAugmentor(ImmutableMap.of());
         }
         ErrorLogger logger =
@@ -494,12 +496,12 @@ public final class MainRunner {
                 new LogImpl() {
                   @Override
                   public void logUserVisible(String message) {
-                    console.printFailure(message);
+                    printConsole.printFailure(message);
                   }
 
                   @Override
                   public void logUserVisibleInternalError(String message) {
-                    console.printFailure(
+                    printConsole.printFailure(
                         linesToText("Buck encountered an internal error", message));
                   }
 
@@ -640,7 +642,7 @@ public final class MainRunner {
     }
 
     // Return help strings fast if the command is a help request.
-    Optional<ExitCode> result = command.runHelp(console.getStdOut());
+    Optional<ExitCode> result = command.runHelp(printConsole.getStdOut());
     if (result.isPresent()) {
       return result.get();
     }
@@ -727,8 +729,8 @@ public final class MainRunner {
 
       Verbosity verbosity = VerbosityParser.parse(args);
 
-      // Setup the console.
-      console = makeCustomConsole(context, verbosity, buckConfig);
+      // Setup the printConsole.
+      printConsole = makeCustomConsole(context, verbosity, buckConfig);
 
       ExecutionEnvironment executionEnvironment =
           new DefaultExecutionEnvironment(clientEnvironment, System.getProperties());
@@ -768,7 +770,7 @@ public final class MainRunner {
           // so we can delete it asynchronously after the command is done.
           moveToTrash(
               filesystem,
-              console,
+              printConsole,
               buildId,
               filesystem.getBuckPaths().getAnnotationDir(),
               filesystem.getBuckPaths().getGenDir(),
@@ -784,7 +786,7 @@ public final class MainRunner {
 
       LOG.verbose("Buck core key from the previous Buck instance: %s", previousBuckCoreKey);
 
-      ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
+      ProcessExecutor processExecutor = new DefaultProcessExecutor(printConsole);
 
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =
           new PlatformSandboxExecutionStrategyFactory();
@@ -802,7 +804,7 @@ public final class MainRunner {
 
       ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
       Watchman watchman =
-          buildWatchman(context, parserConfig, projectWatchList, environment, console, clock);
+          buildWatchman(context, parserConfig, projectWatchList, environment, printConsole, clock);
 
       ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions =
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
@@ -856,7 +858,7 @@ public final class MainRunner {
               rootCell,
               knownRuleTypesProvider,
               watchman,
-              console,
+              printConsole,
               clock,
               buildTargetFactory,
               targetConfigurationSerializer);
@@ -927,7 +929,7 @@ public final class MainRunner {
       InvocationInfo invocationInfo =
           InvocationInfo.of(
               buildId,
-              superConsoleConfig.isEnabled(console.getAnsi(), console.getVerbosity()),
+              superConsoleConfig.isEnabled(printConsole.getAnsi(), printConsole.getVerbosity()),
               context.isPresent(),
               command.getSubCommandNameForLogging(),
               filteredArgsForLogging,
@@ -971,8 +973,8 @@ public final class MainRunner {
               GlobalStateManager.singleton()
                   .setupLoggers(
                       invocationInfo,
-                      console.getStdErr(),
-                      console.getStdErr().getRawStream(),
+                      printConsole.getStdErr(),
+                      printConsole.getStdErr().getRawStream(),
                       verbosity);
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
           ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier =
@@ -991,7 +993,20 @@ public final class MainRunner {
             GlobalStateManager.singleton().getThreadToCommandRegister();
 
         Optional<Exception> exceptionForFix = Optional.empty();
+        Path simpleConsoleLog =
+            invocationInfo
+                .getLogDirectoryPath()
+                .resolve(BuckConstant.BUCK_SIMPLE_CONSOLE_LOG_FILE_NAME);
 
+        PrintStream simpleConsolePrintStream = new PrintStream(simpleConsoleLog.toFile());
+        Console simpleLogConsole =
+            new Console(
+                Verbosity.STANDARD_INFORMATION,
+                simpleConsolePrintStream,
+                simpleConsolePrintStream,
+                printConsole.getAnsi());
+        printConsole.setDuplicatingConsole(Optional.of(simpleLogConsole));
+        Path testLogPath = filesystem.getBuckPaths().getLogDir().resolve("test.log");
         try (ThrowingCloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
                 getExecutorWrapper(
                     MostExecutors.newSingleThreadExecutor("Disk I/O"),
@@ -1064,15 +1079,37 @@ public final class MainRunner {
                         ExecutorPool.PROJECT.toString(),
                         EXECUTOR_SERVICES_TIMEOUT_SECONDS);
             BuildInfoStoreManager storeManager = new BuildInfoStoreManager();
+            AbstractConsoleEventBusListener fileLoggerConsoleListener =
+                new SimpleConsoleEventBusListener(
+                    new RenderingConsole(clock, simpleLogConsole),
+                    clock,
+                    testConfig.getResultSummaryVerbosity(),
+                    superConsoleConfig.getHideSucceededRulesInLogMode(),
+                    superConsoleConfig.getNumberOfSlowRulesToShow(),
+                    superConsoleConfig.shouldShowSlowRulesInConsole(),
+                    locale,
+                    testLogPath,
+                    executionEnvironment,
+                    buildId,
+                    logBuckConfig.isLogBuildIdToConsoleEnabled(),
+                    logBuckConfig.getBuildDetailsTemplate(),
+                    logBuckConfig.getBuildDetailsCommands(),
+                    isRemoteExecutionBuild
+                        ? Optional.of(
+                            remoteExecutionConfig.getDebugURLString(
+                                metadataProvider.get().getReSessionId()))
+                        : Optional.empty(),
+                    createAdditionalConsoleLinesProviders(
+                        remoteExecutionListener, remoteExecutionConfig, metadataProvider));
             AbstractConsoleEventBusListener consoleListener =
                 createConsoleEventListener(
                     clock,
                     superConsoleConfig,
-                    console,
+                    printConsole,
                     testConfig.getResultSummaryVerbosity(),
                     executionEnvironment,
                     locale,
-                    filesystem.getBuckPaths().getLogDir().resolve("test.log"),
+                    testLogPath,
                     logBuckConfig.isLogBuildIdToConsoleEnabled(),
                     logBuckConfig.getBuildDetailsTemplate(),
                     logBuckConfig.getBuildDetailsCommands(),
@@ -1218,9 +1255,10 @@ public final class MainRunner {
                       : Optional.empty(),
                   managerScope);
           consoleListener.register(buildEventBus);
+          fileLoggerConsoleListener.register(buildEventBus);
 
           if (logBuckConfig.isBuckConfigLocalWarningEnabled()
-              && !console.getVerbosity().isSilent()) {
+              && !printConsole.getVerbosity().isSilent()) {
             ImmutableList<Path> localConfigFiles =
                 rootCell.getAllCells().stream()
                     .map(
@@ -1379,7 +1417,7 @@ public final class MainRunner {
             exitCode =
                 command.run(
                     CommandRunnerParams.of(
-                        console,
+                        printConsole,
                         stdIn,
                         rootCell,
                         watchman,
@@ -1440,7 +1478,7 @@ public final class MainRunner {
           if (exitCode != ExitCode.SUCCESS) {
             handleAutoFix(
                 filesystem,
-                console,
+                printConsole,
                 environment,
                 command,
                 buckConfig,
@@ -1475,7 +1513,7 @@ public final class MainRunner {
           }
 
           // TODO(buck_team): refactor eventListeners for RAII
-          flushAndCloseEventListeners(console, eventListeners);
+          flushAndCloseEventListeners(printConsole, eventListeners);
         }
       }
     }
@@ -1620,7 +1658,7 @@ public final class MainRunner {
       return;
     }
 
-    if (!console.getVerbosity().shouldPrintStandardInformation()) {
+    if (!printConsole.getVerbosity().shouldPrintStandardInformation()) {
       return;
     }
 
@@ -1635,7 +1673,7 @@ public final class MainRunner {
   }
 
   private void printWarnMessage(String message) {
-    console.getStdErr().getRawStream().println(console.getAnsi().asWarningText(message));
+    printConsole.getStdErr().getRawStream().println(printConsole.getAnsi().asWarningText(message));
   }
 
   private ListeningExecutorService getDirCacheStoreExecutor(
@@ -1829,7 +1867,7 @@ public final class MainRunner {
         });
   }
 
-  private Console makeCustomConsole(
+  private DuplicatingConsole makeCustomConsole(
       Optional<NGContext> context, Verbosity verbosity, BuckConfig buckConfig) {
     Optional<String> color;
     if (context.isPresent() && (context.get().getEnv() != null)) {
@@ -1838,11 +1876,12 @@ public final class MainRunner {
     } else {
       color = Optional.empty();
     }
-    return new Console(
-        verbosity,
-        console.getStdOut().getRawStream(),
-        console.getStdErr().getRawStream(),
-        buckConfig.getView(CliConfig.class).createAnsi(color));
+    return new DuplicatingConsole(
+        new Console(
+            verbosity,
+            printConsole.getStdOut().getRawStream(),
+            printConsole.getStdErr().getRawStream(),
+            buckConfig.getView(CliConfig.class).createAnsi(color)));
   }
 
   private void flushAndCloseEventListeners(

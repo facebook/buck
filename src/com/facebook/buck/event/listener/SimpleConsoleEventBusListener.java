@@ -307,6 +307,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     if (lines.isEmpty()) {
       return;
     }
+
     if (console.getVerbosity().shouldPrintStandardInformation()) {
       console.logLines(lines);
     }

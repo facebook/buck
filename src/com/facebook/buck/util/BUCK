@@ -58,6 +58,7 @@ PROCESS_EXECUTOR_SRCS = [
     "ContextualProcessExecutor.java",
     "DefaultProcessExecutor.java",
     "DirtyPrintStreamDecorator.java",
+    "DuplicatingConsole.java",
     "ForwardingProcessListener.java",
     "InputStreamConsumer.java",
     "Libc.java",

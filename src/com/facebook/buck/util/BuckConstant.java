@@ -34,6 +34,8 @@ public class BuckConstant {
 
   public static final String BUCK_FIX_SPEC_FILE_NAME = "buck_fix_spec.json";
 
+  public static final String BUCK_SIMPLE_CONSOLE_LOG_FILE_NAME = "simple_console.log";
+
   private BuckConstant() {}
 
   /**
