@@ -1233,8 +1233,9 @@ public class ProjectGeneratorTest {
     assertEquals("foo2.h", fileRefFoo2.getName());
 
     PBXGroup group3 = project.getMainGroup().getOrCreateChildGroupByName("foo");
-    PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(group3, "generated1.h");
-    PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(group3, "generated2.h");
+    PBXGroup generatedGroup = group3.getOrCreateChildGroupByName("GENERATED-foo");
+    PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(generatedGroup, "generated1.h");
+    PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(generatedGroup, "generated2.h");
 
     // There should be no PBXHeadersBuildPhase in the 'Buck header map mode'.
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
