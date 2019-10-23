@@ -163,3 +163,17 @@ cxx_library(
         "PUBLIC",
     ],
 )
+
+cxx_library(
+    name = "lib-shared",
+    srcs = [
+        "lib.cpp",
+    ],
+    headers = [
+        "lib.h",
+    ],
+    link_style = "shared",
+    visibility = [
+        "PUBLIC",
+    ],
+)

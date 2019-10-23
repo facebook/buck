@@ -1,0 +1,23 @@
+CLASSES
+  dex
+    com/facebook/sample/Sample
+    com/facebook/sample/Sample2
+    com/facebook/sample/Sample3
+    com/sample/app/MyApplication
+TARGETS
+  dex
+    //java/com/sample/app:app
+    //java/com/sample/lib:lib
+    //res/com/sample/asset_only:asset_only
+    //res/com/sample/base:base
+    //res/com/sample/title:title
+    //res/com/sample/top:top
+  native_only_module
+    //native/cxx:lib-shared
+DEPS
+  dex
+  native_only_module
+    dex
+LIBRARIES
+  native_only_module
+    libnative_cxx_lib-shared.so

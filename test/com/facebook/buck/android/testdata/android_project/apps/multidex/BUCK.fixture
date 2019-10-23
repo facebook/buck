@@ -616,6 +616,20 @@ android_app_modularity(
     ],
 )
 
+android_app_modularity(
+    name = "modularity-metadata-with-native-libraries",
+    application_module_configs = {
+        "native_only_module": ["//native/cxx:lib-shared"],
+    },
+    should_include_libraries = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//native/cxx:lib-shared",
+        "//res/com/sample/base:base",
+    ],
+)
+
 android_binary(
     name = "app-with-consistency-check",
     android_app_modularity_result = ":modularity-metadata",

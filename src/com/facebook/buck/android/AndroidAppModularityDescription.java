@@ -61,7 +61,9 @@ public class AndroidAppModularityDescription
             buildTarget,
             params,
             context.getActionGraphBuilder(),
+            context.getToolchainProvider(),
             args.getNoDx(),
+            args.getShouldIncludeLibraries(),
             apkModuleGraph,
             context.getConfigurationRuleRegistry());
 
@@ -89,6 +91,11 @@ public class AndroidAppModularityDescription
     @Value.Default
     default boolean getShouldIncludeClasses() {
       return true;
+    }
+
+    @Value.Default
+    default boolean getShouldIncludeLibraries() {
+      return false;
     }
   }
 }

@@ -139,4 +139,16 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
 
     Assert.assertEquals(expected, actual);
   }
+
+  @Test
+  public void testAppModularityWithNativeLibrary() throws IOException {
+    String target = "//apps/multidex:modularity-metadata-with-native-libraries";
+    Path result = workspace.buildAndReturnOutput(target);
+    String expected =
+        workspace.getFileContents(
+            testdataDir.resolve("testAppModularityMetadataWithNativeLibrary.txt"));
+    String actual = workspace.getFileContents(result);
+
+    Assert.assertEquals(expected, actual);
+  }
 }
