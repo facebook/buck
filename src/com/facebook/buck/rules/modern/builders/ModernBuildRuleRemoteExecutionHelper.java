@@ -65,6 +65,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
+import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -473,9 +474,17 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                   @Override
                   public String describe() {
                     try {
-                      return String.format("File (path:%s size:%s)", path, Files.size(path));
+                      HashCode hash = hasher.hashBytes(ByteStreams.toByteArray(get()));
+                      return String.format(
+                          "File (path:%s size:%s). Expected hash: [%s], Calculated hash: [%s]",
+                          path,
+                          Files.size(cellPathPrefix.resolve(path)),
+                          getDigest().getHash(),
+                          hash.toString());
                     } catch (IOException e) {
-                      return String.format("failed to describe (%s)", e.getMessage());
+                      LOG.warn(e, "Unable to describe file: " + path);
+                      return String.format(
+                          "failed to describe (path:%s error:%s)", path, e.getMessage());
                     }
                   }
                 });
