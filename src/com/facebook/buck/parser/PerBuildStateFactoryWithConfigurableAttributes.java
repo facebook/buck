@@ -176,7 +176,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             "nonresolving_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
             nonResolvingRawTargetNodeToTargetNodeFactory,
-            unconfiguredBuildTargetFactory);
+            unconfiguredBuildTargetFactory,
+            parserConfig.getRequireTargetPlatform());
 
     ConfigurationRuleRegistry configurationRuleRegistry =
         ConfigurationRuleRegistryFactory.createRegistry(
@@ -221,7 +222,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             "configured_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
             unconfiguredTargetNodeToTargetNodeFactory,
-            unconfiguredBuildTargetFactory) {
+            unconfiguredBuildTargetFactory,
+            parserConfig.getRequireTargetPlatform()) {
           @Override
           public void close() {
             super.close();

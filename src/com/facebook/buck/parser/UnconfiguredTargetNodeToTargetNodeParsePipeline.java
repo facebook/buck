@@ -66,6 +66,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   private final boolean speculativeDepsTraversal;
   private final UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline;
   private final ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory;
+  private final boolean requireTargetPlatform;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory;
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
   private final BuckEventBus eventBus;
@@ -91,11 +92,13 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       String pipelineName,
       boolean speculativeDepsTraversal,
       ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory,
-      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory) {
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory,
+      boolean requireTargetPlatform) {
     this.executorService = executorService;
     this.unconfiguredTargetNodePipeline = unconfiguredTargetNodePipeline;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
     this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
+    this.requireTargetPlatform = requireTargetPlatform;
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
     this.perfEventScope = SimplePerfEvent.scope(eventBus, PerfEventId.of(pipelineName));
     this.perfEventId = PerfEventId.of("GetTargetNode");
@@ -305,6 +308,14 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
           targetConfiguration =
               ImmutableRuleBasedTargetConfiguration.of(
                   ConfigurationBuildTargets.convert(configurationTarget));
+        } else {
+          if (requireTargetPlatform) {
+            throw new HumanReadableException(
+                "parser.require_target_platform=true, "
+                    + "but global --target-platforms= is not specified "
+                    + "and target %s does not specify default_target_platform",
+                unconfiguredTarget);
+          }
         }
       }
     }

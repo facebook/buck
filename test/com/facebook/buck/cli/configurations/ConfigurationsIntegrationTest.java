@@ -390,4 +390,42 @@ public class ConfigurationsIntegrationTest {
         Matchers.containsString(
             "requested rule //:c1 of type constraint_setting, but it was constraint_value"));
   }
+
+  @Test
+  public void requireTargetPlatformBuildFailure() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "require_target_platform", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckBuild("//:j");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "parser.require_target_platform=true, "
+                + "but global --target-platforms= is not specified "
+                + "and target //:j does not specify default_target_platform"));
+  }
+
+  @Test
+  public void requireTargetPlatformSpecifiedAtCommandLine() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "require_target_platform", tmp);
+    workspace.setUp();
+
+    // Good if specified on command line
+    ProcessResult result = workspace.runBuckBuild("--target-platforms=//:p", "//:j");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void requireTargetPlatformDefaultTargetPlatform() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "require_target_platform", tmp);
+    workspace.setUp();
+
+    // Good if specified per target
+    ProcessResult result = workspace.runBuckBuild("//:j-with-default-t-p");
+    result.assertSuccess();
+  }
 }

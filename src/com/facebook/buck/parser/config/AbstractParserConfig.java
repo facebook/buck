@@ -303,6 +303,20 @@ public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   }
 
   /**
+   * When set, requested target node will fail to configure if platform is not specified either
+   * per-target with {@code default_target_platform} or globally with {@code --target-platforms=}
+   * command line flag.
+   */
+  @Value.Lazy
+  public boolean getRequireTargetPlatform() {
+    // NOTE(nga): the future of this option is unknown at the moment.
+    // It is possible that:
+    // * we will change this option default to true
+    // * we will remove this option (inlining it as true or false)
+    return getDelegate().getBooleanValue("parser", "require_target_platform", false);
+  }
+
+  /**
    * For use in performance-sensitive code or if you don't care if the build file actually exists,
    * otherwise prefer {@link #getAbsolutePathToBuildFile}.
    *

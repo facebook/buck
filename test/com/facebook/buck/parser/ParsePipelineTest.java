@@ -476,7 +476,8 @@ public class ParsePipelineTest {
               "raw_target_node_parse_pipeline",
               speculativeParsing == SpeculativeParsing.ENABLED,
               rawTargetNodeToTargetNodeFactory,
-              new ParsingUnconfiguredBuildTargetViewFactory());
+              new ParsingUnconfiguredBuildTargetViewFactory(),
+              false);
     }
 
     public UnconfiguredTargetNodeToTargetNodeParsePipeline getTargetNodeParsePipeline() {
