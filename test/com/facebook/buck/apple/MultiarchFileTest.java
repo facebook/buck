@@ -222,7 +222,7 @@ public class MultiarchFileTest {
     assertThat(
         "dsym deps should contain single arch rules themselves",
         dsymDeps,
-        hasItems(multiarchRule.getBuildDeps().toArray(new BuildRule[0])));
+        hasItems(RichStream.from(multiarchRule.getBuildDeps()).toArray(BuildRule[]::new)));
     assertThat(
         "dsym deps should contain dsym deps of single arch rules",
         dsymDeps,
