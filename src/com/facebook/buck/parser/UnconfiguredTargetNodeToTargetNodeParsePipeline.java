@@ -19,7 +19,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
@@ -288,16 +287,6 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     TargetConfiguration targetConfiguration;
     if (unconfiguredTargetNode.getRuleType().getKind() == AbstractRuleType.Kind.CONFIGURATION) {
       targetConfiguration = ConfigurationForConfigurationTargets.INSTANCE;
-      String defaultTargetPlatform =
-          (String)
-              unconfiguredTargetNode
-                  .getAttributes()
-                  .get(BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
-      if (defaultTargetPlatform != null && !defaultTargetPlatform.isEmpty()) {
-        throw new HumanReadableException(
-            "configuration target %s cannot specify %s",
-            unconfiguredTarget, BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
-      }
     } else {
       targetConfiguration = globalTargetConfiguration;
       if (!globalTargetConfiguration.getConfigurationTarget().isPresent()) {
