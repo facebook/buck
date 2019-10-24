@@ -425,6 +425,17 @@ public class GenruleIntegrationTest {
     assertEquals(rulekey1, rulekey2);
   }
 
+  /** Tests that we handle genrules whose out is "." without crashing. */
+  @Test
+  public void testGenruleWithDotOutWorks() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "genrule_dot_out", temporaryFolder);
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("//:mkdir");
+    assertTrue(Files.exists(output.resolve("hello")));
+  }
+
   @Test
   public void srcsMap() throws IOException {
     ProjectWorkspace workspace =
