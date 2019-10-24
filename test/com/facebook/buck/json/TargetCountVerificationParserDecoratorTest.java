@@ -43,7 +43,7 @@ public class TargetCountVerificationParserDecoratorTest {
   private CapturingConsoleEventListener capturingConsoleEventListener;
   private Path path;
   private ProjectBuildFileParser parserMock;
-  private ImmutableMap<String, Map<String, Object>> rawTargets;
+  private ImmutableMap<String, ImmutableMap<String, Object>> rawTargets;
   private BuckEventBus eventBus;
 
   @Before
@@ -62,10 +62,10 @@ public class TargetCountVerificationParserDecoratorTest {
     retMap1.put("e", "e");
 
     String[] names = {"a", "b", "c", "d", "e"};
-    ImmutableMap.Builder<String, Map<String, Object>> builder =
+    ImmutableMap.Builder<String, ImmutableMap<String, Object>> builder =
         ImmutableMap.builderWithExpectedSize(names.length);
     for (String name : names) {
-      builder.put(name, retMap1);
+      builder.put(name, ImmutableMap.copyOf(retMap1));
     }
 
     rawTargets = builder.build();
@@ -107,7 +107,7 @@ public class TargetCountVerificationParserDecoratorTest {
   }
 
   private BuildFileManifest toBuildFileManifest(
-      ImmutableMap<String, Map<String, Object>> rawTargets) {
+      ImmutableMap<String, ImmutableMap<String, Object>> rawTargets) {
     return ImmutableBuildFileManifest.of(
         rawTargets,
         ImmutableSortedSet.of(),

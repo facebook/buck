@@ -195,7 +195,7 @@ public class ResolverIntegrationTest {
     HashCode seen = MorePaths.asByteSource(jarFile).hash(Hashing.sha1());
     assertEquals(expected, seen);
 
-    Map<String, Map<String, Object>> rules =
+    ImmutableMap<String, ImmutableMap<String, Object>> rules =
         buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
 
     assertEquals(1, rules.size());
@@ -221,7 +221,7 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:with-sources:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
-    Map<String, Map<String, Object>> rules =
+    ImmutableMap<String, ImmutableMap<String, Object>> rules =
         buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
 
     Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
@@ -271,7 +271,7 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:deps-in-same-project:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
-    Map<String, Map<String, Object>> allTargets =
+    ImmutableMap<String, ImmutableMap<String, Object>> allTargets =
         buildFileParser
             .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
             .getTargets();

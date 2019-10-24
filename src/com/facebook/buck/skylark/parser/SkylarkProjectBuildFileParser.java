@@ -186,8 +186,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       // ParseResult.getRawRules() returns ImmutableMap<String, Map<String, Object>>, so it is
       // a safe downcast here
       @SuppressWarnings("unchecked")
-      ImmutableMap<String, Map<String, Object>> targets =
-          (ImmutableMap<String, Map<String, Object>>)
+      ImmutableMap<String, ImmutableMap<String, Object>> targets =
+          (ImmutableMap<String, ImmutableMap<String, Object>>)
               getBuildFileManifestPojoizer().convertToPojo(rawRules);
 
       rulesParsed = targets.size();

@@ -18,14 +18,14 @@ package com.facebook.buck.parser.api;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Map;
 import java.util.Optional;
 
 public class BuildFileManifestFactory {
 
   private BuildFileManifestFactory() {}
 
-  public static BuildFileManifest create(ImmutableMap<String, Map<String, Object>> targets) {
+  public static BuildFileManifest create(
+      ImmutableMap<String, ImmutableMap<String, Object>> targets) {
     return ImmutableBuildFileManifest.of(
         targets,
         ImmutableSortedSet.of(),

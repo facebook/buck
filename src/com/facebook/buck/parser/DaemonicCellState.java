@@ -253,7 +253,8 @@ class DaemonicCellState {
       int invalidatedRawNodes = 0;
       BuildFileManifest buildFileManifest = allBuildFileManifests.getIfPresent(path);
       if (buildFileManifest != null) {
-        ImmutableMap<String, Map<String, Object>> rawNodes = buildFileManifest.getTargets();
+        ImmutableMap<String, ImmutableMap<String, Object>> rawNodes =
+            buildFileManifest.getTargets();
         // Increment the counter
         invalidatedRawNodes = rawNodes.size();
         for (Map<String, Object> rawNode : rawNodes.values()) {

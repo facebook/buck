@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -100,7 +99,7 @@ public class BuildFileManifestCacheTest {
             Paths.get("BUCK"),
             TestProjectFilesystems.createProjectFilesystem(cell1Path).asView());
 
-    ImmutableMap<String, Map<String, Object>> targets =
+    ImmutableMap<String, ImmutableMap<String, Object>> targets =
         ImmutableMap.of(
             "target1", ImmutableMap.of("key1", "val1"), "target2", ImmutableMap.of("key2", 2));
     ImmutableSortedSet<String> includes =

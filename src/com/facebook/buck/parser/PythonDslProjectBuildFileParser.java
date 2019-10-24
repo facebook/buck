@@ -514,18 +514,24 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         ImmutableList.of());
   }
 
-  private static ImmutableMap<String, Map<String, Object>> indexTargetsByName(
+  private static ImmutableMap<String, ImmutableMap<String, Object>> indexTargetsByName(
       ImmutableList<Map<String, Object>> targets) {
-    ImmutableMap.Builder<String, Map<String, Object>> builder =
+    ImmutableMap.Builder<String, ImmutableMap<String, Object>> builder =
         ImmutableMap.builderWithExpectedSize(targets.size());
     targets.forEach(
         target -> builder.put((String) target.get("name"), convertSelectableAttributes(target)));
     return builder.build();
   }
 
-  private static Map<String, Object> convertSelectableAttributes(Map<String, Object> values) {
-    return Maps.transformValues(
-        values, PythonDslProjectBuildFileParser::convertToSelectableAttributeIfNeeded);
+  private static ImmutableMap<String, Object> convertSelectableAttributes(
+      Map<String, Object> values) {
+    return values.entrySet().stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                Map.Entry::getKey,
+                e ->
+                    PythonDslProjectBuildFileParser.convertToSelectableAttributeIfNeeded(
+                        e.getValue())));
   }
 
   /**

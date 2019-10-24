@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -35,7 +34,7 @@ public abstract class BuildFileManifest implements ComputeResult {
   /** @return a list of targets defined in the build file. */
   @Value.Parameter
   @JsonProperty("targets")
-  public abstract ImmutableMap<String, Map<String, Object>> getTargets();
+  public abstract ImmutableMap<String, ImmutableMap<String, Object>> getTargets();
 
   /** @return a set of extension files read during parsing. */
   @Value.Parameter

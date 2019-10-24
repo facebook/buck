@@ -135,9 +135,10 @@ public class HybridCacheStorageTest {
     Path include1 = filesystem.createNewFile(filesystem.getPath("Includes1"));
     Path include2 = filesystem.createNewFile(filesystem.getPath("includes2"));
     ImmutableSortedSet<String> includes = ImmutableSortedSet.of("/Includes1", "/includes2");
-    Map<String, Object> target1 = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
-    Map<String, Object> target2 = ImmutableMap.of("t2K1", "t2V1", "t2K2", "t2V2");
-    Map<String, Map<String, Object>> targets = ImmutableMap.of("tar1", target1, "tar2", target2);
+    ImmutableMap<String, Object> target1 = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
+    ImmutableMap<String, Object> target2 = ImmutableMap.of("t2K1", "t2V1", "t2K2", "t2V2");
+    Map<String, ImmutableMap<String, Object>> targets =
+        ImmutableMap.of("tar1", target1, "tar2", target2);
 
     BuildFileManifest buildFileManifest =
         ImmutableBuildFileManifest.of(
