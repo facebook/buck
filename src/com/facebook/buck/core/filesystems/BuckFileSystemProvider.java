@@ -48,15 +48,23 @@ import java.util.concurrent.ExecutorService;
  */
 public class BuckFileSystemProvider extends FileSystemProvider {
 
-  private FileSystemProvider defaultProvider;
-  private BuckFileSystem fileSystem;
-  private FileSystem defaultFileSystem;
+  private final FileSystemProvider defaultProvider;
+  private final BuckFileSystem fileSystem;
+  private final FileSystem defaultFileSystem;
 
-  public BuckFileSystemProvider(FileSystemProvider defaultProvider) {
+  private BuckFileSystemProvider(FileSystemProvider defaultProvider, FileSystem defaultFileSystem) {
     this.defaultProvider = defaultProvider;
-    this.defaultFileSystem = defaultProvider.getFileSystem(getRootURI(defaultProvider.getScheme()));
+    this.defaultFileSystem = defaultFileSystem;
     String userDir = System.getProperty("user.dir");
     fileSystem = new BuckFileSystem(this, userDir == null ? "" : userDir);
+  }
+
+  public BuckFileSystemProvider(FileSystemProvider defaultProvider) {
+    this(defaultProvider, defaultProvider.getFileSystem(getRootURI(defaultProvider.getScheme())));
+  }
+
+  public BuckFileSystemProvider(FileSystem defaultFileSystem) {
+    this(defaultFileSystem.provider(), defaultFileSystem);
   }
 
   /**

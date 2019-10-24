@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.file;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
@@ -54,6 +55,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class MostFiles {
+
+  private static final Logger LOG = Logger.get(MostFiles.class);
 
   // Extended attribute bits for directories and symlinks; see:
   // http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute
@@ -180,7 +183,11 @@ public final class MostFiles {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                 throws IOException {
-              Files.delete(file);
+              try {
+                Files.delete(file);
+              } catch (IOException e) {
+                LOG.warn("%s, could not delete file", e);
+              }
               return FileVisitResult.CONTINUE;
             }
 
@@ -195,12 +202,13 @@ public final class MostFiles {
                     Files.delete(dir);
                   } catch (DirectoryNotEmptyException notEmpty) {
                     try (Stream<Path> paths = Files.list(dir)) {
-                      throw new IOException(
+                      LOG.warn(
                           String.format(
                               "Could not delete non-empty directory %s. Contents:\n%s",
-                              dir, paths.map(Path::toString).collect(Collectors.joining("\n"))),
-                          notEmpty);
+                              dir, paths.map(Path::toString).collect(Collectors.joining("\n"))));
                     }
+                  } catch (IOException ioException) {
+                    LOG.warn("%s, could not delete directory", ioException);
                   }
                 }
                 return FileVisitResult.CONTINUE;

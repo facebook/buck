@@ -25,6 +25,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.filesystems.BuckFileSystem;
+import com.facebook.buck.testutil.BuckFSProviderDeleteError;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -78,6 +80,49 @@ public class MostFilesTest {
     Files.createDirectories(childDir);
     MostFiles.deleteRecursivelyIfExists(dirToDelete);
     assertThat(Files.exists(dirToDelete), is(false));
+  }
+
+  @Test
+  public void deleteRecursivelyIfExistsWithUndeletableFile() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    BuckFSProviderDeleteError bfsProvider = new BuckFSProviderDeleteError(vfs);
+    BuckFileSystem bfs = new BuckFileSystem(bfsProvider, "/");
+    Path fakeTmpDir = bfs.getPath("/tmp/fake-tmp-dir");
+    Path dirToDelete = fakeTmpDir.resolve("delete-me");
+    Path childDir = dirToDelete.resolve("child-dir");
+    Files.createDirectories(childDir);
+    Path readOnlyFile = dirToDelete.resolve("roFile");
+    Files.createFile(readOnlyFile);
+    Path deletableFile = childDir.resolve("deletableFile");
+    Files.createFile(deletableFile);
+    bfsProvider.setFileToErrorOnDeletion(readOnlyFile);
+
+    MostFiles.deleteRecursivelyIfExists(dirToDelete);
+    assertThat(Files.exists(childDir), is(false));
+    assertThat(Files.exists(dirToDelete), is(true));
+    assertThat(Files.exists(readOnlyFile), is(true));
+  }
+
+  @Test
+  public void deleteRecursivelyIfExistsWithUndeletableDirectory() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    BuckFSProviderDeleteError bfsProvider = new BuckFSProviderDeleteError(vfs);
+    BuckFileSystem bfs = new BuckFileSystem(bfsProvider, "/");
+    Path fakeTmpDir = bfs.getPath("/tmp/fake-tmp-dir");
+    Path dirToDelete = fakeTmpDir.resolve("delete-me");
+    Path childDir = dirToDelete.resolve("child-dir");
+    Files.createDirectories(childDir);
+    Path readOnlyDir = dirToDelete.resolve("roDir");
+    Files.createDirectories(readOnlyDir);
+    bfsProvider.setFileToErrorOnDeletion(readOnlyDir);
+    Path fileInReadOnlyDir = readOnlyDir.resolve("deletableFile");
+    Files.createFile(fileInReadOnlyDir);
+
+    MostFiles.deleteRecursivelyIfExists(dirToDelete);
+    assertThat(Files.exists(childDir), is(false));
+    assertThat(Files.exists(fileInReadOnlyDir), is(false));
+    assertThat(Files.exists(dirToDelete), is(true));
+    assertThat(Files.exists(readOnlyDir), is(true));
   }
 
   @Test
