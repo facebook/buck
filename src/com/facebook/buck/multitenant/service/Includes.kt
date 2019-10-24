@@ -73,6 +73,8 @@ internal fun processIncludes(
  */
 class IncludesMapChangeBuilder(private val previousIncludesMapState: IncludesMapChange) {
 
+    private val forwardMapAddsWithEmptyIncludes: MutableList<Include> = mutableListOf()
+    private val forwardMapRemovals: MutableList<Include> = mutableListOf()
     private val forwardMapDeltas: MutableList<Pair<Include, SetDelta>> = mutableListOf()
     private val reverseMapDeltas: MutableList<Pair<Include, SetDelta>> = mutableListOf()
 
@@ -85,12 +87,16 @@ class IncludesMapChangeBuilder(private val previousIncludesMapState: IncludesMap
      */
     fun processAddedPackage(packagePath: FsAgnosticPath, includes: HashSet<FsAgnosticPath>) {
         // verification that the package is new
-        require(!previousIncludesMapState.forwardMap.containsKey(packagePath)) {
+        require(previousIncludesMapState.forwardMap[packagePath] == null) {
             "New package $packagePath already existed"
         }
-        includes.forEach { include ->
-            appendForwardMap(buildFilePath = packagePath, include = include)
-            appendReverseMap(buildFilePath = packagePath, include = include)
+        if (includes.isEmpty()) {
+            forwardMapAddsWithEmptyIncludes.add(packagePath)
+        } else {
+            includes.forEach { include ->
+                appendForwardMap(buildFilePath = packagePath, include = include)
+                appendReverseMap(buildFilePath = packagePath, include = include)
+            }
         }
     }
 
@@ -104,7 +110,7 @@ class IncludesMapChangeBuilder(private val previousIncludesMapState: IncludesMap
      */
     fun processModifiedPackage(packagePath: FsAgnosticPath, includes: HashSet<FsAgnosticPath>) {
         val previousIncludes = previousIncludesMapState.forwardMap[packagePath]
-        val brandNewIncludes = (previousIncludes == null || previousIncludes.isEmpty()) && includes.isNotEmpty()
+        val brandNewIncludes = previousIncludes.isNullOrEmpty() && includes.isNotEmpty()
         val previousIncludesHashSet =
             previousIncludes?.asSequence()?.map { FsAgnosticPath.fromIndex(it) }?.toHashSet()
                 ?: hashSetOf()
@@ -124,10 +130,13 @@ class IncludesMapChangeBuilder(private val previousIncludesMapState: IncludesMap
      * @param packageToRemove build file directory path that corresponds to the removed package
      */
     fun processRemovedPackage(packageToRemove: FsAgnosticPath) {
-        previousIncludesMapState.forwardMap[packageToRemove]?.forEach { include ->
-            val includePath = FsAgnosticPath.fromIndex(include)
-            removeFromForwardMap(buildFilePath = packageToRemove, include = includePath)
-            removeFromReverseMap(buildFilePath = packageToRemove, include = includePath)
+        val previousIncludes = previousIncludesMapState.forwardMap[packageToRemove]
+        if (previousIncludes != null) {
+            forwardMapRemovals.add(packageToRemove)
+            previousIncludes.forEach { include ->
+                val includePath = FsAgnosticPath.fromIndex(include)
+                removeFromReverseMap(buildFilePath = packageToRemove, include = includePath)
+            }
         }
     }
 
@@ -137,32 +146,39 @@ class IncludesMapChangeBuilder(private val previousIncludesMapState: IncludesMap
     fun build(): IncludesMapChange =
         IncludesMapChange(forwardMap = getForwardMap(), reverseMap = getReverseMap())
 
-    private fun getForwardMap(): Map<Include, MemorySharingIntSet> {
-        return applyUpdates(previousIncludesMapState.forwardMap, forwardMapDeltas)
-    }
+    private fun getForwardMap(): Map<Include, MemorySharingIntSet?> =
+        applyUpdates(
+            previousState = previousIncludesMapState.forwardMap,
+            adds = forwardMapAddsWithEmptyIncludes,
+            updates = forwardMapDeltas,
+            removals = forwardMapRemovals
+        )
 
-    private fun getReverseMap(): Map<Include, MemorySharingIntSet> {
-        return applyUpdates(previousIncludesMapState.reverseMap, reverseMapDeltas)
-    }
+    private fun getReverseMap(): Map<Include, MemorySharingIntSet?> =
+        applyUpdates(
+            previousState = previousIncludesMapState.reverseMap,
+            updates = reverseMapDeltas
+        )
 
     private fun applyUpdates(
-        previousState: Map<Include, MemorySharingIntSet>,
-        updates: List<Pair<Include, SetDelta>>
-    ): Map<Include, MemorySharingIntSet> {
-        if (updates.isEmpty()) {
+        previousState: Map<Include, MemorySharingIntSet?>,
+        adds: List<Include> = emptyList(),
+        updates: List<Pair<Include, SetDelta>>,
+        removals: List<Include> = emptyList()
+    ): Map<Include, MemorySharingIntSet?> {
+        if (adds.isEmpty() && updates.isEmpty() && removals.isEmpty()) {
             return previousState
         }
 
-        val derivedDeltas = deriveDeltas(updates) { previousState[it] }
-        val map = previousState.toMutableMap()
+        val newState = previousState.toMutableMap()
+        adds.forEach { newState[it] = MemorySharingIntSet.empty() }
+        removals.forEach { newState[it] = null }
+
+        val derivedDeltas = deriveDeltas(updates) { newState[it] }
         derivedDeltas.forEach { (path, newSet) ->
-            if (newSet == null) {
-                map.remove(path)
-            } else {
-                map[path] = newSet
-            }
+            newState[path] = newSet
         }
-        return map
+        return newState
     }
 
     private fun appendForwardMap(buildFilePath: FsAgnosticPath, include: Include) {
@@ -175,9 +191,5 @@ class IncludesMapChangeBuilder(private val previousIncludesMapState: IncludesMap
 
     private fun removeFromReverseMap(buildFilePath: FsAgnosticPath, include: Include) {
         reverseMapDeltas.add(include to SetDelta.Remove(FsAgnosticPath.toIndex(buildFilePath)))
-    }
-
-    private fun removeFromForwardMap(buildFilePath: FsAgnosticPath, include: Include) {
-        forwardMapDeltas.add(buildFilePath to SetDelta.Remove(FsAgnosticPath.toIndex(include)))
     }
 }
