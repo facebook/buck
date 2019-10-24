@@ -389,6 +389,11 @@
         description="Go to Buck file for this source file.">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift P"/>
       </action>
+      <action
+          id="buck.CopyTarget"
+          class="com.facebook.buck.intellij.ideabuck.actions.CopyTargetAction"
+          text="Copy Buck Target"
+          description="Copy the Buck target of the current class"/>
       <add-to-group anchor="after" group-id="EditorPopupMenu" relative-to-action="EditorToggleColumnMode"/>
     </group>
 
