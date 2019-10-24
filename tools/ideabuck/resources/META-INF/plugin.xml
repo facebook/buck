@@ -377,7 +377,11 @@
   </extensions>
 
   <actions>
-    <group id="buck.Menu">
+
+    <group
+      id="buck.Menu"
+      popup="true"
+      text="Buck">
       <action
         id="buck.GoToBuckFile"
         class="com.facebook.buck.intellij.ideabuck.actions.GoToBuckFile"
@@ -385,8 +389,7 @@
         description="Go to Buck file for this source file.">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift P"/>
       </action>
-      <add-to-group anchor="first" group-id="EditorPopupMenu.GoTo"/>
-      <add-to-group group-id="GoToMenu" anchor="after" relative-to-action="GoToCodeGroup"/>
+      <add-to-group anchor="after" group-id="EditorPopupMenu" relative-to-action="EditorToggleColumnMode"/>
     </group>
 
     <group id="buck.ToolbarActions">
