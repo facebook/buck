@@ -37,7 +37,8 @@ internal typealias MutableRdepsMap = MutableGenerationMap<BuildTargetId, MemoryS
 internal typealias IncludesMap = GenerationMap<Include, MemorySharingIntSet, Include>
 internal typealias MutableIncludesMap = MutableGenerationMap<Include, MemorySharingIntSet, Include>
 
-fun GenerationMap<Include, MemorySharingIntSet, Include>.toMap(generation: Generation) = getEntries(generation).toMap()
+internal fun GenerationMap<Include, MemorySharingIntSet, Include>.toMap(generation: Generation) =
+    getEntries(generation).toMap()
 
 data class IncludesMapsHolder(val forwardMap: IncludesMap, val reverseMap: IncludesMap)
 data class MutableIncludesMapHolder(

@@ -20,7 +20,7 @@ import io.vavr.collection.Set
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntCollection
 
-private val EMPTY_ANTLERS_INT_SET: MemorySharingIntSet = MemorySharingIntSet.Unique(IntArray(0))
+private val EMPTY_INT_SET: MemorySharingIntSet = MemorySharingIntSet.Unique(IntArray(0))
 
 /**
  * A set of [Int] objects. Note that the type of storage we use depends on a combination of (1) the size of
@@ -29,7 +29,7 @@ private val EMPTY_ANTLERS_INT_SET: MemorySharingIntSet = MemorySharingIntSet.Uni
 sealed class MemorySharingIntSet : Iterable<Int> {
 
     companion object{
-        fun empty(): MemorySharingIntSet = EMPTY_ANTLERS_INT_SET
+        fun empty(): MemorySharingIntSet = EMPTY_INT_SET
     }
 
     abstract val size: Int

@@ -270,7 +270,7 @@ internal class IncludesTest {
             include3 to uniqueSet(packageB),
             include4 to uniqueSet(packageD),
             include5 to uniqueSet(packageB),
-            include6 to null)
+            include6 to uniqueSet())
     }
 
     @Test
@@ -315,9 +315,9 @@ internal class IncludesTest {
         )
         verifyMap(
             includesMapChange1.reverseMap,
-            include2 to null,
-            include3 to null,
-            include6 to null
+            include2 to uniqueSet(),
+            include3 to uniqueSet(),
+            include6 to uniqueSet()
         )
 
         // Process change#2
@@ -348,7 +348,10 @@ internal class IncludesTest {
         )
         verifyMap(
             includesMapChange2.reverseMap,
-            include5 to uniqueSet(packageC)
+            include2 to uniqueSet(),
+            include5 to uniqueSet(packageC),
+            include3 to uniqueSet(),
+            include6 to uniqueSet()
         )
     }
 
