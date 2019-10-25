@@ -47,6 +47,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -87,9 +88,13 @@ public class AppleLibraryDescriptionTest {
     assertThat(builder.build().getExtraDeps(), Matchers.hasItem(dep.getBuildTarget()));
     BuildRule binary = builder.build(graphBuilder);
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
+
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs(), graphBuilder.getSourcePathResolver()),
-        Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        Matchers.hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath)));
     assertThat(binary.getBuildDeps(), Matchers.hasItem(dep));
   }
 

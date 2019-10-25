@@ -133,14 +133,14 @@ public class CxxGenruleDescriptionTest {
           Joiner.on(' ')
               .join(
                   Arg.stringify(
-                      ImmutableList.of(genrule.getCmd().get()),
+                      ImmutableList.of(genrule.getBuildable().getCmd().get()),
                       graphBuilder.getSourcePathResolver())),
           Matchers.containsString("-a"));
       assertThat(
           Joiner.on(' ')
               .join(
                   Arg.stringify(
-                      ImmutableList.of(genrule.getCmd().get()),
+                      ImmutableList.of(genrule.getBuildable().getCmd().get()),
                       graphBuilder.getSourcePathResolver())),
           Matchers.not(Matchers.containsString("-b")));
     }
@@ -170,7 +170,7 @@ public class CxxGenruleDescriptionTest {
         Joiner.on(' ')
             .join(
                 Arg.stringify(
-                    ImmutableList.of(genrule.getCmd().get()),
+                    ImmutableList.of(genrule.getBuildable().getCmd().get()),
                     graphBuilder.getSourcePathResolver())),
         Matchers.containsString("-cppflag -cxxppflag"));
   }
@@ -199,7 +199,7 @@ public class CxxGenruleDescriptionTest {
           Joiner.on(' ')
               .join(
                   Arg.stringify(
-                      ImmutableList.of(genrule.getCmd().get()),
+                      ImmutableList.of(genrule.getBuildable().getCmd().get()),
                       graphBuilder.getSourcePathResolver())),
           Matchers.containsString(expected));
     }
@@ -300,7 +300,7 @@ public class CxxGenruleDescriptionTest {
                 .orElseThrow(AssertionError::new);
     assertThat(
         Arg.stringify(
-            RichStream.from(genrule.getCmd()).toOnceIterable(),
+            RichStream.from(genrule.getBuildable().getCmd()).toOnceIterable(),
             graphBuilder.getSourcePathResolver()),
         Matchers.contains(
             graphBuilder
