@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
@@ -27,6 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -169,20 +169,14 @@ class FileInputsAdder {
    * operations.
    */
   public abstract static class AbstractDelegate implements Delegate {
-    private ProjectFilesystemView projectFilesystemView;
-
-    public AbstractDelegate(ProjectFilesystemView projectFilesystemView) {
-      this.projectFilesystemView = projectFilesystemView;
-    }
-
     @Override
     public Iterable<Path> getDirectoryContents(Path target) throws IOException {
       if (!Files.isDirectory(target)) {
         return null;
       }
-      return projectFilesystemView.getDirectoryContents(target).stream()
-          .map(projectFilesystemView::resolve)
-          .collect(Collectors.toList());
+      try (Stream<Path> listing = Files.list(target)) {
+        return listing.collect(Collectors.toList());
+      }
     }
 
     @Override

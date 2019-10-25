@@ -18,15 +18,11 @@ package com.facebook.buck.rules.modern.builders;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.filesystem.FileExtensionMatcher;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.modern.builders.FileInputsAdder.AbstractDelegate;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.MoreIterables;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,7 +40,6 @@ public class FileInputsAdderTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  ProjectFilesystem projectFilesystem;
   private final Map<Path, HashCode> fileHashes = new HashMap<>();
 
   private FileInputsAdder adder;
@@ -92,13 +87,9 @@ public class FileInputsAdderTest {
 
   @Before
   public void setUp() {
-    projectFilesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     adder =
         new FileInputsAdder(
-            new AbstractDelegate(
-                projectFilesystem
-                    .asView()
-                    .withView(Paths.get(""), ImmutableSet.of(FileExtensionMatcher.of("ignore")))) {
+            new AbstractDelegate() {
               @Override
               public void addFile(Path path) {
                 computeDirectory(path)
@@ -161,26 +152,13 @@ public class FileInputsAdderTest {
 
     fileHashes.put(file1, HashCode.fromInt(1));
     fileHashes.put(file2, HashCode.fromInt(2));
-    adder.addInput(subdir.toAbsolutePath());
+    adder.addInput(subdir);
+
+    Directory result = rootDirectory;
 
     new Directory()
         .addChild("subdir1", new Directory().addFile("file1", 1).addFile("file2", 2))
-        .assertSame(rootDirectory);
-  }
-
-  @Test
-  public void testAddDirectoryWithIgnores() throws IOException {
-    Path subdir = tmp.newFolder("subdir1");
-    Path file1 = tmp.newFile("subdir1/file1");
-    Path file2 = tmp.newFile("subdir1/file2.ignore");
-
-    fileHashes.put(file1, HashCode.fromInt(1));
-    fileHashes.put(file2, HashCode.fromInt(2));
-    adder.addInput(subdir.toAbsolutePath());
-
-    new Directory()
-        .addChild("subdir1", new Directory().addFile("file1", 1))
-        .assertSame(rootDirectory);
+        .assertSame(result);
   }
 
   @Test
@@ -194,10 +172,11 @@ public class FileInputsAdderTest {
 
     adder.addInput(link1);
 
+    Directory result = rootDirectory;
     new Directory()
         .addChild("subdir1", new Directory().addSymlink("link1", "../file1"))
         .addFile("file1", 1)
-        .assertSame(rootDirectory);
+        .assertSame(result);
   }
 
   @Test
@@ -208,7 +187,9 @@ public class FileInputsAdderTest {
 
     adder.addInput(link1);
 
-    new Directory().addSymlink("link1", absoluteTarget.toString()).assertSame(rootDirectory);
+    Directory result = rootDirectory;
+
+    new Directory().addSymlink("link1", absoluteTarget.toString()).assertSame(result);
   }
 
   @Test

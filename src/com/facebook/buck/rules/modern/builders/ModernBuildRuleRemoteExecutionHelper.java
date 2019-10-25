@@ -30,7 +30,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
@@ -395,8 +394,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       allNodes.add(
           getSerializationTreeAndInputs(hash, requiredDataPredicate, requiredDataBuilder::add));
 
-      MerkleTreeNode inputsMerkleTree =
-          resolveInputs(inputsMapBuilder.getInputs(rule), rule.getProjectFilesystem());
+      MerkleTreeNode inputsMerkleTree = resolveInputs(inputsMapBuilder.getInputs(rule));
 
       allNodes.add(inputsMerkleTree);
       getFileInputs(inputsMerkleTree, requiredDataPredicate, requiredDataBuilder::add);
@@ -505,14 +503,14 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   private final ConcurrentHashMap<Data, MerkleTreeNode> resolvedInputsCache =
       new ConcurrentHashMap<>();
 
-  private MerkleTreeNode resolveInputs(Data inputs, ProjectFilesystem projectFilesystem) {
+  private MerkleTreeNode resolveInputs(Data inputs) {
     MerkleTreeNode cached = resolvedInputsCache.get(inputs);
     if (cached != null) {
       return cached;
     }
 
     // Ensure the children are computed.
-    inputs.getChildren().forEach(child -> resolveInputs(child, projectFilesystem));
+    inputs.getChildren().forEach(this::resolveInputs);
 
     return resolvedInputsCache.computeIfAbsent(
         inputs,
@@ -524,10 +522,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
             FileInputsAdder inputsAdder =
                 new FileInputsAdder(
-                    new FileInputsAdder.AbstractDelegate(
-                        projectFilesystem
-                            .asView()
-                            .withView(Paths.get(""), projectFilesystem.getIgnorePaths())) {
+                    new FileInputsAdder.AbstractDelegate() {
                       @Override
                       public void addFile(Path path) throws IOException {
                         files.put(
@@ -563,9 +558,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
             List<MerkleTreeNode> nodes = new ArrayList<>();
             nodes.add(nodeCache.createNode(files, symlinks, emptyDirectories));
 
-            inputs
-                .getChildren()
-                .forEach(child -> nodes.add(resolveInputs(child, projectFilesystem)));
+            inputs.getChildren().forEach(child -> nodes.add(resolveInputs(child)));
             return nodeCache.mergeNodes(nodes);
           } catch (IOException e) {
             throw new BuckUncheckedExecutionException(e);
