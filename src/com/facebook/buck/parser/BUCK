@@ -10,6 +10,7 @@ java_immutables_library(
         "//src/com/facebook/buck/parser/api:api",
         "//src/com/facebook/buck/parser/config:config",
         "//src/com/facebook/buck/parser/implicit:implicit",
+        "//src/com/facebook/buck/parser/spec:spec",
     ],
     tests = [
         "//test/com/facebook/buck/parser:integration",

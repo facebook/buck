@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolver;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.function.Predicate;

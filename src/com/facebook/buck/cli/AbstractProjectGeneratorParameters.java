@@ -17,7 +17,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.config.Config;

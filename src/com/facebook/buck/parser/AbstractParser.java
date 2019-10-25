@@ -33,6 +33,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;

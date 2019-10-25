@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.parser.spec;
 
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.google.common.base.Preconditions;

@@ -26,6 +26,8 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.parser.spec.BuildFileSpec;
+import com.facebook.buck.parser.spec.ImmutableTargetNodePredicateSpec;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.caliper.AfterExperiment;
 import com.google.caliper.BeforeExperiment;
