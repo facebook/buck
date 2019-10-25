@@ -205,7 +205,8 @@ public class GenruleBuildable implements Buildable {
     this.androidTools = androidTools;
 
     // Sanity check for the output path.
-    Path legacyBasePath = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(out);
+    Path legacyBasePath =
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(out).normalize();
     if (legacyBasePath.isAbsolute() || out.isEmpty()) {
       throw new HumanReadableException(
           "The 'out' parameter of genrule %s is '%s', which is not a valid file name.",
