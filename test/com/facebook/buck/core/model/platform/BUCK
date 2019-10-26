@@ -13,3 +13,12 @@ java_library(
     ],
     visibility = ["//test/..."],
 )
+
+standard_java_test(
+    name = "platform",
+    deps = [
+        "//src/com/facebook/buck/core/model/platform:platform",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

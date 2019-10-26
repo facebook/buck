@@ -21,6 +21,8 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.platform.ConstraintValue;
+import com.facebook.buck.core.model.platform.ConstraintValueUtil;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -79,6 +81,14 @@ public class ConfigSettingDescription
                         ConstraintValueRule.class,
                         dependencyStack.child(constraintValue)))
             .collect(ImmutableSet.toImmutableSet());
+
+    ImmutableSet<ConstraintValue> constraintValues =
+        constraintValueRules.stream()
+            .map(ConstraintValueRule::getConstraintValue)
+            .collect(ImmutableSet.toImmutableSet());
+    ConstraintValueUtil.validateUniqueConstraintSettings(
+        "config_setting", buildTarget, dependencyStack, constraintValues);
+
     return new ConfigSettingRule(buildTarget, arg.getValues(), constraintValueRules);
   }
 

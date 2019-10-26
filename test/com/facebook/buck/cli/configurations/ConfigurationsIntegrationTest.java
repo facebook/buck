@@ -428,4 +428,20 @@ public class ConfigurationsIntegrationTest {
     ProcessResult result = workspace.runBuckBuild("//:j-with-default-t-p");
     result.assertSuccess();
   }
+
+  @Test
+  public void configSettingUniqueConstraintSettings() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "config_setting_unique", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckBuild("--target-platforms=//:p", "//:j");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "in config_setting rule //:c: "
+                + "Duplicate constraint values detected: "
+                + "constraint_setting //:pet has [//:cat, //:dog]"));
+  }
 }
