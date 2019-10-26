@@ -1,0 +1,25 @@
+constraint_setting(
+    name = "pet",
+)
+
+constraint_value(
+    name = "dog",
+    constraint_setting = ":pet",
+)
+
+constraint_value(
+    name = "cat",
+    constraint_setting = ":pet",
+)
+
+java_library(
+    name = "j",
+)
+
+platform(
+    name = "p",
+    constraint_values = [
+        ":cat",
+        ":dog",
+    ],
+)

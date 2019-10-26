@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.platform.ConstraintValueUtil;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -76,6 +77,14 @@ public class PlatformDescription
                         ConstraintValueRule.class,
                         dependencyStack.child(constraintValue)))
             .collect(ImmutableSet.toImmutableSet());
+
+    ConstraintValueUtil.validateUniqueConstraintSettings(
+        "platform",
+        buildTarget,
+        dependencyStack,
+        constraintValueRules.stream()
+            .map(ConstraintValueRule::getConstraintValue)
+            .collect(ImmutableSet.toImmutableSet()));
 
     return PlatformRule.of(
         buildTarget,

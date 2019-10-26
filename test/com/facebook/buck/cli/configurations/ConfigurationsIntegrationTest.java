@@ -444,4 +444,20 @@ public class ConfigurationsIntegrationTest {
                 + "Duplicate constraint values detected: "
                 + "constraint_setting //:pet has [//:cat, //:dog]"));
   }
+
+  @Test
+  public void platformUniqueConstraintSettings() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "platform_unique", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckBuild("--target-platforms=//:p", "//:j");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "in platform rule //:p: "
+                + "Duplicate constraint values detected: "
+                + "constraint_setting //:pet has [//:cat, //:dog]"));
+  }
 }
