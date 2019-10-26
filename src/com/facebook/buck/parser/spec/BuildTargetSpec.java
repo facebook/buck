@@ -18,13 +18,16 @@ package com.facebook.buck.parser.spec;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.stream.StreamSupport;
 import org.immutables.value.Value;
 
@@ -32,9 +35,22 @@ import org.immutables.value.Value;
 @Value.Immutable(builder = false, copy = false)
 public abstract class BuildTargetSpec implements TargetNodeSpec {
 
-  /** @return Build target to match with this spec */
+  /** @return Build target to match with this spec and its output label, if any */
   @Value.Parameter
-  public abstract UnconfiguredBuildTargetView getUnconfiguredBuildTargetView();
+  public abstract UnconfiguredBuildTargetWithOutputs getUnconfiguredBuildTargetViewWithOutputs();
+
+  public UnconfiguredBuildTargetView getUnconfiguredBuildTargetView() {
+    return getUnconfiguredBuildTargetViewWithOutputs().getBuildTarget();
+  }
+
+  /** Returns a {@code BuildTargetSpec} with an empty output label. */
+  public static BuildTargetSpec of(
+      UnconfiguredBuildTargetView unconfiguredBuildTargetView, BuildFileSpec buildFileSpec) {
+    return ImmutableBuildTargetSpec.of(
+        ImmutableUnconfiguredBuildTargetWithOutputs.of(
+            unconfiguredBuildTargetView, Optional.empty()),
+        buildFileSpec);
+  }
 
   @Override
   @Value.Parameter
