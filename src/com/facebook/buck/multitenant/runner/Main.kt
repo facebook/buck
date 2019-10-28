@@ -27,6 +27,7 @@ import java.io.InputStream
 import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.LocalDateTime
 import kotlin.system.measureTimeMillis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -149,7 +150,10 @@ private fun nanosToNowInSec(start: Long): Long {
     return (System.nanoTime() - start) / NANOS_IN_SEC
 }
 
-private fun msg(message: String) = System.err.println(message)
+private fun msg(message: String) {
+    System.err.println("[${LocalDateTime.now()}] $message")
+    System.err.flush()
+}
 
 private fun createOutputFromDescriptor(out: String): Output {
     return when (out) {

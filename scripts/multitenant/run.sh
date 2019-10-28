@@ -24,5 +24,10 @@
 # debugging: -J-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8888
 
 TARGET=$(buck build //src/com/facebook/buck/multitenant/runner:runner --show-output | awk '{print $2}')
-kotlin -cp $TARGET -J-Xmx16G -J-XX:+UseG1GC com.facebook.buck.multitenant.runner.MainKt "$@"
+kotlin -cp $TARGET \
+-J-Xmx16G \
+-J-XX:+UseG1GC \
+-J-XX:StringTableSize=1000003 \
+com.facebook.buck.multitenant.runner.MainKt \
+"$@"
 
