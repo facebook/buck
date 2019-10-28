@@ -403,5 +403,5 @@ internal class IncludesTest {
     private fun uniqueSet(vararg values: FsAgnosticPath): MemorySharingIntSet.Unique =
         MemorySharingIntSet.Unique(values.map {
             checkNotNull(FsAgnosticPath.toIndex(it))
-        }.toIntArray())
+        }.toIntArray().sortedArray())
 }

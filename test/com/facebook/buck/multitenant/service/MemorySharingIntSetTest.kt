@@ -19,6 +19,8 @@ package com.facebook.buck.multitenant.service
 import io.vavr.collection.HashSet
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MemorySharingIntSetTest {
@@ -205,9 +207,21 @@ class MemorySharingIntSetTest {
                 expected.size())
         assertEquals(expected, asPersistentValues(set))
     }
+
+    @Test
+    @SuppressWarnings("MagicNumber")
+    fun contains() {
+        val uniqueSet = uniqueSet(10, 20, 30, 40, 50, 60)
+        assertTrue(uniqueSet.contains(40))
+        assertFalse(uniqueSet.contains(35))
+
+        val persistentSet = MemorySharingIntSet.Persistent(HashSet.ofAll(uniqueSet.values.toSet()))
+        assertTrue(persistentSet.contains(40))
+        assertFalse(persistentSet.contains(35))
+    }
 }
 
-private fun uniqueSet(vararg ids: Int): MemorySharingIntSet.Unique = MemorySharingIntSet.Unique(ids)
+private fun uniqueSet(vararg ids: Int) = MemorySharingIntSet.Unique(ids)
 private fun add(id: Int): SetDelta = SetDelta.Add(id)
 private fun remove(id: Int): SetDelta = SetDelta.Remove(id)
 

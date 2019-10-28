@@ -28,11 +28,16 @@ private val EMPTY_INT_SET: MemorySharingIntSet = MemorySharingIntSet.Unique(IntA
  */
 sealed class MemorySharingIntSet : Iterable<Int> {
 
-    companion object{
+    companion object {
         fun empty(): MemorySharingIntSet = EMPTY_INT_SET
     }
 
     abstract val size: Int
+
+    /**
+     * Returns `true` if [element] is found in the [MemorySharingIntSet].
+     */
+    abstract fun contains(element: Int): Boolean
 
     /**
      * Custom method for adding the values in this set to an [IntCollection]. This gives the
@@ -62,8 +67,15 @@ sealed class MemorySharingIntSet : Iterable<Int> {
      * Unique representation of a [IntArray] that does not share any memory with another [MemorySharingIntSet].
      */
     class Unique(val values: IntArray) : MemorySharingIntSet() {
+        init {
+            check(values.asSequence().zipWithNext { a, b -> a <= b }.all { it }) {
+                "IntArray must be sorted"
+            }
+        }
+
         override val size: Int get() = values.size
         override fun iterator(): Iterator<Int> = IntArrayList.wrap(values).iterator()
+        override fun contains(element: Int): Boolean = values.binarySearch(element) in 0 until size
     }
 
     /**
@@ -73,6 +85,7 @@ sealed class MemorySharingIntSet : Iterable<Int> {
     class Persistent(val values: Set<Int>) : MemorySharingIntSet() {
         override val size: Int get() = values.size()
         override fun iterator(): Iterator<Int> = values.iterator()
+        override fun contains(element: Int): Boolean = values.contains(element)
     }
 }
 
@@ -111,10 +124,10 @@ fun <T> deriveDeltas(
  */
 private fun <T> groupDeltasByKey(deltas: List<Pair<T, SetDelta>>): Map<T, MutableList<SetDelta>> {
     /**
-     [out] is effectively a multimap, but none of the Guava [ListMultimap]
-     implementations work for us here because we want to be able to sort the [List] for each
-     entry when we are done populating the map and Guava's [ListMultimap] returns the [List] for
-     each entry as an unmodifiable view.
+    [out] is effectively a multimap, but none of the Guava [ListMultimap]
+    implementations work for us here because we want to be able to sort the [List] for each
+    entry when we are done populating the map and Guava's [ListMultimap] returns the [List] for
+    each entry as an unmodifiable view.
      */
     val out = mutableMapOf<T, MutableList<SetDelta>>()
     deltas.forEach { (value, setDelta) ->
