@@ -18,6 +18,8 @@ package com.facebook.buck.features.project.intellij;
 
 import static com.facebook.buck.features.project.intellij.IjProjectPaths.getUrl;
 
+import com.facebook.buck.android.AndroidLibraryDescription;
+import com.facebook.buck.android.AndroidLibraryDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.features.project.intellij.model.ContentRoot;
@@ -51,7 +53,9 @@ public class IjProjectWriter {
   static final String INTELLIJ_TYPE = "intellij.type";
   static final String INTELLIJ_NAME = "intellij.name";
   static final String INTELLIJ_FILE_PATH = "intellij.file_path";
+  static final String MODULE_LANG = "module.lang";
   static final String MODULE_TYPE = "module";
+  static final String BUCK_TYPE = "buck.type";
   static final String LIBRARY_TYPE = "library";
 
   private final TargetGraph targetGraph;
@@ -144,7 +148,10 @@ public class IjProjectWriter {
                         targetInfo.put(
                             INTELLIJ_FILE_PATH,
                             projectPaths.getModuleImlFilePath(module).toString());
-                        targetInfo.put("buck.type", getRuleNameForBuildTarget(target));
+                        targetInfo.put(BUCK_TYPE, getRuleNameForBuildTarget(target));
+                        getModuleLang(target)
+                            .ifPresent(
+                                moduleLang -> targetInfo.put(MODULE_LANG, moduleLang.toString()));
                         targetInfoMap.put(target.getFullyQualifiedName(), targetInfo);
                       });
             });
@@ -162,7 +169,7 @@ public class IjProjectWriter {
                         targetInfo.put(
                             INTELLIJ_FILE_PATH,
                             projectPaths.getLibraryXmlFilePath(library).toString());
-                        targetInfo.put("buck.type", getRuleNameForBuildTarget(target));
+                        targetInfo.put(BUCK_TYPE, getRuleNameForBuildTarget(target));
                         targetInfoMap.put(target.getFullyQualifiedName(), targetInfo);
                       });
             });
@@ -181,6 +188,14 @@ public class IjProjectWriter {
 
   private String getRuleNameForBuildTarget(BuildTarget buildTarget) {
     return targetGraph.get(buildTarget).getRuleType().getName();
+  }
+
+  private Optional<AndroidLibraryDescription.JvmLanguage> getModuleLang(BuildTarget buildTarget) {
+    if (targetGraph.get(buildTarget).getConstructorArg() instanceof AndroidLibraryDescriptionArg) {
+      return ((AndroidLibraryDescriptionArg) (targetGraph.get(buildTarget).getConstructorArg()))
+          .getLanguage();
+    }
+    return Optional.empty();
   }
 
   private boolean writeModule(IjModule module, ImmutableList<ContentRoot> contentRoots)

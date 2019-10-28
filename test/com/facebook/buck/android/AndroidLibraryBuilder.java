@@ -110,4 +110,9 @@ public class AndroidLibraryBuilder
     getArgForPopulating().addSrcs(PathSourcePath.of(new FakeProjectFilesystem(), path));
     return this;
   }
+
+  public AndroidLibraryBuilder setLanguage(AndroidLibraryDescription.JvmLanguage jvmLanguage) {
+    getArgForPopulating().setLanguage(jvmLanguage);
+    return this;
+  }
 }

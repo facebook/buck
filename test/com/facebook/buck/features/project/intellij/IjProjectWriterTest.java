@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidLibraryBuilder;
+import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -253,6 +255,50 @@ public class IjProjectWriterTest {
         targetInfoMap);
   }
 
+  @Test
+  public void testTargetInfoWithJvmLanguage() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    getWriterForModuleGraphWithGivenJvmLanguage(
+            filesystem, filesystem, AndroidLibraryDescription.JvmLanguage.KOTLIN)
+        .write();
+    Map<String, Map<String, String>> targetInfoMap =
+        readJson(
+            filesystem,
+            TARGET_INFO_MAP_JSON,
+            new TypeReference<Map<String, Map<String, String>>>() {});
+    boolean isWindows = Platform.detect() == Platform.WINDOWS;
+
+    assertEquals(
+        ImmutableMap.of(
+            "//java/com/example/base2:base2",
+            ImmutableMap.of(
+                "buck.type",
+                "android_library",
+                IjProjectWriter.INTELLIJ_FILE_PATH,
+                isWindows
+                    ? "java\\com\\example\\base2\\java_com_example_base2.iml"
+                    : "java/com/example/base2/java_com_example_base2.iml",
+                IjProjectWriter.INTELLIJ_NAME,
+                "java_com_example_base2",
+                IjProjectWriter.INTELLIJ_TYPE,
+                IjProjectWriter.MODULE_TYPE),
+            "//java/com/example/base:base",
+            ImmutableMap.of(
+                "buck.type",
+                "android_library",
+                IjProjectWriter.INTELLIJ_FILE_PATH,
+                isWindows
+                    ? "java\\com\\example\\base\\java_com_example_base.iml"
+                    : "java/com/example/base/java_com_example_base.iml",
+                IjProjectWriter.INTELLIJ_NAME,
+                "java_com_example_base",
+                IjProjectWriter.INTELLIJ_TYPE,
+                IjProjectWriter.MODULE_TYPE,
+                IjProjectWriter.MODULE_LANG,
+                "KOTLIN")),
+        targetInfoMap);
+  }
+
   private IjProjectWriter getWriterForModuleGraph1(
       ProjectFilesystem filesystem, ProjectFilesystem outFileSystem) {
     TargetNode<?> guavaTargetNode =
@@ -292,6 +338,31 @@ public class IjProjectWriterTest {
     ImmutableSet<TargetNode<?>> targetNodes = ImmutableSet.of(baseTargetNode, base2TargetNode);
     return writer(
         filesystem,
+        outFileSystem,
+        TargetGraphFactory.newInstance(targetNodes),
+        IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode, base2TargetNode)));
+  }
+
+  private IjProjectWriter getWriterForModuleGraphWithGivenJvmLanguage(
+      ProjectFilesystem inFilesystem,
+      ProjectFilesystem outFileSystem,
+      AndroidLibraryDescription.JvmLanguage jvmLanguage) {
+    TargetNode<?> baseTargetNode =
+        AndroidLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/example/base:base"))
+            .addSrc(Paths.get("java/com/example/android/AndroidLib.java"))
+            .setLanguage(jvmLanguage)
+            .build();
+
+    TargetNode<?> base2TargetNode =
+        AndroidLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/example/base2:base2"))
+            .addSrc(Paths.get("java/com/example/base/Base.java"))
+            .build();
+    ImmutableSet<TargetNode<?>> targetNodes = ImmutableSet.of(baseTargetNode, base2TargetNode);
+
+    return writer(
+        inFilesystem,
         outFileSystem,
         TargetGraphFactory.newInstance(targetNodes),
         IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode, base2TargetNode)));
