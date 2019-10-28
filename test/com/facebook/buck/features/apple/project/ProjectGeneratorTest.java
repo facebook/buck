@@ -507,7 +507,7 @@ public class ProjectGeneratorTest {
             appleFlavors,
             platformSources,
             platformHeadersIterable,
-            Paths.get("."),
+            Paths.get(".."),
             graphBuilder.getSourcePathResolver());
 
     ImmutableSet.Builder<String> excludedResultsBuilder = ImmutableSet.builder();

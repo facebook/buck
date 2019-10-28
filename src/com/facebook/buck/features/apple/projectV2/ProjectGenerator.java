@@ -95,6 +95,7 @@ import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.features.halide.HalideLibraryDescription;
 import com.facebook.buck.features.halide.HalideLibraryDescriptionArg;
 import com.facebook.buck.io.MoreProjectFilesystems;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -468,10 +469,9 @@ public class ProjectGenerator {
 
         // Set the cell root relative to the source root for each configuration.
         Path cellRootRelativeToSourceRoot =
-            projectCell
-                .getRoot()
-                .resolve(xcodeProjectWriteOptions.sourceRoot())
-                .relativize(projectCell.getRoot());
+            MorePaths.relativizeWithDotDotSupport(
+                projectCell.getRoot().resolve(xcodeProjectWriteOptions.sourceRoot()),
+                projectCell.getRoot());
         projectBuildSettings.put(
             BUCK_CELL_RELATIVE_PATH, cellRootRelativeToSourceRoot.normalize().toString());
 
@@ -1046,7 +1046,8 @@ public class ProjectGenerator {
   private static String sourceNameRelativeToOutput(
       SourcePath source, SourcePathResolver pathResolver, Path outputDirectory) {
     Path pathRelativeToCell = pathResolver.getRelativePath(source);
-    Path pathRelativeToOutput = outputDirectory.relativize(pathRelativeToCell);
+    Path pathRelativeToOutput =
+        MorePaths.relativizeWithDotDotSupport(outputDirectory, pathRelativeToCell);
     return pathRelativeToOutput.toString();
   }
 

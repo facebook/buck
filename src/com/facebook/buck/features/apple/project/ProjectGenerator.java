@@ -1127,7 +1127,8 @@ public class ProjectGenerator {
   private static String sourceNameRelativeToOutput(
       SourcePath source, SourcePathResolver pathResolver, Path outputDirectory) {
     Path pathRelativeToCell = pathResolver.getRelativePath(source);
-    Path pathRelativeToOutput = outputDirectory.relativize(pathRelativeToCell);
+    Path pathRelativeToOutput =
+        MorePaths.relativizeWithDotDotSupport(outputDirectory, pathRelativeToCell);
     return pathRelativeToOutput.toString();
   }
 
@@ -3191,16 +3192,16 @@ public class ProjectGenerator {
 
   private Path getHeaderMapRelativeSymlinkPathForEntry(
       Map.Entry<Path, ?> entry, Path headerSymlinkTreeRoot) {
-    return projectCell
-        .getFilesystem()
-        .resolve(projectCell.getFilesystem().getBuckPaths().getConfiguredBuckOut())
-        .normalize()
-        .relativize(
-            projectCell
-                .getFilesystem()
-                .resolve(headerSymlinkTreeRoot)
-                .resolve(entry.getKey())
-                .normalize());
+    return MorePaths.relativizeWithDotDotSupport(
+        projectCell
+            .getFilesystem()
+            .resolve(projectCell.getFilesystem().getBuckPaths().getConfiguredBuckOut())
+            .normalize(),
+        projectCell
+            .getFilesystem()
+            .resolve(headerSymlinkTreeRoot)
+            .resolve(entry.getKey())
+            .normalize());
   }
 
   private HashCode getHeaderSymlinkTreeHashCode(
@@ -3606,7 +3607,8 @@ public class ProjectGenerator {
     if (options.shouldUseAbsoluteHeaderMapPaths()) {
       return treeRoot;
     } else {
-      return projectFilesystem.resolve(outputDirectory).relativize(treeRoot);
+      return MorePaths.relativizeWithDotDotSupport(
+          projectFilesystem.resolve(outputDirectory), treeRoot);
     }
   }
 
@@ -3758,17 +3760,12 @@ public class ProjectGenerator {
               builder.add(buckOut.toAbsolutePath().normalize());
             } else {
               builder.add(
-                  targetNode
-                      .getFilesystem()
-                      .resolve(outputDirectory)
-                      .relativize(
-                          nativeNode
-                              .getFilesystem()
-                              .resolve(
-                                  nativeNode
-                                      .getFilesystem()
-                                      .getBuckPaths()
-                                      .getConfiguredBuckOut())));
+                  MorePaths.relativizeWithDotDotSupport(
+                      targetNode.getFilesystem().resolve(outputDirectory),
+                      nativeNode
+                          .getFilesystem()
+                          .resolve(
+                              nativeNode.getFilesystem().getBuckPaths().getConfiguredBuckOut())));
             }
           });
     }
