@@ -1,0 +1,10 @@
+genrule(
+    name = "foo",
+    out = "out.txt",
+    cmd = select({
+        # No space before `>` is for Windows compatibility
+        "//:foo-c": "echo foo-p> $OUT",
+        "//:bar-c": "echo bar-p> $OUT",
+        "DEFAULT": "echo default-p> $OUT",
+    }),
+)

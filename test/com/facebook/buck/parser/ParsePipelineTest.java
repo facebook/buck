@@ -47,6 +47,7 @@ import com.facebook.buck.parser.api.BuildFileManifestFactory;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.config.ParserConfig;
+import com.facebook.buck.parser.detector.TargetConfigurationDetectorFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -472,6 +473,7 @@ public class ParsePipelineTest {
               this.targetNodeParsePipelineCache,
               this.executorService,
               unconfiguredTargetNodePipeline,
+              TargetConfigurationDetectorFactory.empty(),
               this.eventBus,
               "raw_target_node_parse_pipeline",
               speculativeParsing == SpeculativeParsing.ENABLED,

@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -39,6 +40,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.config.ParserConfig;
+import com.facebook.buck.parser.detector.TargetConfigurationDetector;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.types.Pair;
@@ -67,6 +69,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   private final boolean speculativeDepsTraversal;
   private final UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline;
   private final ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory;
+  private final TargetConfigurationDetector targetConfigurationDetector;
   private final boolean requireTargetPlatform;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory;
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
@@ -89,6 +92,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       Cache<BuildTarget, TargetNode<?>> cache,
       ListeningExecutorService executorService,
       UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline,
+      TargetConfigurationDetector targetConfigurationDetector,
       BuckEventBus eventBus,
       String pipelineName,
       boolean speculativeDepsTraversal,
@@ -97,6 +101,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       boolean requireTargetPlatform) {
     this.executorService = executorService;
     this.unconfiguredTargetNodePipeline = unconfiguredTargetNodePipeline;
+    this.targetConfigurationDetector = targetConfigurationDetector;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
     this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
     this.requireTargetPlatform = requireTargetPlatform;
@@ -292,33 +297,9 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     if (unconfiguredTargetNode.getRuleType().getKind() == AbstractRuleType.Kind.CONFIGURATION) {
       targetConfiguration = ConfigurationForConfigurationTargets.INSTANCE;
     } else {
-      targetConfiguration = globalTargetConfiguration;
-      if (!globalTargetConfiguration.getConfigurationTarget().isPresent()) {
-        // We use `default_target_platform` only when global platform is not specified
-        String defaultTargetPlatform =
-            (String)
-                unconfiguredTargetNode
-                    .getAttributes()
-                    .get(BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
-        if (defaultTargetPlatform != null && !defaultTargetPlatform.isEmpty()) {
-          UnconfiguredBuildTargetView configurationTarget =
-              unconfiguredBuildTargetViewFactory.createForBaseName(
-                  cell.getCellPathResolver(),
-                  unconfiguredTarget.getBaseName(),
-                  defaultTargetPlatform);
-          targetConfiguration =
-              ImmutableRuleBasedTargetConfiguration.of(
-                  ConfigurationBuildTargets.convert(configurationTarget));
-        } else {
-          if (requireTargetPlatform) {
-            throw new HumanReadableException(
-                "parser.require_target_platform=true, "
-                    + "but global --target-platforms= is not specified "
-                    + "and target %s does not specify default_target_platform",
-                unconfiguredTarget);
-          }
-        }
-      }
+      targetConfiguration =
+          targetConfigurationForBuildTarget(
+              cell, unconfiguredTarget, globalTargetConfiguration, unconfiguredTargetNode);
     }
     BuildTarget configuredTarget = unconfiguredTarget.configure(targetConfiguration);
     return getNodeJobWithRawNode(
@@ -326,6 +307,49 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
         configuredTarget,
         DependencyStack.top(configuredTarget),
         Optional.of(unconfiguredTargetNode));
+  }
+
+  private TargetConfiguration targetConfigurationForBuildTarget(
+      Cell cell,
+      UnconfiguredBuildTargetView unconfiguredTarget,
+      TargetConfiguration globalTargetConfiguration,
+      UnconfiguredTargetNode unconfiguredTargetNode) {
+    if (globalTargetConfiguration.getConfigurationTarget().isPresent()) {
+      return globalTargetConfiguration;
+    }
+
+    // We use `default_target_platform` only when global platform is not specified
+    String defaultTargetPlatform =
+        (String)
+            unconfiguredTargetNode
+                .getAttributes()
+                .get(BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
+    if (defaultTargetPlatform != null && !defaultTargetPlatform.isEmpty()) {
+      UnconfiguredBuildTargetView configurationTarget =
+          unconfiguredBuildTargetViewFactory.createForBaseName(
+              cell.getCellPathResolver(), unconfiguredTarget.getBaseName(), defaultTargetPlatform);
+      return ImmutableRuleBasedTargetConfiguration.of(
+          ConfigurationBuildTargets.convert(configurationTarget));
+    }
+
+    // Use detector when neither global configuration is specified
+    // not `default_target_platform` argument is passed
+    Optional<TargetConfiguration> detectedTargetConfiguration =
+        targetConfigurationDetector.detectTargetConfiguration(unconfiguredTargetNode);
+    if (detectedTargetConfiguration.isPresent()) {
+      return detectedTargetConfiguration.get();
+    }
+
+    if (requireTargetPlatform) {
+      throw new HumanReadableException(
+          "parser.require_target_platform=true, "
+              + "but global --target-platforms= is not specified "
+              + "and target %s does not specify default_target_platform "
+              + "and detector did not detect the platform",
+          unconfiguredTarget);
+    }
+
+    return UnconfiguredTargetConfiguration.INSTANCE;
   }
 
   /** Get build target by name, load if necessary */

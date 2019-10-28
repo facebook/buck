@@ -27,6 +27,8 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.MoreStringsForTests;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
@@ -459,5 +461,16 @@ public class ConfigurationsIntegrationTest {
             "in platform rule //:p: "
                 + "Duplicate constraint values detected: "
                 + "constraint_setting //:pet has [//:cat, //:dog]"));
+  }
+
+  @Test
+  public void detectorByTarget() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "detector_by_target", tmp);
+    workspace.setUp();
+
+    ImmutableMap<String, Path> result = workspace.buildMultipleAndReturnOutputs("//...");
+    assertEquals(ImmutableList.of("foo-p"), Files.readAllLines(result.get("//foo:foo")));
+    assertEquals(ImmutableList.of("bar-p"), Files.readAllLines(result.get("//bar/baz:baz")));
   }
 }

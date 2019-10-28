@@ -49,7 +49,7 @@ class BuildTargetParser {
   /** The BuildTargetParser is stateless, so this single instance can be shared. */
   public static final BuildTargetParser INSTANCE = new BuildTargetParser();
 
-  private static final String BUILD_RULE_PREFIX = "//";
+  static final String BUILD_RULE_PREFIX = "//";
   private static final String BUILD_RULE_SEPARATOR = ":";
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
 
@@ -126,7 +126,7 @@ class BuildTargetParser {
       Objects.requireNonNull(baseName);
       // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
       baseName = baseName.replace('\\', '/');
-      checkBaseName(baseName, buildTargetName);
+      BaseNameParser.checkBaseName(baseName, buildTargetName);
 
       Path cellPath = cellPathResolver.getCellPath(canonicalCellName);
 
@@ -144,48 +144,6 @@ class BuildTargetParser {
           String.format("When parsing %s: %s.", buildTargetName, e.getHumanReadableErrorMessage()));
     } catch (Exception e) {
       throw new BuckUncheckedExecutionException(e, "When parsing %s.", buildTargetName);
-    }
-  }
-
-  protected static void checkBaseName(String baseName, String buildTargetName) {
-    if (baseName.equals(BUILD_RULE_PREFIX)) {
-      return;
-    }
-    if (!baseName.startsWith(BUILD_RULE_PREFIX)) {
-      throw new BuildTargetParseException(
-          String.format("Path in %s must start with %s", buildTargetName, BUILD_RULE_PREFIX));
-    }
-    int baseNamePathStart = BUILD_RULE_PREFIX.length();
-    if (baseName.charAt(baseNamePathStart) == '/') {
-      throw new BuildTargetParseException(
-          String.format(
-              "Build target path should start with an optional cell name, then // and then a "
-                  + "relative directory name, not an absolute directory path (found %s)",
-              buildTargetName));
-    }
-    // instead of splitting the path by / and allocating lots of unnecessary garbage, use 2 indices
-    // to track the [start, end) indices of the package part
-    int start = baseNamePathStart;
-    while (start < baseName.length()) {
-      int end = baseName.indexOf('/', start);
-      if (end == -1) end = baseName.length();
-      int len = end - start;
-      if (len == 0) {
-        throw new BuildTargetParseException(
-            String.format(
-                "Build target path cannot contain // other than at the start "
-                    + "(or after a cell name) (found %s)",
-                buildTargetName));
-      }
-      if (len == 1 && baseName.charAt(start) == '.') {
-        throw new BuildTargetParseException(
-            String.format("Build target path cannot contain . (found %s)", buildTargetName));
-      }
-      if (len == 2 && baseName.charAt(start) == '.' && baseName.charAt(start + 1) == '.') {
-        throw new BuildTargetParseException(
-            String.format("Build target path cannot contain .. (found %s)", buildTargetName));
-      }
-      start = end + 1;
     }
   }
 }

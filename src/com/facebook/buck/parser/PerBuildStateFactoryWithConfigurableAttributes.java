@@ -40,6 +40,8 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.config.ParserConfig;
+import com.facebook.buck.parser.detector.TargetConfigurationDetector;
+import com.facebook.buck.parser.detector.TargetConfigurationDetectorFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
@@ -101,6 +103,14 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
 
     TargetNodeListener<TargetNode<?>> symlinkCheckers = cellManager::registerInputsUnderSymlinks;
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
+
+    TargetConfigurationDetector targetConfigurationDetector =
+        TargetConfigurationDetectorFactory.fromBuckConfig(
+            parserConfig,
+            unconfiguredBuildTargetFactory,
+            rootCell.getCellPathResolver(),
+            rootCell.getCellNameResolver());
+
     int numParsingThreads = parserConfig.getNumParsingThreads();
     DefaultProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
@@ -172,6 +182,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             daemonicParserState.getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
             MoreExecutors.newDirectExecutorService(),
             unconfiguredTargetNodePipeline,
+            targetConfigurationDetector,
             eventBus,
             "nonresolving_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
@@ -218,6 +229,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             daemonicParserState.getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
             configuredPipelineExecutor,
             unconfiguredTargetNodePipeline,
+            targetConfigurationDetector,
             eventBus,
             "configured_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,

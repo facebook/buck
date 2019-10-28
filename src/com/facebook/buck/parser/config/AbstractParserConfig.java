@@ -316,6 +316,11 @@ public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue("parser", "require_target_platform", false);
   }
 
+  @Value.Lazy
+  public String getTargetPlatformDetectorSpec() {
+    return getDelegate().getValue("parser", "target_platform_detector_spec").orElse("");
+  }
+
   /**
    * For use in performance-sensitive code or if you don't care if the build file actually exists,
    * otherwise prefer {@link #getAbsolutePathToBuildFile}.

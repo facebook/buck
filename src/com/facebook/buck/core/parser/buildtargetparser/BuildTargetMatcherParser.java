@@ -28,6 +28,9 @@ import java.util.Optional;
  * Context for parsing build target names. Fully-qualified target names are parsed the same
  * regardless of the context.
  */
+// TODO(nga): this class is similar SimplePackageSpec parser,
+//            but relies on filesystem paths instead of target labels.
+//            We should merge these.
 public abstract class BuildTargetMatcherParser<T> {
 
   private static final String BUILD_RULE_PREFIX = "//";
@@ -92,7 +95,7 @@ public abstract class BuildTargetMatcherParser<T> {
       String basePathWithPrefix =
           buildTargetPattern.substring(
               0, buildTargetPattern.length() - WILDCARD_BUILD_RULE_SUFFIX.length() - 1);
-      BuildTargetParser.checkBaseName(basePathWithPrefix, buildTargetPattern);
+      BaseNameParser.checkBaseName(basePathWithPrefix, buildTargetPattern);
     }
 
     String basePathWithSlash =
