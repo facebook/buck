@@ -50,6 +50,7 @@ public class ResourceFilters {
           "anim",
           "color",
           "drawable",
+          "font",
           "mipmap",
           "layout",
           "menu",
