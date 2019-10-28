@@ -17,6 +17,7 @@
 package com.facebook.buck.io.windowsfs;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 
 /** Utility class for working with windows FS */
@@ -148,6 +149,10 @@ public class WindowsFS {
     }
 
     if (!nativeResult.getResult()) {
+      if (nativeResult.getErrorCode() == WindowsFSLibrary.ERROR_ALREADY_EXISTS) {
+        throw new FileAlreadyExistsException(symlinkPathString);
+      }
+
       String message =
           "Tried to link "
               + symlinkPathString

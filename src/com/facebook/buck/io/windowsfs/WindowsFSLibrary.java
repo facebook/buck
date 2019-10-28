@@ -30,6 +30,7 @@ public interface WindowsFSLibrary extends Library {
 
   // Native Windows error codes.
   int INVALID_PARAMETER_ERROR = 87;
+  int ERROR_ALREADY_EXISTS = 183;
   int ERROR_PRIVILEGE_NOT_HELD = 1314;
 
   /*
