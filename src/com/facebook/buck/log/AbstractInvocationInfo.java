@@ -116,6 +116,10 @@ abstract class AbstractInvocationInfo {
     return getLogDirectoryPath().resolve(BuckConstant.BUCK_LOG_FILE_NAME);
   }
 
+  public Path getSimpleConsoleOutputFilePath() {
+    return getLogDirectoryPath().resolve(BuckConstant.BUCK_SIMPLE_CONSOLE_LOG_FILE_NAME);
+  }
+
   private String getLogDirectoryName() {
     return String.format(
         DIR_NAME_TEMPLATE,

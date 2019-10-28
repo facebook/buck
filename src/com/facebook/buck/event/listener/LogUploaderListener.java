@@ -43,18 +43,21 @@ public class LogUploaderListener implements BuckEventListener {
   private final Path logDirectoryPath;
   private final BuildId buildId;
   private final TaskManagerCommandScope managerScope;
+  private final String traceKindFile;
 
   public LogUploaderListener(
       ChromeTraceBuckConfig config,
       Path logFilePath,
       Path logDirectoryPath,
       BuildId buildId,
-      TaskManagerCommandScope managerScope) {
+      TaskManagerCommandScope managerScope,
+      String traceKindFile) {
     this.config = config;
     this.logFilePath = logFilePath;
     this.logDirectoryPath = logDirectoryPath;
     this.buildId = buildId;
     this.managerScope = managerScope;
+    this.traceKindFile = traceKindFile;
   }
 
   @Subscribe
@@ -80,7 +83,7 @@ public class LogUploaderListener implements BuckEventListener {
             traceUploadUri.get(), logDirectoryPath, logFilePath, buildId);
     BackgroundTask<LogUploaderListenerCloseArgs> task =
         ImmutableBackgroundTask.<LogUploaderListenerCloseArgs>builder()
-            .setAction(new LogUploaderListenerCloseAction())
+            .setAction(new LogUploaderListenerCloseAction(traceKindFile))
             .setActionArgs(args)
             .setName("LogUploaderListener_close")
             .build();
@@ -92,13 +95,20 @@ public class LogUploaderListener implements BuckEventListener {
    * in background.
    */
   static class LogUploaderListenerCloseAction implements TaskAction<LogUploaderListenerCloseArgs> {
+
+    private final String traceFileKind;
+
+    public LogUploaderListenerCloseAction(String traceFileKind) {
+      this.traceFileKind = traceFileKind;
+    }
+
     @Override
     public void run(LogUploaderListenerCloseArgs args) {
-      Path logFile = args.getLogDirectoryPath().resolve("upload-build-log.log");
+      Path logFile = args.getLogDirectoryPath().resolve("upload_" + traceFileKind + ".log");
       UploaderLauncher.uploadInBackground(
           args.getBuildId(),
           args.getLogFilePath(),
-          "build_log",
+          traceFileKind,
           args.getTraceUploadURI(),
           logFile,
           CompressionType.NONE);

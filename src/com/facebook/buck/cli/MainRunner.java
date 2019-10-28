@@ -2168,7 +2168,17 @@ public final class MainRunner {
             invocationInfo.getLogFilePath(),
             invocationInfo.getLogDirectoryPath(),
             invocationInfo.getBuildId(),
-            managerScope));
+            managerScope,
+            "build_log"));
+    eventListenersBuilder.add(
+        new LogUploaderListener(
+            chromeTraceConfig,
+            invocationInfo.getSimpleConsoleOutputFilePath(),
+            invocationInfo.getLogDirectoryPath(),
+            invocationInfo.getBuildId(),
+            managerScope,
+            "simple_console_output"));
+
     if (logBuckConfig.isRuleKeyLoggerEnabled()) {
 
       Optional<RuleKeyLogFileUploader> keyLogFileUploader =
