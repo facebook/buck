@@ -392,7 +392,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
         targetTranslator = info.getTargetTranslator();
       }
 
-      Set<BuildTarget> parseDeps = root.getParseDeps();
+      Set<BuildTarget> parseDeps = Sets.union(root.getParseDeps(), root.getConfigurationDeps());
       ImmutableSet.Builder<VersionTargetGraphKey> subGraphKeys =
           ImmutableSet.builderWithExpectedSize(parseDeps.size());
       targetGraph
