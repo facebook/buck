@@ -27,6 +27,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.util.RemoteExecutionUtil;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -142,6 +143,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final String DISABLE_DISTCC_IF_REMOTE_EXECUTION_ENABLED_EXPERIMENT_PROPERTY =
       "disable_distcc_if_remote_execution_enabled";
 
+  public static final String USE_REMOTE_EXECUTION_IF_BUCK_DISTCC_SET_PROPERTY =
+      "use_remote_execution_if_buck_distcc_set";
+
   private String getAutoReExperimentPropertyKey() {
     return getValue(AUTO_RE_EXPERIMENT_PROPERTY_KEY).orElse(DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY);
   }
@@ -157,7 +161,19 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
             "experiments", DISABLE_DISTCC_IF_REMOTE_EXECUTION_ENABLED_EXPERIMENT_PROPERTY, false);
   }
 
+  private boolean shouldUseRemoteExecutionIfBuckDistccSet() {
+    return getDelegate()
+        .getBooleanValue(SECTION, USE_REMOTE_EXECUTION_IF_BUCK_DISTCC_SET_PROPERTY, false);
+  }
+
   public boolean isRemoteExecutionAutoEnabled(String username, List<String> commandArguments) {
+    if (shouldUseRemoteExecutionIfBuckDistccSet()) {
+      String buckDistccEnvValue =
+          EnvVariablesProvider.getSystemEnv().getOrDefault("BUCK_DISTCC", "0");
+      if ("1".equals(buckDistccEnvValue)) {
+        return true;
+      }
+    }
     return isRemoteExecutionAutoEnabled(
         isBuildWhitelistedForRemoteExecution(username, commandArguments),
         isExperimentEnabled(),
