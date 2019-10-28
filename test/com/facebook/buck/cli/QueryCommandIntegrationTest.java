@@ -1740,4 +1740,35 @@ public class QueryCommandIntegrationTest {
                 + "    At //:a\n"
                 + "    At //:b"));
   }
+
+  @Test
+  public void queryOutputsConfigurationDefaultTargetPlatform() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_outputs_configuration", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("query", "//:j", "--output-attributes", "buck.*");
+    result.assertSuccess();
+
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("j-p-query-out.json")))));
+  }
+
+  @Test
+  public void queryOutputsConfigurationCommandLine() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_outputs_configuration", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "--target-platforms=//:q", "//:j", "--output-attributes", "buck.*");
+    result.assertSuccess();
+
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("j-q-query-out.json")))));
+  }
 }

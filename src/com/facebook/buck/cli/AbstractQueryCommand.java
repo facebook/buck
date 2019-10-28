@@ -806,6 +806,16 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
           attributes.put(snakeCaseKey, targetNodeAttributes.get(key));
         }
       }
+
+      if (patternsMatcher.matches(InternalTargetAttributeNames.TARGET_CONFIGURATION)) {
+        Optional<BuildTarget> configuration =
+            node.getBuildTarget().getTargetConfiguration().getConfigurationTarget();
+        configuration.ifPresent(
+            buildTarget ->
+                attributes.put(
+                    InternalTargetAttributeNames.TARGET_CONFIGURATION,
+                    buildTarget.getFullyQualifiedName()));
+      }
     }
     return Optional.of(attributes);
   }
