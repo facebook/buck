@@ -37,6 +37,7 @@ import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
+import com.facebook.buck.core.exceptions.ThrowableCauseIterable;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.config.DepsAwareExecutorConfig;
@@ -139,6 +140,7 @@ import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.remoteexecution.event.listener.RemoteExecutionConsoleLineProvider;
 import com.facebook.buck.remoteexecution.event.listener.RemoteExecutionEventListener;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
+import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.facebook.buck.remoteexecution.util.RemoteExecutionUtil;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -411,6 +413,8 @@ public final class MainRunner {
 
   private Optional<BuckConfig> parsedRootConfig = Optional.empty();
 
+  private Optional<StackedFileHashCache> stackedFileHashCache = Optional.empty();
+
   static {
     MacIpv6BugWorkaround.apply();
   }
@@ -517,6 +521,19 @@ public final class MainRunner {
                 },
                 augmentor);
         logger.logException(t);
+
+        if (MultiThreadedBlobUploader.CorruptArtifactException.isCause(ThrowableCauseIterable.of(t))
+            && stackedFileHashCache.isPresent()) {
+          LOG.error(
+              "Command failed due to CorruptArtifactException."
+                  + "\nThis indicates something outside of buck's control has modified files in an unexpected way."
+                  + "\nThe hash for file %s was invalid."
+                  + "\nPurging file hash caches.",
+              (MultiThreadedBlobUploader.CorruptArtifactException.getDescription(
+                      ThrowableCauseIterable.of(t)))
+                  .orElse(""));
+          stackedFileHashCache.get().invalidateAll();
+        }
       } catch (Throwable ignored) {
         // In some very rare cases error processing may error itself
         // One example is logger implementation to throw while trying to log the error message
@@ -913,6 +930,7 @@ public final class MainRunner {
               projectFilesystemFactory, buildBuckConfig.getFileHashCacheMode()));
 
       StackedFileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
+      stackedFileHashCache = Optional.of(fileHashCache);
 
       Optional<WebServer> webServer = buckGlobalState.getWebServer();
       ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools =

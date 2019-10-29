@@ -278,6 +278,11 @@ public class RemoteExecutionStrategyTest {
     }
 
     @Override
+    public boolean isLocalFallbackDisabledOnCorruptedArtifacts() {
+      return false;
+    }
+
+    @Override
     public OptionalLong maxInputSizeBytes() {
       return OptionalLong.empty();
     }

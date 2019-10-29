@@ -164,7 +164,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads())),
             remoteExecutionConfig.getAuxiliaryBuildTag()),
         eventBus,
-        strategyConfig.isLocalFallbackEnabled());
+        strategyConfig.isLocalFallbackEnabled(),
+        strategyConfig.isLocalFallbackDisabledOnCorruptedArtifacts());
   }
 
   @Override

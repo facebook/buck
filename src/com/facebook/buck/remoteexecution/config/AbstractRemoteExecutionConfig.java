@@ -60,6 +60,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final int DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING = 6;
   public static final int DEFAULT_REMOTE_OUTPUT_MATERIALIZATION_THREADS = 4;
   public static final boolean DEFAULT_IS_LOCAL_FALLBACK_ENABLED = false;
+  public static final boolean DEFAULT_IS_LOCAL_FALLBACK_DISABLED_ON_CORRUPT_ARTIFACTS = false;
 
   private static final String CONFIG_CERT = "cert";
   private static final String CONFIG_KEY = "key";
@@ -82,6 +83,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final String OUTPUT_MATERIALIZATION_THREADS_KEY = "output_materialization_threads";
   /** Whether failed remote executions are retried locally. */
   public static final String IS_LOCAL_FALLBACK_ENABLED_KEY = "is_local_fallback_enabled";
+  /** Whether failed remote executions are retried locally if the artifacts are corrupted. */
+  public static final String IS_LOCAL_FALLBACK_DISABLED_ON_CORRUPT_ARTIFACTS_KEY =
+      "is_local_fallback_disabled_on_corrupt_artifacts";
   /** The maximum size of inputs allowed on remote execution, if unset, no maximum. */
   public static final String MAX_INPUT_SIZE_BYTES = "max_input_size_bytes";
   /**
@@ -321,6 +325,14 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
         getDelegate()
             .getBooleanValue(
                 SECTION, IS_LOCAL_FALLBACK_ENABLED_KEY, DEFAULT_IS_LOCAL_FALLBACK_ENABLED);
+
+    boolean isLocalFallbackDisabledOnCorruptedArtifacts =
+        getDelegate()
+            .getBooleanValue(
+                SECTION,
+                IS_LOCAL_FALLBACK_DISABLED_ON_CORRUPT_ARTIFACTS_KEY,
+                DEFAULT_IS_LOCAL_FALLBACK_DISABLED_ON_CORRUPT_ARTIFACTS);
+
     OptionalLong maxInputSizeBytes =
         getDelegate()
             .getValue(SECTION, MAX_INPUT_SIZE_BYTES)
@@ -394,6 +406,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       @Override
       public boolean isLocalFallbackEnabled() {
         return isLocalFallbackEnabled;
+      }
+
+      @Override
+      public boolean isLocalFallbackDisabledOnCorruptedArtifacts() {
+        return isLocalFallbackDisabledOnCorruptedArtifacts;
       }
 
       @Override

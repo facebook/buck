@@ -19,12 +19,14 @@ package com.facebook.buck.rules.modern.builders;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
+import com.facebook.buck.core.exceptions.ThrowableCauseIterable;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent.Result;
+import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Futures;
@@ -43,14 +45,17 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
   private final BuildRuleStrategy mainBuildRuleStrategy;
   private final BuckEventBus eventBus;
   private final boolean localFallbackEnabled;
+  private final boolean localFallbackDisabledOnCorruptedArtifacts;
 
   public LocalFallbackStrategy(
       BuildRuleStrategy mainBuildRuleStrategy,
       BuckEventBus eventBus,
-      boolean localFallbackEnabled) {
+      boolean localFallbackEnabled,
+      boolean localFallbackDisabledOnCorruptedArtifacts) {
     this.mainBuildRuleStrategy = mainBuildRuleStrategy;
     this.eventBus = eventBus;
     this.localFallbackEnabled = localFallbackEnabled;
+    this.localFallbackDisabledOnCorruptedArtifacts = localFallbackDisabledOnCorruptedArtifacts;
   }
 
   @Override
@@ -65,7 +70,8 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
         mainBuildRuleStrategy.build(rule, strategyContext),
         strategyContext,
         eventBus,
-        localFallbackEnabled);
+        localFallbackEnabled,
+        localFallbackDisabledOnCorruptedArtifacts);
   }
 
   @Override
@@ -99,6 +105,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     private final LocalFallbackEvent.Started startedEvent;
     private final Stopwatch remoteExecutionTimer;
     private final boolean localFallbackEnabled;
+    private final boolean localFallbackDisabledOnCorruptedArtifacts;
 
     private Optional<ListenableFuture<Optional<BuildResult>>> localStrategyBuildResult;
     private boolean hasCancellationBeenRequested;
@@ -110,7 +117,8 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
         StrategyBuildResult remoteStrategyBuildResult,
         BuildStrategyContext strategyContext,
         BuckEventBus eventBus,
-        boolean localFallbackEnabled) {
+        boolean localFallbackEnabled,
+        boolean localFallbackDisabledOnCorruptedArtifacts) {
       this.lock = new Object();
       this.localStrategyBuildResult = Optional.empty();
       this.buildTarget = buildTarget;
@@ -124,6 +132,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       this.remoteExecutionTimer = Stopwatch.createStarted();
       this.remoteBuildErrorMessage = Optional.empty();
       this.localFallbackEnabled = localFallbackEnabled;
+      this.localFallbackDisabledOnCorruptedArtifacts = localFallbackDisabledOnCorruptedArtifacts;
 
       this.eventBus.post(this.startedEvent);
       this.remoteStrategyBuildResult
@@ -201,7 +210,10 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
         remoteBuildResult = Optional.of(Result.FAIL);
       }
       remoteBuildErrorMessage = Optional.of(result.toString());
-      if (localFallbackEnabled) {
+      if (localFallbackEnabled
+          && (!localFallbackDisabledOnCorruptedArtifacts
+              || !(MultiThreadedBlobUploader.CorruptArtifactException.isCause(
+                  ThrowableCauseIterable.of(result.get().getFailure()))))) {
         fallbackBuildToLocalStrategy();
       } else {
         completeCombinedFuture(result, remoteBuildResult.get(), Result.NOT_RUN);
@@ -214,7 +226,10 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       remoteBuildResult =
           Optional.of(t instanceof InterruptedException ? Result.INTERRUPTED : Result.EXCEPTION);
       remoteBuildErrorMessage = Optional.of(t.toString());
-      if (localFallbackEnabled) {
+      if (localFallbackEnabled
+          && (!localFallbackDisabledOnCorruptedArtifacts
+              || !(MultiThreadedBlobUploader.CorruptArtifactException.isCause(
+                  ThrowableCauseIterable.of(t))))) {
         fallbackBuildToLocalStrategy();
       } else {
         completeCombinedFutureWithException(t, remoteBuildResult.get(), Result.NOT_RUN);
