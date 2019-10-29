@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
@@ -24,9 +25,12 @@ import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 
 /** The factory is used to avoid creation of {@link UnusedDependenciesFinder} when */
 public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
+  @AddToRuleKey private final Optional<String> buildozerPath;
+
   @ExcludeFromRuleKey(
       reason = "includes source paths",
       serialization = DefaultFieldSerialization.class,
@@ -41,8 +45,10 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       providedDeps;
 
   public UnusedDependenciesFinderFactory(
+      Optional<String> buildozerPath,
       ImmutableList<AbstractUnusedDependenciesFinder.DependencyAndExportedDeps> deps,
       ImmutableList<AbstractUnusedDependenciesFinder.DependencyAndExportedDeps> providedDeps) {
+    this.buildozerPath = buildozerPath;
     this.deps = deps;
     this.providedDeps = providedDeps;
   }
@@ -59,6 +65,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         deps,
         providedDeps,
         sourcePathResolver,
-        unusedDependenciesAction);
+        unusedDependenciesAction,
+        buildozerPath);
   }
 }

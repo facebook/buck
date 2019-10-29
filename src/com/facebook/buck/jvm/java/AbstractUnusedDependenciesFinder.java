@@ -79,6 +79,8 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
 
   public abstract UnusedDependenciesAction getUnusedDependenciesAction();
 
+  public abstract Optional<String> getBuildozerPath();
+
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Preconditions.checkState(getUnusedDependenciesAction() != UnusedDependenciesAction.IGNORE);
@@ -218,12 +220,19 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
       String dependencyType,
       ImmutableSet<String> unusedDependencies) {
     BuildTarget buildTarget = getBuildTarget();
-    String commandTemplate = "buildozer 'remove %s %s' %s";
+    String commandTemplate = "%s 'remove %s %s' %s";
     String commands =
         Joiner.on('\n')
             .join(
                 unusedDependencies.stream()
-                    .map(dep -> String.format(commandTemplate, dependencyType, dep, buildTarget))
+                    .map(
+                        dep ->
+                            String.format(
+                                commandTemplate,
+                                getBuildozerPath().orElse("buildozer"),
+                                dependencyType,
+                                dep,
+                                buildTarget))
                     .collect(Collectors.toList()));
     String messageTemplate =
         "Target %s is declared with unused targets in %s: \n%s\n\n"

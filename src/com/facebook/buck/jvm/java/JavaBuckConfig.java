@@ -261,6 +261,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .orElse(UnusedDependenciesConfig.IGNORE);
   }
 
+  public Optional<String> getUnusedDependenciesBuildozerString() {
+    return delegate.getValue(SECTION, "unused_dependencies_buildozer_path");
+  }
+
   public Optional<String> getJavaTempDir() {
     return delegate.getValue("java", "test_temp_dir");
   }

@@ -69,7 +69,29 @@ public class UnusedDependenciesFinderIntegrationTest {
         Matchers.allOf(
             Matchers.containsString(
                 "Target //:bar_with_dep is declared with unused targets in deps:"),
-            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+            Matchers.containsString(
+                "buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep")));
+  }
+
+  @Test
+  public void testFailBuildWithSpecifiedBuildozerPath() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=fail",
+            "-c",
+            "java.unused_dependencies_buildozer_path=/some/path/buildozer",
+            ":bar_with_dep");
+
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        Matchers.allOf(
+            Matchers.containsString(
+                "Target //:bar_with_dep is declared with unused targets in deps:"),
+            Matchers.containsString(
+                "/some/path/buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep")));
   }
 
   @Test
