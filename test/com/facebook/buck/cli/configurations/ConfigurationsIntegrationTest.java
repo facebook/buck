@@ -473,4 +473,15 @@ public class ConfigurationsIntegrationTest {
     assertEquals(ImmutableList.of("foo-p"), Files.readAllLines(result.get("//foo:foo")));
     assertEquals(ImmutableList.of("bar-p"), Files.readAllLines(result.get("//bar/baz:baz")));
   }
+
+  @Test
+  public void targetPlatformsTwice() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "target_platforms_twice", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckBuild("--target-platforms=//:p", "--target-platforms=//:p", "//:j")
+        .assertSuccess();
+  }
 }

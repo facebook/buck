@@ -1,0 +1,26 @@
+constraint_setting(
+    name = "cs",
+)
+
+constraint_value(
+    name = "cv",
+    constraint_setting = ":cs",
+)
+
+platform(
+    name = "p",
+    constraint_values = [
+        ":cv",
+    ],
+)
+
+config_setting(
+    name = "c",
+    constraint_values = [
+        ":cv",
+    ],
+)
+
+java_library(
+    name = "j",
+)

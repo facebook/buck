@@ -232,7 +232,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -1581,10 +1581,13 @@ public final class MainRunner {
               .orElse(UnconfiguredTargetConfiguration.INSTANCE);
       return () -> hostTargetConfiguration;
     }
+    // TODO(nga): provide a better message if more than one platform specified on command line
     BuildTarget targetPlatform =
         ConfigurationBuildTargets.convert(
             unconfiguredBuildTargetFactory.create(
-                cellPathResolver, Iterables.getOnlyElement(command.getTargetPlatforms())));
+                cellPathResolver,
+                Iterators.getOnlyElement(
+                    command.getTargetPlatforms().stream().distinct().iterator())));
     return () -> ImmutableRuleBasedTargetConfiguration.of(targetPlatform);
   }
 
