@@ -1572,14 +1572,14 @@ public final class MainRunner {
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       CellPathResolver cellPathResolver) {
     if (command.getTargetPlatforms().isEmpty()) {
-      Optional<UnconfiguredBuildTargetView> hostPlatformFromConfig =
-          buckConfig.getView(BuildBuckConfig.class).getHostPlatform();
-      TargetConfiguration hostTargetConfiguration =
-          hostPlatformFromConfig
+      Optional<UnconfiguredBuildTargetView> targetPlatformFromBuckconfig =
+          buckConfig.getView(ParserConfig.class).getTargetPlatforms();
+      TargetConfiguration targetConfigurationFromBuckconfig =
+          targetPlatformFromBuckconfig
               .map(ConfigurationBuildTargets::convert)
               .<TargetConfiguration>map(ImmutableRuleBasedTargetConfiguration::of)
               .orElse(UnconfiguredTargetConfiguration.INSTANCE);
-      return () -> hostTargetConfiguration;
+      return () -> targetConfigurationFromBuckconfig;
     }
     // TODO(nga): provide a better message if more than one platform specified on command line
     BuildTarget targetPlatform =

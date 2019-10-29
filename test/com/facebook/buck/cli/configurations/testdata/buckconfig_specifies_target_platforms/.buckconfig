@@ -1,0 +1,4 @@
+[parser]
+    polyglot_parsing_enabled = true
+    default_build_file_syntax = SKYLARK
+    target_platforms = //:p-buckconfig

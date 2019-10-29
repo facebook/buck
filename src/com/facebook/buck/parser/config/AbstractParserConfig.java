@@ -322,6 +322,20 @@ public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   }
 
   /**
+   * @return a target that points to a {@code platform} rule that describes the target platforms.
+   *     This is used when command-line argument is unspecified. Please do not use this option.
+   */
+  @Value.Lazy
+  public Optional<UnconfiguredBuildTargetView> getTargetPlatforms() {
+    // TODO(nga): remove this option, it exists only for migration,
+    //            and in the future platform should be only specified via one of:
+    //            * `--target-platforms=` command line argument
+    //            * `default_target_platform` argument
+    //            * platform detector
+    return getDelegate().getMaybeUnconfiguredBuildTarget("parser", "target_platforms");
+  }
+
+  /**
    * For use in performance-sensitive code or if you don't care if the build file actually exists,
    * otherwise prefer {@link #getAbsolutePathToBuildFile}.
    *

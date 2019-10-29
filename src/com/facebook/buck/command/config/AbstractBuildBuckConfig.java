@@ -20,7 +20,6 @@ import static java.lang.Integer.parseInt;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.google.common.annotations.VisibleForTesting;
@@ -238,11 +237,5 @@ public abstract class AbstractBuildBuckConfig implements ConfigView<BuckConfig> 
     return getDelegate()
         .getEnum("build", "file_hash_cache_mode", FileHashCacheMode.class)
         .orElse(FileHashCacheMode.DEFAULT);
-  }
-
-  /** @return a target that points to a {@code platform} rule that describes the host platform. */
-  @Value.Lazy
-  public Optional<UnconfiguredBuildTargetView> getHostPlatform() {
-    return getDelegate().getMaybeUnconfiguredBuildTarget(BUILD_SECTION, "host_platform");
   }
 }

@@ -26,7 +26,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.MoreStringsForTests;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -234,26 +233,6 @@ public class ConfigurationsIntegrationTest {
   }
 
   @Test
-  public void hostOsConstraintsAreResolvedWithCustomPlatform() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
-    workspace.setUp();
-
-    Platform platform = Platform.detect();
-    String hostPlatform =
-        (platform == Platform.LINUX) ? "//config:osx_x86-64" : "//config:linux_x86-64";
-
-    Path output =
-        workspace.buildAndReturnOutput(
-            "//:platform_dependent_genrule", "-c", "build.host_platform=" + hostPlatform);
-
-    workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
-
-    String expected = (platform == Platform.LINUX) ? "osx" : "linux";
-    assertEquals(expected, workspace.getFileContents(output).trim());
-  }
-
-  @Test
   public void cpuConstraintsAreResolvedWithCustomHostPlatforms() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
@@ -418,6 +397,22 @@ public class ConfigurationsIntegrationTest {
     // Good if specified on command line
     ProcessResult result = workspace.runBuckBuild("--target-platforms=//:p", "//:j");
     result.assertSuccess();
+  }
+
+  @Test
+  public void buckconfigSpecifiesTargetPlatforms() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "buckconfig_specifies_target_platforms", tmp);
+    workspace.setUp();
+
+    // By default target platform is taken from buckconfig
+    Path fromBuckconfig = workspace.buildAndReturnOutput("//:g");
+    assertEquals(ImmutableList.of("from-buckconfig"), Files.readAllLines(fromBuckconfig));
+
+    // Command line overrides buckconfig
+    Path fromCmdline = workspace.buildAndReturnOutput("--target-platforms=//:p-cmdline", "//:g");
+    assertEquals(ImmutableList.of("from-cmdline"), Files.readAllLines(fromCmdline));
   }
 
   @Test
