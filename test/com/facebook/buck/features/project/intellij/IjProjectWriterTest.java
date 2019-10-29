@@ -111,7 +111,7 @@ public class IjProjectWriterTest {
         ImmutableMap.of(
             "//java/com/example/base:base",
                 ImmutableMap.of(
-                    "buck.type",
+                    IjProjectWriter.BUCK_TYPE,
                     "java_library",
                     IjProjectWriter.INTELLIJ_FILE_PATH,
                     isWindows
@@ -123,7 +123,7 @@ public class IjProjectWriterTest {
                     IjProjectWriter.MODULE_TYPE),
             "//third_party/guava:guava",
                 ImmutableMap.of(
-                    "buck.type",
+                    IjProjectWriter.BUCK_TYPE,
                     "java_library",
                     IjProjectWriter.INTELLIJ_FILE_PATH,
                     isWindows
@@ -145,7 +145,7 @@ public class IjProjectWriterTest {
         ImmutableMap.of(
             "//java/com/example/base2:base2",
             ImmutableMap.of(
-                "buck.type",
+                IjProjectWriter.BUCK_TYPE,
                 "java_library",
                 IjProjectWriter.INTELLIJ_FILE_PATH,
                 isWindows
@@ -157,7 +157,7 @@ public class IjProjectWriterTest {
                 IjProjectWriter.MODULE_TYPE),
             "//java/com/example/base:base",
             ImmutableMap.of(
-                "buck.type",
+                IjProjectWriter.BUCK_TYPE,
                 "java_library",
                 IjProjectWriter.INTELLIJ_FILE_PATH,
                 isWindows
@@ -184,7 +184,7 @@ public class IjProjectWriterTest {
         ImmutableMap.of(
             "//java/com/example/base:base",
             ImmutableMap.of(
-                "buck.type",
+                IjProjectWriter.BUCK_TYPE,
                 "java_library",
                 IjProjectWriter.INTELLIJ_FILE_PATH,
                 isWindows
@@ -196,7 +196,7 @@ public class IjProjectWriterTest {
                 IjProjectWriter.MODULE_TYPE),
             "//third_party/guava:guava",
             ImmutableMap.of(
-                "buck.type",
+                IjProjectWriter.BUCK_TYPE,
                 "java_library",
                 IjProjectWriter.INTELLIJ_FILE_PATH,
                 isWindows
@@ -218,7 +218,7 @@ public class IjProjectWriterTest {
         ImmutableMap.of(
             "//java/com/example/base2:base2",
             ImmutableMap.of(
-                "buck.type",
+                IjProjectWriter.BUCK_TYPE,
                 "java_library",
                 IjProjectWriter.INTELLIJ_FILE_PATH,
                 isWindows
@@ -230,7 +230,7 @@ public class IjProjectWriterTest {
                 IjProjectWriter.MODULE_TYPE),
             "//java/com/example/base:base",
             ImmutableMap.of(
-                "buck.type",
+                IjProjectWriter.BUCK_TYPE,
                 "java_library",
                 IjProjectWriter.INTELLIJ_FILE_PATH,
                 isWindows
@@ -242,7 +242,7 @@ public class IjProjectWriterTest {
                 IjProjectWriter.MODULE_TYPE),
             "//third_party/guava:guava",
             ImmutableMap.of(
-                "buck.type",
+                IjProjectWriter.BUCK_TYPE,
                 "java_library",
                 IjProjectWriter.INTELLIJ_FILE_PATH,
                 isWindows
@@ -272,7 +272,7 @@ public class IjProjectWriterTest {
         ImmutableMap.of(
             "//java/com/example/base2:base2",
             ImmutableMap.of(
-                "buck.type",
+                IjProjectWriter.BUCK_TYPE,
                 "android_library",
                 IjProjectWriter.INTELLIJ_FILE_PATH,
                 isWindows
@@ -284,7 +284,7 @@ public class IjProjectWriterTest {
                 IjProjectWriter.MODULE_TYPE),
             "//java/com/example/base:base",
             ImmutableMap.of(
-                "buck.type",
+                IjProjectWriter.BUCK_TYPE,
                 "android_library",
                 IjProjectWriter.INTELLIJ_FILE_PATH,
                 isWindows
