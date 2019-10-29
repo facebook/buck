@@ -414,9 +414,15 @@ public abstract class DefaultJavaLibraryRules {
                   UnusedDependenciesFinder.of(
                       buildTarget,
                       projectFilesystem,
-                      buildRuleResolver,
                       CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem),
-                      Objects.requireNonNull(getDeps()),
+                      UnusedDependenciesFinder.getDependencies(
+                          buildRuleResolver,
+                          buildRuleResolver.getAllRules(
+                              Objects.requireNonNull(getDeps()).getDepTargets())),
+                      UnusedDependenciesFinder.getDependencies(
+                          buildRuleResolver,
+                          buildRuleResolver.getAllRules(
+                              Objects.requireNonNull(getDeps()).getProvidedDepTargets())),
                       sourcePathResolver,
                       unusedDependenciesAction));
     }

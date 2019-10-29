@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
@@ -38,13 +37,16 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /**
@@ -65,11 +67,11 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
 
   public abstract ProjectFilesystem getProjectFilesystem();
 
-  public abstract BuildRuleResolver getBuildRuleResolver();
-
   public abstract Path getDepFileRelativePath();
 
-  public abstract JavaLibraryDeps getJavaLibraryDeps();
+  public abstract ImmutableList<DependencyAndExportedDeps> getDeps();
+
+  public abstract ImmutableList<DependencyAndExportedDeps> getProvidedDeps();
 
   public abstract SourcePathResolver getSourcePathResolver();
 
@@ -122,101 +124,97 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
 
   private void findUnusedDependenciesAndProcessMessages(
       MessageHandler messageHandler, ImmutableSet<Path> usedJars) {
-    JavaLibraryDeps javaLibraryDeps = getJavaLibraryDeps();
-
+    findUnusedDependenciesAndProcessMessages(messageHandler, usedJars, getDeps(), "deps");
     findUnusedDependenciesAndProcessMessages(
-        messageHandler, usedJars, javaLibraryDeps.getDepTargets(), "deps");
-    findUnusedDependenciesAndProcessMessages(
-        messageHandler, usedJars, javaLibraryDeps.getProvidedDepTargets(), "provided_deps");
+        messageHandler, usedJars, getProvidedDeps(), "provided_deps");
   }
 
   private void findUnusedDependenciesAndProcessMessages(
       MessageHandler messageHandler,
       ImmutableSet<Path> usedJars,
-      Iterable<BuildTarget> targets,
+      Iterable<DependencyAndExportedDeps> targets,
       String dependencyType) {
-    ImmutableSet<UnflavoredBuildTargetView> unusedDependencies =
-        findUnusedDependencies(usedJars, targets);
+    ImmutableSet<String> unusedDependencies = findUnusedDependencies(usedJars, targets);
     if (!unusedDependencies.isEmpty()) {
       processUnusedDependencies(messageHandler, dependencyType, unusedDependencies);
     }
   }
 
-  private ImmutableSet<UnflavoredBuildTargetView> findUnusedDependencies(
-      ImmutableSet<Path> usedJars, Iterable<BuildTarget> targets) {
-    BuildRuleResolver buildRuleResolver = getBuildRuleResolver();
+  private ImmutableSet<String> findUnusedDependencies(
+      ImmutableSet<Path> usedJars, Iterable<DependencyAndExportedDeps> targets) {
     SourcePathResolver sourcePathResolver = getSourcePathResolver();
-    ImmutableSet.Builder<UnflavoredBuildTargetView> unusedDependencies = ImmutableSet.builder();
+    ImmutableSet.Builder<String> unusedDependencies = ImmutableSet.builder();
 
-    for (BuildRule dependency : buildRuleResolver.getAllRules(targets)) {
-      if (isUnusedDependency(dependency, usedJars, sourcePathResolver)) {
-        unusedDependencies.add(dependency.getBuildTarget().getUnflavoredBuildTarget());
+    for (DependencyAndExportedDeps target : targets) {
+      if (isUnusedDependencyIncludingExportedDeps(target, usedJars, sourcePathResolver)) {
+        unusedDependencies.add(target.dependency.buildTarget);
       }
     }
 
     return unusedDependencies.build();
   }
 
-  private boolean isUnusedDependency(
-      BuildRule dependency, ImmutableSet<Path> usedJars, SourcePathResolver sourcePathResolver) {
-    if (!(dependency instanceof HasJavaAbi)) {
+  private boolean isUnusedDependencyIncludingExportedDeps(
+      DependencyAndExportedDeps dependency,
+      ImmutableSet<Path> usedJars,
+      SourcePathResolver sourcePathResolver) {
+    if (isUsedDependency(dependency.dependency, usedJars, sourcePathResolver)) {
       return false;
     }
 
-    final SourcePath dependencyOutput = dependency.getSourcePathToOutput();
-    if (dependencyOutput == null) {
-      return false;
-    }
-
-    final Path dependencyOutputPath = sourcePathResolver.getAbsolutePath(dependencyOutput);
-    if (usedJars.contains(dependencyOutputPath)) {
-      return false;
-    }
-
-    final Optional<Path> abiJarPath = getAbiJarPath(sourcePathResolver, (HasJavaAbi) dependency);
-    if (abiJarPath.isPresent() && usedJars.contains(abiJarPath.get())) {
-      return false;
-    }
-
-    if (dependency instanceof ExportDependencies) {
-      for (BuildRule exportedDependency : ((ExportDependencies) dependency).getExportedDeps()) {
-        if (!isUnusedDependency(exportedDependency, usedJars, sourcePathResolver)) {
-          return false;
-        }
+    for (DependencyAndExportedDeps exportedDependency : dependency.exportedDeps) {
+      if (isUsedDependencyIncludingExportedDeps(exportedDependency, usedJars, sourcePathResolver)) {
+        return false;
       }
     }
 
     return true;
   }
 
-  private Optional<BuildTarget> getAbiJarTarget(HasJavaAbi dependency) {
-    Optional<BuildTarget> abiJarTarget = dependency.getSourceOnlyAbiJar();
-    if (!abiJarTarget.isPresent()) {
-      abiJarTarget = dependency.getAbiJar();
+  private boolean isUsedDependencyIncludingExportedDeps(
+      DependencyAndExportedDeps exportedDep,
+      ImmutableSet<Path> usedJars,
+      SourcePathResolver sourcePathResolver) {
+    if (isUsedDependency(exportedDep.dependency, usedJars, sourcePathResolver)) {
+      return true;
     }
-    return abiJarTarget;
+
+    for (DependencyAndExportedDeps exportedDependency : exportedDep.exportedDeps) {
+      if (isUsedDependencyIncludingExportedDeps(exportedDependency, usedJars, sourcePathResolver)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
-  private Optional<Path> getAbiJarPath(
-      SourcePathResolver sourcePathResolver, HasJavaAbi dependency) {
-    Optional<BuildTarget> abiJarTarget = getAbiJarTarget(dependency);
-    if (!abiJarTarget.isPresent()) {
-      return Optional.empty();
+  private boolean isUsedDependency(
+      BuildTargetAndSourcePaths dependency,
+      ImmutableSet<Path> usedJars,
+      SourcePathResolver sourcePathResolver) {
+    final @Nullable SourcePath dependencyOutput = dependency.fullJarSourcePath;
+    if (dependencyOutput != null) {
+      final Path dependencyOutputPath = sourcePathResolver.getAbsolutePath(dependencyOutput);
+      if (usedJars.contains(dependencyOutputPath)) {
+        return true;
+      }
     }
 
-    BuildRule abiJarRule = getBuildRuleResolver().getRule(abiJarTarget.get());
-    SourcePath abiJarOutput = abiJarRule.getSourcePathToOutput();
-    if (abiJarOutput == null) {
-      return Optional.empty();
+    final @Nullable SourcePath dependencyAbiOutput = dependency.abiSourcePath;
+    if (dependencyAbiOutput != null) {
+      final Path dependencyAbiOutputPath = sourcePathResolver.getAbsolutePath(dependencyAbiOutput);
+      if (usedJars.contains(dependencyAbiOutputPath)) {
+        return true;
+      }
     }
 
-    return Optional.of(sourcePathResolver.getAbsolutePath(abiJarOutput));
+    return false;
   }
 
   private void processUnusedDependencies(
       MessageHandler messageHandler,
       String dependencyType,
-      ImmutableSet<UnflavoredBuildTargetView> unusedDependencies) {
+      ImmutableSet<String> unusedDependencies) {
     BuildTarget buildTarget = getBuildTarget();
     String commandTemplate = "buildozer 'remove %s %s' %s";
     String commands =
@@ -237,7 +235,19 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   private void logDiagnosticsIfNeeded(MessageHandler messageHandler, Set<Path> usedJars) {
     if (messageHandler.encounteredMessage() && LOG.isLoggable(Level.INFO)) {
       LOG.info("Target: %s, usedJars:\n%s\n", getBuildTarget(), Joiner.on('\n').join(usedJars));
-      LOG.info("Target: %s, javaLibraryDeps:\n%s\n", getBuildTarget(), getJavaLibraryDeps());
+      LOG.info(
+          "Target: %s, deps are:\n%s\nProvided deps are:\n%s\n",
+          getBuildTarget(),
+          Joiner.on('\n')
+              .join(
+                  getDeps().stream()
+                      .map(dep -> dep.dependency.buildTarget.toString())
+                      .collect(Collectors.toList())),
+          Joiner.on('\n')
+              .join(
+                  getProvidedDeps().stream()
+                      .map(dep -> dep.dependency.buildTarget.toString())
+                      .collect(Collectors.toList())));
     }
   }
 
@@ -306,6 +316,93 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
     @Override
     public boolean encounteredMessage() {
       return encounteredMessage;
+    }
+  }
+
+  static ImmutableList<DependencyAndExportedDeps> getDependencies(
+      BuildRuleResolver buildRuleResolver, SortedSet<BuildRule> targets) {
+    ImmutableList.Builder<DependencyAndExportedDeps> builder = ImmutableList.builder();
+    for (BuildRule rule : targets) {
+      BuildTargetAndSourcePaths targetAndSourcePaths =
+          getBuildTargetAndSourcePaths(rule, buildRuleResolver);
+      if (targetAndSourcePaths == null) {
+        continue;
+      }
+
+      ImmutableList<DependencyAndExportedDeps> exportedDeps =
+          rule instanceof ExportDependencies
+              ? getDependencies(buildRuleResolver, ((ExportDependencies) rule).getExportedDeps())
+              : ImmutableList.of();
+      builder.add(new DependencyAndExportedDeps(targetAndSourcePaths, exportedDeps));
+    }
+
+    return builder.build();
+  }
+
+  @Nullable
+  private static BuildTargetAndSourcePaths getBuildTargetAndSourcePaths(
+      BuildRule rule, BuildRuleResolver buildRuleResolver) {
+    if (!(rule instanceof HasJavaAbi)) {
+      return null;
+    }
+
+    final SourcePath ruleOutput = rule.getSourcePathToOutput();
+    final SourcePath abiRuleOutput = getAbiPath(buildRuleResolver, (HasJavaAbi) rule);
+    return new BuildTargetAndSourcePaths(
+        rule.getBuildTarget().getUnconfiguredBuildTargetView().toString(),
+        ruleOutput,
+        abiRuleOutput);
+  }
+
+  @Nullable
+  private static SourcePath getAbiPath(BuildRuleResolver buildRuleResolver, HasJavaAbi rule) {
+    Optional<BuildTarget> abiJarTarget = getAbiJarTarget(rule);
+    if (!abiJarTarget.isPresent()) {
+      return null;
+    }
+
+    Optional<BuildRule> abiJarRule = buildRuleResolver.getRuleOptional(abiJarTarget.get());
+    if (!abiJarRule.isPresent()) {
+      return null;
+    }
+
+    return abiJarRule.get().getSourcePathToOutput();
+  }
+
+  private static Optional<BuildTarget> getAbiJarTarget(HasJavaAbi dependency) {
+    Optional<BuildTarget> abiJarTarget = dependency.getSourceOnlyAbiJar();
+    if (!abiJarTarget.isPresent()) {
+      abiJarTarget = dependency.getAbiJar();
+    }
+    return abiJarTarget;
+  }
+
+  /** Holder for a build target string and the source paths of its output. */
+  static class BuildTargetAndSourcePaths {
+    private final String buildTarget;
+    private final @Nullable SourcePath fullJarSourcePath;
+    private final @Nullable SourcePath abiSourcePath;
+
+    BuildTargetAndSourcePaths(
+        String buildTarget,
+        @Nullable SourcePath fullJarSourcePath,
+        @Nullable SourcePath abiSourcePath) {
+      this.buildTarget = buildTarget;
+      this.fullJarSourcePath = fullJarSourcePath;
+      this.abiSourcePath = abiSourcePath;
+    }
+  }
+
+  /** Recursive hierarchy of a single build target and its exported deps. */
+  static class DependencyAndExportedDeps {
+    private final BuildTargetAndSourcePaths dependency;
+    private final ImmutableList<DependencyAndExportedDeps> exportedDeps;
+
+    DependencyAndExportedDeps(
+        BuildTargetAndSourcePaths dependency,
+        ImmutableList<DependencyAndExportedDeps> exportedDeps) {
+      this.dependency = dependency;
+      this.exportedDeps = exportedDeps;
     }
   }
 }
