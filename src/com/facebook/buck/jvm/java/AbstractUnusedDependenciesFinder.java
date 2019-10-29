@@ -19,6 +19,8 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
@@ -378,10 +380,10 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   }
 
   /** Holder for a build target string and the source paths of its output. */
-  static class BuildTargetAndSourcePaths {
-    private final String buildTarget;
-    private final @Nullable SourcePath fullJarSourcePath;
-    private final @Nullable SourcePath abiSourcePath;
+  static class BuildTargetAndSourcePaths implements AddsToRuleKey {
+    @AddToRuleKey private final String buildTarget;
+    @AddToRuleKey private final @Nullable SourcePath fullJarSourcePath;
+    @AddToRuleKey private final @Nullable SourcePath abiSourcePath;
 
     BuildTargetAndSourcePaths(
         String buildTarget,
@@ -394,9 +396,9 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   }
 
   /** Recursive hierarchy of a single build target and its exported deps. */
-  static class DependencyAndExportedDeps {
-    private final BuildTargetAndSourcePaths dependency;
-    private final ImmutableList<DependencyAndExportedDeps> exportedDeps;
+  static class DependencyAndExportedDeps implements AddsToRuleKey {
+    @AddToRuleKey private final BuildTargetAndSourcePaths dependency;
+    @AddToRuleKey private final ImmutableList<DependencyAndExportedDeps> exportedDeps;
 
     DependencyAndExportedDeps(
         BuildTargetAndSourcePaths dependency,

@@ -31,13 +31,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
-import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.PipelinedBuildable;
 import com.facebook.buck.rules.modern.PublicOutputPath;
-import com.facebook.buck.rules.modern.ValueCreator;
-import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
@@ -67,7 +64,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   @CustomFieldBehavior(DefaultFieldSerialization.class)
   private final BuildTarget buildTarget;
 
-  @CustomFieldBehavior(SerializeAsEmptyOptional.class)
+  @AddToRuleKey
   private final Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory;
 
   DefaultJavaLibraryBuildable(
@@ -134,7 +131,13 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1);
     steps.addAll(factoryBuildSteps);
     unusedDependenciesFinderFactory.ifPresent(
-        factory -> steps.add(factory.create(filesystem, buildContext.getSourcePathResolver())));
+        factory ->
+            steps.add(
+                factory.create(
+                    buildTarget,
+                    filesystem,
+                    buildContext.getSourcePathResolver(),
+                    unusedDependenciesAction)));
     addMakeMissingOutputsStep(filesystem, outputPathResolver, steps);
     return steps.build();
   }
@@ -214,17 +217,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
   public RulePipelineStateFactory<JavacPipelineState> getPipelineStateFactory() {
     return jarBuildStepsFactory;
-  }
-
-  private static class SerializeAsEmptyOptional<T>
-      implements CustomFieldSerialization<Optional<T>> {
-    @Override
-    public <E extends Exception> void serialize(Optional<T> value, ValueVisitor<E> serializer) {}
-
-    @Override
-    public <E extends Exception> Optional<T> deserialize(ValueCreator<E> deserializer) {
-      return Optional.empty();
-    }
   }
 
   public boolean hasAnnotationProcessing() {

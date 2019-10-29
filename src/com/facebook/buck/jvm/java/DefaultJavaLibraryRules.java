@@ -405,26 +405,19 @@ public abstract class DefaultJavaLibraryRules {
 
     if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE
         && getConfiguredCompilerFactory().trackClassUsage(getJavacOptions())) {
-      BuildTarget buildTarget = getLibraryTarget();
       BuildRuleResolver buildRuleResolver = getActionGraphBuilder();
 
       unusedDependenciesFinderFactory =
           Optional.of(
-              (projectFilesystem, sourcePathResolver) ->
-                  UnusedDependenciesFinder.of(
-                      buildTarget,
-                      projectFilesystem,
-                      CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem),
-                      UnusedDependenciesFinder.getDependencies(
-                          buildRuleResolver,
-                          buildRuleResolver.getAllRules(
-                              Objects.requireNonNull(getDeps()).getDepTargets())),
-                      UnusedDependenciesFinder.getDependencies(
-                          buildRuleResolver,
-                          buildRuleResolver.getAllRules(
-                              Objects.requireNonNull(getDeps()).getProvidedDepTargets())),
-                      sourcePathResolver,
-                      unusedDependenciesAction));
+              new UnusedDependenciesFinderFactory(
+                  UnusedDependenciesFinder.getDependencies(
+                      buildRuleResolver,
+                      buildRuleResolver.getAllRules(
+                          Objects.requireNonNull(getDeps()).getDepTargets())),
+                  UnusedDependenciesFinder.getDependencies(
+                      buildRuleResolver,
+                      buildRuleResolver.getAllRules(
+                          Objects.requireNonNull(getDeps()).getProvidedDepTargets()))));
     }
 
     DefaultJavaLibrary libraryRule =

@@ -16,11 +16,49 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 
 /** The factory is used to avoid creation of {@link UnusedDependenciesFinder} when */
-public interface UnusedDependenciesFinderFactory {
+public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
+  @ExcludeFromRuleKey(
+      reason = "includes source paths",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class)
+  private final ImmutableList<AbstractUnusedDependenciesFinder.DependencyAndExportedDeps> deps;
+
+  @ExcludeFromRuleKey(
+      reason = "includes source paths",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class)
+  private final ImmutableList<AbstractUnusedDependenciesFinder.DependencyAndExportedDeps>
+      providedDeps;
+
+  public UnusedDependenciesFinderFactory(
+      ImmutableList<AbstractUnusedDependenciesFinder.DependencyAndExportedDeps> deps,
+      ImmutableList<AbstractUnusedDependenciesFinder.DependencyAndExportedDeps> providedDeps) {
+    this.deps = deps;
+    this.providedDeps = providedDeps;
+  }
+
   UnusedDependenciesFinder create(
-      ProjectFilesystem projectFilesystem, SourcePathResolver sourcePathResolver);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SourcePathResolver sourcePathResolver,
+      JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction) {
+    return UnusedDependenciesFinder.of(
+        buildTarget,
+        projectFilesystem,
+        CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem),
+        deps,
+        providedDeps,
+        sourcePathResolver,
+        unusedDependenciesAction);
+  }
 }
