@@ -1043,7 +1043,6 @@ class BuckTool(object):
             java_args.extend(
                 [
                     "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
-                    "-XX:+ExitOnOutOfMemoryError",
                     "-Djava.awt.headless=true",
                     "-Djna.nosys=true",
                     "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
