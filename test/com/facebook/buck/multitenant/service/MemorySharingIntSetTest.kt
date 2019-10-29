@@ -221,7 +221,7 @@ class MemorySharingIntSetTest {
     }
 }
 
-private fun uniqueSet(vararg ids: Int) = MemorySharingIntSet.Unique(ids)
+private fun uniqueSet(vararg ids: Int) = MemorySharingIntSet.Unique(ids.sortedArray())
 private fun add(id: Int): SetDelta = SetDelta.Add(id)
 private fun remove(id: Int): SetDelta = SetDelta.Remove(id)
 

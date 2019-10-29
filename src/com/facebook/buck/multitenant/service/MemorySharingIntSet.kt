@@ -65,14 +65,9 @@ sealed class MemorySharingIntSet : Iterable<Int> {
 
     /**
      * Unique representation of a [IntArray] that does not share any memory with another [MemorySharingIntSet].
+     * The [values] passed into the constructor must be sorted in incrementing order and contain no duplicates.
      */
     class Unique(val values: IntArray) : MemorySharingIntSet() {
-        init {
-            check(values.asSequence().zipWithNext { a, b -> a <= b }.all { it }) {
-                "IntArray must be sorted"
-            }
-        }
-
         override val size: Int get() = values.size
         override fun iterator(): Iterator<Int> = IntArrayList.wrap(values).iterator()
         override fun contains(element: Int): Boolean = values.binarySearch(element) in 0 until size
