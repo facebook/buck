@@ -512,12 +512,7 @@ public class AppleCxxPlatforms {
       XcodeToolFinder xcodeToolFinder,
       ProjectFilesystem filesystem) {
     ImmutableList<String> swiftParams =
-        ImmutableList.of(
-            "-frontend",
-            "-sdk",
-            sdkPaths.getSdkPath().toString(),
-            "-target",
-            targetArchitectureName);
+        ImmutableList.of("-frontend", "-sdk", sdkPaths.getSdkPath().toString());
 
     String platformName = sdk.getApplePlatform().getName();
     ImmutableList.Builder<String> swiftStdlibToolParamsBuilder = ImmutableList.builder();
@@ -547,7 +542,12 @@ public class AppleCxxPlatforms {
     return swiftc.map(
         tool ->
             SwiftPlatformFactory.build(
-                sdk, sdkPaths, tool, swiftStdLibTool, shouldLinkSystemSwift));
+                sdk,
+                sdkPaths,
+                tool,
+                swiftStdLibTool,
+                shouldLinkSystemSwift,
+                targetArchitectureName));
   }
 
   private static void applySourceLibrariesParamIfNeeded(

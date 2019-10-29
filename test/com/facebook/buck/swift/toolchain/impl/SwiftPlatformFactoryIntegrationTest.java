@@ -91,11 +91,13 @@ public class SwiftPlatformFactoryIntegrationTest {
             createAppleSdkPaths(developerDir),
             swiftcTool,
             Optional.of(swiftStdTool),
-            true);
+            true,
+            "x86_64-apple-ios9.3");
     assertThat(swiftPlatform.getSwiftStdlibTool().get(), equalTo(swiftStdTool));
     assertThat(swiftPlatform.getSwiftc(), equalTo(swiftcTool));
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
+    assertThat(swiftPlatform.getSwiftTarget(), equalTo("x86_64-apple-ios9.3"));
   }
 
   @Test
@@ -108,7 +110,8 @@ public class SwiftPlatformFactoryIntegrationTest {
             createAppleSdkPaths(developerDir, toolchainDir),
             swiftcTool,
             Optional.of(swiftStdTool),
-            true);
+            true,
+            "x86_64-apple-ios9.3");
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
   }
@@ -130,7 +133,8 @@ public class SwiftPlatformFactoryIntegrationTest {
                 tmp.getRoot().resolve("foo3")),
             swiftcTool,
             Optional.of(swiftStdTool),
-            true);
+            true,
+            "x86_64-apple-ios9.3");
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), hasSize(1));
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), hasSize(2));
   }

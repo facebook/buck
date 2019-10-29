@@ -1149,11 +1149,11 @@ public class AppleCxxPlatformsTest {
   @Test
   public void checkSwiftPlatformUsesCorrectMinTargetSdk() {
     AppleCxxPlatform platformWithConfiguredSwift = buildAppleCxxPlatformWithSwiftToolchain();
-    Tool swiftc = platformWithConfiguredSwift.getSwiftPlatform().get().getSwiftc();
+    SwiftPlatform swiftPlatform = platformWithConfiguredSwift.getSwiftPlatform().get();
+    Tool swiftc = swiftPlatform.getSwiftc();
     assertThat(swiftc, notNullValue());
     assertThat(swiftc, instanceOf(VersionedTool.class));
-    VersionedTool versionedSwiftc = (VersionedTool) swiftc;
-    assertThat(versionedSwiftc.getExtraArgs(), hasItem("i386-apple-ios7.0"));
+    assertThat(swiftPlatform.getSwiftTarget(), equalTo("i386-apple-ios7.0"));
   }
 
   @Test

@@ -87,6 +87,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path swiftdocPath;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey private final String swiftTarget;
   @AddToRuleKey private final Optional<String> version;
   @AddToRuleKey private final ImmutableList<? extends Arg> compilerFlags;
 
@@ -109,6 +110,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       CxxPlatform cxxPlatform,
       SwiftBuckConfig swiftBuckConfig,
       BuildTarget buildTarget,
+      String swiftTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Tool swiftCompiler,
@@ -155,6 +157,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.swiftdocPath = outputPath.resolve(escapedModuleName + ".swiftdoc");
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
+    this.swiftTarget = swiftTarget;
     this.version = version;
     this.compilerFlags =
         new ImmutableList.Builder<Arg>()
@@ -181,6 +184,8 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private SwiftCompileStep makeCompileStep(SourcePathResolver resolver) {
     ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
     compilerCommand.addAll(swiftCompiler.getCommandPrefix(resolver));
+
+    compilerCommand.add("-target", swiftTarget);
 
     if (bridgingHeader.isPresent()) {
       compilerCommand.add(
@@ -287,20 +292,8 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     // The swift compiler path will be the first element of the command prefix
     compilerCommand.add(commandPrefix.get(0));
-
-    String target = "";
-    for (int i = 0; i < commandPrefix.size() - 1; ++i) {
-      if (commandPrefix.get(i).equals("-target")) {
-        target = commandPrefix.get(i + 1);
-        break;
-      }
-    }
-
     compilerCommand.add("-modulewrap", modulePath.toString(), "-o", moduleObjectPath.toString());
-
-    if (!target.isEmpty()) {
-      compilerCommand.add("-target", target);
-    }
+    compilerCommand.add("-target", swiftTarget);
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(

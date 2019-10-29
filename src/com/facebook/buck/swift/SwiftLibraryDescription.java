@@ -294,6 +294,7 @@ public class SwiftLibraryDescription
           cxxPlatform,
           swiftBuckConfig,
           buildTarget,
+          swiftPlatform.get().getSwiftTarget(),
           projectFilesystem,
           params.copyAppendingExtraDeps(
               () ->
@@ -461,6 +462,7 @@ public class SwiftLibraryDescription
         cxxPlatform,
         swiftBuckConfig,
         buildTarget,
+        swiftPlatform.getSwiftTarget(),
         projectFilesystem,
         paramsWithSrcDeps,
         swiftPlatform.getSwiftc(),

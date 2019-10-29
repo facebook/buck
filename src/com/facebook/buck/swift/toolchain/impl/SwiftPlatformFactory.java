@@ -44,15 +44,16 @@ public class SwiftPlatformFactory {
       AppleSdkPaths sdkPaths,
       Tool swiftc,
       Optional<Tool> swiftStdLibTool,
-      boolean shouldLinkSystemSwift) {
+      boolean shouldLinkSystemSwift,
+      String swiftTarget) {
     String platformName = sdk.getApplePlatform().getName();
     Set<Path> toolchainPaths = sdkPaths.getToolchainPaths();
     SwiftPlatform.Builder builder =
         SwiftPlatform.builder()
             .setSwiftc(swiftc)
             .setSwiftStdlibTool(swiftStdLibTool)
-            .setSwiftSharedLibraryRunPaths(
-                buildSharedRunPaths(platformName, shouldLinkSystemSwift));
+            .setSwiftSharedLibraryRunPaths(buildSharedRunPaths(platformName, shouldLinkSystemSwift))
+            .setSwiftTarget(swiftTarget);
 
     for (Path toolchainPath : toolchainPaths) {
       Optional<Path> swiftRuntimePathForBundling =
