@@ -51,10 +51,14 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertSuccess();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
-                "Target //:bar_with_dep is declared with unused targets in deps:"),
-            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+        Matchers.containsString(
+            "Target //:bar_with_dep is declared with unused targets in deps: \n"
+                + "buck//third-party/java/jsr:jsr305\n"
+                + "\n"
+                + "Please remove them. You may be able to use the following commands: \n"
+                + "buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep\n"
+                + "\n"
+                + "If you are sure that these targets are required, then you may add them as `runtime_deps` instead and they will no longer be detected as unused.\n"));
   }
 
   @Test
@@ -278,6 +282,15 @@ public class UnusedDependenciesFinderIntegrationTest {
             "-c",
             "java.unused_dependencies_action=fail",
             ":bar_with_exported_provided_dep");
+
+    processResult.assertSuccess();
+  }
+
+  @Test
+  public void testDoNotFailForRuntimeDeps() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build", "-c", "java.unused_dependencies_action=fail", ":bar_with_runtime_dep");
 
     processResult.assertSuccess();
   }

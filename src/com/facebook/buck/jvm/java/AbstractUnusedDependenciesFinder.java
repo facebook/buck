@@ -236,7 +236,9 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
                     .collect(Collectors.toList()));
     String messageTemplate =
         "Target %s is declared with unused targets in %s: \n%s\n\n"
-            + "Please remove them. You may be able to use the following commands: \n%s\n";
+            + "Please remove them. You may be able to use the following commands: \n%s\n\n"
+            + "If you are sure that these targets are required, then you may add them as "
+            + "`runtime_deps` instead and they will no longer be detected as unused.\n";
     String deps = Joiner.on('\n').join(unusedDependencies);
     String message = String.format(messageTemplate, buildTarget, dependencyType, deps, commands);
 

@@ -32,6 +32,17 @@ java_library(
 )
 
 java_library(
+    name = "bar_with_runtime_dep",
+    srcs = ["Bar.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    runtime_deps = [
+        "buck//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_library(
     name = "meh",
     srcs = ["Meh.java"],
 )
