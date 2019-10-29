@@ -431,7 +431,7 @@ class BuckTool(object):
 
     @property
     def _use_buckd(self):
-        return not os.environ.get("NO_BUCKD")
+        return not os.environ.get("NO_BUCKD") or os.environ.get("NO_BUCKD") == "0"
 
     def _environ_for_buck(self):
         env = os.environ.copy()
