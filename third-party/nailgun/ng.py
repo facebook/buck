@@ -27,7 +27,7 @@ import struct
 import sys
 from threading import Condition, Event, Thread, RLock
 
-is_py2 = sys.version[0] == "2"
+is_py2 = sys.version_info[0] == 2
 if is_py2:
     import Queue as Queue
     import __builtin__ as builtin
@@ -47,6 +47,7 @@ else:
 
 if sys.platform == "win32":
     import os, msvcrt
+
     msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
     msvcrt.setmode(sys.stderr.fileno(), os.O_BINARY)
 
@@ -93,6 +94,21 @@ HAS_MEMORYVIEW = "memoryview" in dir(builtin)
 EVENT_STDIN_CHUNK = 0
 EVENT_STDIN_CLOSED = 1
 EVENT_STDIN_EXCEPTION = 2
+
+
+def compat_memoryview_py2(buf):
+    return memoryview(buf)
+
+
+def compat_memoryview_py3(buf):
+    return memoryview(buf).cast("c")
+
+
+# memoryview in python3, while wrapping ctypes.create_string_buffer has problems with
+# that type's default format (<c) and assignment operators. For python3, cast to
+# a 'c' array. Little endian single byte doesn't make sense anyways. However,
+# 'cast' does not exist for python2. So, we have to toggle a bit.
+compat_memoryview = compat_memoryview_py2 if is_py2 else compat_memoryview_py3
 
 
 class NailgunException(Exception):
@@ -374,7 +390,8 @@ class WindowsNamedPipeTransport(Transport):
 
         if err == ERROR_NO_PROCESS_ON_OTHER_END_OF_PIPE:
             raise NailgunException(
-                "No process on the other end of pipe", NailgunException.CONNECTION_BROKEN
+                "No process on the other end of pipe",
+                NailgunException.CONNECTION_BROKEN,
             )
 
         if not immediate:
@@ -387,6 +404,11 @@ class WindowsNamedPipeTransport(Transport):
             self._raise_win_err("error while waiting for read", err)
 
         nread = nread.value
+        if not is_py2:
+            # Wrap in a memoryview, as python3 does not let you assign from a
+            # ctypes.c_char_array slice directly to a memory view, as one is 'c', and one
+            # is '<c' struct/buffer proto format.
+            buf = compat_memoryview(buf)
         buffer[:nread] = buf[:nread]
         return nread
 
@@ -626,7 +648,7 @@ class NailgunConnection(object):
         # only way to provide an offset to recv_into() is to use
         # memoryview(), which doesn't exist until Python 2.7.
         if HAS_MEMORYVIEW:
-            self._recv_into_memoryview(num_bytes, memoryview(buf))
+            self._recv_into_memoryview(num_bytes, compat_memoryview(buf))
         else:
             self._recv_to_buffer_with_copy(num_bytes, buf)
 
