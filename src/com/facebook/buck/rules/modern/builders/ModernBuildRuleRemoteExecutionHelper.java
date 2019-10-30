@@ -476,11 +476,12 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                     try {
                       HashCode hash = hasher.hashBytes(ByteStreams.toByteArray(get()));
                       return String.format(
-                          "File (path:%s size:%s). Expected hash: [%s], Calculated hash: [%s]",
+                          "File (path:%s size:%s). Expected hash: [%s], Calculated hash: [%s]. Cached hash: [%s].",
                           path,
                           Files.size(cellPathPrefix.resolve(path)),
                           getDigest().getHash(),
-                          hash.toString());
+                          hash.toString(),
+                          fileHasher.apply(cellPathPrefix.resolve(path)).toString());
                     } catch (IOException e) {
                       LOG.warn(e, "Unable to describe file: " + path);
                       return String.format(
