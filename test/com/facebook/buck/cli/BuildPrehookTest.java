@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
@@ -34,6 +35,7 @@ import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -121,6 +123,39 @@ public class BuildPrehookTest {
       String argumentsFile = params.getEnvironment().get().get("BUCK_BUILD_ARGUMENTS_FILE");
       String argumentsJson = Iterables.getOnlyElement(Files.readAllLines(Paths.get(argumentsFile)));
       assertThat(argumentsJson, Matchers.equalTo("[ \"target\" ]"));
+    }
+  }
+
+  @Test
+  public void interpreterAndArgsArePassed() throws IOException, InterruptedException {
+    String pathToScript = cell.getFilesystem().getPathForRelativePath("script.py").toString();
+    String interpreterAndArgs = "python3 -B";
+
+    processStates = Collections.singleton(FakeListeningProcessState.ofExit(0));
+
+    buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "build",
+                    ImmutableMap.of(
+                        "prehook_script",
+                        pathToScript,
+                        "prehook_script_interpreter_and_args",
+                        interpreterAndArgs)))
+            .build();
+    try (BuildPrehook buildPrehook = newBuildHook(ImmutableList.of("target"))) {
+      buildPrehook.startPrehookScript();
+      processExecutor.waitForAllLaunchedProcesses();
+      String argumentsFile = params.getEnvironment().get().get("BUCK_BUILD_ARGUMENTS_FILE");
+      String argumentsJson = Iterables.getOnlyElement(Files.readAllLines(Paths.get(argumentsFile)));
+      assertThat(argumentsJson, Matchers.equalTo("[ \"target\" ]"));
+      assertEquals(
+          ImmutableList.of(
+              "python3",
+              "-B",
+              cell.getFilesystem().resolve(pathToScript).toAbsolutePath().toString()),
+          params.getCommand());
     }
   }
 

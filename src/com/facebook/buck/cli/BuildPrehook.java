@@ -26,6 +26,7 @@ import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ListeningProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import java.io.ByteArrayOutputStream;
@@ -67,6 +68,8 @@ class BuildPrehook implements AutoCloseable {
 
   /** Start the build prehook script. */
   synchronized void startPrehookScript() throws IOException {
+    Optional<ImmutableList<String>> interpreterAndArgs =
+        buckConfig.getView(BuildBuckConfig.class).getBuildPrehookScriptInterpreterAndArgs();
     Optional<String> pathToPrehookScript =
         buckConfig.getView(BuildBuckConfig.class).getPathToBuildPrehookScript();
     if (!pathToPrehookScript.isPresent()) {
@@ -98,6 +101,7 @@ class BuildPrehook implements AutoCloseable {
 
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
+            .addAllCommand(interpreterAndArgs.orElse(ImmutableList.of()))
             .addCommand(pathToScript)
             .setEnvironment(environmentBuilder.build())
             .setDirectory(cell.getFilesystem().getRootPath())

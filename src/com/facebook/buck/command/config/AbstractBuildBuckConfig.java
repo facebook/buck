@@ -23,6 +23,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -220,6 +221,12 @@ public abstract class AbstractBuildBuckConfig implements ConfigView<BuckConfig> 
   @Value.Lazy
   public Optional<String> getPathToBuildPrehookScript() {
     return getDelegate().getValue(BUILD_SECTION, "prehook_script");
+  }
+
+  @Value.Lazy
+  public Optional<ImmutableList<String>> getBuildPrehookScriptInterpreterAndArgs() {
+    return getDelegate()
+        .getOptionalListWithoutComments(BUILD_SECTION, "prehook_script_interpreter_and_args", ' ');
   }
 
   /**
