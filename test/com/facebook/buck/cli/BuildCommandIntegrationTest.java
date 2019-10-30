@@ -48,8 +48,6 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.function.ThrowingFunction;
-import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
@@ -343,34 +341,13 @@ public class BuildCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
 
-    ThrowingFunction<String, String, Exception> getOutput =
-        (String data) ->
-            MoreStrings.lines(data).stream()
-                .filter(line -> line.startsWith("//subdir1/subdir2:bar"))
-                .map(line -> line.trim().split("\\s+")[1])
-                .findFirst()
-                .get();
-
-    String absolutePath =
-        getOutput.apply(
-            workspace
-                .runBuckCommand("build", "--show-output", "//subdir1/subdir2:bar")
-                .assertSuccess()
-                .getStdout());
+    Path absolutePath = workspace.buildAndReturnOutput("//subdir1/subdir2:bar");
 
     workspace.setRelativeWorkingDirectory(Paths.get("subdir1"));
-    String subdirRelativePath =
-        getOutput.apply(
-            workspace
-                .runBuckCommand("build", "--show-output", "subdir2:bar")
-                .assertSuccess()
-                .getStdout());
-    String subdirAbsolutePath =
-        getOutput.apply(
-            workspace
-                .runBuckCommand("build", "--show-output", "//subdir1/subdir2:bar")
-                .assertSuccess()
-                .getStdout());
+
+    Path subdirRelativePath = workspace.buildAndReturnOutput("subdir2:bar");
+
+    Path subdirAbsolutePath = workspace.buildAndReturnOutput("//subdir1/subdir2:bar");
 
     assertEquals(absolutePath, subdirAbsolutePath);
     assertEquals(absolutePath, subdirRelativePath);
