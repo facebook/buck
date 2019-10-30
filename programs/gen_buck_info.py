@@ -19,8 +19,7 @@ import os
 import sys
 import time
 
-import buck_version
-import java_version
+from programs import buck_version, java_version
 
 
 def main(argv):

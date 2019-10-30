@@ -17,7 +17,7 @@ import shutil
 import tempfile
 import unittest
 
-import buck_project
+from programs import buck_project
 
 
 class TestBuckProjects(unittest.TestCase):

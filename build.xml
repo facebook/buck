@@ -1040,6 +1040,8 @@
 
   <target name="gen-buck-info">
     <exec executable="python" output="${buck.info.file}" logError="true" failonerror="true">
+      <env key="PYTHONPATH" value="${basedir}" />
+      <env key="PYTHONDONTWRITEBYTECODE" value="1" />
       <arg value="programs/gen_buck_info.py"/>
       <arg value="--java-version"/>
       <arg value="${java.version}"/>

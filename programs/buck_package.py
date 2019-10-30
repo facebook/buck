@@ -21,9 +21,9 @@ import shutil
 import stat
 import tempfile
 
-import file_locks
 import pkg_resources
-from buck_tool import BuckTool, MovableTemporaryFile, Resource
+from programs import file_locks
+from programs.buck_tool import BuckTool, MovableTemporaryFile, Resource
 
 
 SERVER = Resource("buck_server")

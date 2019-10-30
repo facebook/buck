@@ -34,9 +34,9 @@ from collections import namedtuple
 from subprocess import CalledProcessError, check_output
 
 from ng import NailgunConnection, NailgunException
-from subprocutils import which
-from timing import monotonic_time_nanos
-from tracing import Tracing
+from programs.subprocutils import which
+from programs.timing import monotonic_time_nanos
+from programs.tracing import Tracing
 
 
 BUCKD_CLIENT_TIMEOUT_MILLIS = 180000

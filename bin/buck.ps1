@@ -12,5 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 # Invoke the buck wrappers scripts with Python.
-$env:PYTHONPATH=(Join-Path (Join-Path (Split-Path (Split-Path $PSCommandPath)) third-party) nailgun)
+$BUCK_DIR=(Split-Path (Split-Path $PSCommandPath))
+$NG_PATH=(Join-Path (Join-Path $BUCK_DIR third-party) nailgun)
+$env:PYTHONPATH="${NG_PATH};${BUCK_DIR}"
 python (Join-Path (Join-Path (Split-Path (Split-Path $PSCommandPath)) programs) buck.py) $args

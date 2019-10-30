@@ -15,7 +15,7 @@
 import os
 import unittest
 
-from buck_tool import BuckToolException, CommandLineArgs, MovableTemporaryFile
+from programs.buck_tool import BuckToolException, CommandLineArgs, MovableTemporaryFile
 
 
 class TestCommandLineArgs(unittest.TestCase):

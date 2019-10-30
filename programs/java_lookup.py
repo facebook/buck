@@ -18,8 +18,8 @@ import re
 import sys
 import textwrap
 
-from buck_tool import BuckToolException
-from subprocutils import which
+from programs.buck_tool import BuckToolException
+from programs.subprocutils import which
 
 
 JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRING = r"jdk(1\.(\d+)(\.\d+(_\d+)?)?)(\.jdk)?"

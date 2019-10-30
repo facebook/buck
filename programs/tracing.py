@@ -23,7 +23,7 @@ import platform
 import time
 import uuid
 
-from timing import monotonic_time_nanos
+from programs.timing import monotonic_time_nanos
 
 
 def create_symlink(original, symlink):

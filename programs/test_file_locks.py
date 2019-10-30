@@ -18,7 +18,8 @@ import tempfile
 import unittest
 from multiprocessing import Pool
 
-import file_locks
+from programs import file_locks
+
 
 # Python will gc the lock files otherwise
 leak_files_please = []

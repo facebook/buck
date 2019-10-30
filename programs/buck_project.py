@@ -22,8 +22,8 @@ import sys
 import tempfile
 import textwrap
 
-import file_locks
-from tracing import Tracing
+from programs import file_locks
+from programs.tracing import Tracing
 
 
 def get_file_contents_if_exists(path, default=None):

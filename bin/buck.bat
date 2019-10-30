@@ -12,5 +12,5 @@
 :: License for the specific language governing permissions and limitations
 :: under the License.
 @echo off
-set PYTHONPATH=%~dp0..\third-party\nailgun
+set PYTHONPATH=%~dp0..\third-party\nailgun;%~dp0..
 python %~dp0..\programs\buck.py %*

@@ -21,7 +21,7 @@ import sys
 import tempfile
 from subprocess import CalledProcessError, check_output
 
-from subprocutils import which
+from programs.subprocutils import which
 
 
 class EmptyTempFile(object):

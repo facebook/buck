@@ -17,9 +17,10 @@ import shutil
 import tempfile
 import unittest
 
-from buck_tool import BuckToolException
-from java_lookup import _get_java_path_for_highest_minor_version, get_java_path
-from subprocutils import which
+from programs.buck_tool import BuckToolException
+from programs.java_lookup import _get_java_path_for_highest_minor_version, get_java_path
+from programs.subprocutils import which
+
 
 ANY_JAVA_VERSION = 8
 JAVA_VERSION_THAT_OBVIOUSLY_CANT_EXIST_LOCALLY = 500

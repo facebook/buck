@@ -30,9 +30,9 @@ import zipfile
 from multiprocessing import Queue
 from subprocess import check_output
 
-from buck_logging import setup_logging
-from buck_project import BuckProject, NoBuckConfigFoundException
-from buck_tool import (
+from programs.buck_logging import setup_logging
+from programs.buck_project import BuckProject, NoBuckConfigFoundException
+from programs.buck_tool import (
     BuckDaemonErrorException,
     BuckStatusReporter,
     ExecuteTarget,
@@ -40,10 +40,10 @@ from buck_tool import (
     ExitCodeCallable,
     install_signal_handlers,
 )
-from java_lookup import get_java_path
-from java_version import get_java_major_version
-from subprocutils import propagate_failure
-from tracing import Tracing
+from programs.java_lookup import get_java_path
+from programs.java_version import get_java_major_version
+from programs.subprocutils import propagate_failure
+from programs.tracing import Tracing
 
 
 if sys.version_info < (2, 7):
@@ -190,11 +190,11 @@ def main(argv, reporter):
         # Try to detect if we're running a PEX by checking if we were invoked
         # via a zip file.
         if zipfile.is_zipfile(argv[0]):
-            from buck_package import BuckPackage
+            from programs.buck_package import BuckPackage
 
             return BuckPackage(p, reporter)
         else:
-            from buck_repo import BuckRepo
+            from programs.buck_repo import BuckRepo
 
             return BuckRepo(THIS_DIR, p, reporter)
 

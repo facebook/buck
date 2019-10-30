@@ -20,9 +20,9 @@ import os
 import os.path
 import sys
 
-from buck_tool import BuckTool, platform_path
-from subprocutils import which
-from tracing import Tracing
+from programs.buck_tool import BuckTool, platform_path
+from programs.subprocutils import which
+from programs.tracing import Tracing
 
 
 # If you're looking for JAVA_CLASSPATHS, they're now defined in the programs/classpaths file.
