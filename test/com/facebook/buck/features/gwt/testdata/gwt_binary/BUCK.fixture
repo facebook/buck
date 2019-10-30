@@ -45,7 +45,7 @@ gwt_binary(
     modules = ["com/example/gwt/A"],
     optimize = 0,
     style = "PRETTY",
-    vm_args = ["-Xmx256M"],
+    vm_args = ["-Xmx512m"],
     deps = [
         ":gwt-dev",
     ],
@@ -53,10 +53,10 @@ gwt_binary(
 
 prebuilt_jar(
     name = "gwt-dev",
-    binary_jar = "lib/gwt-dev-2.7.0.jar",
+    binary_jar = "lib/gwt-dev-2.8.2.jar",
 )
 
 prebuilt_jar(
     name = "gwt-user",
-    binary_jar = "lib/gwt-user-2.7.0.jar",
+    binary_jar = "lib/gwt-user-2.8.2.jar",
 )
