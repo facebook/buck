@@ -13,6 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import print_function
 
 import hashlib
 import sys
@@ -27,15 +28,15 @@ def hash_files(files, verbose=False):
     for file in sorted(files):
         if verbose:
             file_hasher = hashlib.md5()
-        with open(file) as f:
+        with open(file, "rb") as f:
             content = f.read()
             m.update(content)
             if verbose:
                 file_hasher.update(content)
         if verbose:
-            print file, file_hasher.hexdigest()
+            print(file_hasher.hexdigest(), file=file)
     return m.hexdigest()
 
 
-if __name__ == '__main__':
-    print hash_files(sys.argv[1:])
+if __name__ == "__main__":
+    print(hash_files(sys.argv[1:]))
