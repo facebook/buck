@@ -120,7 +120,7 @@ public class TargetSpecResolverTest {
     parserPythonInterpreterProvider =
         new ParserPythonInterpreterProvider(parserConfig, executableFinder);
     perBuildStateFactory =
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
             typeCoercerFactory,
             constructorArgMarshaller,
             knownRuleTypesProvider,

@@ -44,7 +44,7 @@ public class ParserFactory {
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
     return new ParserWithConfigurableAttributes(
         daemonicParserState,
-        new PerBuildStateFactoryWithConfigurableAttributes(
+        new PerBuildStateFactory(
             typeCoercerFactory,
             marshaller,
             knownRuleTypesProvider,

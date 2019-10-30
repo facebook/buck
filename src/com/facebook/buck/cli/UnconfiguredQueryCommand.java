@@ -63,7 +63,7 @@ public class UnconfiguredQueryCommand extends AbstractQueryCommand {
             new CommandThreadManager(
                 "UnconfiguredQuery", getConcurrencyLimit(params.getBuckConfig()));
         PerBuildState parserState =
-            PerBuildStateFactory.createFactory(
+            new PerBuildStateFactory(
                     params.getTypeCoercerFactory(),
                     new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                     params.getKnownRuleTypesProvider(),

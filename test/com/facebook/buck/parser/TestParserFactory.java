@@ -60,7 +60,7 @@ public class TestParserFactory {
     return create(
         executor,
         cell,
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
             typeCoercerFactory,
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             knownRuleTypesProvider,

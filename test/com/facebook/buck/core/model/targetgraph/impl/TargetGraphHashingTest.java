@@ -112,7 +112,7 @@ public class TargetGraphHashingTest {
         TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider, eventBus);
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     PerBuildState parserState =
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
                 typeCoercerFactory,
                 new DefaultConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,

@@ -123,7 +123,7 @@ public class QueryCommandTest {
     ListeningExecutorService executorService = new FakeListeningExecutorService();
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     PerBuildState perBuildState =
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
                 typeCoercerFactory,
                 new DefaultConstructorArgMarshaller(typeCoercerFactory),
                 params.getKnownRuleTypesProvider(),

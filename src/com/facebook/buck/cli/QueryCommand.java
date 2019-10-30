@@ -40,7 +40,7 @@ public class QueryCommand extends AbstractQueryCommand {
     try (CommandThreadManager pool =
             new CommandThreadManager("Query", getConcurrencyLimit(params.getBuckConfig()));
         PerBuildState parserState =
-            PerBuildStateFactory.createFactory(
+            new PerBuildStateFactory(
                     params.getTypeCoercerFactory(),
                     new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                     params.getKnownRuleTypesProvider(),

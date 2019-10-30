@@ -911,7 +911,7 @@ public class TargetsCommand extends AbstractCommand {
     Iterator<TargetNode<?>> targetNodeIterator = targetNodes.iterator();
 
     try (PerBuildState state =
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
                 params.getTypeCoercerFactory(),
                 new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                 params.getKnownRuleTypesProvider(),
@@ -1313,7 +1313,7 @@ public class TargetsCommand extends AbstractCommand {
     ImmutableMap<BuildTarget, HashCode> buildTargetHashes;
 
     try (PerBuildState state =
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
                 params.getTypeCoercerFactory(),
                 new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                 params.getKnownRuleTypesProvider(),

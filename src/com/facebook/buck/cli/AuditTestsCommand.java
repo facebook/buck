@@ -81,7 +81,7 @@ public class AuditTestsCommand extends AbstractCommand {
     try (CommandThreadManager pool =
             new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()));
         PerBuildState parserState =
-            PerBuildStateFactory.createFactory(
+            new PerBuildStateFactory(
                     params.getTypeCoercerFactory(),
                     new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                     params.getKnownRuleTypesProvider(),

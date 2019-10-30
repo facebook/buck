@@ -219,7 +219,7 @@ public class ParserWithConfigurableAttributesTest {
       Path buildFile)
       throws BuildFileParseException {
     try (PerBuildState state =
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
                 typeCoercerFactory,
                 new DefaultConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
@@ -2681,7 +2681,7 @@ public class ParserWithConfigurableAttributesTest {
                 HashCode.fromBytes(buildTarget.getBaseName().getBytes(StandardCharsets.UTF_8))));
 
     try (PerBuildState state =
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
                 typeCoercerFactory,
                 new DefaultConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
