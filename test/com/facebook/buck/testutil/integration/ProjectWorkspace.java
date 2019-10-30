@@ -539,7 +539,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
       }
       envBuilder.putAll(environmentOverrides);
       envBuilder.put(
-          "BUCK_CLIENT_PWD", repoRoot.toAbsolutePath().resolve(relativeWorkingDir).toString());
+          "BUCK_CLIENT_PWD",
+          repoRoot.toAbsolutePath().resolve(relativeWorkingDir).normalize().toString());
 
       ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
       BackgroundTaskManager manager = AsyncBackgroundTaskManager.of();

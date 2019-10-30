@@ -39,6 +39,8 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -67,6 +69,7 @@ import org.junit.Test;
 public class BuildCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
 
   @Test
   public void justBuild() throws IOException {
@@ -348,6 +351,33 @@ public class BuildCommandIntegrationTest {
     Path subdirRelativePath = workspace.buildAndReturnOutput("subdir2:bar");
 
     Path subdirAbsolutePath = workspace.buildAndReturnOutput("//subdir1/subdir2:bar");
+
+    assertEquals(absolutePath, subdirAbsolutePath);
+    assertEquals(absolutePath, subdirRelativePath);
+  }
+
+  @Test
+  public void canBuildAndUseRelativePathsFromWithinASymlinkedDirectory() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+
+    assertFalse(tmp.getRoot().startsWith(tmp2.getRoot()));
+    assertFalse(tmp2.getRoot().startsWith(tmp.getRoot()));
+
+    Path dest = tmp2.getRoot().resolve("symlink_subdir").toAbsolutePath();
+    Path relativeDest = tmp.getRoot().relativize(dest);
+
+    MorePaths.createSymLink(new WindowsFS(), dest, tmp.getRoot());
+
+    workspace.setRelativeWorkingDirectory(relativeDest);
+
+    Path absolutePath = workspace.buildAndReturnOutput("//subdir1/subdir2:bar");
+
+    workspace.setRelativeWorkingDirectory(relativeDest.resolve("subdir1"));
+
+    Path subdirAbsolutePath = workspace.buildAndReturnOutput("//subdir1/subdir2:bar");
+    Path subdirRelativePath = workspace.buildAndReturnOutput("subdir2:bar");
 
     assertEquals(absolutePath, subdirAbsolutePath);
     assertEquals(absolutePath, subdirRelativePath);

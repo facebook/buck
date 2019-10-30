@@ -1554,12 +1554,29 @@ public final class MainRunner {
       throw new IllegalStateException(
           String.format("Received non-absolute BUCK_CLIENT_PWD %s from wrapper", pwd));
     }
-    if (!pwd.startsWith(rootCell.getRoot())) {
-      throw new IllegalStateException(
-          String.format(
-              "Received BUCK_CLIENT_PWD %s from wrapper that was not a child of %s",
-              pwd, rootCell.getRoot()));
+    // Resolution of symlinks is funky on windows. Python doesn't follow symlinks, but java does
+    // So: do an extra resolution in java, and see what happens. Yay.
+    Path originalPwd = pwd;
+    try {
+      pwd = pwd.toRealPath().toAbsolutePath();
+    } catch (IOException e) {
+      // Pass if we can't resolve the path, it'll blow up eventually
     }
+
+    if (!pwd.startsWith(rootCell.getRoot())) {
+      if (originalPwd.equals(pwd)) {
+        throw new IllegalStateException(
+            String.format(
+                "Received BUCK_CLIENT_PWD %s from wrapper that was not a child of %s",
+                pwd, rootCell.getRoot()));
+      } else {
+        throw new IllegalStateException(
+            String.format(
+                "Received BUCK_CLIENT_PWD %s (resolved to %s) from wrapper that was not a child of %s",
+                originalPwd, pwd, rootCell.getRoot()));
+      }
+    }
+
     return pwd;
   }
 
