@@ -17,6 +17,8 @@
 package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.hash.HashCode;
 import java.util.Optional;
@@ -30,8 +32,21 @@ import org.immutables.value.Value;
 @Value.Immutable(prehash = true)
 public abstract class AbstractDefaultBuildTargetSourcePath implements BuildTargetSourcePath {
 
+  public abstract BuildTargetWithOutputs getTargetWithOutputs();
+
   @Override
-  public abstract BuildTarget getTarget();
+  public BuildTarget getTarget() {
+    return getTargetWithOutputs().getBuildTarget();
+  }
+
+  /**
+   * Returns a default {@link com.facebook.buck.core.sourcepath.BuildTargetSourcePath} with an empty
+   * output label.
+   */
+  public static DefaultBuildTargetSourcePath of(BuildTarget target) {
+    return DefaultBuildTargetSourcePath.of(
+        ImmutableBuildTargetWithOutputs.of(target, Optional.empty()));
+  }
 
   @Override
   @Value.Parameter(value = false)
@@ -39,7 +54,7 @@ public abstract class AbstractDefaultBuildTargetSourcePath implements BuildTarge
 
   @Override
   public int hashCode() {
-    return getTarget().hashCode();
+    return getTargetWithOutputs().hashCode();
   }
 
   @Override
@@ -53,12 +68,12 @@ public abstract class AbstractDefaultBuildTargetSourcePath implements BuildTarge
     }
 
     AbstractDefaultBuildTargetSourcePath that = (AbstractDefaultBuildTargetSourcePath) other;
-    return getTarget().equals(that.getTarget());
+    return getTargetWithOutputs().equals(that.getTargetWithOutputs());
   }
 
   @Override
   public String toString() {
-    return String.valueOf(getTarget());
+    return String.valueOf(getTargetWithOutputs());
   }
 
   @Override
@@ -73,6 +88,6 @@ public abstract class AbstractDefaultBuildTargetSourcePath implements BuildTarge
     }
 
     AbstractDefaultBuildTargetSourcePath that = (AbstractDefaultBuildTargetSourcePath) other;
-    return getTarget().compareTo(that.getTarget());
+    return getTargetWithOutputs().compareTo(that.getTargetWithOutputs());
   }
 }

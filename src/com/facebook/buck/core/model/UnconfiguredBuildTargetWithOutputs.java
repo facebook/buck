@@ -33,7 +33,8 @@ import org.immutables.value.Value;
  * <p>See also {@link BuildTargetWithOutputs} for outputs with configured build targets.
  */
 @Value.Immutable(prehash = true, builder = false)
-public abstract class UnconfiguredBuildTargetWithOutputs {
+public abstract class UnconfiguredBuildTargetWithOutputs
+    implements Comparable<UnconfiguredBuildTargetWithOutputs> {
   @Value.Parameter
   /** Returns the associated {@link UnconfiguredBuildTargetView}. */
   public abstract UnconfiguredBuildTargetView getBuildTarget();
@@ -41,4 +42,42 @@ public abstract class UnconfiguredBuildTargetWithOutputs {
   @Value.Parameter
   /** Returns the output label associated with the build target, if any. */
   public abstract Optional<String> getOutputLabel();
+
+  @Override
+  public int compareTo(UnconfiguredBuildTargetWithOutputs other) {
+    if (this == other) {
+      return 0;
+    }
+
+    int targetComparison = getBuildTarget().compareTo(other.getBuildTarget());
+    if (targetComparison != 0) {
+      return targetComparison;
+    }
+
+    if (getOutputLabel().isPresent() && other.getOutputLabel().isPresent()) {
+      return getOutputLabel().get().compareTo(other.getOutputLabel().get());
+    }
+
+    if (getOutputLabel().isPresent()) {
+      return 1;
+    }
+
+    if (other.getOutputLabel().isPresent()) {
+      return -1;
+    }
+
+    return 0;
+  }
+
+  /**
+   * Returns the string representation of a {@code UnconfiguredBuildTargetWithOutputs} in the form
+   * of target_name[output_label]. E.g. //foo:bar[baz]. If no output label is available, the square
+   * brackets are omitted. E.g. //foo:bar
+   */
+  @Override
+  public String toString() {
+    return getOutputLabel()
+        .map(ol -> String.format("%s[%s]", getBuildTarget(), ol))
+        .orElse(getBuildTarget().getFullyQualifiedName());
+  }
 }

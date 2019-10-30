@@ -18,6 +18,8 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.AbstractDefaultBuildTargetSourcePath;
@@ -171,9 +173,11 @@ public class ThriftRuleKeyHasherTest {
     hasher.putBuildTargetSourcePath(
         new AbstractDefaultBuildTargetSourcePath() {
           @Override
-          public BuildTarget getTarget() {
-            return BuildTargetFactory.newInstance(
-                new File("cell_path_2").toPath(), "//base_name_2", "rule_name_2");
+          public BuildTargetWithOutputs getTargetWithOutputs() {
+            return ImmutableBuildTargetWithOutputs.of(
+                BuildTargetFactory.newInstance(
+                    new File("cell_path_2").toPath(), "//base_name_2", "rule_name_2"),
+                Optional.empty());
           }
 
           @Override
@@ -264,7 +268,12 @@ public class ThriftRuleKeyHasherTest {
                     new com.facebook.buck.log.thrift.rulekeys.BuildTarget("//base_name:rule_name")))
             .put(
                 ".build_target_source_path_value",
-                Value.targetPath(new TargetPath("//base_name_2:rule_name_2")))
+                Value.targetPath(
+                    new TargetPath(
+                        ImmutableBuildTargetWithOutputs.of(
+                                BuildTargetFactory.newInstance("//base_name_2:rule_name_2"),
+                                Optional.empty())
+                            .toString())))
             .put(
                 ".list_value",
                 Value.containerList(

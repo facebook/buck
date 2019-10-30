@@ -34,7 +34,7 @@ import org.immutables.value.Value;
  * targets.
  */
 @Value.Immutable(prehash = true, builder = false)
-public abstract class BuildTargetWithOutputs {
+public abstract class BuildTargetWithOutputs implements Comparable<BuildTargetWithOutputs> {
   @Value.Parameter
   /** Returns the associated {@link BuildTarget}. */
   public abstract BuildTarget getBuildTarget();
@@ -42,4 +42,42 @@ public abstract class BuildTargetWithOutputs {
   @Value.Parameter
   /** Returns the output label associated with the build target, if any. */
   public abstract Optional<String> getOutputLabel();
+
+  @Override
+  public int compareTo(BuildTargetWithOutputs other) {
+    if (this == other) {
+      return 0;
+    }
+
+    int targetComparison = getBuildTarget().compareTo(other.getBuildTarget());
+    if (targetComparison != 0) {
+      return targetComparison;
+    }
+
+    if (getOutputLabel().isPresent() && other.getOutputLabel().isPresent()) {
+      return getOutputLabel().get().compareTo(other.getOutputLabel().get());
+    }
+
+    if (getOutputLabel().isPresent()) {
+      return 1;
+    }
+
+    if (other.getOutputLabel().isPresent()) {
+      return -1;
+    }
+
+    return 0;
+  }
+
+  /**
+   * Returns the string representation of a {@code BuildTargetWithOutputs} in the form of
+   * target_name[output_label] if an output label is present. E.g. //foo:bar[baz]. If no output
+   * label is present, the square brackets are omitted. E.g. //foo:bar
+   */
+  @Override
+  public String toString() {
+    return getOutputLabel()
+        .map(ol -> String.format("%s[%s]", getBuildTarget(), ol))
+        .orElse(getBuildTarget().getFullyQualifiedName());
+  }
 }
