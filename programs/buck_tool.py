@@ -450,9 +450,13 @@ class BuckTool(object):
             try:
                 # Get the number of columns in the terminal.
                 with open(os.devnull, "w") as devnull:
-                    stty_size_str = check_output(
-                        ["stty", "size"], stderr=devnull
-                    ).strip()
+                    # Make sure we get a string back in py3, but encoding isn't
+                    # valid in py2, so don't send in that case
+                    stty_size_str = (
+                        check_output(["stty", "size"], stderr=devnull)
+                        .decode("utf-8")
+                        .strip()
+                    )
                     stty_size = stty_size_str.split(" ")
                     if len(stty_size) >= 2:
                         env["BUCK_TERM_COLUMNS"] = stty_size[1]
