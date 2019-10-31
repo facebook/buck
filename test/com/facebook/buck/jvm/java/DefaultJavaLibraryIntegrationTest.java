@@ -45,6 +45,7 @@ import com.facebook.buck.json.HasJsonField;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.jvm.java.testutil.Bootclasspath;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -551,7 +552,15 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     // Warm the used classes file
     ProcessResult buildResult =
         workspace.runBuckCommand("build", mainTarget.getFullyQualifiedName());
-    buildResult.assertFailure("MyPlugin won't let you build this");
+
+    // Java 8 swallows exceptions coming from javac plugin code during plugin init, and returns
+    // failure from the `JavacTask`. Java 9+ allows these user plugin code exceptions to propagate
+    // directly out of the `JavacTask` invocation, and there's no way to distinguish these
+    // exceptions from other exceptions originating from javac itself. So we end up with different
+    // exit codes depending on Buck's Java version.
+    ExitCode expectedExitCode =
+        (JavaVersion.getMajorVersion() <= 8) ? ExitCode.BUILD_ERROR : ExitCode.FATAL_GENERIC;
+    buildResult.assertExitCode("MyPlugin won't let you build this", expectedExitCode);
   }
 
   @Test
