@@ -142,18 +142,26 @@ public class LinkableListFilterFactory {
     for (CxxLinkGroupMapping groupMapping : mapping) {
       String currentLinkGroup = groupMapping.getLinkGroup();
       for (CxxLinkGroupMappingTarget mappingTarget : groupMapping.getMappingTargets()) {
-        final BuildTarget buildTarget = mappingTarget.getBuildTarget();
+        final ImmutableList<BuildTarget> buildTargets = getBuildTargetsForMapping(mappingTarget);
 
-        addGroupMappingForBuildTarget(
-            targetGraph,
-            enableTraversalForAppleLibraryOnly,
-            buildTargetToLinkGroupMap,
-            currentLinkGroup,
-            mappingTarget.getTraversal(),
-            buildTarget);
+        for (BuildTarget buildTarget : buildTargets) {
+          addGroupMappingForBuildTarget(
+              targetGraph,
+              enableTraversalForAppleLibraryOnly,
+              buildTargetToLinkGroupMap,
+              currentLinkGroup,
+              mappingTarget.getTraversal(),
+              buildTarget);
+        }
       }
     }
     return buildTargetToLinkGroupMap;
+  }
+
+  @Nonnull
+  private static ImmutableList<BuildTarget> getBuildTargetsForMapping(
+      CxxLinkGroupMappingTarget mappingTarget) {
+    return ImmutableList.of(mappingTarget.getBuildTarget());
   }
 
   /**
