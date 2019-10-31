@@ -60,7 +60,7 @@ public class TargetNodes {
   public static <V extends ConstructorArg> Optional<TargetNode<V>> castArg(
       TargetNode<?> node, Class<V> cls) {
     if (cls.isInstance(node.getConstructorArg())) {
-      return Optional.of((TargetNode<V>) node.copy());
+      return Optional.of((TargetNode<V>) node);
     } else {
       return Optional.empty();
     }

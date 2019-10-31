@@ -116,8 +116,6 @@ public interface TargetNode<T extends ConstructorArg>
 
   RuleType getRuleType();
 
-  TargetNode<T> copy();
-
   /**
    * This method copies this target node with applying logic in {@link
    * com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription} that may give

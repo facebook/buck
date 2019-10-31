@@ -176,11 +176,6 @@ abstract class AbstractImmutableTargetNode<T extends ConstructorArg> implements 
   }
 
   @Override
-  public TargetNode<T> copy() {
-    return ImmutableTargetNode.copyOf(this);
-  }
-
-  @Override
   public TargetNode<T> copyWithFlavors(ImmutableSet<Flavor> flavors) {
     return getNodeCopier().copyNodeWithFlavors(ImmutableTargetNode.copyOf(this), flavors);
   }
