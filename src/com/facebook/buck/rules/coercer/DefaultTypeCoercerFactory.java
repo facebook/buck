@@ -55,6 +55,7 @@ import com.facebook.buck.rules.macros.LdflagsStaticMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticPicFilterMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticPicMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.LocationPlatformMacro;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacro;
 import com.facebook.buck.rules.macros.OutputMacro;
@@ -162,6 +163,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 .put("exe", ExecutableMacro.class)
                 .put("env", EnvMacro.class)
                 .put("location", LocationMacro.class)
+                .put("location-platform", LocationPlatformMacro.class)
                 .put("maven_coords", MavenCoordinatesMacro.class)
                 .put("output", OutputMacro.class)
                 .put("abs_output", AbsoluteOutputMacro.class)
@@ -194,6 +196,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                     buildTargetTypeCoercer, ExecutableMacro.class, ExecutableMacro::of),
                 new EnvMacroTypeCoercer(),
                 new LocationMacroTypeCoercer(buildTargetTypeCoercer),
+                new LocationPlatformMacroTypeCoercer(buildTargetTypeCoercer),
                 new BuildTargetMacroTypeCoercer<>(
                     buildTargetTypeCoercer, MavenCoordinatesMacro.class, MavenCoordinatesMacro::of),
                 new OutputMacroTypeCoercer(),

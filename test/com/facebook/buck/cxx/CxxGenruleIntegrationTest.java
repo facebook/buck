@@ -148,4 +148,13 @@ public class CxxGenruleIntegrationTest {
     Path output = workspace.buildAndReturnOutput("//:rule#default");
     assertThat(workspace.getFileContents(output), Matchers.containsString("default"));
   }
+
+  @Test
+  public void locationPlatformMacro() throws IOException {
+    workspace.replaceFileContents(
+        "BUCK", "@CMD@", "echo -- $(location-platform //:trivial shared)");
+    Path trivialPath = workspace.buildAndReturnOutput("//:trivial#default,shared");
+    Path output = workspace.buildAndReturnOutput("//:rule#default");
+    assertThat(workspace.getFileContents(output), Matchers.containsString(trivialPath.toString()));
+  }
 }

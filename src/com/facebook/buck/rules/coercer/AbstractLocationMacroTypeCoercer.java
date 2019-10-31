@@ -20,39 +20,43 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.macros.BaseLocationMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/** Coerces `$(location ...)` macros into {@link LocationMacro}. */
-class LocationMacroTypeCoercer extends AbstractLocationMacroTypeCoercer<LocationMacro> {
+/** Base class for expanding {@link BaseLocationMacro}s to strings. */
+abstract class AbstractLocationMacroTypeCoercer<T extends BaseLocationMacro>
+    implements MacroTypeCoercer<T> {
 
-  public LocationMacroTypeCoercer(TypeCoercer<BuildTarget> buildTargetTypeCoercer) {
-    super(buildTargetTypeCoercer);
+  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
+
+  public AbstractLocationMacroTypeCoercer(TypeCoercer<BuildTarget> buildTargetTypeCoercer) {
+    this.buildTargetTypeCoercer = buildTargetTypeCoercer;
   }
 
   @Override
-  public Class<LocationMacro> getOutputClass() {
-    return LocationMacro.class;
+  public boolean hasElementClass(Class<?>[] types) {
+    return buildTargetTypeCoercer.hasElementClass(types);
   }
 
   @Override
-  public LocationMacro coerce(
+  public void traverse(CellPathResolver cellRoots, T macro, TypeCoercer.Traversal traversal) {
+    buildTargetTypeCoercer.traverse(cellRoots, macro.getTarget(), traversal);
+  }
+
+  protected Pair<BuildTarget, Optional<String>> coerceTarget(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      ImmutableList<String> args)
+      String arg)
       throws CoerceFailedException {
-    if (args.size() != 1 || args.get(0).isEmpty()) {
-      throw new CoerceFailedException(
-          String.format("expected exactly one argument (found %d)", args.size()));
-    }
-    Pair<BuildTarget, Optional<String>> target =
-        coerceTarget(
-            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, args.get(0));
-    return LocationMacro.of(target.getFirst(), target.getSecond());
+    LocationMacro.SplitResult parts = LocationMacro.splitSupplementaryOutputPart(arg);
+    BuildTarget target =
+        buildTargetTypeCoercer.coerce(
+            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, parts.target);
+    return new Pair<>(target, parts.supplementaryOutput);
   }
 }

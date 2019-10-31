@@ -77,6 +77,7 @@ import com.facebook.buck.rules.macros.LdflagsStaticFilterMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticPicFilterMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticPicMacro;
+import com.facebook.buck.rules.macros.LocationPlatformMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.PlatformNameMacro;
@@ -208,6 +209,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     expanders.add(new ExecutableMacroExpander());
     expanders.add(new CxxLocationMacroExpander(cxxPlatform));
+    expanders.add(new LocationPlatformMacroExpander(cxxPlatform));
     expanders.add(
         new StringExpander<>(
             PlatformNameMacro.class, StringArg.of(cxxPlatform.getFlavor().toString())));

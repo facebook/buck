@@ -18,41 +18,49 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.LocationPlatformMacro;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/** Coerces `$(location ...)` macros into {@link LocationMacro}. */
-class LocationMacroTypeCoercer extends AbstractLocationMacroTypeCoercer<LocationMacro> {
+/** Coerces `$(location-platform ...)` macros into {@link LocationPlatformMacro}. */
+class LocationPlatformMacroTypeCoercer
+    extends AbstractLocationMacroTypeCoercer<LocationPlatformMacro> {
 
-  public LocationMacroTypeCoercer(TypeCoercer<BuildTarget> buildTargetTypeCoercer) {
+  public LocationPlatformMacroTypeCoercer(TypeCoercer<BuildTarget> buildTargetTypeCoercer) {
     super(buildTargetTypeCoercer);
   }
 
   @Override
-  public Class<LocationMacro> getOutputClass() {
-    return LocationMacro.class;
+  public Class<LocationPlatformMacro> getOutputClass() {
+    return LocationPlatformMacro.class;
   }
 
   @Override
-  public LocationMacro coerce(
+  public LocationPlatformMacro coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
-    if (args.size() != 1 || args.get(0).isEmpty()) {
+    if (args.size() < 1) {
       throw new CoerceFailedException(
-          String.format("expected exactly one argument (found %d)", args.size()));
+          String.format("expected at least one argument (found %d)", args.size()));
     }
     Pair<BuildTarget, Optional<String>> target =
         coerceTarget(
             cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, args.get(0));
-    return LocationMacro.of(target.getFirst(), target.getSecond());
+    return LocationPlatformMacro.of(
+        target.getFirst(),
+        target.getSecond(),
+        args.subList(1, args.size()).stream()
+            .map(InternalFlavor::of)
+            .collect(ImmutableSet.toImmutableSet()));
   }
 }
