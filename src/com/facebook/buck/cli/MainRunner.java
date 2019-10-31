@@ -528,7 +528,7 @@ public final class MainRunner {
               "Command failed due to CorruptArtifactException."
                   + "\nThis indicates something outside of buck's control has modified files in an unexpected way."
                   + "\nThe hash for file %s was invalid."
-                  + "\nPurging file hash caches.",
+                  + "\nPurging file hash caches. Try re-running the build.",
               (MultiThreadedBlobUploader.CorruptArtifactException.getDescription(
                       ThrowableCauseIterable.of(t)))
                   .orElse(""));
