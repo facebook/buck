@@ -31,6 +31,10 @@ export_file(
 genrule(
     name = "meta-inf",
     out = "META-INF",
+    cmd_exe = " ".join([
+                "mkdir $OUT && ",
+                "copy $(location :{}) $OUT\module-binary-hash.txt".format("known-hash.txt"),
+    ]),
     cmd = " ".join([
         "mkdir $OUT && ",
         "cp $(location :{}) $OUT/module-binary-hash.txt".format("known-hash.txt"),

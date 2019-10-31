@@ -117,6 +117,7 @@ import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
@@ -2030,7 +2031,7 @@ public class CachingBuildEngineTest {
             TarInspector.readTarZst(fetchedArtifact);
 
         assertEquals(
-            Sets.union(ImmutableSet.of(metadataDirectory + "/"), artifactEntries.keySet()),
+            Sets.union(ImmutableSet.of(PathFormatter.pathWithUnixSeparators(metadataDirectory) + "/"), artifactEntries.keySet()),
             fetchedArtifactEntries.keySet());
         assertThat(
             fetchedArtifactEntries,
