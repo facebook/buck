@@ -1,5 +1,5 @@
-#include <unistd.h>
+#include <stdio.h>
 
 void func() {
-  write(1, "a\n", 2);
+  printf("a\n");
 }

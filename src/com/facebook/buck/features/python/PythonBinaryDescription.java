@@ -41,7 +41,6 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
-import com.facebook.buck.cxx.toolchain.linker.impl.WindowsLinker;
 import com.facebook.buck.features.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
@@ -144,14 +143,6 @@ public class PythonBinaryDescription
       PythonPackageComponents components,
       ImmutableSet<String> preloadLibraries,
       PackageStyle packageStyle) {
-
-    // We don't currently support targeting Windows.
-    if (cxxPlatform.getLd().resolve(graphBuilder, buildTarget.getTargetConfiguration())
-        instanceof WindowsLinker) {
-      throw new HumanReadableException(
-          "%s: cannot build in-place python binaries for Windows (%s)",
-          buildTarget, cxxPlatform.getFlavor());
-    }
 
     // Add in any missing init modules into the python components.
     SourcePath emptyInit = createEmptyInitModule(buildTarget, projectFilesystem, graphBuilder);

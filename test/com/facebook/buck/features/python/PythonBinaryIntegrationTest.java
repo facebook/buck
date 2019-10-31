@@ -109,12 +109,14 @@ public class PythonBinaryIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
-
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_binary", tmp);
     workspace.setUp();
     String pexFlags = pexDirectory ? "--directory" : "";
-    workspace.writeContentsToPath(
+    String buckconfigContents =
+        Platform.detect().equals(Platform.WINDOWS)
+            ? workspace.getFileContents("buckconfig.windows")
+            : "";
+    buckconfigContents +=
         "[python]\n"
             + "  package_style = "
             + packageStyle.toString().toLowerCase()
@@ -123,8 +125,8 @@ public class PythonBinaryIntegrationTest {
             + nativeLinkStrategy.toString().toLowerCase()
             + "\n"
             + "  pex_flags = "
-            + pexFlags,
-        ".buckconfig");
+            + pexFlags;
+    workspace.writeContentsToPath(buckconfigContents, ".buckconfig");
     PythonBuckConfig config = getPythonBuckConfig();
     assertThat(config.getPackageStyle(), equalTo(packageStyle));
     assertThat(config.getNativeLinkStrategy(), equalTo(nativeLinkStrategy));
@@ -138,7 +140,6 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void executionThroughSymlink() throws IOException, InterruptedException {
-    assumeThat(Platform.detect(), Matchers.oneOf(Platform.MACOS, Platform.LINUX));
     workspace.runBuckBuild("//:bin").assertSuccess();
     String output =
         workspace
@@ -199,6 +200,7 @@ public class PythonBinaryIntegrationTest {
   }
 
   public void assumeThatNativeLibsAreSupported() {
+    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
     assumeThat(packageStyle, not(is(PackageStyle.INPLACE_LITE)));
     assumeThat(
         "TODO(8667197): Native libs currently don't work on El Capitan",
@@ -317,7 +319,7 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void multiplePythonHomes() {
-    assumeThat(Platform.detect(), not(is(Platform.WINDOWS)));
+    assumeThatNativeLibsAreSupported();
     ProcessResult result =
         workspace.runBuckBuild(
             "-c",
@@ -447,7 +449,7 @@ public class PythonBinaryIntegrationTest {
             .getStderr(),
         Matchers.matchesPattern(
             Pattern.compile(
-                ".*Tried to link.*external_sources/__init__.py.*",
+                ".*Tried to link.*external_sources[/\\\\]__init__.py.*",
                 Pattern.MULTILINE | Pattern.DOTALL)));
   }
 
@@ -478,6 +480,7 @@ public class PythonBinaryIntegrationTest {
    */
   @Test
   public void omnibusExcludedNativeLinkableRoot() {
+    assumeThatNativeLibsAreSupported();
     assumeThat(nativeLinkStrategy, is(NativeLinkStrategy.MERGED));
     workspace
         .runBuckCommand("targets", "--show-output", "//omnibus_excluded_root:bin")
@@ -507,6 +510,17 @@ public class PythonBinaryIntegrationTest {
     return new PythonBuckConfig(buckConfig);
   }
 
+  private ImmutableList<String> getDirectlyExecutedPexCommand(String pexPathString)
+      throws IOException {
+    return Platform.detect().equals(Platform.WINDOWS)
+        ? ImmutableList.of(
+            new PythonInterpreterFromConfig(getPythonBuckConfig(), new ExecutableFinder())
+                .getPythonInterpreterPath()
+                .toString(),
+            pexPathString)
+        : ImmutableList.of(pexPathString);
+  }
+
   @Test
   public void stripsPathEarlyInInplaceBinaries() throws IOException, InterruptedException {
     assumeThat(packageStyle, is(PackageStyle.INPLACE));
@@ -514,11 +528,13 @@ public class PythonBinaryIntegrationTest {
 
     DefaultProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
 
+    ImmutableList<String> command = getDirectlyExecutedPexCommand(pexPath.toString());
+
     Result ret =
         executor.launchAndExecute(
             ProcessExecutorParams.builder()
                 .setDirectory(workspace.resolve("pathtest"))
-                .setCommand(ImmutableList.of(pexPath.toString()))
+                .setCommand(command)
                 .build());
     Assert.assertEquals(0, ret.getExitCode());
   }
@@ -526,15 +542,18 @@ public class PythonBinaryIntegrationTest {
   @Test
   public void preloadDeps() throws IOException, InterruptedException {
     assumeThat(packageStyle, is(PackageStyle.INPLACE));
+    assumeThatNativeLibsAreSupported();
     Path pexPath = workspace.buildAndReturnOutput("//preload_deps:bin");
 
     DefaultProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+
+    ImmutableList<String> command = getDirectlyExecutedPexCommand(pexPath.toString());
 
     Result ret =
         executor.launchAndExecute(
             ProcessExecutorParams.builder()
                 .setDirectory(workspace.resolve("pathtest"))
-                .setCommand(ImmutableList.of(pexPath.toString()))
+                .setCommand(command)
                 .build());
     Assert.assertEquals(0, ret.getExitCode());
   }
@@ -542,6 +561,7 @@ public class PythonBinaryIntegrationTest {
   @Test
   public void preloadDepsOrder() throws IOException, InterruptedException {
     assumeThat(packageStyle, is(PackageStyle.INPLACE));
+    assumeThatNativeLibsAreSupported();
     DefaultProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
 
     for (Pair<String, String> test :
@@ -549,11 +569,14 @@ public class PythonBinaryIntegrationTest {
             new Pair<>("//preload_deps:bin_a_first", "a\n"),
             new Pair<>("//preload_deps:bin_b_first", "b\n"))) {
       Path pexPath = workspace.buildAndReturnOutput(test.getFirst());
+
+      ImmutableList<String> command = getDirectlyExecutedPexCommand(pexPath.toString());
+
       Result ret =
           executor.launchAndExecute(
               ProcessExecutorParams.builder()
                   .setDirectory(workspace.resolve("pathtest"))
-                  .setCommand(ImmutableList.of(pexPath.toString()))
+                  .setCommand(command)
                   .build());
       Assert.assertEquals(
           ret.getStdout().orElse("") + ret.getStderr().orElse(""), 0, ret.getExitCode());
