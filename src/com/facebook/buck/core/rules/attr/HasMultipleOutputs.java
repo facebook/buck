@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.attr;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -27,10 +28,11 @@ import javax.annotation.Nullable;
 public interface HasMultipleOutputs extends BuildRule {
   /**
    * Returns the {@link SourcePath} to the output associated with the given output label, or {@code
-   * null} if it does not exist.
+   * null} if it does not exist. If an empty output label is given, returns the default {@link
+   * SourcePath} to the default output associated with the rule.
    */
   @Nullable
-  SourcePath getSourcePathToOutput(String outputLabel);
+  SourcePath getSourcePathToOutput(Optional<String> outputLabel);
 
   /** Returns a map of {@link SourcePath} instances keyed by associated output labels. */
   ImmutableMap<String, SourcePath> getSourcePathsByOutputsLabels();
