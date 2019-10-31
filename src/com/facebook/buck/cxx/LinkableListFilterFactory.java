@@ -185,11 +185,7 @@ public class LinkableListFilterFactory {
               public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
                 addBuildTargetToLinkGroup(
                     node.getBuildTarget(), currentLinkGroup, buildTargetToLinkGroupMap);
-                if (enableTraversalForAppleLibraryOnly
-                    && node.getDescription()
-                        .getConstructorArgType()
-                        .equals(GenruleDescriptionArg.class)) {
-                  // cut the branch if the node type is genrule
+                if (shouldSkipTraversingNode(node, enableTraversalForAppleLibraryOnly)) {
                   return Collections.emptySet();
                 } else {
                   return targetGraph.getOutgoingNodesFor(node);
@@ -203,6 +199,13 @@ public class LinkableListFilterFactory {
         addBuildTargetToLinkGroup(buildTarget, currentLinkGroup, buildTargetToLinkGroupMap);
         break;
     }
+  }
+
+  private static boolean shouldSkipTraversingNode(
+      TargetNode<?> node, Boolean enableTraversalForAppleLibraryOnly) {
+    // cut the branch if the node type is genrule
+    return enableTraversalForAppleLibraryOnly
+        && node.getDescription().getConstructorArgType().equals(GenruleDescriptionArg.class);
   }
 
   private static void addBuildTargetToLinkGroup(
