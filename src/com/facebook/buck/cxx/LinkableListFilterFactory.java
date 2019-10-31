@@ -144,37 +144,57 @@ public class LinkableListFilterFactory {
       for (CxxLinkGroupMappingTarget mappingTarget : groupMapping.getMappingTargets()) {
         final BuildTarget buildTarget = mappingTarget.getBuildTarget();
 
-        switch (mappingTarget.getTraversal()) {
-          case TREE:
-            TargetNode<?> initialTargetNode = targetGraph.get(buildTarget);
-            AbstractBreadthFirstTraversal<TargetNode<?>> treeTraversal =
-                new AbstractBreadthFirstTraversal<TargetNode<?>>(initialTargetNode) {
-
-                  @Override
-                  public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
-                    addBuildTargetToLinkGroup(
-                        node.getBuildTarget(), currentLinkGroup, buildTargetToLinkGroupMap);
-                    if (enableTraversalForAppleLibraryOnly
-                        && node.getDescription()
-                            .getConstructorArgType()
-                            .equals(GenruleDescriptionArg.class)) {
-                      // cut the branch if the node type is genrule
-                      return Collections.emptySet();
-                    } else {
-                      return targetGraph.getOutgoingNodesFor(node);
-                    }
-                  }
-                };
-            treeTraversal.start();
-            break;
-
-          case NODE:
-            addBuildTargetToLinkGroup(buildTarget, currentLinkGroup, buildTargetToLinkGroupMap);
-            break;
-        }
+        addGroupMappingForBuildTarget(
+            targetGraph,
+            enableTraversalForAppleLibraryOnly,
+            buildTargetToLinkGroupMap,
+            currentLinkGroup,
+            mappingTarget.getTraversal(),
+            buildTarget);
       }
     }
     return buildTargetToLinkGroupMap;
+  }
+
+  /**
+   * Given a {@param buildTarget} and a {@param currentLinkGroup}, applies the group to the {@param
+   * targetGraph} as specified by the {@param traversal}.
+   */
+  private static void addGroupMappingForBuildTarget(
+      TargetGraph targetGraph,
+      Boolean enableTraversalForAppleLibraryOnly,
+      Map<BuildTarget, String> buildTargetToLinkGroupMap,
+      String currentLinkGroup,
+      CxxLinkGroupMappingTarget.Traversal traversal,
+      BuildTarget buildTarget) {
+    switch (traversal) {
+      case TREE:
+        TargetNode<?> initialTargetNode = targetGraph.get(buildTarget);
+        AbstractBreadthFirstTraversal<TargetNode<?>> treeTraversal =
+            new AbstractBreadthFirstTraversal<TargetNode<?>>(initialTargetNode) {
+
+              @Override
+              public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
+                addBuildTargetToLinkGroup(
+                    node.getBuildTarget(), currentLinkGroup, buildTargetToLinkGroupMap);
+                if (enableTraversalForAppleLibraryOnly
+                    && node.getDescription()
+                        .getConstructorArgType()
+                        .equals(GenruleDescriptionArg.class)) {
+                  // cut the branch if the node type is genrule
+                  return Collections.emptySet();
+                } else {
+                  return targetGraph.getOutgoingNodesFor(node);
+                }
+              }
+            };
+        treeTraversal.start();
+        break;
+
+      case NODE:
+        addBuildTargetToLinkGroup(buildTarget, currentLinkGroup, buildTargetToLinkGroupMap);
+        break;
+    }
   }
 
   private static void addBuildTargetToLinkGroup(
