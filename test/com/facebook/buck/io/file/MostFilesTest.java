@@ -71,6 +71,31 @@ public class MostFilesTest {
     MostFiles.deleteRecursivelyIfExists(fakeTmpDir.resolve("nonexistent"));
   }
 
+  @Test(expected = IOException.class)
+  public void deleteRecursivelyIfExistsShouldFailOnFileIfDeletingOnlyContents() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path fakeTmpDir = vfs.getPath("/tmp/fake-tmp-dir");
+    Path fileToDelete = fakeTmpDir.resolve("delete-me");
+    Files.createDirectories(fakeTmpDir);
+    MostFiles.writeLinesToFile(ImmutableList.of(""), fileToDelete);
+
+    MostFiles.deleteRecursivelyWithOptions(
+        fileToDelete, EnumSet.of(MostFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
+  }
+
+  @Test
+  public void deleteRecursivelyIfExistsShouldNotFailOnFile() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path fakeTmpDir = vfs.getPath("/tmp/fake-tmp-dir");
+    Path fileToDelete = fakeTmpDir.resolve("delete-me");
+    Files.createDirectories(fakeTmpDir);
+    MostFiles.writeLinesToFile(ImmutableList.of(""), fileToDelete);
+
+    MostFiles.deleteRecursivelyWithOptions(
+        fileToDelete, EnumSet.noneOf(MostFiles.DeleteRecursivelyOptions.class));
+    assertThat(Files.exists(fileToDelete), is(false));
+  }
+
   @Test
   public void deleteRecursivelyIfExistsDeletesDirectory() throws IOException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
