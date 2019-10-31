@@ -25,7 +25,8 @@ import org.immutables.value.Value.Immutable;
 import org.immutables.value.Value.Parameter;
 
 /** Platform target implementation of {@link TargetConfiguration}. */
-@Immutable(builder = false, copy = false, prehash = true)
+@Value.Style(weakInterning = true)
+@Immutable(builder = false, copy = false, prehash = true, intern = true)
 public abstract class RuleBasedTargetConfiguration implements TargetConfiguration {
 
   @Value.Check
