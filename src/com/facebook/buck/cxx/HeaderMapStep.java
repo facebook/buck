@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
@@ -26,6 +27,9 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -33,16 +37,23 @@ import java.util.Map;
 class HeaderMapStep implements Step {
 
   private static final Logger LOG = Logger.get(HeaderMapStep.class);
+  private static final HashFunction HASHER = Hashing.sha1();
+  private static final String FILE_HASH_VERIFICATION = "hash.verify";
 
   private final ProjectFilesystem filesystem;
   private final Path output;
   private final ImmutableMap<Path, Path> entries;
+  private BuildTarget target;
 
   public HeaderMapStep(
-      ProjectFilesystem filesystem, Path output, ImmutableMap<Path, Path> entries) {
+      ProjectFilesystem filesystem,
+      Path output,
+      ImmutableMap<Path, Path> entries,
+      BuildTarget target) {
     this.filesystem = filesystem;
     this.output = output;
     this.entries = entries;
+    this.target = target;
   }
 
   @Override
@@ -64,6 +75,17 @@ class HeaderMapStep implements Step {
     }
     HeaderMap headerMap = builder.build();
     filesystem.writeBytesToPath(headerMap.getBytes(), output);
+    if (output.getParent() != null) {
+      Path metaOut =
+          output
+              .getParent()
+              .resolve(output.getFileName().toString() + "." + FILE_HASH_VERIFICATION);
+      HashCode hashCode = HASHER.hashBytes(headerMap.getBytes());
+      filesystem.writeContentsToPath(
+          String.format("hash: %s\ntarget: %s\nbuild: %s", hashCode, target, context.getBuildId()),
+          metaOut);
+    }
+
     return StepExecutionResults.SUCCESS;
   }
 

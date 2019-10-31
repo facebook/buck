@@ -87,7 +87,9 @@ class DirectHeaderMap extends HeaderSymlinkTree {
             RmStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), headerMapPath)))
-        .add(new HeaderMapStep(getProjectFilesystem(), headerMapPath, entriesBuilder.build()))
+        .add(
+            new HeaderMapStep(
+                getProjectFilesystem(), headerMapPath, entriesBuilder.build(), getBuildTarget()))
         .build();
   }
 

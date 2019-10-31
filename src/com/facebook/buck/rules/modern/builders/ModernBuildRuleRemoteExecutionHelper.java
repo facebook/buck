@@ -110,6 +110,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   private static final String pluginRoot = System.getProperty("pf4j.pluginsDir");
   public static final Path TRAMPOLINE_PATH = Paths.get("__trampoline__.sh");
   public static final Path METADATA_PATH = Paths.get(".buck.metadata");
+  private static final String FILE_HASH_VERIFICATION = "hash.verify";
 
   private final InputsMapBuilder inputsMapBuilder;
 
@@ -475,13 +476,29 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                   public String describe() {
                     try {
                       HashCode hash = hasher.hashBytes(ByteStreams.toByteArray(get()));
-                      return String.format(
-                          "File (path:%s size:%s). Expected hash: [%s], Calculated hash: [%s]. Cached hash: [%s].",
-                          path,
-                          Files.size(cellPathPrefix.resolve(path)),
-                          getDigest().getHash(),
-                          hash.toString(),
-                          fileHasher.apply(cellPathPrefix.resolve(path)).toString());
+                      String description =
+                          String.format(
+                              "File (path:%s size:%s). Expected hash: [%s], Calculated hash: [%s]. Cached hash: [%s].",
+                              path,
+                              Files.size(cellPathPrefix.resolve(path)),
+                              getDigest().getHash(),
+                              hash.toString(),
+                              fileHasher.apply(cellPathPrefix.resolve(path)).toString());
+                      if (cellPathPrefix.resolve(path).getParent() != null) {
+                        Path metaInfo =
+                            cellPathPrefix
+                                .resolve(path)
+                                .getParent()
+                                .resolve(
+                                    path.getFileName().toString() + "." + FILE_HASH_VERIFICATION);
+                        if (Files.exists(metaInfo)) {
+                          description +=
+                              String.format(
+                                  " Meta Data Found: [%s]",
+                                  String.join(",", Files.readAllLines(metaInfo)));
+                        }
+                      }
+                      return description;
                     } catch (IOException e) {
                       LOG.warn(e, "Unable to describe file: " + path);
                       return String.format(

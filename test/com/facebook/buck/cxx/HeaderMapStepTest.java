@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
@@ -55,7 +56,9 @@ public class HeaderMapStepTest {
             Paths.get("file2.h"), Paths.get("/other/absolute/path.h"),
             Paths.get("prefix/file1.h"), Paths.get("/some/absolute/path.h"));
 
-    HeaderMapStep step = new HeaderMapStep(projectFilesystem, output, entries);
+    HeaderMapStep step =
+        new HeaderMapStep(
+            projectFilesystem, output, entries, BuildTargetFactory.newInstance("//test:test"));
 
     step.execute(context);
 

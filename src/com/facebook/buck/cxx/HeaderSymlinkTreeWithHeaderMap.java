@@ -85,7 +85,11 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
         ImmutableList.<Step>builder()
             .addAll(super.getBuildSteps(context, buildableContext))
             .add(
-                new HeaderMapStep(getProjectFilesystem(), headerMapPath, headerMapEntries.build()));
+                new HeaderMapStep(
+                    getProjectFilesystem(),
+                    headerMapPath,
+                    headerMapEntries.build(),
+                    getBuildTarget()));
     return builder.build();
   }
 
