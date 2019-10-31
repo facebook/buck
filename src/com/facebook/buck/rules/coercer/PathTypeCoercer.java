@@ -22,6 +22,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 
 public class PathTypeCoercer extends LeafTypeCoercer<Path> {
@@ -56,7 +57,12 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
       if (pathString.isEmpty()) {
         throw new CoerceFailedException("invalid path");
       }
-      return pathCache.getUnchecked(pathRelativeToProjectRoot).getUnchecked(pathString);
+      try {
+        return pathCache.getUnchecked(pathRelativeToProjectRoot).getUnchecked(pathString);
+      } catch (UncheckedExecutionException e) {
+        throw new CoerceFailedException(
+            String.format("Could not convert '%s' to a Path", pathString), e.getCause());
+      }
     } else {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
