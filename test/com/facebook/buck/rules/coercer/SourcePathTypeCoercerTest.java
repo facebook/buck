@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -32,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,9 +45,10 @@ public class SourcePathTypeCoercerTest {
   private final Path pathRelativeToProjectRoot = Paths.get("");
   private final SourcePathTypeCoercer sourcePathTypeCoercer =
       new SourcePathTypeCoercer(
-          new BuildTargetTypeCoercer(
-              new UnconfiguredBuildTargetTypeCoercer(
-                  new ParsingUnconfiguredBuildTargetViewFactory())),
+          new BuildTargetWithOutputsTypeCoercer(
+              new BuildTargetTypeCoercer(
+                  new UnconfiguredBuildTargetTypeCoercer(
+                      new ParsingUnconfiguredBuildTargetViewFactory()))),
           new PathTypeCoercer());
 
   @Before
@@ -92,6 +95,24 @@ public class SourcePathTypeCoercerTest {
   }
 
   @Test
+  public void coerceAbsoluteBuildTargetWithOutputLabel() throws CoerceFailedException {
+    SourcePath sourcePath =
+        sourcePathTypeCoercer.coerce(
+            cellRoots,
+            projectFilesystem,
+            pathRelativeToProjectRoot,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "//:hello[label]");
+
+    assertEquals(
+        DefaultBuildTargetSourcePath.of(
+            ImmutableBuildTargetWithOutputs.of(
+                BuildTargetFactory.newInstance(projectFilesystem, "//:hello"),
+                Optional.of("label"))),
+        sourcePath);
+  }
+
+  @Test
   public void coerceRelativeBuildTarget() throws CoerceFailedException {
     SourcePath sourcePath =
         sourcePathTypeCoercer.coerce(
@@ -104,6 +125,24 @@ public class SourcePathTypeCoercerTest {
     assertEquals(
         DefaultBuildTargetSourcePath.of(
             BuildTargetFactory.newInstance(projectFilesystem, "//:hello")),
+        sourcePath);
+  }
+
+  @Test
+  public void coerceRelativeBuildTargetWithOutputLabel() throws CoerceFailedException {
+    SourcePath sourcePath =
+        sourcePathTypeCoercer.coerce(
+            cellRoots,
+            projectFilesystem,
+            pathRelativeToProjectRoot,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            ":hello[label]");
+
+    assertEquals(
+        DefaultBuildTargetSourcePath.of(
+            ImmutableBuildTargetWithOutputs.of(
+                BuildTargetFactory.newInstance(projectFilesystem, "//:hello"),
+                Optional.of("label"))),
         sourcePath);
   }
 

@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -127,9 +128,11 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
     TypeCoercer<BuildTarget> buildTargetTypeCoercer =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer);
+    TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
+        new BuildTargetWithOutputsTypeCoercer(buildTargetTypeCoercer);
     PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
     TypeCoercer<SourcePath> sourcePathTypeCoercer =
-        new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
+        new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);
     TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer =
         new SourceWithFlagsTypeCoercer(
             sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
@@ -258,6 +261,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           sourcePathTypeCoercer,
           unconfiguredBuildTargetTypeCoercer,
           buildTargetTypeCoercer,
+          buildTargetWithOutputsTypeCoercer,
           buildTargetPatternTypeCoercer,
 
           // apple link groups

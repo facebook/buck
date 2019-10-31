@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -26,12 +26,13 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 
 public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
-  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
+  private final TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
   private final TypeCoercer<Path> pathTypeCoercer;
 
   public SourcePathTypeCoercer(
-      TypeCoercer<BuildTarget> buildTargetTypeCoercer, TypeCoercer<Path> pathTypeCoercer) {
-    this.buildTargetTypeCoercer = buildTargetTypeCoercer;
+      TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer,
+      TypeCoercer<Path> pathTypeCoercer) {
+    this.buildTargetWithOutputsTypeCoercer = buildTargetWithOutputsTypeCoercer;
     this.pathTypeCoercer = pathTypeCoercer;
   }
 
@@ -50,10 +51,10 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
       throws CoerceFailedException {
     if ((object instanceof String)
         && (((String) object).contains("//") || ((String) object).startsWith(":"))) {
-      BuildTarget buildTarget =
-          buildTargetTypeCoercer.coerce(
+      BuildTargetWithOutputs buildTargetWithOutputs =
+          buildTargetWithOutputsTypeCoercer.coerce(
               cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
-      return DefaultBuildTargetSourcePath.of(buildTarget);
+      return DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
     } else {
       Path path =
           pathTypeCoercer.coerce(

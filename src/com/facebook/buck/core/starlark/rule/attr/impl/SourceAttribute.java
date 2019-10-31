@@ -24,6 +24,7 @@ import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
+import com.facebook.buck.rules.coercer.BuildTargetWithOutputsTypeCoercer;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.SourcePathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
@@ -45,9 +46,10 @@ public abstract class SourceAttribute extends Attribute<SourcePath> {
 
   private static final TypeCoercer<SourcePath> coercer =
       new SourcePathTypeCoercer(
-          new BuildTargetTypeCoercer(
-              new UnconfiguredBuildTargetTypeCoercer(
-                  new ParsingUnconfiguredBuildTargetViewFactory())),
+          new BuildTargetWithOutputsTypeCoercer(
+              new BuildTargetTypeCoercer(
+                  new UnconfiguredBuildTargetTypeCoercer(
+                      new ParsingUnconfiguredBuildTargetViewFactory()))),
           new PathTypeCoercer());
 
   @Override
