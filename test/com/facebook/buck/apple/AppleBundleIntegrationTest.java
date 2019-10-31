@@ -92,11 +92,10 @@ public class AppleBundleIntegrationTest {
         new DefaultProcessExecutor(new TestConsole()), absoluteBundlePath);
   }
 
-  private void runSimpleApplicationBundleTestWithBuildTarget(String fqtn)
-      throws IOException, InterruptedException {
+  private ProjectWorkspace runApplicationBundleTestWithScenarioAndBuildTarget(
+      String scenario, String fqtn) throws IOException, InterruptedException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_application_bundle_no_debug", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget(fqtn);
@@ -122,6 +121,13 @@ public class AppleBundleIntegrationTest {
 
     // Non-Swift target shouldn't include Frameworks/
     assertFalse(Files.exists(appPath.resolve("Frameworks")));
+
+    return workspace;
+  }
+
+  private void runSimpleApplicationBundleTestWithBuildTarget(String fqtn)
+      throws IOException, InterruptedException {
+    runApplicationBundleTestWithScenarioAndBuildTarget("simple_application_bundle_no_debug", fqtn);
   }
 
   @Test
@@ -182,33 +188,11 @@ public class AppleBundleIntegrationTest {
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_application_bundle_with_codesigning", tmp);
-    workspace.setUp();
-
-    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphoneos-arm64,no-debug");
-    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
-
-    workspace.verify(
-        Paths.get("DemoApp_output.expected"),
-        BuildTargetPaths.getGenPath(
-            filesystem,
-            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-            "%s"));
-
-    Path appPath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                    filesystem,
-                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-                    "%s")
-                .resolve(target.getShortName() + ".app"));
-    assertTrue(Files.exists(appPath.resolve(target.getShortName())));
-
-    assertTrue(checkCodeSigning(appPath));
+        runApplicationBundleTestWithScenarioAndBuildTarget(
+            "simple_application_bundle_with_codesigning", "//:DemoApp#iphoneos-arm64,no-debug");
 
     // Do not match iOS profiles on tvOS targets.
-    target = workspace.newBuildTarget("//:DemoApp#appletvos-arm64,no-debug");
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#appletvos-arm64,no-debug");
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertFailure();
     assertTrue(result.getStderr().contains("No valid non-expired provisioning profiles match"));
