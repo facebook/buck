@@ -867,8 +867,22 @@ class HeaderSearchPaths {
         .toSet();
   }
 
-  static Path getPathToHeaderMapsRoot(ProjectFilesystem projectFilesystem) {
-    return projectFilesystem.getBuckPaths().getGenDir().resolve("_p");
+  private Path getPathToGenDirRelativeToProjectFileSystem(ProjectFilesystem targetFileSystem) {
+    // For targets in the cell of the project, this will simply return the normal `buck-out/gen`
+    // path. However, for targets in other cells, we need to put them in `buck-out/cell/...` path
+    // In order to do this, we need to get the target file system and relativize the path back
+    // to the project cell, else this will not go in the right place.
+    //
+    // So for a project in foo//bar/baz:
+    //    foo//bar/baz:target -> ./buck-out/gen/...
+    //    foo//qux:target -> ./buck-out/cells/qux/...
+    return projectFilesystem.relativize(
+        targetFileSystem.resolve(targetFileSystem.getBuckPaths().getGenDir()));
+  }
+
+  private Path getPathToHeaderMapsRoot(ProjectFilesystem targetFileSystem) {
+    Path genDirPathForTarget = getPathToGenDirRelativeToProjectFileSystem(targetFileSystem);
+    return genDirPathForTarget.resolve("_p");
   }
 
   private static Path getHeaderMapLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
@@ -910,16 +924,14 @@ class HeaderSearchPaths {
 
   private Path getPathToHeadersPath(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode, String suffix) {
-    return HeaderSearchPaths.getPathToHeaderMapsRoot(
-            getFilesystemForTarget(Optional.of(targetNode.getBuildTarget())))
+    return getPathToHeaderMapsRoot(getFilesystemForTarget(Optional.of(targetNode.getBuildTarget())))
         .resolve(getFilenameToHeadersPath(targetNode, suffix));
   }
 
   private Path getAbsolutePathToHeaderSymlinkTree(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
       HeaderVisibility headerVisibility) {
-    ProjectFilesystem filesystem = getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()));
-    return filesystem.resolve(getPathToHeaderSymlinkTree(targetNode, headerVisibility));
+    return projectFilesystem.resolve(getPathToHeaderSymlinkTree(targetNode, headerVisibility));
   }
 
   public Path getPathToHeaderSymlinkTree(
@@ -938,7 +950,7 @@ class HeaderSearchPaths {
   }
 
   private Path getPathToMergedHeaderMap() {
-    return HeaderSearchPaths.getPathToHeaderMapsRoot(projectFilesystem).resolve("pub-hmap");
+    return getPathToHeaderMapsRoot(projectFilesystem).resolve("pub-hmap");
   }
 
   /** @return a map of all exported platform headers without matching a specific platform. */
