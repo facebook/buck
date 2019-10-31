@@ -32,7 +32,11 @@ public final class MemoryHandler extends Handler implements Callable<Handler> {
 
   @Override
   public void publish(LogRecord record) {
-    inner.publish(record);
+    try {
+      inner.publish(record);
+    } catch (Exception e) {
+      // Skip - Memory Handler shouldn't raise errors on publish
+    }
   }
 
   @Override
