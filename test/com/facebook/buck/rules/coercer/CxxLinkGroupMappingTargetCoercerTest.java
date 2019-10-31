@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
@@ -42,7 +43,8 @@ public class CxxLinkGroupMappingTargetCoercerTest {
     TypeCoercer<UnconfiguredBuildTargetView> unconfigured =
         new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory());
     TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer(unconfigured);
-    return new CxxLinkGroupMappingTargetCoercer(buildTargetTypeCoercer, traversalTypeCoercer);
+    return new CxxLinkGroupMappingTargetCoercer(
+        buildTargetTypeCoercer, traversalTypeCoercer, new PatternTypeCoercer());
   }
 
   @Before
@@ -80,5 +82,24 @@ public class CxxLinkGroupMappingTargetCoercerTest {
             input);
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
     assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.NODE);
+  }
+
+  @Test
+  public void canCoerceMappingWithLabelRegex() throws CoerceFailedException {
+    String targetString = "//foo:bar";
+    String labelRegex = "some_label_regex*";
+    String labelMatch = "label:" + labelRegex;
+    ImmutableList<Object> input = ImmutableList.of(targetString, "tree", labelMatch);
+    CxxLinkGroupMappingTarget target =
+        coercer.coerce(
+            createCellRoots(filesystem),
+            filesystem,
+            basePath,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            input);
+    assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
+    assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.TREE);
+    assertTrue(target.getLabelPattern().isPresent());
+    assertEquals(target.getLabelPattern().get().pattern(), labelRegex);
   }
 }

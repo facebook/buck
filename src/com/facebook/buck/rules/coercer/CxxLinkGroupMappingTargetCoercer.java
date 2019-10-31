@@ -21,9 +21,10 @@ import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.types.Pair;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * {@link TypeCoercer} for {@link CxxLinkGroupMappingTarget}.
@@ -34,16 +35,17 @@ import java.util.Collection;
 public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGroupMappingTarget> {
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
   private final TypeCoercer<CxxLinkGroupMappingTarget.Traversal> traversalCoercer;
-  private final TypeCoercer<Pair<BuildTarget, CxxLinkGroupMappingTarget.Traversal>>
-      buildTargetWithTraversalTypeCoercer;
+  private final TypeCoercer<Pattern> patternTypeCoercer;
+
+  private static final String LABEL_REGEX_PREFIX = "label:";
 
   public CxxLinkGroupMappingTargetCoercer(
       TypeCoercer<BuildTarget> buildTargetTypeCoercer,
-      TypeCoercer<CxxLinkGroupMappingTarget.Traversal> traversalCoercer) {
+      TypeCoercer<CxxLinkGroupMappingTarget.Traversal> traversalCoercer,
+      TypeCoercer<Pattern> patternTypeCoercer) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.traversalCoercer = traversalCoercer;
-    this.buildTargetWithTraversalTypeCoercer =
-        new PairTypeCoercer<>(this.buildTargetTypeCoercer, this.traversalCoercer);
+    this.patternTypeCoercer = patternTypeCoercer;
   }
 
   @Override
@@ -76,15 +78,51 @@ public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGrou
       return (CxxLinkGroupMappingTarget) object;
     }
 
-    if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
-      Pair<BuildTarget, CxxLinkGroupMappingTarget.Traversal> buildTargetWithTraversal =
-          buildTargetWithTraversalTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
-      return CxxLinkGroupMappingTarget.of(
-          buildTargetWithTraversal.getFirst(), buildTargetWithTraversal.getSecond());
+    if (object instanceof Collection<?>) {
+      Collection<?> collection = ((Collection<?>) object);
+      if (2 <= collection.size() && collection.size() <= 3) {
+        Object[] objects = collection.toArray();
+        BuildTarget buildTarget =
+            buildTargetTypeCoercer.coerce(
+                cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, objects[0]);
+        CxxLinkGroupMappingTarget.Traversal traversal =
+            traversalCoercer.coerce(
+                cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, objects[1]);
+        Optional<Pattern> labelPattern = Optional.empty();
+        if (collection.size() >= 3) {
+          String regexString = extractLabelRegexString(objects[2]);
+          labelPattern =
+              Optional.of(
+                  patternTypeCoercer.coerce(
+                      cellRoots,
+                      filesystem,
+                      pathRelativeToProjectRoot,
+                      targetConfiguration,
+                      regexString));
+        }
+
+        return CxxLinkGroupMappingTarget.of(buildTarget, traversal, labelPattern);
+      }
     }
 
     throw CoerceFailedException.simple(
-        object, getOutputClass(), "input should be pair of a build target and traversal");
+        object,
+        getOutputClass(),
+        "input should be pair of a build target and traversal, optionally with a label filter");
+  }
+
+  private String extractLabelRegexString(Object object) throws CoerceFailedException {
+    if (!(object instanceof String)) {
+      throw CoerceFailedException.simple(
+          object, getOutputClass(), "Third element should be a label regex filter");
+    }
+
+    String prefixWithRegex = (String) object;
+    if (!prefixWithRegex.startsWith(LABEL_REGEX_PREFIX)) {
+      throw CoerceFailedException.simple(
+          object, getOutputClass(), "Label regex filter should start with " + LABEL_REGEX_PREFIX);
+    }
+
+    return prefixWithRegex.substring(LABEL_REGEX_PREFIX.length());
   }
 }

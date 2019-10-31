@@ -150,7 +150,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new CxxLinkGroupMappingTargetTraversalCoercer();
     TypeCoercer<CxxLinkGroupMappingTarget> linkGroupMappingTargetCoercer =
         new CxxLinkGroupMappingTargetCoercer(
-            buildTargetTypeCoercer, linkGroupMappingTraversalCoercer);
+            buildTargetTypeCoercer, linkGroupMappingTraversalCoercer, patternTypeCoercer);
     TypeCoercer<ImmutableList<CxxLinkGroupMappingTarget>> linkGroupMappingTargetsCoercer =
         new ListTypeCoercer<>(linkGroupMappingTargetCoercer);
     TypeCoercer<CxxLinkGroupMapping> linkGroupMappingCoercer =

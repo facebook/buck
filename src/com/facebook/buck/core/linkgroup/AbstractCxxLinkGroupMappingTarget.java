@@ -20,6 +20,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ComparisonChain;
+import java.util.Optional;
+import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 /**
@@ -59,15 +61,43 @@ abstract class AbstractCxxLinkGroupMappingTarget
   @AddToRuleKey
   public abstract Traversal getTraversal();
 
+  @Value.Parameter
+  @AddToRuleKey
+  public abstract Optional<Pattern> getLabelPattern();
+
   @Override
   public int compareTo(AbstractCxxLinkGroupMappingTarget that) {
     if (this == that) {
       return 0;
     }
 
+    int labelComparison = compareLabelPattern(that);
+    if (labelComparison != 0) {
+      return labelComparison;
+    }
+
     return ComparisonChain.start()
         .compare(this.getBuildTarget(), that.getBuildTarget())
         .compare(this.getTraversal(), that.getTraversal())
         .result();
+  }
+
+  private int compareLabelPattern(AbstractCxxLinkGroupMappingTarget that) {
+    Optional<Pattern> thisLabelPattern = this.getLabelPattern();
+    Optional<Pattern> thatLabelPattern = that.getLabelPattern();
+
+    if (thisLabelPattern.isPresent() == thatLabelPattern.isPresent()) {
+      if (thisLabelPattern.isPresent()) {
+        return thisLabelPattern.get().pattern().compareTo(thatLabelPattern.get().pattern());
+      }
+
+      return 0;
+    }
+
+    if (!thisLabelPattern.isPresent()) {
+      return -1;
+    }
+
+    return 1;
   }
 }
