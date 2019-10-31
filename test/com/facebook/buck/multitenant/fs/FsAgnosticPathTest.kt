@@ -16,6 +16,8 @@
 package com.facebook.buck.multitenant.fs
 
 import com.facebook.buck.util.json.ObjectMappers
+import java.nio.file.FileSystems
+import java.nio.file.Paths
 import org.hamcrest.Matchers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -242,5 +244,23 @@ class FsAgnosticPathTest {
         val path =
             ObjectMappers.READER.forType(FsAgnosticPath::class.java).readValue<FsAgnosticPath>(data)
         assertEquals(FsAgnosticPath.of(""), path)
+    }
+
+    @Test
+    fun toPath() {
+        val empty = FsAgnosticPath.of("")
+        val foo = FsAgnosticPath.of("foo")
+        val fooBar = FsAgnosticPath.of("foo/bar")
+        val fooBarBaz = FsAgnosticPath.of("foo/bar/baz")
+
+        val fooPath = Paths.get("foo")
+        val fooBarPath = fooPath.resolve(Paths.get("bar"))
+        val fooBarBazPath = fooBarPath.resolve(Paths.get("baz"))
+
+        val fileSystem = FileSystems.getDefault()
+        assertEquals(empty.toPath(fileSystem), Paths.get(""))
+        assertEquals(foo.toPath(fileSystem), fooPath)
+        assertEquals(fooBar.toPath(fileSystem), fooBarPath)
+        assertEquals(fooBarBaz.toPath(fileSystem), fooBarBazPath)
     }
 }

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
+import java.nio.file.FileSystem
 import java.nio.file.Path
 
 /**
@@ -38,8 +39,7 @@ private val PATH_CACHE: Cache<String, FsAgnosticPath> =
 /**
  * Cache between [FsAgnosticPath] to unique [Int] value.
  */
-private val PATH_TO_INDEX_CACHE =
-    AppendOnlyBidirectionalCache<FsAgnosticPath>()
+private val PATH_TO_INDEX_CACHE = AppendOnlyBidirectionalCache<FsAgnosticPath>()
 
 /**
  * Prefer this to [java.nio.file.Path] in the multitenant packages. Whereas a [java.nio.file.Path]
@@ -125,7 +125,8 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
      */
     fun name(): FsAgnosticPath {
         val lastIndex = path.lastIndexOf('/')
-        return if (lastIndex == -1) this else createWithoutVerification(path.substring(lastIndex + 1))
+        return if (lastIndex == -1) this
+        else createWithoutVerification(path.substring(lastIndex + 1))
     }
 
     /**
@@ -151,6 +152,20 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
 
     override fun toString(): String {
         return path
+    }
+
+    /**
+     * Converts a [FsAgnosticPath] string representation to a [Path] in the given [fileSystem].
+     */
+    @SuppressWarnings("SpreadOperator")
+    fun toPath(fileSystem: FileSystem): Path {
+        val pathStrings = toString().split("/")
+        val first = pathStrings[0]
+        return if (pathStrings.size > 1) {
+            fileSystem.getPath(first, *pathStrings.subList(1, pathStrings.size).toTypedArray())
+        } else {
+            fileSystem.getPath(first)
+        }
     }
 }
 
