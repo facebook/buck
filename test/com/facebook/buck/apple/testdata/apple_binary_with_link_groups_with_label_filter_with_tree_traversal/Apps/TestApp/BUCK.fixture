@@ -1,0 +1,45 @@
+apple_binary(
+    name = "App",
+    srcs = ["main.c"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    # By not specifying a link group but setting a link_group_map,
+    # all ungrouped libs will be linked into the binary.
+    link_group_map = [
+        # All libs which have a label that matches the regex "infra*"
+        # will be treated as the root node to be grouped using "tree"
+        # traversal to the "infra" group.
+        (
+            "infra",
+            [("//Apps/Libs:Root", "tree", "label:infra.*")],
+        ),
+    ],
+    deps = [
+        ":InfraDylib",
+        "//Apps/Libs:Root",
+    ],
+)
+
+apple_library(
+    name = "InfraDylib",
+    srcs = ["dummy.c"],
+    link_group = "infra",
+    # In the real world, the link group definition must be the same
+    # across the binary and the dylibs. This would be achieved by
+    # a single definition in a .bzl file.
+    link_group_map = [
+        (
+            "infra",
+            [("//Apps/Libs:Root", "tree", "label:infra.*")],
+        ),
+    ],
+    link_style = "static",
+    # To make the binary runnable, an rpath must be added via exported_linker_flags.
+    linker_flags = ["-Wl,-all_load"],
+    preferred_linkage = "shared",
+    soname = "Infra.dylib",
+    deps = [
+        "//Apps/Libs:Root",
+    ],
+)

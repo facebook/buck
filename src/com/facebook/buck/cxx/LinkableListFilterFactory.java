@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
@@ -33,6 +34,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 
 /**
@@ -142,7 +144,9 @@ public class LinkableListFilterFactory {
     for (CxxLinkGroupMapping groupMapping : mapping) {
       String currentLinkGroup = groupMapping.getLinkGroup();
       for (CxxLinkGroupMappingTarget mappingTarget : groupMapping.getMappingTargets()) {
-        final ImmutableList<BuildTarget> buildTargets = getBuildTargetsForMapping(mappingTarget);
+        final ImmutableList<BuildTarget> buildTargets =
+            getBuildTargetsForMapping(
+                targetGraph, enableTraversalForAppleLibraryOnly, mappingTarget);
 
         for (BuildTarget buildTarget : buildTargets) {
           addGroupMappingForBuildTarget(
@@ -160,8 +164,63 @@ public class LinkableListFilterFactory {
 
   @Nonnull
   private static ImmutableList<BuildTarget> getBuildTargetsForMapping(
+      TargetGraph targetGraph,
+      Boolean enableTraversalForAppleLibraryOnly,
       CxxLinkGroupMappingTarget mappingTarget) {
-    return ImmutableList.of(mappingTarget.getBuildTarget());
+
+    Optional<Pattern> labelPattern = mappingTarget.getLabelPattern();
+    if (!labelPattern.isPresent()) {
+      return ImmutableList.of(mappingTarget.getBuildTarget());
+    }
+
+    return findBuildTargetsMatchingLabelPattern(
+        targetGraph, enableTraversalForAppleLibraryOnly, mappingTarget, labelPattern.get());
+  }
+
+  @Nonnull
+  private static ImmutableList<BuildTarget> findBuildTargetsMatchingLabelPattern(
+      TargetGraph targetGraph,
+      Boolean enableTraversalForAppleLibraryOnly,
+      CxxLinkGroupMappingTarget mappingTarget,
+      Pattern regex) {
+    ImmutableList.Builder<BuildTarget> allTargets = ImmutableList.builder();
+    TargetNode<?> initialTargetNode = targetGraph.get(mappingTarget.getBuildTarget());
+
+    AbstractBreadthFirstTraversal<TargetNode<?>> treeTraversal =
+        new AbstractBreadthFirstTraversal<TargetNode<?>>(initialTargetNode) {
+          @Override
+          public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
+            if (shouldSkipTraversingNode(node, enableTraversalForAppleLibraryOnly)) {
+              return Collections.emptySet();
+            }
+
+            boolean matchesRegex = false;
+            if (node.getConstructorArg() instanceof BuildRuleArg) {
+              BuildRuleArg buildRuleArg = (BuildRuleArg) node.getConstructorArg();
+              for (String label : buildRuleArg.getLabels()) {
+                matchesRegex = regex.matcher(label).matches();
+                if (matchesRegex) {
+                  break;
+                }
+              }
+            }
+
+            if (matchesRegex) {
+              allTargets.add(node.getBuildTarget());
+              if (mappingTarget.getTraversal() == CxxLinkGroupMappingTarget.Traversal.TREE) {
+                // We can stop traversing the tree at this point because we've added the
+                // build target to the set of all targets that will be traversed by the
+                // algorithm that applies the link groups.
+                return Collections.emptySet();
+              }
+            }
+
+            return targetGraph.getOutgoingNodesFor(node);
+          }
+        };
+    treeTraversal.start();
+
+    return allTargets.build();
   }
 
   /**

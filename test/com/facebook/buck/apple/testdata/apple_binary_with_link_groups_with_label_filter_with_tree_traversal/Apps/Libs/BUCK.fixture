@@ -1,0 +1,46 @@
+apple_library(
+    name = "Root",
+    visibility = ["//Apps/..."],
+    deps = [
+        ":A",
+        ":B",
+    ],
+)
+
+apple_library(
+    name = "A",
+    srcs = ["A/A.c"],
+    exported_headers = ["A/A.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    visibility = ["//Apps/..."],
+    deps = [
+        ":C",
+    ],
+)
+
+apple_library(
+    name = "B",
+    srcs = ["B/B.c"],
+    exported_headers = ["B/B.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    labels = ["infra_lib"],
+    visibility = ["//Apps/..."],
+    deps = [
+        ":C",
+    ],
+)
+
+apple_library(
+    name = "C",
+    srcs = ["C/C.c"],
+    exported_headers = ["C/C.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    labels = ["infra_lib"],
+    visibility = ["//Apps/..."],
+)
