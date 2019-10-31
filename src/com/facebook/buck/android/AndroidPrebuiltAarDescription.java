@@ -163,7 +163,8 @@ public class AndroidPrebuiltAarDescription
           /* mavenCoords */ Optional.empty(),
           /* provided */ false,
           args.getRequiredForSourceOnlyAbi(),
-          /* generate_abi */ true);
+          /* generate_abi */ true,
+          /* neverMarkAsUnusedDependency */ false);
     }
 
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {

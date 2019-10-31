@@ -316,4 +316,16 @@ public class UnusedDependenciesFinderIntegrationTest {
 
     processResult.assertSuccess();
   }
+
+  @Test
+  public void testDoNotFailIfMarkedAsNeverUnused() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=fail",
+            ":bar_with_dep_marked_as_never_unused");
+
+    processResult.assertSuccess();
+  }
 }

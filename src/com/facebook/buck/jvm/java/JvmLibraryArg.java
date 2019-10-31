@@ -84,6 +84,8 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
 
   Optional<UnusedDependenciesAction> getOnUnusedDependencies();
 
+  Optional<Boolean> getNeverMarkAsUnusedDependency();
+
   /** Verifies some preconditions on the arguments. */
   @Value.Check
   default void verify() {

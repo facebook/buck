@@ -60,7 +60,8 @@ public class PrebuiltJarTest {
             /* mavenCoords */ Optional.empty(),
             /* provided */ false,
             /* requiredForSourceOnlyAbi */ false,
-            /* generateAbi */ true);
+            /* generateAbi */ true,
+            /* neverMarkAsUnusedDependency */ false);
   }
 
   @Test

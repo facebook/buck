@@ -123,6 +123,7 @@ public class DefaultJavaLibrary
   private final Optional<SourcePath> sourcePathForGeneratedAnnotationPath;
 
   private JavaClassHashesProvider javaClassHashesProvider;
+  private final boolean neverMarkAsUnusedDependency;
 
   public static DefaultJavaLibraryRules.Builder rulesBuilder(
       BuildTarget buildTarget,
@@ -169,7 +170,8 @@ public class DefaultJavaLibrary
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi,
       boolean isDesugarEnabled,
-      boolean isInterfaceMethodsDesugarEnabled) {
+      boolean isInterfaceMethodsDesugarEnabled,
+      boolean neverMarkAsUnusedDependency) {
     super(
         buildTarget,
         projectFilesystem,
@@ -220,6 +222,7 @@ public class DefaultJavaLibrary
             : new DefaultJavaAbiInfo(getSourcePathToOutput());
     this.abiJar = abiJar;
     this.sourceOnlyAbiJar = sourceOnlyAbiJar;
+    this.neverMarkAsUnusedDependency = neverMarkAsUnusedDependency;
 
     this.outputClasspathEntriesSupplier =
         MoreSuppliers.memoize(
@@ -494,5 +497,10 @@ public class DefaultJavaLibrary
 
   public void setJavaClassHashesProvider(JavaClassHashesProvider javaClassHashesProvider) {
     this.javaClassHashesProvider = javaClassHashesProvider;
+  }
+
+  @Override
+  public boolean neverMarkAsUnusedDependency() {
+    return neverMarkAsUnusedDependency;
   }
 }

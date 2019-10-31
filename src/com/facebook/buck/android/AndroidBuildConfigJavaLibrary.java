@@ -89,6 +89,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         Optional.empty(),
         null,
         false,
+        false,
         false);
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(getBuildDeps().contains(androidBuildConfig));

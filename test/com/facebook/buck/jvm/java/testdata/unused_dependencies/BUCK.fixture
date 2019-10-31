@@ -131,6 +131,23 @@ java_library(
 )
 
 java_library(
+    name = "bar_with_dep_marked_as_never_unused",
+    srcs = ["Bar.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dep_marked_as_never_unused",
+    ],
+)
+
+java_library(
+    name = "dep_marked_as_never_unused",
+    srcs = ["Meh.java"],
+    never_mark_as_unused_dependency = True,
+)
+
+java_library(
     name = "res_dep",
     srcs = [],
     visibility = [

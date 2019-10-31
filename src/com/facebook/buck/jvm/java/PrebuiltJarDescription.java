@@ -83,7 +83,8 @@ public class PrebuiltJarDescription
             args.getMavenCoords(),
             args.getProvided(),
             args.getRequiredForSourceOnlyAbi(),
-            args.getGenerateAbi());
+            args.getGenerateAbi(),
+            args.getNeverMarkAsUnusedDependency());
 
     BuildTarget gwtTarget = buildTarget.withAppendedFlavors(JavaLibrary.GWT_MODULE_FLAVOR);
     BuildRuleParams gwtParams =
@@ -197,6 +198,11 @@ public class PrebuiltJarDescription
     @Value.Default
     default boolean getGenerateAbi() {
       return true;
+    }
+
+    @Value.Default
+    default boolean getNeverMarkAsUnusedDependency() {
+      return false;
     }
   }
 }

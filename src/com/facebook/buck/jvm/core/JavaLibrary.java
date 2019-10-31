@@ -76,6 +76,8 @@ public interface JavaLibrary
 
   boolean hasAnnotationProcessing();
 
+  boolean neverMarkAsUnusedDependency();
+
   class Data {
     private final ImmutableSortedMap<String, HashCode> classNamesToHashes;
 

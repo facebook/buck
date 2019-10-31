@@ -32,6 +32,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
@@ -356,6 +357,10 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   private static BuildTargetAndSourcePaths getBuildTargetAndSourcePaths(
       BuildRule rule, BuildRuleResolver buildRuleResolver) {
     if (!(rule instanceof HasJavaAbi)) {
+      return null;
+    }
+
+    if (rule instanceof JavaLibrary && ((JavaLibrary) rule).neverMarkAsUnusedDependency()) {
       return null;
     }
 

@@ -148,6 +148,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
+  public boolean neverMarkAsUnusedDependency() {
+    return false;
+  }
+
+  @Override
   public Optional<BuildTarget> getAbiJar() {
     return Optional.empty();
   }

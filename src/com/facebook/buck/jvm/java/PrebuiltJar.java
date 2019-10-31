@@ -84,6 +84,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final boolean provided;
   @AddToRuleKey private final boolean requiredForSourceOnlyAbi;
   @AddToRuleKey private final boolean generateAbi;
+  @AddToRuleKey private final boolean neverMarkAsUnusedDependency;
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
@@ -102,7 +103,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> mavenCoords,
       boolean provided,
       boolean requiredForSourceOnlyAbi,
-      boolean generateAbi) {
+      boolean generateAbi,
+      boolean neverMarkAsUnusedDependency) {
     super(buildTarget, projectFilesystem, params);
     this.binaryJar = binaryJar;
     this.sourceJar = sourceJar;
@@ -112,6 +114,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.provided = provided;
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
     this.generateAbi = generateAbi;
+    this.neverMarkAsUnusedDependency = neverMarkAsUnusedDependency;
 
     this.transitiveClasspathsSupplier =
         MoreSuppliers.memoize(
@@ -262,6 +265,11 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public boolean hasAnnotationProcessing() {
     return false;
+  }
+
+  @Override
+  public boolean neverMarkAsUnusedDependency() {
+    return neverMarkAsUnusedDependency;
   }
 
   @Override

@@ -103,6 +103,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         Optional.empty(),
         null,
         false,
+        false,
         false);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
