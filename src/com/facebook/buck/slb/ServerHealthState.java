@@ -19,10 +19,12 @@ package com.facebook.buck.slb;
 import static com.facebook.buck.slb.AbstractClientSideSlbConfig.MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE;
 
 import com.google.common.base.Preconditions;
+import java.io.IOException;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import javax.annotation.Nullable;
 
 public class ServerHealthState {
   private static final int MAX_STORED_SAMPLES = 100;
@@ -37,6 +39,7 @@ public class ServerHealthState {
   private float lastReportedErrorPercentage;
   private int lastReportedSamples;
   private long lastReportedLatency;
+  private @Nullable IOException lastException;
 
   public ServerHealthState(URI server) {
     this(server, MAX_STORED_SAMPLES, MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE);
@@ -71,6 +74,10 @@ public class ServerHealthState {
       pingLatencies.add(new LatencySample(nowMillis, latencyMillis));
       keepWithinSizeLimit(pingLatencies);
     }
+  }
+
+  public void reportException(IOException exp) {
+    this.lastException = exp;
   }
 
   /**
@@ -170,6 +177,11 @@ public class ServerHealthState {
 
     lastReportedLatency = (count > 0) ? sum / count : -1;
     return lastReportedLatency;
+  }
+
+  @Nullable
+  public IOException getLastException() {
+    return this.lastException;
   }
 
   public String toString(long nowMillis, int timeRangeMillis) {

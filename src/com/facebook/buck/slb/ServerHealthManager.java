@@ -17,6 +17,7 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
@@ -25,6 +26,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -104,6 +106,11 @@ public class ServerHealthManager {
     getBestServerCache.refresh(this);
   }
 
+  public void reportException(URI server, IOException exp) {
+    Preconditions.checkState(servers.containsKey(server), "Unknown server [%s]", server);
+    Preconditions.checkNotNull(servers.get(server)).reportException(exp);
+  }
+
   public void reportRequestSuccess(URI server) {
     Preconditions.checkState(servers.containsKey(server), "Unknown server [%s]", server);
     servers.get(server).reportRequestSuccess(clock.currentTimeMillis());
@@ -124,12 +131,16 @@ public class ServerHealthManager {
                           .map(
                               e ->
                                   String.format(
-                                      "%s (%d ms limit: %dms, error %.2f in last %d requests",
+                                      "%s (%d ms limit: %dms, error %.2f in last %d requests with cause %s",
                                       e.getKey().toString(),
                                       e.getValue().getLastReportedLatency(),
                                       maxAcceptableLatencyMillis,
                                       e.getValue().getLastReportedErrorPercentage(),
-                                      e.getValue().getLastReportedSamples()))
+                                      e.getValue().getLastReportedSamples(),
+                                      e.getValue().getLastException() != null
+                                          ? MoreThrowables.getInitialCause(
+                                              e.getValue().getLastException())
+                                          : "No underlying exception"))
                           .sorted()
                           .collect(Collectors.toList()))));
     } catch (ExecutionException e) {

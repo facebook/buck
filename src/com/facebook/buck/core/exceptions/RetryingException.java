@@ -42,7 +42,6 @@ public class RetryingException extends IOException {
     for (int i = 0; i < exceptions.size(); ++i) {
       builder.append(String.format(" %d:[%s]", i, exceptions.get(i).toString()));
     }
-
     return builder.toString();
   }
 }

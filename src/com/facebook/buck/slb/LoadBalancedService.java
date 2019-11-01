@@ -61,7 +61,7 @@ public class LoadBalancedService implements HttpService {
       return response;
     } catch (IOException e) {
       data.setException(e);
-      throw new IOException(e);
+      throw e;
     } finally {
       data.setLatencyMicros((System.nanoTime() - startRequestNanos) / 1000);
       eventBus.post(new LoadBalancedServiceEvent(data.build()));

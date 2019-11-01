@@ -213,6 +213,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
     */
     @Override
     public void onFailure(Call call, IOException e) {
+      healthManager.reportException(serverUri, e);
       healthManager.reportRequestError(serverUri);
       PerServerPingData.Builder perServerData = PerServerPingData.builder().setServer(serverUri);
       perServerData.setException(e);
