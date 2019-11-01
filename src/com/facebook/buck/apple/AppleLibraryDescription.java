@@ -429,6 +429,7 @@ public class AppleLibraryDescription
             ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
         Optional.of(buildTarget),
         Optional.empty(),
+        Optional.empty(),
         Either.ofLeft(AppleBundleExtension.FRAMEWORK),
         Optional.empty(),
         args.getInfoPlist().get(),

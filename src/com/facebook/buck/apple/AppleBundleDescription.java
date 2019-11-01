@@ -177,6 +177,7 @@ public class AppleBundleDescription
             ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
         args.getBinary(),
         args.getPlatformBinary(),
+        args.getDefaultPlatform(),
         args.getExtension(),
         args.getProductName(),
         args.getInfoPlist(),
@@ -226,7 +227,9 @@ public class AppleBundleDescription
       AppleCxxPlatform appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
       cxxPlatform = new StaticUnresolvedCxxPlatform(appleCxxPlatform.getCxxPlatform());
     } else {
-      cxxPlatform = ApplePlatforms.getCxxPlatformForBuildTarget(cxxPlatformsProvider, buildTarget);
+      cxxPlatform =
+          ApplePlatforms.getCxxPlatformForBuildTarget(
+              cxxPlatformsProvider, buildTarget, constructorArg.getDefaultPlatform());
     }
 
     // TODO(cjhopman): Why doesn't this add parse time deps from the cxxPlatform? Does it just
@@ -334,6 +337,7 @@ public class AppleBundleDescription
             cxxPlatformsProvider,
             appleCxxPlatforms,
             buildTarget,
+            args.getDefaultPlatform(),
             MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
     BuildTarget binaryTarget =
         AppleDescriptions.getTargetPlatformBinary(

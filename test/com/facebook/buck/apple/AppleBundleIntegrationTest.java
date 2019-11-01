@@ -184,6 +184,27 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void applicationBundleWithDefaultPlatform() throws IOException, InterruptedException {
+    runApplicationBundleTestWithScenarioAndBuildTarget(
+        "default_platform_in_rules", "//:DemoApp#no-debug");
+  }
+
+  @Test
+  public void applicationBundleWithDefaultPlatformAndFlavor()
+      throws IOException, InterruptedException {
+    runApplicationBundleTestWithScenarioAndBuildTarget(
+        "default_platform_in_rules", "//:DemoApp#iphonesimulator-i386,no-debug");
+  }
+
+  @Test
+  public void applicationBundleFatBinaryWithDefaultPlatform()
+      throws IOException, InterruptedException {
+    runApplicationBundleTestWithScenarioAndBuildTarget(
+        "default_platform_in_rules",
+        "//:DemoApp#iphonesimulator-x86_64,iphonesimulator-i386,no-debug");
+  }
+
+  @Test
   public void simpleApplicationBundleWithCodeSigning() throws Exception {
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 

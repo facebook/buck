@@ -19,12 +19,14 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import java.util.Collections;
 import java.util.Optional;
 
 public class ApplePlatforms {
@@ -33,11 +35,18 @@ public class ApplePlatforms {
 
   /** Only works with thin binaries. */
   static UnresolvedCxxPlatform getCxxPlatformForBuildTarget(
-      CxxPlatformsProvider cxxPlatformsProvider, BuildTarget target) {
+      CxxPlatformsProvider cxxPlatformsProvider,
+      BuildTarget target,
+      Optional<Flavor> defaultPlatform) {
     return cxxPlatformsProvider
         .getUnresolvedCxxPlatforms()
         .getValue(target)
-        .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform());
+        .orElse(
+            cxxPlatformsProvider
+                .getUnresolvedCxxPlatforms()
+                .getValue(
+                    defaultPlatform.map(Collections::singleton).orElse(Collections.emptySet()))
+                .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform()));
   }
 
   public static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(
@@ -45,13 +54,14 @@ public class ApplePlatforms {
       CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       BuildTarget target,
+      Optional<Flavor> defaultPlatform,
       Optional<MultiarchFileInfo> fatBinaryInfo) {
     AppleCxxPlatform appleCxxPlatform;
     if (fatBinaryInfo.isPresent()) {
       appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
     } else {
       CxxPlatform cxxPlatform =
-          getCxxPlatformForBuildTarget(cxxPlatformsProvider, target)
+          getCxxPlatformForBuildTarget(cxxPlatformsProvider, target, defaultPlatform)
               .resolve(ruleResolver, target.getTargetConfiguration());
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
