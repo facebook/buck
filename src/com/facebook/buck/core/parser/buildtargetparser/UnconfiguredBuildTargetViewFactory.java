@@ -52,6 +52,9 @@ public interface UnconfiguredBuildTargetViewFactory {
   UnconfiguredBuildTargetView createForBaseName(
       CellPathResolver cellPathResolver, String baseName, String buildTargetName);
 
+  UnconfiguredBuildTargetView createForPathRelativeToProjectRoot(
+      CellPathResolver cellPathResolver, Path pathRelativeToProjectRoot, String buildTargetName);
+
   /**
    * Given a target base name and a target name returns {@link UnconfiguredBuildTargetView} with
    * optionally allowing the short name to be empty.

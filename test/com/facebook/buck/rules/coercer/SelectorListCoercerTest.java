@@ -54,9 +54,7 @@ public class SelectorListCoercerTest {
     cellPathResolver = TestCellPathResolver.get(projectFilesystem);
     selectorListFactory =
         new SelectorListFactory(
-            new SelectorFactory(
-                new UnconfiguredBuildTargetTypeCoercer(
-                    new ParsingUnconfiguredBuildTargetViewFactory())));
+            new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory()));
   }
 
   @Test

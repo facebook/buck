@@ -41,7 +41,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.FlavorTypeCoercer;
 import com.facebook.buck.rules.coercer.ListTypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -292,9 +291,7 @@ public class DefaultSelectorListResolverTest {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
     SelectorFactory selectorFactory =
-        new SelectorFactory(
-            new UnconfiguredBuildTargetTypeCoercer(
-                new ParsingUnconfiguredBuildTargetViewFactory()));
+        new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory());
     ListTypeCoercer<Flavor> flavorListTypeCoercer = new ListTypeCoercer<>(new FlavorTypeCoercer());
     Selector<ImmutableList<Flavor>> selector =
         selectorFactory.createSelector(

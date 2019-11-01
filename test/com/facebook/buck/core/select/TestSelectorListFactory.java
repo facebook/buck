@@ -23,7 +23,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.collect.ImmutableList;
 import java.util.Map;
 
@@ -33,9 +32,7 @@ public class TestSelectorListFactory {
       TypeCoercer<T> elementTypeCoercer, Map<String, ?>... selectors) throws CoerceFailedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SelectorFactory selectorFactory =
-        new SelectorFactory(
-            new UnconfiguredBuildTargetTypeCoercer(
-                new ParsingUnconfiguredBuildTargetViewFactory()));
+        new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory());
     ImmutableList.Builder<Selector<T>> selectorBuilder = ImmutableList.builder();
     for (Map<String, ?> selectorAttributes : selectors) {
       Selector<T> selector =

@@ -20,10 +20,8 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.pathformat.PathFormatter;
 import java.nio.file.Path;
 
 /** {@link TypeCoercer} for {@link UnconfiguredBuildTargetView} */
@@ -56,11 +54,8 @@ public class UnconfiguredBuildTargetTypeCoercer
     String param = (String) object;
 
     try {
-      String baseName =
-          UnflavoredBuildTargetView.BUILD_TARGET_PREFIX
-              + PathFormatter.pathWithUnixSeparators(pathRelativeToProjectRoot);
-
-      return unconfiguredBuildTargetFactory.createForBaseName(cellRoots, baseName, param);
+      return unconfiguredBuildTargetFactory.createForPathRelativeToProjectRoot(
+          cellRoots, pathRelativeToProjectRoot, param);
     } catch (BuildTargetParseException e) {
       throw new CoerceFailedException(
           String.format(

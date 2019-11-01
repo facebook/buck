@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
@@ -98,6 +97,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();
 
   private final TypeCoercer<?>[] nonParameterizedTypeCoercers;
+  private final ParsingUnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
   public DefaultTypeCoercerFactory() {
     TypeCoercer<String> stringTypeCoercer = new StringTypeCoercer();
@@ -123,8 +123,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 .parse(cellRoots, (String) object);
           }
         };
-    UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
-        new ParsingUnconfiguredBuildTargetViewFactory();
+    unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
     unconfiguredBuildTargetTypeCoercer =
         new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
     TypeCoercer<BuildTarget> buildTargetTypeCoercer =
@@ -423,7 +422,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
       return new SelectorListCoercer<>(
           new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer),
           typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)),
-          new SelectorListFactory(new SelectorFactory(unconfiguredBuildTargetTypeCoercer)));
+          new SelectorListFactory(new SelectorFactory(unconfiguredBuildTargetFactory)));
     } else {
       throw new IllegalArgumentException("Unhandled type: " + typeName);
     }

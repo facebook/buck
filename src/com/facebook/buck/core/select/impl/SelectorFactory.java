@@ -19,8 +19,7 @@ package com.facebook.buck.core.select.impl;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -40,10 +39,10 @@ import java.util.Set;
 /** Factory to create {@link Selector} using raw (non-coerced) data. */
 public class SelectorFactory {
 
-  private final TypeCoercer<UnconfiguredBuildTargetView> buildTargetTypeCoercer;
+  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory;
 
-  public SelectorFactory(TypeCoercer<UnconfiguredBuildTargetView> buildTargetTypeCoercer) {
-    this.buildTargetTypeCoercer = buildTargetTypeCoercer;
+  public SelectorFactory(UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory) {
+    this.unconfiguredBuildTargetViewFactory = unconfiguredBuildTargetViewFactory;
   }
 
   /** Creates a new Selector using the default error message when no conditions match. */
@@ -93,12 +92,8 @@ public class SelectorFactory {
         selectorKey =
             new SelectorKey(
                 ConfigurationBuildTargets.convert(
-                    buildTargetTypeCoercer.coerce(
-                        cellPathResolver,
-                        filesystem,
-                        pathRelativeToProjectRoot,
-                        UnconfiguredTargetConfiguration.INSTANCE,
-                        key)));
+                    unconfiguredBuildTargetViewFactory.createForPathRelativeToProjectRoot(
+                        cellPathResolver, pathRelativeToProjectRoot, key)));
       }
       if (entry.getValue() == Runtime.NONE) {
         result.remove(selectorKey);

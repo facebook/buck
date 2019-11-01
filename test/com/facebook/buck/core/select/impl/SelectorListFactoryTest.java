@@ -34,7 +34,6 @@ import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.FlavorTypeCoercer;
 import com.facebook.buck.rules.coercer.ListTypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -52,9 +51,7 @@ public class SelectorListFactoryTest {
     projectFilesystem = new FakeProjectFilesystem();
     selectorListFactory =
         new SelectorListFactory(
-            new SelectorFactory(
-                new UnconfiguredBuildTargetTypeCoercer(
-                    new ParsingUnconfiguredBuildTargetViewFactory())));
+            new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory()));
   }
 
   @Test

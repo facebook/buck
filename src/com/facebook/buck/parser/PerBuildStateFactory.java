@@ -44,7 +44,6 @@ import com.facebook.buck.parser.detector.TargetConfigurationDetector;
 import com.facebook.buck.parser.detector.TargetConfigurationDetectorFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
@@ -252,9 +251,7 @@ public class PerBuildStateFactory {
         };
 
     SelectorListFactory selectorListFactory =
-        new SelectorListFactory(
-            new SelectorFactory(
-                new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory)));
+        new SelectorListFactory(new SelectorFactory(unconfiguredBuildTargetFactory));
 
     cellManager.register(rootCell);
 
