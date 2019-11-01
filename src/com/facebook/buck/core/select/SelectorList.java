@@ -17,7 +17,7 @@
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.rules.coercer.concat.Concatable;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Represents a list of {@link Selector} objects
@@ -41,9 +41,9 @@ import java.util.List;
  */
 public final class SelectorList<T> {
   private final Concatable<T> elementTypeConcatable;
-  private final List<Selector<T>> selectors;
+  private final ImmutableList<Selector<T>> selectors;
 
-  public SelectorList(Concatable<T> elementTypeConcatable, List<Selector<T>> selectors) {
+  public SelectorList(Concatable<T> elementTypeConcatable, ImmutableList<Selector<T>> selectors) {
     this.elementTypeConcatable = elementTypeConcatable;
     this.selectors = selectors;
   }
@@ -51,7 +51,7 @@ public final class SelectorList<T> {
   /**
    * @return a syntactically order-preserved list of all values and selectors for this attribute.
    */
-  public List<Selector<T>> getSelectors() {
+  public ImmutableList<Selector<T>> getSelectors() {
     return selectors;
   }
 
