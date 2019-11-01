@@ -154,7 +154,10 @@ public class IjProjectBuckConfig {
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "default_min_android_sdk_version"))
         .setMultiCellModuleSupportEnabled(
             buckConfig.getBooleanValue(
-                INTELLIJ_BUCK_CONFIG_SECTION, "multi_cell_module_support", false));
+                INTELLIJ_BUCK_CONFIG_SECTION, "multi_cell_module_support", false))
+        .setGeneratingDummyRDotJavaEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "generate_dummy_r_dot_java", true));
   }
 
   private static String getModuleGroupName(String moduleGroupName, BuckConfig buckConfig) {

@@ -73,7 +73,9 @@ public class PregeneratedCodeWriter {
       return;
     }
 
-    writeGeneratedByIdeaClassToFile(androidFacet.get(), packageName.get(), "R", null);
+    if (projectConfig.isGeneratingDummyRDotJavaEnabled()) {
+      writeGeneratedByIdeaClassToFile(androidFacet.get(), packageName.get(), "R", null);
+    }
 
     writeGeneratedByIdeaClassToFile(androidFacet.get(), packageName.get(), "Manifest", null);
   }

@@ -112,4 +112,6 @@ abstract class AbstractIjProjectConfig {
   public abstract ImmutableSet<String> getExcludeTestPatterns();
 
   public abstract boolean isMultiCellModuleSupportEnabled();
+
+  public abstract boolean isGeneratingDummyRDotJavaEnabled();
 }
