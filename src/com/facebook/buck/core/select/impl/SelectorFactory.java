@@ -84,12 +84,10 @@ public class SelectorFactory {
     LinkedHashMap<SelectorKey, T> result =
         Maps.newLinkedHashMapWithExpectedSize(rawAttributes.size());
     Set<SelectorKey> nullConditions = new HashSet<>();
-    boolean foundDefaultCondition = false;
     for (Entry<String, ?> entry : rawAttributes.entrySet()) {
       String key = entry.getKey();
       SelectorKey selectorKey;
       if (key.equals(SelectorKey.DEFAULT_KEYWORD)) {
-        foundDefaultCondition = true;
         selectorKey = SelectorKey.DEFAULT;
       } else {
         selectorKey =
@@ -119,9 +117,6 @@ public class SelectorFactory {
     }
 
     return new Selector<>(
-        ImmutableMap.copyOf(result),
-        ImmutableSet.copyOf(nullConditions),
-        noMatchMessage,
-        foundDefaultCondition);
+        ImmutableMap.copyOf(result), ImmutableSet.copyOf(nullConditions), noMatchMessage);
   }
 }

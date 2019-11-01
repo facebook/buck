@@ -58,7 +58,7 @@ public class DefaultSelectorListResolver extends AbstractSelectorListResolver {
 
     if (matchingResult == null) {
       assertSelectorHasDefault(buildTarget, dependencyStack, attributeName, selector);
-      matchingResult = selector.hasDefaultCondition() ? selector.getDefaultConditionValue() : null;
+      matchingResult = selector.getDefaultConditionValue();
     }
 
     return matchingResult == NULL_VALUE ? null : (T) matchingResult;

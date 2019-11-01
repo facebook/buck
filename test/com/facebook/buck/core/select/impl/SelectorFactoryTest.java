@@ -17,7 +17,8 @@
 package com.facebook.buck.core.select.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
@@ -85,7 +86,7 @@ public class SelectorFactoryTest {
     assertEquals(InternalFlavor.of("flavor1"), conditions.get(keys.get(0)));
     assertEquals("//:a", keys.get(1).getBuildTarget().getFullyQualifiedName());
     assertEquals(InternalFlavor.of("flavor2"), conditions.get(keys.get(1)));
-    assertTrue(selector.hasDefaultCondition());
+    assertNotNull(selector.getDefaultConditionValue());
   }
 
   @Test
@@ -106,7 +107,7 @@ public class SelectorFactoryTest {
     assertEquals(InternalFlavor.of("flavor1"), conditions.get(keys.get(0)));
     assertEquals("//:a", keys.get(1).getBuildTarget().getFullyQualifiedName());
     assertEquals(InternalFlavor.of("flavor2"), conditions.get(keys.get(1)));
-    assertFalse(selector.hasDefaultCondition());
+    assertNull(selector.getDefaultConditionValue());
   }
 
   @Test
@@ -125,7 +126,7 @@ public class SelectorFactoryTest {
     List<SelectorKey> keys = Lists.newArrayList(conditions.keySet());
     assertEquals(SelectorKey.DEFAULT, keys.get(0));
     assertEquals(InternalFlavor.of("flavor1"), conditions.get(keys.get(0)));
-    assertTrue(selector.hasDefaultCondition());
+    assertNotNull(selector.getDefaultConditionValue());
   }
 
   @Test
@@ -144,6 +145,6 @@ public class SelectorFactoryTest {
     List<SelectorKey> keys = Lists.newArrayList(conditions.keySet());
     assertEquals("//:a", keys.get(0).getBuildTarget().getFullyQualifiedName());
     assertEquals(InternalFlavor.of("flavor2"), conditions.get(keys.get(0)));
-    assertFalse(selector.hasDefaultCondition());
+    assertNull(selector.getDefaultConditionValue());
   }
 }

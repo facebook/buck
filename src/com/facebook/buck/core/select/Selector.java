@@ -29,7 +29,6 @@ public class Selector<T> {
   private final ImmutableMap<SelectorKey, T> conditions;
   private final ImmutableSet<SelectorKey> nullConditions;
   private final String noMatchMessage;
-  private final boolean hasDefaultCondition;
 
   /**
    * Creates a new Selector with a custom error message for a situation when no conditions match.
@@ -37,12 +36,10 @@ public class Selector<T> {
   public Selector(
       ImmutableMap<SelectorKey, T> conditions,
       ImmutableSet<SelectorKey> nullConditions,
-      String noMatchMessage,
-      boolean hasDefaultCondition) {
+      String noMatchMessage) {
     this.conditions = conditions;
     this.nullConditions = nullConditions;
     this.noMatchMessage = noMatchMessage;
-    this.hasDefaultCondition = hasDefaultCondition;
   }
 
   public ImmutableMap<SelectorKey, T> getConditions() {
@@ -64,7 +61,8 @@ public class Selector<T> {
 
   /** Returns whether or not this selector has a default condition. */
   public boolean hasDefaultCondition() {
-    return hasDefaultCondition;
+    return conditions.containsKey(SelectorKey.DEFAULT)
+        || nullConditions.contains(SelectorKey.DEFAULT);
   }
 
   /**
