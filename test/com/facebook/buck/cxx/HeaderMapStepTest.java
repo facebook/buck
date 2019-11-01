@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -58,7 +59,11 @@ public class HeaderMapStepTest {
 
     HeaderMapStep step =
         new HeaderMapStep(
-            projectFilesystem, output, entries, BuildTargetFactory.newInstance("//test:test"));
+            projectFilesystem,
+            output,
+            entries,
+            BuildTargetFactory.newInstance("//test:test"),
+            new FakeBuildableContext());
 
     step.execute(context);
 

@@ -89,7 +89,8 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
                     getProjectFilesystem(),
                     headerMapPath,
                     headerMapEntries.build(),
-                    getBuildTarget()));
+                    getBuildTarget(),
+                    buildableContext));
     return builder.build();
   }
 

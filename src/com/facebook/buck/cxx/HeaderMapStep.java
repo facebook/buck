@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
@@ -44,16 +45,19 @@ class HeaderMapStep implements Step {
   private final Path output;
   private final ImmutableMap<Path, Path> entries;
   private BuildTarget target;
+  private BuildableContext buildableContext;
 
   public HeaderMapStep(
       ProjectFilesystem filesystem,
       Path output,
       ImmutableMap<Path, Path> entries,
-      BuildTarget target) {
+      BuildTarget target,
+      BuildableContext buildableContext) {
     this.filesystem = filesystem;
     this.output = output;
     this.entries = entries;
     this.target = target;
+    this.buildableContext = buildableContext;
   }
 
   @Override
@@ -75,6 +79,7 @@ class HeaderMapStep implements Step {
     }
     HeaderMap headerMap = builder.build();
     filesystem.writeBytesToPath(headerMap.getBytes(), output);
+    buildableContext.recordArtifact(output);
     if (output.getParent() != null) {
       Path metaOut =
           output
