@@ -705,7 +705,7 @@ public class AppleDescriptions {
     Sets.SetView<Flavor> buildTargetFlavors =
         Sets.intersection(
             appleCxxPlatforms.getFlavors(), buildTargetWithoutBundleSpecificFlavors.getFlavors());
-    if (buildTargetFlavors.size() == 0 && defaultPlatform.isPresent()) {
+    if (buildTargetFlavors.isEmpty() && defaultPlatform.isPresent()) {
       buildTargetWithoutBundleSpecificFlavors =
           buildTargetWithoutBundleSpecificFlavors.withFlavors(defaultPlatform.get());
     }
