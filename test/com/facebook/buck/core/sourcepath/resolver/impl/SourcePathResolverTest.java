@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.sourcepath.resolver.impl;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -26,10 +27,13 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -48,10 +52,13 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.SortedSet;
+import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -71,7 +78,7 @@ public class SourcePathResolverTest {
   }
 
   @Test
-  public void resolveDefaultBuildTargetSourcePath() {
+  public void resolveDefaultBuildTargetSourcePathWithNoOutputLabel() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Path expectedPath = Paths.get("foo");
@@ -81,6 +88,89 @@ public class SourcePathResolverTest {
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(rule.getBuildTarget());
 
     assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
+  }
+
+  @Test
+  public void resolveDefaultBuildTargetSourcePathWithOutputLabel() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
+    Path expectedPath = Paths.get("foo").resolve("bar");
+    BuildRule rule =
+        new PathReferenceRuleWithMultipleOutputs(
+            buildTarget, new FakeProjectFilesystem(), null, ImmutableMap.of("bar", expectedPath));
+    graphBuilder.addToIndex(rule);
+    BuildTargetWithOutputs buildTargetWithOutputs =
+        ImmutableBuildTargetWithOutputs.of(buildTarget, Optional.of("bar"));
+    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
+
+    assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
+  }
+
+  @Test
+  public void shouldGetCorrectPathWhenMultipleOutputsAvailable() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
+    Path expectedPath = Paths.get("foo").resolve("bar");
+    BuildRule rule =
+        new PathReferenceRuleWithMultipleOutputs(
+            buildTarget,
+            new FakeProjectFilesystem(),
+            null,
+            ImmutableMap.of(
+                "baz",
+                Paths.get("foo").resolve("baz"),
+                "bar",
+                expectedPath,
+                "qux",
+                Paths.get("foo").resolve("qux")));
+    graphBuilder.addToIndex(rule);
+    BuildTargetWithOutputs buildTargetWithOutputs =
+        ImmutableBuildTargetWithOutputs.of(buildTarget, Optional.of("bar"));
+    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
+
+    assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
+  }
+
+  @Test
+  public void cannotResolveBuildTargetWithNonExistentOutputLabel() {
+    exception.expect(HumanReadableException.class);
+    exception.expectMessage(containsString("No known output for: //:foo[baz]"));
+
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    Path path = Paths.get("foo").resolve("bar");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
+    BuildRule rule =
+        new PathReferenceRuleWithMultipleOutputs(
+            buildTarget, new FakeProjectFilesystem(), path, ImmutableMap.of("bar", path));
+    graphBuilder.addToIndex(rule);
+    BuildTargetWithOutputs buildTargetWithOutputs =
+        ImmutableBuildTargetWithOutputs.of(buildTarget, Optional.of("baz"));
+    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
+
+    pathResolver.getRelativePath(sourcePath);
+  }
+
+  @Test
+  public void throwsWhenRequestTargetWithOutputLabelFromRuleThatDoesNotSupportMultipleOutputs() {
+    exception.expect(IllegalStateException.class);
+    exception.expectMessage(
+        containsString(
+            "Multiple outputs not supported for path_reference_rule target //:foo[bar]"));
+
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
+    BuildRule rule =
+        new PathReferenceRule(buildTarget, new FakeProjectFilesystem(), Paths.get("foo"));
+    graphBuilder.addToIndex(rule);
+    BuildTargetWithOutputs buildTargetWithOutputs =
+        ImmutableBuildTargetWithOutputs.of(buildTarget, Optional.of("bar"));
+    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
+
+    pathResolver.getRelativePath(sourcePath);
   }
 
   @Test
@@ -394,6 +484,38 @@ public class SourcePathResolverTest {
     @Override
     public SourcePath getSourcePathToOutput() {
       return ExplicitBuildTargetSourcePath.of(getBuildTarget(), source);
+    }
+  }
+
+  private static class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
+      implements HasMultipleOutputs {
+    private final ImmutableMap<String, Path> outputLabelToSource;
+
+    protected PathReferenceRuleWithMultipleOutputs(
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
+        Path source,
+        ImmutableMap<String, Path> outputLabelToSource) {
+      super(buildTarget, projectFilesystem, source);
+      this.outputLabelToSource = outputLabelToSource;
+    }
+
+    @Nullable
+    @Override
+    public SourcePath getSourcePathToOutput(Optional<String> outputLabel) {
+      if (!outputLabel.isPresent()) {
+        return getSourcePathToOutput();
+      }
+      Path path = outputLabelToSource.get(outputLabel.get());
+      if (path == null) {
+        return null;
+      }
+      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), path);
+    }
+
+    @Override
+    public ImmutableMap<String, SourcePath> getSourcePathsByOutputsLabels() {
+      return null;
     }
   }
 }

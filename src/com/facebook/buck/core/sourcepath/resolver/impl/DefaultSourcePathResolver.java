@@ -18,9 +18,11 @@ package com.facebook.buck.core.sourcepath.resolver.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -53,9 +55,24 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
   @Override
   protected SourcePath resolveDefaultBuildTargetSourcePath(
       DefaultBuildTargetSourcePath targetSourcePath) {
-    SourcePath resolvedPath = ruleFinder.getRule(targetSourcePath).getSourcePathToOutput();
+    BuildTargetWithOutputs buildTargetWithOutputs = targetSourcePath.getTargetWithOutputs();
+    BuildRule rule = ruleFinder.getRule(targetSourcePath);
+    SourcePath resolvedPath;
+    if (buildTargetWithOutputs.getOutputLabel().isPresent()) {
+      Preconditions.checkState(
+          rule instanceof HasMultipleOutputs,
+          "Multiple outputs not supported for %s target %s",
+          rule.getType(),
+          targetSourcePath.getTargetWithOutputs());
+      resolvedPath =
+          ((HasMultipleOutputs) rule)
+              .getSourcePathToOutput(buildTargetWithOutputs.getOutputLabel());
+    } else {
+      resolvedPath = rule.getSourcePathToOutput();
+    }
     if (resolvedPath == null) {
-      throw new HumanReadableException("No known output for: %s", targetSourcePath.getTarget());
+      throw new HumanReadableException(
+          "No known output for: %s", targetSourcePath.getTargetWithOutputs());
     }
     return resolvedPath;
   }
