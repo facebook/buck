@@ -85,6 +85,8 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
           .ifPresent(builder::addMinSdkVersions);
     }
 
+    target.getConstructorArg().getResourceUnionPackage().ifPresent(builder::setPackageName);
+
     context.setCompilerOutputPath(moduleFactoryResolver.getCompilerOutputPath(target));
   }
 
