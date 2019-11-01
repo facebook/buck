@@ -233,7 +233,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
     // TODO(simons): Enable this precondition once setPath(Path) has been removed.
     // Preconditions.checkState(absolutePath.isAbsolute());
     if (ideallyRelative.isAbsolute()) {
-      logger.warn(
+      logger.info(
           "Attempting to add absolute path to rule key. Only using file name: %s", ideallyRelative);
       ideallyRelative = ideallyRelative.getFileName();
     }
