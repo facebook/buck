@@ -22,15 +22,16 @@ from __future__ import print_function
 
 import sys
 
+WARNING_WHITELIST_URLS = (
+    "http://docs.oracle.com/javase/7/docs/api/package-list",
+    "https://junit-team.github.io/junit/javadoc/latest/package-list",
+)
 
 WARNING_WHITELIST = frozenset(
-    map(
-        lambda url: "  [javadoc] javadoc: warning - Error fetching URL: " + url,
-        [
-            "http://docs.oracle.com/javase/7/docs/api/package-list",
-            "https://junit-team.github.io/junit/javadoc/latest/package-list",
-        ],
-    )
+    [
+        "  [javadoc] javadoc: warning - Error fetching URL: " + url
+        for url in WARNING_WHITELIST_URLS
+    ]
     + ["  [javadoc] 2 warnings"]
 )
 

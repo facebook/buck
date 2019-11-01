@@ -121,4 +121,6 @@ java_test(
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
     ],
+    # In OSS tests, writing a large file as one of these tests requires can be slow
+    test_case_timeout_ms = 240000,
 )

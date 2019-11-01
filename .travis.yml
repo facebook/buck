@@ -4,6 +4,9 @@ matrix:
   include:
   - os: linux
     jdk: oraclejdk8
+    python:
+      - 3.7
+      - 2.7
     dist: trusty
     addons:
       apt:
@@ -19,6 +22,9 @@ matrix:
         - android-23
   - os: linux
     jdk: openjdk8
+    python:
+      - 3.7
+      - 2.7
     dist: trusty
     addons:
       apt:
@@ -34,6 +40,9 @@ matrix:
         - android-23
   - os: linux
     jdk: openjdk8
+    python:
+      - 3.7
+      - 2.7
     dist: trusty
     addons:
       apt:
@@ -50,6 +59,9 @@ matrix:
         - android-23
   - os: linux
     jdk: openjdk8
+    python:
+      - 3.7
+      - 2.7
     dist: trusty
     addons:
       apt:
@@ -65,6 +77,9 @@ matrix:
         - android-23
   - os: linux
     jdk: openjdk8
+    python:
+      - 3.7
+      - 2.7
     dist: trusty
     addons:
       apt:
@@ -90,6 +105,9 @@ matrix:
         - android-23
   - os: linux
     jdk: openjdk8
+    python:
+      - 3.7
+      - 2.7
     android:
       components:
         - tools
@@ -128,6 +146,9 @@ matrix:
     env: CI_ACTION=heavy_integration
   - os: linux
     jdk: openjdk8
+    python:
+      - 3.7
+      - 2.7
     android:
       components:
         - tools
@@ -160,6 +181,9 @@ matrix:
     env: CI_ACTION=android_ndk_15
   - os: linux
     jdk: openjdk8
+    python:
+      - 3.7
+      - 2.7
     android:
       components:
         - tools
@@ -192,6 +216,9 @@ matrix:
     env: CI_ACTION=android_ndk_16
   - os: linux
     jdk: openjdk8
+    python:
+      - 3.7
+      - 2.7
     android:
       components:
         - tools
@@ -224,6 +251,9 @@ matrix:
     env: CI_ACTION=android_ndk_17
   - os: linux
     jdk: openjdk8
+    python:
+      - 3.7
+      - 2.7
     android:
       components:
         - tools
@@ -259,6 +289,7 @@ matrix:
 sudo: false
 
 before_install:
+  - echo "Python version is ${TRAVIS_PYTHON_VERSION}"
   # Install ant on MacOS
   - if \[ ${TRAVIS_OS_NAME} == "osx" \]; then brew install ant watchman; fi
   # Limit Ant's and Buck's memory usage to avoid the OOM killer.
