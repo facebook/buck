@@ -21,6 +21,7 @@ import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleLibraryDescriptionArg;
+import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
@@ -60,6 +61,12 @@ public class NodeHelper {
     }
 
     return false;
+  }
+
+  static Optional<ModuleMapMode> getModuleMapMode(TargetNode<?> libraryNode) {
+    Optional<TargetNode<AppleLibraryDescriptionArg>> appleLibNode =
+        TargetNodes.castArg(libraryNode, AppleLibraryDescriptionArg.class);
+    return appleLibNode.flatMap(node -> node.getConstructorArg().getModulemapMode());
   }
 
   /**

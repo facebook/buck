@@ -2002,6 +2002,9 @@ public class ProjectGenerator {
     Optional<String> moduleName =
         isModularAppleLibrary ? Optional.of(getModuleName(targetNode)) : Optional.empty();
     ModuleMapMode moduleMapMode = getModuleMapMode(targetNode);
+    boolean shouldGenerateMissingUmbrellaHeader =
+        options.shouldGenerateMissingUmbrellaHeader()
+            && moduleMapMode.shouldGenerateMissingUmbrellaHeader();
     // -- phases
     createHeaderSymlinkTree(
         publicCxxHeaders,
@@ -2013,7 +2016,7 @@ public class ProjectGenerator {
             || !options.shouldUseHeaderMaps()
             || isModularAppleLibrary,
         !shouldMergeHeaderMaps(),
-        options.shouldGenerateMissingUmbrellaHeader());
+        shouldGenerateMissingUmbrellaHeader);
     if (isFocusedOnTarget) {
       createHeaderSymlinkTree(
           getPrivateCxxHeaders(targetNode),
@@ -2025,7 +2028,7 @@ public class ProjectGenerator {
                   .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled())
               || !options.shouldUseHeaderMaps(),
           options.shouldUseHeaderMaps(),
-          options.shouldGenerateMissingUmbrellaHeader());
+          shouldGenerateMissingUmbrellaHeader);
     }
 
     Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =

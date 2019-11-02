@@ -944,7 +944,30 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testBuildAppleLibraryWhereModularSwiftUsesUmbrellaDirectoryModuleMap()
       throws Exception {
-    testModularScenario("umbrella_directory_modulemap", "Test");
+    ProjectWorkspace workspace = testModularScenario("umbrella_directory_modulemap", "Test");
+
+    // After testing the build itself, we want to ensure that we did not create an
+    // umbrella header for the library, and were truly relying on only the umbrella
+    // directory declaration.
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    Path headersPath =
+        tmp.getRoot()
+            .resolve(filesystem.getBuckPaths().getGenDir())
+            .resolve(
+                "ObjCLibrary#header-mode-symlink-tree-with-umbrella-directory-modulemap,headers,iphonesimulator-x86_64")
+            .resolve("ObjCLibrary");
+
+    Files.list(headersPath).forEach(path -> System.out.println("PATH " + path));
+
+    Path umbrellaHeaderPath = headersPath.resolve("ObjCLibrary.h");
+    assertThat("umbrella header should not exist", Files.exists(umbrellaHeaderPath), is(false));
+
+    // Also check that an actual header from the library exists, so that we know
+    // we don't just have the wrong directory when passing the "false" check
+    // above.
+    Path libraryHeaderPath = headersPath.resolve("FirstHeader.h");
+    assertThat("library header should exist", Files.exists(libraryHeaderPath), is(true));
   }
 
   @Test
@@ -953,7 +976,8 @@ public class AppleLibraryIntegrationTest {
     testModularScenario("umbrella_directory_modulemap_per_library", "Test");
   }
 
-  private void testModularScenario(String scenario, String targetName) throws Exception {
+  private ProjectWorkspace testModularScenario(String scenario, String targetName)
+      throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -968,6 +992,7 @@ public class AppleLibraryIntegrationTest {
             .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
     ProcessResult result = workspace.runBuckCommand("build", dylibTarget.getFullyQualifiedName());
     result.assertSuccess();
+    return workspace;
   }
 
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
