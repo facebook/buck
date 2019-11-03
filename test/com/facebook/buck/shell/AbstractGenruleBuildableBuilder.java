@@ -56,8 +56,6 @@ abstract class AbstractGenruleBuildableBuilder {
 
   public abstract Optional<String> getCmdExe();
 
-  public abstract Optional<String> getType();
-
   @Value.Default
   public String getOut() {
     return "example-file";
@@ -66,11 +64,6 @@ abstract class AbstractGenruleBuildableBuilder {
   @Value.Default
   public boolean getEnableSandboxingInGenrule() {
     return false;
-  }
-
-  @Value.Default
-  public boolean isCacheable() {
-    return true;
   }
 
   @Value.Default
@@ -94,10 +87,8 @@ abstract class AbstractGenruleBuildableBuilder {
         getCmd().map(StringArg::of),
         getBash().map(StringArg::of),
         getCmdExe().map(StringArg::of),
-        getType(),
         getOut(),
         getEnableSandboxingInGenrule(),
-        isCacheable(),
         getEnvironmentExpansionSeparator(),
         getSandboxProperties(),
         getAndroidTools());

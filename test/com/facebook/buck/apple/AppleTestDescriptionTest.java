@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxStrip;
@@ -46,7 +45,6 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -86,13 +84,9 @@ public class AppleTestDescriptionTest {
                 .get();
     BuildRule binary = strip.getBuildDeps().first();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
-
-    SourcePath outputSourcePath = dep.getSourcePathToOutput();
-    Path absoluteLinkerScriptPath =
-        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs(), graphBuilder.getSourcePathResolver()),
-        Matchers.hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath)));
+        Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(binary.getBuildDeps(), Matchers.hasItem(dep));
   }
 
