@@ -389,27 +389,4 @@ public class GenruleBuildableTest {
             .findFirst();
     assertTrue("GenruleBuildable didn't generate correct mkdir", mkdir.isPresent());
   }
-
-  @Test
-  public void outputPathShouldBeNormalized() {
-    ImmutableList<String> unnormalizedPaths =
-        ImmutableList.<String>builder().add("foo/./bar/./.").add(".").add("./foo").build();
-
-    for (String out : unnormalizedPaths) {
-      BuildTarget target =
-          BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example:genrule");
-      GenruleBuildable buildable =
-          GenruleBuildableBuilder.builder()
-              .setBuildTarget(target)
-              .setFilesystem(filesystem)
-              .setBash("echo something > $OUT")
-              .setOut(out)
-              .build()
-              .toBuildable();
-
-      OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
-      Path outputPath = outputPathResolver.resolvePath(buildable.getOutput());
-      assertEquals(outputPath, outputPath.normalize());
-    }
-  }
 }
