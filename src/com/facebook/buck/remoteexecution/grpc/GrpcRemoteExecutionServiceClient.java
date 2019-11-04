@@ -175,11 +175,13 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
               @Override
               public void onNext(Operation value) {
                 state.currentOp = value;
-                try {
-                  state.setCurrentOpMetadata(
-                      state.currentOp.getMetadata().unpack(ExecuteOperationMetadata.class));
-                } catch (InvalidProtocolBufferException e) {
-                  LOG.warn("Unable to parse ExecuteOperationMetadata from Operation");
+                if (state.currentOp.hasMetadata()) {
+                  try {
+                    state.setCurrentOpMetadata(
+                        state.currentOp.getMetadata().unpack(ExecuteOperationMetadata.class));
+                  } catch (InvalidProtocolBufferException e) {
+                    LOG.warn("Unable to parse ExecuteOperationMetadata from Operation");
+                  }
                 }
               }
 
