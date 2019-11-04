@@ -126,11 +126,6 @@ public class BuildInfo {
     return getPathToMetadataDirectory(target, filesystem).resolve("artifact");
   }
 
-  public static Path getPathToBuildMetadataDirectory(
-      BuildTarget target, ProjectFilesystem filesystem) {
-    return getPathToMetadataDirectory(target, filesystem).resolve("build");
-  }
-
   public static Path getPathToOtherMetadataDirectory(
       BuildTarget target, ProjectFilesystem filesystem) {
     return getPathToMetadataDirectory(target, filesystem).resolve("other");
