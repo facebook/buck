@@ -371,7 +371,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       return buildTimestamps;
     }
 
-    @JsonIgnore
+    @JsonView(JsonViews.MachineReadableLog.class)
     public Optional<String> getStrategyResult() {
       return strategyResult;
     }
