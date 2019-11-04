@@ -27,4 +27,5 @@ apple_binary(
 apple_package(
     name = "DemoAppPackage",
     bundle = ":DemoApp",
+    default_platform = "iphonesimulator-x86_64",
 )

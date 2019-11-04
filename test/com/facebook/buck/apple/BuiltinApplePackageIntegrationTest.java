@@ -316,4 +316,35 @@ public class BuiltinApplePackageIntegrationTest {
         .assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:DemoAppPackage");
   }
+
+  @Test
+  public void testPackageWithoutDefaultPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "default_platform_in_rules", tmp);
+    workspace.setUp();
+
+    BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
+    workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
+  }
+
+  @Test
+  public void testPackageWithoutDefaultPlatformAndFlavorOverride() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "default_platform_in_rules", tmp);
+    workspace.setUp();
+
+    BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage#thisshouldfail");
+    // Assert a flavor on the target wins
+    workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertFailure();
+
+    packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
+    // Assert a flavor from configuration the target loses
+    workspace
+        .runBuckCommand(
+            "build",
+            packageTarget.getFullyQualifiedName(),
+            "--config",
+            "cxx.default_platform=doesnotexist")
+        .assertSuccess();
+  }
 }

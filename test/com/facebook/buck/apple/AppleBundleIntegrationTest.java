@@ -205,6 +205,22 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void applicationBundleWithDefaultPlatformIgnoresConfigOverride()
+      throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        runApplicationBundleTestWithScenarioAndBuildTarget(
+            "default_platform_in_rules", "//:DemoApp#no-debug");
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#no-debug");
+    workspace
+        .runBuckCommand(
+            "build",
+            target.getFullyQualifiedName(),
+            "--config",
+            "cxx.default_platform=doesnotexist")
+        .assertSuccess();
+  }
+
+  @Test
   public void simpleApplicationBundleWithCodeSigning() throws Exception {
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 

@@ -21,6 +21,7 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -82,7 +83,7 @@ public class ApplePackageDescription
         graphBuilder.getRule(propagateFlavorsToTarget(buildTarget, args.getBundle()));
 
     Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
-        getApplePackageConfig(buildTarget);
+        getApplePackageConfig(buildTarget, args.getDefaultPlatform());
 
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(
@@ -148,7 +149,7 @@ public class ApplePackageDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractApplePackageDescriptionArg extends BuildRuleArg {
+  interface AbstractApplePackageDescriptionArg extends BuildRuleArg, HasDefaultPlatform {
     @Hint(isDep = false)
     BuildTarget getBundle();
 
@@ -167,9 +168,11 @@ public class ApplePackageDescription
    * @return If found, a package config for this target.
    * @throws HumanReadableException if there are multiple possible package configs.
    */
-  private Optional<ApplePackageConfigAndPlatformInfo> getApplePackageConfig(BuildTarget target) {
+  private Optional<ApplePackageConfigAndPlatformInfo> getApplePackageConfig(
+      BuildTarget target, Optional<Flavor> defaultPlatform) {
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain = getAppleCxxPlatformFlavorDomain();
-    Set<Flavor> platformFlavors = getPlatformFlavorsOrDefault(target, appleCxxPlatformFlavorDomain);
+    Set<Flavor> platformFlavors =
+        getPlatformFlavorsOrDefault(target, defaultPlatform, appleCxxPlatformFlavorDomain);
 
     // Ensure that different platforms generate the same config.
     // The value of this map is just for error reporting.
@@ -199,10 +202,16 @@ public class ApplePackageDescription
   }
 
   private ImmutableSet<Flavor> getPlatformFlavorsOrDefault(
-      BuildTarget target, FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
+      BuildTarget target,
+      Optional<Flavor> defaultPlatform,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
+
     Sets.SetView<Flavor> intersection =
         Sets.intersection(appleCxxPlatformFlavorDomain.getFlavors(), target.getFlavors());
     if (intersection.isEmpty()) {
+      if (defaultPlatform.isPresent()) {
+        return ImmutableSet.of(defaultPlatform.get());
+      }
       return ImmutableSet.of(
           toolchainProvider
               .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
