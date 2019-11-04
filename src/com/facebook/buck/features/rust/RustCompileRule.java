@@ -280,6 +280,10 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
               String metadata = RustCompileUtils.hashForTarget(buildTarget);
 
               cmd.add(String.format("-Clinker=%s", linkerCmd.get(0)))
+                  .addAll(
+                      linkerCmd.subList(1, linkerCmd.size()).stream()
+                          .map(l -> String.format("-Clink-arg=%s", l))
+                          .iterator())
                   .add(String.format("-Clink-arg=@%s", argFilePath))
                   .add(String.format("-Cmetadata=%s", metadata))
                   .add(String.format("-Cextra-filename=-%s", metadata))
