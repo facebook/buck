@@ -32,6 +32,7 @@ import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.query.QueryNormalizer;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.PatternsMatcher;
@@ -45,7 +46,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 import java.io.BufferedOutputStream;
@@ -71,7 +71,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.FileOptionHandler;
@@ -79,9 +78,6 @@ import org.kohsuke.args4j.spi.FileOptionHandler;
 /** Provides base functionality for query commands. */
 public abstract class AbstractQueryCommand extends AbstractCommand {
   private static final Logger LOG = Logger.get(AbstractCommand.class);
-
-  /** String used to separate distinct sets when using `%Ss` in a query */
-  public static final String SET_SEPARATOR = "--";
 
   /**
    * Example usage:
@@ -230,8 +226,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
     String queryFormat = arguments.get(0);
     List<String> formatArgs = arguments.subList(1, arguments.size());
-    if (queryFormat.contains("%Ss")) {
-      runSingleQueryWithSet(params, env, queryFormat, formatArgs);
+    if (queryFormat.contains(QueryNormalizer.SET_SUBSTITUTOR)) {
+      runSingleQuery(params, env, QueryNormalizer.normalize(queryFormat, formatArgs));
       return;
     }
     if (queryFormat.contains("%s")) {
@@ -253,46 +249,6 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
           "Must not specify format arguments without a %s or %Ss in the query");
     }
     runSingleQuery(params, env, queryFormat);
-  }
-
-  /** Format and evaluate the query using list substitution */
-  private void runSingleQueryWithSet(
-      CommandRunnerParams params,
-      BuckQueryEnvironment env,
-      String queryFormat,
-      List<String> formatArgs)
-      throws InterruptedException, QueryException, IOException {
-    // No separators means 1 set, a single separator means 2 sets, etc
-    int numberOfSetsProvided = Iterables.frequency(formatArgs, SET_SEPARATOR) + 1;
-    int numberOfSetsRequested = StringUtils.countMatches(queryFormat, "%Ss");
-    if (numberOfSetsProvided != numberOfSetsRequested && numberOfSetsProvided > 1) {
-      String message =
-          String.format(
-              "Incorrect number of sets. Query uses `%%Ss` %d times but %d sets were given",
-              numberOfSetsRequested, numberOfSetsProvided);
-      throw new CommandLineException(message);
-    }
-
-    // If they only provided one list as args, use that for every instance of `%Ss`
-    if (numberOfSetsProvided == 1) {
-      String formattedQuery = queryFormat.replace("%Ss", getSetRepresentation(formatArgs));
-      runSingleQuery(params, env, formattedQuery);
-      return;
-    }
-
-    List<String> unusedFormatArgs = formatArgs;
-    String formattedQuery = queryFormat;
-    while (formattedQuery.contains("%Ss")) {
-      int nextSeparatorIndex = unusedFormatArgs.indexOf(SET_SEPARATOR);
-      List<String> currentSet =
-          nextSeparatorIndex == -1
-              ? unusedFormatArgs
-              : unusedFormatArgs.subList(0, nextSeparatorIndex);
-      // +1 so we don't include the separator in the next list
-      unusedFormatArgs = unusedFormatArgs.subList(nextSeparatorIndex + 1, unusedFormatArgs.size());
-      formattedQuery = formattedQuery.replaceFirst("%Ss", getSetRepresentation(currentSet));
-    }
-    runSingleQuery(params, env, formattedQuery);
   }
 
   /**
@@ -831,12 +787,6 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
   public static String getEscapedArgumentsListAsString(List<String> arguments) {
     return arguments.stream().map(arg -> "'" + arg + "'").collect(Collectors.joining(" "));
-  }
-
-  private static String getSetRepresentation(List<String> args) {
-    return args.stream()
-        .map(input -> "'" + input + "'")
-        .collect(Collectors.joining(" ", "set(", ")"));
   }
 
   static String getAuditDependenciesQueryFormat(boolean isTransitive, boolean includeTests) {

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.query.QueryNormalizer;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.OptionDef;
@@ -53,7 +54,7 @@ public class QueryMultiSetOptionHandler extends OptionHandler<String> {
       String param = params.getParameter(counter);
 
       // Special case the -- separator
-      if (param.startsWith("-") && !param.equals(QueryCommand.SET_SEPARATOR)) {
+      if (param.startsWith("-") && !param.equals(QueryNormalizer.SET_SEPARATOR)) {
         break;
       }
 

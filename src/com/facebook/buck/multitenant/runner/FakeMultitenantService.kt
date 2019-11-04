@@ -22,6 +22,7 @@ import com.facebook.buck.multitenant.service.DefaultFsToBuildPackageChangeTransl
 import com.facebook.buck.multitenant.service.FsChanges
 import com.facebook.buck.multitenant.service.Index
 import com.facebook.buck.multitenant.service.IndexAppender
+import com.facebook.buck.query.QueryNormalizer
 import java.nio.file.Path
 
 /**
@@ -52,7 +53,7 @@ class FakeMultitenantService(
             index.createIndexForGenerationWithLocalChanges(generation, buildPackageChanges)
         val cellToBuildFileName = mapOf("" to "BUCK")
         val env = MultitenantQueryEnvironment(localizedIndex, generation, cellToBuildFileName)
-        val queryTargets = env.evaluateQuery(query)
+        val queryTargets = env.evaluateQuery(QueryNormalizer.normalize(query))
         return queryTargets.map { it.toString() }
     }
 }

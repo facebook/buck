@@ -22,7 +22,6 @@ import com.facebook.buck.cli.OwnersReport.Builder;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -43,6 +42,7 @@ import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -216,7 +216,7 @@ public class QueryCommandTest {
     queryCommand.formatAndRunQuery(params, env);
   }
 
-  @Test(expected = HumanReadableException.class)
+  @Test(expected = QueryException.class)
   public void testRunMultiQueryWithIncorrectNumberOfSets() throws Exception {
     queryCommand.setArguments(
         ImmutableList.of(
