@@ -447,6 +447,18 @@ public class GoBinaryIntegrationTest {
     assertTrue(initialObjects.size() > 0);
   }
 
+  /**
+   * Test that Go binaries work with custom C++ linker wrapper tools which includes extra arguments
+   * (which would otherwise require bash quoting).
+   */
+  @Test
+  public void binaryWithCustomCxxLdTool() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_custom_ld_tool", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:bin").assertSuccess();
+  }
+
   private ImmutableSortedSet<Path> findFiles(Path root, PathMatcher matcher) throws IOException {
     ImmutableSortedSet.Builder<Path> files = ImmutableSortedSet.naturalOrder();
     Files.walkFileTree(
