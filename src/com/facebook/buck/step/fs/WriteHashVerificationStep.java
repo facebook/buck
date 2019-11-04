@@ -21,17 +21,20 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.ProcessHelper;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /** Build Step to write out a hash.verify file next to rule output. */
 public class WriteHashVerificationStep implements Step {
   private static final HashFunction HASHER = Hashing.sha1();
   private static final String FILE_HASH_VERIFICATION = "hash.verify";
+  private static final int MAX_BYTES = 20000;
 
   private final ProjectFilesystem filesystem;
   private final Path file;
@@ -56,10 +59,15 @@ public class WriteHashVerificationStep implements Step {
               .resolve(output.getFileName().toString() + "." + FILE_HASH_VERIFICATION);
       HashCode hashCode =
           HASHER.hashBytes(ByteStreams.toByteArray(filesystem.newFileInputStream(output)));
+      Optional<String> existingMeta = filesystem.readFileIfItExists(metaOut);
       filesystem.writeContentsToPath(
           String.format(
-              "hash: %s\ntarget: %s\nbuild: %s",
-              hashCode, buildTarget.getFullyQualifiedName(), context.getBuildId()),
+              "hash: %s\ntarget: %s\nbuild: %s\npid: %d\n%s",
+              hashCode,
+              buildTarget.getFullyQualifiedName(),
+              context.getBuildId(),
+              ProcessHelper.getInstance().getPid(),
+              existingMeta.map(m -> m.substring(0, Math.min(m.length(), MAX_BYTES))).orElse("")),
           metaOut);
     }
     return StepExecutionResults.SUCCESS;
