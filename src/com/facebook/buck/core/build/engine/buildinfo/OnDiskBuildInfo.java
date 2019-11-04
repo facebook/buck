@@ -18,7 +18,6 @@ package com.facebook.buck.core.build.engine.buildinfo;
 
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.util.hashing.FileHashLoader;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,12 +50,6 @@ public interface OnDiskBuildInfo {
    *     exists.
    */
   Optional<ImmutableMap<String, String>> getMap(String key);
-
-  /**
-   * @return Assuming the "artifact" value associated with the specified key is a valid sha1 hash,
-   *     returns it as a {@link Sha1HashCode}, if it exists.
-   */
-  Optional<Sha1HashCode> getHash(String key);
 
   /**
    * Returns the {@link RuleKey} for the rule whose output is currently stored on disk.

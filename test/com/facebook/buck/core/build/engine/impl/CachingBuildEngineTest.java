@@ -1795,8 +1795,6 @@ public class CachingBuildEngineTest {
             equalTo(Optional.empty()));
         assertThat(
             onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE), equalTo(Optional.of("6")));
-        assertThat(
-            onDiskBuildInfo.getHash(BuildInfo.MetadataKey.OUTPUT_HASH), equalTo(Optional.empty()));
       }
     }
 

@@ -25,7 +25,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -85,29 +84,6 @@ public class DefaultOnDiskBuildInfoTest {
     setMetadata("KEY", "Some Invalid Json");
     DefaultOnDiskBuildInfo onDiskBuildInfo = createOnDiskBuildInfo();
     assertThat(onDiskBuildInfo.getValues("KEY"), Matchers.equalTo(Optional.empty()));
-  }
-
-  @Test
-  public void whenMetadataValidHashThenGetHashReturnsHash() throws IOException {
-    String hash = "fac0fac1fac2fac3fac4fac5fac6fac7fac8fac9";
-    setMetadata("KEY", hash);
-    DefaultOnDiskBuildInfo onDiskBuildInfo = createOnDiskBuildInfo();
-    assertThat(
-        onDiskBuildInfo.getHash("KEY"), Matchers.equalTo(Optional.of(Sha1HashCode.of(hash))));
-  }
-
-  @Test
-  public void whenMetadataEmptyStringThenGetHashReturnsAbsent() throws IOException {
-    setMetadata("KEY", "");
-    DefaultOnDiskBuildInfo onDiskBuildInfo = createOnDiskBuildInfo();
-    assertThat(onDiskBuildInfo.getHash("KEY"), Matchers.equalTo(Optional.empty()));
-  }
-
-  @Test
-  public void whenMetadataInvalidHashThenGetHashReturnsAbsent() throws IOException {
-    setMetadata("KEY", "Not A Valid Hash");
-    DefaultOnDiskBuildInfo onDiskBuildInfo = createOnDiskBuildInfo();
-    assertThat(onDiskBuildInfo.getHash("KEY"), Matchers.equalTo(Optional.empty()));
   }
 
   @Test

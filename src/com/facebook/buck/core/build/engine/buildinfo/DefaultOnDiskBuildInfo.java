@@ -24,7 +24,6 @@ import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -140,23 +139,6 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
               value.get(), new TypeReference<ImmutableMap<String, String>>() {});
       return Optional.of(map);
     } catch (IOException ignored) {
-      return Optional.empty();
-    }
-  }
-
-  @Override
-  public Optional<Sha1HashCode> getHash(String key) {
-    Optional<String> optionalValue = getValue(key);
-    if (optionalValue.isPresent()) {
-      String value = optionalValue.get();
-      try {
-        return Optional.of(Sha1HashCode.of(value));
-      } catch (IllegalArgumentException e) {
-        LOG.error(e, "DefaultOnDiskBuildInfo.getHash(%s): Cannot transform %s to SHA1", key, value);
-        return Optional.empty();
-      }
-    } else {
-      LOG.warn("DefaultOnDiskBuildInfo.getHash(%s): Hash not found", key);
       return Optional.empty();
     }
   }
