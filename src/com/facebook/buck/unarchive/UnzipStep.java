@@ -46,7 +46,7 @@ public class UnzipStep extends UnarchiveStep {
         zipFile,
         destinationDirectory,
         stripPrefix,
-        PatternsMatcher.EMPTY);
+        PatternsMatcher.NONE);
   }
 
   /**

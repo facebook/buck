@@ -51,12 +51,7 @@ public abstract class Unarchiver {
       ExistingFileMode existingFileMode)
       throws IOException {
     return extractArchive(
-        archiveFile,
-        filesystem,
-        relativePath,
-        stripPrefix,
-        PatternsMatcher.EMPTY,
-        existingFileMode);
+        archiveFile, filesystem, relativePath, stripPrefix, PatternsMatcher.NONE, existingFileMode);
   }
 
   /**
@@ -121,7 +116,7 @@ public abstract class Unarchiver {
         archiveFile,
         destination,
         Optional.empty(),
-        PatternsMatcher.EMPTY,
+        PatternsMatcher.NONE,
         existingFileMode);
   }
 

@@ -560,7 +560,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
 
     SortedMap<String, Object> convertedAttributes = new TreeMap<>();
-    if (patternsMatcher.hasPatterns()) {
+    if (!patternsMatcher.isMatchesNone()) {
       for (Map.Entry<String, Object> attribute : attributes.entrySet()) {
         String attributeName = attribute.getKey();
         String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, attributeName);
@@ -777,7 +777,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       return Optional.empty();
     }
     SortedMap<String, Object> attributes = new TreeMap<>();
-    if (patternsMatcher.hasPatterns()) {
+    if (!patternsMatcher.isMatchesNone()) {
       for (String key : targetNodeAttributes.keySet()) {
         String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, key);
         if (patternsMatcher.matches(snakeCaseKey)) {

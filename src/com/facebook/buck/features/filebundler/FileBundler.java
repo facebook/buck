@@ -56,7 +56,7 @@ public abstract class FileBundler {
         destinationDir,
         toCopy,
         pathResolver,
-        PatternsMatcher.EMPTY);
+        PatternsMatcher.NONE);
   }
 
   public void copy(
@@ -75,9 +75,9 @@ public abstract class FileBundler {
       Path absolutePath = Objects.requireNonNull(pathEntry.getValue());
       Path destination = destinationDir.resolve(relativePath);
 
-      if (entriesToExclude.hasPatterns()) {
+      if (!entriesToExclude.isMatchesNone()) {
         String entryPath = PathFormatter.pathWithUnixSeparators(relativePath);
-        if (entriesToExclude.matchesAny(entryPath)) {
+        if (entriesToExclude.matches(entryPath)) {
           continue;
         }
       }

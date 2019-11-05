@@ -118,7 +118,7 @@ public class Untar extends Unarchiver {
       TarArchiveEntry entry;
       while ((entry = archiveStream.getNextTarEntry()) != null) {
         String entryName = entry.getName();
-        if (entriesToExclude.matchesAny(entryName)) {
+        if (entriesToExclude.matches(entryName)) {
           continue;
         }
         Path destFile = Paths.get(entryName);

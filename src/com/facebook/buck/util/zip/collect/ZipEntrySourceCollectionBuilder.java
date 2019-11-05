@@ -52,7 +52,7 @@ public class ZipEntrySourceCollectionBuilder {
   /** Add the given file as a source for an entry with the provided name. */
   public void addFile(String entryName, Path sourceFilePath) {
     entryName = PathFormatter.pathWithUnixSeparators(entryName);
-    if (excludedEntriesMatcher.matchesAny(entryName)) {
+    if (excludedEntriesMatcher.matches(entryName)) {
       return;
     }
     ZipEntrySource entrySource = new ImmutableFileZipEntrySource(sourceFilePath, entryName);
@@ -72,7 +72,7 @@ public class ZipEntrySourceCollectionBuilder {
     ImmutableList<String> zipEntries = Zip.getAllZipEntries(zipFilePath);
     for (int i = 0; i < zipEntries.size(); ++i) {
       String entryName = zipEntries.get(i);
-      if (excludedEntriesMatcher.matchesAny(entryName)) {
+      if (excludedEntriesMatcher.matches(entryName)) {
         continue;
       }
       ZipEntrySource entrySource = new ImmutableZipEntrySourceFromZip(zipFilePath, entryName, i);

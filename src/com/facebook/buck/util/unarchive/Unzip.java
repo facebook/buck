@@ -226,7 +226,7 @@ public class Unzip extends Unarchiver {
     SortedMap<Path, ZipArchiveEntry> pathMap = new TreeMap<>();
     for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
       String entryName = entry.getName();
-      if (entriesToExclude.matchesAny(entryName)) {
+      if (entriesToExclude.matches(entryName)) {
         continue;
       }
       Path entryPath = Paths.get(entryName);
@@ -250,7 +250,7 @@ public class Unzip extends Unarchiver {
     SortedMap<Path, ZipArchiveEntry> pathMap = new TreeMap<>();
     for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
       String entryName = entry.getName();
-      if (entriesToExclude.matchesAny(entryName)) {
+      if (entriesToExclude.matches(entryName)) {
         continue;
       }
       Path target = relativePath.resolve(entryName).normalize();

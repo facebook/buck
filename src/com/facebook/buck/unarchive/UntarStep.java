@@ -43,8 +43,7 @@ public class UntarStep extends UnarchiveStep {
       Path destinationDirectory,
       Optional<Path> stripPrefix,
       ArchiveFormat format) {
-    super(
-        format, filesystem, archiveFile, destinationDirectory, stripPrefix, PatternsMatcher.EMPTY);
+    super(format, filesystem, archiveFile, destinationDirectory, stripPrefix, PatternsMatcher.NONE);
 
     switch (format) {
       case TAR:

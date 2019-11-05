@@ -903,7 +903,8 @@ public class TargetsCommand extends AbstractCommand {
       ImmutableMap<BuildTarget, TargetResult> targetResults,
       ImmutableSet<String> outputAttributes)
       throws BuildFileParseException {
-    PatternsMatcher attributesPatternsMatcher = new PatternsMatcher(outputAttributes);
+    PatternsMatcher attributesPatternsMatcher =
+        outputAttributes.isEmpty() ? PatternsMatcher.ANY : new PatternsMatcher(outputAttributes);
 
     // Print the JSON representation of the build node for the specified target(s).
     params.getConsole().getStdOut().println("[");

@@ -174,9 +174,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .setDuplicatesLogLevel(duplicatesLogLevel)
                 .setRemoveEntryPredicate(
                     entry ->
-                        blacklistPatternsMatcher.hasPatterns()
-                            && blacklistPatternsMatcher.substringMatches(
-                                ((ZipEntry) entry).getName()))
+                        blacklistPatternsMatcher.substringMatches(((ZipEntry) entry).getName()))
                 .build());
     commands.add(jar);
 

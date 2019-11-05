@@ -273,7 +273,7 @@ public class UntarTest {
               Paths.get("output_dir"),
               Optional.empty(),
               ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES,
-              PatternsMatcher.EMPTY,
+              PatternsMatcher.NONE,
               writeSymlinksLast.get());
     } else {
       unarchivedFiles =
