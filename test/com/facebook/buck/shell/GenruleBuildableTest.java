@@ -46,6 +46,7 @@ import com.facebook.buck.rules.modern.DefaultBuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.environment.Platform;
@@ -344,5 +345,48 @@ public class GenruleBuildableTest {
 
     ZipScrubberStep zipScrubberStep = (ZipScrubberStep) scrubberStep.get();
     assertTrue(zipScrubberStep.getZipAbsolutePath().isAbsolute());
+  }
+
+  /**
+   * Tests that, even with out is a filepath with nested directories, genrule only creates the root
+   * output directory.
+   */
+  @Test
+  public void shouldOnlyCreateOutputBaseDirectoryForNestedOutput() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildTarget target =
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example:genrule");
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(filesystem)
+            .setBash("echo something > $OUT")
+            .setOut("nested/file/out.cpp")
+            .build()
+            .toBuildable();
+
+    BuildContext buildContext =
+        FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver(), filesystem);
+    OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
+    BuildCellRelativePathFactory buildCellRelativePathFactory =
+        new DefaultBuildCellRelativePathFactory(
+            buildContext.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver));
+    ImmutableList<Step> steps =
+        buildable.getBuildSteps(
+            buildContext, filesystem, outputPathResolver, buildCellRelativePathFactory);
+
+    Path targetGenrulePath = BuildTargetPaths.getGenPath(filesystem, target, "%s");
+    Optional<Step> mkdir =
+        steps.stream()
+            .filter(
+                step ->
+                    step instanceof MkdirStep
+                        && ((MkdirStep) step)
+                            .getPath()
+                            .getPathRelativeToBuildCellRoot()
+                            .equals(targetGenrulePath))
+            .findFirst();
+    assertTrue("GenruleBuildable didn't generate correct mkdir", mkdir.isPresent());
   }
 }
