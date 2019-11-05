@@ -85,9 +85,9 @@ class BuckShellBuildPackageParser(private val root: Path, private val daemon: Bo
     }
 
     private fun execBuck(patternsFile: Path, outputFile: Path) {
-        val builder = ProcessBuilder("buck", "targets", "--show-parse-state",
-            "@" + patternsFile.toString()).redirectOutput(outputFile.toFile()).redirectError(
-                ProcessBuilder.Redirect.INHERIT)
+        val builder = ProcessBuilder("buck", "targets", "--show-parse-state", "-c",
+            "log.log_upload_mode=never", "@" + patternsFile.toString()).redirectOutput(
+            outputFile.toFile()).redirectError(ProcessBuilder.Redirect.INHERIT)
             .directory(root.toFile())
         builder.environment().putIfAbsent("BUCK_EXTRA_JAVA_ARGS", "-Xmx24G")
         if (!daemon) {
