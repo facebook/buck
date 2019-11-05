@@ -116,8 +116,14 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     /** Format output as dot graph */
     DOT,
 
+    /** Format output as dot graph, in a more compact format */
+    DOT_COMPACT,
+
     /** Format output as dot graph in bfs order */
     DOT_BFS,
+
+    /** Format output as dot graph in bfs order, in a more compact format */
+    DOT_BFS_COMPACT,
 
     /** Format output as JSON */
     JSON,
@@ -134,7 +140,9 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       usage =
           "Output format (default: list).\n"
               + " dot -  dot graph format.\n"
+              + " dot_compact - dot graph format, compacted.\n"
               + " dot_bfs -  dot graph format in bfs order.\n"
+              + " dot_bfs_compact - dot graph format in bfs order, compacted.\n"
               + " json - JSON format.\n"
               + " json_unconfigured - JSON format with unevaluated selects\n"
               + " thrift - thrift binary format.\n")
@@ -322,13 +330,25 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
       switch (outputFormat) {
         case DOT:
+        case DOT_COMPACT:
           printDotOutput(
-              params, env, asQueryBuildTargets(queryResult), Dot.OutputOrder.SORTED, printStream);
+              params,
+              env,
+              asQueryBuildTargets(queryResult),
+              Dot.OutputOrder.SORTED,
+              printStream,
+              outputFormat == OutputFormat.DOT_COMPACT);
           break;
 
         case DOT_BFS:
+        case DOT_BFS_COMPACT:
           printDotOutput(
-              params, env, asQueryBuildTargets(queryResult), Dot.OutputOrder.BFS, printStream);
+              params,
+              env,
+              asQueryBuildTargets(queryResult),
+              Dot.OutputOrder.BFS,
+              printStream,
+              outputFormat == OutputFormat.DOT_BFS_COMPACT);
           break;
 
         case JSON:
@@ -393,14 +413,16 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       BuckQueryEnvironment env,
       Set<QueryBuildTarget> queryResult,
       Dot.OutputOrder outputOrder,
-      PrintStream printStream)
+      PrintStream printStream,
+      boolean compactMode)
       throws IOException, QueryException {
     Dot.Builder<TargetNode<?>> dotBuilder =
         Dot.builder(env.getTargetGraph(), "result_graph")
             .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
             .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
             .setNodeToTypeName(targetNode -> targetNode.getRuleType().getName())
-            .setOutputOrder(outputOrder);
+            .setOutputOrder(outputOrder)
+            .setCompactMode(compactMode);
     if (shouldOutputAttributes()) {
       Function<TargetNode<?>, ImmutableSortedMap<String, String>> nodeToAttributes =
           getNodeToAttributeFunction(params, env);

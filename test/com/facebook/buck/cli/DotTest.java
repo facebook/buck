@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.Dot.OutputOrder;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.google.common.base.Functions;
@@ -88,6 +89,66 @@ public class DotTest {
             "  E;",
             "  F;"),
         false);
+  }
+
+  @Test
+  public void testGenerateCompactDotOutput() throws IOException {
+    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
+    mutableGraph.addEdge("A", "B");
+    mutableGraph.addEdge("B", "C");
+    mutableGraph.addEdge("B", "D");
+    mutableGraph.addEdge("C", "E");
+    mutableGraph.addEdge("D", "E");
+    mutableGraph.addEdge("A", "E");
+    mutableGraph.addEdge("F", "E");
+    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+
+    StringBuilder output = new StringBuilder();
+    Dot.builder(graph, "the_graph")
+        .setNodeToName(Functions.identity())
+        .setNodeToTypeName(name -> "A")
+        .setOutputOrder(outputOrder)
+        .setCompactMode(true)
+        .build()
+        .writeOutput(output);
+
+    if (outputOrder == OutputOrder.SORTED) {
+      assertOutput(
+          output.toString(),
+          ImmutableSet.of(
+              "  1 -> 2;",
+              "  1 -> 3;",
+              "  2 -> 4;",
+              "  2 -> 5;",
+              "  4 -> 3;",
+              "  5 -> 3;",
+              "  6 -> 3;",
+              "  1 [style=filled,color=\"#C1C1C0\",label=A];",
+              "  2 [style=filled,color=\"#C1C1C0\",label=B];",
+              "  3 [style=filled,color=\"#C1C1C0\",label=E];",
+              "  4 [style=filled,color=\"#C1C1C0\",label=C];",
+              "  5 [style=filled,color=\"#C1C1C0\",label=D];",
+              "  6 [style=filled,color=\"#C1C1C0\",label=F];"),
+          true);
+    } else {
+      assertOutput(
+          output.toString(),
+          ImmutableSet.of(
+              "  1 -> 2;",
+              "  1 -> 3;",
+              "  2 -> 5;",
+              "  2 -> 6;",
+              "  4 -> 3;",
+              "  5 -> 3;",
+              "  6 -> 3;",
+              "  1 [style=filled,color=\"#C1C1C0\",label=A];",
+              "  2 [style=filled,color=\"#C1C1C0\",label=B];",
+              "  3 [style=filled,color=\"#C1C1C0\",label=E];",
+              "  4 [style=filled,color=\"#C1C1C0\",label=F];",
+              "  5 [style=filled,color=\"#C1C1C0\",label=C];",
+              "  6 [style=filled,color=\"#C1C1C0\",label=D];"),
+          true);
+    }
   }
 
   @Test

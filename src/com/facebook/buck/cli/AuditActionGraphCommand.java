@@ -61,8 +61,17 @@ public class AuditActionGraphCommand extends AbstractCommand {
 
   private static final Logger LOG = Logger.get(AuditActionGraphCommand.class);
 
-  @Option(name = "--dot", usage = "Print result in graphviz dot format.")
+  @Option(
+      name = "--dot",
+      usage = "Print result in graphviz dot format.",
+      forbids = {"--dot-compact"})
   private boolean generateDotOutput;
+
+  @Option(
+      name = "--dot-compact",
+      usage = "Print result in a more compact graphviz dot format.",
+      forbids = {"---dot"})
+  private boolean generateDotOutputInCompactMode;
 
   @Option(
       name = "--node-view",
@@ -105,13 +114,14 @@ public class AuditActionGraphCommand extends AbstractCommand {
           params.getActionGraphProvider().getActionGraph(targetGraphCreationResult);
 
       // Dump the action graph.
-      if (generateDotOutput) {
+      if (generateDotOutput || generateDotOutputInCompactMode) {
         dumpAsDot(
             actionGraphAndBuilder.getActionGraph(),
             actionGraphAndBuilder.getActionGraphBuilder(),
             includeRuntimeDeps,
             nodeView,
-            params.getConsole().getStdOut());
+            params.getConsole().getStdOut(),
+            generateDotOutputInCompactMode);
       } else {
         dumpAsJson(
             actionGraphAndBuilder.getActionGraph(),
@@ -210,7 +220,8 @@ public class AuditActionGraphCommand extends AbstractCommand {
       ActionGraphBuilder actionGraphBuilder,
       boolean includeRuntimeDeps,
       NodeView nodeView,
-      DirtyPrintStreamDecorator out)
+      DirtyPrintStreamDecorator out,
+      boolean compactMode)
       throws IOException {
     MutableDirectedGraph<BuildRule> dag = new MutableDirectedGraph<>();
     graph.getNodes().forEach(dag::addNode);
@@ -225,7 +236,8 @@ public class AuditActionGraphCommand extends AbstractCommand {
     Dot.Builder<BuildRule> builder =
         Dot.builder(new DirectedAcyclicGraph<>(dag), "action_graph")
             .setNodeToName(BuildRule::getFullyQualifiedName)
-            .setNodeToTypeName(BuildRule::getType);
+            .setNodeToTypeName(BuildRule::getType)
+            .setCompactMode(compactMode);
     if (nodeView == NodeView.Extended) {
       builder.setNodeToAttributes(AuditActionGraphCommand::getNodeAttributes);
     }
