@@ -440,6 +440,17 @@ public class GenruleIntegrationTest {
   }
 
   @Test
+  public void testGenruleWithChangingNestedDirectory() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_path_changes", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:hello").assertSuccess();
+    workspace.runBuckBuild("//:hello", "-c", "buck.break=yes").assertSuccess();
+  }
+
+  @Test
   public void srcsMap() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "genrule_srcs_map", temporaryFolder);

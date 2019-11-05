@@ -1,0 +1,13 @@
+break_buck = read_config("buck", "break")
+
+if break_buck == "yes":
+    out = "hello.txt/hello.txt"
+else:
+    out = "hello.txt"
+
+genrule(
+    name = "hello",
+    out = out,
+    bash = "mkdir -p \$(dirname ${OUT}) && touch ${OUT}",
+    cmd_exe = "powershell -Command mkdir (Split-Path -Parent ${OUT}) ; New-Item -Type file ${OUT}",
+)
