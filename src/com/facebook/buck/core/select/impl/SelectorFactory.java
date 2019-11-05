@@ -18,13 +18,9 @@ package com.facebook.buck.core.select.impl;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -46,22 +42,11 @@ public class SelectorFactory {
   }
 
   /** Creates a new Selector using the default error message when no conditions match. */
-  public <T> Selector<T> createSelector(
+  public Selector<Object> createSelector(
       CellPathResolver cellPathResolver,
-      ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      Map<String, ?> rawAttributes,
-      TypeCoercer<T> elementTypeCoercer)
-      throws CoerceFailedException {
-    return createSelector(
-        cellPathResolver,
-        filesystem,
-        pathRelativeToProjectRoot,
-        targetConfiguration,
-        rawAttributes,
-        elementTypeCoercer,
-        "");
+      Map<String, ?> rawAttributes) {
+    return createSelector(cellPathResolver, pathRelativeToProjectRoot, rawAttributes, "");
   }
 
   /**
@@ -69,18 +54,13 @@ public class SelectorFactory {
    *
    * @param rawAttributes a map with attributes represented in a format produced by build file
    *     parsers (i.e. non-coerced.)
-   * @param elementTypeCoercer coercer that is used to coerce values of the given map
    */
-  public <T> Selector<T> createSelector(
+  public Selector<Object> createSelector(
       CellPathResolver cellPathResolver,
-      ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
       Map<String, ?> rawAttributes,
-      TypeCoercer<T> elementTypeCoercer,
-      String noMatchMessage)
-      throws CoerceFailedException {
-    LinkedHashMap<SelectorKey, T> result =
+      String noMatchMessage) {
+    LinkedHashMap<SelectorKey, Object> result =
         Maps.newLinkedHashMapWithExpectedSize(rawAttributes.size());
     Set<SelectorKey> nullConditions = new HashSet<>();
     for (Entry<String, ?> entry : rawAttributes.entrySet()) {
@@ -99,14 +79,7 @@ public class SelectorFactory {
         result.remove(selectorKey);
         nullConditions.add(selectorKey);
       } else {
-        result.put(
-            selectorKey,
-            elementTypeCoercer.coerce(
-                cellPathResolver,
-                filesystem,
-                pathRelativeToProjectRoot,
-                targetConfiguration,
-                entry.getValue()));
+        result.put(selectorKey, entry.getValue());
         nullConditions.remove(selectorKey);
       }
     }

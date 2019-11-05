@@ -17,8 +17,10 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -27,8 +29,11 @@ import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
+import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.base.Preconditions;
@@ -46,11 +51,55 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
 
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final BuiltTargetVerifier builtTargetVerifier;
+  private final CellPathResolver cellPathResolver;
+  private final SelectorListFactory selectorListFactory;
 
   public DefaultUnconfiguredTargetNodeFactory(
-      KnownRuleTypesProvider knownRuleTypesProvider, BuiltTargetVerifier builtTargetVerifier) {
+      KnownRuleTypesProvider knownRuleTypesProvider,
+      BuiltTargetVerifier builtTargetVerifier,
+      CellPathResolver cellPathResolver,
+      SelectorListFactory selectorListFactory) {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.builtTargetVerifier = builtTargetVerifier;
+    this.cellPathResolver = cellPathResolver;
+    this.selectorListFactory = selectorListFactory;
+  }
+
+  private ImmutableMap<String, Object> convertSelects(
+      Map<String, Object> attrs, Path pathRelativeToProjectRoot, DependencyStack dependencyStack) {
+    ImmutableMap.Builder<String, Object> result = ImmutableMap.builder();
+    for (Map.Entry<String, Object> attr : attrs.entrySet()) {
+      result.put(
+          attr.getKey(),
+          convertSelectorListInAttrValue(
+              attr.getKey(), attr.getValue(), pathRelativeToProjectRoot, dependencyStack));
+    }
+    return result.build();
+  }
+
+  /**
+   * Convert attr value {@link ListWithSelects} to {@link SelectorList} or keep it as is otherwise
+   */
+  private Object convertSelectorListInAttrValue(
+      String attrName,
+      Object attrValue,
+      Path pathRelativeToProjectRoot,
+      DependencyStack dependencyStack) {
+    if (attrValue instanceof ListWithSelects) {
+      try {
+        return selectorListFactory.create(
+            cellPathResolver, pathRelativeToProjectRoot, (ListWithSelects) attrValue);
+      } catch (CoerceFailedException e) {
+        throw new HumanReadableException(
+            e,
+            dependencyStack,
+            "failed to coerce list with selects for attr %s: %s",
+            attrName,
+            e.getMessage());
+      }
+    } else {
+      return attrValue;
+    }
   }
 
   @Override
@@ -86,12 +135,11 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             rawAttributes.get("within_view"),
             target.getData());
 
+    ImmutableMap<String, Object> withSelects =
+        convertSelects(rawAttributes, target.getBasePath(), dependencyStack);
+
     return ImmutableUnconfiguredTargetNode.of(
-        target.getData(),
-        ruleType,
-        ImmutableMap.copyOf(rawAttributes),
-        visibilityPatterns,
-        withinViewPatterns);
+        target.getData(), ruleType, withSelects, visibilityPatterns, withinViewPatterns);
   }
 
   private static RuleType parseRuleTypeFromRawRule(

@@ -18,6 +18,7 @@ package com.facebook.buck.core.select;
 
 import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.google.common.collect.ImmutableList;
+import java.util.Objects;
 
 /**
  * Represents a list of {@link Selector} objects
@@ -61,5 +62,33 @@ public final class SelectorList<T> {
    */
   public Concatable<T> getConcatable() {
     return elementTypeConcatable;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SelectorList<?> that = (SelectorList<?>) o;
+    return elementTypeConcatable.equals(that.elementTypeConcatable)
+        && selectors.equals(that.selectors);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(elementTypeConcatable, selectors);
+  }
+
+  @Override
+  public String toString() {
+    return "SelectorList{"
+        + "elementTypeConcatable="
+        + elementTypeConcatable
+        + ", selectors="
+        + selectors
+        + '}';
   }
 }

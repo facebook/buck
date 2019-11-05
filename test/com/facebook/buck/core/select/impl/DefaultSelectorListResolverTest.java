@@ -20,29 +20,27 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.Selector;
+import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.TestSelectorListFactory;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.FlavorTypeCoercer;
 import com.facebook.buck.rules.coercer.ListTypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -285,22 +283,16 @@ public class DefaultSelectorListResolverTest {
   }
 
   @Test
-  public void testResolvingListWithNoMatchesThrowsExceptionWithCustomMessage()
-      throws CoerceFailedException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+  public void testResolvingListWithNoMatchesThrowsExceptionWithCustomMessage() {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
-    SelectorFactory selectorFactory =
-        new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory());
     ListTypeCoercer<Flavor> flavorListTypeCoercer = new ListTypeCoercer<>(new FlavorTypeCoercer());
     Selector<ImmutableList<Flavor>> selector =
-        selectorFactory.createSelector(
-            TestCellPathResolver.get(projectFilesystem),
-            projectFilesystem,
-            projectFilesystem.getRootPath(),
-            UnconfiguredTargetConfiguration.INSTANCE,
-            ImmutableMap.of("//x:y", Lists.newArrayList("flavor11", "flavor12")),
-            flavorListTypeCoercer,
+        new Selector<>(
+            ImmutableMap.of(
+                new SelectorKey(ConfigurationBuildTargetFactoryForTests.newInstance("//x:y")),
+                ImmutableList.of(InternalFlavor.of("flavor11"), InternalFlavor.of("flavor12"))),
+            ImmutableSet.of(),
             "Custom message");
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(

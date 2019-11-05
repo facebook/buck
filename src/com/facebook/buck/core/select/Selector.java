@@ -18,6 +18,8 @@ package com.facebook.buck.core.select;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -40,6 +42,10 @@ public class Selector<T> {
     this.conditions = conditions;
     this.nullConditions = nullConditions;
     this.noMatchMessage = noMatchMessage;
+  }
+
+  public static <T> Selector<T> onlyDefault(T element) {
+    return new Selector<>(ImmutableMap.of(SelectorKey.DEFAULT, element), ImmutableSet.of(), "");
   }
 
   public ImmutableMap<SelectorKey, T> getConditions() {
@@ -72,5 +78,61 @@ public class Selector<T> {
    */
   public String getNoMatchMessage() {
     return noMatchMessage;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Selector<?> selector = (Selector<?>) o;
+    return conditions.equals(selector.conditions)
+        && nullConditions.equals(selector.nullConditions)
+        && noMatchMessage.equals(selector.noMatchMessage);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(conditions, nullConditions, noMatchMessage);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("select({");
+    boolean first = true;
+
+    for (Map.Entry<SelectorKey, T> entry : conditions.entrySet()) {
+      if (!first) {
+        sb.append(", ");
+      }
+      first = false;
+      sb.append('"').append(entry.getKey()).append('"');
+      sb.append(": ");
+      sb.append(entry.getValue());
+    }
+
+    for (SelectorKey entry : nullConditions) {
+      if (!first) {
+        sb.append(", ");
+      }
+      first = false;
+      sb.append('"').append(entry).append('"');
+      sb.append(": ");
+      sb.append("None");
+    }
+
+    sb.append("}");
+    if (noMatchMessage != null) {
+      sb.append(", no_match_message=");
+      sb.append('"').append(noMatchMessage).append('"');
+    }
+
+    sb.append(")");
+
+    return sb.toString();
   }
 }

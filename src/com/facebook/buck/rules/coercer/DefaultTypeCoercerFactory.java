@@ -29,8 +29,6 @@ import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.SelectorList;
-import com.facebook.buck.core.select.impl.SelectorFactory;
-import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -421,8 +419,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     } else if (rawClass.isAssignableFrom(SelectorList.class)) {
       return new SelectorListCoercer<>(
           new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer),
-          typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)),
-          new SelectorListFactory(new SelectorFactory(unconfiguredBuildTargetFactory)));
+          typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
     } else {
       throw new IllegalArgumentException("Unhandled type: " + typeName);
     }

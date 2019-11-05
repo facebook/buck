@@ -30,7 +30,6 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -244,7 +243,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
     // The reason why we cannot use coercer from {@code argumentInfo} because {@link
     // ListWithSelects} is not generic class, but an instance contains all necessary information
     // to coerce the value into an instance of {@link SelectorList} which is a generic class.
-    if (rawValue instanceof ListWithSelects) {
+    if (rawValue instanceof SelectorList<?>) {
       if (!argumentInfo.isConfigurable()) {
         throw new HumanReadableException(
             "%s: attribute '%s' cannot be configured using select",
@@ -253,7 +252,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
 
       coercer =
           typeCoercerFactory.typeCoercerForParameterizedType(
-              "ListWithSelects", SelectorList.class, argumentInfo.getGenericParameterTypes());
+              "SelectorList", SelectorList.class, argumentInfo.getGenericParameterTypes());
     } else {
       coercer = argumentInfo.getTypeCoercer();
     }

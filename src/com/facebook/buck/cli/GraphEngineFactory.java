@@ -38,6 +38,8 @@ import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
+import com.facebook.buck.core.select.impl.SelectorFactory;
+import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.parser.BuiltTargetVerifier;
 import com.facebook.buck.parser.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.parser.DefaultUnconfiguredTargetNodeFactory;
@@ -138,7 +140,11 @@ public class GraphEngineFactory {
     // COMPUTATION: Unconfigured build target to raw target node computation
     DefaultUnconfiguredTargetNodeFactory rawTargetNodeFactory =
         new DefaultUnconfiguredTargetNodeFactory(
-            params.getKnownRuleTypesProvider(), new BuiltTargetVerifier());
+            params.getKnownRuleTypesProvider(),
+            new BuiltTargetVerifier(),
+            cell.getCellPathResolver(),
+            new SelectorListFactory(
+                new SelectorFactory(params.getUnconfiguredBuildTargetFactory())));
 
     BuildTargetToUnconfiguredTargetNodeComputation buildTargetToUnconfiguredTargetNodeComputation =
         BuildTargetToUnconfiguredTargetNodeComputation.of(rawTargetNodeFactory, cell);

@@ -22,9 +22,9 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
-import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -38,15 +38,11 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
 
   private final BuildTargetTypeCoercer buildTargetTypeCoercer;
   private final TypeCoercer<T> elementTypeCoercer;
-  private final SelectorListFactory selectorListFactory;
 
   public SelectorListCoercer(
-      BuildTargetTypeCoercer buildTargetTypeCoercer,
-      TypeCoercer<T> elementTypeCoercer,
-      SelectorListFactory selectorListFactory) {
+      BuildTargetTypeCoercer buildTargetTypeCoercer, TypeCoercer<T> elementTypeCoercer) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.elementTypeCoercer = elementTypeCoercer;
-    this.selectorListFactory = selectorListFactory;
   }
 
   @Override
@@ -93,13 +89,35 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
-    ListWithSelects list = (ListWithSelects) object;
-    return selectorListFactory.create(
-        cellRoots,
-        filesystem,
-        pathRelativeToProjectRoot,
-        targetConfiguration,
-        list.getElements(),
-        elementTypeCoercer);
+    SelectorList<?> list = (SelectorList<?>) object;
+
+    ImmutableList.Builder<Selector<T>> selectors = ImmutableList.builder();
+    for (Selector<?> selector : list.getSelectors()) {
+      selectors.add(
+          coerceSelector(
+              selector, cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration));
+    }
+    return new SelectorList<>(elementTypeCoercer, selectors.build());
+  }
+
+  private Selector<T> coerceSelector(
+      Selector<?> input,
+      CellPathResolver cellPathResolver,
+      ProjectFilesystem projectFilesystem,
+      Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration)
+      throws CoerceFailedException {
+    ImmutableMap.Builder<SelectorKey, T> conditions = ImmutableMap.builder();
+    for (Map.Entry<SelectorKey, ?> entry : input.getConditions().entrySet()) {
+      conditions.put(
+          entry.getKey(),
+          elementTypeCoercer.coerce(
+              cellPathResolver,
+              projectFilesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              entry.getValue()));
+    }
+    return new Selector<>(conditions.build(), input.getNullConditions(), input.getNoMatchMessage());
   }
 }

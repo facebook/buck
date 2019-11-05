@@ -33,7 +33,6 @@ import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolver;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -41,7 +40,6 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -197,7 +195,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                 state.getSelectorListResolver(),
                 configurationContext,
                 cell.getCellPathResolver(),
-                cell.getFilesystem(),
                 buildTarget,
                 state.getSelectorListFactory(),
                 attributeName,
@@ -216,7 +213,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       SelectorListResolver selectorListResolver,
       SelectableConfigurationContext configurationContext,
       CellPathResolver cellPathResolver,
-      ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
       SelectorListFactory selectorListFactory,
       String attributeName,
@@ -227,16 +223,9 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       return jsonObject;
     }
 
-    ListWithSelects list = (ListWithSelects) jsonObject;
-
     SelectorList<Object> selectorList =
         selectorListFactory.create(
-            cellPathResolver,
-            projectFilesystem,
-            buildTarget.getBasePath(),
-            buildTarget.getTargetConfiguration(),
-            list.getElements(),
-            JsonTypeConcatenatingCoercerFactory.createForType(list.getType()));
+            cellPathResolver, buildTarget.getBasePath(), (ListWithSelects) jsonObject);
 
     return selectorListResolver.resolveList(
         configurationContext, buildTarget, attributeName, selectorList, dependencyStack);

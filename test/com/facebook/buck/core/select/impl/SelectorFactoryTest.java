@@ -22,16 +22,12 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.FlavorTypeCoercer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -51,96 +47,81 @@ public class SelectorFactoryTest {
   }
 
   @Test
-  public void testCanCreateEmptySelector() throws CoerceFailedException {
-    Selector<Flavor> selector =
+  public void testCanCreateEmptySelector() {
+    Selector<Object> selector =
         selectorFactory.createSelector(
             TestCellPathResolver.get(projectFilesystem),
-            projectFilesystem,
             projectFilesystem.getRootPath(),
-            UnconfiguredTargetConfiguration.INSTANCE,
-            ImmutableMap.of(),
-            new FlavorTypeCoercer());
+            ImmutableMap.of());
 
     assertTrue(selector.getConditions().isEmpty());
   }
 
   @Test
-  public void testCanCreateSelectorWithDefaultValue() throws CoerceFailedException {
-    Selector<Flavor> selector =
+  public void testCanCreateSelectorWithDefaultValue() {
+    Selector<Object> selector =
         selectorFactory.createSelector(
             TestCellPathResolver.get(projectFilesystem),
-            projectFilesystem,
             projectFilesystem.getRootPath(),
-            UnconfiguredTargetConfiguration.INSTANCE,
-            ImmutableMap.of("DEFAULT", "flavor1", "//:a", "flavor2"),
-            new FlavorTypeCoercer());
+            ImmutableMap.of("DEFAULT", "flavor1", "//:a", "flavor2"));
 
     assertEquals(2, selector.getConditions().size());
-    ImmutableMap<SelectorKey, Flavor> conditions = selector.getConditions();
+    ImmutableMap<SelectorKey, Object> conditions = selector.getConditions();
     List<SelectorKey> keys = Lists.newArrayList(conditions.keySet());
     assertEquals(SelectorKey.DEFAULT, keys.get(0));
-    assertEquals(InternalFlavor.of("flavor1"), conditions.get(keys.get(0)));
+    assertEquals("flavor1", conditions.get(keys.get(0)));
     assertEquals("//:a", keys.get(1).getBuildTarget().getFullyQualifiedName());
-    assertEquals(InternalFlavor.of("flavor2"), conditions.get(keys.get(1)));
+    assertEquals("flavor2", conditions.get(keys.get(1)));
     assertNotNull(selector.getDefaultConditionValue());
   }
 
   @Test
-  public void testCanCreateSelectorWithoutDefaultValues() throws CoerceFailedException {
-    Selector<Flavor> selector =
+  public void testCanCreateSelectorWithoutDefaultValues() {
+    Selector<Object> selector =
         selectorFactory.createSelector(
             TestCellPathResolver.get(projectFilesystem),
-            projectFilesystem,
             projectFilesystem.getRootPath(),
-            UnconfiguredTargetConfiguration.INSTANCE,
-            ImmutableMap.of("//:z", "flavor1", "//:a", "flavor2"),
-            new FlavorTypeCoercer());
+            ImmutableMap.of("//:z", "flavor1", "//:a", "flavor2"));
 
     assertEquals(2, selector.getConditions().size());
-    ImmutableMap<SelectorKey, Flavor> conditions = selector.getConditions();
+    ImmutableMap<SelectorKey, Object> conditions = selector.getConditions();
     List<SelectorKey> keys = Lists.newArrayList(conditions.keySet());
     assertEquals("//:z", keys.get(0).getBuildTarget().getFullyQualifiedName());
-    assertEquals(InternalFlavor.of("flavor1"), conditions.get(keys.get(0)));
+    assertEquals("flavor1", conditions.get(keys.get(0)));
     assertEquals("//:a", keys.get(1).getBuildTarget().getFullyQualifiedName());
-    assertEquals(InternalFlavor.of("flavor2"), conditions.get(keys.get(1)));
+    assertEquals("flavor2", conditions.get(keys.get(1)));
     assertNull(selector.getDefaultConditionValue());
   }
 
   @Test
-  public void testCanCreateSelectorWithOnlyDefaultValue() throws CoerceFailedException {
-    Selector<Flavor> selector =
+  public void testCanCreateSelectorWithOnlyDefaultValue() {
+    Selector<Object> selector =
         selectorFactory.createSelector(
             TestCellPathResolver.get(projectFilesystem),
-            projectFilesystem,
             projectFilesystem.getRootPath(),
-            UnconfiguredTargetConfiguration.INSTANCE,
-            ImmutableMap.of("DEFAULT", "flavor1"),
-            new FlavorTypeCoercer());
+            ImmutableMap.of("DEFAULT", "flavor1"));
 
     assertEquals(1, selector.getConditions().size());
-    ImmutableMap<SelectorKey, Flavor> conditions = selector.getConditions();
+    ImmutableMap<SelectorKey, Object> conditions = selector.getConditions();
     List<SelectorKey> keys = Lists.newArrayList(conditions.keySet());
     assertEquals(SelectorKey.DEFAULT, keys.get(0));
-    assertEquals(InternalFlavor.of("flavor1"), conditions.get(keys.get(0)));
+    assertEquals("flavor1", conditions.get(keys.get(0)));
     assertNotNull(selector.getDefaultConditionValue());
   }
 
   @Test
   public void testCanCreateSelectorWithNoneValues() throws CoerceFailedException {
-    Selector<Flavor> selector =
+    Selector<Object> selector =
         selectorFactory.createSelector(
             TestCellPathResolver.get(projectFilesystem),
-            projectFilesystem,
             projectFilesystem.getRootPath(),
-            UnconfiguredTargetConfiguration.INSTANCE,
-            ImmutableMap.of("//:z", Runtime.NONE, "//:a", "flavor2"),
-            new FlavorTypeCoercer());
+            ImmutableMap.of("//:z", Runtime.NONE, "//:a", "flavor2"));
 
     assertEquals(1, selector.getConditions().size());
-    ImmutableMap<SelectorKey, Flavor> conditions = selector.getConditions();
+    ImmutableMap<SelectorKey, Object> conditions = selector.getConditions();
     List<SelectorKey> keys = Lists.newArrayList(conditions.keySet());
     assertEquals("//:a", keys.get(0).getBuildTarget().getFullyQualifiedName());
-    assertEquals(InternalFlavor.of("flavor2"), conditions.get(keys.get(0)));
+    assertEquals("flavor2", conditions.get(keys.get(0)));
     assertNull(selector.getDefaultConditionValue());
   }
 }

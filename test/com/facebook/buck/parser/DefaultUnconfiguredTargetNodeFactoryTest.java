@@ -21,18 +21,28 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.select.Selector;
+import com.facebook.buck.core.select.SelectorKey;
+import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.select.impl.SelectorFactory;
+import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
+import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.util.List;
 import org.junit.Test;
 
 public class DefaultUnconfiguredTargetNodeFactoryTest {
@@ -42,15 +52,20 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
 
-    DefaultUnconfiguredTargetNodeFactory factory =
-        new DefaultUnconfiguredTargetNodeFactory(knownRuleTypesProvider, new BuiltTargetVerifier());
-
     Cell cell = new TestCellBuilder().build();
+
+    DefaultUnconfiguredTargetNodeFactory factory =
+        new DefaultUnconfiguredTargetNodeFactory(
+            knownRuleTypesProvider,
+            new BuiltTargetVerifier(),
+            cell.getCellPathResolver(),
+            new SelectorListFactory(
+                new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory())));
 
     UnconfiguredBuildTargetView buildTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c");
 
-    ImmutableMap<String, Object> attributes =
+    ImmutableMap<String, Object> inputAttributes =
         ImmutableMap.<String, Object>builder()
             .put("buck.type", "java_library")
             .put("name", "c")
@@ -71,19 +86,45 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             .put("visibility", ImmutableList.of("//a/..."))
             .put("within_view", ImmutableList.of("//b/..."))
             .build();
+
+    ImmutableMap<String, Object> expectAttributes =
+        ImmutableMap.<String, Object>builder()
+            .put("buck.type", "java_library")
+            .put("name", "c")
+            .put("buck.base_path", "a/b")
+            .put("deps", ImmutableList.of("//a/b:d", "//a/b:e"))
+            .put(
+                "resources",
+                new SelectorList<>(
+                    JsonTypeConcatenatingCoercerFactory.createForType(List.class),
+                    ImmutableList.of(
+                        new Selector<>(
+                            ImmutableMap.of(
+                                new SelectorKey(
+                                    ConfigurationBuildTargetFactoryForTests.newInstance("//c:a")),
+                                ImmutableList.of("//a/b:file1", "//a/b:file2"),
+                                new SelectorKey(
+                                    ConfigurationBuildTargetFactoryForTests.newInstance("//c:b")),
+                                ImmutableList.of("//a/b:file3", "//a/b:file4")),
+                            ImmutableSet.of(),
+                            ""))))
+            .put("visibility", ImmutableList.of("//a/..."))
+            .put("within_view", ImmutableList.of("//b/..."))
+            .build();
+
     UnconfiguredTargetNode unconfiguredTargetNode =
         factory.create(
             cell,
             cell.getRoot().resolve("a/b/BUCK"),
             buildTarget,
             DependencyStack.root(),
-            attributes);
+            inputAttributes);
 
     assertEquals(
         RuleType.of("java_library", RuleType.Kind.BUILD), unconfiguredTargetNode.getRuleType());
     assertEquals(buildTarget.getData(), unconfiguredTargetNode.getBuildTarget());
 
-    assertEquals(attributes, unconfiguredTargetNode.getAttributes());
+    assertEquals(expectAttributes, unconfiguredTargetNode.getAttributes());
 
     assertEquals(
         "//a/...",

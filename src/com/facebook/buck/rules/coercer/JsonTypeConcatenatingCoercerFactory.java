@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.select.impl.SelectorListFactory;
 import java.util.List;
 import java.util.Map;
 
@@ -27,8 +26,8 @@ import java.util.Map;
  * JSON format.
  *
  * <p>Coercers provided by this factory are intended to be used together with {@link
- * SelectorListFactory} to resolve configurable attributes that contain values of JSON-compatible
- * types.
+ * com.facebook.buck.core.select.impl.SelectorListFactory} to resolve configurable attributes that
+ * contain values of JSON-compatible types.
  */
 public class JsonTypeConcatenatingCoercerFactory {
 

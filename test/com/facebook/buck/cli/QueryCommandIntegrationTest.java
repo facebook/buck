@@ -1487,7 +1487,7 @@ public class QueryCommandIntegrationTest {
     assertThat(
         result.getStderr(),
         containsIgnoringPlatformNewlines(
-            "type 'class java.lang.Boolean' doesn't support select concatenation"));
+            "type 'java.lang.Boolean' doesn't support select concatenation"));
 
     result =
         workspace.runBuckCommand(
@@ -1496,7 +1496,7 @@ public class QueryCommandIntegrationTest {
     assertThat(
         result.getStderr(),
         containsIgnoringPlatformNewlines(
-            "type 'class java.lang.Boolean' doesn't support select concatenation"));
+            "type 'java.lang.Boolean' doesn't support select concatenation"));
   }
 
   @Test

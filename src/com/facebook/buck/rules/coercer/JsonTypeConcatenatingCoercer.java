@@ -17,13 +17,13 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 
 /**
- * The purpose of this {@link TypeCoercer} to be used together with {@link SelectorListFactory} to
- * resolve configurable attributes that contain values of JSON-compatible types.
+ * The purpose of this {@link TypeCoercer} to be used together with {@link
+ * com.facebook.buck.core.select.impl.SelectorListFactory} to resolve configurable attributes that
+ * contain values of JSON-compatible types.
  *
  * <p>This coercer does not transform the objects, but only provides a way to concatenate elements.
  */

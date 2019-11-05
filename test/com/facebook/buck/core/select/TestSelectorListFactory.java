@@ -16,14 +16,15 @@
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 
 public class TestSelectorListFactory {
@@ -31,19 +32,27 @@ public class TestSelectorListFactory {
   public static <T> SelectorList<T> createSelectorListForCoercer(
       TypeCoercer<T> elementTypeCoercer, Map<String, ?>... selectors) throws CoerceFailedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SelectorFactory selectorFactory =
-        new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory());
     ImmutableList.Builder<Selector<T>> selectorBuilder = ImmutableList.builder();
     for (Map<String, ?> selectorAttributes : selectors) {
-      Selector<T> selector =
-          selectorFactory.createSelector(
-              TestCellPathResolver.get(projectFilesystem),
-              projectFilesystem,
-              projectFilesystem.getRootPath(),
-              UnconfiguredTargetConfiguration.INSTANCE,
-              selectorAttributes,
-              elementTypeCoercer);
-      selectorBuilder.add(selector);
+      ImmutableMap.Builder<SelectorKey, T> conditions = ImmutableMap.builder();
+
+      for (Map.Entry<String, ?> condition : selectorAttributes.entrySet()) {
+        SelectorKey key =
+            condition.getKey().equals(SelectorKey.DEFAULT_KEYWORD)
+                ? SelectorKey.DEFAULT
+                : new SelectorKey(
+                    ConfigurationBuildTargetFactoryForTests.newInstance(condition.getKey()));
+        conditions.put(
+            key,
+            elementTypeCoercer.coerce(
+                TestCellPathResolver.get(projectFilesystem),
+                projectFilesystem,
+                projectFilesystem.getRootPath(),
+                UnconfiguredTargetConfiguration.INSTANCE,
+                condition.getValue()));
+      }
+
+      selectorBuilder.add(new Selector<>(conditions.build(), ImmutableSet.of(), ""));
     }
     return new SelectorList<>(elementTypeCoercer, selectorBuilder.build());
   }

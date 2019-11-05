@@ -19,7 +19,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.util.List;
 
-class ListConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
+/** Concatenate {@link List}s of unknown types. */
+final class ListConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
 
   ListConcatenatingCoercer() {
     super(List.class);
@@ -29,5 +30,20 @@ class ListConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
   public Object concat(Iterable<Object> elements) {
     Iterable<List<Object>> lists = Iterables.transform(elements, List.class::cast);
     return ImmutableList.copyOf(Iterables.concat(lists));
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return obj instanceof ListConcatenatingCoercer;
+  }
+
+  @Override
+  public String toString() {
+    return ListConcatenatingCoercer.class.getSimpleName();
+  }
+
+  @Override
+  public int hashCode() {
+    return ListConcatenatingCoercer.class.hashCode();
   }
 }

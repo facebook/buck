@@ -131,6 +131,9 @@ public class PerBuildStateFactory {
 
     TargetNodeFactory targetNodeFactory = new TargetNodeFactory(typeCoercerFactory);
 
+    SelectorListFactory selectorListFactory =
+        new SelectorListFactory(new SelectorFactory(unconfiguredBuildTargetFactory));
+
     BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline =
         new BuildFileRawNodeParsePipeline(
             new PipelineNodeCache<>(daemonicParserState.getRawNodeCache(), n -> false),
@@ -158,7 +161,10 @@ public class PerBuildStateFactory {
             buildFileRawNodeParsePipeline,
             buildTargetRawNodeParsePipeline,
             new DefaultUnconfiguredTargetNodeFactory(
-                knownRuleTypesProvider, new BuiltTargetVerifier()));
+                knownRuleTypesProvider,
+                new BuiltTargetVerifier(),
+                rootCell.getCellPathResolver(),
+                selectorListFactory));
 
     PackageBoundaryChecker packageBoundaryChecker =
         new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
@@ -249,9 +255,6 @@ public class PerBuildStateFactory {
             }
           }
         };
-
-    SelectorListFactory selectorListFactory =
-        new SelectorListFactory(new SelectorFactory(unconfiguredBuildTargetFactory));
 
     cellManager.register(rootCell);
 

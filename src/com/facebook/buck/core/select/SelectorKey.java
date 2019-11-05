@@ -59,4 +59,21 @@ public class SelectorKey {
   public String toString() {
     return buildTarget == null ? DEFAULT_KEYWORD : buildTarget.getFullyQualifiedName();
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SelectorKey that = (SelectorKey) o;
+    return Objects.equals(buildTarget, that.buildTarget);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(buildTarget);
+  }
 }

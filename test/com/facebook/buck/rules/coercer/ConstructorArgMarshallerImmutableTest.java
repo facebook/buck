@@ -47,6 +47,9 @@ import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
+import com.facebook.buck.core.select.Selector;
+import com.facebook.buck.core.select.SelectorKey;
+import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
@@ -60,8 +63,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.DefaultSelectableConfigurationContext;
-import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
-import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -523,14 +524,28 @@ public class ConstructorArgMarshallerImmutableTest {
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
                 ImmutableList.of(new TestSelectable(selectableTarget, true))));
-    ImmutableListWithSelects selectorList =
-        ImmutableListWithSelects.of(
+    SelectorList<?> selectorList =
+        new SelectorList<>(
+            JsonTypeConcatenatingCoercerFactory.createForType(List.class),
             ImmutableList.of(
-                ImmutableSelectorValue.of(
-                    ImmutableMap.of("DEFAULT", "string1", "//x:y", "string2"), ""),
-                ImmutableSelectorValue.of(
-                    ImmutableMap.of("DEFAULT", "string3", "//x:y", "string4"), "")),
-            ImmutableMap.class);
+                new Selector<>(
+                    ImmutableMap.of(
+                        SelectorKey.DEFAULT,
+                        "string1",
+                        new SelectorKey(
+                            ConfigurationBuildTargetFactoryForTests.newInstance("//x:y")),
+                        "string2"),
+                    ImmutableSet.of(),
+                    ""),
+                new Selector<>(
+                    ImmutableMap.of(
+                        SelectorKey.DEFAULT,
+                        "string3",
+                        new SelectorKey(
+                            ConfigurationBuildTargetFactoryForTests.newInstance("//x:y")),
+                        "string4"),
+                    ImmutableSet.of(),
+                    "")));
     TargetPlatformResolver targetPlatformResolver =
         (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
     SelectableConfigurationContext selectableConfigurationContext =

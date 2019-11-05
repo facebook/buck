@@ -12,6 +12,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/parser/api:api",
         "//src/com/facebook/buck/parser/syntax:syntax",
+        "//src/com/facebook/buck/rules/coercer:coercer",
         "//third-party/java/bazel:bazel",
         "//third-party/java/jsr:jsr305",
     ],
