@@ -40,7 +40,7 @@ public class DiffPrinter {
       greenColor = "\u001B[32m";
       redColor = "\u001B[31m";
       resetColors = "\u001B[0m";
-      boldColor = "\033[1;37m";
+      boldColor = "\033[1m";
     } else {
       greenColor = "";
       redColor = "";
