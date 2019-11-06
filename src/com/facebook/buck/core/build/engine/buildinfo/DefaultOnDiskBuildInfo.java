@@ -155,29 +155,34 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public ImmutableSortedSet<Path> getPathsForArtifact() throws IOException {
-    ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
-    for (Path path : getOutputPaths()) {
-      paths.add(path);
+    return getRecursivePaths(getOutputPaths());
+  }
+
+  private ImmutableSortedSet<Path> getRecursivePaths(ImmutableSortedSet<Path> paths)
+      throws IOException {
+    ImmutableSortedSet.Builder<Path> allPaths = ImmutableSortedSet.naturalOrder();
+    for (Path path : paths) {
+      allPaths.add(path);
       projectFilesystem.walkRelativeFileTree(
           path,
           new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
                 throws IOException {
-              paths.add(dir);
+              allPaths.add(dir);
               return super.preVisitDirectory(dir, attrs);
             }
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                 throws IOException {
-              paths.add(file);
+              allPaths.add(file);
               return super.visitFile(file, attrs);
             }
           },
           false);
     }
-    return paths.build();
+    return allPaths.build();
   }
 
   @Override
@@ -225,8 +230,8 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     projectFilesystem.writeContentsToPath(
         recordedPathsString, metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
-    ImmutableSortedSet<Path> pathsForArtifact = getPathsForArtifact();
-    long outputSize = getOutputSize(pathsForArtifact);
+    ImmutableSortedSet<Path> outputPaths = getRecursivePaths(recordedPaths);
+    long outputSize = getOutputSize(outputPaths);
     projectFilesystem.writeContentsToPath(
         String.valueOf(outputSize), metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE));
 
@@ -241,7 +246,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     // several threads and cache the results.
     ImmutableSortedMap.Builder<String, String> outputHashes = ImmutableSortedMap.naturalOrder();
     Hasher hasher = Hashing.sha1().newHasher();
-    for (Path path : pathsForArtifact) {
+    for (Path path : outputPaths) {
       String pathString = path.toString();
       HashCode fileHash = fileHashLoader.get(projectFilesystem, path);
       hasher.putBytes(pathString.getBytes(Charsets.UTF_8));
