@@ -128,9 +128,6 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     /** Format output as JSON */
     JSON,
 
-    /** Format output as JSON with targets having unconfigured attributes * */
-    JSON_UNCONFIGURED,
-
     /** Format output as Thrift binary */
     THRIFT,
   }
@@ -202,6 +199,14 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       forbids = {"--output-attributes"})
   @VisibleForTesting
   Supplier<ImmutableSet<String>> outputAttributesSane = Suppliers.ofInstance(ImmutableSet.of());
+
+  /** Which of *query commands was invoked */
+  protected enum WhichQueryCommand {
+    QUERY,
+    UQUERY,
+  }
+
+  protected abstract WhichQueryCommand whichQueryCommand();
 
   private ImmutableSet<String> outputAttributes() {
     // There's no easy way apparently to ensure that an option has not been set
@@ -352,11 +357,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
           break;
 
         case JSON:
-          printJsonOutput(params, env, queryResult, printStream);
-          break;
-
-        case JSON_UNCONFIGURED:
-          printJsonUnconfiguredOutput(params, env, queryResult, printStream);
+          printJsonOutputConfiguredOrUnconfigured(params, env, queryResult, printStream);
           break;
 
         case THRIFT:
@@ -382,6 +383,19 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return (Set<QueryBuildTarget>) set;
   }
 
+  private void printJsonOutputConfiguredOrUnconfigured(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      Set<QueryTarget> queryResult,
+      PrintStream printStream)
+      throws QueryException, IOException {
+    if (whichQueryCommand() == WhichQueryCommand.UQUERY) {
+      printJsonUnconfiguredOutput(params, env, queryResult, printStream);
+    } else {
+      printJsonOutput(params, env, queryResult, printStream);
+    }
+  }
+
   private void printJsonOutput(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
@@ -402,7 +416,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       PrintStream printStream)
       throws QueryException, IOException {
     if (shouldOutputAttributes()) {
-      collectAndPrintAttributesAsJson(params, env, queryResult, outputAttributes(), printStream);
+      printJsonOutputConfiguredOrUnconfigured(params, env, queryResult, printStream);
     } else {
       CommandHelper.print(queryResult, printStream);
     }

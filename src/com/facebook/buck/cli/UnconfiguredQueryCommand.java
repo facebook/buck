@@ -52,13 +52,6 @@ public class UnconfiguredQueryCommand extends AbstractQueryCommand {
       throw new CommandLineException("must specify at least the query expression");
     }
 
-    if (generateJsonOutput
-        || outputFormat == OutputFormat.JSON
-        || (outputFormat == OutputFormat.LIST && shouldOutputAttributes())) {
-      generateJsonOutput = false;
-      outputFormat = OutputFormat.JSON_UNCONFIGURED;
-    }
-
     try (CommandThreadManager pool =
             new CommandThreadManager(
                 "UnconfiguredQuery", getConcurrencyLimit(params.getBuckConfig()));
@@ -95,5 +88,10 @@ public class UnconfiguredQueryCommand extends AbstractQueryCommand {
   @Override
   public String getShortDescription() {
     return "provides facilities to query information about the unconfigured target nodes graph";
+  }
+
+  @Override
+  protected WhichQueryCommand whichQueryCommand() {
+    return WhichQueryCommand.UQUERY;
   }
 }
