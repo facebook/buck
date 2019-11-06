@@ -324,18 +324,13 @@ public class RuleKeyDiffPrinter {
       case BYTE_ARRAY:
         return String.format("ByteArray, length %s", value.getByteArray().length);
       case CONTAINER_MAP:
-        return value
-            .getContainerMap()
-            .entrySet()
-            .stream()
+        return value.getContainerMap().entrySet().stream()
             .map(
                 entry ->
                     String.format("%s: %s", entry.getKey(), getRuleKeyName(file, entry.getValue())))
             .collect(Collectors.joining(", "));
       case CONTAINER_LIST:
-        return value
-            .getContainerList()
-            .stream()
+        return value.getContainerList().stream()
             .map(v -> getRuleKeyName(file, v))
             .collect(Collectors.joining(", "));
       case RULE_KEY_HASH:
@@ -356,7 +351,10 @@ public class RuleKeyDiffPrinter {
         return value.getBuildTarget().name;
       case TARGET_PATH:
         return value.getTargetPath().path;
+      case KEY:
+        return value.getKey().key;
     }
-    return "UNKNOWN NAME";
+    // Should not really happen since switch above covers all union members
+    return "UNKNOWN UNION MEMBER";
   }
 }
