@@ -110,6 +110,8 @@ public interface AndroidGraphEnhancerArgs
     return true;
   }
 
+  ImmutableList<String> getAdditionalAaptParams();
+
   @Value.Default
   default AaptMode getAaptMode() {
     return AaptMode.AAPT1;

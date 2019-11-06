@@ -146,6 +146,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         params,
         graphBuilder,
         args.getAaptMode(),
+        args.getAdditionalAaptParams(),
         args.getResourceCompression(),
         resourceFilter,
         args.getEffectiveBannedDuplicateResourceTypes(),

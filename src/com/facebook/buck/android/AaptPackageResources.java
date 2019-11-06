@@ -59,6 +59,7 @@ public class AaptPackageResources extends AbstractBuildRule {
   @AddToRuleKey private final ManifestEntries manifestEntries;
   @AddToRuleKey private final boolean includesVectorDrawables;
   @AddToRuleKey private final ImmutableList<SourcePath> dependencyResourceApks;
+  @AddToRuleKey private final ImmutableList<String> additionalAaptParams;
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
@@ -98,7 +99,8 @@ public class AaptPackageResources extends AbstractBuildRule {
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
-      ManifestEntries manifestEntries) {
+      ManifestEntries manifestEntries,
+      ImmutableList<String> additionalAaptParams) {
     super(buildTarget, projectFilesystem);
     this.androidPlatformTarget = androidPlatformTarget;
     this.manifest = manifest;
@@ -117,6 +119,7 @@ public class AaptPackageResources extends AbstractBuildRule {
                     filteredResourcesProvider,
                     dependencyResourceApks,
                     resourceDeps));
+    this.additionalAaptParams = additionalAaptParams;
   }
 
   @Override
@@ -202,7 +205,8 @@ public class AaptPackageResources extends AbstractBuildRule {
              */
             !skipCrunchPngs /* && packageType.isCrunchPngFiles() */,
             includesVectorDrawables,
-            manifestEntries),
+            manifestEntries,
+            additionalAaptParams),
         ZipScrubberStep.of(
             context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput())));
 

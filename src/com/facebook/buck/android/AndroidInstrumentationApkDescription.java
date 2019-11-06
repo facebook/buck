@@ -194,6 +194,7 @@ public class AndroidInstrumentationApkDescription
             params,
             graphBuilder,
             args.getAaptMode(),
+            ImmutableList.of(),
             ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),

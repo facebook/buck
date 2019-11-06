@@ -261,6 +261,7 @@ public class AaptPackageResourcesTest {
                 constructorArgs.hasAndroidResourceDeps,
                 false,
                 false,
-                constructorArgs.manifestEntries));
+                constructorArgs.manifestEntries,
+                ImmutableList.of()));
   }
 }

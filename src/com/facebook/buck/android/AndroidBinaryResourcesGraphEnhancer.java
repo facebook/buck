@@ -79,6 +79,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final ProjectFilesystem projectFilesystem;
   private final ActionGraphBuilder graphBuilder;
   private final AaptMode aaptMode;
+  private final ImmutableList<String> additionalAaptParams;
   private final Optional<SourcePath> rawManifest;
   private final Optional<SourcePath> manifestSkeleton;
   private final Optional<SourcePath> moduleManifestSkeleton;
@@ -109,6 +110,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       Optional<SourcePath> manifestSkeleton,
       Optional<SourcePath> moduleManifestSkeleton,
       AaptMode aaptMode,
+      ImmutableList<String> additionalAaptParams,
       FilterResourcesSteps.ResourceFilter resourceFilter,
       ResourcesFilter.ResourceCompressionMode resourceCompressionMode,
       ImmutableSet<String> locales,
@@ -136,6 +138,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.locales = locales;
     this.localizedStringFileName = localizedStringFileName;
     this.aaptMode = aaptMode;
+    this.additionalAaptParams = additionalAaptParams;
     this.rawManifest = rawManifest;
     this.manifestSkeleton = manifestSkeleton;
     this.moduleManifestSkeleton = moduleManifestSkeleton;
@@ -559,6 +562,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         noAutoAddOverlayResources,
         isProtoFormat,
         aapt2ToolProvider.resolve(graphBuilder, aaptLinkBuildTarget.getTargetConfiguration()),
+        additionalAaptParams,
         androidPlatformTarget.getAndroidJar());
   }
 
@@ -624,7 +628,8 @@ class AndroidBinaryResourcesGraphEnhancer {
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         skipCrunchPngs,
         includesVectorDrawables,
-        manifestEntries);
+        manifestEntries,
+        additionalAaptParams);
   }
 
   private PackageStringAssets createPackageStringAssets(

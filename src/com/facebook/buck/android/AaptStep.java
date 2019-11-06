@@ -78,6 +78,8 @@ public class AaptStep extends ShellStep {
   private final boolean includesVectorDrawables;
   private final ManifestEntries manifestEntries;
 
+  private final ImmutableList<String> additionalAaptParams;
+
   public AaptStep(
       SourcePathResolver pathResolver,
       AndroidPlatformTarget androidPlatformTarget,
@@ -91,7 +93,8 @@ public class AaptStep extends ShellStep {
       ImmutableList<Path> pathToDependecyResourceApks,
       boolean isCrunchPngFiles,
       boolean includesVectorDrawables,
-      ManifestEntries manifestEntries) {
+      ManifestEntries manifestEntries,
+      ImmutableList<String> additionalAaptParams) {
     super(workingDirectory);
     this.pathResolver = pathResolver;
     this.androidPlatformTarget = androidPlatformTarget;
@@ -105,6 +108,7 @@ public class AaptStep extends ShellStep {
     this.isCrunchPngFiles = isCrunchPngFiles;
     this.includesVectorDrawables = includesVectorDrawables;
     this.manifestEntries = manifestEntries;
+    this.additionalAaptParams = additionalAaptParams;
   }
 
   @Override
@@ -185,6 +189,8 @@ public class AaptStep extends ShellStep {
     while (iterator.hasNext()) {
       builder.add("--feature-after", iterator.next().toString());
     }
+
+    builder.addAll(additionalAaptParams);
 
     return builder.build();
   }

@@ -149,6 +149,7 @@ public class AndroidBinaryGraphEnhancerTest {
             originalParams,
             graphBuilder,
             AaptMode.AAPT1,
+            ImmutableList.of(),
             ResourcesFilter.ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -218,7 +219,8 @@ public class AndroidBinaryGraphEnhancerTest {
             ImmutableList.of(),
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
-            /* manifestEntries */ ManifestEntries.empty());
+            /* manifestEntries */ ManifestEntries.empty(),
+            ImmutableList.of());
     graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
@@ -331,6 +333,7 @@ public class AndroidBinaryGraphEnhancerTest {
             originalParams,
             graphBuilder,
             AaptMode.AAPT1,
+            ImmutableList.of(),
             ResourcesFilter.ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -400,7 +403,8 @@ public class AndroidBinaryGraphEnhancerTest {
             ImmutableList.of(),
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
-            /* manifestEntries */ ManifestEntries.empty());
+            /* manifestEntries */ ManifestEntries.empty(),
+            ImmutableList.of());
     graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
@@ -533,6 +537,7 @@ public class AndroidBinaryGraphEnhancerTest {
             originalParams,
             graphBuilder,
             AaptMode.AAPT1,
+            ImmutableList.of(),
             ResourcesFilter.ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -602,7 +607,8 @@ public class AndroidBinaryGraphEnhancerTest {
             ImmutableList.of(),
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
-            /* manifestEntries */ ManifestEntries.empty());
+            /* manifestEntries */ ManifestEntries.empty(),
+            ImmutableList.of());
     graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
@@ -685,6 +691,7 @@ public class AndroidBinaryGraphEnhancerTest {
             originalParams,
             graphBuilder,
             AaptMode.AAPT1,
+            ImmutableList.of(),
             ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -821,6 +828,7 @@ public class AndroidBinaryGraphEnhancerTest {
             originalParams,
             graphBuilder,
             AaptMode.AAPT1,
+            ImmutableList.of(),
             ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -904,6 +912,7 @@ public class AndroidBinaryGraphEnhancerTest {
             originalParams,
             graphBuilder,
             AaptMode.AAPT1,
+            ImmutableList.of(),
             ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -1015,6 +1024,7 @@ public class AndroidBinaryGraphEnhancerTest {
             originalParams,
             graphBuilder,
             AaptMode.AAPT1,
+            ImmutableList.of(),
             ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),

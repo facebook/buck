@@ -61,6 +61,7 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final int packageIdOffset;
   @AddToRuleKey private final ImmutableList<SourcePath> dependencyResourceApks;
   @AddToRuleKey private final Tool aapt2Tool;
+  @AddToRuleKey private final ImmutableList<String> additionalAaptParams;
   private final Path androidJar;
   private final BuildableSupport.DepsSupplier depsSupplier;
 
@@ -81,6 +82,7 @@ public class Aapt2Link extends AbstractBuildRule {
       boolean noAutoAddOverlay,
       boolean useProtoFormat,
       Tool aapt2Tool,
+      ImmutableList<String> additionalAaptParams,
       Path androidJar) {
     super(buildTarget, projectFilesystem);
     this.compileRules = compileRules;
@@ -95,6 +97,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.useProtoFormat = useProtoFormat;
     this.androidJar = androidJar;
     this.aapt2Tool = aapt2Tool;
+    this.additionalAaptParams = additionalAaptParams;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
   }
 
@@ -283,6 +286,8 @@ public class Aapt2Link extends AbstractBuildRule {
       builder.add("--output-text-symbols", pf.resolve(getRDotTxtPath()).toString());
 
       compiledResourcePaths.forEach(r -> builder.add("-R", r.toString()));
+
+      builder.addAll(additionalAaptParams);
 
       return builder.build();
     }
