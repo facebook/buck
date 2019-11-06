@@ -402,10 +402,10 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
   }
 
   public boolean hasOutput() {
-    return !getClassNames().isEmpty();
+    return !getClassNamesToHashes().isEmpty();
   }
 
-  ImmutableSortedMap<String, HashCode> getClassNames() {
+  ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
     return buildOutputInitializer.getBuildOutput().classnamesToHashes;
   }
 

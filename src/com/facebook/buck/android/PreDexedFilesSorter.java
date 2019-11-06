@@ -100,8 +100,9 @@ public class PreDexedFilesSorter {
       // Sort dex files so that there's a better chance of the same set of pre-dexed files to end up
       // in a given secondary dex file.
       ImmutableList<DexWithClasses> sortedDexFilesToMerge =
-          FluentIterable.from(dexFilesToMerge.get(module))
-              .toSortedList(DexWithClasses.DEX_WITH_CLASSES_COMPARATOR);
+          dexFilesToMerge.get(module).stream()
+              .sorted(DexWithClasses.DEX_WITH_CLASSES_COMPARATOR)
+              .collect(ImmutableList.toImmutableList());
 
       // Bucket each DexWithClasses into the appropriate dex file.
       for (DexWithClasses dexWithClasses : sortedDexFilesToMerge) {
@@ -139,11 +140,11 @@ public class PreDexedFilesSorter {
   }
 
   public class DexStoreContents {
-    private List<List<DexWithClasses>> dexesContents = new ArrayList<>();
+    private List<List<DexWithClasses>> secondaryDexesContents = new ArrayList<>();
     private int primaryDexSize;
     private List<DexWithClasses> primaryDexContents;
-    private int currentDexSize;
-    private List<DexWithClasses> currentDexContents;
+    private int currentSecondaryDexSize;
+    private List<DexWithClasses> currentSecondaryDexContents;
 
     private final APKModule apkModule;
     private final ProjectFilesystem filesystem;
@@ -156,8 +157,8 @@ public class PreDexedFilesSorter {
       this.filesystem = filesystem;
       this.steps = steps;
       this.apkModule = apkModule;
-      currentDexSize = 0;
-      currentDexContents = new ArrayList<>();
+      currentSecondaryDexSize = 0;
+      currentSecondaryDexContents = new ArrayList<>();
       primaryDexSize = 0;
       primaryDexContents = new ArrayList<>();
     }
@@ -170,28 +171,31 @@ public class PreDexedFilesSorter {
 
     public void addDex(DexWithClasses dexWithClasses) {
       // If we're over the size threshold, start writing to a new dex
-      if (dexWithClasses.getWeightEstimate() + currentDexSize > dexWeightLimit) {
-        currentDexSize = 0;
-        currentDexContents = new ArrayList<>();
+      if (dexWithClasses.getWeightEstimate() + currentSecondaryDexSize > dexWeightLimit) {
+        currentSecondaryDexSize = 0;
+        currentSecondaryDexContents = new ArrayList<>();
       }
 
       // If this is the first class in the dex, initialize it with a canary and add it to the set of
       // dexes.
-      if (currentDexContents.isEmpty()) {
+      if (currentSecondaryDexContents.isEmpty()) {
         DexWithClasses canary =
             createCanary(
-                filesystem, apkModule.getCanaryClassName(), dexesContents.size() + 1, steps);
-        currentDexSize += canary.getWeightEstimate();
-        currentDexContents.add(canary);
+                filesystem,
+                apkModule.getCanaryClassName(),
+                secondaryDexesContents.size() + 1,
+                steps);
+        currentSecondaryDexSize += canary.getWeightEstimate();
+        currentSecondaryDexContents.add(canary);
 
-        dexesContents.add(currentDexContents);
+        secondaryDexesContents.add(currentSecondaryDexContents);
         dexInputsHashes.put(canary.getSourcePathToDexFile(), canary.getClassesHash());
       }
 
       // Now add the contributions from the dexWithClasses entry.
-      currentDexContents.add(dexWithClasses);
+      currentSecondaryDexContents.add(dexWithClasses);
       dexInputsHashes.put(dexWithClasses.getSourcePathToDexFile(), dexWithClasses.getClassesHash());
-      currentDexSize += dexWithClasses.getWeightEstimate();
+      currentSecondaryDexSize += dexWithClasses.getWeightEstimate();
     }
 
     Result getResult() {
@@ -204,7 +208,7 @@ public class PreDexedFilesSorter {
           ImmutableMultimap.builder();
       boolean isRootModule = apkModule.equals(apkModuleGraph.getRootAPKModule());
 
-      for (int index = 0; index < dexesContents.size(); index++) {
+      for (int index = 0; index < secondaryDexesContents.size(); index++) {
         Path pathToSecondaryDex;
         if (isRootModule) {
           pathToSecondaryDex =
@@ -215,10 +219,10 @@ public class PreDexedFilesSorter {
                   .resolve(apkModule.getName())
                   .resolve(dexStore.fileNameForSecondary(apkModule.getName(), index));
         }
-        metadataTxtEntries.put(pathToSecondaryDex, dexesContents.get(index).get(0));
+        metadataTxtEntries.put(pathToSecondaryDex, secondaryDexesContents.get(index).get(0));
         Collection<SourcePath> dexContentPaths =
             Collections2.transform(
-                dexesContents.get(index), DexWithClasses::getSourcePathToDexFile);
+                secondaryDexesContents.get(index), DexWithClasses::getSourcePathToDexFile);
         secondaryOutputToInputs.putAll(pathToSecondaryDex, dexContentPaths);
       }
 
@@ -253,7 +257,7 @@ public class PreDexedFilesSorter {
       throw new HumanReadableException(message.toString());
     }
 
-    /** @see com.facebook.buck.android.dalvik.CanaryFactory#create(String, String) */
+    /** @see CanaryFactory#create(String, String) */
     private DexWithClasses createCanary(
         ProjectFilesystem filesystem,
         String storeName,
