@@ -30,6 +30,7 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -398,6 +399,11 @@ public class AppleBundleDescription
     Optional<Boolean> getIbtoolModuleFlag();
 
     Optional<ImmutableList<String>> getIbtoolFlags();
+
+    // See documentation in LinkableCxxConstructorArg. These are equivalent mappings.
+    Optional<ImmutableList<CxxLinkGroupMapping>> getResourceGroupMap();
+
+    Optional<String> getResourceGroup();
 
     @Override
     @Hint(isDep = false)
