@@ -16,13 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.testutil.MoreAsserts.assertJsonMatches;
-import static com.facebook.buck.testutil.MoreAsserts.assertJsonNotMatches;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -118,83 +114,5 @@ public class MainIntegrationTest {
         " --version (-V)          : Show version number.",
         "",
         "");
-  }
-
-  @Test
-  public void handleReusingCurrentConfigProperty() throws IOException {
-    String warningMessage =
-        String.format(
-            "`%s` parameter provided. Reusing previously defined config.",
-            GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG);
-
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
-            this, "output_path", tmp);
-    workspace.setUp();
-
-    // the first execution with specific configuration params for ui.json_attribute_format
-    ProcessResult result =
-        workspace.runBuckdCommand(
-            "targets",
-            "--json",
-            "-c",
-            "ui.json_attribute_format=snake_case",
-            "-c",
-            "client.id=123",
-            "-c",
-            "ui.warn_on_config_file_overrides=true",
-            "-c",
-            "foo.bar3=1",
-            "-c",
-            "foo.bar4=1",
-            "--show-output",
-            "...");
-    result.assertSuccess();
-    String expectedJson = workspace.getFileContents("output_path_json_all_snake_case.js");
-    assertJsonMatches(expectedJson, result.getStdout());
-    assertThat(
-        GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " not provided",
-        result.getStderr(),
-        not(containsString(warningMessage)));
-
-    // the second execution without specific configuration params for ui.json_attribute_format but
-    // with --reuse-current-config" param
-    result =
-        workspace.runBuckdCommand(
-            "targets", "--json", GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG, "--show-output", "...");
-    result.assertSuccess();
-    assertJsonMatches(expectedJson, result.getStdout());
-    String stderr = result.getStderr();
-    assertThat(
-        GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " provided",
-        stderr,
-        containsString(warningMessage));
-    assertThat(
-        stderr,
-        containsString(
-            "Running with reused config, some configuration changes would not be applied:"));
-    assertThat(
-        "show config key in the diff",
-        stderr,
-        containsString("  Removed value ui.json_attribute_format='snake_case'"));
-    assertThat(
-        "show whitelisted config settings in the diff",
-        stderr,
-        containsString("  Removed value ui.warn_on_config_file_overrides='true'"));
-    assertThat(
-        "show whitelisted config settings in the diff",
-        stderr,
-        containsString("  Removed value client.id='123'"));
-    assertThat(stderr, containsString("  ... and 2 more. See logs for all changes"));
-
-    // the third execution without specific configuration params for ui.json_attribute_format and
-    // without --reuse-current-config param
-    result = workspace.runBuckdCommand("targets", "--json", "--show-output", "...");
-    result.assertSuccess();
-    assertJsonNotMatches(expectedJson, result.getStdout());
-    assertThat(
-        GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " not provided",
-        result.getStderr(),
-        not(containsString(warningMessage)));
   }
 }

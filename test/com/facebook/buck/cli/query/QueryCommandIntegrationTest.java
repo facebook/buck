@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.cli.query;
 
 import static com.facebook.buck.cli.ThriftOutputUtils.edgesToStringList;
 import static com.facebook.buck.cli.ThriftOutputUtils.nodesToStringList;

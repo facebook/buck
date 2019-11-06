@@ -1,0 +1,8 @@
+{
+  "example/1.txt": [
+    "//example:one"
+  ],
+  "example/app/7.txt": [
+    "//example/app:seven"
+  ]
+}

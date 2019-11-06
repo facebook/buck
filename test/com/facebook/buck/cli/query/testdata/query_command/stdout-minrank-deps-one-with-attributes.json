@@ -1,0 +1,26 @@
+{
+  "//example:one" : {
+    "minrank" : 0,
+    "name" : "one"
+  },
+  "//example:three" : {
+    "minrank" : 1,
+    "name" : "three"
+  },
+  "//example:two" : {
+    "minrank" : 1,
+    "name" : "two"
+  },
+  "//example:five" : {
+    "minrank" : 2,
+    "name" : "five"
+  },
+  "//example:four" : {
+    "minrank" : 2,
+    "name" : "four"
+  },
+  "//example:six" : {
+    "minrank" : 2,
+    "name" : "six"
+  }
+}

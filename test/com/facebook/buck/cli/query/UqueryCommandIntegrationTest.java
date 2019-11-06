@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.cli;
+package com.facebook.buck.cli.query;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -40,7 +40,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class BuckUnconfiguredQueryTest {
+public class UqueryCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 

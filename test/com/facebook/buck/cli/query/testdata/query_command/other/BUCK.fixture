@@ -1,0 +1,8 @@
+java_test(
+    name = "eight-tests",
+    srcs = ["8-test.txt"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [],
+)

@@ -1,0 +1,16 @@
+{
+  "//...": [
+    "//example/app:seven-tests",
+    "//example:four-application-tests",
+    "//example:four-tests",
+    "//example:one-tests",
+    "//example:six-tests",
+    "//other:eight-tests"
+  ],
+  "//example:": [
+    "//example:four-application-tests",
+    "//example:four-tests",
+    "//example:one-tests",
+    "//example:six-tests"
+  ]
+}

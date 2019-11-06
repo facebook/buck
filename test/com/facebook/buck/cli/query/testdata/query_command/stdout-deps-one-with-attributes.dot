@@ -1,0 +1,16 @@
+digraph result_graph {
+  "//example:five" [style=filled,color=indianred1,"buck_buck.type"=java_library,buck_name=five];
+  "//example:five" -> "//example:six";
+  "//example:four" [style=filled,color=indianred1,"buck_buck.type"=java_library,buck_name=four];
+  "//example:four" -> "//example:six";
+  "//example:one" [style=filled,color=indianred1,"buck_buck.type"=java_library,buck_name=one];
+  "//example:one" -> "//example:three";
+  "//example:one" -> "//example:two";
+  "//example:six" [style=filled,color=indianred1,"buck_buck.type"=java_library,buck_name=six];
+  "//example:three" [style=filled,color=indianred1,"buck_buck.type"=java_library,buck_name=three];
+  "//example:three" -> "//example:five";
+  "//example:three" -> "//example:four";
+  "//example:three" -> "//example:six";
+  "//example:two" [style=filled,color=indianred1,"buck_buck.type"=java_library,buck_name=two];
+  "//example:two" -> "//example:four";
+}
