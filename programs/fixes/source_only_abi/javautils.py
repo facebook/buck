@@ -16,6 +16,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from collections import namedtuple
 
+
 Replacement = namedtuple("Replacement", ["line", "col", "old", "new"])
 
 loaded_paths = {}
@@ -29,7 +30,7 @@ def load(path):
 
 
 def write_all():
-    for java_file in loaded_paths.itervalues():
+    for java_file in loaded_paths.values():
         java_file.write()
 
 

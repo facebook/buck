@@ -18,8 +18,7 @@ import ast
 import os
 import os.path
 import re
-from UserDict import DictMixin
-from UserList import UserList
+
 
 BUILD_TARGET_PATTERN = re.compile(r"^(?P<cell>.*)?//(?P<path>[^:]+)?:(?P<name>.*)$")
 
@@ -42,7 +41,7 @@ def get_build_target(rule):
 
 
 def write_all():
-    for buck_file in __buck_files.itervalues():
+    for buck_file in __buck_files.values():
         buck_file.write()
 
 
@@ -115,14 +114,14 @@ class BuckFile:
     def write(self):
         """Writes back to the file all modifications accumulated in this object by calls to its
         other methods"""
-        for target in self.targets.itervalues():
+        for target in self.targets.values():
             target.save()
 
         with open(self.path, "w+") as buck_file:
             buck_file.writelines(self.lines)
 
 
-class BuildTarget(DictMixin):
+class BuildTarget:
     """Provides basic utilities for reading and editing a single rule within a BUCK file"""
 
     def __init__(self, buck_file, ast_node):
