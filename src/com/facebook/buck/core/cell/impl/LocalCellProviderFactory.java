@@ -77,6 +77,7 @@ public class LocalCellProviderFactory {
         CellMappingsFactory.create(rootFilesystem.getRootPath(), rootConfig.getConfig());
 
     return new CellProvider(
+        newCellPathResolver,
         cellProvider ->
             new CacheLoader<Path, Cell>() {
               @Override

@@ -17,6 +17,7 @@ package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -30,6 +31,8 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public final class CellProvider {
+
+  private final NewCellPathResolver newCellPathResolver;
   private final LoadingCache<Path, Cell> cells;
 
   /**
@@ -40,8 +43,10 @@ public final class CellProvider {
    * CellProvider object.
    */
   public CellProvider(
+      NewCellPathResolver newCellPathResolver,
       Function<CellProvider, CacheLoader<Path, Cell>> cellCacheLoader,
       @Nullable Function<CellProvider, Cell> rootCellLoader) {
+    this.newCellPathResolver = newCellPathResolver;
     this.cells = CacheBuilder.newBuilder().build(cellCacheLoader.apply(this));
     if (rootCellLoader != null) {
       Cell rootCell = rootCellLoader.apply(this);
@@ -68,11 +73,17 @@ public final class CellProvider {
     }
   }
 
+  /** Get cell object by canonicall cell name */
+  public Cell getCellByCanonicalCellName(CanonicalCellName canonicalCellName) {
+    // TODO(nga): skip resolving to cell path
+    return getCellByPath(newCellPathResolver.getCellPath(canonicalCellName));
+  }
+
   public ImmutableMap<Path, Cell> getLoadedCells() {
     return ImmutableMap.copyOf(cells.asMap());
   }
 
   public Cell getBuildTargetCell(BuildTarget buildTarget) {
-    return getCellByPath(buildTarget.getCellPath());
+    return getCellByCanonicalCellName(buildTarget.getCell());
   }
 }
