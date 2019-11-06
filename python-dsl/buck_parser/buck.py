@@ -69,6 +69,7 @@ from .util import (
     is_special,
 )
 
+
 # When build files are executed, the functions in this file tagged with
 # @provide_for_build will be provided in the build file's local symbol table.
 # Those tagged with @provide_as_native_rule will be present unless
@@ -954,9 +955,9 @@ class BuildFileProcessor(object):
         """
 
         @functools.wraps(real)
-        def wrapper(varname, *arg, **kwargs):
+        def wrapper(_inner_self, varname, *arg, **kwargs):
             self._record_env_var(varname, read(varname))
-            return real(varname, *arg, **kwargs)
+            return real(_inner_self, varname, *arg, **kwargs)
 
         # Save the real function for restoration.
         wrapper._real = real
@@ -995,7 +996,7 @@ class BuildFileProcessor(object):
 
         # Install interceptors into the main ways a user can read the env.
         with self._with_env_interceptor(
-            read, os.environ, "__contains__", "__getitem__", "get"
+            read, os.environ.__class__, "__contains__", "__getitem__", "get"
         ):
             yield
 

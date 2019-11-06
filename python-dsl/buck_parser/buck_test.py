@@ -55,7 +55,7 @@ def fake_path(fake_path_class, path, glob_results={}):
     # FakePath's members.
     result = fake_path_class(path)
     result.glob_results = {}
-    for pattern, paths in glob_results.iteritems():
+    for pattern, paths in glob_results.items():
         result.glob_results[pattern] = [result / fake_path_class(p) for p in paths]
     return result
 

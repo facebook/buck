@@ -25,7 +25,7 @@ class DeterministicSetTest(unittest.TestCase):
     def test_depset_iteration_order_is_sorted(self):
         # depset contract does not state that the order is sorted, but
         # currently the easiest way to implement determinism is to sort
-        random_elements = [random.shuffle(range(99))]
+        random_elements = [random.shuffle(list(range(99)))]
         self.assertEqual(
             list(DeterministicSet(random_elements)), sorted(random_elements)
         )
