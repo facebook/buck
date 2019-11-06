@@ -2788,7 +2788,7 @@ public class ProjectGenerator {
       throws IOException {
     addCoreDataModelBuildPhase(
         targetGroup,
-        AppleBuildRules.collectTransitiveBuildRules(
+        AppleBuildRules.collectTransitiveBuildTargetArg(
             xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
@@ -2801,7 +2801,7 @@ public class ProjectGenerator {
   private void addSceneKitAssetsIntoTarget(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode, PBXGroup targetGroup) {
     ImmutableSet<AppleWrapperResourceArg> allSceneKitAssets =
-        AppleBuildRules.collectTransitiveBuildRules(
+        AppleBuildRules.collectTransitiveBuildTargetArg(
             xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),

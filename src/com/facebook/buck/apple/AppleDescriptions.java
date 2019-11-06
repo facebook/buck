@@ -463,7 +463,7 @@ public class AppleDescriptions {
     TargetNode<?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleWrapperResourceArg> coreDataModelArgs =
-        AppleBuildRules.collectTransitiveBuildRules(
+        AppleBuildRules.collectTransitiveBuildTargetArg(
             xcodeDescriptions,
             targetGraph,
             Optional.empty(),
@@ -501,7 +501,7 @@ public class AppleDescriptions {
     TargetNode<?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleWrapperResourceArg> sceneKitAssetsArgs =
-        AppleBuildRules.collectTransitiveBuildRules(
+        AppleBuildRules.collectTransitiveBuildTargetArg(
             xcodeDescriptions,
             targetGraph,
             Optional.empty(),

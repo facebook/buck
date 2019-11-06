@@ -31,6 +31,7 @@ import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.util.RichStream;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -38,6 +39,7 @@ import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /** Helpers for reading properties of Apple target build rules. */
@@ -441,13 +443,62 @@ public final class AppleBuildRules {
   }
 
   @SuppressWarnings("unchecked")
-  public static <T> ImmutableSet<T> collectTransitiveBuildRules(
+  public static <T extends ConstructorArg> ImmutableSet<T> collectTransitiveBuildTargetArg(
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
       ImmutableSet<Class<? extends BaseDescription<?>>> descriptionClasses,
       Collection<TargetNode<?>> targetNodes,
       RecursiveDependenciesMode mode,
+      Predicate<BuildTarget> filter) {
+
+    return collectTransitiveBuildRuleTargetsWithTransform(
+        xcodeDescriptions,
+        targetGraph,
+        cache,
+        descriptionClasses,
+        targetNodes,
+        mode,
+        input -> (T) input.getConstructorArg(), filter);
+  }
+
+  /** Collects transitive target nodes of type included in descriptionClasses */
+  public static <T extends ConstructorArg, V extends TargetNode<T>>
+      ImmutableSet<V> collectTransitiveBuildRuleTargets(
+          XCodeDescriptions xcodeDescriptions,
+          TargetGraph targetGraph,
+          Optional<AppleDependenciesCache> cache,
+          ImmutableSet<Class<? extends BaseDescription<?>>> descriptionClasses,
+          Collection<TargetNode<?>> targetNodes,
+          RecursiveDependenciesMode mode) {
+    ImmutableSet<V> collectedTargets =
+        collectTransitiveBuildRuleTargetsWithTransform(
+            xcodeDescriptions,
+            targetGraph,
+            cache,
+            descriptionClasses,
+            targetNodes,
+            mode,
+            t -> {
+              @SuppressWarnings("unchecked")
+              V castedT = (V) t;
+              return castedT;
+            }, Predicates.alwaysTrue());
+    return collectedTargets;
+  }
+
+  /**
+   * Collect the transitive target node dependencies using some RecursiveDependenciesMode. Apply a
+   * transform on the dependencies
+   */
+  public static <T> ImmutableSet<T> collectTransitiveBuildRuleTargetsWithTransform(
+      XCodeDescriptions xcodeDescriptions,
+      TargetGraph targetGraph,
+      Optional<AppleDependenciesCache> cache,
+      ImmutableSet<Class<? extends BaseDescription<?>>> descriptionClasses,
+      Collection<TargetNode<?>> targetNodes,
+      RecursiveDependenciesMode mode,
+      Function<TargetNode<?>, T> transform,
       Predicate<BuildTarget> filter) {
 
     return RichStream.from(targetNodes)
@@ -457,7 +508,7 @@ public final class AppleBuildRules {
                     xcodeDescriptions, targetGraph, cache, mode, targetNode, descriptionClasses)
                     .stream())
         .filter(targetNode -> filter.test(targetNode.getBuildTarget()))
-        .map(input -> (T) input.getConstructorArg())
+        .map(transform)
         .toImmutableSet();
   }
 

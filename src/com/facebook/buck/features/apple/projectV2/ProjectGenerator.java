@@ -905,7 +905,7 @@ public class ProjectGenerator {
             mode);
 
     ImmutableSet<AppleWrapperResourceArg> coreDataResources =
-        AppleBuildRules.collectTransitiveBuildRules(
+        AppleBuildRules.collectTransitiveBuildTargetArg(
             xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
