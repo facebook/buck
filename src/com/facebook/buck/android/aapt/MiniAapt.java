@@ -73,6 +73,8 @@ import org.xml.sax.SAXException;
  */
 public class MiniAapt implements Step {
 
+  private static final String GRAYSCALE_SUFFIX = "_g.png";
+
   /** See {@link com.facebook.buck.android.AaptStep} for a list of files that we ignore. */
   public static final ImmutableList<String> IGNORED_FILE_EXTENSIONS = ImmutableList.of("orig");
 
@@ -337,7 +339,12 @@ public class MiniAapt implements Step {
         isCustomDrawable = root.getNodeName().startsWith(CUSTOM_DRAWABLE_PREFIX);
       }
     } else if (isGrayscaleImageProcessingEnabled) {
-      isGrayscaleImage = filename.endsWith(".g.png");
+      // .g.png is no longer an allowed filename in newer versions of aapt2.
+      isGrayscaleImage = filename.endsWith(".g.png") || filename.endsWith(GRAYSCALE_SUFFIX);
+      if (isGrayscaleImage) {
+        // Trim _g or .g from the resource name
+        resourceName = filename.substring(0, filename.length() - GRAYSCALE_SUFFIX.length());
+      }
     }
 
     DocumentLocation location = DocumentLocation.of(0, 0);

@@ -376,10 +376,10 @@ public class MiniAaptTest {
                 IdType.INT, RType.DRAWABLE, "custom_drawable", CustomDrawableType.CUSTOM)));
   }
 
-  @Test
-  public void testParsingGrayscaleImage() throws IOException, ResourceParseException {
+  private void testParsingGrayscaleImageImpl(String normalFilename, String grayscaleFilename)
+      throws IOException, ResourceParseException {
     ImmutableList<String> lines = ImmutableList.<String>builder().add("").build();
-    filesystem.writeLinesToPath(lines, Paths.get("fbui_tomato.png"));
+    filesystem.writeLinesToPath(lines, Paths.get(normalFilename));
 
     MiniAapt aapt =
         new MiniAapt(
@@ -390,7 +390,7 @@ public class MiniAaptTest {
             ImmutableSet.of(),
             /* isGrayscaleImageProcessingEnabled */ true,
             MiniAapt.ResourceCollectionType.R_DOT_TXT);
-    aapt.processDrawables(filesystem, Paths.get("fbui_tomato.g.png"));
+    aapt.processDrawables(filesystem, Paths.get(grayscaleFilename));
 
     Set<RDotTxtEntry> definitions =
         ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
@@ -404,6 +404,12 @@ public class MiniAaptTest {
                     RType.DRAWABLE,
                     "fbui_tomato",
                     CustomDrawableType.GRAYSCALE_IMAGE))));
+  }
+
+  @Test
+  public void testParsingGrayscaleImage() throws IOException, ResourceParseException {
+    testParsingGrayscaleImageImpl("fbui_tomato.png", "fbui_tomato.g.png");
+    testParsingGrayscaleImageImpl("fbui_tomato.png", "fbui_tomato_g.png");
   }
 
   @Test(expected = ResourceParseException.class)
