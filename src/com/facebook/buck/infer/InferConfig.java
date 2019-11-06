@@ -57,6 +57,15 @@ public abstract class InferConfig implements ConfigView<BuckConfig> {
     return getDelegate().getListWithoutComments(INFER_CONFIG_SECTION, "nullsafe_args");
   }
 
+  /** Directory with third party signatures for nullsafe. */
+  @Value.Lazy
+  public Optional<SourcePath> getNullsafeThirdPartySignatures(
+      TargetConfiguration targetConfiguration) {
+    return getDelegate()
+        .getSourcePath(
+            INFER_CONFIG_SECTION, "nullsafe_third_party_signatures", targetConfiguration);
+  }
+
   public Boolean getPrettyPrint() {
     return getDelegate().getBoolean(INFER_CONFIG_SECTION, "pretty_print").orElse(false);
   }

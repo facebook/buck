@@ -127,6 +127,16 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
             config.getPrettyPrint()));
   }
 
+  @Override
+  @Nullable
+  public SourcePath getSourcePathToOutput() {
+    if (getBuildable().producesOutput()) {
+      return getSourcePath(getBuildable().reportJson);
+    } else {
+      return null;
+    }
+  }
+
   /** {@link Buildable} that is responsible for running Nullsafe. */
   static class Impl implements Buildable {
     private static final String INFER_DEFAULT_RESULT_DIR = "infer-out";
@@ -240,6 +250,10 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
       return steps.build();
     }
 
+    public boolean producesOutput() {
+      return generatedClasses != null && !sources.isEmpty();
+    }
+
     private ImmutableMap<String, String> buildEnv(SourcePathResolver sourcePathResolver) {
       ImmutableMap.Builder<String, String> cmdEnv = ImmutableMap.builder();
       inferPlatform.getInferVersion().ifPresent(v -> cmdEnv.put("INFERVERSION", v));
@@ -317,11 +331,12 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
           "--generated-classes",
           filesystem.relativize(sourcePathResolver.getAbsolutePath(generatedClasses)).toString());
 
-      return argsBuilder.build();
-    }
+      inferPlatform
+          .getNullsafeThirdPartySignatures()
+          .map(x -> sourcePathResolver.getAbsolutePath(x).toString())
+          .ifPresent(dir -> addNotEmpty(argsBuilder, "--nullsafe-third-party-signatures", dir));
 
-    public boolean producesOutput() {
-      return generatedClasses != null && !sources.isEmpty();
+      return argsBuilder.build();
     }
 
     private static void addNotEmpty(
@@ -329,16 +344,6 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
       if (!argValue.isEmpty()) {
         argBuilder.add(argName, argValue);
       }
-    }
-  }
-
-  @Override
-  @Nullable
-  public SourcePath getSourcePathToOutput() {
-    if (getBuildable().producesOutput()) {
-      return getSourcePath(getBuildable().reportJson);
-    } else {
-      return null;
     }
   }
 }

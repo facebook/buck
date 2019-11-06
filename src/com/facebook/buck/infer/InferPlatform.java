@@ -39,4 +39,7 @@ public abstract class InferPlatform implements AddsToRuleKey {
   // TODO(arr): use content hash as a rule key instead
   @AddToRuleKey
   abstract Optional<SourcePath> getInferConfig();
+
+  @AddToRuleKey
+  abstract Optional<SourcePath> getNullsafeThirdPartySignatures();
 }

@@ -67,8 +67,11 @@ public class InferPlatformFactory {
 
                 Optional<SourcePath> configFile = config.getConfigFile(targetConfiguration);
                 Optional<String> version = config.getVersion();
+                Optional<SourcePath> nullsafeThirdPartySignatures =
+                    config.getNullsafeThirdPartySignatures(targetConfiguration);
 
-                return new ImmutableInferPlatform(tool, version, configFile);
+                return new ImmutableInferPlatform(
+                    tool, version, configFile, nullsafeThirdPartySignatures);
               }
 
               @Override
@@ -78,10 +81,15 @@ public class InferPlatformFactory {
 
                 deps.addAll(toolProvider.getParseTimeDeps(targetConfiguration));
 
-                inferConfig
-                    .getConfigFile(targetConfiguration)
-                    .filter(BuildTargetSourcePath.class::isInstance)
-                    .ifPresent(cf -> deps.add(((BuildTargetSourcePath) cf).getTarget()));
+                ImmutableList.of(
+                        inferConfig.getConfigFile(targetConfiguration),
+                        inferConfig.getNullsafeThirdPartySignatures(targetConfiguration))
+                    .forEach(
+                        sourcePathOpt ->
+                            sourcePathOpt
+                                .filter(BuildTargetSourcePath.class::isInstance)
+                                .ifPresent(
+                                    cf -> deps.add(((BuildTargetSourcePath) cf).getTarget())));
 
                 return deps.build();
               }
