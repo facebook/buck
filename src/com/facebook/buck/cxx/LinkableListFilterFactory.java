@@ -29,6 +29,9 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.google.common.base.Predicates;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import java.util.Collections;
@@ -46,6 +49,31 @@ import javax.annotation.Nonnull;
 public class LinkableListFilterFactory {
   private LinkableListFilterFactory() {}
 
+  private static final LoadingCache<
+          TargetGraph, LoadingCache<ImmutableList<CxxLinkGroupMapping>, Map<BuildTarget, String>>>
+      graphCache =
+          CacheBuilder.newBuilder()
+              // Do _not_ hold onto TargetGraph, those can change in-between invocations and we do
+              // not want to be holding onto old immutable graphs. NB: Weak keys means that the
+              // cache will use _reference equality_, by definition, hence why we _deliberately_
+              // set up a two-level cache, as we want weak TargetGraph and strong mapping semantics.
+              .weakKeys()
+              // Once a graph has changed, we do not want to cache different versions of the graph
+              // in the off-chance that a future graph will match perfectly.
+              .maximumSize(1)
+              .build(
+                  CacheLoader.from(
+                      graph -> {
+                        return CacheBuilder.newBuilder()
+                            // Cache all mapping for a particular graph. Usually, there would be
+                            // a single mapping re-used across all targets, so the perf savings
+                            // are significant.
+                            .build(
+                                CacheLoader.from(
+                                    mapping -> {
+                                      return makeBuildTargetToLinkGroupMap(mapping, graph);
+                                    }));
+                      }));
   private static String MATCH_ALL_LINK_GROUP_NAME = "MATCH_ALL";
 
   /** Convenience method that unpacks a {@link LinkableCxxConstructorArg} and forwards the call. */
@@ -88,7 +116,7 @@ public class LinkableListFilterFactory {
     }
 
     Map<BuildTarget, String> buildTargetToLinkGroupMap =
-        makeBuildTargetToLinkGroupMap(mapping, targetGraph);
+        getCachedBuildTargetToLinkGroupMap(mapping, targetGraph);
 
     LinkableListFilter filter =
         (ImmutableList<? extends NativeLinkable> allLinkables,
@@ -143,7 +171,8 @@ public class LinkableListFilterFactory {
       return Predicates.alwaysTrue();
     }
 
-    Map<BuildTarget, String> targetToGroupMap = makeBuildTargetToLinkGroupMap(mapping.get(), graph);
+    Map<BuildTarget, String> targetToGroupMap =
+        getCachedBuildTargetToLinkGroupMap(mapping.get(), graph);
 
     return (BuildTarget target) -> {
       if (!targetToGroupMap.containsKey(target)) {
@@ -158,6 +187,14 @@ public class LinkableListFilterFactory {
 
       return (resourceGroup.map(group -> group.equals(targetGroup)).orElse(false)).booleanValue();
     };
+  }
+
+  @Nonnull
+  private static Map<BuildTarget, String> getCachedBuildTargetToLinkGroupMap(
+      ImmutableList<CxxLinkGroupMapping> mapping, TargetGraph targetGraph) {
+    LoadingCache<ImmutableList<CxxLinkGroupMapping>, Map<BuildTarget, String>> groupingCache =
+        graphCache.getUnchecked(targetGraph);
+    return groupingCache.getUnchecked(mapping);
   }
 
   /**
