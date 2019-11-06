@@ -28,6 +28,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import print_function
+
+import logging
+import re
+import sys
+from io import BytesIO
+from zipfile import ZipFile
+
 
 """
 Performs checks for consistency between the main Buck binary and jars with modules.
@@ -35,12 +43,17 @@ Performs checks for consistency between the main Buck binary and jars with modul
 Detects duplicate classes that are present in multiple jars and report them.
 """
 
-import logging
-import re
-import sys
+HELP_TEMPLATE = """\
+Analyzes jars stored in a zip file and detects classes that are present in multiple jars.
 
-from io import BytesIO
-from zipfile import ZipFile
+Usage:
+    {} <zip_file> <jar_file_name_pattern> [<jar_file_name_pattern> ... ]
+"""
+
+MULTIPLE_CLASSES_ERROR = """
+Found multiple classes in different jars. Please, refactor dependencies to include classes in the
+main Buck binary only (buck_verser) or move classes to relevant modules.
+"""
 
 
 def main():
@@ -58,7 +71,9 @@ def main():
 
     logging.info("Found entries: %s" % zip_file_entries)
 
-    all_entries = read_list_of_entries_from_zip_file_entries(zip_file_path, zip_file_entries)
+    all_entries = read_list_of_entries_from_zip_file_entries(
+        zip_file_path, zip_file_entries
+    )
     class_entries = remove_non_class_entries(all_entries)
 
     report_class_entries(class_entries)
@@ -69,7 +84,7 @@ def main():
 
 
 def get_argv():
-    if len(sys.argv) > 2 and (sys.argv[1] == '-v' or sys.argv[1] == '--verbose'):
+    if len(sys.argv) > 2 and (sys.argv[1] == "-v" or sys.argv[1] == "--verbose"):
         logging.getLogger().setLevel(logging.INFO)
         argv = sys.argv[0:0] + sys.argv[1:]
     else:
@@ -153,7 +168,7 @@ def remove_non_class_entries(entries):
     for entry_name in entries.keys():
         new_nested_entries = []
         for nested_entry in entries[entry_name]:
-            if nested_entry[-6:] == '.class':
+            if nested_entry[-6:] == ".class":
                 new_nested_entries.append(nested_entry)
         new_entries[entry_name] = new_nested_entries
     return new_entries
@@ -208,26 +223,21 @@ def check_entries_and_report_duplicates(class_entries):
     for class_entry in class_entries.keys():
         class_entry_jars = class_entries[class_entry]
         if len(class_entry_jars) > 1:
-            logging.error("%s is present in (%s)" % (class_entry, ", ".join(class_entry_jars)))
+            logging.error(
+                "%s is present in (%s)" % (class_entry, ", ".join(class_entry_jars))
+            )
             rc = 1
     return rc
 
 
 def print_help():
-    print """Analyzes jars stored in a zip file and detects classes that are present in multiple jars.
-
-Usage:
-    %s <zip_file> <jar_file_name_pattern> [<jar_file_name_pattern> ... ]
-    """ % sys.argv[0]
+    print(HELP_TEMPLATE.format(sys.argv[0]))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     rc = main()
 
     if rc > 0:
-        print("""
-Found multiple classes in different jars. Please, refactor dependencies to include classes in the
-main Buck binary only (buck_verser) or move classes to relevant modules.
-        """)
+        print(MULTIPLE_CLASSES_ERROR)
 
     sys.exit(rc)

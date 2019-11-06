@@ -77,9 +77,9 @@ class ProjectWorkspace(object):
         # Copy output through to unittest's output so failures are easy to debug. Can't just
         # provide sys.stdout/sys.stderr to Popen because unittest has replaced the streams with
         # things that aren't directly compatible with Popen.
-        sys.stdout.write(stdout)
+        sys.stdout.write(stdout.decode("utf8"))
         sys.stdout.flush()
-        sys.stderr.write(stderr)
+        sys.stderr.write(stderr.decode("utf8"))
         sys.stderr.flush()
 
         return proc.returncode

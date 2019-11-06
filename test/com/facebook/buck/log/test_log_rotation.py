@@ -29,7 +29,7 @@ class LogRotationTest(unittest.TestCase):
 
         with ProjectWorkspace(test_data) as workspace:
             iterations = 3
-            for i in xrange(0, iterations):
+            for i in range(0, iterations):
                 returncode = workspace.run_buck(
                     "targets",
                     "//:foo",

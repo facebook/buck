@@ -87,8 +87,7 @@ class TestAppend(unittest.TestCase):
 
         with pkg_resources.resource_stream(__name__, "testrunner-bin-fixed.jar") as r:
             with ZipFile(r) as zip_file:
-                for zip_file_entry in zip_file.namelist():
-                    entry = zip_file_entry.encode("utf-8")
+                for entry in zip_file.namelist():
                     if not entry.endswith("/"):
                         self.assertTrue(
                             entry in ALLOWED_ENTRIES,

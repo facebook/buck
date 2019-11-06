@@ -688,8 +688,7 @@ class BuckTool(object):
                 path = cmd["path"].encode("utf8")
                 argv = [arg.encode("utf8") for arg in cmd["argv"]]
                 envp = {
-                    k.encode("utf8"): v.encode("utf8")
-                    for k, v in cmd["envp"].iteritems()
+                    k.encode("utf8"): v.encode("utf8") for k, v in cmd["envp"].items()
                 }
                 cwd = cmd["cwd"].encode("utf8")
                 if cmd["is_fix_script"]:

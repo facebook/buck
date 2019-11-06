@@ -33,9 +33,9 @@ class TestBuckRun(unittest.TestCase):
             os.mkdir(subdir)
             proc = run_buck_process(["run", "//:pwd"], subdir)
             stdout, stderr = proc.communicate()
-            sys.stdout.write(stdout)
+            sys.stdout.write(stdout.decode("utf8"))
             sys.stdout.flush()
-            sys.stderr.write(stderr)
+            sys.stderr.write(stderr.decode("utf8"))
             sys.stderr.flush()
             self.assertEqual(0, proc.returncode)
 
