@@ -96,7 +96,7 @@ public class CxxLibraryDescription
     }
   }
 
-  static final FlavorDomain<Type> LIBRARY_TYPE =
+  public static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
   public enum MetadataType implements FlavorConvertible {
