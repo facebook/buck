@@ -26,7 +26,6 @@ import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
 import com.facebook.buck.features.python.toolchain.PythonInterpreter;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import com.google.common.base.Splitter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -65,7 +64,7 @@ public class DefaultPexToolProvider implements PexToolProvider {
   public Tool getPexTool(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     CommandTool.Builder builder =
         new CommandTool.Builder(getRawPexTool(resolver, ruleKeyConfiguration, targetConfiguration));
-    for (String flag : Splitter.on(' ').omitEmptyStrings().split(pythonBuckConfig.getPexFlags())) {
+    for (String flag : pythonBuckConfig.getPexFlags()) {
       builder.addArg(flag);
     }
 

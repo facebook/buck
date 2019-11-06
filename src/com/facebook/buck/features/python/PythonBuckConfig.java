@@ -59,8 +59,8 @@ public class PythonBuckConfig {
     return delegate.getMaybeBuildTarget(SECTION, "path_to_pex", targetConfiguration);
   }
 
-  public String getPexFlags() {
-    return delegate.getValue(SECTION, "pex_flags").orElse("");
+  public ImmutableList<String> getPexFlags() {
+    return delegate.getListWithoutComments(SECTION, "pex_flags", ' ');
   }
 
   public Optional<Tool> getRawPexTool(

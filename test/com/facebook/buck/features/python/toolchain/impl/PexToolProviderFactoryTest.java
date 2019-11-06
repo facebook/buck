@@ -43,7 +43,9 @@ public class PexToolProviderFactoryTest {
   public void testPexArgs() {
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections(ImmutableMap.of("python", ImmutableMap.of("pex_flags", "--hello --world")))
+            .setSections(
+                ImmutableMap.of(
+                    "python", ImmutableMap.of("pex_flags", "--foo \"--hello --world\"")))
             .build();
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     PexToolProviderFactory pexToolProviderFactory = new PexToolProviderFactory();
@@ -69,6 +71,6 @@ public class PexToolProviderFactoryTest {
         pexToolProvider
             .getPexTool(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver.getSourcePathResolver()),
-        hasConsecutiveItems("--hello", "--world"));
+        hasConsecutiveItems("--foo", "--hello --world"));
   }
 }
