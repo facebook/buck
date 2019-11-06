@@ -88,8 +88,7 @@ public class LinkableListFilterFactory {
     }
 
     Map<BuildTarget, String> buildTargetToLinkGroupMap =
-        makeBuildTargetToLinkGroupMap(
-            mapping, targetGraph, cxxBuckConfig.getLinkGroupCuttingGenruleBranchEnabled());
+        makeBuildTargetToLinkGroupMap(mapping, targetGraph);
 
     LinkableListFilter filter =
         (ImmutableList<? extends NativeLinkable> allLinkables,
@@ -144,8 +143,7 @@ public class LinkableListFilterFactory {
       return Predicates.alwaysTrue();
     }
 
-    Map<BuildTarget, String> targetToGroupMap =
-        makeBuildTargetToLinkGroupMap(mapping.get(), graph, true);
+    Map<BuildTarget, String> targetToGroupMap = makeBuildTargetToLinkGroupMap(mapping.get(), graph);
 
     return (BuildTarget target) -> {
       if (!targetToGroupMap.containsKey(target)) {
@@ -168,21 +166,17 @@ public class LinkableListFilterFactory {
    */
   @Nonnull
   private static Map<BuildTarget, String> makeBuildTargetToLinkGroupMap(
-      ImmutableList<CxxLinkGroupMapping> mapping,
-      TargetGraph targetGraph,
-      Boolean enableTraversalForAppleLibraryOnly) {
+      ImmutableList<CxxLinkGroupMapping> mapping, TargetGraph targetGraph) {
     Map<BuildTarget, String> buildTargetToLinkGroupMap = new HashMap<>();
     for (CxxLinkGroupMapping groupMapping : mapping) {
       String currentLinkGroup = groupMapping.getLinkGroup();
       for (CxxLinkGroupMappingTarget mappingTarget : groupMapping.getMappingTargets()) {
         final ImmutableList<BuildTarget> buildTargets =
-            getBuildTargetsForMapping(
-                targetGraph, enableTraversalForAppleLibraryOnly, mappingTarget);
+            getBuildTargetsForMapping(targetGraph, mappingTarget);
 
         for (BuildTarget buildTarget : buildTargets) {
           addGroupMappingForBuildTarget(
               targetGraph,
-              enableTraversalForAppleLibraryOnly,
               buildTargetToLinkGroupMap,
               currentLinkGroup,
               mappingTarget.getTraversal(),
@@ -195,25 +189,19 @@ public class LinkableListFilterFactory {
 
   @Nonnull
   private static ImmutableList<BuildTarget> getBuildTargetsForMapping(
-      TargetGraph targetGraph,
-      Boolean enableTraversalForAppleLibraryOnly,
-      CxxLinkGroupMappingTarget mappingTarget) {
+      TargetGraph targetGraph, CxxLinkGroupMappingTarget mappingTarget) {
 
     Optional<Pattern> labelPattern = mappingTarget.getLabelPattern();
     if (!labelPattern.isPresent()) {
       return ImmutableList.of(mappingTarget.getBuildTarget());
     }
 
-    return findBuildTargetsMatchingLabelPattern(
-        targetGraph, enableTraversalForAppleLibraryOnly, mappingTarget, labelPattern.get());
+    return findBuildTargetsMatchingLabelPattern(targetGraph, mappingTarget, labelPattern.get());
   }
 
   @Nonnull
   private static ImmutableList<BuildTarget> findBuildTargetsMatchingLabelPattern(
-      TargetGraph targetGraph,
-      Boolean enableTraversalForAppleLibraryOnly,
-      CxxLinkGroupMappingTarget mappingTarget,
-      Pattern regex) {
+      TargetGraph targetGraph, CxxLinkGroupMappingTarget mappingTarget, Pattern regex) {
     ImmutableList.Builder<BuildTarget> allTargets = ImmutableList.builder();
     TargetNode<?> initialTargetNode = targetGraph.get(mappingTarget.getBuildTarget());
 
@@ -221,7 +209,7 @@ public class LinkableListFilterFactory {
         new AbstractBreadthFirstTraversal<TargetNode<?>>(initialTargetNode) {
           @Override
           public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
-            if (shouldSkipTraversingNode(node, enableTraversalForAppleLibraryOnly)) {
+            if (shouldSkipTraversingNode(node)) {
               return Collections.emptySet();
             }
 
@@ -260,7 +248,6 @@ public class LinkableListFilterFactory {
    */
   private static void addGroupMappingForBuildTarget(
       TargetGraph targetGraph,
-      Boolean enableTraversalForAppleLibraryOnly,
       Map<BuildTarget, String> buildTargetToLinkGroupMap,
       String currentLinkGroup,
       CxxLinkGroupMappingTarget.Traversal traversal,
@@ -275,7 +262,7 @@ public class LinkableListFilterFactory {
               public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
                 addBuildTargetToLinkGroup(
                     node.getBuildTarget(), currentLinkGroup, buildTargetToLinkGroupMap);
-                if (shouldSkipTraversingNode(node, enableTraversalForAppleLibraryOnly)) {
+                if (shouldSkipTraversingNode(node)) {
                   return Collections.emptySet();
                 } else {
                   return targetGraph.getOutgoingNodesFor(node);
@@ -291,11 +278,9 @@ public class LinkableListFilterFactory {
     }
   }
 
-  private static boolean shouldSkipTraversingNode(
-      TargetNode<?> node, Boolean enableTraversalForAppleLibraryOnly) {
+  private static boolean shouldSkipTraversingNode(TargetNode<?> node) {
     // cut the branch if the node type is genrule
-    return enableTraversalForAppleLibraryOnly
-        && node.getDescription().getConstructorArgType().equals(GenruleDescriptionArg.class);
+    return node.getDescription().getConstructorArgType().equals(GenruleDescriptionArg.class);
   }
 
   private static void addBuildTargetToLinkGroup(

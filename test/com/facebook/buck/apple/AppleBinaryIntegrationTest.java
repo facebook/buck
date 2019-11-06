@@ -603,7 +603,6 @@ public class AppleBinaryIntegrationTest {
             this, "apple_binary_with_link_groups_with_genrule", tmp);
     workspace.setUp();
     workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_cutting_genrule_branch_enabled", "true");
 
     String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:TestApp", workspace);
     assertThat(binarySymbolTable, not(containsString("T _get_value_from_a")));
@@ -613,27 +612,6 @@ public class AppleBinaryIntegrationTest {
         getMacDylibSymbolTable("//Apps/TestApp:Dylib", "Dylib.dylib", workspace);
     assertThat(dylibSymbolTable, containsString("T _get_value_from_a"));
     assertThat(dylibSymbolTable, not(containsString("T _get_value_from_b")));
-  }
-
-  @Test
-  public void testAppleBinaryWithLinkGroupWithCuttingGenruleBranchDisabled() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "apple_binary_with_link_groups_with_genrule", tmp);
-    workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
-
-    String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:TestApp", workspace);
-    assertThat(binarySymbolTable, not(containsString("T _get_value_from_a")));
-    assertThat(binarySymbolTable, not(containsString("T _get_value_from_b")));
-
-    String dylibSymbolTable =
-        getMacDylibSymbolTable("//Apps/TestApp:Dylib", "Dylib.dylib", workspace);
-    assertThat(dylibSymbolTable, containsString("T _get_value_from_a"));
-    assertThat(dylibSymbolTable, containsString("T _get_value_from_b"));
   }
 
   @Test

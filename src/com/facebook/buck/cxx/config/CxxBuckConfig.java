@@ -82,8 +82,6 @@ public class CxxBuckConfig {
   private static final String MAX_TEST_OUTPUT_SIZE = "max_test_output_size";
   private static final String LINKER_PLATFORM = "linker_platform";
   private static final String LINK_GROUPS_ENABLED = "link_groups_enabled";
-  private static final String LINK_GROUPS_CUTTING_GENRULE_BRANCH_ENABLED =
-      "link_groups_cutting_genrule_branch_enabled";
   private static final String UNTRACKED_HEADERS = "untracked_headers";
   private static final String UNTRACKED_HEADERS_WHITELIST = "untracked_headers_whitelist";
   private static final String EXPORTED_HEADERS_SYMLINKS_ENABLED =
@@ -437,14 +435,6 @@ public class CxxBuckConfig {
 
   public boolean getLinkGroupsEnabled() {
     return getLinkGroupsEnabledSetting().orElse(false);
-  }
-
-  public Optional<Boolean> getLinkGroupCuttingGenruleBranchEnabledSetting() {
-    return delegate.getBoolean(cxxSection, LINK_GROUPS_CUTTING_GENRULE_BRANCH_ENABLED);
-  }
-
-  public boolean getLinkGroupCuttingGenruleBranchEnabled() {
-    return getLinkGroupCuttingGenruleBranchEnabledSetting().orElse(false);
   }
 
   public Optional<Boolean> getPublicHeadersSymlinksSetting() {
