@@ -210,8 +210,21 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public void calculateOutputSizeAndWriteOutputHashes(
-      FileHashLoader fileHashLoader, Predicate<Long> shouldWriteOutputHashes) throws IOException {
+  public void calculateOutputSizeAndWriteMetadata(
+      FileHashLoader fileHashLoader,
+      ImmutableSortedSet<Path> recordedPaths,
+      Predicate<Long> shouldWriteOutputHashes)
+      throws IOException {
+    // Convert all recorded paths to use unix file separators
+    String recordedPathsString =
+        toJson(
+            recordedPaths.stream()
+                .map(Object::toString)
+                .map(path -> path.replace(File.separator, "/"))
+                .collect(ImmutableList.toImmutableList()));
+    projectFilesystem.writeContentsToPath(
+        recordedPathsString, metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+
     ImmutableSortedSet<Path> pathsForArtifact = getPathsForArtifact();
     long outputSize = getOutputSize(pathsForArtifact);
     projectFilesystem.writeContentsToPath(
@@ -290,5 +303,13 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
       }
     }
     return size;
+  }
+
+  private String toJson(Object value) {
+    try {
+      return ObjectMappers.WRITER.writeValueAsString(value);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

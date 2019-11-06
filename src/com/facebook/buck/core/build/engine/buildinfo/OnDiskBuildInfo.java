@@ -70,8 +70,11 @@ public interface OnDiskBuildInfo {
   /** Deletes both "artifact" and "build" metadata. */
   void deleteExistingMetadata() throws IOException;
 
-  void calculateOutputSizeAndWriteOutputHashes(
-      FileHashLoader fileHashLoader, Predicate<Long> shouldWriteOutputHashes) throws IOException;
+  void calculateOutputSizeAndWriteMetadata(
+      FileHashLoader fileHashLoader,
+      ImmutableSortedSet<Path> recordedPaths,
+      Predicate<Long> shouldWriteOutputHashes)
+      throws IOException;
 
   void validateArtifact(Set<Path> extractedFiles) throws IOException;
 
