@@ -32,13 +32,16 @@ public class LexerTest {
 
   @Test
   public void testScan() throws Exception {
-    String query = "deps(//foo:bar)";
+    String query = "deps(//foo:bar[baz])";
     List<Lexer.Token> tokens = Lexer.scan(query.toCharArray());
     List<Lexer.Token> expected =
         Lists.newArrayList(
             new Lexer.Token("deps"),
             new Lexer.Token(Lexer.TokenKind.LPAREN),
             new Lexer.Token("//foo:bar"),
+            new Lexer.Token(Lexer.TokenKind.LBRACKET),
+            new Lexer.Token("baz"),
+            new Lexer.Token(Lexer.TokenKind.RBRACKET),
             new Lexer.Token(Lexer.TokenKind.RPAREN),
             new Lexer.Token(Lexer.TokenKind.EOF));
     assertThat(tokens, is(equalTo(expected)));
