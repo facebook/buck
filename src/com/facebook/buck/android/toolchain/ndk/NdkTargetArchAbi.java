@@ -16,25 +16,45 @@
 
 package com.facebook.buck.android.toolchain.ndk;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /** Name of the target CPU + ABI. */
 public enum NdkTargetArchAbi {
-  X86("x86"),
-  X86_64("x86_64"),
-  ARMEABI("armeabi"),
-  ARMEABI_V7A("armeabi-v7a"),
-  ARM64_V8A("arm64-v8a"),
+  X86("x86", "x86"),
+  X86_64("x86_64", "x86_64"),
+  ARMEABI("armeabi", "arm"),
+  ARMEABI_V7A("armeabi-v7a", "armv7"),
+  ARM64_V8A("arm64-v8a", "arm64"),
   ;
 
   private final String value;
+  private final String buckconfigValue;
 
-  NdkTargetArchAbi(String value) {
+  NdkTargetArchAbi(String value, String buckconfigValue) {
     this.value = Objects.requireNonNull(value);
+    this.buckconfigValue = buckconfigValue;
   }
 
   @Override
   public String toString() {
     return value;
+  }
+
+  /** Get a value from a string used in buckconfig, throw if ABI is unknown. */
+  public static NdkTargetArchAbi fromBuckconfigValue(String buckconfigValue) {
+    for (NdkTargetArchAbi value : NdkTargetArchAbi.values()) {
+      if (value.buckconfigValue.equals(buckconfigValue)) {
+        return value;
+      }
+    }
+    String abis =
+        Arrays.stream(NdkTargetArchAbi.values())
+            .map(a -> a.buckconfigValue)
+            .collect(Collectors.joining(", "));
+    throw new HumanReadableException(
+        "unknown NDK abi: %s, possible values: %s", buckconfigValue, abis);
   }
 }

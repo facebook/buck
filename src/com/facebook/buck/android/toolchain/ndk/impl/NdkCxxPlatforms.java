@@ -240,12 +240,13 @@ public class NdkCxxPlatforms {
   }
 
   @VisibleForTesting
-  static ImmutableSet<String> getDefaultCpuAbis(String ndkVersion) {
+  static ImmutableSet<NdkTargetArchAbi> getDefaultCpuAbis(String ndkVersion) {
     int ndkMajorVersion = getNdkMajorVersion(ndkVersion);
     if (ndkMajorVersion > 16) {
-      return ImmutableSet.of("armv7", "x86");
+      return ImmutableSet.of(NdkTargetArchAbi.ARMEABI_V7A, NdkTargetArchAbi.X86);
     } else {
-      return ImmutableSet.of("arm", "armv7", "x86");
+      return ImmutableSet.of(
+          NdkTargetArchAbi.ARMEABI, NdkTargetArchAbi.ARMEABI_V7A, NdkTargetArchAbi.X86);
     }
   }
 
@@ -259,7 +260,7 @@ public class NdkCxxPlatforms {
       NdkCxxPlatformCompiler compiler,
       NdkCxxRuntime cxxRuntime,
       NdkCxxRuntimeType runtimeType,
-      Set<String> cpuAbis,
+      Set<NdkTargetArchAbi> cpuAbis,
       Platform platform) {
     return getPlatforms(
         config,
@@ -286,7 +287,7 @@ public class NdkCxxPlatforms {
       NdkCxxPlatformCompiler compiler,
       NdkCxxRuntime cxxRuntime,
       NdkCxxRuntimeType runtimeType,
-      Set<String> cpuAbis,
+      Set<NdkTargetArchAbi> cpuAbis,
       Platform platform,
       ExecutableFinder executableFinder,
       boolean strictToolchainPaths) {
@@ -294,7 +295,7 @@ public class NdkCxxPlatforms {
         ImmutableMap.builder();
 
     // ARM Platform
-    if (cpuAbis.contains("arm")) {
+    if (cpuAbis.contains(NdkTargetArchAbi.ARMEABI)) {
       ndkCxxPlatformBuilder.put(
           TargetCpuType.ARM,
           getNdkCxxPlatform(
@@ -315,7 +316,7 @@ public class NdkCxxPlatforms {
     }
 
     // ARMv7 Platform
-    if (cpuAbis.contains("armv7")) {
+    if (cpuAbis.contains(NdkTargetArchAbi.ARMEABI_V7A)) {
       ndkCxxPlatformBuilder.put(
           TargetCpuType.ARMV7,
           getNdkCxxPlatform(
@@ -336,7 +337,7 @@ public class NdkCxxPlatforms {
     }
 
     // ARM64 Platform
-    if (cpuAbis.contains("arm64")) {
+    if (cpuAbis.contains(NdkTargetArchAbi.ARM64_V8A)) {
       ndkCxxPlatformBuilder.put(
           TargetCpuType.ARM64,
           getNdkCxxPlatform(
@@ -357,7 +358,7 @@ public class NdkCxxPlatforms {
     }
 
     // x86 Platform
-    if (cpuAbis.contains("x86")) {
+    if (cpuAbis.contains(NdkTargetArchAbi.X86)) {
       ndkCxxPlatformBuilder.put(
           TargetCpuType.X86,
           getNdkCxxPlatform(
@@ -378,7 +379,7 @@ public class NdkCxxPlatforms {
     }
 
     // x86_64 Platform
-    if (cpuAbis.contains("x86_64")) {
+    if (cpuAbis.contains(NdkTargetArchAbi.X86_64)) {
       ndkCxxPlatformBuilder.put(
           TargetCpuType.X86_64,
           getNdkCxxPlatform(

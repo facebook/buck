@@ -27,6 +27,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
+import com.facebook.buck.android.toolchain.ndk.NdkTargetArchAbi;
 import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -243,7 +244,7 @@ public class AndroidNdkHelper {
     }
   }
 
-  public static ImmutableSet<String> getDefaultCpuAbis(String ndkVersion) {
+  public static ImmutableSet<NdkTargetArchAbi> getDefaultCpuAbis(String ndkVersion) {
     return NdkCxxPlatforms.getDefaultCpuAbis(ndkVersion);
   }
 }

@@ -32,6 +32,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformTargetConfiguration;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
+import com.facebook.buck.android.toolchain.ndk.NdkTargetArchAbi;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.cell.TestCellPathResolver;
@@ -235,12 +236,16 @@ public class NdkCxxPlatformTest {
   @Test
   public void testDefaultCpuAbisForNdk16() {
     assertEquals(
-        ImmutableSet.of("arm", "armv7", "x86"), NdkCxxPlatforms.getDefaultCpuAbis("16.1.123"));
+        ImmutableSet.of(
+            NdkTargetArchAbi.ARMEABI, NdkTargetArchAbi.ARMEABI_V7A, NdkTargetArchAbi.X86),
+        NdkCxxPlatforms.getDefaultCpuAbis("16.1.123"));
   }
 
   @Test
   public void testDefaultCpuAbisForNdk17() {
-    assertEquals(ImmutableSet.of("armv7", "x86"), NdkCxxPlatforms.getDefaultCpuAbis("17.1.123"));
+    assertEquals(
+        ImmutableSet.of(NdkTargetArchAbi.ARMEABI_V7A, NdkTargetArchAbi.X86),
+        NdkCxxPlatforms.getDefaultCpuAbis("17.1.123"));
   }
 
   @Test
@@ -572,7 +577,7 @@ public class NdkCxxPlatformTest {
                       .build(),
                   NdkCxxRuntime.GNUSTL,
                   NdkCxxRuntimeType.DYNAMIC,
-                  ImmutableSet.of("x86"),
+                  ImmutableSet.of(NdkTargetArchAbi.X86),
                   platform,
                   new AlwaysFoundExecutableFinder(),
                   /* strictToolchainPaths */ false);
@@ -626,7 +631,7 @@ public class NdkCxxPlatformTest {
                 .build(),
             NdkCxxRuntime.GNUSTL,
             NdkCxxRuntimeType.DYNAMIC,
-            ImmutableSet.of("x86"),
+            ImmutableSet.of(NdkTargetArchAbi.X86),
             Platform.LINUX,
             new AlwaysFoundExecutableFinder(),
             /* strictToolchainPaths */ false);

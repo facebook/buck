@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
+import com.facebook.buck.android.toolchain.ndk.NdkTargetArchAbi;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -188,8 +189,14 @@ public class AndroidBuckConfig {
     return delegate.getMap("ndk", "app_platform_per_cpu_abi");
   }
 
-  public Optional<ImmutableSet<String>> getNdkCpuAbis() {
-    return delegate.getOptionalListWithoutComments("ndk", "cpu_abis").map(ImmutableSet::copyOf);
+  public Optional<ImmutableSet<NdkTargetArchAbi>> getNdkCpuAbis() {
+    return delegate
+        .getOptionalListWithoutComments("ndk", "cpu_abis")
+        .map(
+            abis ->
+                abis.stream()
+                    .map(NdkTargetArchAbi::fromBuckconfigValue)
+                    .collect(ImmutableSet.toImmutableSet()));
   }
 
   public Optional<NdkCompilerType> getNdkCompiler() {
