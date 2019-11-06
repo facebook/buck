@@ -175,6 +175,13 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testIfAllNativeDepsAreSupportSystemThenDoNotCopyNativeLibs() throws IOException {
+    Path outputApk = workspace.buildAndReturnOutput("//:app-system-loader-aar-only");
+    ZipInspector zipInspector = new ZipInspector(outputApk);
+    zipInspector.assertFileExists("lib/x86/libdep.so");
+  }
+
+  @Test
   public void testSystemLoadedLibsRespectCpuFilter() throws IOException {
     Path outputApk =
         workspace.buildAndReturnOutput("//:app-dep-on-aar-with-native-loaded-so_exo-native_armv7");

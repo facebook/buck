@@ -383,8 +383,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       if (filteredStrippedLibsMap.isEmpty()
           && filteredStrippedLibsAssetsMap.isEmpty()
           && nativeLibsDirectories.isEmpty()
-          && nativeLibsAssetsDirectories.isEmpty()
-          && nativeLibsDirectoriesForPrimaryDexModule.isEmpty()) {
+          && nativeLibsAssetsDirectories.isEmpty()) {
         continue;
       }
 
