@@ -75,14 +75,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
-import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -185,9 +183,6 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final boolean verifyResources;
 
   private final Duration codesignTimeout;
-  private static final ImmutableList<String> BASE_IBTOOL_FLAGS =
-      ImmutableList.of(
-          "--output-format", "human-readable-text", "--notices", "--warnings", "--errors");
 
   AppleBundle(
       BuildTarget buildTarget,
@@ -491,8 +486,20 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   bundleVariantDestinationPath)));
 
       Path destinationPath = bundleVariantDestinationPath.resolve(variantFilePath.getFileName());
-      addResourceProcessingSteps(
-          context.getSourcePathResolver(), variantFilePath, destinationPath, stepsBuilder);
+      AppleResourceProcessing.addResourceProcessingSteps(
+          context.getSourcePathResolver(),
+          variantFilePath,
+          destinationPath,
+          stepsBuilder,
+          ibtoolFlags,
+          getProjectFilesystem(),
+          isLegacyWatchApp(),
+          platform,
+          LOG,
+          ibtool,
+          ibtoolModuleFlag,
+          getBuildTarget(),
+          Optional.of(binaryName));
     }
 
     if (!frameworks.isEmpty()) {
@@ -892,8 +899,20 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path bundleDestinationPath =
           bundleRoot.resolve(fileWithDestination.getDestination().getPath(destinations));
       Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
-      addResourceProcessingSteps(
-          context.getSourcePathResolver(), resolvedFilePath, destinationPath, stepsBuilder);
+      AppleResourceProcessing.addResourceProcessingSteps(
+          context.getSourcePathResolver(),
+          resolvedFilePath,
+          destinationPath,
+          stepsBuilder,
+          ibtoolFlags,
+          getProjectFilesystem(),
+          isLegacyWatchApp(),
+          platform,
+          LOG,
+          ibtool,
+          ibtoolModuleFlag,
+          getBuildTarget(),
+          Optional.of(binaryName));
     }
   }
 
@@ -1036,117 +1055,6 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
               bundleBinaryPath,
               ImmutableSet.of(destinations.getFrameworksPath(), destinations.getPlugInsPath()),
               codeSignIdentitySupplier));
-    }
-  }
-
-  private void addStoryboardProcessingSteps(
-      SourcePathResolver resolver,
-      Path sourcePath,
-      Path destinationPath,
-      ImmutableList.Builder<Step> stepsBuilder) {
-    ImmutableList<String> modifiedFlags =
-        ImmutableList.<String>builder().addAll(BASE_IBTOOL_FLAGS).addAll(ibtoolFlags).build();
-
-    if (platform.getName().contains("watch") || isLegacyWatchApp()) {
-      LOG.debug(
-          "Compiling storyboard %s to storyboardc %s and linking", sourcePath, destinationPath);
-
-      Path compiledStoryboardPath =
-          BuildTargetPaths.getScratchPath(
-              getProjectFilesystem(), getBuildTarget(), "%s.storyboardc");
-
-      stepsBuilder.add(
-          new IbtoolStep(
-              getProjectFilesystem(),
-              ibtool.getEnvironment(resolver),
-              ibtool.getCommandPrefix(resolver),
-              ibtoolModuleFlag ? Optional.of(binaryName) : Optional.empty(),
-              ImmutableList.<String>builder()
-                  .addAll(modifiedFlags)
-                  .add("--target-device", "watch", "--compile")
-                  .build(),
-              sourcePath,
-              compiledStoryboardPath));
-
-      stepsBuilder.add(
-          new IbtoolStep(
-              getProjectFilesystem(),
-              ibtool.getEnvironment(resolver),
-              ibtool.getCommandPrefix(resolver),
-              ibtoolModuleFlag ? Optional.of(binaryName) : Optional.empty(),
-              ImmutableList.<String>builder()
-                  .addAll(modifiedFlags)
-                  .add("--target-device", "watch", "--link")
-                  .build(),
-              compiledStoryboardPath,
-              destinationPath.getParent()));
-
-    } else {
-      LOG.debug("Compiling storyboard %s to storyboardc %s", sourcePath, destinationPath);
-
-      String compiledStoryboardFilename =
-          Files.getNameWithoutExtension(destinationPath.toString()) + ".storyboardc";
-
-      Path compiledStoryboardPath = destinationPath.getParent().resolve(compiledStoryboardFilename);
-
-      stepsBuilder.add(
-          new IbtoolStep(
-              getProjectFilesystem(),
-              ibtool.getEnvironment(resolver),
-              ibtool.getCommandPrefix(resolver),
-              ibtoolModuleFlag ? Optional.of(binaryName) : Optional.empty(),
-              ImmutableList.<String>builder().addAll(modifiedFlags).add("--compile").build(),
-              sourcePath,
-              compiledStoryboardPath));
-    }
-  }
-
-  private void addResourceProcessingSteps(
-      SourcePathResolver resolver,
-      Path sourcePath,
-      Path destinationPath,
-      ImmutableList.Builder<Step> stepsBuilder) {
-    String sourcePathExtension =
-        Files.getFileExtension(sourcePath.toString()).toLowerCase(Locale.US);
-    switch (sourcePathExtension) {
-      case "plist":
-      case "stringsdict":
-        LOG.debug("Converting plist %s to binary plist %s", sourcePath, destinationPath);
-        stepsBuilder.add(
-            new PlistProcessStep(
-                getProjectFilesystem(),
-                sourcePath,
-                Optional.empty(),
-                destinationPath,
-                ImmutableMap.of(),
-                ImmutableMap.of(),
-                PlistProcessStep.OutputFormat.BINARY));
-        break;
-      case "storyboard":
-        addStoryboardProcessingSteps(resolver, sourcePath, destinationPath, stepsBuilder);
-        break;
-      case "xib":
-        String compiledNibFilename =
-            Files.getNameWithoutExtension(destinationPath.toString()) + ".nib";
-        Path compiledNibPath = destinationPath.getParent().resolve(compiledNibFilename);
-        LOG.debug("Compiling XIB %s to NIB %s", sourcePath, destinationPath);
-        stepsBuilder.add(
-            new IbtoolStep(
-                getProjectFilesystem(),
-                ibtool.getEnvironment(resolver),
-                ibtool.getCommandPrefix(resolver),
-                ibtoolModuleFlag ? Optional.of(binaryName) : Optional.empty(),
-                ImmutableList.<String>builder()
-                    .addAll(BASE_IBTOOL_FLAGS)
-                    .addAll(ibtoolFlags)
-                    .addAll(ImmutableList.of("--compile"))
-                    .build(),
-                sourcePath,
-                compiledNibPath));
-        break;
-      default:
-        stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), sourcePath, destinationPath));
-        break;
     }
   }
 
