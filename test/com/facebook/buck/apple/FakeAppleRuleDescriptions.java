@@ -120,6 +120,7 @@ public class FakeAppleRuleDescriptions {
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool",
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/nm",
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/ar",
+                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool",
                         "Platforms/iPhoneOS.platform/Developer/usr/bin/libtool",
                         "usr/bin/actool",
                         "usr/bin/ibtool",

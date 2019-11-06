@@ -128,6 +128,7 @@ public class AppleCxxPlatformsTest {
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
+        root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"),

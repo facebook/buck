@@ -268,6 +268,9 @@ public class AppleCxxPlatforms {
     Tool ibtool =
         getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "ibtool", version);
 
+    Tool libtool =
+        getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "libtool", version);
+
     Tool momc =
         getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "momc", version);
 
@@ -484,6 +487,7 @@ public class AppleCxxPlatforms {
         .setMinVersion(minVersion)
         .setBuildVersion(buildVersion)
         .setActool(actool)
+        .setLibtool(libtool)
         .setIbtool(ibtool)
         .setMomc(momc)
         .setCopySceneKitAssets(
