@@ -777,8 +777,9 @@ public class TargetsCommand extends AbstractCommand {
       TargetResult targetResult = entry.getValue();
       targetResult.getRuleKey().ifPresent(builder::add);
       if (isShowCellPath) {
-        // TODO(T47190884): Use a NewCellPathResolver and look this up based on name.
-        builder.add(entry.getKey().getCellPath().toString());
+        Path cellPath =
+            params.getCell().getNewCellPathResolver().getCellPath(entry.getKey().getCell());
+        builder.add(cellPath.toString());
       }
       targetResult.getOutputPath().ifPresent(builder::add);
       targetResult.getGeneratedSourcePath().ifPresent(builder::add);
@@ -962,8 +963,12 @@ public class TargetsCommand extends AbstractCommand {
         targetNodeAttributes.put(
             "fully_qualified_name", targetNode.getBuildTarget().getFullyQualifiedName());
         if (isShowCellPath) {
-          // TODO(T47190884): Use a NewCellPathResolver and look this up based on name.
-          targetNodeAttributes.put("buck.cell_path", targetNode.getBuildTarget().getCellPath());
+          Path cellPath =
+              params
+                  .getCell()
+                  .getNewCellPathResolver()
+                  .getCellPath(targetNode.getBuildTarget().getCell());
+          targetNodeAttributes.put("buck.cell_path", cellPath);
         }
 
         if (jsonAttributeFormat != JsonAttributeFormat.LEGACY) {
