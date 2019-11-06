@@ -45,6 +45,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.FrameworkDependencies;
+import com.facebook.buck.cxx.LinkableListFilterFactory;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -54,7 +55,6 @@ import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.versions.Version;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -62,6 +62,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import java.util.function.Predicate;
 import org.immutables.value.Value;
 
 public class AppleBundleDescription
@@ -164,6 +165,13 @@ public class AppleBundleDescription
     }
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
 
+    Predicate<BuildTarget> resourceFilter =
+        LinkableListFilterFactory.resourcePredicateFrom(
+            cxxBuckConfig,
+            args.getResourceGroup(),
+            args.getResourceGroupMap(),
+            context.getTargetGraph());
+
     return AppleDescriptions.createAppleBundle(
         xcodeDescriptions,
         cxxPlatformsProvider,
@@ -200,7 +208,7 @@ public class AppleBundleDescription
         swiftBuckConfig.getCopyStdlibToFrameworks(),
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
-        Predicates.alwaysTrue());
+        resourceFilter);
   }
 
   /**

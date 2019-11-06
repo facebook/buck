@@ -1,0 +1,129 @@
+# BUNDLES
+
+apple_bundle(
+    name = "App",
+    binary = ":AppBinary",
+    extension = "app",
+    info_plist = "Dummy-Info.plist",
+    resource_group_map = [
+        (
+            "foundation",
+            [(":FrameworkLib", "tree")],
+        ),
+        (
+            "MATCH_ALL",
+            [(":UtilityLib", "tree")],
+        ),
+    ],
+    deps = [
+        ":AppFramework",
+    ],
+)
+
+apple_bundle(
+    name = "AppFramework",
+    binary = ":FrameworkDylib#shared",
+    extension = "framework",
+    info_plist = "Dummy-Info.plist",
+    resource_group = "foundation",
+    resource_group_map = [
+        (
+            "foundation",
+            [(":FrameworkLib", "tree")],
+        ),
+        (
+            "MATCH_ALL",
+            [(":UtilityLib", "tree")],
+        ),
+    ],
+)
+
+# BINARIES
+
+apple_binary(
+    name = "AppBinary",
+    srcs = ["main.c"],
+    link_group_map = [
+        (
+            "foundation",
+            [(":FrameworkLib", "tree")],
+        ),
+        (
+            "MATCH_ALL",
+            [(":UtilityLib", "tree")],
+        ),
+    ],
+    deps = [
+        ":Root",
+    ],
+)
+
+# LIBRARIES
+
+apple_library(
+    name = "Root",
+    deps = [
+        ":AppLib",
+        ":FrameworkLib",
+        ":UtilityLib",
+    ],
+)
+
+apple_library(
+    name = "FrameworkDylib",
+    link_group = "foundation",
+    link_group_map = [
+        (
+            "foundation",
+            [(":FrameworkLib", "tree")],
+        ),
+        (
+            "MATCH_ALL",
+            [(":UtilityLib", "tree")],
+        ),
+    ],
+    link_style = "static",
+    linker_flags = ["-Wl,-all_load"],
+    preferred_linkage = "shared",
+    deps = [
+        ":Root",
+    ],
+)
+
+apple_library(
+    name = "FrameworkLib",
+    srcs = ["lib.c"],
+    headers = ["lib.h"],
+    deps = [":FrameworkResources"],
+)
+
+apple_library(
+    name = "AppLib",
+    srcs = ["applib.c"],
+    headers = ["applib.h"],
+    deps = [":AppResources"],
+)
+
+apple_library(
+    name = "UtilityLib",
+    srcs = ["utility.c"],
+    headers = ["utility.h"],
+    deps = [":UtilityResources"],
+)
+
+# RESOURCES
+
+apple_resource(
+    name = "FrameworkResources",
+    files = ["resource_framework.txt"],
+)
+
+apple_resource(
+    name = "AppResources",
+    files = ["resource_app.txt"],
+)
+
+apple_resource(
+    name = "UtilityResources",
+    files = ["resource_utility.txt"],
+)

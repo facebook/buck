@@ -28,12 +28,14 @@ import com.facebook.buck.cxx.toolchain.nativelink.LinkableListFilter;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.shell.GenruleDescriptionArg;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 
@@ -129,6 +131,35 @@ public class LinkableListFilterFactory {
         };
 
     return Optional.of(filter);
+  }
+
+  /** Creates a predicate to filter resources that will be included in an apple_bundle. */
+  @Nonnull
+  public static Predicate<BuildTarget> resourcePredicateFrom(
+      CxxBuckConfig cxxBuckConfig,
+      Optional<String> resourceGroup,
+      Optional<ImmutableList<CxxLinkGroupMapping>> mapping,
+      TargetGraph graph) {
+    if (!cxxBuckConfig.getLinkGroupsEnabled() || !mapping.isPresent()) {
+      return Predicates.alwaysTrue();
+    }
+
+    Map<BuildTarget, String> targetToGroupMap =
+        makeBuildTargetToLinkGroupMap(mapping.get(), graph, true);
+
+    return (BuildTarget target) -> {
+      if (!targetToGroupMap.containsKey(target)) {
+        // Ungrouped targets belong to the unlabelled bundle (by def)
+        return !resourceGroup.isPresent();
+      }
+
+      String targetGroup = targetToGroupMap.get(target);
+      if (targetGroup.equals(MATCH_ALL_LINK_GROUP_NAME)) {
+        return true;
+      }
+
+      return (resourceGroup.map(group -> group.equals(targetGroup)).orElse(false)).booleanValue();
+    };
   }
 
   /**

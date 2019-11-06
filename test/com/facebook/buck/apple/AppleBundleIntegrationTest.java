@@ -1194,6 +1194,58 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void resourceGroupDoesNotDuplicateResourcesInAppAndFramework() throws Exception {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_embedded_framework_and_resource_groups", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "codesign", "/usr/bin/true");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:App#no-debug,macosx-x86_64");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(
+                        AppleDebugFormat.NONE.getFlavor(),
+                        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
+
+    String appResourceName = "resource_app.txt";
+    String utilityResourceName = "resource_utility.txt";
+    String frameworkResourceName = "resource_framework.txt";
+
+    Path appBundleResourcesPath = appPath.resolve("Contents/Resources");
+    assertTrue(
+        "App resource should be present in the app bundle.",
+        Files.exists(appBundleResourcesPath.resolve(appResourceName)));
+    assertTrue(
+        "Utility resource should be present in the app bundle.",
+        Files.exists(appBundleResourcesPath.resolve(utilityResourceName)));
+    assertFalse(
+        "Framework resource should be absent in the app bundle.",
+        Files.exists(appBundleResourcesPath.resolve(frameworkResourceName)));
+
+    Path frameworkResourcesPath =
+        appPath.resolve("Contents/Frameworks/AppFramework.framework/Resources");
+    assertFalse(
+        "App resource should be absent the framework bundle.",
+        Files.exists(frameworkResourcesPath.resolve(appResourceName)));
+    assertTrue(
+        "Utility resource should be present in the framework bundle.",
+        Files.exists(frameworkResourcesPath.resolve(utilityResourceName)));
+    assertTrue(
+        "Framework resource should be present in the framework bundle.",
+        Files.exists(frameworkResourcesPath.resolve(frameworkResourceName)));
+  }
+
+  @Test
   public void testTargetOutputForAppleBundle() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
