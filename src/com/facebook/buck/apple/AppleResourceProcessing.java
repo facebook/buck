@@ -16,20 +16,31 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.CodeSignIdentity;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
 
 /** Contains shared logic for adding resource processing steps to apple build rules */
 public class AppleResourceProcessing {
@@ -110,6 +121,128 @@ public class AppleResourceProcessing {
     }
   }
 
+  /** Adds Variant file processing steps to a build rule */
+  public static void addVariantFileProcessingSteps(
+      AppleBundleResources resources,
+      BuildContext context,
+      Path dirRoot,
+      AppleBundleDestinations destinations,
+      ImmutableList.Builder<Step> stepsBuilder,
+      ProjectFilesystem projectFilesystem,
+      ImmutableList<String> ibtoolFlags,
+      boolean isLegacyWatchApp,
+      ApplePlatform platform,
+      Logger LOG,
+      Tool ibtool,
+      boolean ibtoolModuleFlag,
+      BuildTarget buildTarget,
+      Optional<String> binaryName) {
+    for (SourcePath path : resources.getResourceVariantFiles()) {
+      Path variantFilePath = context.getSourcePathResolver().getAbsolutePath(path);
+
+      Path variantDirectory = variantFilePath.getParent();
+      if (variantDirectory == null || !variantDirectory.toString().endsWith(".lproj")) {
+        throw new HumanReadableException(
+            "Variant files have to be in a directory with name ending in '.lproj', "
+                + "but '%s' is not.",
+            variantFilePath);
+      }
+
+      Path bundleDestinationPath = dirRoot.resolve(destinations.getResourcesPath());
+      Path bundleVariantDestinationPath =
+          bundleDestinationPath.resolve(variantDirectory.getFileName());
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  projectFilesystem,
+                  bundleVariantDestinationPath)));
+
+      Path destinationPath = bundleVariantDestinationPath.resolve(variantFilePath.getFileName());
+      AppleResourceProcessing.addResourceProcessingSteps(
+          context.getSourcePathResolver(),
+          variantFilePath,
+          destinationPath,
+          stepsBuilder,
+          ibtoolFlags,
+          projectFilesystem,
+          isLegacyWatchApp,
+          platform,
+          LOG,
+          ibtool,
+          ibtoolModuleFlag,
+          buildTarget,
+          binaryName);
+    }
+  }
+
+  /** Adds framework processing steps to a build rule */
+  public static void addFrameworksProcessingSteps(
+      Set<SourcePath> frameworks,
+      Path dirRoot,
+      AppleBundleDestinations destinations,
+      ImmutableList.Builder<Step> stepsBuilder,
+      BuildContext context,
+      ProjectFilesystem projectFilesystem,
+      ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder) {
+    if (!frameworks.isEmpty()) {
+      Path frameworksDestinationPath = dirRoot.resolve(destinations.getFrameworksPath());
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), projectFilesystem, frameworksDestinationPath)));
+      for (SourcePath framework : frameworks) {
+        Path srcPath = context.getSourcePathResolver().getAbsolutePath(framework);
+        stepsBuilder.add(
+            CopyStep.forDirectory(
+                projectFilesystem,
+                srcPath,
+                frameworksDestinationPath,
+                CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+        codeSignOnCopyPathsBuilder.add(frameworksDestinationPath.resolve(srcPath.getFileName()));
+      }
+    }
+  }
+
+  /** Adds the swift stdlib to the bundle if needed */
+  public static void addSwiftStdlibStepIfNeeded(
+      SourcePathResolver resolver,
+      Path destinationPath,
+      Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier,
+      ImmutableList.Builder<Step> stepsBuilder,
+      boolean isForPackaging,
+      String bundleExtension,
+      boolean copySwiftStdlibToFrameworks,
+      Optional<Tool> swiftStdlibTool,
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
+      Path sdkPath,
+      Tool lipo,
+      Path bundleBinaryPath,
+      AppleBundleDestinations destinations) {
+    // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
+    // are copied over).
+    boolean shouldCopySwiftStdlib =
+        !bundleExtension.equals(AppleBundleExtension.APPEX.toFileExtension())
+            && (!bundleExtension.equals(AppleBundleExtension.FRAMEWORK.toFileExtension())
+                || copySwiftStdlibToFrameworks);
+
+    if (swiftStdlibTool.isPresent() && shouldCopySwiftStdlib) {
+      String tempDirPattern = isForPackaging ? "__swift_packaging_temp__%s" : "__swift_temp__%s";
+      stepsBuilder.add(
+          new SwiftStdlibStep(
+              projectFilesystem.getRootPath(),
+              BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, tempDirPattern),
+              sdkPath,
+              destinationPath,
+              swiftStdlibTool.get().getCommandPrefix(resolver),
+              lipo.getCommandPrefix(resolver),
+              bundleBinaryPath,
+              ImmutableSet.of(destinations.getFrameworksPath(), destinations.getPlugInsPath()),
+              codeSignIdentitySupplier));
+    }
+  }
+
   /** Adds Resources processing steps to a build rule */
   public static void addResourceProcessingSteps(
       SourcePathResolver resolver,
@@ -179,6 +312,109 @@ public class AppleResourceProcessing {
       default:
         stepsBuilder.add(CopyStep.forFile(projectFilesystem, sourcePath, destinationPath));
         break;
+    }
+  }
+
+  /** Adds required copy resources steps */
+  public static void addStepsToCopyResources(
+      BuildContext context,
+      ImmutableList.Builder<Step> stepsBuilder,
+      AppleBundleResources resources,
+      boolean verifyResources,
+      Path dirRoot,
+      AppleBundleDestinations destinations,
+      ProjectFilesystem projectFilesystem,
+      ImmutableList<String> ibtoolFlags,
+      boolean isLegacyWatchApp,
+      ApplePlatform platform,
+      Logger LOG,
+      Tool ibtool,
+      boolean ibtoolModuleFlag,
+      BuildTarget buildTarget,
+      Optional<String> binaryName) {
+    boolean hasNoResourceToCopy =
+        resources.getResourceDirs().isEmpty()
+            && resources.getDirsContainingResourceDirs().isEmpty()
+            && resources.getResourceFiles().isEmpty();
+    if (hasNoResourceToCopy) {
+      return;
+    }
+    if (verifyResources) {
+      verifyResourceConflicts(resources, context.getSourcePathResolver());
+    }
+
+    for (AppleBundleDestination bundleDestination : resources.getAllDestinations()) {
+      Path bundleDestinationPath = dirRoot.resolve(bundleDestination.getPath(destinations));
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), projectFilesystem, bundleDestinationPath)));
+    }
+
+    for (SourcePathWithAppleBundleDestination dirWithDestination : resources.getResourceDirs()) {
+      Path bundleDestinationPath =
+          dirRoot.resolve(dirWithDestination.getDestination().getPath(destinations));
+      stepsBuilder.add(
+          CopyStep.forDirectory(
+              projectFilesystem,
+              context.getSourcePathResolver().getAbsolutePath(dirWithDestination.getSourcePath()),
+              bundleDestinationPath,
+              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+    }
+
+    for (SourcePathWithAppleBundleDestination dirWithDestination :
+        resources.getDirsContainingResourceDirs()) {
+      Path bundleDestinationPath =
+          dirRoot.resolve(dirWithDestination.getDestination().getPath(destinations));
+      stepsBuilder.add(
+          CopyStep.forDirectory(
+              projectFilesystem,
+              context.getSourcePathResolver().getAbsolutePath(dirWithDestination.getSourcePath()),
+              bundleDestinationPath,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
+    }
+
+    for (SourcePathWithAppleBundleDestination fileWithDestination : resources.getResourceFiles()) {
+      Path resolvedFilePath =
+          context.getSourcePathResolver().getAbsolutePath(fileWithDestination.getSourcePath());
+      Path bundleDestinationPath =
+          dirRoot.resolve(fileWithDestination.getDestination().getPath(destinations));
+      Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
+      AppleResourceProcessing.addResourceProcessingSteps(
+          context.getSourcePathResolver(),
+          resolvedFilePath,
+          destinationPath,
+          stepsBuilder,
+          ibtoolFlags,
+          projectFilesystem,
+          isLegacyWatchApp,
+          platform,
+          LOG,
+          ibtool,
+          ibtoolModuleFlag,
+          buildTarget,
+          binaryName);
+    }
+  }
+
+  private static void verifyResourceConflicts(
+      AppleBundleResources resources, SourcePathResolver resolver) {
+    // Ensure there are no resources that will overwrite each other
+    // TODO: handle ResourceDirsContainingResourceDirs
+    for (AppleBundleDestination destination : resources.getAllDestinations()) {
+      Set<Path> resourcePaths = new HashSet<>();
+      for (SourcePath path :
+          Iterables.concat(
+              resources.getResourceDirsForDestination(destination),
+              resources.getResourceFilesForDestination(destination))) {
+        Path pathInBundle = resolver.getRelativePath(path).getFileName();
+        if (resourcePaths.contains(pathInBundle)) {
+          throw new HumanReadableException(
+              "Bundle contains multiple resources with path %s", pathInBundle);
+        } else {
+          resourcePaths.add(pathInBundle);
+        }
+      }
     }
   }
 }
