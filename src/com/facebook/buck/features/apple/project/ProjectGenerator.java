@@ -161,6 +161,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -860,7 +861,8 @@ public class ProjectGenerator {
                 targetGraph,
                 Optional.of(dependenciesCache),
                 ImmutableList.of(targetNode),
-                mode),
+                mode,
+                Predicates.alwaysTrue()),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
             AppleBuildRules.collectRecursiveWrapperResources(
                 xcodeDescriptions,
@@ -2792,7 +2794,8 @@ public class ProjectGenerator {
             Optional.of(dependenciesCache),
             AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode),
-            RecursiveDependenciesMode.COPYING));
+            RecursiveDependenciesMode.COPYING,
+            Predicates.alwaysTrue()));
   }
 
   private void addSceneKitAssetsIntoTarget(
@@ -2804,7 +2807,8 @@ public class ProjectGenerator {
             Optional.of(dependenciesCache),
             AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode),
-            RecursiveDependenciesMode.COPYING);
+            RecursiveDependenciesMode.COPYING,
+            Predicates.alwaysTrue());
 
     for (AppleWrapperResourceArg sceneKitAssets : allSceneKitAssets) {
       PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");

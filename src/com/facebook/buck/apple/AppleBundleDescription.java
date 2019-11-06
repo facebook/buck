@@ -54,6 +54,7 @@ import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.versions.Version;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -198,7 +199,8 @@ public class AppleBundleDescription
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
         cxxBuckConfig.shouldCacheStrip(),
-        appleConfig.useEntitlementsWhenAdhocCodeSigning());
+        appleConfig.useEntitlementsWhenAdhocCodeSigning(),
+        Predicates.alwaysTrue());
   }
 
   /**

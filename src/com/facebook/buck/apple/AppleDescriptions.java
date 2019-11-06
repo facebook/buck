@@ -374,7 +374,8 @@ public class AppleDescriptions {
       String targetSDKVersion,
       Tool actool,
       AppleAssetCatalog.ValidationType assetCatalogValidation,
-      AppleAssetCatalogsCompilationOptions appleAssetCatalogsCompilationOptions) {
+      AppleAssetCatalogsCompilationOptions appleAssetCatalogsCompilationOptions,
+      Predicate<BuildTarget> filter) {
     TargetNode<?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleAssetCatalogDescriptionArg> assetCatalogArgs =
@@ -383,7 +384,8 @@ public class AppleDescriptions {
             targetGraph,
             Optional.empty(),
             ImmutableList.of(targetNode),
-            RecursiveDependenciesMode.COPYING);
+            RecursiveDependenciesMode.COPYING,
+            filter);
 
     ImmutableSortedSet.Builder<SourcePath> assetCatalogDirsBuilder =
         ImmutableSortedSet.naturalOrder();
@@ -456,7 +458,8 @@ public class AppleDescriptions {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String moduleName,
-      AppleCxxPlatform appleCxxPlatform) {
+      AppleCxxPlatform appleCxxPlatform,
+      Predicate<BuildTarget> filter) {
     TargetNode<?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleWrapperResourceArg> coreDataModelArgs =
@@ -466,7 +469,8 @@ public class AppleDescriptions {
             Optional.empty(),
             AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode),
-            RecursiveDependenciesMode.COPYING);
+            RecursiveDependenciesMode.COPYING,
+            filter);
 
     BuildTarget coreDataModelBuildTarget = buildTarget.withAppendedFlavors(CoreDataModel.FLAVOR);
 
@@ -492,7 +496,8 @@ public class AppleDescriptions {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      AppleCxxPlatform appleCxxPlatform) {
+      AppleCxxPlatform appleCxxPlatform,
+      Predicate<BuildTarget> filter) {
     TargetNode<?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleWrapperResourceArg> sceneKitAssetsArgs =
@@ -502,7 +507,8 @@ public class AppleDescriptions {
             Optional.empty(),
             AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode),
-            RecursiveDependenciesMode.COPYING);
+            RecursiveDependenciesMode.COPYING,
+            filter);
 
     BuildTarget sceneKitAssetsBuildTarget = buildTarget.withAppendedFlavors(SceneKitAssets.FLAVOR);
 
@@ -632,7 +638,8 @@ public class AppleDescriptions {
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
       boolean cacheStrips,
-      boolean useEntitlementsWhenAdhocCodeSigning) {
+      boolean useEntitlementsWhenAdhocCodeSigning,
+      Predicate<BuildTarget> filter) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -664,7 +671,8 @@ public class AppleDescriptions {
             Optional.empty(),
             targetGraph.get(buildTarget),
             appleCxxPlatform,
-            RecursiveDependenciesMode.COPYING);
+            RecursiveDependenciesMode.COPYING,
+            filter);
 
     ImmutableSet.Builder<SourcePath> frameworksBuilder = ImmutableSet.builder();
     if (INCLUDE_FRAMEWORKS.getRequiredValue(buildTarget)) {
@@ -721,7 +729,8 @@ public class AppleDescriptions {
             appleCxxPlatform.getMinVersion(),
             appleCxxPlatform.getActool(),
             assetCatalogValidation,
-            appleAssetCatalogsCompilationOptions);
+            appleAssetCatalogsCompilationOptions,
+            filter);
     addToIndex(graphBuilder, assetCatalog);
 
     Optional<CoreDataModel> coreDataModel =
@@ -732,7 +741,8 @@ public class AppleDescriptions {
             projectFilesystem,
             params,
             AppleBundle.getBinaryName(buildTarget, productName),
-            appleCxxPlatform);
+            appleCxxPlatform,
+            filter);
     addToIndex(graphBuilder, coreDataModel);
 
     Optional<SceneKitAssets> sceneKitAssets =
@@ -742,7 +752,8 @@ public class AppleDescriptions {
             buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
             params,
-            appleCxxPlatform);
+            appleCxxPlatform,
+            filter);
     addToIndex(graphBuilder, sceneKitAssets);
 
     // TODO(beng): Sort through the changes needed to make project generation work with

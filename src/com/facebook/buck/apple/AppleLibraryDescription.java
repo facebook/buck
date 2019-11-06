@@ -92,6 +92,7 @@ import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -449,7 +450,8 @@ public class AppleLibraryDescription
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
         cxxBuckConfig.shouldCacheStrip(),
-        appleConfig.useEntitlementsWhenAdhocCodeSigning());
+        appleConfig.useEntitlementsWhenAdhocCodeSigning(),
+        Predicates.alwaysTrue());
   }
 
   /**

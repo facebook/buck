@@ -398,7 +398,8 @@ public final class AppleBuildRules {
           TargetGraph targetGraph,
           Optional<AppleDependenciesCache> cache,
           Iterable<TargetNode<T>> targetNodes,
-          RecursiveDependenciesMode mode) {
+          RecursiveDependenciesMode mode,
+          Predicate<BuildTarget> filter) {
     return RichStream.from(targetNodes)
         .flatMap(
             input ->
@@ -410,6 +411,7 @@ public final class AppleBuildRules {
                     input,
                     APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES)
                     .stream())
+        .filter(targetNode -> filter.test(targetNode.getBuildTarget()))
         .map(input -> (AppleAssetCatalogDescriptionArg) input.getConstructorArg())
         .toImmutableSet();
   }
@@ -445,7 +447,8 @@ public final class AppleBuildRules {
       Optional<AppleDependenciesCache> cache,
       ImmutableSet<Class<? extends BaseDescription<?>>> descriptionClasses,
       Collection<TargetNode<?>> targetNodes,
-      RecursiveDependenciesMode mode) {
+      RecursiveDependenciesMode mode,
+      Predicate<BuildTarget> filter) {
 
     return RichStream.from(targetNodes)
         .flatMap(
@@ -453,6 +456,7 @@ public final class AppleBuildRules {
                 getRecursiveTargetNodeDependenciesOfTypes(
                     xcodeDescriptions, targetGraph, cache, mode, targetNode, descriptionClasses)
                     .stream())
+        .filter(targetNode -> filter.test(targetNode.getBuildTarget()))
         .map(input -> (T) input.getConstructorArg())
         .toImmutableSet();
   }

@@ -20,6 +20,7 @@ import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -72,7 +73,8 @@ public class AppleResources {
       Optional<AppleDependenciesCache> cache,
       TargetNode<T> targetNode,
       AppleCxxPlatform appleCxxPlatform,
-      RecursiveDependenciesMode mode) {
+      RecursiveDependenciesMode mode,
+      Predicate<BuildTarget> filter) {
     AppleBundleResources.Builder builder = AppleBundleResources.builder();
 
     Iterable<TargetNode<?>> resourceNodes =
@@ -87,6 +89,10 @@ public class AppleResources {
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
     for (TargetNode<?> resourceNode : resourceNodes) {
+      if (!filter.test(resourceNode.getBuildTarget())) {
+        continue;
+      }
+
       @SuppressWarnings("unchecked")
       TargetNode<BuildRuleArg> node = (TargetNode<BuildRuleArg>) resourceNode;
 

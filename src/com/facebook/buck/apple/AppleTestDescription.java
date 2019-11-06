@@ -80,6 +80,7 @@ import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -345,7 +346,8 @@ public class AppleTestDescription
                         appleConfig.getCodesignTimeout(),
                         swiftBuckConfig.getCopyStdlibToFrameworks(),
                         cxxBuckConfig.shouldCacheStrip(),
-                        appleConfig.useEntitlementsWhenAdhocCodeSigning())));
+                        appleConfig.useEntitlementsWhenAdhocCodeSigning(),
+                        Predicates.alwaysTrue())));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, buildTarget.getTargetConfiguration(), graphBuilder);

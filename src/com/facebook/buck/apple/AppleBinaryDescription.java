@@ -69,6 +69,7 @@ import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -408,7 +409,8 @@ public class AppleBinaryDescription
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
         cxxBuckConfig.shouldCacheStrip(),
-        appleConfig.useEntitlementsWhenAdhocCodeSigning());
+        appleConfig.useEntitlementsWhenAdhocCodeSigning(),
+        Predicates.alwaysTrue());
   }
 
   private BuildRule createBinary(
