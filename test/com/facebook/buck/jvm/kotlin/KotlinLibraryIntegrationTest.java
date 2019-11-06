@@ -149,6 +149,14 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  public void shouldAnnotationProcessClassesUsingJavacWhenNoKotlinSources() {
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//com/example/ap/annotation-processing-tool-javac:java_sources_only");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
   public void shouldCompileLibraryWithDependencyOnAnother() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/child:child");
     buildResult.assertSuccess("Build should have succeeded.");

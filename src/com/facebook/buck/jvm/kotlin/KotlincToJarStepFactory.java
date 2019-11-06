@@ -171,13 +171,14 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         BuildTargetPaths.getGenPath(
             projectFilesystem, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
     boolean generatingCode = !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
+    boolean hasKotlinSources =
+        sourceFilePaths.stream().anyMatch(KOTLIN_PATH_MATCHER::matches)
+            || sourceFilePaths.stream().anyMatch(SRC_ZIP_MATCHER::matches);
 
     ImmutableSortedSet.Builder<Path> sourceBuilder =
         ImmutableSortedSet.<Path>naturalOrder().addAll(sourceFilePaths);
 
-    // Only invoke kotlinc if we have kotlin or src zip files.
-    if (sourceFilePaths.stream().anyMatch(KOTLIN_PATH_MATCHER::matches)
-        || sourceFilePaths.stream().anyMatch(SRC_ZIP_MATCHER::matches)) {
+    if (hasKotlinSources) {
       ImmutableSortedSet<Path> sourcePaths =
           ImmutableSortedSet.<Path>naturalOrder().add(genOutput).addAll(sourceFilePaths).build();
 
@@ -288,7 +289,11 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     switch (annotationProcessingTool) {
       case KAPT:
-        finalJavacOptions = javacOptions.withJavaAnnotationProcessorParams(JavacPluginParams.EMPTY);
+        // If kapt was never invoked then do annotation processing with javac.
+        finalJavacOptions =
+            hasKotlinSources
+                ? javacOptions.withJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
+                : javacOptions;
         break;
 
       case JAVAC:
