@@ -115,9 +115,7 @@ public class JsUtil {
                 worker.getMaxWorkers(),
                 worker.isPersistent()
                     ? Optional.of(
-                        WorkerProcessIdentity.of(
-                            buildTarget.getCellPath().toString() + buildTarget,
-                            worker.getInstanceKey()))
+                        WorkerProcessIdentity.of(buildTarget.toString(), worker.getInstanceKey()))
                     : Optional.empty()));
     return new WorkerShellStep(
         buildTarget,
