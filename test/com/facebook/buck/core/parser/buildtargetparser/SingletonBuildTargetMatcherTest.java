@@ -30,7 +30,10 @@ public class SingletonBuildTargetMatcherTest {
   @Test
   public void testApply() {
     SingletonBuildTargetMatcher pattern =
-        SingletonBuildTargetMatcher.of(ROOT, "//src/com/facebook/buck:buck");
+        SingletonBuildTargetMatcher.of(
+            BuildTargetFactory.newInstance("//src/com/facebook/buck:buck")
+                .getUnconfiguredBuildTargetView()
+                .getData());
 
     assertTrue(
         pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "buck")));

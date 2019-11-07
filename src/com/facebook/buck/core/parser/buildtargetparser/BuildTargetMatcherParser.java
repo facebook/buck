@@ -142,8 +142,7 @@ public abstract class BuildTargetMatcherParser<T> {
 
     @Override
     public BuildTargetMatcher createForSingleton(UnconfiguredBuildTargetView target) {
-      return SingletonBuildTargetMatcher.of(
-          target.getUnflavoredBuildTargetView().getCellPath(), target.getFullyQualifiedName());
+      return SingletonBuildTargetMatcher.of(target.getData());
     }
   }
 }
