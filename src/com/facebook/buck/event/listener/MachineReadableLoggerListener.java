@@ -241,7 +241,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Subscribe
-  public void commandFinished(CommandEvent.Finished event) {
+  public synchronized void commandFinished(CommandEvent.Finished event) {
     exitCode = Optional.of(event.getExitCode());
   }
 
@@ -251,12 +251,12 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Subscribe
-  public synchronized void watchmanFileCreation(WatchmanStatusEvent.FileCreation event) {
+  public void watchmanFileCreation(WatchmanStatusEvent.FileCreation event) {
     writeToLog("FileCreate", event);
   }
 
   @Subscribe
-  public synchronized void watchmanFileDeletion(WatchmanStatusEvent.FileDeletion event) {
+  public void watchmanFileDeletion(WatchmanStatusEvent.FileDeletion event) {
     writeToLog("FileDelete", event);
   }
 
@@ -266,12 +266,12 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Subscribe
-  public synchronized void symlinkInvalidation(ParsingEvent.SymlinkInvalidation event) {
+  public void symlinkInvalidation(ParsingEvent.SymlinkInvalidation event) {
     writeToLog("SymlinkInvalidation", event);
   }
 
   @Subscribe
-  public synchronized void environmentalChange(ParsingEvent.EnvVariableChange event) {
+  public void environmentalChange(ParsingEvent.EnvVariableChange event) {
     writeToLog("EnvChange", event);
   }
 
@@ -301,7 +301,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     executor.submit(() -> writeToLogImpl(prefix, obj));
   }
 
-  private void writeToLogImpl(String prefix, Object obj) {
+  private synchronized void writeToLogImpl(String prefix, Object obj) {
     try {
       outputStream.write((prefix + " ").getBytes(Charsets.UTF_8));
       objectWriter.without(Feature.AUTO_CLOSE_TARGET).writeValue(outputStream, obj);
