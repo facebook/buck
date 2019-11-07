@@ -31,6 +31,8 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
@@ -56,6 +58,7 @@ public class AuditClasspathCommandTest {
   private TestConsole console;
   private AuditClasspathCommand auditClasspathCommand;
   private CommandRunnerParams params;
+  private ProjectFilesystem projectFilesystem;
 
   @Before
   public void setUp() {
@@ -66,6 +69,7 @@ public class AuditClasspathCommandTest {
             .setConsole(console)
             .setToolchainProvider(AndroidBinaryBuilder.createToolchainProviderForAndroidBinary())
             .build();
+    projectFilesystem = new FakeProjectFilesystem();
   }
 
   @Test
@@ -131,7 +135,7 @@ public class AuditClasspathCommandTest {
         params,
         new ImmutableTargetGraphCreationResult(targetGraph, ImmutableSet.of(testAndroidTarget)));
 
-    Path root = javaLibraryTarget.getUnflavoredBuildTarget().getCellPath();
+    Path root = projectFilesystem.getRootPath();
     SortedSet<String> expectedPaths =
         Sets.newTreeSet(
             Arrays.asList(
@@ -224,7 +228,7 @@ public class AuditClasspathCommandTest {
             TargetGraphFactory.newInstance(ImmutableSet.of(androidNode, javaNode)),
             ImmutableSet.of(androidTarget, javaTarget)));
 
-    Path root = javaTarget.getCellPath();
+    Path root = projectFilesystem.getRootPath();
     ObjectMapper objectMapper = ObjectMappers.legacyCreate();
     String expected =
         String.format(
@@ -284,7 +288,7 @@ public class AuditClasspathCommandTest {
         new ImmutableTargetGraphCreationResult(targetGraph, targets));
 
     // Verify output.
-    Path root = javaLibrary.getBuildTarget().getUnflavoredBuildTarget().getCellPath();
+    Path root = projectFilesystem.getRootPath();
     ImmutableSortedSet<String> expectedPaths =
         ImmutableSortedSet.of(
             root.resolve(
@@ -342,7 +346,7 @@ public class AuditClasspathCommandTest {
         new ImmutableTargetGraphCreationResult(targetGraph, targets));
 
     // Verify output.
-    Path root = javaLibrary.getBuildTarget().getCellPath();
+    Path root = projectFilesystem.getRootPath();
     ObjectMapper objectMapper = ObjectMappers.legacyCreate();
     String expected =
         String.format(
