@@ -132,11 +132,13 @@ public class TargetNodeTest {
   public void targetsWithTheSameRelativePathButNotTheSameCellMightNotBeAbleToSeeEachOther() {
 
     ProjectFilesystem rootOne = FakeProjectFilesystem.createJavaOnlyFilesystem("/one");
-    BuildTarget buildTargetOne = BuildTargetFactory.newInstance(rootOne.getRootPath(), "//foo:bar");
+    BuildTarget buildTargetOne =
+        BuildTargetFactory.newInstance(rootOne.getRootPath(), "aaa//foo:bar");
     TargetNode<ExampleDescriptionArg> targetNodeOne = createTargetNode(buildTargetOne);
 
     ProjectFilesystem rootTwo = FakeProjectFilesystem.createJavaOnlyFilesystem("/two");
-    BuildTarget buildTargetTwo = BuildTargetFactory.newInstance(rootTwo.getRootPath(), "//foo:bar");
+    BuildTarget buildTargetTwo =
+        BuildTargetFactory.newInstance(rootTwo.getRootPath(), "bbb//foo:bar");
     TargetNode<ExampleDescriptionArg> targetNodeTwo = createTargetNode(buildTargetTwo);
 
     boolean isVisible = targetNodeOne.isVisibleTo(targetNodeTwo);
