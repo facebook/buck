@@ -17,13 +17,9 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import java.util.function.Consumer;
 
-/**
- * An {@link Arg} implementation that delegates to another arg. Could be useful for overriding one
- * of the functions of the underlying Arg.
- */
 public class ProxyArg implements Arg {
   @AddToRuleKey protected final Arg arg;
 
@@ -32,7 +28,8 @@ public class ProxyArg implements Arg {
   }
 
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     arg.appendToCommandLine(consumer, pathResolver);
   }
 

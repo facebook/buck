@@ -40,7 +40,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.TestExecutionContext;
@@ -915,7 +915,7 @@ public class MergeAndroidResourcesStepTest {
   }
 
   private void checkDuplicatesDetected(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       FakeProjectFilesystem filesystem,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
       EnumSet<RType> rtypes,

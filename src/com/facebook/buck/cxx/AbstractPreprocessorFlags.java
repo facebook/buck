@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PathShortener;
@@ -87,7 +87,7 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
   }
 
   public CxxToolFlags getIncludePathFlags(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor) {
@@ -101,7 +101,7 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
 
   public CxxToolFlags getSanitizedIncludePathFlags(
       DebugPathSanitizer sanitizer,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor) {
@@ -116,7 +116,9 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
   }
 
   public CxxToolFlags getNonIncludePathFlags(
-      SourcePathResolver resolver, Optional<PrecompiledHeaderData> pch, Preprocessor preprocessor) {
+      SourcePathResolverAdapter resolver,
+      Optional<PrecompiledHeaderData> pch,
+      Preprocessor preprocessor) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
     ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
     if (pch.isPresent()) {
@@ -129,7 +131,7 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
   }
 
   public CxxToolFlags toToolFlags(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor,

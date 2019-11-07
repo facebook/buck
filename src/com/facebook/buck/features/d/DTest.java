@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -90,7 +90,7 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return contacts;
   }
 
-  private ImmutableList<String> getExecutableCommand(SourcePathResolver pathResolver) {
+  private ImmutableList<String> getExecutableCommand(SourcePathResolverAdapter pathResolver) {
     return ImmutableList.of(pathResolver.getAbsolutePath(getSourcePathToOutput()).toString());
   }
 
@@ -115,14 +115,14 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         getProjectFilesystem(), getBuildTarget(), "__test_%s_output__");
   }
 
-  private ImmutableList<String> getShellCommand(SourcePathResolver pathResolver) {
+  private ImmutableList<String> getShellCommand(SourcePathResolverAdapter pathResolver) {
     return getExecutableCommand(pathResolver);
   }
 
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
       ResultType resultType = ResultType.FAILURE;

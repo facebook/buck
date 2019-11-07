@@ -30,7 +30,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -67,7 +67,8 @@ public class MiniAaptTest {
           .build();
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final SourcePathResolver resolver = new TestActionGraphBuilder().getSourcePathResolver();
+  private final SourcePathResolverAdapter resolver =
+      new TestActionGraphBuilder().getSourcePathResolver();
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 

@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 public class ScalacStep extends ShellStep {
   private final Tool scalac;
   private final ImmutableList<String> extraArguments;
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private final Path outputDirectory;
   private final ImmutableSortedSet<Path> sourceFilePaths;
   private final ImmutableSortedSet<Path> classpathEntries;
@@ -41,7 +41,7 @@ public class ScalacStep extends ShellStep {
   ScalacStep(
       Tool scalac,
       ImmutableList<String> extraArguments,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Path outputDirectory,
       ImmutableSortedSet<Path> sourceFilePaths,
       ImmutableSortedSet<Path> classpathEntries,

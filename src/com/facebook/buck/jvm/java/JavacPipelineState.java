@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -82,7 +82,7 @@ public class JavacPipelineState implements RulePipelineState {
 
   /** Get the invocation instance. */
   public Javac.Invocation getJavacInvocation(
-      SourcePathResolver resolver, ProjectFilesystem filesystem, ExecutionContext context)
+      SourcePathResolverAdapter resolver, ProjectFilesystem filesystem, ExecutionContext context)
       throws IOException {
     if (invocation == null) {
       javacOptions.validateOptions(classpathChecker::validateClasspath);
@@ -193,7 +193,7 @@ public class JavacPipelineState implements RulePipelineState {
       ExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries,
       ProjectFilesystem filesystem,
-      SourcePathResolver resolver) {
+      SourcePathResolverAdapter resolver) {
     return getOptions(
         javacOptions,
         filesystem,
@@ -207,7 +207,7 @@ public class JavacPipelineState implements RulePipelineState {
   public static ImmutableList<String> getOptions(
       JavacOptions javacOptions,
       ProjectFilesystem filesystem,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       Path outputDirectory,
       Path generatedCodeDirectory,
       ExecutionContext context,

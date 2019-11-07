@@ -24,7 +24,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -47,7 +47,7 @@ public class BuildReport {
   private static final Logger LOG = Logger.get(BuildReport.class);
 
   private final BuildExecutionResult buildExecutionResult;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final Cell rootCell;
 
   /**
@@ -55,7 +55,9 @@ public class BuildReport {
    * @param pathResolver source path resolver which can be used for the result.
    */
   public BuildReport(
-      BuildExecutionResult buildExecutionResult, SourcePathResolver pathResolver, Cell rootCell) {
+      BuildExecutionResult buildExecutionResult,
+      SourcePathResolverAdapter pathResolver,
+      Cell rootCell) {
     this.buildExecutionResult = buildExecutionResult;
     this.pathResolver = pathResolver;
     this.rootCell = rootCell;

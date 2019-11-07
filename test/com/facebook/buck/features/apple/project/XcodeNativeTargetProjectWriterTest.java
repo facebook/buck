@@ -61,7 +61,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.js.JsBundleGenruleBuilder;
 import com.facebook.buck.features.js.JsTestScenario;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -83,7 +83,7 @@ import org.junit.Test;
 public class XcodeNativeTargetProjectWriterTest {
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
-  private SourcePathResolver sourcePathResolver;
+  private SourcePathResolverAdapter sourcePathResolverAdapter;
   private BuildRuleResolver buildRuleResolver;
 
   @Before
@@ -91,15 +91,16 @@ public class XcodeNativeTargetProjectWriterTest {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     generatedProject = new PBXProject("TestProject");
     buildRuleResolver = new TestActionGraphBuilder();
-    sourcePathResolver = buildRuleResolver.getSourcePathResolver();
+    sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
     pathRelativizer =
-        new PathRelativizer(Paths.get("_output"), sourcePathResolver::getRelativePath);
+        new PathRelativizer(Paths.get("_output"), sourcePathResolverAdapter::getRelativePath);
   }
 
   @Test
   public void shouldCreateTargetAndTargetGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(pathRelativizer, sourcePathResolver::getRelativePath);
+        new NewNativeTargetProjectMutator(
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath);
     mutator
         .setTargetName("TestTarget")
         .setProduct(ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
@@ -112,7 +113,8 @@ public class XcodeNativeTargetProjectWriterTest {
   @Test
   public void shouldCreateTargetAndCustomTargetGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(pathRelativizer, sourcePathResolver::getRelativePath);
+        new NewNativeTargetProjectMutator(
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath);
     mutator
         .setTargetName("TestTarget")
         .setTargetGroupPath(ImmutableList.of("Grandparent", "Parent"))
@@ -128,7 +130,8 @@ public class XcodeNativeTargetProjectWriterTest {
   @Test
   public void shouldCreateTargetAndNoGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(pathRelativizer, sourcePathResolver::getRelativePath);
+        new NewNativeTargetProjectMutator(
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath);
     NewNativeTargetProjectMutator.Result result =
         mutator
             .setTargetName("TestTarget")
@@ -504,16 +507,16 @@ public class XcodeNativeTargetProjectWriterTest {
   }
 
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults() {
-    return mutator(sourcePathResolver, pathRelativizer);
+    return mutator(sourcePathResolverAdapter, pathRelativizer);
   }
 
-  private NewNativeTargetProjectMutator mutator(SourcePathResolver pathResolver) {
+  private NewNativeTargetProjectMutator mutator(SourcePathResolverAdapter pathResolver) {
     return mutator(
         pathResolver, new PathRelativizer(Paths.get("_output"), pathResolver::getRelativePath));
   }
 
   private NewNativeTargetProjectMutator mutator(
-      SourcePathResolver pathResolver, PathRelativizer relativizer) {
+      SourcePathResolverAdapter pathResolver, PathRelativizer relativizer) {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(relativizer, pathResolver::getRelativePath);
     mutator

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.exopackage;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -38,13 +38,13 @@ import java.util.function.Supplier;
 public class NativeExoHelper {
   @VisibleForTesting public static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
   private final Supplier<List<String>> abiSupplier;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final ExopackageInfo.NativeLibsInfo nativeLibsInfo;
 
   NativeExoHelper(
       Supplier<List<String>> abiSupplier,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
       ExopackageInfo.NativeLibsInfo nativeLibsInfo) {
     this.abiSupplier = abiSupplier;

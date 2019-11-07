@@ -17,7 +17,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.args.Arg;
 import java.util.function.Consumer;
 
@@ -32,7 +32,8 @@ public class CxxThinLTOIndexArg implements Arg {
   }
 
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     consumer.accept(
         String.format(
             "-fthinlto-index=%s.thinlto.bc",

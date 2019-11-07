@@ -31,7 +31,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.log.Logger;
@@ -598,7 +598,7 @@ abstract class GoDescriptors {
    *     + '.a'.
    */
   private static Path getPathInSymlinkTree(
-      SourcePathResolver resolver, Path goPackageName, SourcePath ruleOutput) {
+      SourcePathResolverAdapter resolver, Path goPackageName, SourcePath ruleOutput) {
     Path output = resolver.getRelativePath(ruleOutput);
 
     String extension = Files.getFileExtension(output.toString());

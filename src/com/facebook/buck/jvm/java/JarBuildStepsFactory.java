@@ -33,7 +33,7 @@ import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
@@ -509,7 +509,7 @@ public class JarBuildStepsFactory
   }
 
   private ImmutableMap<Path, SourcePath> getDepOutputPathToAbiSourcePath(
-      SourcePathResolver pathResolver, SourcePathRuleFinder ruleFinder) {
+      SourcePathResolverAdapter pathResolver, SourcePathRuleFinder ruleFinder) {
     ImmutableMap.Builder<Path, SourcePath> pathToSourcePathMapBuilder = ImmutableMap.builder();
     for (JavaDependencyInfo depInfo : dependencyInfos.infos) {
       SourcePath sourcePath = depInfo.compileTimeJar;

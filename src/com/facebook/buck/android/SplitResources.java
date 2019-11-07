@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -142,9 +142,10 @@ public class SplitResources extends AbstractBuildRule {
     private Path absolutePathToAaptResources;
     private Path absolutePathToOriginalRDotTxt;
 
-    public SplitResourcesStep(SourcePathResolver sourcePathResolver) {
-      absolutePathToAaptResources = sourcePathResolver.getAbsolutePath(pathToAaptResources);
-      absolutePathToOriginalRDotTxt = sourcePathResolver.getAbsolutePath(pathToOriginalRDotTxt);
+    public SplitResourcesStep(SourcePathResolverAdapter sourcePathResolverAdapter) {
+      absolutePathToAaptResources = sourcePathResolverAdapter.getAbsolutePath(pathToAaptResources);
+      absolutePathToOriginalRDotTxt =
+          sourcePathResolverAdapter.getAbsolutePath(pathToOriginalRDotTxt);
     }
 
     @Override

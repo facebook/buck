@@ -22,7 +22,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.MoreIterables;
@@ -101,7 +101,8 @@ public class QueryTargetsAndOutputsMacroExpander
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
       Stream.Builder<String> items = Stream.builder();
       MoreIterables.forEachPair(
           targets,

@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
@@ -63,7 +63,7 @@ class CxxPreprocessAndCompileStep implements Step {
   private final Path input;
   private final CxxSource.Type inputType;
   private final ToolCommand command;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final HeaderPathNormalizer headerPathNormalizer;
   private final DebugPathSanitizer sanitizer;
   private final Compiler compiler;
@@ -91,7 +91,7 @@ class CxxPreprocessAndCompileStep implements Step {
       Path input,
       CxxSource.Type inputType,
       ToolCommand command,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HeaderPathNormalizer headerPathNormalizer,
       DebugPathSanitizer sanitizer,
       Path scratchDir,

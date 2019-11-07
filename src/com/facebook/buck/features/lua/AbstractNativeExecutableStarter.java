@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.WriteStringTemplateRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.cxx.AbstractCxxLibraryGroup;
 import com.facebook.buck.cxx.AbstractCxxSource.Type;
@@ -81,7 +81,7 @@ abstract class AbstractNativeExecutableStarter implements Starter {
 
   abstract ActionGraphBuilder getActionGraphBuilder();
 
-  abstract SourcePathResolver getPathResolver();
+  abstract SourcePathResolverAdapter getPathResolver();
 
   abstract CellPathResolver getCellPathResolver();
 

@@ -18,7 +18,7 @@ package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.ProcessExecutor;
@@ -34,12 +34,12 @@ public class OcamlDepToolStep extends ShellStep {
 
   private final ImmutableList<SourcePath> input;
   private final ImmutableList<String> flags;
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private Tool ocamlDepTool;
 
   public OcamlDepToolStep(
       Path workingDirectory,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Tool ocamlDepTool,
       List<SourcePath> input,
       List<String> flags) {

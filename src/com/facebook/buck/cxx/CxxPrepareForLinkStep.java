@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.args.Arg;
@@ -45,7 +45,7 @@ public class CxxPrepareForLinkStep {
       ImmutableList<Arg> args,
       Linker linker,
       Path currentCellPath,
-      SourcePathResolver resolver) {
+      SourcePathResolverAdapter resolver) {
 
     ImmutableList<Arg> allArgs =
         new ImmutableList.Builder<Arg>()

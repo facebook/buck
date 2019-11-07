@@ -23,7 +23,7 @@ import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.rules.modern.HasCustomInputsLogic;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.function.ThrowingConsumer;
@@ -71,12 +71,12 @@ abstract class AbstractVersionedTool implements Tool, HasCustomInputsLogic {
   protected abstract String getVersion();
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
     return ImmutableList.<String>builder().add(getPath().toString()).addAll(getExtraArgs()).build();
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
     return ImmutableMap.of();
   }
 

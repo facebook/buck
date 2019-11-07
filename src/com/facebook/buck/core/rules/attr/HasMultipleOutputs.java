@@ -18,8 +18,8 @@ package com.facebook.buck.core.rules.attr;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 /**
  * {@link com.facebook.buck.core.rules.BuildRule} instances that support multiple outputs via output
@@ -27,13 +27,12 @@ import javax.annotation.Nullable;
  */
 public interface HasMultipleOutputs extends BuildRule {
   /**
-   * Returns the {@link SourcePath} to the output associated with the given output label, or {@code
-   * null} if it does not exist. If an empty output label is given, returns the default {@link
-   * SourcePath} to the default output associated with the rule.
+   * Returns {@link SourcePath} instances to the output associated with the given output label, or
+   * an empty list if it does not exist. If an empty output label is given, returns the default
+   * outputs associated with the rule.
    */
-  @Nullable
-  SourcePath getSourcePathToOutput(Optional<String> outputLabel);
+  ImmutableSortedSet<SourcePath> getSourcePathToOutput(Optional<String> outputLabel);
 
   /** Returns a map of {@link SourcePath} instances keyed by associated output labels. */
-  ImmutableMap<String, SourcePath> getSourcePathsByOutputsLabels();
+  ImmutableMap<String, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels();
 }

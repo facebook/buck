@@ -41,7 +41,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
@@ -305,7 +305,7 @@ public class PythonBinaryDescriptionTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     Path executor = Paths.get("/root/executor");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonBuckConfig config =
@@ -331,7 +331,7 @@ public class PythonBinaryDescriptionTest {
   public void executableCommandWithNoPathToPexExecutor() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     PythonPackagedBinary binary =
         (PythonPackagedBinary)
             PythonBinaryBuilder.create(target).setMainModule("main").build(graphBuilder);

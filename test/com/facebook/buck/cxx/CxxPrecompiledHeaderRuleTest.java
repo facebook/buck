@@ -48,7 +48,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -138,7 +138,7 @@ public class CxxPrecompiledHeaderRuleTest {
       new DefaultTargetNodeToBuildRuleTransformer();
 
   public final ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(transformer);
-  public final SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+  public final SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
   public final BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 
   public final Compiler compiler =

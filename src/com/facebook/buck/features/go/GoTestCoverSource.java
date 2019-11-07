@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -85,7 +85,7 @@ public class GoTestCoverSource extends AbstractBuildRule {
     ImmutableMap.Builder<SourcePath, SourcePath> coveredSources = ImmutableMap.builder();
     ImmutableSet.Builder<SourcePath> testSources = ImmutableSet.builder();
 
-    SourcePathResolver pathResolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = ruleFinder.getSourcePathResolver();
     for (SourcePath path : srcs) {
       if (!isTestFile(pathResolver, buildTarget, path)) {
         Path srcPath = pathResolver.getAbsolutePath(path);
@@ -130,7 +130,7 @@ public class GoTestCoverSource extends AbstractBuildRule {
   }
 
   private boolean isTestFile(
-      SourcePathResolver resolver, BuildTarget buildTarget, SourcePath path) {
+      SourcePathResolverAdapter resolver, BuildTarget buildTarget, SourcePath path) {
     return resolver.getSourcePathName(buildTarget, path).endsWith("_test.go");
   }
 

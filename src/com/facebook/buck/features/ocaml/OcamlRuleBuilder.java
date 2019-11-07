@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
@@ -464,7 +464,7 @@ public class OcamlRuleBuilder {
   }
 
   private static ImmutableList<SourcePath> getCInput(
-      SourcePathResolver resolver, ImmutableList<SourcePath> input) {
+      SourcePathResolverAdapter resolver, ImmutableList<SourcePath> input) {
     return input.stream()
         .filter(OcamlUtil.sourcePathExt(resolver, OcamlCompilables.OCAML_C))
         .collect(ImmutableList.toImmutableList());

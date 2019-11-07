@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
@@ -148,7 +148,7 @@ public class CalculateSourceAbi
   }
 
   @Override
-  public Object initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
+  public Object initializeFromDisk(SourcePathResolverAdapter pathResolver) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     javaAbiInfo.load(pathResolver);
     return new Object();
@@ -181,12 +181,14 @@ public class CalculateSourceAbi
   }
 
   @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(
+      SourcePathResolverAdapter pathResolver) {
     return getBuildable().jarBuildStepsFactory.getCoveredByDepFilePredicate(ruleFinder);
   }
 
   @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(
+      SourcePathResolverAdapter pathResolver) {
     return getBuildable().jarBuildStepsFactory.getExistenceOfInterestPredicate();
   }
 

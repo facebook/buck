@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
@@ -98,7 +98,7 @@ abstract class AbstractCxxSourceRuleFactory {
   protected abstract ActionGraphBuilder getActionGraphBuilder();
 
   @Value.Parameter
-  protected abstract SourcePathResolver getPathResolver();
+  protected abstract SourcePathResolverAdapter getPathResolver();
 
   @Value.Parameter
   protected abstract CxxBuckConfig getCxxBuckConfig();
@@ -688,7 +688,7 @@ abstract class AbstractCxxSourceRuleFactory {
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver) {
+      SourcePathResolverAdapter pathResolver) {
 
     // This method should be called only if prefix/precompiled header param present.
     Preconditions.checkState(getPreInclude().isPresent());

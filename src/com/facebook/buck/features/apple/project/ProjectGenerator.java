@@ -102,7 +102,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.CycleException;
@@ -274,7 +274,7 @@ public class ProjectGenerator {
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
   private final Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode;
-  private final SourcePathResolver defaultPathResolver;
+  private final SourcePathResolverAdapter defaultPathResolver;
   private final BuckEventBus buckEventBus;
   private final RuleKeyConfiguration ruleKeyConfiguration;
 
@@ -351,24 +351,25 @@ public class ProjectGenerator {
     this.appleCxxFlavors = appleCxxFlavors;
     this.actionGraphBuilderForNode = actionGraphBuilderForNode;
     this.defaultPathResolver =
-        new AbstractSourcePathResolver() {
-          @Override
-          protected SourcePath resolveDefaultBuildTargetSourcePath(
-              DefaultBuildTargetSourcePath targetSourcePath) {
-            throw new UnsupportedOperationException();
-          }
+        new SourcePathResolverAdapter(
+            new AbstractSourcePathResolver() {
+              @Override
+              protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
+                  DefaultBuildTargetSourcePath targetSourcePath) {
+                throw new UnsupportedOperationException();
+              }
 
-          @Override
-          public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
-            throw new UnsupportedOperationException();
-          }
+              @Override
+              public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+                throw new UnsupportedOperationException();
+              }
 
-          @Override
-          protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
-              BuildTargetSourcePath sourcePath) {
-            throw new UnsupportedOperationException();
-          }
-        };
+              @Override
+              protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
+                  BuildTargetSourcePath sourcePath) {
+                throw new UnsupportedOperationException();
+              }
+            });
     this.buckEventBus = buckEventBus;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -1127,7 +1128,7 @@ public class ProjectGenerator {
   }
 
   private static String sourceNameRelativeToOutput(
-      SourcePath source, SourcePathResolver pathResolver, Path outputDirectory) {
+      SourcePath source, SourcePathResolverAdapter pathResolver, Path outputDirectory) {
     Path pathRelativeToCell = pathResolver.getRelativePath(source);
     Path pathRelativeToOutput =
         MorePaths.relativizeWithDotDotSupport(outputDirectory, pathRelativeToCell);
@@ -1151,7 +1152,7 @@ public class ProjectGenerator {
       ImmutableList<Pair<Pattern, ImmutableSortedSet<SourceWithFlags>>> platformSources,
       ImmutableList<Pair<Pattern, Iterable<SourcePath>>> platformHeaders,
       Path outputDirectory,
-      SourcePathResolver pathResolver) {
+      SourcePathResolverAdapter pathResolver) {
     Set<String> allPlatformSpecificSources = new HashSet<>();
     Map<String, Set<String>> includedSourcesByPlatform = new HashMap<>();
 
@@ -1248,7 +1249,7 @@ public class ProjectGenerator {
   /** @return a map of all exported platform headers without matching a specific platform. */
   public static ImmutableMap<Path, SourcePath> parseAllPlatformHeaders(
       BuildTarget buildTarget,
-      SourcePathResolver sourcePathResolver,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
       ImmutableList<SourceSortedSet> platformHeaders,
       boolean export,
       CxxLibraryDescription.CommonArg args) {
@@ -1260,7 +1261,7 @@ public class ProjectGenerator {
     for (SourceSortedSet sourceList : platformHeaders) {
       parsed.putAll(
           sourceList.toNameMap(
-              buildTarget, sourcePathResolver, parameterName, path -> true, path -> path));
+              buildTarget, sourcePathResolverAdapter, parameterName, path -> true, path -> path));
     }
     return CxxPreprocessables.resolveHeaderMap(
         args.getHeaderNamespace().map(Paths::get).orElse(buildTarget.getBasePath()),

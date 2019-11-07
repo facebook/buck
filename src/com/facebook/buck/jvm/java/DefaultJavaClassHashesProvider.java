@@ -19,7 +19,7 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
@@ -45,10 +45,11 @@ public class DefaultJavaClassHashesProvider implements JavaClassHashesProvider {
 
   @Override
   public ImmutableSortedMap<String, HashCode> getClassNamesToHashes(
-      ProjectFilesystem filesystem, SourcePathResolver sourcePathResolver) {
+      ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolverAdapter) {
     return classNamesToHashesSupplier.get(
         () -> {
-          Path absolutePath = sourcePathResolver.getAbsolutePath(classNamesToHashesSourcePath);
+          Path absolutePath =
+              sourcePathResolverAdapter.getAbsolutePath(classNamesToHashesSourcePath);
           return readClassNamesToHashes(filesystem, absolutePath);
         });
   }

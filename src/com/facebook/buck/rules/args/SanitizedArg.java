@@ -20,7 +20,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
@@ -63,7 +63,8 @@ public class SanitizedArg implements Arg {
   }
 
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     consumer.accept(unsanitized);
   }
 

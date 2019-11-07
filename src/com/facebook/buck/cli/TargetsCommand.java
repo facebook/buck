@@ -51,7 +51,7 @@ import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.CycleException;
@@ -1166,9 +1166,10 @@ public class TargetsCommand extends AbstractCommand {
           BuildRule rule = graphBuilder.requireRule(target);
           builder.setRuleType(rule.getType());
           if (isShowOutput || isShowFullOutput) {
-            SourcePathResolver sourcePathResolver = graphBuilder.getSourcePathResolver();
+            SourcePathResolverAdapter sourcePathResolverAdapter =
+                graphBuilder.getSourcePathResolver();
             getUserFacingOutputPath(
-                    sourcePathResolver,
+                    sourcePathResolverAdapter,
                     rule,
                     params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink())
                 .map(path -> pathToString(path, params))
@@ -1177,7 +1178,7 @@ public class TargetsCommand extends AbstractCommand {
             if (rule instanceof JavaLibrary) {
               ((JavaLibrary) rule)
                   .getGeneratedAnnotationSourcePath()
-                  .map(sourcePathResolver::getRelativePath)
+                  .map(sourcePathResolverAdapter::getRelativePath)
                   .map(rule.getProjectFilesystem()::resolve)
                   .map(path -> pathToString(path, params))
                   .ifPresent(builder::setGeneratedSourcePath);
@@ -1194,7 +1195,7 @@ public class TargetsCommand extends AbstractCommand {
 
   /** Returns absolute path to the output rule, if the rule has an output. */
   static Optional<Path> getUserFacingOutputPath(
-      SourcePathResolver pathResolver, BuildRule rule, boolean buckOutCompatLink) {
+      SourcePathResolverAdapter pathResolver, BuildRule rule, boolean buckOutCompatLink) {
     Optional<Path> outputPathOptional =
         Optional.ofNullable(rule.getSourcePathToOutput()).map(pathResolver::getRelativePath);
 

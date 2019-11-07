@@ -31,7 +31,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.CoercedTestRunnerSpec;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.TestXRule;
@@ -222,8 +222,8 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   /** @return a list of JVM args that should be passed to JVM to run the command properly */
-  protected ImmutableList<String> getJvmArgs(SourcePathResolver sourcePathResolver) {
-    return ImmutableList.copyOf(Arg.stringify(this.vmArgs, sourcePathResolver));
+  protected ImmutableList<String> getJvmArgs(SourcePathResolverAdapter sourcePathResolverAdapter) {
+    return ImmutableList.copyOf(Arg.stringify(this.vmArgs, sourcePathResolverAdapter));
   }
 
   @Override

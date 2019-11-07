@@ -33,7 +33,7 @@ import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
@@ -163,7 +163,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
    * {@link #setSourcePathAsRule}.
    */
   final RuleKeyBuilder<RULE_KEY> setSourcePathDirectly(SourcePath sourcePath) throws IOException {
-    SourcePathResolver resolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
       Path relativePath = resolver.getRelativePath(sourcePath);
       Optional<HashCode> precomputedHash =
@@ -250,7 +250,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
   }
 
   final RuleKeyBuilder<RULE_KEY> setNonHashingSourcePathDirectly(SourcePath sourcePath) {
-    SourcePathResolver resolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
       hasher.putNonHashingPath(resolver.getRelativePath(sourcePath));
     } else if (sourcePath instanceof PathSourcePath) {

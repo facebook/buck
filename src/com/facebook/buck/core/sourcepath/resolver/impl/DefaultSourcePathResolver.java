@@ -33,6 +33,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
@@ -53,28 +54,31 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
   }
 
   @Override
-  protected SourcePath resolveDefaultBuildTargetSourcePath(
+  protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
       DefaultBuildTargetSourcePath targetSourcePath) {
     BuildTargetWithOutputs buildTargetWithOutputs = targetSourcePath.getTargetWithOutputs();
     BuildRule rule = ruleFinder.getRule(targetSourcePath);
-    SourcePath resolvedPath;
     if (buildTargetWithOutputs.getOutputLabel().isPresent()) {
       Preconditions.checkState(
           rule instanceof HasMultipleOutputs,
           "Multiple outputs not supported for %s target %s",
           rule.getType(),
           targetSourcePath.getTargetWithOutputs());
-      resolvedPath =
+      ImmutableSortedSet<SourcePath> resolvedPaths =
           ((HasMultipleOutputs) rule)
               .getSourcePathToOutput(buildTargetWithOutputs.getOutputLabel());
-    } else {
-      resolvedPath = rule.getSourcePathToOutput();
+      if (resolvedPaths.isEmpty()) {
+        throw new HumanReadableException(
+            "No known output for: %s", targetSourcePath.getTargetWithOutputs());
+      }
+      return resolvedPaths;
     }
+    SourcePath resolvedPath = rule.getSourcePathToOutput();
     if (resolvedPath == null) {
       throw new HumanReadableException(
           "No known output for: %s", targetSourcePath.getTargetWithOutputs());
     }
-    return resolvedPath;
+    return ImmutableSortedSet.of(resolvedPath);
   }
 
   @Override

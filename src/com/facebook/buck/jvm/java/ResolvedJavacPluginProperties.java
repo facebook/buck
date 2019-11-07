@@ -20,7 +20,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
 import com.facebook.buck.util.Memoizer;
@@ -63,7 +63,7 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   }
 
   /** Get the classpath for the plugin. */
-  public URL[] getClasspath(SourcePathResolver resolver, ProjectFilesystem filesystem) {
+  public URL[] getClasspath(SourcePathResolverAdapter resolver, ProjectFilesystem filesystem) {
     return classpathSupplier.get(
         () ->
             inner.getClasspathEntries().stream()
@@ -92,7 +92,7 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
 
   /** Get the javac plugin fields. */
   public JavacPluginJsr199Fields getJavacPluginJsr199Fields(
-      SourcePathResolver resolver, ProjectFilesystem filesystem) {
+      SourcePathResolverAdapter resolver, ProjectFilesystem filesystem) {
     return JavacPluginJsr199Fields.builder()
         .setCanReuseClassLoader(getCanReuseClassLoader())
         .setClasspath(ImmutableList.copyOf(getClasspath(resolver, filesystem)))
@@ -101,7 +101,7 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   }
 
   public static String getJoinedClasspath(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem,
       ImmutableList<ResolvedJavacPluginProperties> resolvedProperties) {
     return resolvedProperties.stream()

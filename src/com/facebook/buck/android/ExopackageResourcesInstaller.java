@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.common.InstallTrigger;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
@@ -85,7 +85,7 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
           public StepExecutionResult execute(ExecutionContext context)
               throws IOException, InterruptedException {
             trigger.verify(context);
-            SourcePathResolver resolver = buildContext.getSourcePathResolver();
+            SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
             String packageName =
                 AdbHelper.tryToExtractPackageNameFromManifest(
                     resolver.getAbsolutePath(manifestPath));

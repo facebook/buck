@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -46,7 +46,8 @@ public class WriteToFileArg implements Arg {
   }
 
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     try {
       ProjectFilesystem filesystem =
           pathResolver.getFilesystem(DefaultBuildTargetSourcePath.of(target));
@@ -69,7 +70,7 @@ public class WriteToFileArg implements Arg {
    * Get the expanded content to write to the file. For some macros, the expanded value needs to be
    * different when written to a file.
    */
-  protected String getContent(SourcePathResolver pathResolver) {
+  protected String getContent(SourcePathResolverAdapter pathResolver) {
     StringBuilder builder = new StringBuilder();
     delegate.appendToCommandLine(builder::append, pathResolver);
     return builder.toString();

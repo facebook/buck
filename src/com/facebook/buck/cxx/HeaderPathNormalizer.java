@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -72,7 +72,7 @@ class HeaderPathNormalizer {
   }
 
   public Optional<Path> getAbsolutePathForUnnormalizedPath(
-      SourcePathResolver pathResolver, Path unnormalizedPath) {
+      SourcePathResolverAdapter pathResolver, Path unnormalizedPath) {
     Preconditions.checkArgument(unnormalizedPath.isAbsolute());
     Optional<Map.Entry<Path, SourcePath>> result = pathLookup(unnormalizedPath, normalized);
     if (!result.isPresent()) {
@@ -102,13 +102,13 @@ class HeaderPathNormalizer {
 
   public static class Builder {
 
-    private final SourcePathResolver pathResolver;
+    private final SourcePathResolverAdapter pathResolver;
 
     private final Map<Path, SourcePath> headers = new LinkedHashMap<>();
     private final Map<Path, SourcePath> normalized = new LinkedHashMap<>();
     private final Map<Path, Path> prefixMap = new LinkedHashMap<>();
 
-    public Builder(SourcePathResolver pathResolver) {
+    public Builder(SourcePathResolverAdapter pathResolver) {
       this.pathResolver = pathResolver;
     }
 

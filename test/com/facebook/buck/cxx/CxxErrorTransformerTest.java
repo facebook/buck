@@ -23,7 +23,7 @@ import static org.hamcrest.Matchers.oneOf;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
@@ -85,7 +85,7 @@ public class CxxErrorTransformerTest {
   @Parameterized.Parameter(value = 3)
   public Path originalPath;
 
-  private SourcePathResolver pathResolver;
+  private SourcePathResolverAdapter pathResolver;
 
   @Before
   public void setUp() {

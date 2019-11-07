@@ -18,7 +18,7 @@ package com.facebook.buck.maven;
 
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.google.common.annotations.VisibleForTesting;
@@ -77,10 +77,10 @@ public class Pom {
 
   private final Model model;
   private final MavenPublishable publishable;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final Path path;
 
-  public Pom(SourcePathResolver pathResolver, Path path, MavenPublishable buildRule) {
+  public Pom(SourcePathResolverAdapter pathResolver, Path path, MavenPublishable buildRule) {
     this.pathResolver = pathResolver;
     this.path = path;
     this.publishable = buildRule;
@@ -88,7 +88,7 @@ public class Pom {
     applyBuildRule();
   }
 
-  public static Path generatePomFile(SourcePathResolver pathResolver, MavenPublishable rule)
+  public static Path generatePomFile(SourcePathResolverAdapter pathResolver, MavenPublishable rule)
       throws IOException {
     Path pom = getPomPath(rule);
     Files.deleteIfExists(pom);
@@ -105,7 +105,7 @@ public class Pom {
 
   @VisibleForTesting
   static void generatePomFile(
-      SourcePathResolver pathResolver, MavenPublishable rule, Path optionallyExistingPom)
+      SourcePathResolverAdapter pathResolver, MavenPublishable rule, Path optionallyExistingPom)
       throws IOException {
     new Pom(pathResolver, optionallyExistingPom, rule).flushToFile();
   }

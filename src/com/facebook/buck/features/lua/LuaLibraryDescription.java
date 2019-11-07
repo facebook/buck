@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -60,7 +60,7 @@ public class LuaLibraryDescription
       }
 
       @Override
-      public LuaPackageComponents getLuaPackageComponents(SourcePathResolver pathResolver) {
+      public LuaPackageComponents getLuaPackageComponents(SourcePathResolverAdapter pathResolver) {
         return LuaPackageComponents.builder()
             .putAllModules(
                 LuaUtil.toModuleMap(

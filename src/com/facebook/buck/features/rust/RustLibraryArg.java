@@ -18,7 +18,7 @@ package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
 import java.nio.file.Path;
@@ -40,7 +40,8 @@ public class RustLibraryArg implements Arg, HasSourcePath {
   }
 
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     // Use absolute path to make sure cross-cell references work.
     Path path = pathResolver.getAbsolutePath(rlib);
     // NOTE: each of these logical args must be put on the command line as a single parameter

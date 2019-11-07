@@ -21,7 +21,7 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.support.fix.BuckRunSpec;
@@ -142,7 +142,7 @@ public final class RunCommand extends AbstractCommand {
     // command.
     //
     // If we haven't received a command args file, we assume it's fine to just run in-process.
-    SourcePathResolver resolver = build.getGraphBuilder().getSourcePathResolver();
+    SourcePathResolverAdapter resolver = build.getGraphBuilder().getSourcePathResolver();
     Tool executable = binaryBuildRule.getExecutableCommand();
     if (commandArgsFile == null) {
       ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();

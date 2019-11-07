@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -162,7 +162,7 @@ public class CommandAliasBuilder
 
   public static class BuildResult {
     private final CommandAlias commandAlias;
-    private final SourcePathResolver sourcePathResolver;
+    private final SourcePathResolverAdapter sourcePathResolverAdapter;
     private final ActionGraphBuilder graphBuilder;
     private final CommandAliasDescriptionArg arg;
     private final SourcePathRuleFinder ruleFinder;
@@ -177,7 +177,7 @@ public class CommandAliasBuilder
       this.arg = arg;
       ruleFinder = graphBuilder;
       this.cellRoots = cellRoots;
-      sourcePathResolver = this.ruleFinder.getSourcePathResolver();
+      sourcePathResolverAdapter = this.ruleFinder.getSourcePathResolver();
       this.graphBuilder = graphBuilder;
     }
 
@@ -185,12 +185,12 @@ public class CommandAliasBuilder
       return commandAlias;
     }
 
-    SourcePathResolver sourcePathResolver() {
-      return sourcePathResolver;
+    SourcePathResolverAdapter sourcePathResolver() {
+      return sourcePathResolverAdapter;
     }
 
     public String pathOf(BuildTarget target) {
-      return sourcePathResolver
+      return sourcePathResolverAdapter
           .getAbsolutePath(graphBuilder.requireRule(target).getSourcePathToOutput())
           .toString();
     }
@@ -199,7 +199,7 @@ public class CommandAliasBuilder
       return graphBuilder
           .getRuleWithType(target, BinaryBuildRule.class)
           .getExecutableCommand()
-          .getCommandPrefix(sourcePathResolver);
+          .getCommandPrefix(sourcePathResolverAdapter);
     }
 
     public ActionGraphBuilder graphBuilder() {
@@ -219,11 +219,11 @@ public class CommandAliasBuilder
     }
 
     public ImmutableList<String> getCommandPrefix() {
-      return commandAlias.getExecutableCommand().getCommandPrefix(sourcePathResolver);
+      return commandAlias.getExecutableCommand().getCommandPrefix(sourcePathResolverAdapter);
     }
 
     public ImmutableMap<String, String> getEnvironment() {
-      return commandAlias.getExecutableCommand().getEnvironment(sourcePathResolver);
+      return commandAlias.getExecutableCommand().getEnvironment(sourcePathResolverAdapter);
     }
 
     public Iterable<BuildTarget> getRuntimeDeps() {

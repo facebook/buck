@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -122,7 +122,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
       ImmutableList<TestCaseSummary> summaries = ImmutableList.of();
@@ -178,7 +178,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private ImmutableList<String> getTestCommand(
-      SourcePathResolver pathResolver, String... additionalArgs) {
+      SourcePathResolverAdapter pathResolver, String... additionalArgs) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(testExeBuild.getExecutableCommand().getCommandPrefix(pathResolver));
     args.add(additionalArgs);

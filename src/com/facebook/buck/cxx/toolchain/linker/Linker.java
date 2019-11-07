@@ -21,7 +21,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -43,14 +43,15 @@ public interface Linker extends Tool {
    */
   ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap);
 
-  // TODO(cjhopman): We should only require SourcePathResolver at the action execution phase, not
+  // TODO(cjhopman): We should only require SourcePathResolverAdapter at the action execution phase,
+  // not
   // during action graph creation. This is only ever used to get filenames, and that should be safe.
   // We should introduce an interface that is limited to just safe operations like that.
   /**
    * @return the platform-specific way to specify that the library represented by the given argument
    *     should be linked whole.
    */
-  Iterable<Arg> linkWhole(Arg input, SourcePathResolver resolver);
+  Iterable<Arg> linkWhole(Arg input, SourcePathResolverAdapter resolver);
 
   /**
    * @return the platform-specific way to specify that linker should use the given soname when

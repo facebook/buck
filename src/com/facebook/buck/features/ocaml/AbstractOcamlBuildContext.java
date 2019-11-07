@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxHeaders;
@@ -68,7 +68,7 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
 
   public abstract ProjectFilesystem getProjectFilesystem();
 
-  public abstract SourcePathResolver getSourcePathResolver();
+  public abstract SourcePathResolverAdapter getSourcePathResolver();
 
   public abstract boolean isLibrary();
 

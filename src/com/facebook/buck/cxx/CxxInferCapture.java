@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
@@ -103,7 +103,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     return buildDeps;
   }
 
-  private CxxToolFlags getSearchPathFlags(SourcePathResolver pathResolver) {
+  private CxxToolFlags getSearchPathFlags(SourcePathResolverAdapter pathResolver) {
     return preprocessorDelegate.getFlagsWithSearchPaths(
         /* no pch */ Optional.empty(), pathResolver);
   }
@@ -165,13 +165,15 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
   }
 
   @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(
+      SourcePathResolverAdapter pathResolver) {
     return Depfiles.getCoveredByDepFilePredicate(
         Optional.of(preprocessorDelegate), Optional.empty());
   }
 
   @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(
+      SourcePathResolverAdapter pathResolver) {
     return (SourcePath path) -> false;
   }
 
@@ -220,10 +222,10 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
 
   private class WriteArgFileStep implements Step {
 
-    private final SourcePathResolver pathResolver;
+    private final SourcePathResolverAdapter pathResolver;
     private final Path inputRelativePath;
 
-    public WriteArgFileStep(SourcePathResolver pathResolver, Path inputRelativePath) {
+    public WriteArgFileStep(SourcePathResolverAdapter pathResolver, Path inputRelativePath) {
       this.pathResolver = pathResolver;
       this.inputRelativePath = inputRelativePath;
     }

@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
@@ -31,7 +31,7 @@ public interface FilteredResourcesProvider {
   ImmutableList<SourcePath> getResDirectories();
 
   default ImmutableList<Path> getRelativeResDirectories(
-      ProjectFilesystem filesystem, SourcePathResolver resolver) {
+      ProjectFilesystem filesystem, SourcePathResolverAdapter resolver) {
     return RichStream.from(getResDirectories())
         .map(d -> filesystem.relativize(resolver.getAbsolutePath(d)))
         .toImmutableList();

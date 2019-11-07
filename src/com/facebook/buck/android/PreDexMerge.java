@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -329,7 +329,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       throw new HumanReadableException("No classes found in primary or secondary dexes");
     }
 
-    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
     Multimap<Path, SourcePath> aggregatedOutputToInputs = HashMultimap.create();
     ImmutableMap.Builder<Path, Sha1HashCode> dexInputHashesBuilder = ImmutableMap.builder();
     for (PreDexedFilesSorter.Result result : sortResults.values()) {
@@ -341,7 +341,8 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                     context.getBuildCellRootPath(), getProjectFilesystem(), dexOutputPath)));
       }
       aggregatedOutputToInputs.putAll(result.secondaryOutputToInputs);
-      addResolvedPathsToBuilder(sourcePathResolver, dexInputHashesBuilder, result.dexInputHashes);
+      addResolvedPathsToBuilder(
+          sourcePathResolverAdapter, dexInputHashesBuilder, result.dexInputHashes);
     }
     ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesBuilder.build();
 
@@ -354,14 +355,18 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             primaryDexPath,
             Suppliers.ofInstance(
                 rootApkModuleResult.primaryDexInputs.stream()
-                    .map(path -> sourcePathResolver.getRelativePath(getProjectFilesystem(), path))
+                    .map(
+                        path ->
+                            sourcePathResolverAdapter.getRelativePath(getProjectFilesystem(), path))
                     .collect(ImmutableSet.toImmutableSet())),
             Optional.of(paths.jarfilesSubdir),
             Optional.of(
                 Suppliers.ofInstance(
                     Multimaps.transformValues(
                         aggregatedOutputToInputs,
-                        path -> sourcePathResolver.getRelativePath(getProjectFilesystem(), path)))),
+                        path ->
+                            sourcePathResolverAdapter.getRelativePath(
+                                getProjectFilesystem(), path)))),
             () -> dexInputHashes,
             paths.successDir,
             DX_MERGE_OPTIONS,
@@ -391,12 +396,12 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   private void addResolvedPathsToBuilder(
-      SourcePathResolver sourcePathResolver,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
       ImmutableMap.Builder<Path, Sha1HashCode> builder,
       ImmutableMap<SourcePath, Sha1HashCode> dexInputHashes) {
     for (Map.Entry<SourcePath, Sha1HashCode> entry : dexInputHashes.entrySet()) {
       builder.put(
-          sourcePathResolver.getRelativePath(getProjectFilesystem(), entry.getKey()),
+          sourcePathResolverAdapter.getRelativePath(getProjectFilesystem(), entry.getKey()),
           entry.getValue());
     }
   }

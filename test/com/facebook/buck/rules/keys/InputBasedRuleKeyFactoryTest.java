@@ -39,7 +39,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.file.RemoteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -209,7 +209,7 @@ public class InputBasedRuleKeyFactoryTest {
   @Test
   public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathChanges() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildRule dep =
@@ -247,7 +247,7 @@ public class InputBasedRuleKeyFactoryTest {
   @Test
   public void actionRuleKeyChangesIfInputContentsFromBuildTargetSourcePathChanges() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildRule dep =
@@ -319,7 +319,7 @@ public class InputBasedRuleKeyFactoryTest {
   @Test
   public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathInRuleKeyAppendableChanges() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildRule dep =

@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -56,7 +56,7 @@ public class OcamlBuildRulesGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final BuildRuleParams params;
   private final ActionGraphBuilder graphBuilder;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final OcamlBuildContext ocamlContext;
   private final ImmutableMap<Path, ImmutableList<Path>> mlInput;
   private final ImmutableList<SourcePath> cInput;

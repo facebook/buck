@@ -40,6 +40,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.filegroup.FileGroupDescriptionArg;
 import com.facebook.buck.features.filegroup.FilegroupBuilder;
 import com.facebook.buck.features.zip.rules.Zip;
@@ -288,8 +289,8 @@ public class IjProjectSourcePathResolverTest {
     Path realPath = graphBuilder.getSourcePathResolver().getRelativePath(sourcePathToOutput);
 
     // Find the guessed path
-    IjProjectSourcePathResolver projectSourcePathResolver =
-        new IjProjectSourcePathResolver(targetGraph);
+    SourcePathResolverAdapter projectSourcePathResolver =
+        new SourcePathResolverAdapter(new IjProjectSourcePathResolver(targetGraph));
     Path guessedPath = projectSourcePathResolver.getRelativePath(toResolve);
 
     assertEquals(realPath, guessedPath);

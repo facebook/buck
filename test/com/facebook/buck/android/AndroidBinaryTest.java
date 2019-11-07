@@ -35,7 +35,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
@@ -72,7 +72,7 @@ public class AndroidBinaryTest {
   @Test
   public void testAndroidBinaryNoDx() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
 
     // Two android_library deps, neither with an assets directory.
@@ -248,7 +248,7 @@ public class AndroidBinaryTest {
   @Test
   public void testGetUnsignedApkPath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     Keystore keystore = addKeystoreRule(graphBuilder);
 
     BuildTarget targetInRootDirectory = BuildTargetFactory.newInstance("//:fb4a");

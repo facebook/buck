@@ -21,7 +21,7 @@ import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -56,11 +56,12 @@ public interface Kotlinc extends Tool {
 
   String getShortName();
 
-  Path getAnnotationProcessorPath(SourcePathResolver sourcePathResolver);
+  Path getAnnotationProcessorPath(SourcePathResolverAdapter sourcePathResolverAdapter);
 
-  Path getStdlibPath(SourcePathResolver sourcePathResolver);
+  Path getStdlibPath(SourcePathResolverAdapter sourcePathResolverAdapter);
 
-  ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver);
+  ImmutableList<Path> getAdditionalClasspathEntries(
+      SourcePathResolverAdapter sourcePathResolverAdapter);
 
   default ImmutableList<Path> getExpandedSourcePaths(
       ProjectFilesystem projectFilesystem,

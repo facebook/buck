@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -130,7 +130,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
   }
 
   private void appendAdditionalSwiftSteps(
-      SourcePathResolver resolver, ImmutableList.Builder<Step> commands) {
+      SourcePathResolverAdapter resolver, ImmutableList.Builder<Step> commands) {
     // For .ipas containing Swift code, Apple requires the following for App Store submissions:
     // 1. Copy the Swift standard libraries to SwiftSupport/{platform}
     if (bundle instanceof AppleBundle) {

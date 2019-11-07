@@ -17,7 +17,7 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -37,18 +37,18 @@ import java.util.stream.Collectors;
  */
 public class ModuleExoHelper {
   @VisibleForTesting public static final Path MODULAR_DEX_DIR = Paths.get("modular-dex");
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final List<ExopackageInfo.DexInfo> dexInfoForModules;
 
   /**
-   * @param pathResolver a SourcePathResolver for finding the output SourcePaths on disk
+   * @param pathResolver a SourcePathResolverAdapter for finding the output SourcePaths on disk
    * @param projectFilesystem the filesystem owning buck-out
    * @param dexInfoForModules a list of metadata/dex-output-dirs for the modules that we want to
    *     exo-install
    */
   ModuleExoHelper(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
       List<DexInfo> dexInfoForModules) {
     this.pathResolver = pathResolver;

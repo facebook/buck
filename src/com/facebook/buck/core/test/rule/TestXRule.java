@@ -19,7 +19,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
@@ -59,7 +59,7 @@ public interface TestXRule extends TestRule, ExternalTestRunnerRule, HasSuppleme
   @Deprecated
   default Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     throw shouldNotBeCalled();
   }

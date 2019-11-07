@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -175,7 +175,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                   asmHeaderPath.get().getParent())));
     }
 
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     if (getGoSources(groupedSrcs).isEmpty()) {
       steps.add(new TouchStep(getProjectFilesystem(), output));
     } else {

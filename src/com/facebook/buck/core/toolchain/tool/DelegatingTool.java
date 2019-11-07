@@ -17,7 +17,7 @@
 package com.facebook.buck.core.toolchain.tool;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -30,12 +30,12 @@ public abstract class DelegatingTool implements Tool {
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
     return tool.getCommandPrefix(resolver);
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
     return tool.getEnvironment(resolver);
   }
 }

@@ -22,7 +22,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -56,7 +56,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
   UnusedDependenciesFinder create(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver sourcePathResolver,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
       JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction) {
     return UnusedDependenciesFinder.of(
         buildTarget,
@@ -64,7 +64,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem),
         deps,
         providedDeps,
-        sourcePathResolver,
+        sourcePathResolverAdapter,
         unusedDependenciesAction,
         buildozerPath);
   }

@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -194,7 +194,7 @@ public class MultiarchFileInfos {
    */
   @VisibleForTesting
   static String getMultiarchOutputFormatString(
-      SourcePathResolver pathResolver, ImmutableSortedSet<SourcePath> inputs) {
+      SourcePathResolverAdapter pathResolver, ImmutableSortedSet<SourcePath> inputs) {
     if (inputs.isEmpty()) {
       return BASE_OUTPUT_FORMAT_STRING;
     }

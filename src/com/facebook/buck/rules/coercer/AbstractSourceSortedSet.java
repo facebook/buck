@@ -19,7 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
@@ -99,7 +99,7 @@ abstract class AbstractSourceSortedSet implements TargetTranslatable<SourceSorte
 
   public ImmutableMap<String, SourcePath> toNameMap(
       BuildTarget buildTarget,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       String parameterName,
       Predicate<SourcePath> filter,
       Function<SourcePath, SourcePath> transform) {
@@ -124,7 +124,7 @@ abstract class AbstractSourceSortedSet implements TargetTranslatable<SourceSorte
   }
 
   public ImmutableMap<String, SourcePath> toNameMap(
-      BuildTarget buildTarget, SourcePathResolver pathResolver, String parameterName) {
+      BuildTarget buildTarget, SourcePathResolverAdapter pathResolver, String parameterName) {
     return toNameMap(buildTarget, pathResolver, parameterName, x -> true, x -> x);
   }
 

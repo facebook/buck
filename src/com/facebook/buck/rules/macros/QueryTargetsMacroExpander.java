@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Preconditions;
@@ -77,7 +77,8 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
       consumer.accept(
           queriedTargets.stream().map(Object::toString).collect(Collectors.joining(" ")));
     }

@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
@@ -32,7 +33,7 @@ import java.util.Set;
 
 class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
   private final ProjectFilesystem projectFilesystem;
-  private final IjProjectSourcePathResolver sourcePathResolver;
+  private final SourcePathResolverAdapter sourcePathResolver;
   private final Optional<Set<BuildTarget>> requiredBuildTargets;
 
   DefaultIjLibraryFactoryResolver(
@@ -40,7 +41,7 @@ class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
       IjProjectSourcePathResolver sourcePathResolver,
       Optional<Set<BuildTarget>> requiredBuildTargets) {
     this.projectFilesystem = projectFilesystem;
-    this.sourcePathResolver = sourcePathResolver;
+    this.sourcePathResolver = new SourcePathResolverAdapter(sourcePathResolver);
     this.requiredBuildTargets = requiredBuildTargets;
   }
 

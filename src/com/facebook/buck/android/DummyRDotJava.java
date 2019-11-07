@@ -31,7 +31,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
@@ -299,7 +299,7 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   @Override
-  public Object initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
+  public Object initializeFromDisk(SourcePathResolverAdapter pathResolver) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     javaAbiInfo.load(pathResolver);
     return new Object();

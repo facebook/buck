@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -60,7 +60,7 @@ public class OcamlUtil {
   }
 
   public static Predicate<? super SourcePath> sourcePathExt(
-      SourcePathResolver resolver, String... extensions) {
+      SourcePathResolverAdapter resolver, String... extensions) {
     return (Predicate<SourcePath>)
         input -> {
           String strInput = resolver.getRelativePath(input).toString();

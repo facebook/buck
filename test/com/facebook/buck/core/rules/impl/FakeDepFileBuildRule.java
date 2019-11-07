@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -98,12 +98,14 @@ public class FakeDepFileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraD
   }
 
   @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(
+      SourcePathResolverAdapter pathResolver) {
     return coveredPredicate;
   }
 
   @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(
+      SourcePathResolverAdapter pathResolver) {
     return interestingPredicate;
   }
 

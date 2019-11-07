@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
@@ -66,7 +66,7 @@ public class CalculateClassAbiTest {
   @Test
   public void ruleKeysChangeIfGeneratedBinaryJarChanges() throws Exception {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Setup the initial java library.

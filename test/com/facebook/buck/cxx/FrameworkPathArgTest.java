@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -42,7 +42,8 @@ public class FrameworkPathArgTest {
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
       throw new UnsupportedOperationException();
     }
   }

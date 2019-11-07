@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
@@ -136,7 +136,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory)));
 
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
     // Generate and return the PEX build step.
     steps.add(

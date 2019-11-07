@@ -22,7 +22,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -52,7 +52,7 @@ public class AppleResourceProcessing {
 
   /** Add Storyboard processing ibtool steps to a build rule */
   public static void addStoryboardProcessingSteps(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Path sourcePath,
       Path destinationPath,
       ImmutableList.Builder<Step> stepsBuilder,
@@ -206,7 +206,7 @@ public class AppleResourceProcessing {
 
   /** Adds the swift stdlib to the bundle if needed */
   public static void addSwiftStdlibStepIfNeeded(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Path destinationPath,
       Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier,
       ImmutableList.Builder<Step> stepsBuilder,
@@ -245,7 +245,7 @@ public class AppleResourceProcessing {
 
   /** Adds Resources processing steps to a build rule */
   public static void addResourceProcessingSteps(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Path sourcePath,
       Path destinationPath,
       ImmutableList.Builder<Step> stepsBuilder,
@@ -398,7 +398,7 @@ public class AppleResourceProcessing {
   }
 
   private static void verifyResourceConflicts(
-      AppleBundleResources resources, SourcePathResolver resolver) {
+      AppleBundleResources resources, SourcePathResolverAdapter resolver) {
     // Ensure there are no resources that will overwrite each other
     // TODO: handle ResourceDirsContainingResourceDirs
     for (AppleBundleDestination destination : resources.getAllDestinations()) {

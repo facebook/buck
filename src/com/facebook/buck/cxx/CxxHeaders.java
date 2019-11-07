@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.google.common.base.Preconditions;
@@ -63,12 +63,12 @@ public abstract class CxxHeaders implements AddsToRuleKey, HasCustomDepsLogic {
    * @return the path to add to the preprocessor search path to find the includes. This defaults to
    *     the root, but can be overridden to use an alternate path.
    */
-  public Optional<Path> getResolvedIncludeRoot(SourcePathResolver resolver) {
+  public Optional<Path> getResolvedIncludeRoot(SourcePathResolverAdapter resolver) {
     return Optional.of(resolver.getAbsolutePath(Objects.requireNonNull(getRoot())));
   }
 
   private static Path resolveSourcePathAndShorten(
-      SourcePathResolver resolver, SourcePath path, Optional<PathShortener> pathShortener) {
+      SourcePathResolverAdapter resolver, SourcePath path, Optional<PathShortener> pathShortener) {
     Path resolvedPath = resolver.getAbsolutePath(path);
     return pathShortener.isPresent() ? pathShortener.get().shorten(resolvedPath) : resolvedPath;
   }
@@ -79,7 +79,7 @@ public abstract class CxxHeaders implements AddsToRuleKey, HasCustomDepsLogic {
    */
   public static Iterable<String> getArgs(
       Iterable<CxxHeaders> cxxHeaderses,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Optional<PathShortener> pathMinimizer,
       Preprocessor preprocessor) {
     ImmutableList.Builder<String> args = ImmutableList.builder();

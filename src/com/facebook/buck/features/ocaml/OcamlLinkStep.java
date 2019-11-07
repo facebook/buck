@@ -17,7 +17,7 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
@@ -61,7 +61,7 @@ public class OcamlLinkStep extends ShellStep {
       ImmutableList<Path> input,
       boolean isLibrary,
       boolean isBytecode,
-      SourcePathResolver pathResolver) {
+      SourcePathResolverAdapter pathResolver) {
     ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
 
     String linkExt = isBytecode ? OcamlCompilables.OCAML_CMA : OcamlCompilables.OCAML_CMXA;

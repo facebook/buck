@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
@@ -68,7 +68,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -121,7 +121,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -179,7 +179,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -244,7 +244,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -306,7 +306,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -359,7 +359,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -443,7 +443,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -475,7 +475,7 @@ public class OmnibusTest {
   }
 
   private void assertCxxLinkContainsNativeLinkableInput(
-      CxxLink link, SourcePathResolver pathResolver, NativeLinkableInput... inputs) {
+      CxxLink link, SourcePathResolverAdapter pathResolver, NativeLinkableInput... inputs) {
     for (NativeLinkableInput input : inputs) {
       assertThat(
           Arg.stringify(link.getArgs(), pathResolver),

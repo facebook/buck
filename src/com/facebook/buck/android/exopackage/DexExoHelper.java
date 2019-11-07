@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.exopackage;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -29,12 +29,12 @@ import java.util.Map;
 
 public class DexExoHelper {
   @VisibleForTesting public static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final ExopackageInfo.DexInfo dexInfo;
 
   DexExoHelper(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
       ExopackageInfo.DexInfo dexInfo) {
     this.pathResolver = pathResolver;

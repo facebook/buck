@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Ansi;
@@ -51,7 +51,7 @@ import org.junit.Test;
 public class BuildCommandTest {
 
   private BuildExecutionResult buildExecutionResult;
-  private SourcePathResolver resolver;
+  private SourcePathResolverAdapter resolver;
   private Cell rootCell;
 
   @Before

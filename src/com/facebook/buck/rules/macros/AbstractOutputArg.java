@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.args.Arg;
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -47,12 +47,13 @@ abstract class AbstractOutputArg implements Arg {
    * @param path the {@link SourcePath} of the rule's output
    * @return the {@link Path} to be used for generating the {@link Arg}
    */
-  abstract Path sourcePathToArgPath(SourcePath path, SourcePathResolver resolver);
+  abstract Path sourcePathToArgPath(SourcePath path, SourcePathResolverAdapter resolver);
 
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     // Ideally, we'd support some way to query the `HasSupplementalOutputs` interface via a
-    // `SourcePathResolver` so we wouldn't need to capture the `BuildRuleResolver`.
+    // `SourcePathResolverAdapter` so we wouldn't need to capture the `BuildRuleResolver`.
     BuildRule rule =
         resolver
             .getRuleOptional(target)

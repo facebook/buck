@@ -22,7 +22,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -112,7 +112,7 @@ public class MiniAapt implements Step {
     ANDROID_RESOURCE_INDEX,
   }
 
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private final ProjectFilesystem filesystem;
   private final SourcePath resDirectory;
   private final Path pathToOutputFile;
@@ -122,7 +122,7 @@ public class MiniAapt implements Step {
   private final ResourceCollectionType resourceCollectionType;
 
   public MiniAapt(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem,
       SourcePath resDirectory,
       Path pathToTextSymbolsFile,
@@ -138,7 +138,7 @@ public class MiniAapt implements Step {
   }
 
   public MiniAapt(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem,
       SourcePath resDirectory,
       Path pathToOutputFile,

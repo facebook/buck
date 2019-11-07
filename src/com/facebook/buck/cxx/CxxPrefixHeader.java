@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -57,7 +57,7 @@ public class CxxPrefixHeader extends PreInclude {
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver) {
+      SourcePathResolverAdapter pathResolver) {
 
     DepsBuilder depsBuilder = new DepsBuilder(graphBuilder);
 

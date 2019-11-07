@@ -16,22 +16,22 @@
 
 package com.facebook.buck.rules.modern;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 
 /**
- * Uses ValueCreator.createSpecial() to create a SourcePathResolver. Ideally, build rules don't hold
- * references to SourcePathResolvers, but this custom behavior can assist in migrating to
+ * Uses ValueCreator.createSpecial() to create a SourcePathResolverAdapter. Ideally, build rules
+ * don't hold references to SourcePathResolvers, but this custom behavior can assist in migrating to
  * ModernBuildRule.
  */
 public class SourcePathResolverSerialization
-    implements CustomFieldSerialization<SourcePathResolver> {
+    implements CustomFieldSerialization<SourcePathResolverAdapter> {
   @Override
-  public <E extends Exception> void serialize(SourcePathResolver value, ValueVisitor<E> serializer)
-      throws E {}
+  public <E extends Exception> void serialize(
+      SourcePathResolverAdapter value, ValueVisitor<E> serializer) throws E {}
 
   @Override
-  public <E extends Exception> SourcePathResolver deserialize(ValueCreator<E> deserializer)
+  public <E extends Exception> SourcePathResolverAdapter deserialize(ValueCreator<E> deserializer)
       throws E {
-    return deserializer.createSpecial(SourcePathResolver.class);
+    return deserializer.createSpecial(SourcePathResolverAdapter.class);
   }
 }

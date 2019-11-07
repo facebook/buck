@@ -26,7 +26,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourcePathFactoryForTests;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -48,7 +48,7 @@ import org.junit.Test;
 
 public class ManifestTest {
 
-  private static final SourcePathResolver RESOLVER =
+  private static final SourcePathResolverAdapter RESOLVER =
       new TestActionGraphBuilder().getSourcePathResolver();
 
   @Test

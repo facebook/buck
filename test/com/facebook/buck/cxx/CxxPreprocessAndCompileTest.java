@@ -37,7 +37,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
@@ -460,7 +460,7 @@ public class CxxPreprocessAndCompileTest {
     Tool compilerTool = new CommandTool.Builder().addInput(compiler).build();
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = ruleFinder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 

@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -38,10 +38,10 @@ import java.util.Optional;
 public class OcamlCCompileStep extends ShellStep {
   private static final String COMPILER_FLAG = "ccopt";
   private final ProjectFilesystem filesystem;
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private final Args args;
 
-  OcamlCCompileStep(SourcePathResolver resolver, ProjectFilesystem filesystem, Args args) {
+  OcamlCCompileStep(SourcePathResolverAdapter resolver, ProjectFilesystem filesystem, Args args) {
     super(filesystem.getRootPath());
     this.filesystem = filesystem;
     this.resolver = resolver;

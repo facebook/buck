@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -220,10 +220,10 @@ public class Aapt2Link extends AbstractBuildRule {
   class Aapt2LinkStep extends ShellStep {
     private final List<Path> compiledResourcePaths;
     private final List<Path> compiledResourceApkPaths;
-    private final SourcePathResolver pathResolver;
+    private final SourcePathResolverAdapter pathResolver;
 
     Aapt2LinkStep(
-        SourcePathResolver pathResolver,
+        SourcePathResolverAdapter pathResolver,
         Path workingDirectory,
         List<Path> compiledResourcePaths,
         List<Path> compiledResourceApkPaths) {

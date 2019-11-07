@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.file.FileScrubber;
@@ -114,12 +114,12 @@ public class RustCompileTest {
   private static Tool fakeTool() {
     return new Tool() {
       @Override
-      public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+      public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
         return ImmutableList.of();
       }
 
       @Override
-      public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+      public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
         return ImmutableMap.of();
       }
     };
@@ -133,7 +133,7 @@ public class RustCompileTest {
       }
 
       @Override
-      public Iterable<Arg> linkWhole(Arg input, SourcePathResolver pathResolver) {
+      public Iterable<Arg> linkWhole(Arg input, SourcePathResolverAdapter pathResolver) {
         return null;
       }
 
@@ -208,12 +208,12 @@ public class RustCompileTest {
       }
 
       @Override
-      public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+      public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
         return ImmutableList.of();
       }
 
       @Override
-      public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+      public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
         return ImmutableMap.of();
       }
 

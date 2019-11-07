@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -144,7 +144,7 @@ public class ExportFile extends AbstractBuildRule
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
     if (resolver.getFilesystem(src).isDirectory(resolver.getRelativePath(src))) {
       handleDirectory(context.getEventBus());

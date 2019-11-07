@@ -33,6 +33,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.features.filegroup.FileGroupDescriptionArg;
 import com.facebook.buck.features.filegroup.FilegroupDescription;
@@ -60,6 +61,7 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.shell.GenruleDescriptionArg;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -72,9 +74,11 @@ import java.util.Optional;
 public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
 
   private final TargetGraph targetGraph;
+  private final SourcePathResolverAdapter adapter;
 
   public IjProjectSourcePathResolver(TargetGraph targetGraph) {
     this.targetGraph = targetGraph;
+    this.adapter = new SourcePathResolverAdapter(this);
   }
 
   /**
@@ -131,7 +135,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       return getOutputPathForZipfile(
           (ZipFileDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
     } else {
-      // This SourcePathResolver does not attempt to exhaustively list all possible rule
+      // This SourcePathResolverAdapter does not attempt to exhaustively list all possible rule
       // descriptions,
       // instead opting to only implement those relevant for IjProject
       return Optional.empty();
@@ -143,15 +147,16 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
    * to the output.
    */
   @Override
-  protected SourcePath resolveDefaultBuildTargetSourcePath(
+  protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
       DefaultBuildTargetSourcePath targetSourcePath) {
     BuildTarget target = targetSourcePath.getTarget();
     TargetNode<?> targetNode = targetGraph.get(target);
     Optional<Path> outputPath = getOutputPathForTargetNode(targetNode);
-    return PathSourcePath.of(
-        targetNode.getFilesystem(),
-        outputPath.orElseThrow(
-            () -> new HumanReadableException("No known output for: %s", target)));
+    return ImmutableSortedSet.of(
+        PathSourcePath.of(
+            targetNode.getFilesystem(),
+            outputPath.orElseThrow(
+                () -> new HumanReadableException("No known output for: %s", target))));
   }
 
   /**
@@ -223,7 +228,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     // This matches the implementation in ExportFileDescription
     // If the mode is REFERENCE we need to return the relative path to the real underlying file
     if (arg.getMode().map(mode -> mode == ExportFileDescription.Mode.REFERENCE).orElse(false)) {
-      return arg.getSrc().map(this::getRelativePath);
+      return arg.getSrc().map(adapter::getRelativePath);
     }
     // Otherwise, we resolve the generated path for the COPY
     String name = arg.getOut().orElse(buildTarget.getShortNameAndFlavorPostfix());
@@ -265,7 +270,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     // The binary jar is copied with its same name to the output directory, so we need to get
     // the name. The only difference is when the name doesn't end in `.jar` it gets renamed.
     SourcePath binaryJar = constructorArg.getBinaryJar();
-    Path fileName = getRelativePath(filesystem, binaryJar).getFileName();
+    Path fileName = adapter.getRelativePath(filesystem, binaryJar).getFileName();
     String fileNameWithJarExtension =
         String.format("%s.jar", MorePaths.getNameWithoutExtension(fileName));
     // Matches the implementation in PrebuiltJar's constructor

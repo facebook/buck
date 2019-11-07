@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.CompositeArg;
@@ -49,7 +49,7 @@ class CxxWriteArgsToFileStep implements Step {
       ImmutableList<Arg> args,
       Optional<Function<String, String>> escaper,
       Path currentCellPath,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean useUnixPathSeparator) {
     ImmutableList<String> argFileContents =
         stringify(args, currentCellPath, pathResolver, useUnixPathSeparator);
@@ -73,7 +73,7 @@ class CxxWriteArgsToFileStep implements Step {
   static ImmutableList<String> stringify(
       ImmutableCollection<Arg> args,
       Path currentCellPath,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean useUnixPathSeparator) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {

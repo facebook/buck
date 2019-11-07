@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -172,7 +172,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .build();
   }
 
-  private ImmutableMap<String, String> getMergedEnv(SourcePathResolver pathResolver) {
+  private ImmutableMap<String, String> getMergedEnv(SourcePathResolverAdapter pathResolver) {
     return new ImmutableMap.Builder<String, String>()
         .putAll(binary.getExecutableCommand().getEnvironment(pathResolver))
         .putAll(Arg.stringify(getEnv(), pathResolver))
@@ -206,7 +206,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
       Optional<String> resultsFileContents =

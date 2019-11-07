@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -98,7 +98,7 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
                     context.getBuildCellRootPath(), getProjectFilesystem(), output))
             .withRecursive(true));
 
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
     steps.add(
         new ShellStep(getProjectFilesystem().getRootPath()) {

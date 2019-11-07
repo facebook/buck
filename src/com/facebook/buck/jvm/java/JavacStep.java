@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
@@ -46,14 +46,14 @@ public class JavacStep implements Step {
   private final BuildTarget invokingRule;
 
   private final boolean ownsPipelineObject;
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private final ProjectFilesystem filesystem;
 
   public JavacStep(
       Javac javac,
       JavacOptions javacOptions,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem,
       ClasspathChecker classpathChecker,
       CompilerParameters compilerParameters,
@@ -77,7 +77,7 @@ public class JavacStep implements Step {
   public JavacStep(
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem) {
     this(pipeline, invokingRule, false, resolver, filesystem);
   }
@@ -86,7 +86,7 @@ public class JavacStep implements Step {
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
       boolean ownsPipelineObject,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem) {
     this.pipeline = pipeline;
     this.invokingRule = invokingRule;

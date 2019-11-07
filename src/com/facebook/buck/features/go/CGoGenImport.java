@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -49,7 +49,7 @@ public class CGoGenImport extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath sourceWithPackageName;
 
   private final ImmutableSortedSet<BuildRule> deps;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final Path outputFile;
   private final Path genDir;
 

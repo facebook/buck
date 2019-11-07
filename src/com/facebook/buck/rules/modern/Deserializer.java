@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.impl.BuildTargetTypeInfo;
@@ -95,13 +95,13 @@ public class Deserializer {
 
   private final Function<Optional<String>, ProjectFilesystem> cellMap;
   private final ClassFinder classFinder;
-  private final Supplier<SourcePathResolver> pathResolver;
+  private final Supplier<SourcePathResolverAdapter> pathResolver;
   private final ToolchainProvider toolchainProvider;
 
   public Deserializer(
       Function<Optional<String>, ProjectFilesystem> cellMap,
       ClassFinder classFinder,
-      Supplier<SourcePathResolver> pathResolver,
+      Supplier<SourcePathResolverAdapter> pathResolver,
       ToolchainProvider toolchainProvider) {
     this.cellMap = cellMap;
     this.classFinder = classFinder;
@@ -127,7 +127,7 @@ public class Deserializer {
 
     @Override
     public <T> T createSpecial(Class<T> valueClass, Object... args) {
-      if (valueClass.equals(SourcePathResolver.class)) {
+      if (valueClass.equals(SourcePathResolverAdapter.class)) {
         Preconditions.checkState(args.length == 0);
         @SuppressWarnings("unchecked")
         T value = (T) pathResolver.get();

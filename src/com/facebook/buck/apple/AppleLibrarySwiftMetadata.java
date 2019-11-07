@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.swift.SwiftDescriptions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,7 +45,7 @@ public class AppleLibrarySwiftMetadata {
   }
 
   public static AppleLibrarySwiftMetadata from(
-      ImmutableSortedSet<SourceWithFlags> allSources, SourcePathResolver pathResolver) {
+      ImmutableSortedSet<SourceWithFlags> allSources, SourcePathResolverAdapter pathResolver) {
     Map<Boolean, List<SourceWithFlags>> swiftAndNonSwiftSources =
         allSources.stream()
             .collect(

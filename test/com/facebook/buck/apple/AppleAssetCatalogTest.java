@@ -22,7 +22,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -37,7 +37,7 @@ import org.junit.rules.ExpectedException;
 public class AppleAssetCatalogTest {
 
   private ProjectFilesystem filesystem;
-  private SourcePathResolver resolver = new TestActionGraphBuilder().getSourcePathResolver();
+  private SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();
 
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();
 

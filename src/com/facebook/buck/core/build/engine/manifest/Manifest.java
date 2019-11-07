@@ -20,7 +20,7 @@ import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.hashing.FileHashLoader;
@@ -145,7 +145,9 @@ public class Manifest {
   /** Hash the files pointed to by the source paths. */
   @VisibleForTesting
   static HashCode hashSourcePathGroup(
-      FileHashLoader fileHashLoader, SourcePathResolver resolver, ImmutableList<SourcePath> paths)
+      FileHashLoader fileHashLoader,
+      SourcePathResolverAdapter resolver,
+      ImmutableList<SourcePath> paths)
       throws IOException {
     if (paths.size() == 1) {
       return hashSourcePath(paths.get(0), fileHashLoader, resolver);
@@ -158,7 +160,7 @@ public class Manifest {
   }
 
   private static HashCode hashSourcePath(
-      SourcePath path, FileHashLoader fileHashLoader, SourcePathResolver resolver)
+      SourcePath path, FileHashLoader fileHashLoader, SourcePathResolverAdapter resolver)
       throws IOException {
     if (path instanceof ArchiveMemberSourcePath) {
       ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) path;
@@ -172,14 +174,14 @@ public class Manifest {
   }
 
   private static ArchiveMemberPath getArchiveMemberPath(
-      SourcePathResolver resolver, ArchiveMemberSourcePath archivePath) {
+      SourcePathResolverAdapter resolver, ArchiveMemberSourcePath archivePath) {
     return ArchiveMemberPath.of(
         resolver.getRelativePath(archivePath.getArchiveSourcePath()), archivePath.getMemberPath());
   }
 
   private boolean hashesMatch(
       FileHashLoader fileHashLoader,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ImmutableListMultimap<String, SourcePath> universe,
       int[] hashIndices)
       throws IOException {
@@ -209,7 +211,9 @@ public class Manifest {
    *     fileHashLoader}.
    */
   public Optional<RuleKey> lookup(
-      FileHashLoader fileHashLoader, SourcePathResolver resolver, ImmutableSet<SourcePath> universe)
+      FileHashLoader fileHashLoader,
+      SourcePathResolverAdapter resolver,
+      ImmutableSet<SourcePath> universe)
       throws IOException {
     // Create a set of all paths we care about.
     ImmutableSet.Builder<String> interestingPathsBuilder = new ImmutableSet.Builder<>();
@@ -236,7 +240,8 @@ public class Manifest {
     return Optional.empty();
   }
 
-  private static String sourcePathToManifestHeader(SourcePath input, SourcePathResolver resolver) {
+  private static String sourcePathToManifestHeader(
+      SourcePath input, SourcePathResolverAdapter resolver) {
     return sourcePathToManifestPathKey(input, resolver).toString();
   }
 
@@ -244,7 +249,8 @@ public class Manifest {
    * Converting Path to String is expensive when using BuckUnixPath so if we just need a key
    * representation of a manifest path, use the corresponding Path/ArchiveMemberPath.
    */
-  private static Object sourcePathToManifestPathKey(SourcePath input, SourcePathResolver resolver) {
+  private static Object sourcePathToManifestPathKey(
+      SourcePath input, SourcePathResolverAdapter resolver) {
     if (input instanceof ArchiveMemberSourcePath) {
       return getArchiveMemberPath(resolver, (ArchiveMemberSourcePath) input);
     } else {
@@ -256,7 +262,7 @@ public class Manifest {
   public void addEntry(
       FileHashLoader fileHashLoader,
       RuleKey key,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ImmutableSet<SourcePath> universe,
       ImmutableSet<SourcePath> inputs)
       throws IOException {

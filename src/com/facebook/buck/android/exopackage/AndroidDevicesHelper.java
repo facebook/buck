@@ -17,7 +17,7 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.HasInstallableApk;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.Closeable;
@@ -65,7 +65,7 @@ public interface AndroidDevicesHelper extends Closeable {
    * be used to install the apk if needed.
    */
   void installApk(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
       boolean quiet,
@@ -75,12 +75,12 @@ public interface AndroidDevicesHelper extends Closeable {
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
+   * @see #installApk(SourcePathResolverAdapter, HasInstallableApk, boolean, boolean, String)
    */
   void uninstallApp(String packageName, boolean shouldKeepUserData) throws InterruptedException;
 
   void startActivity(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,
       boolean waitForDebugger)

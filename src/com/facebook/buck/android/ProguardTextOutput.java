@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -66,7 +66,7 @@ class ProguardTextOutput extends AbstractBuildRule {
   @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext buildContext, BuildableContext buildableContext) {
-    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     Path configPath = resolver.getAbsolutePath(proguardConfigPath);
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
     builder.addAll(

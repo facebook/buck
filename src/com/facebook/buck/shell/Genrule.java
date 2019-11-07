@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.WriteToFileArg;
@@ -181,7 +181,7 @@ public class Genrule extends ModernBuildRule<GenruleBuildable> implements HasOut
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
-    SourcePathResolver sourcePathResolver = buildRuleResolver.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
 
     // Note: this is a bit of a kludge to accommodate the need for a sandbox to know the structure
     // of GenruleBuildable's filesystem, which would ideally be an implementation detail of
@@ -196,12 +196,12 @@ public class Genrule extends ModernBuildRule<GenruleBuildable> implements HasOut
     return builder
         .addAllAllowedToReadPaths(
             srcs.getPaths().stream()
-                .map(sourcePathResolver::getAbsolutePath)
+                .map(sourcePathResolverAdapter::getAbsolutePath)
                 .map(Object::toString)
                 .collect(Collectors.toList()))
         .addAllAllowedToReadPaths(
             collectReadablePathsFromArguments(
-                sourcePathResolver, buildRuleResolver, cmd, bash, cmdExe))
+                sourcePathResolverAdapter, buildRuleResolver, cmd, bash, cmdExe))
         .addAllowedToReadPaths(
             filesystem.resolve(pathToSrcDirectory).toString(),
             filesystem.resolve(pathToTmpDirectory).toString(),
@@ -218,7 +218,7 @@ public class Genrule extends ModernBuildRule<GenruleBuildable> implements HasOut
   }
 
   private static ImmutableList<String> collectReadablePathsFromArguments(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       BuildRuleResolver buildRuleResolver,
       Optional<Arg> cmd,
       Optional<Arg> bash,
@@ -234,13 +234,15 @@ public class Genrule extends ModernBuildRule<GenruleBuildable> implements HasOut
   }
 
   private static ImmutableList<String> collectExistingArgInputs(
-      SourcePathResolver sourcePathResolver, BuildRuleResolver buildRuleResolver, Arg arg) {
+      SourcePathResolverAdapter sourcePathResolverAdapter,
+      BuildRuleResolver buildRuleResolver,
+      Arg arg) {
     Collection<BuildRule> buildRules = BuildableSupport.getDepsCollection(arg, buildRuleResolver);
     ImmutableList.Builder<String> inputs = ImmutableList.builder();
     for (BuildRule buildRule : buildRules) {
       SourcePath inputPath = buildRule.getSourcePathToOutput();
       if (inputPath != null) {
-        inputs.add(sourcePathResolver.getAbsolutePath(inputPath).toString());
+        inputs.add(sourcePathResolverAdapter.getAbsolutePath(inputPath).toString());
       }
     }
     return inputs.build();

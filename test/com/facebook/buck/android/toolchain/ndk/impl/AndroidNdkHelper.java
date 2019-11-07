@@ -33,7 +33,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -145,10 +145,10 @@ public class AndroidNdkHelper {
     private final ProcessExecutor executor;
     private final Path tmpDir;
     private final Tool objdump;
-    private final SourcePathResolver resolver;
+    private final SourcePathResolverAdapter resolver;
 
     public SymbolGetter(
-        ProcessExecutor executor, Path tmpDir, Tool objdump, SourcePathResolver resolver) {
+        ProcessExecutor executor, Path tmpDir, Tool objdump, SourcePathResolverAdapter resolver) {
       this.executor = executor;
       this.tmpDir = tmpDir;
       this.objdump = objdump;

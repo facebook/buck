@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
@@ -107,7 +107,7 @@ public class SymlinkTree extends AbstractBuildRule
    * @return a map that assigns a unique relative path to each of the SourcePaths.
    */
   public static ImmutableBiMap<SourcePath, Path> resolveDuplicateRelativePaths(
-      ImmutableSortedSet<SourcePath> sourcePaths, SourcePathResolver resolver) {
+      ImmutableSortedSet<SourcePath> sourcePaths, SourcePathResolverAdapter resolver) {
     // This serves a dual purpose - it keeps track of whether a particular relative path had been
     // assigned to a SourcePath and how many times a particular relative path had been seen.
     Multiset<Path> assignedPaths = HashMultiset.create();

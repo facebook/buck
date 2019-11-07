@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -182,9 +182,9 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
   }
 
   private class RunCodeGenStep extends ShellStep {
-    private final SourcePathResolver pathResolver;
+    private final SourcePathResolverAdapter pathResolver;
 
-    RunCodeGenStep(SourcePathResolver pathResolver) {
+    RunCodeGenStep(SourcePathResolverAdapter pathResolver) {
       super(getProjectFilesystem().getRootPath());
       this.pathResolver = pathResolver;
     }

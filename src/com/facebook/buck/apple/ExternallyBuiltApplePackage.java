@@ -26,7 +26,7 @@ import com.facebook.buck.core.rulekey.ThrowingSerialization;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -86,7 +86,7 @@ public class ExternallyBuiltApplePackage extends LegacyGenrule {
 
   @Override
   protected void addEnvironmentVariables(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
     environmentVariablesBuilder.put("SDKROOT", sdkPath.toString());

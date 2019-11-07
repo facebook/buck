@@ -40,7 +40,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
@@ -638,12 +638,12 @@ public class DefaultIjModuleFactoryTest {
             .build();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = buildRuleResolver.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
     IjLibraryFactoryResolver ijLibraryFactoryResolver =
         new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
-            return sourcePathResolver.getRelativePath(path);
+            return sourcePathResolverAdapter.getRelativePath(path);
           }
 
           @Override
@@ -660,7 +660,7 @@ public class DefaultIjModuleFactoryTest {
     assertTrue(library.isPresent());
     assertEquals(
         library.get().getBinaryJars(),
-        ImmutableSet.of(sourcePathResolver.getRelativePath(androidSupportBinaryPath)));
+        ImmutableSet.of(sourcePathResolverAdapter.getRelativePath(androidSupportBinaryPath)));
     assertEquals(library.get().getSourceJars(), ImmutableSet.of(androidSupportSourcesPath));
     assertEquals(library.get().getJavadocUrls(), ImmutableSet.of(androidSupportJavadocUrl));
   }

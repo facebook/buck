@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
@@ -62,7 +62,7 @@ class DexFilesInfo implements AddsToRuleKey {
   }
 
   public ImmutableSet<Path> getSecondaryDexDirs(
-      ProjectFilesystem filesystem, SourcePathResolver resolver) {
+      ProjectFilesystem filesystem, SourcePathResolverAdapter resolver) {
     return secondaryDexDirs.transform(
         set -> set.stream().map(resolver::getRelativePath).collect(ImmutableSet.toImmutableSet()),
         view -> view.getSecondaryDexDirs(filesystem, resolver));
@@ -82,7 +82,7 @@ class DexFilesInfo implements AddsToRuleKey {
     }
 
     ImmutableSet<Path> getSecondaryDexDirs(
-        ProjectFilesystem filesystem, SourcePathResolver resolver) {
+        ProjectFilesystem filesystem, SourcePathResolverAdapter resolver) {
       try {
         Path resolvedRootDirectory = resolver.getRelativePath(rootDirectory);
         return filesystem.readLines(resolver.getRelativePath(subDirListing)).stream()

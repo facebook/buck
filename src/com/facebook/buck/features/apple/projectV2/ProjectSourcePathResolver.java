@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.google.common.base.Preconditions;
@@ -40,7 +40,7 @@ import java.util.function.Function;
 public class ProjectSourcePathResolver {
 
   private final Cell projectCell;
-  private final SourcePathResolver pathSourcePathResolver;
+  private final SourcePathResolverAdapter pathSourcePathResolverAdapter;
   private final TargetGraph targetGraph;
   private final Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode;
 
@@ -48,17 +48,17 @@ public class ProjectSourcePathResolver {
 
   /**
    * @param projectCell Cell to which the project target belongs.
-   * @param pathSourcePathResolver Source path resolver to use for {@link PathSourcePath}s.
+   * @param pathSourcePathResolverAdapter Source path resolver to use for {@link PathSourcePath}s.
    * @param targetGraph Target graph for the project target.
    * @param actionGraphBuilderForNode Action graph builder for the project target.
    */
   public ProjectSourcePathResolver(
       Cell projectCell,
-      SourcePathResolver pathSourcePathResolver,
+      SourcePathResolverAdapter pathSourcePathResolverAdapter,
       TargetGraph targetGraph,
       Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode) {
     this.projectCell = projectCell;
-    this.pathSourcePathResolver = pathSourcePathResolver;
+    this.pathSourcePathResolverAdapter = pathSourcePathResolverAdapter;
     this.targetGraph = targetGraph;
     this.actionGraphBuilderForNode = actionGraphBuilderForNode;
 
@@ -67,16 +67,17 @@ public class ProjectSourcePathResolver {
 
   /**
    * Resolve a relative path to the project cell's filesystem. {@link PathSourcePath}s utilize the
-   * {@link ProjectSourcePathResolver#pathSourcePathResolver} to resolve the path. Otherwise the
-   * {@code sourcePath} is expected to be a {@link BuildTargetSourcePath} for which we derive the
-   * target and resolve it's output to the cell.
+   * {@link ProjectSourcePathResolver#pathSourcePathResolverAdapter} to resolve the path. Otherwise
+   * the {@code sourcePath} is expected to be a {@link BuildTargetSourcePath} for which we derive
+   * the target and resolve it's output to the cell.
    *
    * @param sourcePath Source path to resolve.
    * @return A path relative to the cell.
    */
   public Path resolveSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
-      return projectFilesystem.relativize(pathSourcePathResolver.getAbsolutePath(sourcePath));
+      return projectFilesystem.relativize(
+          pathSourcePathResolverAdapter.getAbsolutePath(sourcePath));
     }
     Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
     BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;

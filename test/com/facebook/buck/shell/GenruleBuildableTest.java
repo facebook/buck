@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
@@ -111,7 +111,7 @@ public class GenruleBuildableTest {
   @Test
   public void testGenruleUsesSpacesForSrcsVariableDelimiterByDefault() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:genrule");
     OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
 
@@ -144,7 +144,7 @@ public class GenruleBuildableTest {
   @Test
   public void testGenruleUsesProvidedDelimiterForSrcsVariable() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:genrule");
     OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
 

@@ -19,7 +19,7 @@ package com.facebook.buck.core.toolchain.tool.impl;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -63,7 +63,7 @@ public class CommandTool implements Tool {
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
     ImmutableList.Builder<String> command = ImmutableList.builder();
     if (baseTool.isPresent()) {
       command.addAll(baseTool.get().getCommandPrefix(resolver));
@@ -75,7 +75,7 @@ public class CommandTool implements Tool {
   }
 
   @Override
-  public ImmutableSortedMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableSortedMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
     ImmutableSortedMap.Builder<String, String> env = ImmutableSortedMap.naturalOrder();
     if (baseTool.isPresent()) {
       env.putAll(baseTool.get().getEnvironment(resolver));

@@ -20,7 +20,7 @@ import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import java.util.Optional;
@@ -41,7 +41,8 @@ public class AbstractLocationMacroExpander<T extends BaseLocationMacro>
   }
 
   @Override
-  protected Arg expand(SourcePathResolver resolver, T macro, BuildRule rule) throws MacroException {
+  protected Arg expand(SourcePathResolverAdapter resolver, T macro, BuildRule rule)
+      throws MacroException {
     Optional<String> supplementaryOutputIdentifier = macro.getSupplementaryOutputIdentifier();
 
     SourcePath output;

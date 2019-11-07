@@ -22,7 +22,7 @@ import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.HeaderPathNormalizer.Builder;
 import com.google.common.base.Preconditions;
@@ -65,7 +65,7 @@ abstract class AbstractCxxIncludes extends CxxHeaders {
   public void addToHeaderPathNormalizer(Builder builder) {}
 
   @Override
-  public Optional<Path> getResolvedIncludeRoot(SourcePathResolver resolver) {
+  public Optional<Path> getResolvedIncludeRoot(SourcePathResolverAdapter resolver) {
     return Optional.of(
         resolver.getAbsolutePath(Preconditions.checkNotNull(getIncludeDir())).normalize());
   }

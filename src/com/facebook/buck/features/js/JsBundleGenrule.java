@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -100,7 +100,7 @@ public class JsBundleGenrule extends LegacyGenrule
 
   @Override
   protected void addEnvironmentVariables(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
     environmentVariablesBuilder
@@ -141,7 +141,7 @@ public class JsBundleGenrule extends LegacyGenrule
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
     ImmutableList<Step> buildSteps = super.getBuildSteps(context, buildableContext);
     OptionalInt lastRmStep =
         IntStream.range(0, buildSteps.size())
@@ -164,20 +164,21 @@ public class JsBundleGenrule extends LegacyGenrule
                     BuildCellRelativePath.fromCellRelativePath(
                         context.getBuildCellRootPath(),
                         getProjectFilesystem(),
-                        sourcePathResolver.getRelativePath(getSourcePathToOutput()))));
+                        sourcePathResolverAdapter.getRelativePath(getSourcePathToOutput()))));
 
     if (rewriteSourcemap) {
       // If the genrule rewrites the source map, we have to create the parent dir, and record
       // the build artifact
 
       SourcePath sourcePathToSourceMap = getSourcePathToSourceMap();
-      buildableContext.recordArtifact(sourcePathResolver.getRelativePath(sourcePathToSourceMap));
+      buildableContext.recordArtifact(
+          sourcePathResolverAdapter.getRelativePath(sourcePathToSourceMap));
       builder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(),
                   getProjectFilesystem(),
-                  sourcePathResolver.getRelativePath(sourcePathToSourceMap).getParent())));
+                  sourcePathResolverAdapter.getRelativePath(sourcePathToSourceMap).getParent())));
     }
 
     if (rewriteMisc) {
@@ -185,20 +186,21 @@ public class JsBundleGenrule extends LegacyGenrule
       // record its contents
 
       SourcePath miscDirPath = getSourcePathToMisc();
-      buildableContext.recordArtifact(sourcePathResolver.getRelativePath(miscDirPath));
+      buildableContext.recordArtifact(sourcePathResolverAdapter.getRelativePath(miscDirPath));
       builder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(),
                   getProjectFilesystem(),
-                  sourcePathResolver.getRelativePath(miscDirPath))));
+                  sourcePathResolverAdapter.getRelativePath(miscDirPath))));
     }
 
     if (rewriteDepsFile) {
       // If the genrule rewrites the dependencies file, we have to record its contents
 
       SourcePath dependenciesFilePath = getSourcePathToDepsFile();
-      buildableContext.recordArtifact(sourcePathResolver.getRelativePath(dependenciesFilePath));
+      buildableContext.recordArtifact(
+          sourcePathResolverAdapter.getRelativePath(dependenciesFilePath));
     }
     // Last, we add all remaining genrule commands after the last RmStep
     return builder.addAll(buildSteps.subList(lastRmStep.getAsInt() + 1, buildSteps.size())).build();

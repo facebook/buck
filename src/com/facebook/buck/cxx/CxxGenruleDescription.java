@@ -37,7 +37,7 @@ import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -471,7 +471,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {
       consumer.accept(
           Arg.stringify(
                   ppFlags
@@ -629,7 +629,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
       consumer.accept(shquoteJoin(Arg.stringify(args, pathResolver)));
     }
   }

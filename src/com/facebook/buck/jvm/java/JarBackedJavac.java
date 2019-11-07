@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSortedSet;
@@ -39,7 +39,7 @@ public class JarBackedJavac extends Jsr199Javac {
 
   @Override
   protected JavaCompiler createCompiler(
-      JavacExecutionContext context, SourcePathResolver resolver) {
+      JavacExecutionContext context, SourcePathResolverAdapter resolver) {
     ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
     ClassLoader compilerClassLoader =
         classLoaderCache.getClassLoaderForClassPath(

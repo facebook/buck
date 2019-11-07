@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -237,7 +237,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       Preprocessor preprocessor,
       CxxToolFlags preprocessorFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver) {
+      SourcePathResolverAdapter pathResolver) {
     return new PreprocessorDelegate(
         cxxPlatform.getHeaderVerification(),
         PathSourcePath.of(getProjectFilesystem(), Paths.get("")),
@@ -264,7 +264,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver);
+      SourcePathResolverAdapter pathResolver);
 
   /**
    * Look up or build a precompiled header build rule which this build rule is requesting.

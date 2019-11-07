@@ -35,7 +35,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -57,7 +57,7 @@ public class JvmLibraryArgInterpreterTest {
   private JavacOptions defaults;
   private ActionGraphBuilder graphBuilder;
   private SourcePathRuleFinder ruleFinder;
-  private SourcePathResolver sourcePathResolver;
+  private SourcePathResolverAdapter sourcePathResolverAdapter;
 
   @Before
   public void createHelpers() {
@@ -68,7 +68,7 @@ public class JvmLibraryArgInterpreterTest {
             .build();
     graphBuilder = new TestActionGraphBuilder();
     ruleFinder = graphBuilder;
-    sourcePathResolver = ruleFinder.getSourcePathResolver();
+    sourcePathResolverAdapter = ruleFinder.getSourcePathResolver();
   }
 
   @Test
@@ -177,7 +177,8 @@ public class JvmLibraryArgInterpreterTest {
         (ExternalJavac) arg.getJavacSpec(ruleFinder).getJavacProvider().resolve(ruleFinder);
 
     assertEquals(
-        ImmutableList.of(externalJavac.toString()), javac.getCommandPrefix(sourcePathResolver));
+        ImmutableList.of(externalJavac.toString()),
+        javac.getCommandPrefix(sourcePathResolverAdapter));
   }
 
   @Test
@@ -199,7 +200,8 @@ public class JvmLibraryArgInterpreterTest {
         (ExternalJavac) arg.getJavacSpec(ruleFinder).getJavacProvider().resolve(ruleFinder);
 
     assertEquals(
-        ImmutableList.of(externalJavacPath.toString()), javac.getCommandPrefix(sourcePathResolver));
+        ImmutableList.of(externalJavacPath.toString()),
+        javac.getCommandPrefix(sourcePathResolverAdapter));
   }
 
   @Test

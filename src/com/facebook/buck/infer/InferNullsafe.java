@@ -24,7 +24,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -211,7 +211,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
         return ImmutableList.of();
       }
 
-      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
 
       Path scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
       Path argFilePath = filesystem.relativize(scratchDir.resolve("args.txt"));
@@ -222,14 +222,14 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
 
       // Prepare infer command line arguments and write them to args.txt
       ImmutableList<String> argsBuilder =
-          buildArgs(inferOutPath, filesystem, sourcePathResolver, outputPathResolver);
+          buildArgs(inferOutPath, filesystem, sourcePathResolverAdapter, outputPathResolver);
       steps.add(
           new WriteFileStep(
               filesystem, Joiner.on(System.lineSeparator()).join(argsBuilder), argFilePath, false));
 
       // Prepare and invoke cmd with appropriate environment
-      ImmutableList<String> cmd = buildCommand(argFilePath, sourcePathResolver);
-      ImmutableMap<String, String> cmdEnv = buildEnv(sourcePathResolver);
+      ImmutableList<String> cmd = buildCommand(argFilePath, sourcePathResolverAdapter);
+      ImmutableMap<String, String> cmdEnv = buildEnv(sourcePathResolverAdapter);
       steps.add(
           new DefaultShellStep(filesystem.getRootPath(), cmd, cmdEnv) {
             @Override
@@ -254,12 +254,13 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
       return generatedClasses != null && !sources.isEmpty();
     }
 
-    private ImmutableMap<String, String> buildEnv(SourcePathResolver sourcePathResolver) {
+    private ImmutableMap<String, String> buildEnv(
+        SourcePathResolverAdapter sourcePathResolverAdapter) {
       ImmutableMap.Builder<String, String> cmdEnv = ImmutableMap.builder();
       inferPlatform.getInferVersion().ifPresent(v -> cmdEnv.put("INFERVERSION", v));
       inferPlatform
           .getInferConfig()
-          .map(sourcePathResolver::getAbsolutePath)
+          .map(sourcePathResolverAdapter::getAbsolutePath)
           .map(Objects::toString)
           .ifPresent(c -> cmdEnv.put("INFERCONFIG", c));
 
@@ -267,9 +268,9 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     }
 
     private ImmutableList<String> buildCommand(
-        Path argFilePath, SourcePathResolver sourcePathResolver) {
+        Path argFilePath, SourcePathResolverAdapter sourcePathResolverAdapter) {
       ImmutableList.Builder<String> cmd = ImmutableList.builder();
-      cmd.addAll(inferPlatform.getInferBin().getCommandPrefix(sourcePathResolver));
+      cmd.addAll(inferPlatform.getInferBin().getCommandPrefix(sourcePathResolverAdapter));
       cmd.add("@" + argFilePath.toString());
 
       return cmd.build();
@@ -278,7 +279,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     private ImmutableList<String> buildArgs(
         Path inferOutPath,
         ProjectFilesystem filesystem,
-        SourcePathResolver sourcePathResolver,
+        SourcePathResolverAdapter sourcePathResolverAdapter,
         OutputPathResolver outputPathResolver) {
       ImmutableList.Builder<String> argsBuilder = ImmutableList.builder();
       argsBuilder.addAll(nullsafeArgs);
@@ -297,7 +298,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
       }
 
       sources.stream()
-          .map(s -> filesystem.relativize(sourcePathResolver.getAbsolutePath(s)))
+          .map(s -> filesystem.relativize(sourcePathResolverAdapter.getAbsolutePath(s)))
           .map(Path::toString)
           .forEach(s -> argsBuilder.add("--sources", s));
 
@@ -305,7 +306,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
           argsBuilder,
           "--classpath",
           classpath.stream()
-              .map(s -> filesystem.relativize(sourcePathResolver.getAbsolutePath(s)))
+              .map(s -> filesystem.relativize(sourcePathResolverAdapter.getAbsolutePath(s)))
               .map(Path::toString)
               .collect(Collectors.joining(File.pathSeparator)));
 
@@ -323,17 +324,19 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
           bootClasspathOverride.orElseGet(
               () ->
                   bootClasspath.stream()
-                      .map(s -> filesystem.relativize(sourcePathResolver.getAbsolutePath(s)))
+                      .map(s -> filesystem.relativize(sourcePathResolverAdapter.getAbsolutePath(s)))
                       .map(Path::toString)
                       .collect(Collectors.joining(File.pathSeparator))));
 
       argsBuilder.add(
           "--generated-classes",
-          filesystem.relativize(sourcePathResolver.getAbsolutePath(generatedClasses)).toString());
+          filesystem
+              .relativize(sourcePathResolverAdapter.getAbsolutePath(generatedClasses))
+              .toString());
 
       inferPlatform
           .getNullsafeThirdPartySignatures()
-          .map(x -> sourcePathResolver.getAbsolutePath(x).toString())
+          .map(x -> sourcePathResolverAdapter.getAbsolutePath(x).toString())
           .ifPresent(dir -> addNotEmpty(argsBuilder, "--nullsafe-third-party-signatures", dir));
 
       return argsBuilder.build();

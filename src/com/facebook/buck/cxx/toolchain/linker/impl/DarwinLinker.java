@@ -21,7 +21,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.linker.HasIncrementalThinLTO;
@@ -73,7 +73,7 @@ public class DarwinLinker extends DelegatingTool
   }
 
   @Override
-  public Iterable<Arg> linkWhole(Arg input, SourcePathResolver resolver) {
+  public Iterable<Arg> linkWhole(Arg input, SourcePathResolverAdapter resolver) {
     return ImmutableList.of(
         StringArg.of("-Xlinker"), StringArg.of("-force_load"), StringArg.of("-Xlinker"), input);
   }
@@ -214,7 +214,8 @@ public class DarwinLinker extends DelegatingTool
     // Open all the symbol files and read in all undefined symbols, passing them to linker using the
     // `-u` command line option.
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
       Set<String> symbols = new LinkedHashSet<>();
       try {
         for (SourcePath path : symbolFiles) {

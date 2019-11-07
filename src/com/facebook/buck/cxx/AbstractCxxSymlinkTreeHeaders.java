@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxPreprocessables.IncludeType;
 import com.facebook.buck.cxx.CxxSymlinkTreeHeaders.Builder;
@@ -76,7 +76,7 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
   public abstract Either<PathSourcePath, SourcePath> getIncludeRoot();
 
   @Override
-  public Optional<Path> getResolvedIncludeRoot(SourcePathResolver resolver) {
+  public Optional<Path> getResolvedIncludeRoot(SourcePathResolverAdapter resolver) {
     return Optional.of(
         getIncludeRoot()
             .transform(

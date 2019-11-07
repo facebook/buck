@@ -28,17 +28,20 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
+import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 
 class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
-  private final IjProjectSourcePathResolver sourcePathResolver;
+  private final SourcePathResolverAdapter sourcePathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final Optional<Set<BuildTarget>> requiredBuildTargets;
   private TargetGraph targetGraph;
@@ -48,7 +51,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
       ProjectFilesystem projectFilesystem,
       Optional<Set<BuildTarget>> requiredBuildTargets,
       TargetGraph targetGraph) {
-    this.sourcePathResolver = sourcePathResolver;
+    this.sourcePathResolver = new SourcePathResolverAdapter(sourcePathResolver);
     this.projectFilesystem = projectFilesystem;
     this.requiredBuildTargets = requiredBuildTargets;
     this.targetGraph = targetGraph;
@@ -183,9 +186,16 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   }
 
   private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
+    SourcePathResolver resolver = sourcePathResolver.getResolver();
+    Preconditions.checkState(
+        resolver instanceof IjProjectSourcePathResolver,
+        "Expected IjProjectSourcePathResolver, got %s",
+        resolver.getClass().getName());
     requiredBuildTargets.ifPresent(
         requiredTargets ->
-            sourcePathResolver.getBuildTarget(sourcePath).ifPresent(requiredTargets::add));
+            ((IjProjectSourcePathResolver) resolver)
+                .getBuildTarget(sourcePath)
+                .ifPresent(requiredTargets::add));
     return sourcePathResolver.getRelativePath(sourcePath);
   }
 }

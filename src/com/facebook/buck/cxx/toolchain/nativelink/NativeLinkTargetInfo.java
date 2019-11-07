@@ -17,7 +17,7 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -62,7 +62,7 @@ public final class NativeLinkTargetInfo implements NativeLinkTarget {
 
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(
-      ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver) {
+      ActionGraphBuilder graphBuilder, SourcePathResolverAdapter pathResolver) {
     return Objects.requireNonNull(
         linkableInput,
         String.format("NativeLinkTargetInfo for %s has no NativeLinkableInput.", target));

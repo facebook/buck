@@ -19,7 +19,7 @@ package com.facebook.buck.core.test.rule;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
@@ -84,7 +84,7 @@ public interface TestRule extends BuildRule {
    *
    * @param executionContext Provides context for creating {@link Step}s.
    * @param options The runtime testing options.
-   * @param buildContext A SourcePathResolver from the build.
+   * @param buildContext A SourcePathResolverAdapter from the build.
    * @return the commands required to run the tests
    */
   ImmutableList<Step> runTests(
@@ -95,7 +95,7 @@ public interface TestRule extends BuildRule {
 
   Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors);
 
   /** @return The set of labels for this build rule. */

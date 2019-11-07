@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -118,7 +118,8 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   }
 
   @Override
-  protected ImmutableList<String> getShellCommand(SourcePathResolver pathResolver, Path output) {
+  protected ImmutableList<String> getShellCommand(
+      SourcePathResolverAdapter pathResolver, Path output) {
     return ImmutableList.<String>builder()
         .addAll(getExecutableCommand().getCommandPrefix(pathResolver))
         .add("--gtest_color=no")

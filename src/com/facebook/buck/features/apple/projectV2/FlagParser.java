@@ -35,7 +35,7 @@ import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilde
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescriptionArg;
@@ -91,7 +91,7 @@ class FlagParser {
   private final TargetGraph targetGraph;
   private final Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode;
   private final AppleDependenciesCache dependenciesCache;
-  private final SourcePathResolver defaultPathResolver;
+  private final SourcePathResolverAdapter defaultPathResolver;
   private final HeaderSearchPaths headerSearchPaths;
 
   private final ImmutableMap<Flavor, CxxBuckConfig> platformCxxBuckConfigs;
@@ -106,7 +106,7 @@ class FlagParser {
       TargetGraph targetGraph,
       Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode,
       AppleDependenciesCache dependenciesCache,
-      SourcePathResolver defaultPathResolver,
+      SourcePathResolverAdapter defaultPathResolver,
       HeaderSearchPaths headerSearchPaths) {
     this.projectCell = projectCell;
     this.appleConfig = appleConfig;

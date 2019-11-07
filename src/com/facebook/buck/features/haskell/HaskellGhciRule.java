@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -273,13 +273,13 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   /** Resolves the real path to the lib and generates a symlink to it */
   private class ResolveAndSymlinkStep extends AbstractExecutionStep {
 
-    private SourcePathResolver resolver;
+    private SourcePathResolverAdapter resolver;
     private Path symlinkDir;
     private String name;
     private SourcePath lib;
 
     public ResolveAndSymlinkStep(
-        SourcePathResolver resolver, Path symlinkDir, String name, SourcePath lib) {
+        SourcePathResolverAdapter resolver, Path symlinkDir, String name, SourcePath lib) {
       super("symlinkLib_" + name);
       this.resolver = resolver;
       this.symlinkDir = symlinkDir;
@@ -301,7 +301,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private void symlinkLibs(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Path symlinkDir,
       ImmutableList.Builder<Step> steps,
       ImmutableSortedMap<String, NonHashableSourcePathContainer> libs) {
@@ -316,7 +316,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
     String name = getBuildTarget().getShortName();
     Path dir = getOutputDir();

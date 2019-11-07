@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.PreprocessorFlags;
@@ -181,7 +181,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         !buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
   }
 
-  private SwiftCompileStep makeCompileStep(SourcePathResolver resolver) {
+  private SwiftCompileStep makeCompileStep(SourcePathResolverAdapter resolver) {
     ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
     compilerCommand.addAll(swiftCompiler.getCommandPrefix(resolver));
 
@@ -286,7 +286,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     }
   }
 
-  private SwiftCompileStep makeModulewrapStep(SourcePathResolver resolver) {
+  private SwiftCompileStep makeModulewrapStep(SourcePathResolverAdapter resolver) {
     ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
     ImmutableList<String> commandPrefix = swiftCompiler.getCommandPrefix(resolver);
 
@@ -334,7 +334,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return steps.build();
   }
 
-  private Step makeFileListStep(SourcePathResolver resolver, Path swiftFileListPath) {
+  private Step makeFileListStep(SourcePathResolverAdapter resolver, Path swiftFileListPath) {
     ImmutableList<String> relativePaths =
         srcs.stream()
             .map(sourcePath -> resolver.getRelativePath(sourcePath).toString())
@@ -374,7 +374,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
    *     swift doesn't like spaces after the "-I" flag.
    */
   @VisibleForTesting
-  ImmutableList<String> getSwiftIncludeArgs(SourcePathResolver resolver) {
+  ImmutableList<String> getSwiftIncludeArgs(SourcePathResolverAdapter resolver) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
     // Arg list can't simply be passed in since the current implementation of toToolFlags drops the

@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -105,7 +105,7 @@ class RobolectricTestHelper {
   }
 
   private String getDirectoriesContent(
-      SourcePathResolver pathResolver, Function<HasAndroidResourceDeps, SourcePath> filter) {
+      SourcePathResolverAdapter pathResolver, Function<HasAndroidResourceDeps, SourcePath> filter) {
     String content;
     if (optionalDummyRDotJava.isPresent()) {
       Iterable<String> resourceDirectories =
@@ -152,7 +152,8 @@ class RobolectricTestHelper {
   }
 
   /** Amend jvm args, adding manifest and dependency paths */
-  void amendVmArgs(ImmutableList.Builder<String> vmArgsBuilder, SourcePathResolver pathResolver) {
+  void amendVmArgs(
+      ImmutableList.Builder<String> vmArgsBuilder, SourcePathResolverAdapter pathResolver) {
     Preconditions.checkState(
         optionalDummyRDotJava.isPresent(), "DummyRDotJava must have been created!");
     vmArgsBuilder.add(
@@ -181,7 +182,7 @@ class RobolectricTestHelper {
 
   @VisibleForTesting
   String getRobolectricAssetsDirectories(
-      SourcePathResolver pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
+      SourcePathResolverAdapter pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
     String argValue;
     if (passDirectoriesInFile) {
       argValue = "@" + projectFilesystem.resolve(assetDirectoriesPath);
@@ -199,7 +200,7 @@ class RobolectricTestHelper {
 
   @VisibleForTesting
   String getRobolectricResourceDirectoriesArg(
-      SourcePathResolver pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
+      SourcePathResolverAdapter pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
     String argValue;
     if (passDirectoriesInFile) {
       argValue = "@" + projectFilesystem.resolve(resourceDirectoriesPath);
@@ -215,7 +216,7 @@ class RobolectricTestHelper {
   }
 
   private Iterable<String> getDirs(
-      Stream<SourcePath> sourcePathStream, SourcePathResolver pathResolver) {
+      Stream<SourcePath> sourcePathStream, SourcePathResolverAdapter pathResolver) {
 
     return sourcePathStream
         .filter(Objects::nonNull)

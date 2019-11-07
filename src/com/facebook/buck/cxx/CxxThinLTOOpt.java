@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.AbstractCxxSource.Type;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -153,7 +153,7 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         boolean useArgfile) {
-      SourcePathResolver resolver = context.getSourcePathResolver();
+      SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
       ImmutableList<Arg> arguments =
           compilerDelegate.getArguments(CxxToolFlags.of(), filesystem.getRootPath());

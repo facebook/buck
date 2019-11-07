@@ -42,7 +42,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -139,7 +139,7 @@ public class GenruleTest {
      */
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     createSampleJavaBinaryRule(graphBuilder);
 
     BuildTarget buildTarget =
@@ -748,7 +748,7 @@ public class GenruleTest {
     // Create an initial input-based rule key
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = graphBuilder;
-    SourcePathResolver pathResolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = ruleFinder.getSourcePathResolver();
     BuildRule dep =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setMain(PathSourcePath.of(filesystem, Paths.get("dep.exe")))
@@ -828,7 +828,7 @@ public class GenruleTest {
     // Create an initial input-based rule key
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = graphBuilder;
-    SourcePathResolver pathResolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = ruleFinder.getSourcePathResolver();
     JavaLibrary dep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("source.java"))

@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -138,7 +138,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             cxxPreprocessorInputs,
             headers);
 
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
     ImmutableSet.Builder<SourcePath> cxxSourcesFromArg = ImmutableSet.builder();
     ImmutableSet.Builder<SourcePath> goSourcesFromArg = ImmutableSet.builder();

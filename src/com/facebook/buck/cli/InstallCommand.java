@@ -54,7 +54,7 @@ import com.facebook.buck.core.rules.attr.HasInstallHelpers;
 import com.facebook.buck.core.rules.attr.NoopInstallable;
 import com.facebook.buck.core.rules.common.InstallTrigger;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
@@ -277,7 +277,7 @@ public class InstallCommand extends BuildCommand {
     Build build = getBuild();
     ExitCode exitCode = ExitCode.SUCCESS;
 
-    SourcePathResolver pathResolver = build.getGraphBuilder().getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = build.getGraphBuilder().getSourcePathResolver();
     for (BuildTarget buildTarget : buildRunResult.getBuildTargets()) {
 
       BuildRule buildRule = build.getGraphBuilder().requireRule(buildTarget);
@@ -402,7 +402,7 @@ public class InstallCommand extends BuildCommand {
   private ExitCode installApk(
       HasInstallableApk hasInstallableApk,
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       CommandRunnerParams params)
       throws InterruptedException {
     AndroidDevicesHelper adbHelper = executionContext.getAndroidDevicesHelper().get();
@@ -473,7 +473,7 @@ public class InstallCommand extends BuildCommand {
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
-      SourcePathResolver pathResolver)
+      SourcePathResolverAdapter pathResolver)
       throws IOException, InterruptedException, NoSuchBuildTargetException {
     String platformName = appleBundle.getPlatformName();
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
@@ -505,7 +505,7 @@ public class InstallCommand extends BuildCommand {
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
-      SourcePathResolver pathResolver)
+      SourcePathResolverAdapter pathResolver)
       throws IOException, InterruptedException {
 
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
@@ -621,7 +621,7 @@ public class InstallCommand extends BuildCommand {
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
-      SourcePathResolver pathResolver)
+      SourcePathResolverAdapter pathResolver)
       throws IOException {
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
 
@@ -792,7 +792,7 @@ public class InstallCommand extends BuildCommand {
   private InstallResult installAppleBundleForSimulatorIdb(
       CommandRunnerParams params,
       AppleBundle appleBundle,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor)
       throws IOException, InterruptedException {
@@ -929,7 +929,7 @@ public class InstallCommand extends BuildCommand {
   private InstallResult installAppleBundleForSimulator(
       CommandRunnerParams params,
       AppleBundle appleBundle,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor)
       throws IOException, InterruptedException {

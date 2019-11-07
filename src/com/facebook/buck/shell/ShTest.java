@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -143,7 +143,9 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext context, SourcePathResolver pathResolver, boolean isUsingTestSelectors) {
+      ExecutionContext context,
+      SourcePathResolverAdapter pathResolver,
+      boolean isUsingTestSelectors) {
     return () -> {
       Optional<String> resultsFileContents =
           getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());

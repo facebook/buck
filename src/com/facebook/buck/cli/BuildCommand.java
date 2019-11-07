@@ -37,7 +37,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.listener.FileSerializationOutputRuleDepsListener;
@@ -501,7 +501,7 @@ public class BuildCommand extends AbstractCommand {
                 loneTarget);
 
         ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
-        SourcePathResolver pathResolver =
+        SourcePathResolverAdapter pathResolver =
             graphs.getActionGraphAndBuilder().getActionGraphBuilder().getSourcePathResolver();
 
         Path outputPath;
@@ -520,7 +520,7 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private void symLinkBuildRuleResult(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       BuckConfig buckConfig,
       Path lastOutputDirPath,
       BuildRule rule)
@@ -560,7 +560,7 @@ public class BuildCommand extends AbstractCommand {
 
     ActionGraphBuilder graphBuilder =
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
     for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
       BuildRule rule = graphBuilder.requireRule(buildTarget);

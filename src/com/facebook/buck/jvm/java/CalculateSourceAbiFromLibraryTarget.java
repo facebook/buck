@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
@@ -115,7 +115,7 @@ public class CalculateSourceAbiFromLibraryTarget
   }
 
   @Override
-  public Object initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
+  public Object initializeFromDisk(SourcePathResolverAdapter pathResolver) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     javaAbiInfo.load(pathResolver);
     return new Object();

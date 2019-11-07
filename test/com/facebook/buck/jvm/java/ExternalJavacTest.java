@@ -34,7 +34,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -156,12 +156,12 @@ public class ExternalJavacTest extends EasyMockSupport {
           private final ImmutableList<String> flags = ImmutableList.copyOf(commandPrefix);
 
           @Override
-          public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+          public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
             return flags;
           }
 
           @Override
-          public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+          public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
             return ImmutableMap.of();
           }
         };

@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
@@ -40,7 +40,7 @@ import org.junit.Test;
 
 public class DefaultIjLibraryFactoryTest {
 
-  private SourcePathResolver sourcePathResolver;
+  private SourcePathResolverAdapter sourcePathResolverAdapter;
   private Path guavaJarPath;
   private TargetNode<?> guava;
   private IjLibrary guavaLibrary;
@@ -57,7 +57,7 @@ public class DefaultIjLibraryFactoryTest {
 
   @Before
   public void setUp() {
-    sourcePathResolver = new TestActionGraphBuilder().getSourcePathResolver();
+    sourcePathResolverAdapter = new TestActionGraphBuilder().getSourcePathResolver();
     guavaJarPath = Paths.get("third_party/java/guava.jar");
     guava =
         PrebuiltJarBuilder.createBuilder(
@@ -89,7 +89,7 @@ public class DefaultIjLibraryFactoryTest {
         new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
-            return sourcePathResolver.getRelativePath(path);
+            return sourcePathResolverAdapter.getRelativePath(path);
           }
 
           @Override

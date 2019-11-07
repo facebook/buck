@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -94,7 +94,7 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return getProjectFilesystem().resolve(scratchDir).resolve("haskell-link.argsfile");
   }
 
-  private Iterable<String> getLinkerArgs(SourcePathResolver resolver) {
+  private Iterable<String> getLinkerArgs(SourcePathResolverAdapter resolver) {
     return MoreIterables.zipAndConcat(
         Iterables.cycle("-optl"), Arg.stringify(linkerArgs, resolver));
   }

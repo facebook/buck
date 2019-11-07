@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -82,7 +82,7 @@ public class ClasspathMacroExpanderTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph, filesystem);
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
     BuildRule rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
     BuildRule dep = graphBuilder.requireRule(depNode.getBuildTarget());
@@ -147,7 +147,7 @@ public class ClasspathMacroExpanderTest {
   private void assertExpandsTo(
       BuildRule rule, ActionGraphBuilder graphBuilder, String expectedClasspath)
       throws MacroException {
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     String classpath =
         Arg.stringify(
             expander.expand(pathResolver, ClasspathMacro.of(rule.getBuildTarget()), rule),

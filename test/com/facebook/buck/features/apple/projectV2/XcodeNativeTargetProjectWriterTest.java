@@ -38,7 +38,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.util.environment.Platform;
@@ -56,7 +56,7 @@ public class XcodeNativeTargetProjectWriterTest {
   private AppleConfig appleConfig;
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
-  private SourcePathResolver sourcePathResolver;
+  private SourcePathResolverAdapter sourcePathResolverAdapter;
   private BuildRuleResolver buildRuleResolver;
 
   @Before
@@ -66,9 +66,9 @@ public class XcodeNativeTargetProjectWriterTest {
     buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     appleConfig = AppleProjectHelper.createDefaultAppleConfig(new FakeProjectFilesystem());
     buildRuleResolver = new TestActionGraphBuilder();
-    sourcePathResolver = buildRuleResolver.getSourcePathResolver();
+    sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
     pathRelativizer =
-        new PathRelativizer(Paths.get("_output"), sourcePathResolver::getRelativePath);
+        new PathRelativizer(Paths.get("_output"), sourcePathResolverAdapter::getRelativePath);
   }
 
   @Test
@@ -87,7 +87,7 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolver::getRelativePath, true);
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath, true);
     projectWriter.writeTargetToProject(nativeTargetAttributes, generatedProject);
 
     assertTargetExistsAndReturnTarget(generatedProject, "bar");
@@ -108,7 +108,7 @@ public class XcodeNativeTargetProjectWriterTest {
             .build();
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolver::getRelativePath, false);
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath, false);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(nativeTargetAttributes, generatedProject);
 
@@ -141,7 +141,7 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolver::getRelativePath, false);
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath, false);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -170,7 +170,7 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolver::getRelativePath, false);
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath, false);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -188,7 +188,7 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolver::getRelativePath, false);
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath, false);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -216,7 +216,7 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolver::getRelativePath, false);
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath, false);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 

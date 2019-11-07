@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -117,7 +117,7 @@ public class ApkGenrule extends LegacyGenrule
 
   @Override
   protected void addEnvironmentVariables(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
     // We have to use an absolute path, because genrules are run in a temp directory.

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.exopackage;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -29,12 +29,12 @@ import java.util.stream.Stream;
 public class ResourcesExoHelper {
   @VisibleForTesting public static final Path RESOURCES_DIR = Paths.get("resources");
 
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final ExopackageInfo.ResourcesInfo resourcesInfo;
 
   ResourcesExoHelper(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
       ExopackageInfo.ResourcesInfo resourcesInfo) {
     this.pathResolver = pathResolver;
@@ -48,7 +48,7 @@ public class ResourcesExoHelper {
 
   /** Returns a map of hash to path for resource files. */
   public static ImmutableMap<String, Path> getResourceFilesByHash(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
       Stream<ExopackagePathAndHash> resourcesPaths) {
     return resourcesPaths

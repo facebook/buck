@@ -48,7 +48,7 @@ import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourcePathFactoryForTests;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -280,7 +280,7 @@ public class RuleKeyBuilderTest {
     Map<AddsToRuleKey, RuleKey> appendableKeys =
         ImmutableMap.of(APPENDABLE_1, RULE_KEY_1, APPENDABLE_2, RULE_KEY_2);
     BuildRuleResolver ruleResolver = new FakeActionGraphBuilder(ruleMap);
-    SourcePathResolver pathResolver = ruleResolver.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = ruleResolver.getSourcePathResolver();
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(

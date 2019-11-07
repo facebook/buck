@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
@@ -91,7 +91,7 @@ public class CxxToolchainDescriptionTest {
     graphBuilder.addToIndex(new SimpleToolRule(binaryToolTarget, binaryTool));
     CxxToolchainBuildRule cxxPlatformRule = builder.build(graphBuilder);
 
-    SourcePathResolver resolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = graphBuilder.getSourcePathResolver();
 
     CxxPlatform platform = cxxPlatformRule.getPlatformWithFlavor(InternalFlavor.of("dontcare"));
 
@@ -131,7 +131,7 @@ public class CxxToolchainDescriptionTest {
     assertEquals(ImmutableList.of("c", "flags"), platform.getCflags());
   }
 
-  private void assertIsBinaryTool(SourcePathResolver resolver, Tool expected, Tool other) {
+  private void assertIsBinaryTool(SourcePathResolverAdapter resolver, Tool expected, Tool other) {
     MoreAsserts.assertIterablesEquals(
         expected.getCommandPrefix(resolver), other.getCommandPrefix(resolver));
   }

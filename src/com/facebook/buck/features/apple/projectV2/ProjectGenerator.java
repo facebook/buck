@@ -73,7 +73,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
@@ -177,7 +177,7 @@ public class ProjectGenerator {
   // These fields are created/filled when creating the projects.
   private final ImmutableList.Builder<Path> headerSymlinkTreesBuilder;
   private final Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode;
-  private final SourcePathResolver defaultPathResolver;
+  private final SourcePathResolverAdapter defaultPathResolver;
   private final BuckEventBus buckEventBus;
 
   private final GidGenerator gidGenerator;
@@ -240,24 +240,25 @@ public class ProjectGenerator {
     this.appleCxxFlavors = appleCxxFlavors;
     this.actionGraphBuilderForNode = actionGraphBuilderForNode;
     this.defaultPathResolver =
-        new AbstractSourcePathResolver() {
-          @Override
-          protected SourcePath resolveDefaultBuildTargetSourcePath(
-              DefaultBuildTargetSourcePath targetSourcePath) {
-            throw new UnsupportedOperationException();
-          }
+        new SourcePathResolverAdapter(
+            new AbstractSourcePathResolver() {
+              @Override
+              protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
+                  DefaultBuildTargetSourcePath targetSourcePath) {
+                throw new UnsupportedOperationException();
+              }
 
-          @Override
-          public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
-            throw new UnsupportedOperationException();
-          }
+              @Override
+              public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+                throw new UnsupportedOperationException();
+              }
 
-          @Override
-          protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
-              BuildTargetSourcePath sourcePath) {
-            throw new UnsupportedOperationException();
-          }
-        };
+              @Override
+              protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
+                  BuildTargetSourcePath sourcePath) {
+                throw new UnsupportedOperationException();
+              }
+            });
     this.buckEventBus = buckEventBus;
 
     this.projectSourcePathResolver =
@@ -1047,7 +1048,7 @@ public class ProjectGenerator {
   }
 
   private static String sourceNameRelativeToOutput(
-      SourcePath source, SourcePathResolver pathResolver, Path outputDirectory) {
+      SourcePath source, SourcePathResolverAdapter pathResolver, Path outputDirectory) {
     Path pathRelativeToCell = pathResolver.getRelativePath(source);
     Path pathRelativeToOutput =
         MorePaths.relativizeWithDotDotSupport(outputDirectory, pathRelativeToCell);
@@ -1071,7 +1072,7 @@ public class ProjectGenerator {
       ImmutableList<Pair<Pattern, ImmutableSortedSet<SourceWithFlags>>> platformSources,
       ImmutableList<Pair<Pattern, Iterable<SourcePath>>> platformHeaders,
       Path outputDirectory,
-      SourcePathResolver pathResolver) {
+      SourcePathResolverAdapter pathResolver) {
     Set<String> allPlatformSpecificSources = new HashSet<>();
     Map<String, Set<String>> includedSourcesByPlatform = new HashMap<>();
 

@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -60,7 +60,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   private BuildRule d;
   private BuildRule e;
   private BuildRule z;
-  private SourcePathResolver resolver;
+  private SourcePathResolverAdapter resolver;
   private ProjectFilesystem filesystem;
 
   @Before

@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.CustomBehaviorUtils;
@@ -73,7 +73,7 @@ import java.util.stream.Stream;
  * required toolchains and referenced paths outside of the known cells.
  */
 public class IsolationChecker {
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final ImmutableMap<Path, Optional<String>> cellMap;
   private final FailureReporter reporter;
   private final Path rootCellPath;

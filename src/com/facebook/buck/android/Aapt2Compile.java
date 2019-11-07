@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -73,13 +73,13 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
         BuildCellRelativePathFactory buildCellPathFactory) {
 
       Path outputPath = outputPathResolver.resolvePath(output);
-      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
 
       Aapt2CompileStep aapt2CompileStep =
           new Aapt2CompileStep(
               filesystem.getRootPath(),
-              aapt2ExecutableTool.getCommandPrefix(sourcePathResolver),
-              sourcePathResolver.getAbsolutePath(resDir),
+              aapt2ExecutableTool.getCommandPrefix(sourcePathResolverAdapter),
+              sourcePathResolverAdapter.getAbsolutePath(resDir),
               outputPath);
       ZipScrubberStep zipScrubberStep = ZipScrubberStep.of(filesystem.resolve(outputPath));
       return ImmutableList.of(aapt2CompileStep, zipScrubberStep);

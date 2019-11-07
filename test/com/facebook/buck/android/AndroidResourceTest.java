@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -111,7 +111,7 @@ public class AndroidResourceTest {
             projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver resolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     AndroidResource androidResource =
         new AndroidResource(
             buildTarget,
@@ -142,7 +142,7 @@ public class AndroidResourceTest {
             projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver resolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     AndroidResource androidResource =
         new AndroidResource(
             buildTarget,

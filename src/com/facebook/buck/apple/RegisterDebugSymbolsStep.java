@@ -17,7 +17,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -32,11 +32,11 @@ class RegisterDebugSymbolsStep implements Step {
 
   private final SourcePath binary;
   private final Tool lldb;
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private final Path dsymPath;
 
   public RegisterDebugSymbolsStep(
-      SourcePath binary, Tool lldb, SourcePathResolver resolver, Path dsymPath) {
+      SourcePath binary, Tool lldb, SourcePathResolverAdapter resolver, Path dsymPath) {
     this.binary = binary;
     this.lldb = lldb;
     this.resolver = resolver;

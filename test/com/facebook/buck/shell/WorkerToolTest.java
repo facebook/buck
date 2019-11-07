@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -88,7 +88,7 @@ public class WorkerToolTest {
   @Test
   public void testArgsWithLocationMacroAffectDependenciesAndExpands() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
@@ -125,7 +125,7 @@ public class WorkerToolTest {
   @Test
   public void testEnvWithLocationMacroAffectDependenciesAndExpands() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))

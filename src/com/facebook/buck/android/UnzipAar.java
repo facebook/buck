@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -196,7 +196,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public BuildOutput initializeFromDisk(SourcePathResolver pathResolver) {
+  public BuildOutput initializeFromDisk(SourcePathResolverAdapter pathResolver) {
     String rDotJavaPackageFromFile =
         getProjectFilesystem().readFirstLine(pathToRDotJavaPackageFile).get();
     return new BuildOutput(rDotJavaPackageFromFile);

@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -70,7 +70,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   private ImmutableMap<Path, SourcePath> links;
   private Path symlinkTreeRoot;
   private ActionGraphBuilder graphBuilder;
-  private SourcePathResolver resolver;
+  private SourcePathResolverAdapter resolver;
 
   @Before
   public void setUp() throws Exception {

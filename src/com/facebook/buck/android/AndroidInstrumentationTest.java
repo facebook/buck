@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -134,7 +134,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   private static String tryToExtractInstrumentationTestRunnerFromManifest(
-      SourcePathResolver pathResolver, ApkInfo apkInfo) {
+      SourcePathResolverAdapter pathResolver, ApkInfo apkInfo) {
     Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
 
     if (!Files.isRegularFile(pathToManifest)) {
@@ -150,7 +150,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   private static String tryToExtractTargetPackageFromManifest(
-      SourcePathResolver pathResolver, ApkInfo apkInfo) {
+      SourcePathResolverAdapter pathResolver, ApkInfo apkInfo) {
     Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
 
     if (!Files.isRegularFile(pathToManifest)) {
@@ -242,7 +242,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   private InstrumentationStep getInstrumentationStep(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       String pathToAdbExecutable,
       Optional<Path> directoryForTestResults,
       Optional<String> deviceSerial,
@@ -348,7 +348,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext context, SourcePathResolver pathResolver, boolean isUsingTestSelectors) {
+      ExecutionContext context,
+      SourcePathResolverAdapter pathResolver,
+      boolean isUsingTestSelectors) {
     return () -> {
       ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
       AndroidDevice device;

@@ -20,7 +20,7 @@ import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
@@ -281,7 +281,7 @@ class Depfiles {
   public static ImmutableList<Path> parseAndVerifyDependencies(
       BuckEventBus eventBus,
       ProjectFilesystem filesystem,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HeaderPathNormalizer headerPathNormalizer,
       HeaderVerification headerVerification,
       Path sourceDepFile,
@@ -323,7 +323,7 @@ class Depfiles {
   private static ImmutableList<Path> normalizeAndVerifyHeaders(
       BuckEventBus eventBus,
       ProjectFilesystem filesystem,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HeaderPathNormalizer headerPathNormalizer,
       HeaderVerification headerVerification,
       Path inputPath,

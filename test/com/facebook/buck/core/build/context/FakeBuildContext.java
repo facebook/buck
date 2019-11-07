@@ -18,7 +18,7 @@ package com.facebook.buck.core.build.context;
 
 import static org.easymock.EasyMock.createMock;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -36,9 +36,9 @@ public class FakeBuildContext {
 
   /** A BuildContext which doesn't touch the host filesystem or actually execute steps. */
   public static final BuildContext NOOP_CONTEXT =
-      withSourcePathResolver(createMock(SourcePathResolver.class));
+      withSourcePathResolver(createMock(SourcePathResolverAdapter.class));
 
-  public static BuildContext withSourcePathResolver(SourcePathResolver pathResolver) {
+  public static BuildContext withSourcePathResolver(SourcePathResolverAdapter pathResolver) {
     return BuildContext.builder()
         .setSourcePathResolver(pathResolver)
         .setJavaPackageFinder(new FakeJavaPackageFinder())
@@ -49,11 +49,11 @@ public class FakeBuildContext {
   }
 
   /**
-   * Same as {@link #withSourcePathResolver(SourcePathResolver)}, except that the returned context
-   * uses the given filesystem's root path as the build cell root path.
+   * Same as {@link #withSourcePathResolver(SourcePathResolverAdapter)}, except that the returned
+   * context uses the given filesystem's root path as the build cell root path.
    */
   public static BuildContext withSourcePathResolver(
-      SourcePathResolver pathResolver, ProjectFilesystem filesystem) {
+      SourcePathResolverAdapter pathResolver, ProjectFilesystem filesystem) {
     return BuildContext.builder()
         .setSourcePathResolver(pathResolver)
         .setJavaPackageFinder(new FakeJavaPackageFinder())
@@ -63,7 +63,8 @@ public class FakeBuildContext {
         .build();
   }
 
-  public static BuildContext create(SourcePathResolver pathResolver, BuckEventBus buckEventBus) {
+  public static BuildContext create(
+      SourcePathResolverAdapter pathResolver, BuckEventBus buckEventBus) {
     return BuildContext.builder()
         .setSourcePathResolver(pathResolver)
         .setJavaPackageFinder(new FakeJavaPackageFinder())

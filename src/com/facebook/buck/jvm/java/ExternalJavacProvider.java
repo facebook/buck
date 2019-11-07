@@ -25,7 +25,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.util.Console;
@@ -139,12 +139,12 @@ public class ExternalJavacProvider implements JavacProvider {
     }
 
     @Override
-    public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+    public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
       return ImmutableList.of(resolver.getAbsolutePath(container.getSourcePath()).toString());
     }
 
     @Override
-    public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
       return ImmutableMap.of();
     }
   }

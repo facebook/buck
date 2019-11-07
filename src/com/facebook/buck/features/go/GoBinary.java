@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.cxx.CxxPrepareForLinkStep;
@@ -118,7 +118,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     buildableContext.recordArtifact(output);
 
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps.add(

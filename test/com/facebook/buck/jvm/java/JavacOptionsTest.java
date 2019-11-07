@@ -30,11 +30,13 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.nio.file.Paths;
@@ -275,24 +277,25 @@ public class JavacOptionsTest {
     OptionAccumulator optionsConsumer = new OptionAccumulator();
     options.appendOptionsTo(
         optionsConsumer,
-        new AbstractSourcePathResolver() {
-          @Override
-          protected SourcePath resolveDefaultBuildTargetSourcePath(
-              DefaultBuildTargetSourcePath targetSourcePath) {
-            throw new UnsupportedOperationException();
-          }
+        new SourcePathResolverAdapter(
+            new AbstractSourcePathResolver() {
+              @Override
+              protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
+                  DefaultBuildTargetSourcePath targetSourcePath) {
+                throw new UnsupportedOperationException();
+              }
 
-          @Override
-          public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
-            throw new UnsupportedOperationException();
-          }
+              @Override
+              public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+                throw new UnsupportedOperationException();
+              }
 
-          @Override
-          protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
-              BuildTargetSourcePath sourcePath) {
-            throw new UnsupportedOperationException();
-          }
-        },
+              @Override
+              protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
+                  BuildTargetSourcePath sourcePath) {
+                throw new UnsupportedOperationException();
+              }
+            }),
         filesystem);
     return optionsConsumer;
   }

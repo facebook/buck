@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.collect.ImmutableSortedSet;
 
 /** The implementation of JavaAbiInfo for targets that have no sources. */
@@ -45,7 +45,7 @@ public class EmptyJavaAbiInfo implements JavaAbiInfo {
   }
 
   @Override
-  public void load(SourcePathResolver pathResolver) {}
+  public void load(SourcePathResolverAdapter pathResolver) {}
 
   @Override
   public void invalidate() {}

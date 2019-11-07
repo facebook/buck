@@ -44,7 +44,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
@@ -277,7 +277,7 @@ public class AppleDescriptions {
   }
 
   public static void populateCxxConstructorArg(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget,
       Consumer<ImmutableSortedSet<SourceWithFlags>> setSrcs,
@@ -319,7 +319,7 @@ public class AppleDescriptions {
   }
 
   public static void populateCxxBinaryDescriptionArg(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       CxxBinaryDescriptionArg.Builder output,
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget) {
@@ -334,7 +334,7 @@ public class AppleDescriptions {
   }
 
   public static void populateCxxLibraryDescriptionArg(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       CxxLibraryDescriptionArg.Builder output,
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget) {

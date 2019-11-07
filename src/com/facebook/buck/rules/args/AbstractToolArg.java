@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;
@@ -32,7 +32,7 @@ interface AbstractToolArg extends Arg {
   Tool getTool();
 
   @Override
-  default void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+  default void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {
     // TODO(mikekap): Pass environment variables through.
     consumer.accept(Joiner.on(' ').join(getTool().getCommandPrefix(resolver)));
   }

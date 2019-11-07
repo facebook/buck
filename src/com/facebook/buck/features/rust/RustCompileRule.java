@@ -26,7 +26,7 @@ import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxPrepareForLinkStep;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -212,7 +212,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       Path outputPath = outputPathResolver.resolvePath(output);
       Path scratchDir = outputPathResolver.getTempPath();
 
-      SourcePathResolver resolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
       Path argFilePath =
           filesystem.getRootPath().resolve(outputPathResolver.getTempPath("argsfile.txt"));

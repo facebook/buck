@@ -30,7 +30,7 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -169,7 +169,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @SuppressWarnings("PMD.PrematureDeclaration")
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    SourcePathResolver pathResolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = context.getSourcePathResolver();
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // The `HasInstallableApk` interface needs access to the manifest, so make sure we create our
@@ -246,7 +246,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             .addAll(dexFilesInfo.getSecondaryDexDirs(getProjectFilesystem(), pathResolver))
             .build();
 
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     Path signedApkPath = getSignedApkPath();
     Path pathToKeystore = resolver.getAbsolutePath(keystorePath);
     Supplier<KeystoreProperties> keystoreProperties =
@@ -386,7 +386,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableSet.Builder<Path> nativeLibraryAsAssetDirectories,
       ImmutableSet.Builder<Path> moduleResourcesDirectories,
       ImmutableList.Builder<Step> steps,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       BuildContext context,
       ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths,
       ModuleInfo.Builder baseModuleInfo,
@@ -471,7 +471,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   }
 
   private void addDexFileDirectories(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       APKModule module,
       ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths,
       ImmutableSet.Builder<Path> dexFileDirectoriesBuilderForThisModule,
@@ -503,7 +503,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private void addNativeDirectory(
       boolean shouldPackageAssetLibraries,
       APKModule module,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilder,
       ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilderForThisModule) {
     nativeLibraryDirectoriesBuilder.add(
@@ -710,7 +710,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   }
 
   private Supplier<KeystoreProperties> getKeystorePropertiesSupplier(
-      SourcePathResolver resolver, Path pathToKeystore) {
+      SourcePathResolverAdapter resolver, Path pathToKeystore) {
     return MoreSuppliers.memoize(
         () -> {
           try {
@@ -736,7 +736,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private Iterable<Step> createRedexSteps(
       BuildContext context,
       BuildableContext buildableContext,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Supplier<KeystoreProperties> keystoreProperties,
       Path apkToRedexAndAlign,
       Path redexedApk) {
@@ -762,7 +762,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   }
 
   private CopyStep createCopyProguardFilesStep(
-      SourcePathResolver pathResolver, SourcePath proguardTextFilesPath) {
+      SourcePathResolverAdapter pathResolver, SourcePath proguardTextFilesPath) {
     return CopyStep.forDirectory(
         getProjectFilesystem(),
         pathResolver.getRelativePath(proguardTextFilesPath),

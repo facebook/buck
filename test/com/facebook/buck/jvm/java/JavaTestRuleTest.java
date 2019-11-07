@@ -24,7 +24,7 @@ import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -47,7 +47,10 @@ public class JavaTestRuleTest {
 
     ImmutableList<String> amended =
         rule.amendVmArgs(
-            vmArgs, createMock(SourcePathResolver.class), Optional.empty(), Optional.empty());
+            vmArgs,
+            createMock(SourcePathResolverAdapter.class),
+            Optional.empty(),
+            Optional.empty());
 
     MoreAsserts.assertListEquals(vmArgs, amended);
   }
@@ -60,7 +63,10 @@ public class JavaTestRuleTest {
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, Optional.empty());
     ImmutableList<String> amended =
         rule.amendVmArgs(
-            vmArgs, createMock(SourcePathResolver.class), Optional.of(device), Optional.empty());
+            vmArgs,
+            createMock(SourcePathResolverAdapter.class),
+            Optional.of(device),
+            Optional.empty());
 
     ImmutableList<String> expected = ImmutableList.of("--one", "-Dbuck.device=emulator");
     assertEquals(expected, amended);
@@ -74,7 +80,10 @@ public class JavaTestRuleTest {
     TargetDevice device = new TargetDevice(TargetDevice.Type.REAL_DEVICE, Optional.empty());
     ImmutableList<String> amended =
         rule.amendVmArgs(
-            vmArgs, createMock(SourcePathResolver.class), Optional.of(device), Optional.empty());
+            vmArgs,
+            createMock(SourcePathResolverAdapter.class),
+            Optional.of(device),
+            Optional.empty());
 
     ImmutableList<String> expected = ImmutableList.of("--one", "-Dbuck.device=device");
     assertEquals(expected, amended);
@@ -88,7 +97,10 @@ public class JavaTestRuleTest {
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, Optional.of("123"));
     List<String> amended =
         rule.amendVmArgs(
-            vmArgs, createMock(SourcePathResolver.class), Optional.of(device), Optional.empty());
+            vmArgs,
+            createMock(SourcePathResolverAdapter.class),
+            Optional.of(device),
+            Optional.empty());
 
     List<String> expected =
         ImmutableList.of("--one", "-Dbuck.device=emulator", "-Dbuck.device.id=123");
@@ -102,7 +114,10 @@ public class JavaTestRuleTest {
 
     List<String> amended =
         rule.amendVmArgs(
-            vmArgs, createMock(SourcePathResolver.class), Optional.empty(), Optional.of("path"));
+            vmArgs,
+            createMock(SourcePathResolverAdapter.class),
+            Optional.empty(),
+            Optional.of("path"));
 
     List<String> expected = ImmutableList.of("--one", "-Djava.io.tmpdir=path");
     assertEquals(expected, amended);

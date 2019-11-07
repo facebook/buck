@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.modern.CustomClassSerialization;
@@ -49,7 +49,8 @@ public class RelativeLinkArg implements Arg {
   }
 
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     link.forEach(consumer);
   }
 

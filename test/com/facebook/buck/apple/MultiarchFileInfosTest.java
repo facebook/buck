@@ -38,7 +38,7 @@ import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -53,13 +53,13 @@ import org.junit.Test;
 
 public class MultiarchFileInfosTest {
 
-  private static SourcePathResolver newSourcePathResolver() {
+  private static SourcePathResolverAdapter newSourcePathResolver() {
     return new TestActionGraphBuilder().getSourcePathResolver();
   }
 
   @Test
   public void testOutputFormatStringEmptyThinRules() {
-    SourcePathResolver pathResolver = newSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = newSourcePathResolver();
 
     ImmutableSortedSet.Builder<SourcePath> inputsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet<SourcePath> inputs = inputsBuilder.build();
@@ -73,7 +73,7 @@ public class MultiarchFileInfosTest {
   @Test
   public void testOutputFormatStringSingleThinRule() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    SourcePathResolver pathResolver = newSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = newSourcePathResolver();
 
     ImmutableSortedSet<SourcePath> inputs =
         ImmutableSortedSet.of(PathSourcePath.of(filesystem, Paths.get("libNiceLibrary.a")));
@@ -87,7 +87,7 @@ public class MultiarchFileInfosTest {
   @Test
   public void testOutputFormatStringDifferentOutputFileNameThinRules() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    SourcePathResolver pathResolver = newSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = newSourcePathResolver();
 
     ImmutableSortedSet.Builder<SourcePath> inputsBuilder = ImmutableSortedSet.naturalOrder();
 
@@ -105,7 +105,7 @@ public class MultiarchFileInfosTest {
   @Test
   public void testOutputFormatStringSameOutputFileNameThinRules() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    SourcePathResolver pathResolver = newSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = newSourcePathResolver();
 
     ImmutableSortedSet.Builder<SourcePath> inputsBuilder = ImmutableSortedSet.naturalOrder();
 

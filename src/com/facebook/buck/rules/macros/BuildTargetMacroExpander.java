@@ -20,7 +20,7 @@ import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.args.Arg;
 import java.util.Optional;
 
@@ -33,7 +33,7 @@ import java.util.Optional;
 public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
     extends AbstractMacroExpanderWithoutPrecomputedWork<M> {
 
-  protected abstract Arg expand(SourcePathResolver resolver, M macro, BuildRule rule)
+  protected abstract Arg expand(SourcePathResolverAdapter resolver, M macro, BuildRule rule)
       throws MacroException;
 
   protected BuildRule resolve(ActionGraphBuilder graphBuilder, M input) throws MacroException {

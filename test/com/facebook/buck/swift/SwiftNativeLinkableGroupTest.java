@@ -24,7 +24,7 @@ import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -47,7 +47,7 @@ public class SwiftNativeLinkableGroupTest {
 
   private Tool swiftcTool;
   private Tool swiftStdTool;
-  private SourcePathResolver sourcePathResolver;
+  private SourcePathResolverAdapter sourcePathResolverAdapter;
   private AppleSdk iphoneSdk;
   private AppleSdkPaths iphoneSdkPaths;
   private AppleSdk macosxSdk;
@@ -98,7 +98,7 @@ public class SwiftNativeLinkableGroupTest {
     setUpAppleSdks();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    sourcePathResolver = buildRuleResolver.getSourcePathResolver();
+    sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
   }
 
   @Test
@@ -126,7 +126,7 @@ public class SwiftNativeLinkableGroupTest {
     // On iOS, Swift runtime is not available as static libs
     assertEquals(staticArgs, sharedArgs);
     assertEquals(
-        Arg.stringify(sharedArgs, sourcePathResolver),
+        Arg.stringify(sharedArgs, sourcePathResolverAdapter),
         ImmutableList.of(
             "-Xlinker",
             "-rpath",
@@ -159,7 +159,7 @@ public class SwiftNativeLinkableGroupTest {
 
     ImmutableList<Arg> sharedArgs = sharedArgsBuilder.build();
     assertEquals(
-        Arg.stringify(sharedArgs, sourcePathResolver),
+        Arg.stringify(sharedArgs, sourcePathResolverAdapter),
         ImmutableList.of(
             "-Xlinker",
             "-rpath",

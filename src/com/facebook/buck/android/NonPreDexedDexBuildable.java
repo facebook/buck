@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -637,7 +637,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       Optional<SourcePath> dexReorderDataDumpFile,
       ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap,
       BuildContext buildContext) {
-    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     Supplier<Set<Path>> primaryInputsToDex;
     Optional<Path> secondaryDexDir;
     Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;

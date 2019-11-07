@@ -27,7 +27,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.HasDefaultFlavors;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -60,7 +60,7 @@ public interface CxxConstructorArg
   }
 
   /** Checks that there are no files that appear both in srcs and platform_srcs */
-  default void checkDuplicateSources(SourcePathResolver sourcePathResolver) {
+  default void checkDuplicateSources(SourcePathResolverAdapter sourcePathResolverAdapter) {
     ImmutableSet.Builder<SourcePath> platformSrcsBuilder =
         ImmutableSet.builderWithExpectedSize(
             getPlatformSrcs().getValues().stream().mapToInt(Set::size).sum());
@@ -83,7 +83,7 @@ public interface CxxConstructorArg
                   "Files may be listed in srcs or platform_srcs, but not both. The following %s both in srcs and platform_srcs: \n\n\t%s\n",
                   intersect.size() > 1 ? "files are listed" : "file is listed",
                   intersect.stream()
-                      .map(sourcePathResolver::getRelativePath)
+                      .map(sourcePathResolverAdapter::getRelativePath)
                       .map(Object::toString)
                       .collect(Collectors.joining("\n\t")))
               .replace("\n", System.lineSeparator()));

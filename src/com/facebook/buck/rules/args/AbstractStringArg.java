@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.collect.Iterables;
 import java.util.Arrays;
@@ -31,7 +31,8 @@ abstract class AbstractStringArg implements Arg {
   abstract String getArg();
 
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     consumer.accept(getArg());
   }
 

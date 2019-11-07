@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
@@ -86,7 +86,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
       postExportedLinkerFlags;
   private final TriFunction<
-          ? super CxxPlatform, ActionGraphBuilder, SourcePathResolver, NativeLinkableInput>
+          ? super CxxPlatform, ActionGraphBuilder, SourcePathResolverAdapter, NativeLinkableInput>
       linkTargetInput;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableSet<FrameworkPath> frameworks;
@@ -126,7 +126,11 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
           exportedLinkerFlags,
       BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
           postExportedLinkerFlags,
-      TriFunction<? super CxxPlatform, ActionGraphBuilder, SourcePathResolver, NativeLinkableInput>
+      TriFunction<
+              ? super CxxPlatform,
+              ActionGraphBuilder,
+              SourcePathResolverAdapter,
+              NativeLinkableInput>
           linkTargetInput,
       Optional<Pattern> supportedPlatformsRegex,
       ImmutableSet<FrameworkPath> frameworks,
@@ -476,7 +480,9 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver) {
+      CxxPlatform cxxPlatform,
+      ActionGraphBuilder graphBuilder,
+      SourcePathResolverAdapter pathResolver) {
     if (!isPlatformSupported(cxxPlatform)) {
       LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
       return NativeLinkableInput.of();

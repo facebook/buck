@@ -22,7 +22,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.rules.args.Arg;
@@ -82,7 +82,7 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
   }
 
   @Override
-  protected Arg expand(SourcePathResolver resolver, ClasspathAbiMacro macro, BuildRule rule)
+  protected Arg expand(SourcePathResolverAdapter resolver, ClasspathAbiMacro macro, BuildRule rule)
       throws MacroException {
     throw new MacroException(
         "expand(BuildRuleResolver ruleResolver, ClasspathAbiMacro input) should be called instead");
@@ -119,7 +119,8 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
       consumer.accept(
           classpath.stream()
               .map(pathResolver::getAbsolutePath)

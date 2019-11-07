@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.build.context;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -27,7 +27,7 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractBuildContext {
 
-  public abstract SourcePathResolver getSourcePathResolver();
+  public abstract SourcePathResolverAdapter getSourcePathResolver();
 
   /** @return the absolute path of the cell in which the build was invoked. */
   public abstract Path getBuildCellRootPath();

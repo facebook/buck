@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -154,7 +154,7 @@ public class JsBundleDescriptionTest {
           scenario.graphBuilder.getRuleWithType(
               bundleTarget.withFlavors(JsFlavors.IOS), JsBundleOutputs.class);
 
-      SourcePathResolver pathResolver = scenario.graphBuilder.getSourcePathResolver();
+      SourcePathResolverAdapter pathResolver = scenario.graphBuilder.getSourcePathResolver();
       assertEquals(
           pathResolver.getRelativePath(map.getSourcePathToOutput()),
           pathResolver.getRelativePath(bundle.getSourcePathToSourceMap()));

@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
@@ -75,10 +75,10 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ProjectFilesystem filesystem = getProjectFilesystem();
-    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
 
-    Path classAbiPath = sourcePathResolver.getAbsolutePath(correctAbi);
-    Path sourceAbiPath = sourcePathResolver.getAbsolutePath(experimentalAbi);
+    Path classAbiPath = sourcePathResolverAdapter.getAbsolutePath(correctAbi);
+    Path sourceAbiPath = sourcePathResolverAdapter.getAbsolutePath(experimentalAbi);
     buildableContext.recordArtifact(outputPath);
     return ImmutableList.of(
         MkdirStep.of(
@@ -102,7 +102,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Object initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
+  public Object initializeFromDisk(SourcePathResolverAdapter pathResolver) throws IOException {
     javaAbiInfo.load(pathResolver);
     return new Object();
   }

@@ -22,7 +22,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -399,7 +399,7 @@ public class CxxLinkableEnhancer {
 
   private static void addSharedLibrariesLinkerArgs(
       CxxPlatform cxxPlatform,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ImmutableSortedSet<FrameworkPath> allLibraries,
       ImmutableList.Builder<Arg> argsBuilder) {
 
@@ -411,7 +411,7 @@ public class CxxLinkableEnhancer {
 
   private static void addFrameworkLinkerArgs(
       CxxPlatform cxxPlatform,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ImmutableSortedSet<FrameworkPath> allFrameworks,
       ImmutableList.Builder<Arg> argsBuilder) {
 
@@ -490,14 +490,14 @@ public class CxxLinkableEnhancer {
     public FrameworkLinkerArgs(
         ImmutableSortedSet<FrameworkPath> allFrameworks,
         CxxPlatform cxxPlatform,
-        SourcePathResolver resolver) {
+        SourcePathResolverAdapter resolver) {
       super(allFrameworks);
       frameworkPathToSearchPath =
           CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {
       ImmutableSortedSet<Path> searchPaths =
           frameworkPaths.stream()
               .map(frameworkPathToSearchPath)
@@ -515,7 +515,7 @@ public class CxxLinkableEnhancer {
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {
       for (FrameworkPath frameworkPath : frameworkPaths) {
         consumer.accept("-framework");
         consumer.accept(frameworkPath.getName(resolver::getAbsolutePath));
@@ -529,7 +529,7 @@ public class CxxLinkableEnhancer {
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {
       for (FrameworkPath frameworkPath : frameworkPaths) {
         String libName =
             MorePaths.stripPathPrefixAndExtension(
@@ -551,14 +551,14 @@ public class CxxLinkableEnhancer {
     public SharedLibraryLinkArgs(
         ImmutableSortedSet<FrameworkPath> allLibraries,
         CxxPlatform cxxPlatform,
-        SourcePathResolver resolver) {
+        SourcePathResolverAdapter resolver) {
       super(allLibraries);
       frameworkPathToSearchPath =
           CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {
       ImmutableSortedSet<Path> searchPaths =
           frameworkPaths.stream()
               .map(frameworkPathToSearchPath)

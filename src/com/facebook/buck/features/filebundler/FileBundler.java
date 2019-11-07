@@ -18,7 +18,7 @@ package com.facebook.buck.features.filebundler;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -48,7 +48,7 @@ public abstract class FileBundler {
       ImmutableList.Builder<Step> steps,
       Path destinationDir,
       ImmutableSortedSet<SourcePath> toCopy,
-      SourcePathResolver pathResolver) {
+      SourcePathResolverAdapter pathResolver) {
     copy(
         filesystem,
         buildCellRelativePathFactory,
@@ -65,7 +65,7 @@ public abstract class FileBundler {
       ImmutableList.Builder<Step> steps,
       Path destinationDir,
       Iterable<SourcePath> toCopy,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       PatternsMatcher entriesToExclude) {
 
     Map<Path, Path> relativeMap = pathResolver.createRelativeMap(basePath, toCopy);

@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 
@@ -30,7 +30,7 @@ public interface JavaAbiInfo {
 
   boolean jarContains(String path);
 
-  void load(SourcePathResolver pathResolver) throws IOException;
+  void load(SourcePathResolverAdapter pathResolver) throws IOException;
 
   void invalidate();
 }

@@ -17,7 +17,7 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
@@ -57,7 +57,7 @@ public class PlatformLockedNativeLinkTargetGroup implements NativeLinkTarget {
 
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(
-      ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver) {
+      ActionGraphBuilder graphBuilder, SourcePathResolverAdapter pathResolver) {
     return underlyingGroup.getNativeLinkTargetInput(cxxPlatform, graphBuilder, pathResolver);
   }
 

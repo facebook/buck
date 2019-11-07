@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.BashStep;
@@ -282,9 +282,11 @@ public class ResourcesFilter extends AbstractBuildRule
 
   @VisibleForTesting
   void addPostFilterCommandSteps(
-      Arg command, SourcePathResolver sourcePathResolver, ImmutableList.Builder<Step> steps) {
+      Arg command,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
+      ImmutableList.Builder<Step> steps) {
     ImmutableList.Builder<String> commandLineBuilder = new ImmutableList.Builder<>();
-    command.appendToCommandLine(commandLineBuilder::add, sourcePathResolver);
+    command.appendToCommandLine(commandLineBuilder::add, sourcePathResolverAdapter);
     commandLineBuilder.add(Escaper.escapeAsBashString(getFilterResourcesDataPath()));
     commandLineBuilder.add(Escaper.escapeAsBashString(getRDotJsonPath()));
     String commandLine = Joiner.on(' ').join(commandLineBuilder.build());
@@ -372,7 +374,7 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   @Override
-  public BuildOutput initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
+  public BuildOutput initializeFromDisk(SourcePathResolverAdapter pathResolver) throws IOException {
     ImmutableList<Path> stringFiles =
         getProjectFilesystem().readLines(getStringFilesPath()).stream()
             .map(Paths::get)

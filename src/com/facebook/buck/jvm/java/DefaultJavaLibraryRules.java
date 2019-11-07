@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.common.ResourceValidator;
@@ -99,7 +99,7 @@ public abstract class DefaultJavaLibraryRules {
   abstract ActionGraphBuilder getActionGraphBuilder();
 
   @Value.Lazy
-  SourcePathResolver getSourcePathResolver() {
+  SourcePathResolverAdapter getSourcePathResolver() {
     return getActionGraphBuilder().getSourcePathResolver();
   }
 

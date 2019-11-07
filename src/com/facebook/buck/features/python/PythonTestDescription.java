@@ -39,7 +39,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.HasTestRunner;
 import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -117,7 +117,7 @@ public class PythonTestDescription
 
   @VisibleForTesting
   protected static Path getTestMainPath(
-      SourcePathResolver resolver, Optional<PythonTestRunner> testRunner) {
+      SourcePathResolverAdapter resolver, Optional<PythonTestRunner> testRunner) {
     return testRunner
         .map(runner -> resolver.getRelativePath(runner.getSrc()))
         .orElse(Paths.get(DEFAULT_TEST_MAIN_NAME));

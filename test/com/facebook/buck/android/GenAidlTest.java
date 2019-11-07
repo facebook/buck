@@ -35,7 +35,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
@@ -66,7 +66,7 @@ public class GenAidlTest {
   private ProjectFilesystem stubFilesystem;
   private PathSourcePath pathToAidl;
   private BuildTarget target;
-  private SourcePathResolver pathResolver;
+  private SourcePathResolverAdapter pathResolver;
   private String pathToAidlExecutable;
   private String pathToFrameworkAidl;
   private String importPath;

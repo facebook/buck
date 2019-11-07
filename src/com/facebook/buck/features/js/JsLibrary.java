@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -81,7 +81,7 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      SourcePathResolver resolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
       Path outputPath = filesystem.resolve(outputPathResolver.resolvePath(output));
       return ImmutableList.of(
           JsUtil.jsonWorkerShellStepAddingFlavors(
@@ -93,7 +93,7 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
     }
 
     abstract ObjectBuilder getJobArgs(
-        SourcePathResolver resolver, Path outputPath, ProjectFilesystem filesystem);
+        SourcePathResolverAdapter resolver, Path outputPath, ProjectFilesystem filesystem);
   }
 
   /** JsLibrary buildable implementation */
@@ -115,7 +115,7 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
 
     @Override
     ObjectBuilder getJobArgs(
-        SourcePathResolver resolver, Path outputPath, ProjectFilesystem filesystem) {
+        SourcePathResolverAdapter resolver, Path outputPath, ProjectFilesystem filesystem) {
       ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
       return JsonBuilder.object()
@@ -207,7 +207,7 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
 
     @Override
     ObjectBuilder getJobArgs(
-        SourcePathResolver resolver, Path outputPath, ProjectFilesystem filesystem) {
+        SourcePathResolverAdapter resolver, Path outputPath, ProjectFilesystem filesystem) {
       ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
       return JsonBuilder.object()

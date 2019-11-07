@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -72,9 +72,9 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       BuildCellRelativePathFactory buildCellPathFactory) {
     Path outputPath = outputPathResolver.resolvePath(this.output);
 
-    SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
     ImmutableMap<Path, Path> entryPathToAbsolutePathMap =
-        sourcePathResolver.createRelativeMap(
+        sourcePathResolverAdapter.createRelativeMap(
             filesystem.resolve(getBuildTarget().getBasePath()), sources);
     return ImmutableList.of(
         new CopyToZipStep(
@@ -82,7 +82,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
             outputPath,
             entryPathToAbsolutePathMap,
             zipSources.stream()
-                .map(sourcePathResolver::getAbsolutePath)
+                .map(sourcePathResolverAdapter::getAbsolutePath)
                 .collect(ImmutableList.toImmutableList()),
             entriesToExclude,
             onDuplicateEntry));

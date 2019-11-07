@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -457,12 +457,12 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private Optional<Path> extractBundlePathForBundle(
-      Optional<AppleBundle> bundle, SourcePathResolver sourcePathResolver) {
+      Optional<AppleBundle> bundle, SourcePathResolverAdapter sourcePathResolverAdapter) {
     if (!bundle.isPresent()) {
       return Optional.empty();
     }
     Path resolvedBundleDirectory =
-        sourcePathResolver.getAbsolutePath(
+        sourcePathResolverAdapter.getAbsolutePath(
             Objects.requireNonNull(bundle.get().getSourcePathToOutput()));
     return Optional.of(
         resolvedBundleDirectory.resolve(bundle.get().getUnzippedOutputFilePathToBinary()));
@@ -484,7 +484,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
       List<TestCaseSummary> testCaseSummaries;

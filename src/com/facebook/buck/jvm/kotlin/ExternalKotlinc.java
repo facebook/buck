@@ -22,7 +22,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -87,7 +87,7 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
     return ImmutableList.of(pathToKotlinc.toString());
   }
 
@@ -175,22 +175,23 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
   }
 
   @Override
-  public Path getAnnotationProcessorPath(SourcePathResolver sourcePathResolver) {
+  public Path getAnnotationProcessorPath(SourcePathResolverAdapter sourcePathResolverAdapter) {
     throw new IllegalStateException("Not supported yet");
   }
 
   @Override
-  public Path getStdlibPath(SourcePathResolver sourcePathResolver) {
+  public Path getStdlibPath(SourcePathResolverAdapter sourcePathResolverAdapter) {
     throw new IllegalStateException("Not supported yet");
   }
 
   @Override
-  public ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver) {
+  public ImmutableList<Path> getAdditionalClasspathEntries(
+      SourcePathResolverAdapter sourcePathResolverAdapter) {
     return ImmutableList.of();
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
     return ImmutableMap.of();
   }
 }

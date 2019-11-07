@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -41,7 +41,7 @@ public class JavaTestGetClassNamesIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private ProjectFilesystem projectFilesystem;
-  private SourcePathResolver resolver;
+  private SourcePathResolverAdapter resolver;
 
   @Before
   public void setUp() throws IOException {

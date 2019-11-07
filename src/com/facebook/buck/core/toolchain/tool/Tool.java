@@ -17,7 +17,7 @@
 package com.facebook.buck.core.toolchain.tool;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -25,11 +25,8 @@ import com.google.common.collect.ImmutableMap;
 public interface Tool extends AddsToRuleKey {
 
   /** @return the prefix command use to run this tool. */
-  ImmutableList<String> getCommandPrefix(SourcePathResolver resolver);
+  ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver);
 
-  /**
-   * @return the list of environment variables to set when running the command.
-   * @param resolver
-   */
-  ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver);
+  /** @return the list of environment variables to set when running the command. */
+  ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver);
 }

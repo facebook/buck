@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.file.WriteFile;
@@ -107,7 +107,7 @@ public class DefaultWorkerToolRule extends WriteFile
   }
 
   @Override
-  public UUID initializeFromDisk(SourcePathResolver pathResolver) {
+  public UUID initializeFromDisk(SourcePathResolverAdapter pathResolver) {
     UUID uuid = generateNewUUID();
     workerTool.updateInstanceKey(uuid);
     return uuid;

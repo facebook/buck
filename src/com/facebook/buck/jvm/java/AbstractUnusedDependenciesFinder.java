@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -76,7 +76,7 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
 
   public abstract ImmutableList<DependencyAndExportedDeps> getProvidedDeps();
 
-  public abstract SourcePathResolver getSourcePathResolver();
+  public abstract SourcePathResolverAdapter getSourcePathResolver();
 
   public abstract UnusedDependenciesAction getUnusedDependenciesAction();
 
@@ -147,11 +147,11 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
 
   private ImmutableSet<String> findUnusedDependencies(
       ImmutableSet<Path> usedJars, Iterable<DependencyAndExportedDeps> targets) {
-    SourcePathResolver sourcePathResolver = getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = getSourcePathResolver();
     ImmutableSet.Builder<String> unusedDependencies = ImmutableSet.builder();
 
     for (DependencyAndExportedDeps target : targets) {
-      if (isUnusedDependencyIncludingExportedDeps(target, usedJars, sourcePathResolver)) {
+      if (isUnusedDependencyIncludingExportedDeps(target, usedJars, sourcePathResolverAdapter)) {
         unusedDependencies.add(target.dependency.buildTarget);
       }
     }
@@ -162,13 +162,14 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   private boolean isUnusedDependencyIncludingExportedDeps(
       DependencyAndExportedDeps dependency,
       ImmutableSet<Path> usedJars,
-      SourcePathResolver sourcePathResolver) {
-    if (isUsedDependency(dependency.dependency, usedJars, sourcePathResolver)) {
+      SourcePathResolverAdapter sourcePathResolverAdapter) {
+    if (isUsedDependency(dependency.dependency, usedJars, sourcePathResolverAdapter)) {
       return false;
     }
 
     for (DependencyAndExportedDeps exportedDependency : dependency.exportedDeps) {
-      if (isUsedDependencyIncludingExportedDeps(exportedDependency, usedJars, sourcePathResolver)) {
+      if (isUsedDependencyIncludingExportedDeps(
+          exportedDependency, usedJars, sourcePathResolverAdapter)) {
         return false;
       }
     }
@@ -179,13 +180,14 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   private boolean isUsedDependencyIncludingExportedDeps(
       DependencyAndExportedDeps exportedDep,
       ImmutableSet<Path> usedJars,
-      SourcePathResolver sourcePathResolver) {
-    if (isUsedDependency(exportedDep.dependency, usedJars, sourcePathResolver)) {
+      SourcePathResolverAdapter sourcePathResolverAdapter) {
+    if (isUsedDependency(exportedDep.dependency, usedJars, sourcePathResolverAdapter)) {
       return true;
     }
 
     for (DependencyAndExportedDeps exportedDependency : exportedDep.exportedDeps) {
-      if (isUsedDependencyIncludingExportedDeps(exportedDependency, usedJars, sourcePathResolver)) {
+      if (isUsedDependencyIncludingExportedDeps(
+          exportedDependency, usedJars, sourcePathResolverAdapter)) {
         return true;
       }
     }
@@ -196,10 +198,10 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   private boolean isUsedDependency(
       BuildTargetAndSourcePaths dependency,
       ImmutableSet<Path> usedJars,
-      SourcePathResolver sourcePathResolver) {
+      SourcePathResolverAdapter sourcePathResolverAdapter) {
     final @Nullable SourcePath dependencyOutput = dependency.fullJarSourcePath;
     if (dependencyOutput != null) {
-      final Path dependencyOutputPath = sourcePathResolver.getAbsolutePath(dependencyOutput);
+      final Path dependencyOutputPath = sourcePathResolverAdapter.getAbsolutePath(dependencyOutput);
       if (usedJars.contains(dependencyOutputPath)) {
         return true;
       }
@@ -207,7 +209,8 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
 
     final @Nullable SourcePath dependencyAbiOutput = dependency.abiSourcePath;
     if (dependencyAbiOutput != null) {
-      final Path dependencyAbiOutputPath = sourcePathResolver.getAbsolutePath(dependencyAbiOutput);
+      final Path dependencyAbiOutputPath =
+          sourcePathResolverAdapter.getAbsolutePath(dependencyAbiOutput);
       if (usedJars.contains(dependencyAbiOutputPath)) {
         return true;
       }

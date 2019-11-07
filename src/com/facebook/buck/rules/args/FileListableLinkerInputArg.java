@@ -17,7 +17,7 @@ package com.facebook.buck.rules.args;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -50,14 +50,15 @@ public class FileListableLinkerInputArg implements Arg, HasSourcePath {
   }
 
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     value.appendToCommandLine(consumer, pathResolver);
   }
 
   public void appendToCommandLineRel(
       Consumer<String> consumer,
       Path currentCellPath,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean useUnixPathSeparator) {
     value.appendToCommandLineRel(consumer, currentCellPath, pathResolver, useUnixPathSeparator);
   }

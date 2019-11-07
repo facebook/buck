@@ -29,17 +29,17 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface SourcePathResolver {
-  <T> ImmutableMap<T, Path> getMappedPaths(Map<T, SourcePath> sourcePathMap);
+  <T> ImmutableMap<T, ImmutableSortedSet<Path>> getMappedPaths(Map<T, SourcePath> sourcePathMap);
 
   ProjectFilesystem getFilesystem(SourcePath sourcePath);
 
-  Path getAbsolutePath(SourcePath sourcePath);
+  ImmutableSortedSet<Path> getAbsolutePath(SourcePath sourcePath);
 
   ImmutableSortedSet<Path> getAllAbsolutePaths(Collection<? extends SourcePath> sourcePaths);
 
-  Path getRelativePath(SourcePath sourcePath);
+  ImmutableSortedSet<Path> getRelativePath(SourcePath sourcePath);
 
-  Path getIdeallyRelativePath(SourcePath sourcePath);
+  ImmutableSortedSet<Path> getIdeallyRelativePath(SourcePath sourcePath);
 
   ImmutableMap<String, SourcePath> getSourcePathNames(
       BuildTarget target, String parameter, Iterable<SourcePath> sourcePaths);
@@ -56,10 +56,11 @@ public interface SourcePathResolver {
   ImmutableCollection<Path> filterInputsToCompareToOutput(Iterable<? extends SourcePath> sources);
 
   /**
-   * @return {@link Path} to the given {@link SourcePath} that is relative to the given {@link
-   *     ProjectFilesystem}
+   * @return {@link Path} instances to the given {@link SourcePath} that is relative to the given
+   *     {@link ProjectFilesystem}
    */
-  Path getRelativePath(ProjectFilesystem projectFilesystem, SourcePath sourcePath);
+  ImmutableSortedSet<Path> getRelativePath(
+      ProjectFilesystem projectFilesystem, SourcePath sourcePath);
 
   /**
    * Creates a map where given source paths are resolved relatively to the given base path and

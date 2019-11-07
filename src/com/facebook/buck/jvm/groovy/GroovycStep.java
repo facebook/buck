@@ -20,7 +20,7 @@ import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.Javac;
@@ -45,7 +45,7 @@ class GroovycStep implements Step {
   private final Tool groovyc;
   private final Optional<ImmutableList<String>> extraArguments;
   private final JavacOptions javacOptions;
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private final Path outputDirectory;
   private final ImmutableSortedSet<Path> sourceFilePaths;
   private final Path pathToSrcsList;
@@ -56,7 +56,7 @@ class GroovycStep implements Step {
       Tool groovyc,
       Optional<ImmutableList<String>> extraArguments,
       JavacOptions javacOptions,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Path outputDirectory,
       ImmutableSortedSet<Path> sourceFilePaths,
       Path pathToSrcsList,

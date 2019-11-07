@@ -16,7 +16,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -50,7 +50,7 @@ class OmnibusRootNode extends OmnibusNode implements NativeLinkTarget, NativeLin
 
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(
-      ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver) {
+      ActionGraphBuilder graphBuilder, SourcePathResolverAdapter pathResolver) {
     return NativeLinkableInput.builder().addArgs(StringArg.of(getBuildTarget().toString())).build();
   }
 

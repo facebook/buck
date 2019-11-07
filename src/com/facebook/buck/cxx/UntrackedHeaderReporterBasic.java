@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -42,7 +42,7 @@ class UntrackedHeaderReporterBasic implements UntrackedHeaderReporter {
   }
 
   @Override
-  public String getErrorReport(SourcePathResolver pathResolver, Path header) {
+  public String getErrorReport(SourcePathResolverAdapter pathResolver, Path header) {
     String errorMessage =
         String.format(
             "%s: included an untracked header: %n%s",

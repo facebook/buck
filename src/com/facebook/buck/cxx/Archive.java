@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.Archiver;
@@ -143,7 +143,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
 
-      SourcePathResolver resolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
       // We only support packaging inputs that use the same filesystem root as the output, as thin
       // archives embed relative paths from output to input inside the archive.  If this becomes a

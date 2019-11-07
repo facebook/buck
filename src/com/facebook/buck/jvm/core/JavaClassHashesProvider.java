@@ -16,7 +16,7 @@
 package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
@@ -25,7 +25,7 @@ import com.google.common.hash.HashCode;
 public interface JavaClassHashesProvider extends AddsToRuleKey {
 
   ImmutableSortedMap<String, HashCode> getClassNamesToHashes(
-      ProjectFilesystem filesystem, SourcePathResolver sourcePathResolver);
+      ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolverAdapter);
 
   /** Invalidates a state */
   void invalidate();

@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -210,7 +210,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     return steps.build();
   }
 
-  private Iterable<String> getPreprocessorFlags(SourcePathResolver resolver) {
+  private Iterable<String> getPreprocessorFlags(SourcePathResolverAdapter resolver) {
     CxxToolFlags cxxToolFlags =
         compilerFlags
             .getPreprocessorFlags()
@@ -225,7 +225,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
         Iterables.cycle("-optP"), Arg.stringify(cxxToolFlags.getAllFlags(), resolver));
   }
 
-  private Iterable<String> getSourceArguments(SourcePathResolver resolver) {
+  private Iterable<String> getSourceArguments(SourcePathResolverAdapter resolver) {
     return srcs.getSourcePaths().stream()
         .map(resolver::getAbsolutePath)
         .map(Object::toString)
@@ -302,7 +302,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
     @Override
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-      SourcePathResolver resolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
       ImmutableList.Builder<String> cmdArgs = ImmutableList.builder();
 

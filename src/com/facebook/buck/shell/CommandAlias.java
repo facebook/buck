@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
@@ -164,12 +164,12 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
     }
 
     @Override
-    public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+    public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
       throw new UnsupportedPlatformException(buildTarget, platform);
     }
 
     @Override
-    public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
       throw new UnsupportedPlatformException(buildTarget, platform);
     }
   }
@@ -215,12 +215,12 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
     }
 
     @Override
-    public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+    public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
       return getTool().getCommandPrefix(resolver);
     }
 
     @Override
-    public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
       return getTool().getEnvironment(resolver);
     }
   }

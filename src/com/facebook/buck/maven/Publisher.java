@@ -18,7 +18,7 @@ package com.facebook.buck.maven;
 
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.MavenPublishable;
@@ -94,7 +94,7 @@ public class Publisher {
   }
 
   public ImmutableSet<DeployResult> publish(
-      SourcePathResolver pathResolver, ImmutableSet<MavenPublishable> publishables)
+      SourcePathResolverAdapter pathResolver, ImmutableSet<MavenPublishable> publishables)
       throws DeploymentException {
     ImmutableListMultimap<UnflavoredBuildTargetView, UnflavoredBuildTargetView>
         duplicateBuiltinBuileRules = checkForDuplicatePackagedDeps(publishables);

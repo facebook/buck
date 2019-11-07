@@ -39,7 +39,7 @@ import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.BaseToolchainProvider;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -76,12 +76,12 @@ import org.junit.Test;
 public class BuildableSerializerTest extends AbstractValueVisitorTest {
   private SourcePathRuleFinder ruleFinder;
   private CellPathResolver cellResolver;
-  private SourcePathResolver resolver;
+  private SourcePathResolverAdapter resolver;
   private CustomToolchainProvider toolchainProvider;
 
   @Before
   public void setUp() {
-    resolver = createStrictMock(SourcePathResolver.class);
+    resolver = createStrictMock(SourcePathResolverAdapter.class);
     ruleFinder = createStrictMock(SourcePathRuleFinder.class);
     cellResolver = createMock(CellPathResolver.class);
     toolchainProvider = new CustomToolchainProvider();
@@ -441,7 +441,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
 
   private static class WithSourcePathResolver implements FakeBuildable {
     @CustomFieldBehavior({SourcePathResolverSerialization.class, ExcludeFromStringification.class})
-    private final SourcePathResolver resolver = null;
+    private final SourcePathResolverAdapter resolver = null;
   }
 
   @Test

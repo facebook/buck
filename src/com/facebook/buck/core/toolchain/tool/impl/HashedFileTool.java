@@ -18,7 +18,7 @@ package com.facebook.buck.core.toolchain.tool.impl;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
@@ -40,12 +40,12 @@ public class HashedFileTool implements Tool {
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
     return ImmutableList.of(resolver.getAbsolutePath(path.get()).toString());
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
     return ImmutableMap.of();
   }
 }

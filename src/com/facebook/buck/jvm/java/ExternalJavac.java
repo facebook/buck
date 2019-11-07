@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
@@ -49,12 +49,12 @@ public class ExternalJavac implements Javac {
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
     return javac.get().getCommandPrefix(resolver);
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
     return javac.get().getEnvironment(resolver);
   }
 
@@ -80,7 +80,7 @@ public class ExternalJavac implements Javac {
   @Override
   public Invocation newBuildInvocation(
       JavacExecutionContext context,
-      SourcePathResolver sourcePathResolver,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
@@ -139,7 +139,7 @@ public class ExternalJavac implements Javac {
         }
 
         ImmutableList.Builder<String> command = ImmutableList.builder();
-        command.addAll(javac.get().getCommandPrefix(sourcePathResolver));
+        command.addAll(javac.get().getCommandPrefix(sourcePathResolverAdapter));
 
         try {
           FluentIterable<String> escapedPaths =

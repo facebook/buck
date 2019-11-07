@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
@@ -71,7 +71,7 @@ public class PomIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private final ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-  private final SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+  private final SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
   private final ProjectFilesystem filesystem = FakeProjectFilesystem.createRealTempFilesystem();
 

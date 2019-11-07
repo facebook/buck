@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -36,7 +36,8 @@ abstract class AbstractCompositeArg implements Arg {
   abstract ImmutableList<Arg> getArgs();
 
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     StringBuilder builder = new StringBuilder();
     getArgs().forEach(arg -> arg.appendToCommandLine(builder::append, pathResolver));
     consumer.accept(builder.toString());
@@ -45,7 +46,7 @@ abstract class AbstractCompositeArg implements Arg {
   public void appendToCommandLineRel(
       Consumer<String> consumer,
       Path cellPath,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean useUnixPathSeparator) {
     ImmutableList<Arg> args = getArgs();
     StringBuilder builder = new StringBuilder();

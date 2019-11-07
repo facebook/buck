@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.google.common.collect.ImmutableSortedMap;
@@ -35,7 +35,7 @@ public class FakeJavaClassHashesProvider implements JavaClassHashesProvider {
 
   @Override
   public ImmutableSortedMap<String, HashCode> getClassNamesToHashes(
-      ProjectFilesystem filesystem, SourcePathResolver sourcePathResolver) {
+      ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolverAdapter) {
     return classNamesToHashes;
   }
 

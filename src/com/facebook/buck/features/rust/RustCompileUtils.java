@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.tool.BinaryWrapperRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -634,14 +634,14 @@ public class RustCompileUtils {
    * Given a list of sources, return the one which is the root based on the defaults and user
    * parameters.
    *
-   * @param resolver SourcePathResolver for rule
+   * @param resolver SourcePathResolverAdapter for rule
    * @param crate Name of crate
    * @param defaults Default names for this rule (library, binary, etc)
    * @param sources List of sources
    * @return The unique matching source - if there are not exactly one, return Optional.empty
    */
   public static Optional<String> getCrateRoot(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       String crate,
       ImmutableSet<String> defaults,
       Stream<Path> sources) {
@@ -695,7 +695,7 @@ public class RustCompileUtils {
 
     ImmutableSortedMap<SourcePath, Optional<String>> fixed = fixedBuilder.build();
 
-    SourcePathResolver resolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = graphBuilder.getSourcePathResolver();
     Stream<Path> filenames =
         Stream.concat(
             srcs.stream()

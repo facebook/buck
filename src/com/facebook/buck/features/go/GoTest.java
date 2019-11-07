@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -127,7 +127,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Optional<Long> processTimeoutMs =
         testRuleTimeoutMs.map(timeout -> timeout + PROCESS_TIMEOUT_EXTRA_MS);
 
-    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(testMain.getExecutableCommand().getCommandPrefix(resolver));
     args.add("-test.v");
@@ -261,7 +261,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
       return TestResults.of(
@@ -322,7 +322,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path outputDirectory,
       Optional<BuildableContext> buildableContext) {
 
-    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
     if (buildableContext.isPresent()) {
       resources.forEach(

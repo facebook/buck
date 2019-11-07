@@ -18,7 +18,7 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.Deserializer.DataProvider;
@@ -48,7 +48,7 @@ public class SerializationTestHelper {
       Class<T> tClass,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ToolchainProvider toolchainProvider,
       Function<Optional<String>, ProjectFilesystem> filesystemFunction)
       throws IOException {

@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -65,7 +65,7 @@ public class JsUtil {
               new LocationMacroExpander() {
                 @Override
                 protected Arg expand(
-                    SourcePathResolver resolver, LocationMacro macro, BuildRule rule)
+                    SourcePathResolverAdapter resolver, LocationMacro macro, BuildRule rule)
                     throws MacroException {
                   return new JsArg(super.expand(resolver, macro, rule));
                 }
@@ -78,7 +78,8 @@ public class JsUtil {
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
       super.appendToCommandLine(
           s -> consumer.accept(escapeJsonForStringEmbedding(s)), pathResolver);
     }
@@ -92,7 +93,7 @@ public class JsUtil {
       WorkerTool worker,
       ObjectBuilder jobArgs,
       BuildTarget buildTarget,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem filesystem) {
     String jobArgsString =
         jobArgs

@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
@@ -79,7 +79,7 @@ abstract class AbstractCompilerParameters {
     public CompilerParameters.Builder setSourceFileSourcePaths(
         ImmutableSortedSet<SourcePath> srcs,
         ProjectFilesystem projectFilesystem,
-        SourcePathResolver resolver) {
+        SourcePathResolverAdapter resolver) {
       ImmutableSortedSet<Path> javaSrcs =
           srcs.stream()
               .map(src -> projectFilesystem.relativize(resolver.getAbsolutePath(src)))
@@ -88,7 +88,8 @@ abstract class AbstractCompilerParameters {
     }
 
     public CompilerParameters.Builder setClasspathEntriesSourcePaths(
-        Collection<SourcePath> compileTimeClasspathSourcePaths, SourcePathResolver resolver) {
+        Collection<SourcePath> compileTimeClasspathSourcePaths,
+        SourcePathResolverAdapter resolver) {
       ImmutableSortedSet<Path> compileTimeClasspathPaths =
           resolver.getAllAbsolutePaths(compileTimeClasspathSourcePaths);
       return ((CompilerParameters.Builder) this).setClasspathEntries(compileTimeClasspathPaths);

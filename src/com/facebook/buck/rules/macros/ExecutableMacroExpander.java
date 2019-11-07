@@ -19,7 +19,7 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ToolArg;
@@ -42,7 +42,7 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander<Executable
   }
 
   @Override
-  protected Arg expand(SourcePathResolver resolver, ExecutableMacro ignored, BuildRule rule)
+  protected Arg expand(SourcePathResolverAdapter resolver, ExecutableMacro ignored, BuildRule rule)
       throws MacroException {
     return ToolArg.of(getTool(rule));
   }

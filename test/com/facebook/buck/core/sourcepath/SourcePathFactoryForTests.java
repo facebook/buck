@@ -16,18 +16,18 @@
 package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.io.ArchiveMemberPath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 
 public class SourcePathFactoryForTests {
   public static ArchiveMemberPath toAbsoluteArchiveMemberPath(
-      SourcePathResolver sourcePathResolver, SourcePath sourcePath) {
+      SourcePathResolverAdapter sourcePathResolverAdapter, SourcePath sourcePath) {
     Preconditions.checkState(sourcePath instanceof ArchiveMemberSourcePath);
     ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;
 
     Path archiveAbsolutePath =
-        sourcePathResolver.getAbsolutePath(archiveMemberSourcePath.getArchiveSourcePath());
+        sourcePathResolverAdapter.getAbsolutePath(archiveMemberSourcePath.getArchiveSourcePath());
 
     return ArchiveMemberPath.of(archiveAbsolutePath, archiveMemberSourcePath.getMemberPath());
   }

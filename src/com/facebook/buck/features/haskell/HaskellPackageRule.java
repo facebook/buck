@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -146,7 +146,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   private WriteFileStep getWriteRegistrationFileStep(
-      SourcePathResolver resolver, Path registrationFile, Path packageDb) {
+      SourcePathResolverAdapter resolver, Path registrationFile, Path packageDb) {
     Map<String, String> entries = new LinkedHashMap<>();
 
     entries.put("name", packageInfo.getName());
@@ -292,12 +292,14 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   private class GhcPkgStep extends ShellStep {
 
-    private final SourcePathResolver resolver;
+    private final SourcePathResolverAdapter resolver;
     private final ImmutableList<String> args;
     private final ImmutableMap<String, String> env;
 
     public GhcPkgStep(
-        SourcePathResolver resolver, ImmutableList<String> args, ImmutableMap<String, String> env) {
+        SourcePathResolverAdapter resolver,
+        ImmutableList<String> args,
+        ImmutableMap<String, String> env) {
       super(getProjectFilesystem().getRootPath());
       this.resolver = resolver;
       this.args = args;

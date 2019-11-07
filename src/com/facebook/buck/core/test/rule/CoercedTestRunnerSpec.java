@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.test.rule;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.args.Arg;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Preconditions;
@@ -50,18 +50,21 @@ public abstract class CoercedTestRunnerSpec {
    * Serializes the underlying freeform JSON of {@link Arg}s.
    *
    * @param jsonGenerator the json writer
-   * @param sourcePathResolver the rule resolver for resolving {@link Arg}s
+   * @param sourcePathResolverAdapter the rule resolver for resolving {@link Arg}s
    * @throws IOException
    */
   @SuppressWarnings("unchecked")
-  public void serialize(JsonGenerator jsonGenerator, SourcePathResolver sourcePathResolver)
+  public void serialize(
+      JsonGenerator jsonGenerator, SourcePathResolverAdapter sourcePathResolverAdapter)
       throws IOException {
     if (getData() instanceof Map) {
-      writeMap(jsonGenerator, (Map<Arg, CoercedTestRunnerSpec>) getData(), sourcePathResolver);
+      writeMap(
+          jsonGenerator, (Map<Arg, CoercedTestRunnerSpec>) getData(), sourcePathResolverAdapter);
     } else if (getData() instanceof Iterable) {
-      writeArray(jsonGenerator, (Iterable<CoercedTestRunnerSpec>) getData(), sourcePathResolver);
+      writeArray(
+          jsonGenerator, (Iterable<CoercedTestRunnerSpec>) getData(), sourcePathResolverAdapter);
     } else if (getData() instanceof Arg) {
-      writeArg(jsonGenerator, Arg.stringify((Arg) getData(), sourcePathResolver));
+      writeArg(jsonGenerator, Arg.stringify((Arg) getData(), sourcePathResolverAdapter));
     } else if (getData() instanceof Number || getData() instanceof Boolean) {
       writeObject(jsonGenerator, getData());
     } else {
@@ -72,12 +75,12 @@ public abstract class CoercedTestRunnerSpec {
   private void writeMap(
       JsonGenerator jsonGenerator,
       Map<Arg, CoercedTestRunnerSpec> data,
-      SourcePathResolver sourcePathResolver)
+      SourcePathResolverAdapter sourcePathResolverAdapter)
       throws IOException {
     jsonGenerator.writeStartObject();
     for (Map.Entry<Arg, CoercedTestRunnerSpec> entry : data.entrySet()) {
-      jsonGenerator.writeFieldName(Arg.stringify(entry.getKey(), sourcePathResolver));
-      entry.getValue().serialize(jsonGenerator, sourcePathResolver);
+      jsonGenerator.writeFieldName(Arg.stringify(entry.getKey(), sourcePathResolverAdapter));
+      entry.getValue().serialize(jsonGenerator, sourcePathResolverAdapter);
     }
     jsonGenerator.writeEndObject();
   }
@@ -85,11 +88,11 @@ public abstract class CoercedTestRunnerSpec {
   private void writeArray(
       JsonGenerator jsonGenerator,
       Iterable<CoercedTestRunnerSpec> data,
-      SourcePathResolver sourcePathResolver)
+      SourcePathResolverAdapter sourcePathResolverAdapter)
       throws IOException {
     jsonGenerator.writeStartArray();
     for (CoercedTestRunnerSpec item : data) {
-      item.serialize(jsonGenerator, sourcePathResolver);
+      item.serialize(jsonGenerator, sourcePathResolverAdapter);
     }
     jsonGenerator.writeEndArray();
   }

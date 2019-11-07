@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.AbstractCxxSource.Type;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
@@ -162,7 +162,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     return Impl.getDepFilePath(getOutputPathResolver().resolvePath(getBuildable().output));
   }
 
-  public Path getRelativeInputPath(SourcePathResolver resolver) {
+  public Path getRelativeInputPaths(SourcePathResolverAdapter resolver) {
     // For caching purposes, the path passed to the compiler is relativized by the absolute path by
     // the current cell root, so that file references emitted by the compiler would not change if
     // the repo is checked out into different places on disk.
@@ -170,7 +170,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
   }
 
   /** Returns the original path of the source file relative to its own project root */
-  public String getSourceInputPath(SourcePathResolver resolver) {
+  public String getSourceInputPath(SourcePathResolverAdapter resolver) {
     return resolver.getSourcePathName(getBuildable().targetName, getBuildable().input);
   }
 
@@ -211,13 +211,15 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
   }
 
   @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(
+      SourcePathResolverAdapter pathResolver) {
     return Depfiles.getCoveredByDepFilePredicate(
         getPreprocessorDelegate(), Optional.of(getCompilerDelegate()));
   }
 
   @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(
+      SourcePathResolverAdapter pathResolver) {
     return (SourcePath path) -> false;
   }
 
@@ -240,7 +242,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
                 preprocessorDelegate.getHeaderPathNormalizer(context),
                 preprocessorDelegate.getHeaderVerification(),
                 getDepFilePath(),
-                getRelativeInputPath(context.getSourcePathResolver()),
+                getRelativeInputPaths(context.getSourcePathResolver()),
                 output,
                 compilerDelegate.getDependencyTrackingMode(),
                 compilerDelegate.getCompiler().getUseUnixPathSeparator());
@@ -315,7 +317,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         boolean useArgfile) {
-      SourcePathResolver resolver = context.getSourcePathResolver();
+      SourcePathResolverAdapter resolver = context.getSourcePathResolver();
       // If we're compiling, this will just be empty.
       HeaderPathNormalizer headerPathNormalizer =
           preprocessDelegate

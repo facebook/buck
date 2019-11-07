@@ -17,7 +17,7 @@
 package com.facebook.buck.features.dotnet;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.Escaper;
@@ -31,7 +31,7 @@ import java.nio.file.Path;
 
 public class CsharpLibraryCompile extends ShellStep {
   private final Tool csharpCompiler;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final Path output;
   private final ImmutableSortedSet<Path> srcs;
   private final ImmutableList<Either<Path, String>> references;
@@ -40,7 +40,7 @@ public class CsharpLibraryCompile extends ShellStep {
   private final ImmutableList<String> compilerFlags;
 
   public CsharpLibraryCompile(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       Tool csharpCompiler,
       Path output,
       ImmutableSortedSet<Path> srcs,

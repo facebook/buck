@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -43,7 +43,7 @@ class CodeSignStep implements Step {
 
   private static final Logger LOG = Logger.get(CodeSignStep.class);
 
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private final Path pathToSign;
   private final Optional<Path> pathToSigningEntitlements;
   private final Supplier<CodeSignIdentity> codeSignIdentitySupplier;
@@ -56,7 +56,7 @@ class CodeSignStep implements Step {
 
   public CodeSignStep(
       ProjectFilesystem filesystem,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Path pathToSign,
       Optional<Path> pathToSigningEntitlements,
       Supplier<CodeSignIdentity> codeSignIdentitySupplier,

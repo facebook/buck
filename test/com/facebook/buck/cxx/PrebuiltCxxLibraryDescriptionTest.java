@@ -39,7 +39,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.AbstractCxxSource.Type;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -291,7 +291,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         TargetGraphFactory.newInstance(genruleBuilder.build(), libraryBuilder.build());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     Genrule genrule = genruleBuilder.build(graphBuilder, filesystem, targetGraph);
     PrebuiltCxxLibrary library =
         (PrebuiltCxxLibrary) libraryBuilder.build(graphBuilder, filesystem, targetGraph);
@@ -314,7 +314,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         TargetGraphFactory.newInstance(genruleBuilder.build(), libraryBuilder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     CxxGenrule genrule = (CxxGenrule) genruleBuilder.build(graphBuilder, filesystem, targetGraph);
     PrebuiltCxxLibrary library =
         (PrebuiltCxxLibrary) libraryBuilder.build(graphBuilder, filesystem, targetGraph);
@@ -412,7 +412,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
     PrebuiltCxxLibrary library =
@@ -903,7 +903,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .setExportedLinkerFlags("--exported-flag");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ruleBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) ruleBuilder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput input =
@@ -1046,7 +1046,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         TargetGraphFactory.newInstance(genruleBuilder.build(), libraryBuilder.build());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     Genrule genrule = genruleBuilder.build(graphBuilder, filesystem, targetGraph);
     PrebuiltCxxLibrary library =
         (PrebuiltCxxLibrary) libraryBuilder.build(graphBuilder, filesystem, targetGraph);

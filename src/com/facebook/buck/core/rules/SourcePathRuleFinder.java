@@ -18,7 +18,7 @@ package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -43,5 +43,5 @@ public interface SourcePathRuleFinder {
   /** @return The {@link BuildRule} whose output {@code sourcePath} refers to its output. */
   BuildRule getRule(BuildTargetSourcePath sourcePath);
 
-  SourcePathResolver getSourcePathResolver();
+  SourcePathResolverAdapter getSourcePathResolver();
 }

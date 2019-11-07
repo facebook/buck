@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -213,7 +213,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private JUnitStep getJUnitStep(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       TestRunningOptions options,
       Optional<Path> outDir,
       Optional<Path> robolectricLogPath,
@@ -347,7 +347,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   ImmutableList<String> amendVmArgs(
       ImmutableList<String> existingVmArgs,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       Optional<TargetDevice> targetDevice,
       Optional<String> javaTempDir) {
     ImmutableList.Builder<String> vmArgs = ImmutableList.builder();
@@ -363,7 +363,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
    */
   protected void onAmendVmArgs(
       ImmutableList.Builder<String> vmArgsBuilder,
-      @SuppressWarnings("unused") SourcePathResolver pathResolver,
+      @SuppressWarnings("unused") SourcePathResolverAdapter pathResolver,
       Optional<TargetDevice> targetDevice) {
     if (!targetDevice.isPresent()) {
       return;
@@ -397,7 +397,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext context, SourcePathResolver pathResolver, boolean isUsingTestSelectors) {
+      ExecutionContext context,
+      SourcePathResolverAdapter pathResolver,
+      boolean isUsingTestSelectors) {
     ImmutableSet<String> contacts = getContacts();
     return () -> {
       // It is possible that this rule was not responsible for running any tests because all tests
@@ -452,7 +454,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     };
   }
 
-  private Set<String> getClassNamesForSources(SourcePathResolver pathResolver) {
+  private Set<String> getClassNamesForSources(SourcePathResolverAdapter pathResolver) {
     if (compiledClassFileFinder == null) {
       compiledClassFileFinder = new CompiledClassFileFinder(compiledTestsLibrary, pathResolver);
     }
@@ -610,6 +612,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public interface AdditionalClasspathEntriesProvider {
-    ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolver resolver);
+    ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolverAdapter resolver);
   }
 }

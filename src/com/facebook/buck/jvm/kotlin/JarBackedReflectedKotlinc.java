@@ -24,7 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -102,22 +102,23 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   }
 
   @Override
-  public Path getAnnotationProcessorPath(SourcePathResolver sourcePathResolver) {
+  public Path getAnnotationProcessorPath(SourcePathResolverAdapter sourcePathResolverAdapter) {
     return annotationProcessingClassPath;
   }
 
   @Override
-  public Path getStdlibPath(SourcePathResolver sourcePathResolver) {
+  public Path getStdlibPath(SourcePathResolverAdapter sourcePathResolverAdapter) {
     return standardLibraryClasspath;
   }
 
   @Override
-  public ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver) {
-    return ImmutableList.of(getStdlibPath(sourcePathResolver));
+  public ImmutableList<Path> getAdditionalClasspathEntries(
+      SourcePathResolverAdapter sourcePathResolverAdapter) {
+    return ImmutableList.of(getStdlibPath(sourcePathResolverAdapter));
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
     throw new UnsupportedOperationException("In memory kotlinc may not be used externally");
   }
 
@@ -207,7 +208,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
     throw new UnsupportedOperationException("In memory kotlinc may not be used externally");
   }
 

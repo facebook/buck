@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -100,7 +100,8 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommand(SourcePathResolver pathResolver, Path output) {
+  protected ImmutableList<String> getShellCommand(
+      SourcePathResolverAdapter pathResolver, Path output) {
     return ImmutableList.<String>builder()
         .addAll(getExecutableCommand().getCommandPrefix(pathResolver))
         .add("--log_format=hrf")

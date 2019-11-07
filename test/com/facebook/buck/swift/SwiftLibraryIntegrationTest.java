@@ -44,7 +44,7 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.FakeCxxLibrary;
@@ -76,7 +76,7 @@ public class SwiftLibraryIntegrationTest {
   @Rule public final TemporaryPaths tmpDir = new TemporaryPaths();
 
   private ActionGraphBuilder graphBuilder;
-  private SourcePathResolver pathResolver;
+  private SourcePathResolverAdapter pathResolver;
 
   @Before
   public void setUp() {

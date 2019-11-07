@@ -20,7 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -450,7 +450,7 @@ public class OcamlBuildStep implements Step {
         .toList();
   }
 
-  private SourcePathResolver getResolver() {
+  private SourcePathResolverAdapter getResolver() {
     return buildContext.getSourcePathResolver();
   }
 }

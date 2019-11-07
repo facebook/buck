@@ -38,7 +38,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.aggregation.DefaultAggregationModuleFactory;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
@@ -678,12 +678,13 @@ public class IjModuleGraphTest {
       Function<? super TargetNode<?>, Optional<Path>> rDotJavaClassPathResolver,
       AggregationMode aggregationMode,
       boolean isMultiCellModulesSupported) {
-    SourcePathResolver sourcePathResolver = new TestActionGraphBuilder().getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter =
+        new TestActionGraphBuilder().getSourcePathResolver();
     IjLibraryFactoryResolver sourceOnlyResolver =
         new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
-            return sourcePathResolver.getAbsolutePath(path);
+            return sourcePathResolverAdapter.getAbsolutePath(path);
           }
 
           @Override

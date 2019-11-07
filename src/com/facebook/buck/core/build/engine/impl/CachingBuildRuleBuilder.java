@@ -72,7 +72,7 @@ import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.rules.schedule.OverrideScheduleRule;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -132,7 +132,7 @@ class CachingBuildRuleBuilder {
   private final BuildType buildMode;
   private final boolean consoleLogBuildFailuresInline;
   private final FileHashCache fileHashCache;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo;
   private final RuleKeyFactories ruleKeyFactories;
@@ -201,7 +201,7 @@ class CachingBuildRuleBuilder {
       DepFiles depFiles,
       FileHashCache fileHashCache,
       long maxDepFileCacheEntries,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       RuleKeyFactories ruleKeyFactories,

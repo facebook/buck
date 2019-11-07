@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -121,7 +121,7 @@ public class CxxTestDescriptionTest {
   public void environmentIsPropagated() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     addFramework(graphBuilder, filesystem);
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
@@ -159,7 +159,7 @@ public class CxxTestDescriptionTest {
   public void testArgsArePropagated() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     addFramework(graphBuilder, filesystem);
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))

@@ -39,6 +39,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
@@ -72,6 +73,7 @@ import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
@@ -215,29 +217,31 @@ public abstract class IsolatedBuildableBuilder {
     this.buildContext =
         BuildContext.builder()
             .setSourcePathResolver(
-                new AbstractSourcePathResolver() {
-                  @Override
-                  protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
-                      BuildTargetSourcePath sourcePath) {
-                    Preconditions.checkState(sourcePath instanceof ExplicitBuildTargetSourcePath);
-                    BuildTarget target = sourcePath.getTarget();
-                    return filesystemFunction.apply(target.getCell().getLegacyName());
-                  }
+                new SourcePathResolverAdapter(
+                    new AbstractSourcePathResolver() {
+                      @Override
+                      protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
+                          BuildTargetSourcePath sourcePath) {
+                        Preconditions.checkState(
+                            sourcePath instanceof ExplicitBuildTargetSourcePath);
+                        BuildTarget target = sourcePath.getTarget();
+                        return filesystemFunction.apply(target.getCell().getLegacyName());
+                      }
 
-                  @Override
-                  protected SourcePath resolveDefaultBuildTargetSourcePath(
-                      DefaultBuildTargetSourcePath targetSourcePath) {
-                    throw new IllegalStateException(
-                        "Cannot resolve DefaultBuildTargetSourcePaths when running with an isolated strategy. "
-                            + "These should have been resolved to the underlying ExplicitBuildTargetSourcePath already.");
-                  }
+                      @Override
+                      protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
+                          DefaultBuildTargetSourcePath targetSourcePath) {
+                        throw new IllegalStateException(
+                            "Cannot resolve DefaultBuildTargetSourcePaths when running with an isolated strategy. "
+                                + "These should have been resolved to the underlying ExplicitBuildTargetSourcePath already.");
+                      }
 
-                  @Override
-                  public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
-                    throw new IllegalStateException(
-                        "Cannot resolve SourcePath names during build when running with an isolated strategy.");
-                  }
-                })
+                      @Override
+                      public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+                        throw new IllegalStateException(
+                            "Cannot resolve SourcePath names during build when running with an isolated strategy.");
+                      }
+                    }))
             .setBuildCellRootPath(canonicalProjectRoot)
             .setEventBus(eventBus)
             .setJavaPackageFinder(javaPackageFinder)

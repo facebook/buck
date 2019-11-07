@@ -17,7 +17,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -38,7 +38,7 @@ class CompiledClassFileFinder {
 
   private final Set<String> classNamesForSources;
 
-  CompiledClassFileFinder(JavaLibrary rule, SourcePathResolver pathResolver) {
+  CompiledClassFileFinder(JavaLibrary rule, SourcePathResolverAdapter pathResolver) {
     Path outputPath;
     SourcePath outputSourcePath = rule.getSourcePathToOutput();
     if (outputSourcePath != null) {
@@ -76,7 +76,7 @@ class CompiledClassFileFinder {
       Set<SourcePath> sources,
       @Nullable Path jarFilePath,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver resolver) {
+      SourcePathResolverAdapter resolver) {
     if (jarFilePath == null) {
       return ImmutableSet.of();
     }

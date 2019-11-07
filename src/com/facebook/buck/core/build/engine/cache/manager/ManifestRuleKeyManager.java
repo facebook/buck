@@ -28,7 +28,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.LazyPath;
@@ -64,7 +64,7 @@ public class ManifestRuleKeyManager {
   private final BuildRule rule;
   private final FileHashLoader fileHashLoader;
   private final long maxDepFileCacheEntries;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final RuleKeyFactories ruleKeyFactories;
   private final BuildCacheArtifactFetcher buildCacheArtifactFetcher;
   private final ArtifactCache artifactCache;
@@ -76,7 +76,7 @@ public class ManifestRuleKeyManager {
       BuildRule rule,
       FileHashLoader fileHashLoader,
       long maxDepFileCacheEntries,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       RuleKeyFactories ruleKeyFactories,
       BuildCacheArtifactFetcher buildCacheArtifactFetcher,
       ArtifactCache artifactCache,

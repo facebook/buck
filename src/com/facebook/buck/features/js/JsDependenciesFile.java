@@ -24,7 +24,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -68,12 +68,12 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
   @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
 
     SourcePath outputFile = getSourcePathToOutput();
-    ObjectBuilder jobArgs = getJobArgs(sourcePathResolver, outputFile);
+    ObjectBuilder jobArgs = getJobArgs(sourcePathResolverAdapter, outputFile);
 
-    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(outputFile));
+    buildableContext.recordArtifact(sourcePathResolverAdapter.getRelativePath(outputFile));
 
     return ImmutableList.<Step>builder()
         .add(
@@ -81,31 +81,36 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolver.getRelativePath(outputFile).getParent())),
+                    sourcePathResolverAdapter.getRelativePath(outputFile).getParent())),
             JsUtil.jsonWorkerShellStepAddingFlavors(
-                worker, jobArgs, getBuildTarget(), sourcePathResolver, getProjectFilesystem()))
+                worker,
+                jobArgs,
+                getBuildTarget(),
+                sourcePathResolverAdapter,
+                getProjectFilesystem()))
         .build();
   }
 
   private ObjectBuilder getJobArgs(
-      SourcePathResolver sourcePathResolver, SourcePath outputFilePath) {
+      SourcePathResolverAdapter sourcePathResolverAdapter, SourcePath outputFilePath) {
 
     ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
 
     return JsonBuilder.object()
-        .addString("outputFilePath", sourcePathResolver.getAbsolutePath(outputFilePath).toString())
+        .addString(
+            "outputFilePath", sourcePathResolverAdapter.getAbsolutePath(outputFilePath).toString())
         .addString("command", "dependencies")
         .addArray("entryPoints", entryPoints.stream().collect(JsonBuilder.toArrayOfStrings()))
         .addArray(
             "libraries",
             libraries.stream()
-                .map(sourcePathResolver::getAbsolutePath)
+                .map(sourcePathResolverAdapter::getAbsolutePath)
                 .map(Path::toString)
                 .collect(JsonBuilder.toArrayOfStrings()))
         .addString("platform", JsUtil.getPlatformString(flavors))
         .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
         .addString("rootPath", getProjectFilesystem().getRootPath().toString())
-        .addRaw("extraData", extraJson.map(a -> Arg.stringify(a, sourcePathResolver)));
+        .addRaw("extraData", extraJson.map(a -> Arg.stringify(a, sourcePathResolverAdapter)));
   }
 
   @Override

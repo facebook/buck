@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.Omnibus;
@@ -137,7 +137,7 @@ public class PythonUtil {
 
   static ImmutableMap<Path, SourcePath> toModuleMap(
       BuildTarget target,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       String parameter,
       Path baseModule,
       Iterable<SourceSortedSet> inputs) {

@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.linker.HasIncrementalThinLTO;
@@ -68,7 +68,7 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
   }
 
   @Override
-  public Iterable<Arg> linkWhole(Arg input, SourcePathResolver resolver) {
+  public Iterable<Arg> linkWhole(Arg input, SourcePathResolverAdapter resolver) {
     return ImmutableList.of(
         StringArg.of("-Wl,--whole-archive"), input, StringArg.of("-Wl,--no-whole-archive"));
   }

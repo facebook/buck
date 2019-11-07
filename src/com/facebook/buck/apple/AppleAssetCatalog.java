@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -173,14 +173,14 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       ImmutableSortedSet<SourcePath> assetCatalogDirs,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver sourcePathResolver,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
       ValidationType validationType)
       throws HumanReadableException {
     HashMap<String, Path> catalogPathsForImageNames = new HashMap<>();
     ArrayList<String> errors = new ArrayList<>();
 
     for (SourcePath assetCatalogDir : assetCatalogDirs) {
-      Path catalogPath = sourcePathResolver.getRelativePath(assetCatalogDir);
+      Path catalogPath = sourcePathResolverAdapter.getRelativePath(assetCatalogDir);
       if (!catalogPath.getFileName().toString().endsWith(".xcassets")) {
         errors.add(
             String.format(

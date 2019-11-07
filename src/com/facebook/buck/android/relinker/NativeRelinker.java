@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRuleDependencyVisitors;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.cxx.CxxLink;
@@ -67,7 +67,7 @@ import java.util.regex.Pattern;
  */
 public class NativeRelinker {
   private final BuildTarget buildTarget;
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableMap<AndroidLinkableMetadata, SourcePath> relinkedLibs;
   private final ImmutableMap<AndroidLinkableMetadata, SourcePath> relinkedLibsAssets;
@@ -82,7 +82,7 @@ public class NativeRelinker {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       CellPathResolver cellPathResolver,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,

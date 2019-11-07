@@ -19,7 +19,7 @@ package com.facebook.buck.features.ocaml;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.Shell;
@@ -40,11 +40,11 @@ import java.util.List;
 public class OcamlDebugLauncherStep implements Step {
 
   private final ProjectFilesystem filesystem;
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private final Args args;
 
   public OcamlDebugLauncherStep(
-      ProjectFilesystem filesystem, SourcePathResolver resolver, Args args) {
+      ProjectFilesystem filesystem, SourcePathResolverAdapter resolver, Args args) {
     this.filesystem = filesystem;
     this.resolver = resolver;
     this.args = args;

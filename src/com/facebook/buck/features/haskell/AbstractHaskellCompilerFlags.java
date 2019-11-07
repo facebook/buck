@@ -21,7 +21,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxToolFlags;
@@ -94,7 +94,7 @@ abstract class AbstractHaskellCompilerFlags implements AddsToRuleKey {
 
   /** @return the arguments to pass to the compiler to build against package dependencies. */
   public final Iterable<String> getPackageFlags(
-      HaskellPlatform platform, SourcePathResolver resolver) {
+      HaskellPlatform platform, SourcePathResolverAdapter resolver) {
     String exposePackage = platform.supportExposePackage() ? "-expose-package" : "-package";
     Set<String> packageDbs = new TreeSet<>();
     Set<String> hidden = new TreeSet<>();

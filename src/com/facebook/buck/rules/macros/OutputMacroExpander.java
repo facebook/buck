@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.args.Arg;
 import java.nio.file.Path;
 
@@ -43,7 +43,7 @@ public class OutputMacroExpander extends AbstractMacroExpanderWithoutPrecomputed
     }
 
     @Override
-    Path sourcePathToArgPath(SourcePath path, SourcePathResolver resolver) {
+    Path sourcePathToArgPath(SourcePath path, SourcePathResolverAdapter resolver) {
       return resolver.getRelativePath(path);
     }
   }

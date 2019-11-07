@@ -17,14 +17,14 @@ package com.facebook.buck.jvm.common;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public final class ResourceValidator {
   public static ImmutableSortedSet<SourcePath> validateResources(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem,
       ImmutableSortedSet<SourcePath> resourcePaths) {
     for (Path path : resolver.filterInputsToCompareToOutput(resourcePaths)) {

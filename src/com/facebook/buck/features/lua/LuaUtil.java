@@ -18,7 +18,7 @@ package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -36,7 +36,7 @@ public class LuaUtil {
 
   public static ImmutableMap<String, SourcePath> toModuleMap(
       BuildTarget target,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       String parameter,
       String baseModule,
       Iterable<SourceSortedSet> inputs) {

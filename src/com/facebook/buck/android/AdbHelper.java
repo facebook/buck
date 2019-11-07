@@ -32,7 +32,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -253,7 +253,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   @Override
   public void installApk(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
       boolean quiet,
@@ -291,7 +291,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   @Override
   public void startActivity(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,
       boolean waitForDebugger)
@@ -346,7 +346,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
+   * @see #installApk(SourcePathResolverAdapter, HasInstallableApk, boolean, boolean, String)
    */
   @Override
   public void uninstallApp(String packageName, boolean shouldKeepUserData)
@@ -371,7 +371,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   public static String tryToExtractPackageNameFromManifest(
-      SourcePathResolver pathResolver, ApkInfo apkInfo) {
+      SourcePathResolverAdapter pathResolver, ApkInfo apkInfo) {
     Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
     return tryToExtractPackageNameFromManifest(pathToManifest);
   }
@@ -635,7 +635,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private void installApkExopackage(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean quiet,
       @Nullable String processName)
@@ -655,7 +655,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private void installApkDirectly(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
       boolean quiet)

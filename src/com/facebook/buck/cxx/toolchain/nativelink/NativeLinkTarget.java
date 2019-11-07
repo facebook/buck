@@ -17,7 +17,7 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -36,7 +36,7 @@ public interface NativeLinkTarget {
 
   /** @return the {@link NativeLinkableInput} used to link this target. */
   NativeLinkableInput getNativeLinkTargetInput(
-      ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver);
+      ActionGraphBuilder graphBuilder, SourcePathResolverAdapter pathResolver);
 
   /** @return an explicit {@link Path} to use for the output location. */
   Optional<Path> getNativeLinkTargetOutputPath();

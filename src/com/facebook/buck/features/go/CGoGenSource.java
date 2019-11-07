@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxToolFlags;
@@ -183,7 +183,7 @@ public class CGoGenSource extends AbstractBuildRule {
     return steps.build();
   }
 
-  private Iterable<String> getPreprocessorFlags(SourcePathResolver resolver) {
+  private Iterable<String> getPreprocessorFlags(SourcePathResolverAdapter resolver) {
     CxxToolFlags cxxToolFlags =
         ppFlags.toToolFlags(
             resolver,

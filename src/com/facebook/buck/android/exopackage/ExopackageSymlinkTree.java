@@ -16,7 +16,7 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.exopackage.ExopackageInfo.NativeLibsInfo;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
@@ -50,7 +50,7 @@ public class ExopackageSymlinkTree {
   public static void createSymlinkTree(
       String packageName,
       ExopackageInfo exoInfo,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem filesystem,
       Path rootPath)
       throws IOException {

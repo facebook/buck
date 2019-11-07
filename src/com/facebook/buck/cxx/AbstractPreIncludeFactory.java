@@ -21,7 +21,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
@@ -50,7 +50,7 @@ abstract class AbstractPreIncludeFactory {
   protected abstract ActionGraphBuilder getActionGraphBuilder();
 
   @Value.Parameter
-  protected abstract SourcePathResolver getPathResolver();
+  protected abstract SourcePathResolverAdapter getPathResolver();
 
   /** NOTE: {@code prefix_header} is incompatible with {@code precompiled_header}. */
   @Value.Parameter

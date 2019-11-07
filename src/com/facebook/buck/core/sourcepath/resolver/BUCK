@@ -4,6 +4,7 @@ java_immutables_library(
     name = "resolver",
     srcs = [
         "SourcePathResolver.java",
+        "SourcePathResolverAdapter.java",
     ],
     exported_deps = [
         "//src/com/facebook/buck/core/io:io",

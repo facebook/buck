@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -84,10 +84,11 @@ public class CxxWriteArgsToFileStepTest {
       throws IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    SourcePathResolver sourcePathResolver = new TestActionGraphBuilder().getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter =
+        new TestActionGraphBuilder().getSourcePathResolver();
     CxxWriteArgsToFileStep step =
         CxxWriteArgsToFileStep.create(
-            argFilePath, inputArgs, escaper, currentCellPath, sourcePathResolver, false);
+            argFilePath, inputArgs, escaper, currentCellPath, sourcePathResolverAdapter, false);
 
     step.execute(context);
 

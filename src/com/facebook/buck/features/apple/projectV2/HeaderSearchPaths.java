@@ -37,7 +37,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -956,7 +956,7 @@ class HeaderSearchPaths {
   /** @return a map of all exported platform headers without matching a specific platform. */
   private static ImmutableMap<Path, SourcePath> parseAllPlatformHeaders(
       BuildTarget buildTarget,
-      SourcePathResolver sourcePathResolver,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
       ImmutableList<SourceSortedSet> platformHeaders,
       boolean export,
       CxxLibraryDescription.CommonArg args) {
@@ -968,7 +968,7 @@ class HeaderSearchPaths {
     for (SourceSortedSet sourceList : platformHeaders) {
       parsed.putAll(
           sourceList.toNameMap(
-              buildTarget, sourcePathResolver, parameterName, path -> true, path -> path));
+              buildTarget, sourcePathResolverAdapter, parameterName, path -> true, path -> path));
     }
     return CxxPreprocessables.resolveHeaderMap(
         args.getHeaderNamespace().map(Paths::get).orElse(buildTarget.getBasePath()),

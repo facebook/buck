@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,7 +33,7 @@ import org.junit.Test;
 public class ForwardingBuildTargetSourcePathTest {
 
   private ActionGraphBuilder graphBuilder;
-  private SourcePathResolver pathResolver;
+  private SourcePathResolverAdapter pathResolver;
 
   @Before
   public void setUp() {

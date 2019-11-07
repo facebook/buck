@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -156,7 +156,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   /** @return the shell command used to run the test. */
   protected abstract ImmutableList<String> getShellCommand(
-      SourcePathResolver pathResolver, Path output);
+      SourcePathResolverAdapter pathResolver, Path output);
 
   @Override
   public ImmutableList<Step> runTests(
@@ -234,7 +234,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
       return TestResults.of(
@@ -311,7 +311,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .build();
   }
 
-  protected ImmutableMap<String, String> getEnv(SourcePathResolver pathResolver) {
+  protected ImmutableMap<String, String> getEnv(SourcePathResolverAdapter pathResolver) {
     return new ImmutableMap.Builder<String, String>()
         .putAll(executable.getEnvironment(pathResolver))
         .putAll(Arg.stringify(env, pathResolver))

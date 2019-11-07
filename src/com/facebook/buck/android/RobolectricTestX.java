@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.CoercedTestRunnerSpec;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -85,7 +85,7 @@ public class RobolectricTestX extends JavaTestX {
   }
 
   @Override
-  protected ImmutableList<String> getJvmArgs(SourcePathResolver pathResolver) {
+  protected ImmutableList<String> getJvmArgs(SourcePathResolverAdapter pathResolver) {
     ImmutableList.Builder<String> vmArgsBuilder = ImmutableList.builder();
     robolectricTestHelper.amendVmArgs(vmArgsBuilder, pathResolver);
     return vmArgsBuilder.addAll(super.getJvmArgs(pathResolver)).build();

@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -174,19 +174,19 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
       // If there are classes, run dx.
       ImmutableSortedMap<String, HashCode> classNamesToHashes =
-          javaClassHashesProvider.getClassNamesToHashes(filesystem, sourcePathResolver);
+          javaClassHashesProvider.getClassNamesToHashes(filesystem, sourcePathResolverAdapter);
       boolean hasClassesToDx = !classNamesToHashes.isEmpty();
       Supplier<Integer> weightEstimate;
 
       @Nullable DxStep dx;
 
       if (hasClassesToDx) {
-        Path pathToOutputFile = sourcePathResolver.getAbsolutePath(javaLibrarySourcePath);
+        Path pathToOutputFile = sourcePathResolverAdapter.getAbsolutePath(javaLibrarySourcePath);
         EstimateDexWeightStep estimate = new EstimateDexWeightStep(filesystem, pathToOutputFile);
         steps.add(estimate);
         weightEstimate = estimate;
@@ -213,7 +213,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
                 Optional.empty(),
                 dexTool,
                 dexTool.equals(DxStep.D8),
-                getAbsolutePaths(desugarDeps, sourcePathResolver),
+                getAbsolutePaths(desugarDeps, sourcePathResolverAdapter),
                 Optional.empty(),
                 Optional.empty() /* minSdkVersion */);
         steps.add(dx);
@@ -272,10 +272,10 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
     }
 
     private Collection<Path> getAbsolutePaths(
-        Collection<SourcePath> sourcePaths, SourcePathResolver sourcePathResolver) {
+        Collection<SourcePath> sourcePaths, SourcePathResolverAdapter sourcePathResolverAdapter) {
       return sourcePaths.stream()
           .filter(Objects::nonNull)
-          .map(sourcePathResolver::getAbsolutePath)
+          .map(sourcePathResolverAdapter::getAbsolutePath)
           .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
     }
   }
@@ -322,7 +322,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
   }
 
   @Override
-  public BuildOutput initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
+  public BuildOutput initializeFromDisk(SourcePathResolverAdapter pathResolver) throws IOException {
     return new BuildOutput(
         readWeightEstimateFromMetadata(),
         readClassNamesToHashesFromMetadata(),

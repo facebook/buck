@@ -17,7 +17,7 @@
 package com.facebook.buck.core.test.rule;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -37,7 +37,7 @@ public abstract class ExternalRunnerTestProtocol implements ExternalTestSpec {
    */
   protected abstract CoercedTestRunnerSpec getSpecs();
 
-  protected abstract SourcePathResolver getSourcePathResolver();
+  protected abstract SourcePathResolverAdapter getSourcePathResolver();
 
   @Override
   public void serialize(JsonGenerator jsonGenerator, SerializerProvider serializerProvider)

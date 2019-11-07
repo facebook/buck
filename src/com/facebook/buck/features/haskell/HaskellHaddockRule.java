@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -127,7 +127,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     String name = getBuildTarget().getShortName();
 
     LOG.info(name);
@@ -171,7 +171,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     @Override
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-      SourcePathResolver resolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
       return ImmutableList.<String>builder()
           .addAll(haddockTool.getCommandPrefix(resolver))
           .addAll(flags)

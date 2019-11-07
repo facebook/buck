@@ -25,7 +25,7 @@ import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -307,7 +307,7 @@ public class GenruleBuildable implements Buildable {
   }
 
   private void addLinksForNamedSources(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem filesystem,
       ImmutableMap<String, SourcePath> srcs,
       Map<Path, Path> links) {
@@ -320,7 +320,7 @@ public class GenruleBuildable implements Buildable {
   }
 
   private void addLinksForAnonymousSources(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem filesystem,
       ImmutableSet<SourcePath> srcs,
       Map<Path, Path> links) {
@@ -394,7 +394,7 @@ public class GenruleBuildable implements Buildable {
       ProjectFilesystem filesystem,
       Path srcPath,
       Path tmpPath) {
-    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
 
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
@@ -411,9 +411,9 @@ public class GenruleBuildable implements Buildable {
     return new AbstractGenruleStep(
         filesystem,
         new AbstractGenruleStep.CommandString(
-            Arg.flattenToSpaceSeparatedString(cmd, sourcePathResolver),
-            Arg.flattenToSpaceSeparatedString(bash, sourcePathResolver),
-            Arg.flattenToSpaceSeparatedString(cmdExe, sourcePathResolver)),
+            Arg.flattenToSpaceSeparatedString(cmd, sourcePathResolverAdapter),
+            Arg.flattenToSpaceSeparatedString(bash, sourcePathResolverAdapter),
+            Arg.flattenToSpaceSeparatedString(cmdExe, sourcePathResolverAdapter)),
         BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), filesystem, srcPath)
             .getPathRelativeToBuildCellRoot(),
@@ -423,7 +423,7 @@ public class GenruleBuildable implements Buildable {
           ExecutionContext executionContext,
           ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
         GenruleBuildable.this.addEnvironmentVariables(
-            sourcePathResolver,
+            sourcePathResolverAdapter,
             outputPathResolver,
             filesystem,
             srcPath,
@@ -464,7 +464,7 @@ public class GenruleBuildable implements Buildable {
    * @param environmentVariablesBuilder Environment map builder
    */
   protected void addEnvironmentVariables(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       OutputPathResolver outputPathResolver,
       ProjectFilesystem filesystem,
       Path srcPath,
@@ -533,7 +533,7 @@ public class GenruleBuildable implements Buildable {
   }
 
   private static Optional<WorkerJobParams> convertToWorkerJobParams(
-      ProjectFilesystem filesystem, SourcePathResolver resolver, Optional<Arg> arg) {
+      ProjectFilesystem filesystem, SourcePathResolverAdapter resolver, Optional<Arg> arg) {
     return arg.map(
         arg1 -> {
           WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;

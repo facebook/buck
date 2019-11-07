@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -81,7 +81,7 @@ public class SymlinkTreeTest {
   private SymlinkTree symlinkTreeBuildRule;
   private ImmutableMap<Path, SourcePath> links;
   private Path outputPath;
-  private SourcePathResolver pathResolver;
+  private SourcePathResolverAdapter pathResolver;
   private ActionGraphBuilder graphBuilder;
 
   @Before

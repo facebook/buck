@@ -37,7 +37,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -223,7 +223,7 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   protected void addEnvironmentVariables(
-      SourcePathResolver pathResolver, Builder<String, String> environmentVariablesBuilder) {
+      SourcePathResolverAdapter pathResolver, Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put(
         "SRCS",
         srcs.getPaths().stream()
@@ -306,7 +306,7 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @VisibleForTesting
   AbstractGenruleStep createGenruleStep(BuildContext context) {
-    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
 
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
@@ -317,7 +317,7 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     if (sandboxExecutionStrategy.isSandboxEnabled() && enableSandboxingInGenrule) {
       programRunner =
           sandboxExecutionStrategy.createSandboxProgramRunner(
-              createSandboxConfiguration(sourcePathResolver));
+              createSandboxConfiguration(sourcePathResolverAdapter));
     } else {
       programRunner = new DirectProgramRunner();
     }
@@ -325,9 +325,9 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return new AbstractGenruleStep(
         getProjectFilesystem(),
         new CommandString(
-            Arg.flattenToSpaceSeparatedString(cmd, sourcePathResolver),
-            Arg.flattenToSpaceSeparatedString(bash, sourcePathResolver),
-            Arg.flattenToSpaceSeparatedString(cmdExe, sourcePathResolver)),
+            Arg.flattenToSpaceSeparatedString(cmd, sourcePathResolverAdapter),
+            Arg.flattenToSpaceSeparatedString(bash, sourcePathResolverAdapter),
+            Arg.flattenToSpaceSeparatedString(cmdExe, sourcePathResolverAdapter)),
         BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), pathToSrcDirectory)
             .getPathRelativeToBuildCellRoot(),
@@ -335,20 +335,22 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       @Override
       protected void addEnvironmentVariables(
           ExecutionContext executionContext, Builder<String, String> environmentVariablesBuilder) {
-        LegacyGenrule.this.addEnvironmentVariables(sourcePathResolver, environmentVariablesBuilder);
+        LegacyGenrule.this.addEnvironmentVariables(
+            sourcePathResolverAdapter, environmentVariablesBuilder);
       }
     };
   }
 
-  private SandboxProperties createSandboxConfiguration(SourcePathResolver sourcePathResolver) {
+  private SandboxProperties createSandboxConfiguration(
+      SourcePathResolverAdapter sourcePathResolverAdapter) {
     SandboxProperties.Builder builder = SandboxProperties.builder();
     return builder
         .addAllAllowedToReadPaths(
             srcs.getPaths().stream()
-                .map(sourcePathResolver::getAbsolutePath)
+                .map(sourcePathResolverAdapter::getAbsolutePath)
                 .map(Object::toString)
                 .collect(Collectors.toList()))
-        .addAllAllowedToReadPaths(collectReadablePathsFromArguments(sourcePathResolver))
+        .addAllAllowedToReadPaths(collectReadablePathsFromArguments(sourcePathResolverAdapter))
         .addAllowedToReadPaths(
             getProjectFilesystem().resolve(pathToSrcDirectory).toString(),
             getProjectFilesystem().resolve(pathToTmpDirectory).toString(),
@@ -365,7 +367,8 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .build();
   }
 
-  private ImmutableList<String> collectReadablePathsFromArguments(SourcePathResolver resolver) {
+  private ImmutableList<String> collectReadablePathsFromArguments(
+      SourcePathResolverAdapter resolver) {
     ImmutableList.Builder<String> paths = ImmutableList.builder();
     cmd.ifPresent(c -> paths.addAll(collectExistingArgInputs(resolver, c)));
     if (Platform.detect() == Platform.WINDOWS) {
@@ -377,13 +380,13 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private ImmutableList<String> collectExistingArgInputs(
-      SourcePathResolver sourcePathResolver, Arg arg) {
+      SourcePathResolverAdapter sourcePathResolverAdapter, Arg arg) {
     Collection<BuildRule> buildRules = BuildableSupport.getDepsCollection(arg, buildRuleResolver);
     ImmutableList.Builder<String> inputs = ImmutableList.builder();
     for (BuildRule buildRule : buildRules) {
       SourcePath inputPath = buildRule.getSourcePathToOutput();
       if (inputPath != null) {
-        inputs.add(sourcePathResolver.getAbsolutePath(inputPath).toString());
+        inputs.add(sourcePathResolverAdapter.getAbsolutePath(inputPath).toString());
       }
     }
     return inputs.build();
@@ -407,7 +410,7 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private static Optional<WorkerJobParams> convertToWorkerJobParams(
-      ProjectFilesystem filesystem, SourcePathResolver resolver, Optional<Arg> arg) {
+      ProjectFilesystem filesystem, SourcePathResolverAdapter resolver, Optional<Arg> arg) {
     return arg.map(
         arg1 -> {
           WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
@@ -482,7 +485,7 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private void addLinksForNamedSources(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ImmutableMap<String, SourcePath> srcs,
       Map<Path, Path> links) {
     srcs.forEach(
@@ -494,7 +497,9 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private void addLinksForUnamedSources(
-      SourcePathResolver pathResolver, ImmutableSet<SourcePath> srcs, Map<Path, Path> links) {
+      SourcePathResolverAdapter pathResolver,
+      ImmutableSet<SourcePath> srcs,
+      Map<Path, Path> links) {
 
     // To preserve legacy behavior, we allow duplicate targets and just ignore all but the
     // last.

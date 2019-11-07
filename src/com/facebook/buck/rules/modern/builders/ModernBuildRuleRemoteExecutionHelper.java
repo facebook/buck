@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
@@ -174,7 +174,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
   private final BuckEventBus eventBus;
 
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final CellPathResolver cellResolver;
   private final ThrowingFunction<Path, HashCode, IOException> fileHasher;
   private final Serializer serializer;

@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.impl.FakeTestRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -83,7 +83,8 @@ public class CxxTestTest {
     }
 
     @Override
-    protected ImmutableList<String> getShellCommand(SourcePathResolver resolver, Path output) {
+    protected ImmutableList<String> getShellCommand(
+        SourcePathResolverAdapter resolver, Path output) {
       return ImmutableList.of();
     }
 
@@ -108,7 +109,7 @@ public class CxxTestTest {
 
           @Override
           protected ImmutableList<String> getShellCommand(
-              SourcePathResolver resolver, Path output) {
+              SourcePathResolverAdapter resolver, Path output) {
             return command;
           }
 

@@ -24,7 +24,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -70,7 +70,7 @@ class ExopackageSymlinkTreeStep implements Step {
   }
 
   public void executeStep() {
-    SourcePathResolver pathResolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = buildContext.getSourcePathResolver();
     // First check our APK to see if exopackage setup is required
     if (ExopackageInstaller.exopackageEnabled(apk.getApkInfo())) {
       createExopackageDirForInstallable(apk, pathResolver);
@@ -94,7 +94,7 @@ class ExopackageSymlinkTreeStep implements Step {
    * @param pathResolver used to find the exo info files
    */
   private void createExopackageDirForInstallable(
-      HasInstallableApk installable, SourcePathResolver pathResolver) {
+      HasInstallableApk installable, SourcePathResolverAdapter pathResolver) {
     installable
         .getApkInfo()
         .getExopackageInfo()
@@ -113,7 +113,7 @@ class ExopackageSymlinkTreeStep implements Step {
       ExopackageInfo exoInfo,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       SourcePath manifestPath) {
     // Set up a scratch path where we can lay out a symlink tree
     Path exopackageSymlinkTreePath = getExopackageSymlinkTreePath(buildTarget, filesystem);

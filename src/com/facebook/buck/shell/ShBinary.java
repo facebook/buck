@@ -35,7 +35,7 @@ import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -266,7 +266,9 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private Step getSymlinkStep(
-      SourcePathResolver resolver, ProjectFilesystem projectFilesystem, Path buildCellRootPath) {
+      SourcePathResolverAdapter resolver,
+      ProjectFilesystem projectFilesystem,
+      Path buildCellRootPath) {
     ImmutableList<String> conflicts = searchForLinkConflicts(resolver);
     if (conflicts.isEmpty()) {
       return new SymlinkTreeStep(
@@ -290,13 +292,13 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     };
   }
 
-  private Path getSymlinkPath(SourcePathResolver resolver, SourcePath input) {
+  private Path getSymlinkPath(SourcePathResolverAdapter resolver, SourcePath input) {
     Path runtimeLinkPath = runtimeResourcesDir.resolve(deriveLinkPath(resolver, input));
 
     return getProjectFilesystem().resolve(runtimeLinkPath);
   }
 
-  private ImmutableList<String> searchForLinkConflicts(SourcePathResolver resolver) {
+  private ImmutableList<String> searchForLinkConflicts(SourcePathResolverAdapter resolver) {
     Map<Path, Path> linkPaths = new HashMap<>();
     ImmutableList.Builder<String> conflicts = ImmutableList.builder();
     for (SourcePath sourcePath : resources) {
@@ -313,7 +315,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return conflicts.build();
   }
 
-  private Path deriveLinkPath(SourcePathResolver resolver, SourcePath sourcePath) {
+  private Path deriveLinkPath(SourcePathResolverAdapter resolver, SourcePath sourcePath) {
     if (sourcePath instanceof DefaultBuildTargetSourcePath) {
       BuildTarget target = ((DefaultBuildTargetSourcePath) sourcePath).getTarget();
 

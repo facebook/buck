@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.ElfSharedLibraryInterface.AbstractBuildable;
 import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
@@ -124,8 +124,8 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
       Path outputScratch = outputPathResolver.resolvePath(new OutputPath(libName + ".scratch"));
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
-      ImmutableList<String> commandPrefix = objcopy.getCommandPrefix(sourcePathResolver);
+      SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
+      ImmutableList<String> commandPrefix = objcopy.getCommandPrefix(sourcePathResolverAdapter);
       Pair<ProjectFilesystem, Path> input = getInput(buildContext, filesystem, outputDir, steps);
       steps.add(
           new ElfExtractSectionsStep(
@@ -214,9 +214,10 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
     @Override
     protected Pair<ProjectFilesystem, Path> getInput(
         BuildContext context, ProjectFilesystem filesystem, Path outputPath, Builder<Step> steps) {
-      SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+      SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
       return new Pair<>(
-          sourcePathResolver.getFilesystem(input), sourcePathResolver.getRelativePath(input));
+          sourcePathResolverAdapter.getFilesystem(input),
+          sourcePathResolverAdapter.getRelativePath(input));
     }
   }
 
@@ -248,7 +249,7 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
       Path fileListPath =
           outputDirPath.resolve(String.format("%s__filelist.txt", shortNameAndFlavorPostfix));
       Path output = outputPath.resolve(libName);
-      SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+      SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
       steps
           .addAll(
               CxxPrepareForLinkStep.create(
@@ -259,12 +260,12 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
                   args,
                   linker,
                   filesystem.getRootPath(),
-                  sourcePathResolver))
+                  sourcePathResolverAdapter))
           .add(
               new CxxLinkStep(
                   filesystem.getRootPath(),
-                  linker.getEnvironment(sourcePathResolver),
-                  linker.getCommandPrefix(sourcePathResolver),
+                  linker.getEnvironment(sourcePathResolverAdapter),
+                  linker.getCommandPrefix(sourcePathResolverAdapter),
                   argFilePath,
                   outputDirPath));
       return new Pair<>(filesystem, output);

@@ -38,7 +38,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.AbstractCxxSource.Type;
@@ -666,7 +666,7 @@ public class CxxDescriptionEnhancer {
    *     macros expanded.
    */
   public static AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath(
-      CxxPlatform cxxPlatform, SourcePathResolver resolver) {
+      CxxPlatform cxxPlatform, SourcePathResolverAdapter resolver) {
     return new FrameworkPathToSearchPathFunction(cxxPlatform, resolver);
   }
 
@@ -675,9 +675,10 @@ public class CxxDescriptionEnhancer {
     @AddToRuleKey private final AddsToRuleKeyFunction<String, String> translateMacrosFn;
     // TODO(cjhopman): This should be refactored to accept the resolver as an argument.
     @CustomFieldBehavior(SourcePathResolverSerialization.class)
-    private final SourcePathResolver resolver;
+    private final SourcePathResolverAdapter resolver;
 
-    public FrameworkPathToSearchPathFunction(CxxPlatform cxxPlatform, SourcePathResolver resolver) {
+    public FrameworkPathToSearchPathFunction(
+        CxxPlatform cxxPlatform, SourcePathResolverAdapter resolver) {
       this.resolver = resolver;
       this.translateMacrosFn =
           new CxxFlags.TranslateMacrosFunction(

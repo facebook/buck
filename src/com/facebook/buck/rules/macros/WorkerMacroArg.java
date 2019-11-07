@@ -20,7 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -116,7 +116,7 @@ public class WorkerMacroArg extends ProxyArg {
     return workerTool.getMaxWorkers();
   }
 
-  public String getJobArgs(SourcePathResolver pathResolver) {
+  public String getJobArgs(SourcePathResolverAdapter pathResolver) {
     return Arg.stringify(arg, pathResolver).trim();
   }
 }

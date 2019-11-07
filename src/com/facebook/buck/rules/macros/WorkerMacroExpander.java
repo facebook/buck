@@ -19,7 +19,7 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ProvidesWorkerTool;
@@ -46,7 +46,7 @@ public class WorkerMacroExpander extends BuildTargetMacroExpander<WorkerMacro> {
   }
 
   @Override
-  protected Arg expand(SourcePathResolver resolver, WorkerMacro ignored, BuildRule rule)
+  protected Arg expand(SourcePathResolverAdapter resolver, WorkerMacro ignored, BuildRule rule)
       throws MacroException {
     return new WorkerToolArg(getTool(rule));
   }
@@ -59,6 +59,7 @@ public class WorkerMacroExpander extends BuildTargetMacroExpander<WorkerMacro> {
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {}
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {}
   }
 }

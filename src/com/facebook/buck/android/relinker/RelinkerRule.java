@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.schedule.OverrideScheduleRule;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -82,7 +82,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
   private final ImmutableList<Pattern> symbolWhitelist;
 
   private final CxxBuckConfig cxxBuckConfig;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final CellPathResolver cellPathResolver;
 
   private SourcePathRuleFinder ruleFinder;
@@ -92,7 +92,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
   public RelinkerRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       CellPathResolver cellPathResolver,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> symbolsNeededPaths,

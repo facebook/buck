@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.WriteStringTemplateRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.file.WriteFile;
@@ -52,7 +52,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
 
   abstract ActionGraphBuilder getActionGraphBuilder();
 
-  abstract SourcePathResolver getPathResolver();
+  abstract SourcePathResolverAdapter getPathResolver();
 
   abstract LuaPlatform getLuaPlatform();
 

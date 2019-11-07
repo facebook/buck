@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -362,7 +362,7 @@ public class Jsr199JavacIntegrationTest {
   private static class JdkNotFoundJavac extends Jsr199Javac {
     @Override
     protected JavaCompiler createCompiler(
-        JavacExecutionContext context, SourcePathResolver resolver) {
+        JavacExecutionContext context, SourcePathResolverAdapter resolver) {
       throw new RuntimeException("JDK is not found");
     }
   }

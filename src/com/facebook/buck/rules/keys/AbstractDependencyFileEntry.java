@@ -17,7 +17,7 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;
@@ -46,7 +46,7 @@ abstract class AbstractDependencyFileEntry {
    * Gets the path to the file. This would be the value of DependencyFileEntry.pathToFile() if the
    * SourcePath is converted to a DependencyFileEntry.
    */
-  public static Path getPathToFile(SourcePathResolver resolver, SourcePath sourcePath) {
+  public static Path getPathToFile(SourcePathResolverAdapter resolver, SourcePath sourcePath) {
     if (sourcePath instanceof ArchiveMemberSourcePath) {
       return resolver.getRelativePath(
           ((ArchiveMemberSourcePath) sourcePath).getArchiveSourcePath());
@@ -55,7 +55,7 @@ abstract class AbstractDependencyFileEntry {
   }
 
   public static DependencyFileEntry fromSourcePath(
-      SourcePath sourcePath, SourcePathResolver resolver) {
+      SourcePath sourcePath, SourcePathResolverAdapter resolver) {
     DependencyFileEntry.Builder builder = DependencyFileEntry.builder();
     builder.setPathToFile(getPathToFile(resolver, sourcePath));
     if (sourcePath instanceof ArchiveMemberSourcePath) {

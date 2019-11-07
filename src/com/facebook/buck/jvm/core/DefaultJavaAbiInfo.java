@@ -21,7 +21,7 @@ import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.util.unarchive.Unzip;
 import com.facebook.infer.annotation.Assertions;
 import com.google.common.base.Preconditions;
@@ -67,7 +67,7 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
   }
 
   @Override
-  public void load(SourcePathResolver pathResolver) throws IOException {
+  public void load(SourcePathResolverAdapter pathResolver) throws IOException {
     Preconditions.checkState(
         jarContents == null,
         "load() called without a preceding invalidate(). This usually indicates "
@@ -90,7 +90,7 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
       this.contentPaths = contentPaths;
     }
 
-    static JarContents load(SourcePathResolver resolver, SourcePath jarSourcePath)
+    static JarContents load(SourcePathResolverAdapter resolver, SourcePath jarSourcePath)
         throws IOException {
       ImmutableSortedSet<SourcePath> contents;
       Path jarAbsolutePath = resolver.getAbsolutePath(jarSourcePath);

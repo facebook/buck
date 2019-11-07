@@ -20,7 +20,7 @@ import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
@@ -52,7 +52,7 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
   }
 
   @Override
-  protected Arg expand(SourcePathResolver resolver, ClasspathMacro ignored, BuildRule rule)
+  protected Arg expand(SourcePathResolverAdapter resolver, ClasspathMacro ignored, BuildRule rule)
       throws MacroException {
     return new ClasspathArg(
         getHasClasspathEntries(rule).getTransitiveClasspathDeps().stream()
@@ -70,7 +70,8 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
       consumer.accept(
           classpath.stream()
               .map(dep -> pathResolver.getAbsolutePath(dep))

@@ -19,7 +19,7 @@ package com.facebook.buck.rules.args;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.collect.ImmutableList;
@@ -36,12 +36,15 @@ abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
   public abstract SourcePath getPath();
 
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     appendToCommandLine(consumer, pathResolver, false);
   }
 
   public void appendToCommandLine(
-      Consumer<String> consumer, SourcePathResolver pathResolver, boolean useUnixPathSeparator) {
+      Consumer<String> consumer,
+      SourcePathResolverAdapter pathResolver,
+      boolean useUnixPathSeparator) {
     String line = pathResolver.getAbsolutePath(getPath()).toString();
     if (useUnixPathSeparator) {
       line = PathFormatter.pathWithUnixSeparators(line);
@@ -53,7 +56,7 @@ abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
   public void appendToCommandLineRel(
       Consumer<String> consumer,
       Path cellPath,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean useUnixPathSeparator) {
     SourcePath path = getPath();
     if (path instanceof BuildTargetSourcePath

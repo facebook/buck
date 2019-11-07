@@ -36,7 +36,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -353,7 +353,7 @@ public class JsLibraryDescription
 
   private static ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>
       mapSourcesToFlavors(
-          SourcePathResolver sourcePathResolver,
+          SourcePathResolverAdapter sourcePathResolverAdapter,
           ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> sources) {
 
     ImmutableBiMap.Builder<Either<SourcePath, Pair<SourcePath, String>>, Flavor> builder =
@@ -361,7 +361,7 @@ public class JsLibraryDescription
     for (Either<SourcePath, Pair<SourcePath, String>> source : sources) {
       Path relativePath =
           source.transform(
-              sourcePathResolver::getRelativePath, pair -> Paths.get(pair.getSecond()));
+              sourcePathResolverAdapter::getRelativePath, pair -> Paths.get(pair.getSecond()));
       builder.put(source, JsFlavors.fileFlavorForSourcePath(relativePath));
     }
     return builder.build();
@@ -371,7 +371,7 @@ public class JsLibraryDescription
       SourcePath sourcePath,
       String basePath,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver sourcePathResolver,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
       CellPathResolver cellPathResolver,
       UnflavoredBuildTargetView target) {
     Path cellPath = cellPathResolver.getCellPathOrThrow(target);
@@ -383,7 +383,8 @@ public class JsLibraryDescription
                 pathSourcePath -> // for sub paths, replace the leading directory with the base path
                 transplantTo.resolve(
                         MorePaths.relativize(
-                            directoryOfBuildFile, sourcePathResolver.getAbsolutePath(sourcePath))))
+                            directoryOfBuildFile,
+                            sourcePathResolverAdapter.getAbsolutePath(sourcePath))))
             .orElse(transplantTo); // build target output paths are replaced completely
 
     return projectFilesystem
@@ -393,6 +394,6 @@ public class JsLibraryDescription
                 new HumanReadableException(
                     "%s: Using '%s' as base path for '%s' would move the file "
                         + "out of the project root.",
-                    target, basePath, sourcePathResolver.getRelativePath(sourcePath)));
+                    target, basePath, sourcePathResolverAdapter.getRelativePath(sourcePath)));
   }
 }

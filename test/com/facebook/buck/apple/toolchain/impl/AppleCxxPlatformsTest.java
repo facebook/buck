@@ -61,7 +61,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.cxx.CxxLinkOptions;
@@ -209,7 +209,7 @@ public class AppleCxxPlatformsTest {
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver resolver = ruleResolver.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
 
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/actool"),
@@ -320,7 +320,7 @@ public class AppleCxxPlatformsTest {
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver resolver = ruleResolver.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
 
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/actool"),
@@ -427,7 +427,7 @@ public class AppleCxxPlatformsTest {
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver resolver = ruleResolver.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
 
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/actool"),
@@ -989,12 +989,12 @@ public class AppleCxxPlatformsTest {
   private static Tool fakeTool() {
     return new Tool() {
       @Override
-      public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+      public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
         return ImmutableList.of();
       }
 
       @Override
-      public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+      public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
         return ImmutableMap.of();
       }
     };

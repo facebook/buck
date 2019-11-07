@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
@@ -82,7 +82,7 @@ abstract class AbstractCxxIncludePaths implements AddsToRuleKey {
    * @param frameworkPathTransformer used to shorten/convert/transmogrify framework {@code -F} paths
    */
   public ImmutableList<String> getFlags(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor) {
@@ -104,7 +104,7 @@ abstract class AbstractCxxIncludePaths implements AddsToRuleKey {
   }
 
   public CxxToolFlags toToolFlags(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor) {
@@ -121,14 +121,14 @@ abstract class AbstractCxxIncludePaths implements AddsToRuleKey {
    * <p>Paths are inserted into the compiler flag list as-is, without transformation or shortening.
    */
   public ImmutableList<String> getFlags(
-      SourcePathResolver pathResolver, Preprocessor preprocessor) {
+      SourcePathResolverAdapter pathResolver, Preprocessor preprocessor) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.addAll(CxxHeaders.getArgs(getIPaths(), pathResolver, Optional.empty(), preprocessor));
     // TODO(steveo) gotta handle framework paths!
     return builder.build();
   }
 
-  public CxxToolFlags toToolFlags(SourcePathResolver resolver, Preprocessor preprocessor) {
+  public CxxToolFlags toToolFlags(SourcePathResolverAdapter resolver, Preprocessor preprocessor) {
     return CxxToolFlags.explicitBuilder()
         .addAllRuleFlags(StringArg.from(getFlags(resolver, preprocessor)))
         .build();

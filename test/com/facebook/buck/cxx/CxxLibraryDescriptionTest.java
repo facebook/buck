@@ -54,7 +54,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -401,7 +401,7 @@ public class CxxLibraryDescriptionTest {
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.cpp"))));
     TargetGraph normalGraph = TargetGraphFactory.newInstance(normalBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(normalGraph);
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     CxxLibraryGroup normal =
         (CxxLibraryGroup) normalBuilder.build(graphBuilder, filesystem, normalGraph);
 
@@ -818,7 +818,7 @@ public class CxxLibraryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(libBuilder.build(), locBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     ExportFile loc = locBuilder.build(graphBuilder, filesystem, targetGraph);
     CxxLink lib = (CxxLink) libBuilder.build(graphBuilder, filesystem, targetGraph);
 

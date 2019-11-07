@@ -40,7 +40,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -53,6 +53,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -66,7 +67,8 @@ import org.junit.Test;
 public class JavaBuckConfigTest {
 
   public static final BuildRuleResolver RULE_RESOLVER = new TestActionGraphBuilder();
-  private static final SourcePathResolver PATH_RESOLVER = RULE_RESOLVER.getSourcePathResolver();
+  private static final SourcePathResolverAdapter PATH_RESOLVER =
+      RULE_RESOLVER.getSourcePathResolver();
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectFilesystem defaultFilesystem;
@@ -448,24 +450,25 @@ public class JavaBuckConfigTest {
     OptionAccumulator optionsConsumer = new OptionAccumulator();
     options.appendOptionsTo(
         optionsConsumer,
-        new AbstractSourcePathResolver() {
-          @Override
-          protected SourcePath resolveDefaultBuildTargetSourcePath(
-              DefaultBuildTargetSourcePath targetSourcePath) {
-            throw new UnsupportedOperationException();
-          }
+        new SourcePathResolverAdapter(
+            new AbstractSourcePathResolver() {
+              @Override
+              protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
+                  DefaultBuildTargetSourcePath targetSourcePath) {
+                throw new UnsupportedOperationException();
+              }
 
-          @Override
-          public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
-            throw new UnsupportedOperationException();
-          }
+              @Override
+              public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+                throw new UnsupportedOperationException();
+              }
 
-          @Override
-          protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
-              BuildTargetSourcePath sourcePath) {
-            throw new UnsupportedOperationException();
-          }
-        },
+              @Override
+              protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
+                  BuildTargetSourcePath sourcePath) {
+                throw new UnsupportedOperationException();
+              }
+            }),
         defaultFilesystem);
     return optionsConsumer;
   }

@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
@@ -200,7 +200,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               .addAll(kotlinHomeLibraries)
               .build();
 
-      SourcePathResolver resolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
       String friendPathsArg = getFriendsPath(resolver, friendPaths);
       String moduleName = getModuleName(invokingRule);
 
@@ -369,7 +369,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       Path classesOutput,
       Path sourcesOutput,
       Path workingDirectory,
-      SourcePathResolver resolver) {
+      SourcePathResolverAdapter resolver) {
 
     ImmutableList<String> annotationProcessors =
         ImmutableList.copyOf(
@@ -501,7 +501,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   }
 
   private String getFriendsPath(
-      SourcePathResolver sourcePathResolver, ImmutableList<SourcePath> friendPathsSourcePaths) {
+      SourcePathResolverAdapter sourcePathResolverAdapter,
+      ImmutableList<SourcePath> friendPathsSourcePaths) {
     if (friendPathsSourcePaths.isEmpty()) {
       return "";
     }
@@ -509,19 +510,20 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     // https://youtrack.jetbrains.com/issue/KT-29933
     ImmutableSortedSet<String> absoluteFriendPaths =
         friendPathsSourcePaths.stream()
-            .map(path -> sourcePathResolver.getAbsolutePath(path).toString())
+            .map(path -> sourcePathResolverAdapter.getAbsolutePath(path).toString())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
     return "-Xfriend-paths="
         + absoluteFriendPaths.stream().reduce("", (path1, path2) -> path1 + "," + path2);
   }
 
-  private ImmutableList<String> getKotlincPluginsArgs(SourcePathResolver sourcePathResolver) {
+  private ImmutableList<String> getKotlincPluginsArgs(
+      SourcePathResolverAdapter sourcePathResolverAdapter) {
     return kotlincPlugins.stream()
         // Ideally, we would not use getAbsolutePath() here, but getRelativePath() does not
         // appear to work correctly if path is a BuildTargetSourcePath in a different cell than
         // the kotlin_library() rule being defined.
-        .map(path -> "-Xplugin=" + sourcePathResolver.getAbsolutePath(path).toString())
+        .map(path -> "-Xplugin=" + sourcePathResolverAdapter.getAbsolutePath(path).toString())
         .collect(ImmutableList.toImmutableList());
   }
 
