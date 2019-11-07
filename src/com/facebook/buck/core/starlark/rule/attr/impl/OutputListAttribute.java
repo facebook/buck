@@ -22,21 +22,26 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.facebook.buck.rules.coercer.ListTypeCoercer;
 import com.facebook.buck.rules.coercer.StringTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import java.util.List;
 
 /**
- * Represents a single output file.
+ * Represents a list of output files.
  *
- * <p>The string value is turned into a relative path which is then converted to a declared artifact
- * automatically before executing the user's implementation function
+ * <p>The list of strings value are turned into relative paths which are then declared automatically
+ * before executing the user's implementation function
  */
 @BuckStyleValue
-public abstract class OutputAttribute extends Attribute<String> {
+public abstract class OutputListAttribute extends Attribute<ImmutableList<String>> {
 
-  private static final TypeCoercer<String> coercer = new StringTypeCoercer();
+  private static final TypeCoercer<ImmutableList<String>> coercer =
+      new ListTypeCoercer<>(new StringTypeCoercer());
 
   @Override
   public abstract Object getPreCoercionDefaultValue();
@@ -47,14 +52,24 @@ public abstract class OutputAttribute extends Attribute<String> {
   @Override
   public abstract boolean getMandatory();
 
+  /** Whether or not the list can be empty */
+  public abstract boolean getAllowEmpty();
+
   @Override
   public void repr(SkylarkPrinter printer) {
-    printer.append("<attr.output>");
+    printer.append("<attr.output_list>");
   }
 
   @Override
-  public TypeCoercer<String> getTypeCoercer() {
+  public TypeCoercer<ImmutableList<String>> getTypeCoercer() {
     return coercer;
+  }
+
+  @Override
+  public void validateCoercedValue(ImmutableList<String> paths) throws CoerceFailedException {
+    if (!getAllowEmpty() && paths.isEmpty()) {
+      throw new CoerceFailedException("List of outputs may not be empty");
+    }
   }
 
   @Override
@@ -64,10 +79,19 @@ public abstract class OutputAttribute extends Attribute<String> {
   }
 
   @SuppressWarnings("unused")
-  Artifact postCoercionTransform(
+  ImmutableList<Artifact> postCoercionTransform(
       Object coercedValue,
       ActionRegistry registry,
       ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
-    return OutputAttributeValidator.validateAndRegisterArtifact(coercedValue, registry);
+    if (!(coercedValue instanceof List<?>)) {
+      throw new IllegalArgumentException(String.format("Value %s must be a list", coercedValue));
+    }
+    List<?> listValue = (List<?>) coercedValue;
+    ImmutableList.Builder<Artifact> builder =
+        ImmutableList.builderWithExpectedSize(listValue.size());
+    for (Object output : listValue) {
+      builder.add(OutputAttributeValidator.validateAndRegisterArtifact(output, registry));
+    }
+    return builder.build();
   }
 }
