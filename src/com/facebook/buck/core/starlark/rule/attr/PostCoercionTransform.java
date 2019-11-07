@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule.attr;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
@@ -44,11 +45,13 @@ public interface PostCoercionTransform<AdditionalDataType, PostTransformType> {
    * {@link BuildTarget}s into a list of associated {@link ProviderInfoCollection}s
    *
    * @param coercedValue the value that has been coerced by {@link Attribute#getTypeCoercer()}
+   * @param registry the registry for the current rule's analysis context
    * @param additionalData additional data that is used to perform the transformation of the coerced
    *     data.
    * @return The value to now use that utilizes information in {@code deps}
    * @throws IllegalArgumentException if {@code coercedValue} is not of the correct type or could
    *     otherwise not be transformed (e.g. a required dep is missing from {@code deps}).
    */
-  PostTransformType postCoercionTransform(Object coercedValue, AdditionalDataType additionalData);
+  PostTransformType postCoercionTransform(
+      Object coercedValue, ActionRegistry registry, AdditionalDataType additionalData);
 }

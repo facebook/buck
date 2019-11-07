@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
@@ -89,8 +90,11 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
     return this::postCoercionTransform;
   }
 
+  @SuppressWarnings("unused")
   private ImmutableList<Artifact> postCoercionTransform(
-      Object coercedValue, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+      Object coercedValue,
+      ActionRegistry registry,
+      ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     if (!(coercedValue instanceof List<?>)) {
       throw new IllegalArgumentException(String.format("Value %s must be a list", coercedValue));
     }

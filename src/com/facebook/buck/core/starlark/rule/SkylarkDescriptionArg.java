@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgBuilder;
@@ -117,7 +118,7 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
   }
 
   SkylarkRuleContextAttr getCoercedAttrValues(
-      ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+      ActionRegistry registry, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     Preconditions.checkState(
         !attrValuesAreMutable,
         "Should not get Coerced Attrs until after the DescriptionArg is frozen.");
@@ -130,7 +131,7 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
             rule.getAttrs(), Predicates.not(rule.getHiddenImplicitAttributes()::contains));
 
     return SkylarkRuleContextAttr.of(
-        rule.getExportedName(), filteredCoercedAttrs, filteredAttrs, deps);
+        rule.getExportedName(), filteredCoercedAttrs, filteredAttrs, registry, deps);
   }
 
   @Override

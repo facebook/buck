@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
@@ -77,8 +78,9 @@ public abstract class SourceAttribute extends Attribute<SourcePath> {
     return this::postCoercionTransform;
   }
 
+  @SuppressWarnings("unused")
   private Artifact postCoercionTransform(
-      Object src, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+      Object src, ActionRegistry registry, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
 
     Collection<Artifact> outputs = SourceArtifactResolver.getArtifactsFromSrcs(src, deps);
     try {

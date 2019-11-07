@@ -35,7 +35,9 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
@@ -48,6 +50,12 @@ public class SourceListAttributeTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
+  private final TestActionExecutionRunner runner =
+      new TestActionExecutionRunner(
+          new FakeProjectFilesystemFactory(),
+          filesystem,
+          BuildTargetFactory.newInstance("//some:rule"));
+
   private final SourceListAttribute attr =
       new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
 
@@ -139,7 +147,8 @@ public class SourceListAttributeTest {
   public void failsTransformIfInvalidCoercedTypeProvided() {
     thrown.expect(IllegalArgumentException.class);
 
-    attr.getPostCoercionTransform().postCoercionTransform("invalid", ImmutableMap.of());
+    attr.getPostCoercionTransform()
+        .postCoercionTransform("invalid", runner.getRegistry(), ImmutableMap.of());
   }
 
   @Test
@@ -147,7 +156,8 @@ public class SourceListAttributeTest {
     thrown.expect(IllegalStateException.class);
 
     attr.getPostCoercionTransform()
-        .postCoercionTransform(ImmutableList.of("invalid"), ImmutableMap.of());
+        .postCoercionTransform(
+            ImmutableList.of("invalid"), runner.getRegistry(), ImmutableMap.of());
   }
 
   @Test
@@ -161,7 +171,8 @@ public class SourceListAttributeTest {
             ImmutableList.of("//foo:bar", "src/main.cpp"));
 
     thrown.expect(IllegalStateException.class);
-    attr.getPostCoercionTransform().postCoercionTransform(coerced, ImmutableMap.of());
+    attr.getPostCoercionTransform()
+        .postCoercionTransform(coerced, runner.getRegistry(), ImmutableMap.of());
   }
 
   @Test
@@ -178,6 +189,7 @@ public class SourceListAttributeTest {
     attr.getPostCoercionTransform()
         .postCoercionTransform(
             coerced,
+            runner.getRegistry(),
             ImmutableMap.of(
                 BuildTargetFactory.newInstance("//foo:bar"),
                 LegacyProviderInfoCollectionImpl.of()));
@@ -209,7 +221,8 @@ public class SourceListAttributeTest {
     ImmutableList<Artifact> expected =
         ImmutableList.of(buildArtifact1, buildArtifact2, sourceArtifact);
 
-    Object transformed = attr.getPostCoercionTransform().postCoercionTransform(coerced, deps);
+    Object transformed =
+        attr.getPostCoercionTransform().postCoercionTransform(coerced, runner.getRegistry(), deps);
 
     assertEquals(expected, transformed);
   }

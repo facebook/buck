@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule.attr;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
@@ -39,8 +40,9 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
   private static final PostCoercionTransform<
           ImmutableMap<BuildTarget, ProviderInfoCollection>, Object>
       IDENTITY =
-          (Object object, ImmutableMap<BuildTarget, ProviderInfoCollection> additionalData) ->
-              object;
+          (Object object,
+              ActionRegistry registry,
+              ImmutableMap<BuildTarget, ProviderInfoCollection> additionalData) -> object;
 
   @Override
   public Attribute<?> getAttribute() {

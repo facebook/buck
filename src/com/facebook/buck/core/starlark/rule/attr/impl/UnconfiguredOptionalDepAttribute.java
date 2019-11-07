@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
@@ -80,8 +81,11 @@ public abstract class UnconfiguredOptionalDepAttribute
     return this::postCoercionTransform;
   }
 
+  @SuppressWarnings("unused")
   private ImmutableList<SkylarkDependency> postCoercionTransform(
-      Object coercedValue, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+      Object coercedValue,
+      ActionRegistry registry,
+      ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     Verify.verify(coercedValue instanceof List<?>, "Value %s must be a list", coercedValue);
     List<?> listValue = (List<?>) coercedValue;
     ImmutableList.Builder<SkylarkDependency> builder =

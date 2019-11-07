@@ -34,7 +34,9 @@ import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.starlark.rule.data.SkylarkDependency;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,6 +51,11 @@ public class DepListAttributeTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
+  private final TestActionExecutionRunner runner =
+      new TestActionExecutionRunner(
+          new FakeProjectFilesystemFactory(),
+          filesystem,
+          BuildTargetFactory.newInstance("//some:rule"));
 
   private final DepListAttribute attr =
       new ImmutableDepListAttribute(ImmutableList.of(), "", true, true, ImmutableList.of());
@@ -125,7 +132,8 @@ public class DepListAttributeTest {
 
     thrown.expect(VerifyException.class);
 
-    attr.getPostCoercionTransform().postCoercionTransform("invalid", ImmutableMap.of());
+    attr.getPostCoercionTransform()
+        .postCoercionTransform("invalid", runner.getRegistry(), ImmutableMap.of());
   }
 
   @Test
@@ -134,7 +142,8 @@ public class DepListAttributeTest {
     thrown.expect(VerifyException.class);
 
     attr.getPostCoercionTransform()
-        .postCoercionTransform(ImmutableList.of("invalid"), ImmutableMap.of());
+        .postCoercionTransform(
+            ImmutableList.of("invalid"), runner.getRegistry(), ImmutableMap.of());
   }
 
   @Test
@@ -149,7 +158,8 @@ public class DepListAttributeTest {
             ImmutableList.of("//foo:bar"));
 
     thrown.expect(NullPointerException.class);
-    attr.getPostCoercionTransform().postCoercionTransform(coerced, ImmutableMap.of());
+    attr.getPostCoercionTransform()
+        .postCoercionTransform(coerced, runner.getRegistry(), ImmutableMap.of());
   }
 
   @Test
@@ -174,6 +184,7 @@ public class DepListAttributeTest {
     attr.getPostCoercionTransform()
         .postCoercionTransform(
             coerced,
+            runner.getRegistry(),
             ImmutableMap.of(
                 BuildTargetFactory.newInstance("//foo:bar"),
                 TestProviderInfoCollectionImpl.builder().put(info).build()));
@@ -215,7 +226,7 @@ public class DepListAttributeTest {
             ImmutableList.of("//foo:bar", "//foo:baz"));
 
     List<SkylarkDependency> transformed =
-        attr.getPostCoercionTransform().postCoercionTransform(coerced, deps);
+        attr.getPostCoercionTransform().postCoercionTransform(coerced, runner.getRegistry(), deps);
 
     assertEquals(2, transformed.size());
     assertEquals(

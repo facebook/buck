@@ -14,6 +14,7 @@ java_test(
         "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
         "//test/com/facebook/buck/core/rules/providers/collect/impl:testutil",
         "//test/com/facebook/buck/core/starlark/compatible:testutil",
+        "//test/com/facebook/buck/step/impl:testutil",
         "//third-party/java/junit:junit",
     ],
 )

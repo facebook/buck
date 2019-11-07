@@ -16,8 +16,10 @@
 package com.facebook.buck.core.starlark.rule;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -27,19 +29,26 @@ import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
+import com.facebook.buck.step.impl.TestActionExecutionRunner;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import java.nio.file.Paths;
+import org.junit.Before;
 import org.junit.Test;
 
 public class SkylarkRuleContextAttrTest {
 
   private final StringAttribute placeholderStringAttr =
       new ImmutableStringAttribute("", "", true, ImmutableList.of());
+  private TestActionExecutionRunner runner;
 
   static class TestAttribute extends Attribute<BuildTarget> {
 
@@ -70,10 +79,23 @@ public class SkylarkRuleContextAttrTest {
     }
 
     @Override
-    public PostCoercionTransform<ImmutableMap<BuildTarget, ProviderInfoCollection>, BuildTarget>
+    public PostCoercionTransform<
+            ImmutableMap<BuildTarget, ProviderInfoCollection>, Pair<Artifact, BuildTarget>>
         getPostCoercionTransform() {
-      return (coercedValue, deps) -> BuildTargetFactory.newInstance((String) coercedValue);
+      return (coercedValue, registry, deps) ->
+          new Pair<>(
+              registry.declareArtifact(Paths.get("out.txt")),
+              BuildTargetFactory.newInstance((String) coercedValue));
     }
+  }
+
+  @Before
+  public void setUp() {
+    runner =
+        new TestActionExecutionRunner(
+            new FakeProjectFilesystemFactory(),
+            FakeProjectFilesystem.createJavaOnlyFilesystem(),
+            BuildTargetFactory.newInstance("//some:rule"));
   }
 
   @Test
@@ -83,6 +105,7 @@ public class SkylarkRuleContextAttrTest {
             "some_method",
             ImmutableMap.of("foo", "foo_value"),
             ImmutableMap.of("foo", placeholderStringAttr),
+            runner.getRegistry(),
             ImmutableMap.of());
 
     assertEquals("foo_value", attr.getValue("foo"));
@@ -96,6 +119,7 @@ public class SkylarkRuleContextAttrTest {
             "some_method",
             ImmutableMap.of("foo", "foo_value", "bar", "bar_value"),
             ImmutableMap.of("foo", placeholderStringAttr, "bar", placeholderStringAttr),
+            runner.getRegistry(),
             ImmutableMap.of());
 
     assertEquals(ImmutableSet.of("bar", "foo"), attr.getFieldNames());
@@ -111,9 +135,13 @@ public class SkylarkRuleContextAttrTest {
             "some_method",
             ImmutableMap.of("foo", "foo_value", "bar", "//foo:bar"),
             ImmutableMap.of("foo", placeholderStringAttr, "bar", attr),
+            runner.getRegistry(),
             ImmutableMap.of(target, providerInfos));
 
     assertEquals("foo_value", ctxAttr.getValue("foo"));
-    assertEquals(target, ctxAttr.getValue("bar"));
+    assertEquals(target, ((Pair) ctxAttr.getValue("bar")).getSecond());
+    Artifact createdArtifact = ((Artifact) ((Pair) ctxAttr.getValue("bar")).getFirst());
+    assertFalse(createdArtifact.isBound());
+    assertEquals("out.txt", createdArtifact.getBasename());
   }
 }
