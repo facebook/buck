@@ -75,7 +75,7 @@ public class BuildTargetMatcherParserTest {
 
     assertEquals(
         SubdirectoryBuildTargetMatcher.of(
-            filesystem.getRootPath(), vfs.getPath("test/com/facebook/buck/parser/")),
+            CanonicalCellName.unsafeRootCell(), vfs.getPath("test/com/facebook/buck/parser/")),
         buildTargetPatternParser.parse(
             createCellRoots(filesystem), "//test/com/facebook/buck/parser/..."));
   }
@@ -95,7 +95,7 @@ public class BuildTargetMatcherParserTest {
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//:parser"));
 
     assertEquals(
-        SubdirectoryBuildTargetMatcher.of(filesystem.getRootPath(), vfs.getPath("")),
+        SubdirectoryBuildTargetMatcher.of(CanonicalCellName.unsafeRootCell(), vfs.getPath("")),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//..."));
   }
 
@@ -117,7 +117,7 @@ public class BuildTargetMatcherParserTest {
         buildTargetPatternParser.parse(cellNames, "other//:something"));
     assertEquals(
         SubdirectoryBuildTargetMatcher.of(
-            filesystem.resolve("foo/other"), filesystem.getPath("sub")),
+            CanonicalCellName.unsafeOf(Optional.of("other")), filesystem.getPath("sub")),
         buildTargetPatternParser.parse(cellNames, "other//sub/..."));
   }
 

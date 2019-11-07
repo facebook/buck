@@ -19,6 +19,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Paths;
@@ -32,7 +33,7 @@ public class SubdirectoryBuildTargetMatcherTest {
   public void testApply() {
     SubdirectoryBuildTargetMatcher pattern =
         SubdirectoryBuildTargetMatcher.of(
-            filesystem.getRootPath(), Paths.get("src/com/facebook/buck/"));
+            CanonicalCellName.rootCell(), Paths.get("src/com/facebook/buck/"));
 
     assertTrue(
         pattern.matches(

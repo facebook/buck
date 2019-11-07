@@ -16,6 +16,7 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import java.nio.file.Path;
@@ -26,7 +27,7 @@ import org.immutables.value.Value;
 @BuckStylePackageVisibleTuple
 abstract class AbstractSubdirectoryBuildTargetMatcher implements BuildTargetMatcher {
 
-  protected abstract Path getCellPath();
+  protected abstract CanonicalCellName getCellName();
 
   /**
    * Base path of the build target in the ancestor directory. It is expected to match the value
@@ -40,8 +41,7 @@ abstract class AbstractSubdirectoryBuildTargetMatcher implements BuildTargetMatc
    */
   @Override
   public boolean matches(BuildTarget target) {
-    // TODO(T47190884): Figure out how to do this based on cell name.
-    if (!getCellPath().equals(target.getCellPath())) {
+    if (!getCellName().equals(target.getCell())) {
       return false;
     }
 
@@ -61,6 +61,6 @@ abstract class AbstractSubdirectoryBuildTargetMatcher implements BuildTargetMatc
 
   @Override
   public String toString() {
-    return getCellPath().getFileName() + "//" + getPathWithinCell() + "/...";
+    return getCellName() + "//" + getPathWithinCell() + "/...";
   }
 }

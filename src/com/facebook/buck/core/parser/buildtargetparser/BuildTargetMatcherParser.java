@@ -131,7 +131,7 @@ public abstract class BuildTargetMatcherParser<T> {
     @Override
     public BuildTargetMatcher createForDescendants(
         CanonicalCellName cellName, Path cellPath, Path basePath) {
-      return SubdirectoryBuildTargetMatcher.of(cellPath, basePath);
+      return SubdirectoryBuildTargetMatcher.of(cellName, basePath);
     }
 
     @Override
