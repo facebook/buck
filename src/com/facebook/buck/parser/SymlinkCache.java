@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -57,8 +58,7 @@ class SymlinkCache {
    */
   private final Map<Path, Optional<Path>> symlinkExistenceCache = new ConcurrentHashMap<>();
 
-  // TODO(T47190884): This should use CanonicalCellName
-  private final Map<Path, ParserConfig.AllowSymlinks> cellSymlinkAllowability =
+  private final Map<CanonicalCellName, ParserConfig.AllowSymlinks> cellSymlinkAllowability =
       new ConcurrentHashMap<>();
 
   public SymlinkCache(BuckEventBus eventBus, DaemonicParserState daemonicParserState) {
@@ -98,7 +98,7 @@ class SymlinkCache {
     }
 
     ParserConfig.AllowSymlinks allowSymlinks =
-        Objects.requireNonNull(cellSymlinkAllowability.get(node.getBuildTarget().getCellPath()));
+        Objects.requireNonNull(cellSymlinkAllowability.get(node.getBuildTarget().getCell()));
     if (allowSymlinks == ParserConfig.AllowSymlinks.FORBID) {
       throw new HumanReadableException(
           "Target %s contains input files under a path which contains a symbolic link "
@@ -162,9 +162,10 @@ class SymlinkCache {
     return newSymlinksEncountered;
   }
 
-  public void registerCell(Path root, Cell cell) {
+  public void registerCell(Cell cell) {
     cellSymlinkAllowability.put(
-        root, cell.getBuckConfig().getView(ParserConfig.class).getAllowSymlinks());
+        cell.getCanonicalName(),
+        cell.getBuckConfig().getView(ParserConfig.class).getAllowSymlinks());
   }
 
   public void close() {

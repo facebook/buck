@@ -40,7 +40,7 @@ class CellManager {
     Path root = cell.getFilesystem().getRootPath();
     if (!cells.containsKey(root)) {
       cells.put(root, cell);
-      symlinkCache.registerCell(root, cell);
+      symlinkCache.registerCell(cell);
     }
   }
 
