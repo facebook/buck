@@ -16,6 +16,7 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.base.Objects;
@@ -27,7 +28,7 @@ import org.immutables.value.Value;
 @BuckStylePackageVisibleTuple
 abstract class AbstractImmediateDirectoryBuildTargetMatcher implements BuildTargetMatcher {
 
-  protected abstract Path getCellPath();
+  protected abstract CanonicalCellName getCellName();
 
   /**
    * The base path of all valid build targets. It is expected to match the value returned from a
@@ -41,8 +42,7 @@ abstract class AbstractImmediateDirectoryBuildTargetMatcher implements BuildTarg
    */
   @Override
   public boolean matches(BuildTarget target) {
-    // TODO(T47190884): Check the name instead of the path.
-    return Objects.equal(getCellPath(), target.getCellPath())
+    return Objects.equal(getCellName(), target.getCell())
         && Objects.equal(getPathWithinCell(), target.getBasePath());
   }
 
@@ -53,6 +53,6 @@ abstract class AbstractImmediateDirectoryBuildTargetMatcher implements BuildTarg
 
   @Override
   public String toString() {
-    return getCellPath().getFileName() + "//" + getPathWithinCell() + ":";
+    return getCellName() + "//" + getPathWithinCell() + ":";
   }
 }

@@ -25,6 +25,7 @@ import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.TestCellNameResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -59,7 +60,7 @@ public class BuildTargetMatcherParserTest {
 
     assertEquals(
         ImmediateDirectoryBuildTargetMatcher.of(
-            filesystem.getRootPath(), vfs.getPath("test/com/facebook/buck/parser/")),
+            CanonicalCellName.unsafeRootCell(), vfs.getPath("test/com/facebook/buck/parser/")),
         buildTargetPatternParser.parse(
             createCellRoots(filesystem), "//test/com/facebook/buck/parser:"));
 
@@ -82,7 +83,8 @@ public class BuildTargetMatcherParserTest {
         BuildTargetMatcherParser.forVisibilityArgument();
 
     assertEquals(
-        ImmediateDirectoryBuildTargetMatcher.of(filesystem.getRootPath(), vfs.getPath("")),
+        ImmediateDirectoryBuildTargetMatcher.of(
+            CanonicalCellName.unsafeRootCell(), vfs.getPath("")),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//:"));
 
     assertEquals(

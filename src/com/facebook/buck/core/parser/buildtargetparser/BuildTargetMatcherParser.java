@@ -19,6 +19,7 @@ package com.facebook.buck.core.parser.buildtargetparser;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.UnknownCellException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
@@ -59,7 +60,7 @@ public abstract class BuildTargetMatcherParser<T> {
     UnconfiguredBuildTargetView target =
         unconfiguredBuildTargetFactory.createWithWildcard(cellNames, buildTargetPattern);
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
-      return createForChildren(target.getCellPath(), target.getBasePath());
+      return createForChildren(target.getCell(), target.getCellPath(), target.getBasePath());
     } else {
       return createForSingleton(target);
     }
@@ -104,7 +105,8 @@ public abstract class BuildTargetMatcherParser<T> {
             buildTargetPattern.length() - WILDCARD_BUILD_RULE_SUFFIX.length());
     // Make sure the basePath comes from the same underlying filesystem.
     Path basePath = cellPath.getFileSystem().getPath(basePathWithSlash);
-    return createForDescendants(cellPath, basePath);
+    CanonicalCellName cellName = cellNames.getNewCellPathResolver().getCanonicalCellName(cellPath);
+    return createForDescendants(cellName, cellPath, basePath);
   }
 
   /** Used when parsing target names in the {@code visibility} argument to a build rule. */
@@ -117,22 +119,25 @@ public abstract class BuildTargetMatcherParser<T> {
    *     Examples are ":azzetz in build file //first-party/orca/orcaapp/BUCK" and
    *     "//first-party/orca/orcaapp:mezzenger in context FULLY_QUALIFIED"
    */
-  protected abstract T createForDescendants(Path cellPath, Path basePath);
+  protected abstract T createForDescendants(
+      CanonicalCellName cellName, Path cellPath, Path basePath);
 
-  protected abstract T createForChildren(Path cellPath, Path basePath);
+  protected abstract T createForChildren(CanonicalCellName cellName, Path cellPath, Path basePath);
 
   protected abstract T createForSingleton(UnconfiguredBuildTargetView target);
 
   private static class VisibilityContext extends BuildTargetMatcherParser<BuildTargetMatcher> {
 
     @Override
-    public BuildTargetMatcher createForDescendants(Path cellPath, Path basePath) {
+    public BuildTargetMatcher createForDescendants(
+        CanonicalCellName cellName, Path cellPath, Path basePath) {
       return SubdirectoryBuildTargetMatcher.of(cellPath, basePath);
     }
 
     @Override
-    public BuildTargetMatcher createForChildren(Path cellPath, Path basePath) {
-      return ImmediateDirectoryBuildTargetMatcher.of(cellPath, basePath);
+    public BuildTargetMatcher createForChildren(
+        CanonicalCellName cellName, Path cellPath, Path basePath) {
+      return ImmediateDirectoryBuildTargetMatcher.of(cellName, basePath);
     }
 
     @Override

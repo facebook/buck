@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.spec;
 
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import java.nio.file.Path;
@@ -24,12 +25,14 @@ import java.nio.file.Path;
 public class BuildTargetMatcherTargetNodeParser extends BuildTargetMatcherParser<TargetNodeSpec> {
 
   @Override
-  public TargetNodeSpec createForDescendants(Path cellPath, Path basePath) {
+  public TargetNodeSpec createForDescendants(
+      CanonicalCellName cellName, Path cellPath, Path basePath) {
     return ImmutableTargetNodePredicateSpec.of(BuildFileSpec.fromRecursivePath(basePath, cellPath));
   }
 
   @Override
-  public TargetNodeSpec createForChildren(Path cellPath, Path basePath) {
+  public TargetNodeSpec createForChildren(
+      CanonicalCellName cellName, Path cellPath, Path basePath) {
     return ImmutableTargetNodePredicateSpec.of(BuildFileSpec.fromPath(basePath, cellPath));
   }
 
