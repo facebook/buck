@@ -141,8 +141,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       executorService.submit(
           () -> {
             for (BuildTarget depTarget : targetNode.getParseDeps()) {
-              // TODO(T47190884): Figure out how to do this with CanonicalCellName instead.
-              Cell depCell = cell.getCellIgnoringVisibilityCheck(depTarget.getCellPath());
+              Cell depCell = cell.getCell(depTarget);
               try {
                 if (depTarget.isFlavored()) {
                   BuildTarget depTargetWithoutFlavors = depTarget.withoutFlavors();
