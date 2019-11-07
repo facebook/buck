@@ -115,7 +115,6 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       builder.put(name, args[i]);
       i++;
     }
-
     parseContext.recordRule(builder.build(), ast);
     return Runtime.NONE;
   }
