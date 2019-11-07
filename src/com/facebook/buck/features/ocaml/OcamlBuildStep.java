@@ -47,8 +47,8 @@ public class OcamlBuildStep implements Step {
   private final BuildTarget buildTarget;
   private final ImmutableMap<String, String> cCompilerEnvironment;
   private final ImmutableList<String> cCompiler;
-  private final ImmutableMap<String, String> cxxCompilerEnvironment;
-  private final ImmutableList<String> cxxCompiler;
+  private final ImmutableMap<String, String> cxxLinkerEnvironment;
+  private final ImmutableList<String> cxxLinker;
   private final boolean bytecodeOnly;
 
   private final boolean hasGeneratedSources;
@@ -61,8 +61,8 @@ public class OcamlBuildStep implements Step {
       BuildTarget buildTarget,
       ImmutableMap<String, String> cCompilerEnvironment,
       ImmutableList<String> cCompiler,
-      ImmutableMap<String, String> cxxCompilerEnvironment,
-      ImmutableList<String> cxxCompiler,
+      ImmutableMap<String, String> cxxLinkerEnvironment,
+      ImmutableList<String> cxxLinker,
       boolean bytecodeOnly) {
     this.buildContext = buildContext;
     this.filesystem = filesystem;
@@ -70,8 +70,8 @@ public class OcamlBuildStep implements Step {
     this.buildTarget = buildTarget;
     this.cCompilerEnvironment = cCompilerEnvironment;
     this.cCompiler = cCompiler;
-    this.cxxCompilerEnvironment = cxxCompilerEnvironment;
-    this.cxxCompiler = cxxCompiler;
+    this.cxxLinkerEnvironment = cxxLinkerEnvironment;
+    this.cxxLinker = cxxLinker;
     this.bytecodeOnly = bytecodeOnly;
 
     hasGeneratedSources =
@@ -235,8 +235,8 @@ public class OcamlBuildStep implements Step {
     OcamlLinkStep linkStep =
         OcamlLinkStep.create(
             filesystem,
-            cxxCompilerEnvironment,
-            cxxCompiler,
+            cxxLinkerEnvironment,
+            cxxLinker,
             ocamlContext.getOcamlCompiler().get().getCommandPrefix(getResolver()),
             flags.build(),
             ocamlContext.getOcamlInteropIncludesDir(),
@@ -262,8 +262,8 @@ public class OcamlBuildStep implements Step {
     OcamlLinkStep linkStep =
         OcamlLinkStep.create(
             filesystem,
-            cxxCompilerEnvironment,
-            cxxCompiler,
+            cxxLinkerEnvironment,
+            cxxLinker,
             ocamlContext.getOcamlBytecodeCompiler().get().getCommandPrefix(getResolver()),
             flags.build(),
             ocamlContext.getOcamlInteropIncludesDir(),

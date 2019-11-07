@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.Compiler;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -38,7 +39,7 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final OcamlBuildContext ocamlContext;
   @AddToRuleKey private final Compiler cCompiler;
-  @AddToRuleKey private final Compiler cxxCompiler;
+  @AddToRuleKey private final Linker cxxLinker;
   @AddToRuleKey private final boolean bytecodeOnly;
 
   public OcamlBuild(
@@ -47,12 +48,12 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildRuleParams params,
       OcamlBuildContext ocamlContext,
       Compiler cCompiler,
-      Compiler cxxCompiler,
+      Linker cxxLinker,
       boolean bytecodeOnly) {
     super(buildTarget, projectFilesystem, params);
     this.ocamlContext = ocamlContext;
     this.cCompiler = cCompiler;
-    this.cxxCompiler = cxxCompiler;
+    this.cxxLinker = cxxLinker;
     this.bytecodeOnly = bytecodeOnly;
 
     Objects.requireNonNull(ocamlContext.getInput());
@@ -84,8 +85,8 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 getBuildTarget(),
                 cCompiler.getEnvironment(context.getSourcePathResolver()),
                 cCompiler.getCommandPrefix(context.getSourcePathResolver()),
-                cxxCompiler.getEnvironment(context.getSourcePathResolver()),
-                cxxCompiler.getCommandPrefix(context.getSourcePathResolver()),
+                cxxLinker.getEnvironment(context.getSourcePathResolver()),
+                cxxLinker.getCommandPrefix(context.getSourcePathResolver()),
                 bytecodeOnly))
         .build();
   }
