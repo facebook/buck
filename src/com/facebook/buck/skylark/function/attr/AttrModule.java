@@ -24,6 +24,7 @@ import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableDepListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableOutputAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableOutputListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
@@ -135,5 +136,13 @@ public class AttrModule implements AttrModuleApi {
           location, "output attributes must have a default value, or be mandatory");
     }
     return new ImmutableOutputAttribute(defaultValue, doc, mandatory);
+  }
+
+  @Override
+  public AttributeHolder outputListAttribute(
+      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      throws EvalException {
+    List<String> validatedValues = defaultValue.getContents(String.class, null);
+    return new ImmutableOutputListAttribute(validatedValues, doc, mandatory, allowEmpty);
   }
 }

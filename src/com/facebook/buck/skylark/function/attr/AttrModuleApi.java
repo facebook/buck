@@ -460,4 +460,50 @@ public interface AttrModuleApi extends SkylarkValue {
       useLocation = true)
   AttributeHolder outputAttribute(
       Object defaultValue, String doc, boolean mandatory, Location location) throws EvalException;
+
+  @SkylarkCallable(
+      name = "output_list",
+      doc =
+          "Create a parameter for user defined rules that is a list of output artifacts.\n"
+              + "Rules with this attribute take a list of string file names, and an artifact is "
+              + "automatically declared for each name name (see ctx.actions.declare_file). This is "
+              + "exposed to rule implementations via ctx.attr.{@code name} as a list of Artifact "
+              + "objects",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "[]",
+            noneable = false,
+            positional = false,
+            named = true,
+            type = SkylarkList.class,
+            generic1 = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = "allow_empty",
+            doc = "Whether the list may be empty",
+            defaultValue = "False",
+            positional = false,
+            named = true,
+            type = Boolean.class),
+      })
+  AttributeHolder outputListAttribute(
+      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      throws EvalException;
 }

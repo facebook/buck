@@ -620,4 +620,43 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         workspace.runBuckBuild("//:empty_path").assertFailure().getStderr(),
         Matchers.containsString("Path '' in target '//:empty_path' was empty"));
   }
+
+  @Test
+  public void implementationGetsArtifactsFromOutputListAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_gets_artifacts_from_output_list", tmp);
+
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    Path outputPath =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_contents"))
+            .resolve("some_out.txt");
+
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:with_contents").assertSuccess();
+    assertEquals("some contents", workspace.getFileContents(outputPath));
+
+    assertThat(
+        workspace.runBuckBuild("//:without_contents").assertFailure().getStderr(),
+        Matchers.containsString(
+            "Artifact some_out.txt declared by //:without_contents is not bound to an action"));
+    assertThat(
+        workspace.runBuckBuild("//:invalid_path").assertFailure().getStderr(),
+        Matchers.containsString(
+            "Path 'foo\\u0000bar.txt' in target '//:invalid_path' is not valid"));
+    assertThat(
+        workspace.runBuckBuild("//:parent_path").assertFailure().getStderr(),
+        Matchers.containsString(
+            String.format(
+                "Path '%s' in target '//:parent_path' attempted to traverse",
+                Paths.get("..", "foo.txt"))));
+    assertThat(
+        workspace.runBuckBuild("//:dot_path").assertFailure().getStderr(),
+        Matchers.containsString("Path '.' in target '//:dot_path' was empty"));
+    assertThat(
+        workspace.runBuckBuild("//:empty_path").assertFailure().getStderr(),
+        Matchers.containsString("Path '' in target '//:empty_path' was empty"));
+  }
 }
