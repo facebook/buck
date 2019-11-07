@@ -58,9 +58,9 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -86,6 +86,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
+import org.immutables.value.Value;
 import org.junit.Test;
 
 public class AndroidBinaryGraphEnhancerTest {
@@ -138,70 +139,17 @@ public class AndroidBinaryGraphEnhancerTest {
         new BuildRuleParams(
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
     AndroidBinaryGraphEnhancer graphEnhancer =
-        new AndroidBinaryGraphEnhancer(
-            createToolchainProviderForAndroidWithJava8(),
-            TestCellPathResolver.get(filesystem),
-            apkTarget,
-            filesystem,
-            TestAndroidPlatformTargetFactory.create(),
-            originalParams,
-            graphBuilder,
-            AaptMode.AAPT1,
-            ImmutableList.of(),
-            ResourcesFilter.ResourceCompressionMode.DISABLED,
-            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
-            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-            Optional.empty(),
-            Optional.empty(),
-            /* locales */ ImmutableSet.of(),
-            /* localizedStringFileName */ null,
-            Optional.of(PathSourcePath.of(filesystem, Paths.get("AndroidManifest.xml"))),
-            Optional.empty(),
-            Optional.empty(),
-            PackageType.DEBUG,
-            /* cpuFilters */ ImmutableSet.of(),
-            /* shouldBuildStringSourceMap */ false,
-            /* shouldPreDex */ true,
-            DexSplitMode.NO_SPLIT,
-            /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
-            /* resourcesToExclude */ ImmutableSet.of(),
-            /* nativeLibsToExclude */ ImmutableSet.of(),
-            /* nativeLinkablesToExclude */ ImmutableSet.of(),
-            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
-            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
-            /* skipCrunchPngs */ false,
-            /* includesVectorDrawables */ false,
-            /* noAutoVersionResources */ false,
-            /* noVersionTransitionsResources */ false,
-            /* noAutoAddOverlayResources */ false,
-            DEFAULT_JAVA_CONFIG,
-            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
-            ANDROID_JAVAC_OPTIONS,
-            EnumSet.noneOf(ExopackageMode.class),
-            /* buildConfigValues */ BuildConfigFields.of(),
-            /* buildConfigValuesFile */ Optional.empty(),
-            XzStep.DEFAULT_COMPRESSION_LEVEL,
-            /* trimResourceIds */ false,
-            /* keepResourcePattern */ Optional.empty(),
-            false,
-            /* nativeLibraryMergeMap */ Optional.empty(),
-            /* nativeLibraryMergeGlue */ Optional.empty(),
-            /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
-            /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
-            Optional.empty(),
-            RelinkerMode.DISABLED,
-            ImmutableList.of(),
-            MoreExecutors.newDirectExecutorService(),
-            /* manifestEntries */ ManifestEntries.empty(),
-            CxxPlatformUtils.DEFAULT_CONFIG,
-            new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
-            new DxConfig(FakeBuckConfig.builder().build()),
-            DxStep.D8,
-            Optional.empty(),
-            defaultNonPredexedArgs(),
-            ImmutableSortedSet::of,
-            false,
-            new NoopAndroidNativeTargetConfigurationMatcher());
+        createGraphEnhancer(
+            TestGraphEnhancerArgs.builder()
+                .setTarget(apkTarget)
+                .setBuildRuleParams(originalParams)
+                .setGraphBuilder(graphBuilder)
+                .setToolchainProvider(createToolchainProviderForAndroidWithJava8())
+                .setResourceCompressionMode(ResourcesFilter.ResourceCompressionMode.DISABLED)
+                .setShouldPredex(true)
+                .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
+                .setDexTool(DxStep.D8)
+                .build());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -322,70 +270,17 @@ public class AndroidBinaryGraphEnhancerTest {
         new BuildRuleParams(
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
     AndroidBinaryGraphEnhancer graphEnhancer =
-        new AndroidBinaryGraphEnhancer(
-            createToolchainProviderForAndroidWithJava8(),
-            TestCellPathResolver.get(filesystem),
-            apkTarget,
-            filesystem,
-            TestAndroidPlatformTargetFactory.create(),
-            originalParams,
-            graphBuilder,
-            AaptMode.AAPT1,
-            ImmutableList.of(),
-            ResourcesFilter.ResourceCompressionMode.DISABLED,
-            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
-            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-            Optional.empty(),
-            Optional.empty(),
-            /* locales */ ImmutableSet.of(),
-            /* localizedStringFileName */ null,
-            Optional.of(PathSourcePath.of(filesystem, Paths.get("AndroidManifest.xml"))),
-            Optional.empty(),
-            Optional.empty(),
-            PackageType.DEBUG,
-            /* cpuFilters */ ImmutableSet.of(),
-            /* shouldBuildStringSourceMap */ false,
-            /* shouldPreDex */ true,
-            DexSplitMode.NO_SPLIT,
-            /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
-            /* resourcesToExclude */ ImmutableSet.of(),
-            /* nativeLibsToExclude */ ImmutableSet.of(),
-            /* nativeLinkablesToExclude */ ImmutableSet.of(),
-            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
-            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
-            /* skipCrunchPngs */ false,
-            /* includesVectorDrawables */ false,
-            /* noAutoVersionResources */ false,
-            /* noVersionTransitionsResources */ false,
-            /* noAutoAddOverlayResources */ false,
-            DEFAULT_JAVA_CONFIG,
-            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
-            ANDROID_JAVAC_OPTIONS,
-            EnumSet.noneOf(ExopackageMode.class),
-            /* buildConfigValues */ BuildConfigFields.of(),
-            /* buildConfigValuesFile */ Optional.empty(),
-            XzStep.DEFAULT_COMPRESSION_LEVEL,
-            /* trimResourceIds */ false,
-            /* keepResourcePattern */ Optional.empty(),
-            false,
-            /* nativeLibraryMergeMap */ Optional.empty(),
-            /* nativeLibraryMergeGlue */ Optional.empty(),
-            /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
-            /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
-            Optional.empty(),
-            RelinkerMode.DISABLED,
-            ImmutableList.of(),
-            MoreExecutors.newDirectExecutorService(),
-            /* manifestEntries */ ManifestEntries.empty(),
-            CxxPlatformUtils.DEFAULT_CONFIG,
-            new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
-            new DxConfig(FakeBuckConfig.builder().build()),
-            DxStep.D8,
-            Optional.empty(),
-            defaultNonPredexedArgs(),
-            ImmutableSortedSet::of,
-            false,
-            new NoopAndroidNativeTargetConfigurationMatcher());
+        createGraphEnhancer(
+            TestGraphEnhancerArgs.builder()
+                .setTarget(apkTarget)
+                .setBuildRuleParams(originalParams)
+                .setGraphBuilder(graphBuilder)
+                .setToolchainProvider(createToolchainProviderForAndroidWithJava8())
+                .setResourceCompressionMode(ResourcesFilter.ResourceCompressionMode.DISABLED)
+                .setShouldPredex(true)
+                .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
+                .setDexTool(DxStep.D8)
+                .build());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -522,74 +417,16 @@ public class AndroidBinaryGraphEnhancerTest {
         new BuildRuleParams(
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
     AndroidBinaryGraphEnhancer graphEnhancer =
-        new AndroidBinaryGraphEnhancer(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    NdkCxxPlatformsProvider.DEFAULT_NAME,
-                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
-                .build(),
-            TestCellPathResolver.get(filesystem),
-            apkTarget,
-            filesystem,
-            TestAndroidPlatformTargetFactory.create(),
-            originalParams,
-            graphBuilder,
-            AaptMode.AAPT1,
-            ImmutableList.of(),
-            ResourcesFilter.ResourceCompressionMode.DISABLED,
-            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
-            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-            Optional.empty(),
-            Optional.empty(),
-            /* locales */ ImmutableSet.of(),
-            /* localizedStringFileName */ null,
-            Optional.of(PathSourcePath.of(filesystem, Paths.get("AndroidManifest.xml"))),
-            Optional.empty(),
-            Optional.empty(),
-            PackageType.DEBUG,
-            /* cpuFilters */ ImmutableSet.of(),
-            /* shouldBuildStringSourceMap */ false,
-            /* shouldPreDex */ true,
-            DexSplitMode.NO_SPLIT,
-            buildRulesToExcludeFromDex,
-            /* resourcesToExclude */ ImmutableSet.of(),
-            /* nativeLibsToExclude */ ImmutableSet.of(),
-            /* nativeLinkablesToExclude */ ImmutableSet.of(),
-            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
-            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
-            /* skipCrunchPngs */ false,
-            /* includesVectorDrawables */ false,
-            /* noAutoVersionResources */ false,
-            /* noVersionTransitionsResources */ false,
-            /* noAutoAddOverlayResources */ false,
-            DEFAULT_JAVA_CONFIG,
-            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
-            ANDROID_JAVAC_OPTIONS,
-            EnumSet.noneOf(ExopackageMode.class),
-            /* buildConfigValues */ BuildConfigFields.of(),
-            /* buildConfigValuesFile */ Optional.empty(),
-            XzStep.DEFAULT_COMPRESSION_LEVEL,
-            /* trimResourceIds */ false,
-            /* keepResourcePattern */ Optional.empty(),
-            false,
-            /* nativeLibraryMergeMap */ Optional.empty(),
-            /* nativeLibraryMergeGlue */ Optional.empty(),
-            /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
-            /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
-            Optional.empty(),
-            RelinkerMode.DISABLED,
-            ImmutableList.of(),
-            MoreExecutors.newDirectExecutorService(),
-            /* manifestEntries */ ManifestEntries.empty(),
-            CxxPlatformUtils.DEFAULT_CONFIG,
-            new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
-            new DxConfig(FakeBuckConfig.builder().build()),
-            DxStep.DX,
-            Optional.empty(),
-            defaultNonPredexedArgs(),
-            ImmutableSortedSet::of,
-            false,
-            new NoopAndroidNativeTargetConfigurationMatcher());
+        createGraphEnhancer(
+            TestGraphEnhancerArgs.builder()
+                .setTarget(apkTarget)
+                .setBuildRuleParams(originalParams)
+                .setGraphBuilder(graphBuilder)
+                .setResourceCompressionMode(ResourcesFilter.ResourceCompressionMode.DISABLED)
+                .setShouldPredex(true)
+                .setBuildRulesToExcludeFromDex(buildRulesToExcludeFromDex)
+                .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
+                .build());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -676,74 +513,12 @@ public class AndroidBinaryGraphEnhancerTest {
 
     // set it up.
     AndroidBinaryGraphEnhancer graphEnhancer =
-        new AndroidBinaryGraphEnhancer(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    NdkCxxPlatformsProvider.DEFAULT_NAME,
-                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
-                .build(),
-            TestCellPathResolver.get(projectFilesystem),
-            apkTarget,
-            projectFilesystem,
-            TestAndroidPlatformTargetFactory.create(),
-            originalParams,
-            graphBuilder,
-            AaptMode.AAPT1,
-            ImmutableList.of(),
-            ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
-            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
-            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-            Optional.empty(),
-            Optional.empty(),
-            /* locales */ ImmutableSet.of(),
-            /* localizedStringFileName */ null,
-            Optional.of(FakeSourcePath.of("AndroidManifest.xml")),
-            Optional.empty(),
-            Optional.empty(),
-            PackageType.DEBUG,
-            /* cpuFilters */ ImmutableSet.of(),
-            /* shouldBuildStringSourceMap */ false,
-            /* shouldPreDex */ false,
-            DexSplitMode.NO_SPLIT,
-            /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
-            /* resourcesToExclude */ ImmutableSet.of(),
-            /* nativeLibsToExclude */ ImmutableSet.of(),
-            /* nativeLinkablesToExclude */ ImmutableSet.of(),
-            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
-            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
-            /* skipCrunchPngs */ false,
-            /* includesVectorDrawables */ false,
-            /* noAutoVersionResources */ false,
-            /* noVersionTransitionsResources */ false,
-            /* noAutoAddOverlayResources */ false,
-            DEFAULT_JAVA_CONFIG,
-            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
-            ANDROID_JAVAC_OPTIONS,
-            EnumSet.of(ExopackageMode.SECONDARY_DEX),
-            /* buildConfigValues */ BuildConfigFields.of(),
-            /* buildConfigValuesFiles */ Optional.empty(),
-            XzStep.DEFAULT_COMPRESSION_LEVEL,
-            /* trimResourceIds */ false,
-            /* keepResourcePattern */ Optional.empty(),
-            false,
-            /* nativeLibraryMergeMap */ Optional.empty(),
-            /* nativeLibraryMergeGlue */ Optional.empty(),
-            /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
-            /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
-            Optional.empty(),
-            RelinkerMode.DISABLED,
-            ImmutableList.of(),
-            MoreExecutors.newDirectExecutorService(),
-            /* manifestEntries */ ManifestEntries.empty(),
-            CxxPlatformUtils.DEFAULT_CONFIG,
-            new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
-            new DxConfig(FakeBuckConfig.builder().build()),
-            DxStep.DX,
-            Optional.empty(),
-            defaultNonPredexedArgs(),
-            ImmutableSortedSet::of,
-            false,
-            new NoopAndroidNativeTargetConfigurationMatcher());
+        createGraphEnhancer(
+            TestGraphEnhancerArgs.builder()
+                .setTarget(apkTarget)
+                .setBuildRuleParams(originalParams)
+                .setGraphBuilder(graphBuilder)
+                .build());
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     // Verify that android_build_config() was processed correctly.
@@ -809,78 +584,15 @@ public class AndroidBinaryGraphEnhancerTest {
 
     // set it up.
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams originalParams =
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(resource));
     AndroidBinaryGraphEnhancer graphEnhancer =
-        new AndroidBinaryGraphEnhancer(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    NdkCxxPlatformsProvider.DEFAULT_NAME,
-                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
-                .build(),
-            TestCellPathResolver.get(projectFilesystem),
-            target,
-            projectFilesystem,
-            TestAndroidPlatformTargetFactory.create(),
-            originalParams,
-            graphBuilder,
-            AaptMode.AAPT1,
-            ImmutableList.of(),
-            ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
-            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
-            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-            Optional.empty(),
-            Optional.empty(),
-            /* locales */ ImmutableSet.of(),
-            /* localizedStringFileName */ null,
-            Optional.of(FakeSourcePath.of("AndroidManifest.xml")),
-            Optional.empty(),
-            Optional.empty(),
-            PackageType.DEBUG,
-            /* cpuFilters */ ImmutableSet.of(),
-            /* shouldBuildStringSourceMap */ false,
-            /* shouldPreDex */ false,
-            DexSplitMode.NO_SPLIT,
-            /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
-            /* resourcesToExclude */ ImmutableSet.of(),
-            /* nativeLibsToExclude */ ImmutableSet.of(),
-            /* nativeLinkablesToExclude */ ImmutableSet.of(),
-            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
-            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
-            /* skipCrunchPngs */ false,
-            /* includesVectorDrawables */ false,
-            /* noAutoVersionResources */ false,
-            /* noVersionTransitionsResources */ false,
-            /* noAutoAddOverlayResources */ false,
-            DEFAULT_JAVA_CONFIG,
-            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
-            ANDROID_JAVAC_OPTIONS,
-            EnumSet.of(ExopackageMode.SECONDARY_DEX),
-            /* buildConfigValues */ BuildConfigFields.of(),
-            /* buildConfigValuesFiles */ Optional.empty(),
-            XzStep.DEFAULT_COMPRESSION_LEVEL,
-            /* trimResourceIds */ false,
-            /* keepResourcePattern */ Optional.empty(),
-            false,
-            /* nativeLibraryMergeMap */ Optional.empty(),
-            /* nativeLibraryMergeGlue */ Optional.empty(),
-            /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
-            /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
-            Optional.empty(),
-            RelinkerMode.DISABLED,
-            ImmutableList.of(),
-            MoreExecutors.newDirectExecutorService(),
-            /* manifestEntries */ ManifestEntries.empty(),
-            CxxPlatformUtils.DEFAULT_CONFIG,
-            new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
-            new DxConfig(FakeBuckConfig.builder().build()),
-            DxStep.DX,
-            Optional.empty(),
-            defaultNonPredexedArgs(),
-            ImmutableSortedSet::of,
-            false,
-            new NoopAndroidNativeTargetConfigurationMatcher());
+        createGraphEnhancer(
+            TestGraphEnhancerArgs.builder()
+                .setTarget(target)
+                .setBuildRuleParams(originalParams)
+                .setGraphBuilder(graphBuilder)
+                .build());
     graphEnhancer.createAdditionalBuildables();
 
     BuildRule aaptPackageResourcesRule = findRuleOfType(graphBuilder, AaptPackageResources.class);
@@ -894,77 +606,14 @@ public class AndroidBinaryGraphEnhancerTest {
 
     // set it up.
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams originalParams = TestBuildRuleParams.create();
     AndroidBinaryGraphEnhancer graphEnhancer =
-        new AndroidBinaryGraphEnhancer(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    NdkCxxPlatformsProvider.DEFAULT_NAME,
-                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
-                .build(),
-            TestCellPathResolver.get(projectFilesystem),
-            target,
-            projectFilesystem,
-            TestAndroidPlatformTargetFactory.create(),
-            originalParams,
-            graphBuilder,
-            AaptMode.AAPT1,
-            ImmutableList.of(),
-            ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
-            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
-            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-            Optional.empty(),
-            Optional.empty(),
-            /* locales */ ImmutableSet.of(),
-            /* localizedStringFileName */ null,
-            Optional.of(FakeSourcePath.of("AndroidManifest.xml")),
-            Optional.empty(),
-            Optional.empty(),
-            PackageType.DEBUG,
-            /* cpuFilters */ ImmutableSet.of(),
-            /* shouldBuildStringSourceMap */ false,
-            /* shouldPreDex */ false,
-            DexSplitMode.NO_SPLIT,
-            /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
-            /* resourcesToExclude */ ImmutableSet.of(),
-            /* nativeLibsToExclude */ ImmutableSet.of(),
-            /* nativeLinkablesToExclude */ ImmutableSet.of(),
-            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
-            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
-            /* skipCrunchPngs */ false,
-            /* includesVectorDrawables */ false,
-            /* noAutoVersionResources */ false,
-            /* noVersionTransitionsResources */ false,
-            /* noAutoAddOverlayResources */ false,
-            DEFAULT_JAVA_CONFIG,
-            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
-            ANDROID_JAVAC_OPTIONS,
-            EnumSet.of(ExopackageMode.SECONDARY_DEX),
-            /* buildConfigValues */ BuildConfigFields.of(),
-            /* buildConfigValuesFiles */ Optional.empty(),
-            XzStep.DEFAULT_COMPRESSION_LEVEL,
-            /* trimResourceIds */ false,
-            /* keepResourcePattern */ Optional.empty(),
-            false,
-            /* nativeLibraryMergeMap */ Optional.empty(),
-            /* nativeLibraryMergeGlue */ Optional.empty(),
-            /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
-            /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
-            Optional.empty(),
-            RelinkerMode.DISABLED,
-            ImmutableList.of(),
-            MoreExecutors.newDirectExecutorService(),
-            /* manifestEntries */ ManifestEntries.empty(),
-            CxxPlatformUtils.DEFAULT_CONFIG,
-            new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
-            new DxConfig(FakeBuckConfig.builder().build()),
-            DxStep.DX,
-            Optional.empty(),
-            defaultNonPredexedArgs(),
-            ImmutableSortedSet::of,
-            false,
-            new NoopAndroidNativeTargetConfigurationMatcher());
+        createGraphEnhancer(
+            TestGraphEnhancerArgs.builder()
+                .setTarget(target)
+                .setBuildRuleParams(originalParams)
+                .setGraphBuilder(graphBuilder)
+                .build());
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(graphBuilder, ResourcesFilter.class);
@@ -1005,78 +654,15 @@ public class AndroidBinaryGraphEnhancerTest {
 
     // set it up.
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams originalParams =
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(resource));
     AndroidBinaryGraphEnhancer graphEnhancer =
-        new AndroidBinaryGraphEnhancer(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    NdkCxxPlatformsProvider.DEFAULT_NAME,
-                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
-                .build(),
-            TestCellPathResolver.get(projectFilesystem),
-            target,
-            projectFilesystem,
-            TestAndroidPlatformTargetFactory.create(),
-            originalParams,
-            graphBuilder,
-            AaptMode.AAPT1,
-            ImmutableList.of(),
-            ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
-            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
-            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-            Optional.empty(),
-            Optional.empty(),
-            /* locales */ ImmutableSet.of(),
-            /* localizedStringFileName */ null,
-            Optional.of(FakeSourcePath.of("AndroidManifest.xml")),
-            Optional.empty(),
-            Optional.empty(),
-            PackageType.DEBUG,
-            /* cpuFilters */ ImmutableSet.of(),
-            /* shouldBuildStringSourceMap */ false,
-            /* shouldPreDex */ false,
-            DexSplitMode.NO_SPLIT,
-            /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
-            /* resourcesToExclude */ ImmutableSet.of(),
-            /* nativeLibsToExclude */ ImmutableSet.of(),
-            /* nativeLinkablesToExclude */ ImmutableSet.of(),
-            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
-            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
-            /* skipCrunchPngs */ false,
-            /* includesVectorDrawables */ false,
-            /* noAutoVersionResources */ false,
-            /* noVersionTransitionsResources */ false,
-            /* noAutoAddOverlayResources */ false,
-            DEFAULT_JAVA_CONFIG,
-            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
-            ANDROID_JAVAC_OPTIONS,
-            EnumSet.of(ExopackageMode.SECONDARY_DEX),
-            /* buildConfigValues */ BuildConfigFields.of(),
-            /* buildConfigValuesFiles */ Optional.empty(),
-            XzStep.DEFAULT_COMPRESSION_LEVEL,
-            /* trimResourceIds */ false,
-            /* keepResourcePattern */ Optional.empty(),
-            false,
-            /* nativeLibraryMergeMap */ Optional.empty(),
-            /* nativeLibraryMergeGlue */ Optional.empty(),
-            /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
-            /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
-            Optional.empty(),
-            RelinkerMode.DISABLED,
-            ImmutableList.of(),
-            MoreExecutors.newDirectExecutorService(),
-            /* manifestEntries */ ManifestEntries.empty(),
-            CxxPlatformUtils.DEFAULT_CONFIG,
-            new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
-            new DxConfig(FakeBuckConfig.builder().build()),
-            DxStep.DX,
-            Optional.empty(),
-            defaultNonPredexedArgs(),
-            ImmutableSortedSet::of,
-            false,
-            new NoopAndroidNativeTargetConfigurationMatcher());
+        createGraphEnhancer(
+            TestGraphEnhancerArgs.builder()
+                .setTarget(target)
+                .setBuildRuleParams(originalParams)
+                .setGraphBuilder(graphBuilder)
+                .build());
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(graphBuilder, ResourcesFilter.class);
@@ -1084,6 +670,117 @@ public class AndroidBinaryGraphEnhancerTest {
         "ResourcesFilter must depend on rules behind resources source paths",
         resourcesFilter,
         resourcesDep);
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractTestGraphEnhancerArgs {
+    abstract BuildTarget getTarget();
+
+    abstract BuildRuleParams getBuildRuleParams();
+
+    abstract ActionGraphBuilder getGraphBuilder();
+
+    @Value.Default
+    ToolchainProvider getToolchainProvider() {
+      return new ToolchainProviderBuilder()
+          .withToolchain(
+              NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(ImmutableMap.of()))
+          .build();
+    }
+
+    @Value.Default
+    ResourcesFilter.ResourceCompressionMode getResourceCompressionMode() {
+      return ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS;
+    }
+
+    @Value.Default
+    boolean getShouldPredex() {
+      return false;
+    }
+
+    @Value.Default
+    ImmutableSet<BuildTarget> getBuildRulesToExcludeFromDex() {
+      return ImmutableSet.of();
+    }
+
+    @Value.Default
+    EnumSet<ExopackageMode> getExopackageMode() {
+      return EnumSet.of(ExopackageMode.SECONDARY_DEX);
+    }
+
+    @Value.Default
+    String getDexTool() {
+      return DxStep.DX;
+    }
+  }
+
+  private AndroidBinaryGraphEnhancer createGraphEnhancer(TestGraphEnhancerArgs args) {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    return new AndroidBinaryGraphEnhancer(
+        args.getToolchainProvider(),
+        TestCellPathResolver.get(projectFilesystem),
+        args.getTarget(),
+        projectFilesystem,
+        TestAndroidPlatformTargetFactory.create(),
+        args.getBuildRuleParams(),
+        args.getGraphBuilder(),
+        AaptMode.AAPT1,
+        ImmutableList.of(),
+        args.getResourceCompressionMode(),
+        FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
+        /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
+        Optional.empty(),
+        Optional.empty(),
+        /* locales */ ImmutableSet.of(),
+        /* localizedStringFileName */ null,
+        Optional.of(FakeSourcePath.of("AndroidManifest.xml")),
+        Optional.empty(),
+        Optional.empty(),
+        PackageType.DEBUG,
+        /* cpuFilters */ ImmutableSet.of(),
+        /* shouldBuildStringSourceMap */ false,
+        /* shouldPreDex */ args.getShouldPredex(),
+        DexSplitMode.NO_SPLIT,
+        /* buildRulesToExcludeFromDex */ args.getBuildRulesToExcludeFromDex(),
+        /* resourcesToExclude */ ImmutableSet.of(),
+        /* nativeLibsToExclude */ ImmutableSet.of(),
+        /* nativeLinkablesToExclude */ ImmutableSet.of(),
+        /* nativeLibAssetsToExclude */ ImmutableSet.of(),
+        /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
+        /* skipCrunchPngs */ false,
+        /* includesVectorDrawables */ false,
+        /* noAutoVersionResources */ false,
+        /* noVersionTransitionsResources */ false,
+        /* noAutoAddOverlayResources */ false,
+        DEFAULT_JAVA_CONFIG,
+        JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
+        ANDROID_JAVAC_OPTIONS,
+        args.getExopackageMode(),
+        /* buildConfigValues */ BuildConfigFields.of(),
+        /* buildConfigValuesFiles */ Optional.empty(),
+        XzStep.DEFAULT_COMPRESSION_LEVEL,
+        /* trimResourceIds */ false,
+        /* keepResourcePattern */ Optional.empty(),
+        false,
+        /* nativeLibraryMergeMap */ Optional.empty(),
+        /* nativeLibraryMergeGlue */ Optional.empty(),
+        /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
+        /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
+        Optional.empty(),
+        RelinkerMode.DISABLED,
+        ImmutableList.of(),
+        MoreExecutors.newDirectExecutorService(),
+        /* manifestEntries */ ManifestEntries.empty(),
+        CxxPlatformUtils.DEFAULT_CONFIG,
+        new APKModuleGraph(TargetGraph.EMPTY, args.getTarget(), Optional.empty()),
+        new DxConfig(FakeBuckConfig.builder().build()),
+        args.getDexTool(),
+        Optional.empty(),
+        defaultNonPredexedArgs(),
+        ImmutableSortedSet::of,
+        false,
+        new NoopAndroidNativeTargetConfigurationMatcher());
   }
 
   private NonPredexedDexBuildableArgs defaultNonPredexedArgs() {
