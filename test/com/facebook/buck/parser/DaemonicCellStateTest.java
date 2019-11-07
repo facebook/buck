@@ -54,8 +54,16 @@ public class DaemonicCellStateTest {
   private DaemonicCellState childState;
 
   private void populateDummyRawNode(DaemonicCellState state, BuildTarget target) {
+    Cell targetCell;
+    if (target.getCell().equals(rootCell.getCanonicalName())) {
+      targetCell = rootCell;
+    } else if (target.getCell().equals(childCell.getCanonicalName())) {
+      targetCell = childCell;
+    } else {
+      throw new AssertionError();
+    }
     state.putBuildFileManifestIfNotPresent(
-        target.getCellPath().resolve(target.getBasePath().resolve("BUCK")),
+        targetCell.getRoot().resolve(target.getBasePath().resolve("BUCK")),
         BuildFileManifestFactory.create(
             ImmutableMap.of(
                 target.getShortName(),
