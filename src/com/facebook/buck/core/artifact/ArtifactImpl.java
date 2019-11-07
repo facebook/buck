@@ -172,6 +172,11 @@ class ArtifactImpl extends AbstractArtifact
     this.location = Location.BUILTIN;
   }
 
+  /** Get the location where this artifact was declared. {@link Location.BUILTIN} is valid */
+  public Location getDeclaredLocation() {
+    return location;
+  }
+
   @Override
   public @Nullable SourceArtifactImpl asSource() {
     return null;

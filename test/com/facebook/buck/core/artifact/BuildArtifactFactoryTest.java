@@ -17,6 +17,7 @@ package com.facebook.buck.core.artifact;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -28,8 +29,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.base.VerifyException;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.vfs.PathFragment;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -68,7 +71,7 @@ public class BuildArtifactFactoryTest {
     Path path = Paths.get("some/output");
     factory.createDeclaredArtifact(path, Location.BUILTIN);
 
-    expectedException.expect(IllegalStateException.class);
+    expectedException.expect(HumanReadableException.class);
     factory.createDeclaredArtifact(path, Location.BUILTIN);
   }
 
@@ -83,7 +86,29 @@ public class BuildArtifactFactoryTest {
     factory.bindtoBuildArtifact(
         ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {}), artifact);
 
-    expectedException.expect(IllegalStateException.class);
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        Matchers.not(Matchers.containsString("Originally declared at")));
+    factory.createDeclaredArtifact(path, Location.BUILTIN);
+  }
+
+  @Test
+  public void multipleOfSameDeclaredArtifactAfterBindingThrowsWithLocationInof() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
+    Path path = Paths.get("some/output");
+    Location declaredLocation =
+        Location.fromPathAndStartColumn(
+            PathFragment.create("my").getChild("BUCK"), 0, 0, new Location.LineAndColumn(2, 4));
+    DeclaredArtifact artifact = factory.createDeclaredArtifact(path, declaredLocation);
+    factory.bindtoBuildArtifact(
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {}), artifact);
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        Matchers.containsString("Originally declared at " + declaredLocation.print()));
     factory.createDeclaredArtifact(path, Location.BUILTIN);
   }
 

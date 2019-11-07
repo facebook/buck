@@ -15,15 +15,16 @@
  */
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.devtools.build.lib.events.Location;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -46,6 +47,31 @@ public class BuildArtifactFactory {
     this.declaredArtifacts = new HashSet<>();
   }
 
+  private DeclaredArtifact declareArtifact(ArtifactImpl artifact) {
+    if (!declaredArtifacts.add(artifact)) {
+      // Grab the existing element, and its location if it has one, to make it easier to
+      // figure out where a file was declared.
+      Optional<String> existingDeclaredLocation =
+          declaredArtifacts.stream()
+              .filter(artifact::equals)
+              .findFirst()
+              .map(ArtifactImpl::getDeclaredLocation)
+              .filter(a -> !a.equals(Location.BUILTIN))
+              .map(Location::print);
+
+      if (existingDeclaredLocation.isPresent()) {
+        throw new HumanReadableException(
+            "Artifact with output %s cannot be declared again in %s. Originally declared at %s",
+            artifact.getOutputPath(), target, existingDeclaredLocation.get());
+      } else {
+        throw new HumanReadableException(
+            "Artifact with output %s cannot be declared again in %s",
+            artifact.getOutputPath(), target);
+      }
+    }
+    return artifact;
+  }
+
   /**
    * @param output the output {@link Path} relative to the package path for the current rule that
    *     the {@link com.facebook.buck.core.rules.actions.Action}s are being created for
@@ -56,10 +82,7 @@ public class BuildArtifactFactory {
    */
   protected DeclaredArtifact createDeclaredArtifact(Path output, Location location)
       throws ArtifactDeclarationException {
-    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, basePath, output, location);
-    Preconditions.checkState(
-        declaredArtifacts.add(artifact), "Artifact at output %s is already declared.", output);
-    return artifact;
+    return declareArtifact(ArtifactImpl.of(target, genDir, basePath, output, location));
   }
 
   /**
@@ -74,10 +97,7 @@ public class BuildArtifactFactory {
    */
   protected DeclaredArtifact createDeclaredArtifact(String output, Location location)
       throws ArtifactDeclarationException {
-    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, basePath, output, location);
-    Preconditions.checkState(
-        declaredArtifacts.add(artifact), "Artifact at output %s is already declared.", output);
-    return artifact;
+    return declareArtifact(ArtifactImpl.of(target, genDir, basePath, output, location));
   }
 
   /**
