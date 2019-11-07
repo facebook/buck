@@ -45,6 +45,12 @@ class CapturingActionRegistry implements ActionRegistry {
   }
 
   @Override
+  public Artifact declareArtifact(String output, Location location)
+      throws ArtifactDeclarationException {
+    return delegate.declareArtifact(output, location);
+  }
+
+  @Override
   public Artifact declareArtifact(Path output, Location location)
       throws ArtifactDeclarationException {
     return delegate.declareArtifact(output, location);

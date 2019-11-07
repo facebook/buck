@@ -47,6 +47,12 @@ public class DefaultActionRegistry extends BuildArtifactFactory implements Actio
   }
 
   @Override
+  public Artifact declareArtifact(String output, Location location)
+      throws ArtifactDeclarationException {
+    return createDeclaredArtifact(output, location);
+  }
+
+  @Override
   public Artifact declareArtifact(Path output, Location location)
       throws ArtifactDeclarationException {
     return createDeclaredArtifact(output, location);

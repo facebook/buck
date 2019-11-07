@@ -59,6 +59,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
+import com.google.devtools.build.lib.events.Location;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -101,13 +102,13 @@ public class RuleKeyBuilderTest {
         new FakeAction(
             actionRegistry,
             ImmutableSet.of(),
-            ImmutableSet.of(actionRegistry.declareArtifact("foo")),
+            ImmutableSet.of(actionRegistry.declareArtifact("foo", Location.BUILTIN)),
             executeLambda);
     ACTION_2 =
         new FakeAction(
             actionRegistry,
             ImmutableSet.of(),
-            ImmutableSet.of(actionRegistry.declareArtifact("bar")),
+            ImmutableSet.of(actionRegistry.declareArtifact("bar", Location.BUILTIN)),
             executeLambda);
   }
 

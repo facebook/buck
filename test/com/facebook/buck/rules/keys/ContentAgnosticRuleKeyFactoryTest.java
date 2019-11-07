@@ -40,6 +40,7 @@ import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.build.lib.events.Location;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -130,7 +131,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:rule");
     ActionRegistryForTests actionRegistry = new ActionRegistryForTests(buildTarget);
-    Artifact artifact = actionRegistry.declareArtifact(filename);
+    Artifact artifact = actionRegistry.declareArtifact(filename, Location.BUILTIN);
 
     Action action =
         new FakeAction(

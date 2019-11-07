@@ -63,6 +63,24 @@ public class BuildArtifactFactory {
   }
 
   /**
+   * Simple wrapper that also validates that a raw string is indeed a valid path
+   *
+   * @param output the output path relative to the package path for the current rule that the {@link
+   *     com.facebook.buck.core.rules.actions.Action}s are being created for
+   * @param location the location within the extension file where this artifact was declared. {@link
+   *     Location.BUILTIN} may be used if not applicable.
+   * @return a {@link DeclaredArtifact} for the given path
+   * @throws ArtifactDeclarationException if the provided output path is invalid in some way
+   */
+  protected DeclaredArtifact createDeclaredArtifact(String output, Location location)
+      throws ArtifactDeclarationException {
+    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, basePath, output, location);
+    Preconditions.checkState(
+        declaredArtifacts.add(artifact), "Artifact at output %s is already declared.", output);
+    return artifact;
+  }
+
+  /**
    * @param key the {@link ActionAnalysisDataKey} corresponding to an {@link
    *     com.facebook.buck.core.rules.actions.Action} to bind the given {@link Artifact} to.
    * @param artifact the {@link Artifact} to bind

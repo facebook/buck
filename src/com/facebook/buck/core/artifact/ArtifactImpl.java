@@ -24,6 +24,7 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -49,6 +50,16 @@ class ArtifactImpl extends AbstractArtifact
   private final Path basePath;
   private final Path outputPath;
   private final Location location;
+
+  static ArtifactImpl of(
+      BuildTarget target, Path genDir, Path packagePath, String outputPath, Location location) {
+    try {
+      return of(target, genDir, packagePath, Paths.get(outputPath), location);
+    } catch (InvalidPathException e) {
+      throw new ArtifactDeclarationException(
+          ArtifactDeclarationException.Reason.INVALID_PATH, target, outputPath);
+    }
+  }
 
   static ArtifactImpl of(
       BuildTarget target, Path genDir, Path packagePath, Path outputPath, Location location)

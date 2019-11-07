@@ -147,6 +147,16 @@ public class ArtifactImplTest {
   }
 
   @Test
+  public void rejectsInvalidPath() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+
+    expectedException.expect(ArtifactDeclarationException.class);
+    expectedException.expectMessage("Path 'foo\\u0000bar.txt' in target '//my:foo' is not valid");
+    ArtifactImpl.of(target, genDir, packagePath, "foo\0bar.txt", Location.BUILTIN);
+  }
+
+  @Test
   public void normalizesPaths() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path genDir = Paths.get("buck-out/gen");

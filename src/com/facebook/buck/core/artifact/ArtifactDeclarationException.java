@@ -18,6 +18,7 @@ package com.facebook.buck.core.artifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import java.nio.file.Path;
+import org.apache.commons.lang.StringEscapeUtils;
 
 /** Represents a failure to declare an {@link Artifact} */
 public class ArtifactDeclarationException extends HumanReadableException {
@@ -26,7 +27,8 @@ public class ArtifactDeclarationException extends HumanReadableException {
     EMPTY_PATH("Path '%s' in target '%s' was empty"),
     ABSOLUTE_PATH("Path '%s' in target '%s' was absolute, but must be relative"),
     PATH_TRAVERSAL(
-        "Path '%s' in target '%s' attempted to traverse upwards in the filesystem. This is not permitted.");
+        "Path '%s' in target '%s' attempted to traverse upwards in the filesystem. This is not permitted."),
+    INVALID_PATH("Path '%s' in target '%s' is not valid");
 
     private final String message;
 
@@ -34,12 +36,18 @@ public class ArtifactDeclarationException extends HumanReadableException {
       this.message = message;
     }
 
-    String getMessage(Path path, BuildTarget buildTarget) {
+    String getMessage(String path, BuildTarget buildTarget) {
       return String.format(message, path, buildTarget);
     }
   }
 
   public ArtifactDeclarationException(Reason reason, BuildTarget buildTarget, Path path) {
-    super(reason.getMessage(path, buildTarget));
+    super(reason.getMessage(path.toString(), buildTarget));
+  }
+
+  public ArtifactDeclarationException(Reason reason, BuildTarget buildTarget, String path) {
+    // Escape the name so that if there are unprintable characters, whitespace, etc, it will
+    // be easy to see that
+    super(reason.getMessage(StringEscapeUtils.escapeJava(path), buildTarget));
   }
 }

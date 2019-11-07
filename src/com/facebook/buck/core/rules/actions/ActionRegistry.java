@@ -47,6 +47,19 @@ public interface ActionRegistry {
   }
 
   /**
+   * Simple helper behaves like {@link #declareArtifact(Path, Location)}, but validates that the
+   * string is a valid path
+   *
+   * @param output the output path relative to the package path for hte current rule that the {@link
+   *     Action}s are being created for
+   * @param location if provided, the location within the extension file where this artifact was
+   *     declared
+   * @return a {@link Artifact} for hte given path
+   * @throws ArtifactDeclarationException if the provided output path is invalid
+   */
+  Artifact declareArtifact(String output, Location location) throws ArtifactDeclarationException;
+
+  /**
    * @param output the output {@link Path} relative to the package path for the current rule that
    *     the {@link Action}s are being created for
    * @param location if provided, the location within the extension file where this artifact was
