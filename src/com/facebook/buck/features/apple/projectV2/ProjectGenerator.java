@@ -425,7 +425,8 @@ public class ProjectGenerator {
             new XcodeNativeTargetProjectWriter(
                 pathRelativizer,
                 projectSourcePathResolver::resolveSourcePath,
-                options.shouldUseShortNamesForTargets());
+                options.shouldUseShortNamesForTargets(),
+                projectCell.getNewCellPathResolver());
         XcodeNativeTargetProjectWriter.Result targetWriteResult =
             nativeTargetProjectWriter.writeTargetToProject(
                 nativeTargetAttributes, xcodeProjectWriteOptions.project());

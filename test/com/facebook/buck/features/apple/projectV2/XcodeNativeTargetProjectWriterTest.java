@@ -31,6 +31,8 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
+import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.impl.CellMappingsFactory;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -39,8 +41,10 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -52,16 +56,19 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class XcodeNativeTargetProjectWriterTest {
+  private ProjectFilesystem projectFilesystem;
   private BuildTarget buildTarget;
   private AppleConfig appleConfig;
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
   private SourcePathResolverAdapter sourcePathResolverAdapter;
   private BuildRuleResolver buildRuleResolver;
+  private NewCellPathResolver newCellPathResolver;
 
   @Before
   public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    projectFilesystem = new FakeProjectFilesystem();
     generatedProject = new PBXProject("TestProject");
     buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     appleConfig = AppleProjectHelper.createDefaultAppleConfig(new FakeProjectFilesystem());
@@ -69,6 +76,10 @@ public class XcodeNativeTargetProjectWriterTest {
     sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
     pathRelativizer =
         new PathRelativizer(Paths.get("_output"), sourcePathResolverAdapter::getRelativePath);
+    newCellPathResolver =
+        CellMappingsFactory.create(
+            projectFilesystem.getRootPath(),
+            Configs.createDefaultConfig(projectFilesystem.getRootPath()));
   }
 
   @Test
@@ -87,7 +98,7 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolverAdapter::getRelativePath, true);
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath, true, newCellPathResolver);
     projectWriter.writeTargetToProject(nativeTargetAttributes, generatedProject);
 
     assertTargetExistsAndReturnTarget(generatedProject, "bar");
@@ -108,7 +119,10 @@ public class XcodeNativeTargetProjectWriterTest {
             .build();
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolverAdapter::getRelativePath, false);
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            false,
+            newCellPathResolver);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(nativeTargetAttributes, generatedProject);
 
@@ -141,7 +155,10 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolverAdapter::getRelativePath, false);
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            false,
+            newCellPathResolver);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -170,7 +187,10 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolverAdapter::getRelativePath, false);
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            false,
+            newCellPathResolver);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -188,7 +208,10 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolverAdapter::getRelativePath, false);
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            false,
+            newCellPathResolver);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -216,7 +239,10 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolverAdapter::getRelativePath, false);
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            false,
+            newCellPathResolver);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 

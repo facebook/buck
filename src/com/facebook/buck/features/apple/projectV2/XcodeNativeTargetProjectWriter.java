@@ -40,6 +40,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
+import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -89,14 +90,17 @@ class XcodeNativeTargetProjectWriter {
   private final PathRelativizer pathRelativizer;
   private final Function<SourcePath, Path> sourcePathResolver;
   private final boolean shouldUseShortNamesForTargets;
+  private final NewCellPathResolver newCellPathResolver;
 
   public XcodeNativeTargetProjectWriter(
       PathRelativizer pathRelativizer,
       Function<SourcePath, Path> sourcePathResolver,
-      boolean shouldUseShortNamesForTargets) {
+      boolean shouldUseShortNamesForTargets,
+      NewCellPathResolver newCellPathResolver) {
     this.pathRelativizer = pathRelativizer;
     this.sourcePathResolver = sourcePathResolver;
     this.shouldUseShortNamesForTargets = shouldUseShortNamesForTargets;
+    this.newCellPathResolver = newCellPathResolver;
   }
 
   public Result writeTargetToProject(
@@ -516,9 +520,10 @@ class XcodeNativeTargetProjectWriter {
     buckBuildPhase.setShellPath(shell.toString());
 
     // Form relative paths to the cell root and build script
-    Path targetPath = target.getCellPath().resolve(target.getBasePath());
-    Path targetRelativeCellRoot = targetPath.relativize(target.getCellPath());
-    Path cellRootRelativeBuildScript = target.getCellPath().relativize(buildScriptPath);
+    Path targetCellPath = newCellPathResolver.getCellPath(target.getCell());
+    Path targetPath = targetCellPath.resolve(target.getBasePath());
+    Path targetRelativeCellRoot = targetPath.relativize(targetCellPath);
+    Path cellRootRelativeBuildScript = targetCellPath.relativize(buildScriptPath);
 
     String shellCommand =
         String.format(
