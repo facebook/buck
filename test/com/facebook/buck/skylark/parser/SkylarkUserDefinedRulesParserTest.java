@@ -384,6 +384,46 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
+  public void enablesAttrsOutputIfConfigured() throws IOException, InterruptedException {
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("output").resolve("well_formed").resolve("BUCK");
+
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void attrsOutputThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("output").resolve("malformed").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector, parser, buildFile, "expected value of type 'string or NoneType'");
+  }
+
+  @Test
+  public void attrsOutputHandlesAbsentDefault() throws IOException, InterruptedException {
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path noDefault = projectFilesystem.resolve("output").resolve("no_default").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector,
+        parser,
+        noDefault,
+        "output attributes must have a default value, or be mandatory");
+  }
+
+  @Test
   public void ruleFailsIfWrongImplTypeProvided() throws IOException, InterruptedException {
     setupWorkspace("rule_with_wrong_impl_type");
 

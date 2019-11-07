@@ -1,0 +1,3 @@
+load("//output:defs.bzl", "well_formed")
+
+well_formed()

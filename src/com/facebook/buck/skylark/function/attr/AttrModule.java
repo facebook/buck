@@ -23,13 +23,16 @@ import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableDepAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableDepListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntListAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableOutputAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringListAttribute;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.util.List;
 
@@ -122,5 +125,15 @@ public class AttrModule implements AttrModuleApi {
 
     return new ImmutableDepListAttribute(
         validatedDefaultValues, doc, mandatory, allowEmpty, validatedProviders);
+  }
+
+  @Override
+  public AttributeHolder outputAttribute(
+      Object defaultValue, String doc, boolean mandatory, Location location) throws EvalException {
+    if (defaultValue == Runtime.NONE && !mandatory) {
+      throw new EvalException(
+          location, "output attributes must have a default value, or be mandatory");
+    }
+    return new ImmutableOutputAttribute(defaultValue, doc, mandatory);
   }
 }

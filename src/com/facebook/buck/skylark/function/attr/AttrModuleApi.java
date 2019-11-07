@@ -17,6 +17,7 @@ package com.facebook.buck.skylark.function.attr;
 
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
@@ -420,4 +421,43 @@ public interface AttrModuleApi extends SkylarkValue {
       boolean allowEmpty,
       SkylarkList<Provider<?>> providers)
       throws EvalException;
+
+  @SkylarkCallable(
+      name = "output",
+      doc =
+          "Create a parameter for user defined rules that is an output artifact.\n"
+              + "Rules with this attribute take a string file name, and an artifact is "
+              + "automatically declared with this name (see ctx.actions.declare_file). This is "
+              + "exposed to rule implementations via ctx.attr.{@code name} as a single Artifact "
+              + "object. Note that if `None` is set for the default value, a value /must/ be "
+              + "provided at runtime.",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "None",
+            noneable = true,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = "True",
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+      },
+      useLocation = true)
+  AttributeHolder outputAttribute(
+      Object defaultValue, String doc, boolean mandatory, Location location) throws EvalException;
 }
