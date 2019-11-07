@@ -398,6 +398,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       }
 
       throw new HumanReadableException(
+          dependencyStack,
           "Build target %s is restricted to constraints in \"target_compatible_with\""
               + " and \"compatible_with\" that do not match the target platform %s."
               + diagnostics,
