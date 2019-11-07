@@ -31,7 +31,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.fs.XzStep;
-import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -71,7 +70,7 @@ public class AndroidBinaryFilesInfoTest {
             ImmutableMap.of());
     AndroidGraphEnhancementResult enhancementResult =
         AndroidGraphEnhancementResult.builder()
-            .setDexMergeRule(Either.ofLeft(preDexMerge))
+            .setDexMergeRule(preDexMerge)
             .setPackageableCollection(collection)
             .setPrimaryResourcesApkPath(FakeSourcePath.of("primary_resources.apk"))
             .setAndroidManifestPath(FakeSourcePath.of("AndroidManifest.xml"))
@@ -96,7 +95,7 @@ public class AndroidBinaryFilesInfoTest {
     Assert.assertEquals(metadataAndSourcePath.getSecond(), dexInfo.getDirectory());
   }
 
-  private class FakePreDexMerge extends PreDexMerge {
+  private class FakePreDexMerge extends PreDexSplitDexMerge {
     DexFilesInfo dexInfo;
     List<Pair<SourcePath, SourcePath>> moduleMetadataAndDexSources;
 
@@ -104,9 +103,10 @@ public class AndroidBinaryFilesInfoTest {
       super(
           buildTarget,
           new FakeProjectFilesystem(),
-          null,
           new BuildRuleParams(
               ImmutableSortedSet::of, ImmutableSortedSet::of, ImmutableSortedSet.of()),
+          null,
+          "dx",
           new DexSplitMode(
               /* shouldSplitDex */ true,
               DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
@@ -123,8 +123,7 @@ public class AndroidBinaryFilesInfoTest {
           null,
           MoreExecutors.newDirectExecutorService(),
           XzStep.DEFAULT_COMPRESSION_LEVEL,
-          Optional.empty(),
-          "dx");
+          Optional.empty());
     }
 
     @Override

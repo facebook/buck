@@ -35,7 +35,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
@@ -79,7 +78,6 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -233,7 +231,7 @@ public class AndroidBinaryGraphEnhancerTest {
             .addClasspathEntry(((HasJavaClassHashes) javaLib), FakeSourcePath.of("ignored"))
             .build();
 
-    graphEnhancer.createPreDexMergeRule(
+    graphEnhancer.createPreDexMergeSingleDexRule(
         graphEnhancer.createPreDexRulesForLibraries(
             /* additionalJavaLibrariesToDex */
             ImmutableList.of(), collection));
@@ -417,7 +415,7 @@ public class AndroidBinaryGraphEnhancerTest {
             .addClasspathEntry(((HasJavaClassHashes) javaLib), FakeSourcePath.of("ignored"))
             .build();
 
-    graphEnhancer.createPreDexMergeRule(
+    graphEnhancer.createPreDexMergeSingleDexRule(
         graphEnhancer.createPreDexRulesForLibraries(
             /* additionalJavaLibrariesToDex */
             ImmutableList.of(), collection));
@@ -621,14 +619,14 @@ public class AndroidBinaryGraphEnhancerTest {
             .addClasspathEntry(((HasJavaClassHashes) javaLib), FakeSourcePath.of("ignored"))
             .build();
 
-    ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibraries =
+    ImmutableList<DexProducedFromJavaLibrary> preDexedLibraries =
         graphEnhancer.createPreDexRulesForLibraries(
             /* additionalJavaLibrariesToDex */
             ImmutableList.of(), collection);
 
-    BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(preDexedLibraries);
+    HasDexFiles preDexMergeRule = graphEnhancer.createPreDexMergeSingleDexRule(preDexedLibraries);
     BuildTarget dexMergeTarget =
-        BuildTargetFactory.newInstance("//java/com/example:apk#dex,dex_merge");
+        BuildTargetFactory.newInstance("//java/com/example:apk#dex,single_dex_merge");
     BuildRule dexMergeRule = graphBuilder.getRule(dexMergeTarget);
 
     assertEquals(dexMergeRule, preDexMergeRule);
@@ -791,7 +789,7 @@ public class AndroidBinaryGraphEnhancerTest {
         packageStringAssetsRule,
         aaptPackageResourcesRule);
 
-    assertFalse(result.getPreDexMerge().isPresent());
+    assertFalse(result.getPreDexMergeSplitDex().isPresent());
     assertTrue(result.getPackageStringAssets().isPresent());
   }
 

@@ -82,7 +82,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-class NonPreDexedDexBuildable extends AbstractBuildRule {
+class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> additionalJarsForProguardAndDesugar;
 
   @AddToRuleKey
@@ -491,7 +491,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     return steps.build();
   }
 
-  DexFilesInfo getDexFilesInfo() {
+  @Override
+  public DexFilesInfo getDexFilesInfo() {
     return new DexFilesInfo(
         genSourcePath(getNonPredexedPrimaryDexPath()),
         new DexFilesInfo.DexSecondaryDexDirView(

@@ -22,7 +22,6 @@ import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -38,7 +37,7 @@ interface AbstractAndroidGraphEnhancementResult {
 
   Optional<PackageStringAssets> getPackageStringAssets();
 
-  Either<PreDexMerge, NonPreDexedDexBuildable> getDexMergeRule();
+  HasDexFiles getDexMergeRule();
 
   SourcePath getPrimaryResourcesApkPath();
 
@@ -62,19 +61,30 @@ interface AbstractAndroidGraphEnhancementResult {
   Optional<CopyNativeLibraries> getCopyNativeLibrariesForSystemLibraryLoader();
 
   @Value.Derived
-  default Optional<PreDexMerge> getPreDexMerge() {
-    return getDexMergeRule().transform(left -> Optional.of(left), right -> Optional.empty());
+  default Optional<PreDexSplitDexMerge> getPreDexMergeSplitDex() {
+    if (getDexMergeRule() instanceof PreDexSplitDexMerge) {
+      return Optional.of((PreDexSplitDexMerge) getDexMergeRule());
+    }
+    return Optional.empty();
+  }
+
+  @Value.Derived
+  default Optional<NonPreDexedDexBuildable> getNonPreDexedDex() {
+    if (getDexMergeRule() instanceof NonPreDexedDexBuildable) {
+      return Optional.of((NonPreDexedDexBuildable) getDexMergeRule());
+    }
+    return Optional.empty();
   }
 
   @Value.Derived
   default DexFilesInfo getDexFilesInfo() {
-    return getDexMergeRule()
-        .transform(PreDexMerge::getDexFilesInfo, NonPreDexedDexBuildable::getDexFilesInfo);
+    return getDexMergeRule().getDexFilesInfo();
   }
 
   @Value.Derived
   default ImmutableList<SourcePath> getAdditionalRedexInputs() {
-    return getDexMergeRule()
-        .transform(left -> ImmutableList.of(), right -> right.getAdditionalRedexInputs());
+    return getNonPreDexedDex()
+        .map(NonPreDexedDexBuildable::getAdditionalRedexInputs)
+        .orElse(ImmutableList.of());
   }
 }

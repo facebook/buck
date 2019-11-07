@@ -56,7 +56,6 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -88,7 +87,8 @@ public class AndroidBinaryGraphEnhancer {
 
   static final Flavor DEX_FLAVOR = InternalFlavor.of("dex");
   static final Flavor D8_FLAVOR = InternalFlavor.of("d8");
-  private static final Flavor DEX_MERGE_FLAVOR = InternalFlavor.of("dex_merge");
+  private static final Flavor DEX_MERGE_SPLIT_FLAVOR = InternalFlavor.of("split_dex_merge");
+  private static final Flavor DEX_MERGE_SINGLE_FLAVOR = InternalFlavor.of("single_dex_merge");
   private static final Flavor TRIM_UBER_R_DOT_JAVA_FLAVOR =
       InternalFlavor.of("trim_uber_r_dot_java");
   private static final Flavor COMPILE_UBER_R_DOT_JAVA_FLAVOR =
@@ -427,24 +427,6 @@ public class AndroidBinaryGraphEnhancer {
     }
 
     ImmutableList<BuildRule> additionalJavaLibraries = additionalJavaLibrariesBuilder.build();
-    ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJava =
-        ImmutableMultimap.of();
-    if (shouldPreDex) {
-      preDexedLibrariesExceptRDotJava =
-          createPreDexRulesForLibraries(additionalJavaLibraries, packageableCollection);
-    }
-    JavaLibrary compileUberRDotJava =
-        createTrimAndCompileUberRDotJava(
-            resourcesEnhancementResult, preDexedLibrariesExceptRDotJava);
-    ImmutableCollection<DexProducedFromJavaLibrary> dexUberRDotJavaParts =
-        createSplitAndDexUberRDotJava(compileUberRDotJava);
-
-    ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibraries =
-        ImmutableMultimap.<APKModule, DexProducedFromJavaLibrary>builder()
-            .putAll(preDexedLibrariesExceptRDotJava)
-            .putAll(apkModuleGraph.getRootAPKModule(), dexUberRDotJavaParts)
-            .build();
-
     ImmutableSet<SourcePath> classpathEntriesToDex =
         ImmutableSet.<SourcePath>builder()
             .addAll(packageableCollection.getClasspathEntriesToDex())
@@ -459,21 +441,38 @@ public class AndroidBinaryGraphEnhancer {
     }
     ImmutableList<SourcePath> proguardConfigs = proguardConfigsBuilder.build();
 
-    Either<PreDexMerge, NonPreDexedDexBuildable> dexMergeRule;
+    HasDexFiles dexMergeRule;
     if (shouldPreDex) {
-      dexMergeRule = Either.ofLeft(createPreDexMergeRule(preDexedLibraries));
+      ImmutableList<DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJava =
+          createPreDexRulesForLibraries(additionalJavaLibraries, packageableCollection);
+      JavaLibrary compileUberRDotJava =
+          createTrimAndCompileUberRDotJava(
+              resourcesEnhancementResult, preDexedLibrariesExceptRDotJava);
+      ImmutableCollection<DexProducedFromJavaLibrary> dexUberRDotJavaParts =
+          createSplitAndDexUberRDotJava(compileUberRDotJava);
+
+      if (dexSplitMode.isShouldSplitDex()) {
+        dexMergeRule =
+            createPreDexMergeSplitDexRule(preDexedLibrariesExceptRDotJava, dexUberRDotJavaParts);
+      } else {
+        dexMergeRule =
+            createPreDexMergeSingleDexRule(
+                ImmutableList.copyOf(
+                    Iterables.concat(preDexedLibrariesExceptRDotJava, dexUberRDotJavaParts)));
+      }
     } else {
+      JavaLibrary compileUberRDotJava =
+          createTrimAndCompileUberRDotJava(resourcesEnhancementResult, ImmutableList.of());
       dexMergeRule =
-          Either.ofRight(
-              createNonPredexedDexBuildable(
-                  dexSplitMode,
-                  rulesToExcludeFromDex.get(),
-                  xzCompressionLevel,
-                  proguardConfigs,
-                  packageableCollection,
-                  classpathEntriesToDex,
-                  compileUberRDotJava,
-                  javaBuckConfig.shouldDesugarInterfaceMethods()));
+          createNonPredexedDexBuildable(
+              dexSplitMode,
+              rulesToExcludeFromDex.get(),
+              xzCompressionLevel,
+              proguardConfigs,
+              packageableCollection,
+              classpathEntriesToDex,
+              compileUberRDotJava,
+              javaBuckConfig.shouldDesugarInterfaceMethods());
     }
 
     return AndroidGraphEnhancementResult.builder()
@@ -495,10 +494,10 @@ public class AndroidBinaryGraphEnhancer {
 
   private JavaLibrary createTrimAndCompileUberRDotJava(
       AndroidBinaryResourcesGraphEnhancementResult resourcesEnhancementResult,
-      ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJava) {
+      ImmutableList<DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJava) {
     // Create rule to trim uber R.java sources.
     Collection<DexProducedFromJavaLibrary> preDexedLibrariesForResourceIdFiltering =
-        trimResourceIds ? preDexedLibrariesExceptRDotJava.values() : ImmutableList.of();
+        trimResourceIds ? preDexedLibrariesExceptRDotJava : ImmutableList.of();
     BuildRuleParams paramsForTrimUberRDotJava =
         buildRuleParams.withDeclaredDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -552,7 +551,7 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   @Nonnull
-  private ImmutableCollection<DexProducedFromJavaLibrary> createSplitAndDexUberRDotJava(
+  private ImmutableList<DexProducedFromJavaLibrary> createSplitAndDexUberRDotJava(
       JavaLibrary compileUberRDotJava) {
     // Create rule to split the compiled R.java into multiple smaller jars.
     BuildTarget splitJarTarget =
@@ -567,7 +566,7 @@ public class AndroidBinaryGraphEnhancer {
     graphBuilder.addToIndex(splitJar);
 
     // Create rules to dex uber R.java jars.
-    ImmutableCollection.Builder<DexProducedFromJavaLibrary> builder = ImmutableList.builder();
+    ImmutableList.Builder<DexProducedFromJavaLibrary> builder = ImmutableList.builder();
     Flavor prebuiltJarFlavor = InternalFlavor.of("prebuilt_jar");
     Flavor dexFlavor = InternalFlavor.of("dexing");
     for (Entry<String, BuildTargetSourcePath> entry : splitJar.getOutputJars().entrySet()) {
@@ -709,34 +708,64 @@ public class AndroidBinaryGraphEnhancer {
    * <p>This method may modify {@code graphBuilder}, inserting new rules into its index.
    */
   @VisibleForTesting
-  PreDexMerge createPreDexMergeRule(
-      ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> allPreDexDeps) {
-    PreDexMerge preDexMerge =
-        new PreDexMerge(
-            originalBuildTarget.withAppendedFlavors(DEX_MERGE_FLAVOR, getDexFlavor(dexTool)),
+  PreDexSplitDexMerge createPreDexMergeSplitDexRule(
+      ImmutableList<DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJava,
+      ImmutableCollection<DexProducedFromJavaLibrary> dexUberRDotJavaParts) {
+    ImmutableMultimap.Builder<APKModule, DexProducedFromJavaLibrary> preDexedLibrariesBuilder =
+        ImmutableMultimap.builder();
+    for (DexProducedFromJavaLibrary dex : preDexedLibrariesExceptRDotJava) {
+      preDexedLibrariesBuilder.put(
+          apkModuleGraph.findModuleForTarget(dex.getJavaLibraryBuildTarget()), dex);
+    }
+    preDexedLibrariesBuilder.putAll(apkModuleGraph.getRootAPKModule(), dexUberRDotJavaParts);
+    ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> allPreDexDeps =
+        preDexedLibrariesBuilder.build();
+
+    PreDexSplitDexMerge preDexMerge =
+        new PreDexSplitDexMerge(
+            originalBuildTarget.withAppendedFlavors(DEX_MERGE_SPLIT_FLAVOR, getDexFlavor(dexTool)),
             projectFilesystem,
-            androidPlatformTarget,
             buildRuleParams.withDeclaredDeps(ImmutableSortedSet.copyOf(allPreDexDeps.values())),
+            androidPlatformTarget,
+            dexTool,
             dexSplitMode,
             apkModuleGraph,
             allPreDexDeps,
             dxExecutorService,
             xzCompressionLevel,
-            dxConfig.getDxMaxHeapSize(),
-            dexTool);
+            dxConfig.getDxMaxHeapSize());
     graphBuilder.addToIndex(preDexMerge);
+    return preDexMerge;
+  }
 
+  /**
+   * Creates/finds the set of build rules that correspond to pre-dex'd artifacts that should be
+   * merged to create the final classes.dex for the APK.
+   *
+   * <p>This method may modify {@code graphBuilder}, inserting new rules into its index.
+   */
+  @VisibleForTesting
+  PreDexSingleDexMerge createPreDexMergeSingleDexRule(
+      Collection<DexProducedFromJavaLibrary> allPreDexDeps) {
+    PreDexSingleDexMerge preDexMerge =
+        new PreDexSingleDexMerge(
+            originalBuildTarget.withAppendedFlavors(DEX_MERGE_SINGLE_FLAVOR, getDexFlavor(dexTool)),
+            projectFilesystem,
+            buildRuleParams.withDeclaredDeps(ImmutableSortedSet.copyOf(allPreDexDeps)),
+            androidPlatformTarget,
+            dexTool,
+            allPreDexDeps);
+    graphBuilder.addToIndex(preDexMerge);
     return preDexMerge;
   }
 
   @VisibleForTesting
-  ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> createPreDexRulesForLibraries(
+  ImmutableList<DexProducedFromJavaLibrary> createPreDexRulesForLibraries(
       Iterable<BuildRule> additionalJavaLibrariesToDex,
       AndroidPackageableCollection packageableCollection) {
     Iterable<BuildTarget> additionalJavaLibraryTargets =
         FluentIterable.from(additionalJavaLibrariesToDex).transform(BuildRule::getBuildTarget);
-    ImmutableMultimap.Builder<APKModule, DexProducedFromJavaLibrary> preDexDeps =
-        ImmutableMultimap.builder();
+    ImmutableList.Builder<DexProducedFromJavaLibrary> preDexDeps = ImmutableList.builder();
     for (BuildTarget buildTarget :
         Iterables.concat(
             packageableCollection.getJavaLibrariesToDex(), additionalJavaLibraryTargets)) {
@@ -777,8 +806,7 @@ public class AndroidBinaryGraphEnhancer {
                     1,
                     desugarDeps);
               });
-      preDexDeps.put(
-          apkModuleGraph.findModuleForTarget(buildTarget), (DexProducedFromJavaLibrary) preDexRule);
+      preDexDeps.add((DexProducedFromJavaLibrary) preDexRule);
     }
     return preDexDeps.build();
   }

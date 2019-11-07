@@ -117,8 +117,8 @@ public class AndroidBinaryTest {
 
     androidBinary
         .getEnhancementResult()
-        .getDexMergeRule()
-        .getRight()
+        .getNonPreDexedDex()
+        .get()
         .addProguardCommands(
             packageableCollection.getClasspathEntriesToDex().stream()
                 .map(pathResolver::getRelativePath)
@@ -138,9 +138,9 @@ public class AndroidBinaryTest {
             androidBinary.getProjectFilesystem(), aaptPackageTarget, "%s/proguard/");
 
     Path proguardOutputDir =
-        androidBinary.getEnhancementResult().getDexMergeRule().getRight().getProguardConfigDir();
+        androidBinary.getEnhancementResult().getNonPreDexedDex().get().getProguardConfigDir();
     Path proguardInputsDir =
-        androidBinary.getEnhancementResult().getDexMergeRule().getRight().getProguardInputsDir();
+        androidBinary.getEnhancementResult().getNonPreDexedDex().get().getProguardInputsDir();
     ImmutableSet<Path> expectedRecordedArtifacts =
         ImmutableSet.of(
             proguardOutputDir.resolve("configuration.txt"),
@@ -341,8 +341,8 @@ public class AndroidBinaryTest {
             .resolve(".dex/classes.dex");
     splitDexRule
         .getEnhancementResult()
-        .getDexMergeRule()
-        .getRight()
+        .getNonPreDexedDex()
+        .get()
         .addDexingSteps(
             classpath,
             Suppliers.ofInstance(ImmutableMap.of()),
@@ -394,8 +394,8 @@ public class AndroidBinaryTest {
             .resolve(".dex/classes.dex");
     splitDexRule
         .getEnhancementResult()
-        .getDexMergeRule()
-        .getRight()
+        .getNonPreDexedDex()
+        .get()
         .addDexingSteps(
             classpath,
             Suppliers.ofInstance(ImmutableMap.of()),

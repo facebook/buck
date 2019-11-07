@@ -118,6 +118,8 @@ RULES_SRCS = [
     "PackageStringAssets.java",
     "PackagedResource.java",
     "PreDexMerge.java",
+    "PreDexSingleDexMerge.java",
+    "PreDexSplitDexMerge.java",
     "PreDexedFilesSorter.java",
     "PrebuiltNativeLibrary.java",
     "PrebuiltNativeLibraryDescription.java",

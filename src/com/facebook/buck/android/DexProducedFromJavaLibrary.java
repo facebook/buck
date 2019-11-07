@@ -85,6 +85,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
+  private final BuildTarget javaLibraryBuildTarget;
+
   public DexProducedFromJavaLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -106,6 +108,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
             androidPlatformTarget,
             javaLibrary));
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.javaLibraryBuildTarget = javaLibrary.getBuildTarget();
   }
 
   public DexProducedFromJavaLibrary(
@@ -425,5 +428,9 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
             .resolve(Impl.DEX_RULE_METADATA)
             .resolve(REFERENCED_RESOURCES.toString());
     return filesystem.readFileIfItExists(resourcesFile);
+  }
+
+  public BuildTarget getJavaLibraryBuildTarget() {
+    return javaLibraryBuildTarget;
   }
 }

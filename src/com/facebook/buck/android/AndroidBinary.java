@@ -180,8 +180,8 @@ public class AndroidBinary extends AbstractBuildRule
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(
-          enhancementResult.getPreDexMerge().isPresent(),
-          "%s specified exopackage without pre-dexing, which is invalid.",
+          enhancementResult.getPreDexMergeSplitDex().isPresent(),
+          "%s specified exopackage without pre-dexing and split dex, which is invalid.",
           getBuildTarget());
       Preconditions.checkArgument(
           dexSplitMode.getDexStore() == DexStore.JAR,

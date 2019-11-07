@@ -114,7 +114,7 @@ public class AndroidBinaryFilesInfo {
 
     ExopackageInfo.Builder builder = ExopackageInfo.builder();
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
-      PreDexMerge preDexMerge = enhancementResult.getPreDexMerge().get();
+      PreDexSplitDexMerge preDexMerge = enhancementResult.getPreDexMergeSplitDex().get();
       builder.setDexInfo(
           ExopackageInfo.DexInfo.of(
               preDexMerge.getMetadataTxtSourcePath(), preDexMerge.getDexDirectorySourcePath()));
@@ -122,7 +122,7 @@ public class AndroidBinaryFilesInfo {
     }
 
     if (ExopackageMode.enabledForModules(exopackageModes)) {
-      PreDexMerge preDexMerge = enhancementResult.getPreDexMerge().get();
+      PreDexSplitDexMerge preDexMerge = enhancementResult.getPreDexMergeSplitDex().get();
 
       ImmutableList<DexInfo> moduleInfo =
           preDexMerge
