@@ -111,9 +111,7 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
     assertEquals(
         ImmutableSortedSet.of(
             metadataDirectory,
-            metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-            metadataDirectory.resolve("artifact_key0"),
-            metadataDirectory.resolve("artifact_key1"),
+            metadataDirectory.resolve(MetadataKey.ARTIFACT_METADATA),
             filePath,
             dirPath,
             subDir,

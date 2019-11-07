@@ -522,20 +522,23 @@ public class CachingBuildEngineTest {
               buildContext.getBuildId().toString(),
               BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
               buildContext.getBuildId().toString());
-      Path metadataDirectory =
-          BuildInfo.getPathToArtifactMetadataDirectory(buildRule.getBuildTarget(), filesystem);
+      Path artifactMetadataFile =
+          BuildInfo.getPathToArtifactMetadataFile(buildRule.getBuildTarget(), filesystem);
       ImmutableMap<Path, String> desiredZipEntries =
           ImmutableMap.of(
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableMap.of()),
+              artifactMetadataFile,
+              ObjectMappers.WRITER.writeValueAsString(
+                  ImmutableMap.of(
+                      BuildInfo.MetadataKey.RECORDED_PATHS,
+                      ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
+                      BuildInfo.MetadataKey.RECORDED_PATH_HASHES,
+                      ObjectMappers.WRITER.writeValueAsString(ImmutableMap.of()),
+                      BuildInfo.MetadataKey.OUTPUT_SIZE,
+                      "0",
+                      BuildInfo.MetadataKey.OUTPUT_HASH,
+                      HashCode.fromInt(123).toString())),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
-              "Imagine this is the contents of a valid JAR file.",
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "0",
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
-              HashCode.fromInt(123).toString());
+              "Imagine this is the contents of a valid JAR file.");
       expect(
               artifactCache.fetchAsync(
                   eq(buildRule.getBuildTarget()),
@@ -614,18 +617,19 @@ public class CachingBuildEngineTest {
               buildContext.getBuildId().toString(),
               BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
               buildContext.getBuildId().toString());
-      Path metadataDirectory =
-          BuildInfo.getPathToArtifactMetadataDirectory(buildRule.getBuildTarget(), filesystem);
       ImmutableMap<Path, String> desiredZipEntries =
           ImmutableMap.of(
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableMap.of()),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "0",
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
-              HashCode.fromInt(123).toString(),
+              BuildInfo.getPathToArtifactMetadataFile(buildRule.getBuildTarget(), filesystem),
+              ObjectMappers.WRITER.writeValueAsString(
+                  ImmutableMap.of(
+                      BuildInfo.MetadataKey.RECORDED_PATHS,
+                      ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
+                      BuildInfo.MetadataKey.RECORDED_PATH_HASHES,
+                      ObjectMappers.WRITER.writeValueAsString(ImmutableMap.of()),
+                      BuildInfo.MetadataKey.OUTPUT_SIZE,
+                      "0",
+                      BuildInfo.MetadataKey.OUTPUT_HASH,
+                      HashCode.fromInt(123).toString())),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
               "Imagine this is the contents of a valid JAR file.");
       expect(
@@ -1829,17 +1833,22 @@ public class CachingBuildEngineTest {
       filesystem.mkdirs(metadataDirectory);
       Path outputPath = pathResolver.getRelativePath(rule.getSourcePathToOutput());
       filesystem.writeContentsToPath(
-          ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(outputPath.toString())),
-          metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+          ObjectMappers.WRITER.writeValueAsString(
+              ImmutableList.of(BuildInfo.MetadataKey.RECORDED_PATHS, outputPath.toString())),
+          BuildInfo.getPathToArtifactMetadataFile(target, filesystem));
 
       Path artifact = tmp.newFile("artifact.zip");
       writeEntriesToArchive(
           artifact,
           ImmutableMap.of(
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(outputPath.toString())),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "5", // Size of "stuff"
+              BuildInfo.getPathToArtifactMetadataFile(target, filesystem),
+              ObjectMappers.WRITER.writeValueAsString(
+                  ImmutableMap.of(
+                      BuildInfo.MetadataKey.RECORDED_PATHS,
+                      ObjectMappers.WRITER.writeValueAsString(
+                          ImmutableList.of(outputPath.toString())),
+                      BuildInfo.MetadataKey.OUTPUT_SIZE,
+                      "5")), // Size of "stuff"
               outputPath,
               "stuff"),
           ImmutableList.of(metadataDirectory));
@@ -1962,15 +1971,19 @@ public class CachingBuildEngineTest {
       writeEntriesToArchive(
           artifact,
           ImmutableMap.of(
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(outputPath.toString())),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
+              BuildInfo.getPathToArtifactMetadataFile(target, filesystem),
               ObjectMappers.WRITER.writeValueAsString(
-                  ImmutableMap.of(outputPath.toString(), HashCode.fromInt(123).toString())),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "5", // Size of "stuff"
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
-              HashCode.fromInt(123).toString(),
+                  ImmutableMap.of(
+                      BuildInfo.MetadataKey.RECORDED_PATHS,
+                      ObjectMappers.WRITER.writeValueAsString(
+                          ImmutableList.of(outputPath.toString())),
+                      BuildInfo.MetadataKey.RECORDED_PATH_HASHES,
+                      ObjectMappers.WRITER.writeValueAsString(
+                          ImmutableMap.of(outputPath.toString(), HashCode.fromInt(123).toString())),
+                      BuildInfo.MetadataKey.OUTPUT_SIZE,
+                      "5", // Size of "stuff"
+                      BuildInfo.MetadataKey.OUTPUT_HASH,
+                      HashCode.fromInt(123).toString())),
               outputPath,
               "stuff"),
           ImmutableList.of(metadataDirectory));
@@ -3345,21 +3358,23 @@ public class CachingBuildEngineTest {
               .build(),
           byteArrayOutputStream.toByteArray());
       Path artifact = tmp.newFile("artifact.zip");
-      Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
       writeEntriesToArchive(
           artifact,
           ImmutableMap.of(
               output,
               "stuff",
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
+              BuildInfo.getPathToArtifactMetadataFile(target, filesystem),
               ObjectMappers.WRITER.writeValueAsString(
-                  ImmutableMap.of(output.toString(), HashCode.fromInt(123).toString())),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "5", // Size of "stuff"
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
-              HashCode.fromInt(123).toString()),
+                  ImmutableMap.of(
+                      BuildInfo.MetadataKey.RECORDED_PATHS,
+                      ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
+                      BuildInfo.MetadataKey.RECORDED_PATH_HASHES,
+                      ObjectMappers.WRITER.writeValueAsString(
+                          ImmutableMap.of(output.toString(), HashCode.fromInt(123).toString())),
+                      BuildInfo.MetadataKey.OUTPUT_SIZE,
+                      "5", // Size of "stuff"
+                      BuildInfo.MetadataKey.OUTPUT_HASH,
+                      HashCode.fromInt(123).toString()))),
           ImmutableList.of());
       cache.store(
           ArtifactInfo.builder()

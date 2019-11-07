@@ -32,6 +32,9 @@ public class BuildInfo {
     /** Utility class: do not instantiate. */
     private MetadataKey() {}
 
+    /** Value for file that contains all artifact metadata as a json bundle. */
+    public static final String ARTIFACT_METADATA = "ARTIFACT_METADATA";
+
     /** Key for {@link OnDiskBuildInfo} which lists the recorded items. */
     public static final String RECORDED_PATHS = "RECORDED_PATHS";
 
@@ -126,8 +129,25 @@ public class BuildInfo {
     return getPathToMetadataDirectory(target, filesystem).resolve("artifact");
   }
 
+  public static Path getPathToArtifactMetadataFile(
+      BuildTarget target, ProjectFilesystem filesystem) {
+    return getPathToArtifactMetadataDirectory(target, filesystem)
+        .resolve(MetadataKey.ARTIFACT_METADATA);
+  }
+
   public static Path getPathToOtherMetadataDirectory(
       BuildTarget target, ProjectFilesystem filesystem) {
     return getPathToMetadataDirectory(target, filesystem).resolve("other");
+  }
+
+  /**
+   * Whether this is a key that represents data to be stored as {@link
+   * MetadataKey#ARTIFACT_METADATA}.
+   */
+  public static boolean isArtifactMetadata(String key) {
+    return key.equals(MetadataKey.OUTPUT_SIZE)
+        || key.equals(MetadataKey.OUTPUT_HASH)
+        || key.equals(MetadataKey.RECORDED_PATHS)
+        || key.equals(MetadataKey.RECORDED_PATH_HASHES);
   }
 }

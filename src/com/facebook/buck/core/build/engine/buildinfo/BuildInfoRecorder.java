@@ -146,10 +146,20 @@ public class BuildInfoRecorder {
     }
     projectFilesystem.mkdirs(pathToMetadataDirectory);
 
+    ImmutableMap.Builder<String, String> artifactMetadata = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : metadataToWrite.entrySet()) {
-      projectFilesystem.writeContentsToPath(
-          entry.getValue(), pathToMetadataDirectory.resolve(entry.getKey()));
+      if (!entry.getKey().equals(BuildInfo.MetadataKey.DEP_FILE)) {
+        artifactMetadata.put(entry.getKey(), entry.getValue());
+      } else {
+        projectFilesystem.writeContentsToPath(
+            entry.getValue(), pathToMetadataDirectory.resolve(entry.getKey()));
+      }
     }
+
+    projectFilesystem.writeContentsToPath(
+        ObjectMappers.WRITER.writeValueAsString(artifactMetadata.build()),
+        BuildInfo.getPathToArtifactMetadataFile(buildTarget, projectFilesystem));
+
     updateBuildMetadata();
   }
 
@@ -178,6 +188,7 @@ public class BuildInfoRecorder {
 
   private ImmutableSortedSet<Path> getRecordedMetadataFiles() {
     return FluentIterable.from(metadataToWrite.keySet())
+        .filter(key -> key.equals(BuildInfo.MetadataKey.DEP_FILE))
         .transform(Paths::get)
         .transform(pathToMetadataDirectory::resolve)
         .toSortedSet(Ordering.natural());

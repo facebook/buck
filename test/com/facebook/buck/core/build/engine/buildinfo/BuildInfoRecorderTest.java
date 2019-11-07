@@ -83,7 +83,7 @@ public class BuildInfoRecorderTest {
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ false);
 
     onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store);
-    assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key1", "value1");
+    assertOnDiskBuildInfoDoesNotHaveMetadata(onDiskBuildInfo, "key1");
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key2", "value2");
 
     buildInfoRecorder = createBuildInfoRecorder();
