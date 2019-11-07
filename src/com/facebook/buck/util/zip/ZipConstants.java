@@ -19,6 +19,14 @@ package com.facebook.buck.util.zip;
 import java.util.Calendar;
 
 public class ZipConstants {
+  static final long ZIP64_ENDSIG = 0x06064b50L;
+  static final long ZIP64_LOCSIG = 0x07064b50L;
+  static final int ZIP64_ENDHDR = 56;
+  static final int ZIP64_LOCHDR = 20;
+  static final int ZIP64_EXTID = 0x0001;
+
+  static final int ZIP64_MAGICCOUNT = 0xFFFF;
+  static final long ZIP64_MAGICVAL = 0xFFFFFFFFL;
 
   // The fake time we use: 12:00:00 AM February 1, 1985
   public static final int DOS_FAKE_TIME = 172032000;

@@ -37,4 +37,16 @@ class ByteIo {
     out.write((int) ((value >>> 24) & 0xff));
     return 4;
   }
+
+  protected static long writeLong(OutputStream out, long value) throws IOException {
+    out.write((int) (value & 0xff));
+    out.write((int) ((value >>> 8) & 0xff));
+    out.write((int) ((value >>> 16) & 0xff));
+    out.write((int) ((value >>> 24) & 0xff));
+    out.write((int) ((value >>> 32) & 0xff));
+    out.write((int) ((value >>> 40) & 0xff));
+    out.write((int) ((value >>> 48) & 0xff));
+    out.write((int) ((value >>> 56) & 0xff));
+    return 8;
+  }
 }

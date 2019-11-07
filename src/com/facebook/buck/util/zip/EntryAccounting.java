@@ -141,8 +141,13 @@ class EntryAccounting {
     return method.compressionMethod;
   }
 
-  public int getRequiredExtractVersion() {
-    int requiredExtractVersion = method.requiredVersion;
+  public int getRequiredExtractVersion(boolean useZip64) {
+    int requiredExtractVersion;
+    if (useZip64) {
+      requiredExtractVersion = 45;
+    } else {
+      requiredExtractVersion = method.requiredVersion;
+    }
     // Set the creator system indicator if we have UNIX-style file attributes.
     // http://forensicswiki.org/wiki/Zip#External_file_attributes
     if (externalAttributes >= (1 << 16)) {
@@ -188,7 +193,14 @@ class EntryAccounting {
     try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
       ByteIo.writeInt(stream, ZipEntry.LOCSIG);
 
-      ByteIo.writeShort(stream, getRequiredExtractVersion());
+      boolean useZip64;
+      if (!requiresDataDescriptor() && entry.getSize() >= ZipConstants.ZIP64_MAGICVAL) {
+        useZip64 = true;
+      } else {
+        useZip64 = false;
+      }
+
+      ByteIo.writeShort(stream, getRequiredExtractVersion(useZip64));
       ByteIo.writeShort(stream, flags);
       ByteIo.writeShort(stream, getCompressionMethod());
       ByteIo.writeInt(stream, getTime());
@@ -202,14 +214,25 @@ class EntryAccounting {
         ByteIo.writeInt(stream, 0);
       } else {
         ByteIo.writeInt(stream, entry.getCrc());
-        ByteIo.writeInt(stream, entry.getSize());
-        ByteIo.writeInt(stream, entry.getSize());
+        if (entry.getSize() >= ZipConstants.ZIP64_MAGICVAL) {
+          ByteIo.writeInt(stream, ZipConstants.ZIP64_MAGICVAL);
+          ByteIo.writeInt(stream, ZipConstants.ZIP64_MAGICVAL);
+        } else {
+          ByteIo.writeInt(stream, entry.getSize());
+          ByteIo.writeInt(stream, entry.getSize());
+        }
       }
 
       byte[] nameBytes = entry.getName().getBytes(Charsets.UTF_8);
       ByteIo.writeShort(stream, nameBytes.length);
-      ByteIo.writeShort(stream, 0);
+      ByteIo.writeShort(stream, useZip64 ? ZipConstants.ZIP64_LOCHDR : 0);
       stream.write(nameBytes);
+      if (useZip64) {
+        ByteIo.writeShort(stream, ZipConstants.ZIP64_EXTID);
+        ByteIo.writeShort(stream, 16);
+        ByteIo.writeLong(stream, entry.getSize());
+        ByteIo.writeLong(stream, entry.getSize());
+      }
 
       byte[] bytes = stream.toByteArray();
       out.write(bytes);
@@ -225,8 +248,14 @@ class EntryAccounting {
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
       ByteIo.writeInt(out, ZipEntry.EXTSIG);
       ByteIo.writeInt(out, getCrc());
-      ByteIo.writeInt(out, getCompressedSize());
-      ByteIo.writeInt(out, getSize());
+      if (getCompressedSize() >= ZipConstants.ZIP64_MAGICVAL
+          || getSize() >= ZipConstants.ZIP64_MAGICVAL) {
+        ByteIo.writeLong(out, getCompressedSize());
+        ByteIo.writeLong(out, getSize());
+      } else {
+        ByteIo.writeInt(out, getCompressedSize());
+        ByteIo.writeInt(out, getSize());
+      }
       return out.toByteArray();
     }
   }
