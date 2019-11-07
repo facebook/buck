@@ -59,7 +59,6 @@ import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -81,7 +80,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -374,12 +372,17 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     // Collect any runtime deps we have into a list of futures.
-    Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(resolver);
-    List<ListenableFuture<BuildResult>> runtimeDepResults = new ArrayList<>();
-    ImmutableSet<BuildRule> runtimeDeps =
-        resolver.getAllRules(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
-    for (BuildRule dep : runtimeDeps) {
-      runtimeDepResults.add(getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext));
+    List<ListenableFuture<BuildResult>> runtimeDepResults =
+        ((HasRuntimeDeps) rule)
+            .getRuntimeDeps(resolver)
+            .map(resolver::getRule)
+            .map(dep -> getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext))
+            .collect(ImmutableList.toImmutableList());
+
+    // If we don't have any runtime deps we can short circuit here
+    if (runtimeDepResults.isEmpty()) {
+      future.setFuture(result);
+      return future;
     }
 
     // Create a new combined future, which runs the original rule and all the runtime deps in
