@@ -37,7 +37,6 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -73,13 +72,11 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
-  @Ignore("Temporarily disabled. TODO(ianc) reenable")
   public void compileKotlinClassWithAnnotationProcessorThatGeneratesJavaCode() throws Exception {
     buildKotlinLibraryThatContainsNoJavaCodeButMustCompileGeneratedJavaCode();
   }
 
   @Test
-  @Ignore("Temporarily disabled. TODO(ianc) reenable")
   public void compileKotlinClassWithAnnotationProcessorThatGeneratesJavaCodeWithExternalJavac()
       throws Exception {
     overrideToolsJavacInBuckConfig();
@@ -98,7 +95,7 @@ public class KotlinLibraryIntegrationTest {
           ImmutableSet.of(
               "META-INF/",
               "META-INF/MANIFEST.MF",
-              "META-INF/example.kotlin_module",
+              "META-INF/com.example.ap.kotlinapgenjava.example.kotlin_module",
               "com/",
               "com/example/",
               "com/example/ap/",
