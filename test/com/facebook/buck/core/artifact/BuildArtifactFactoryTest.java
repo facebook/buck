@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataK
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.google.common.base.VerifyException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.nio.file.Path;
@@ -93,7 +92,7 @@ public class BuildArtifactFactoryTest {
   }
 
   @Test
-  public void multipleOfSameDeclaredArtifactAfterBindingThrowsWithLocationInof() {
+  public void multipleOfSameDeclaredArtifactAfterBindingThrowsWithLocationInfo() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -145,7 +144,30 @@ public class BuildArtifactFactoryTest {
     BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
     factory.createDeclaredArtifact(Paths.get("path1"), Location.BUILTIN);
 
-    expectedException.expect(VerifyException.class);
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        Matchers.allOf(
+            Matchers.not(Matchers.containsString("Originally declared")),
+            Matchers.containsString(
+                "Artifact path1 declared by //my:foo is not bound to an action")));
+    factory.verifyAllArtifactsBound();
+  }
+
+  @Test
+  public void throwsOnValidateWhenArtifactsNotBoundWithLocationInfo() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
+    Location declaredLocation =
+        Location.fromPathAndStartColumn(
+            PathFragment.create("my").getChild("BUCK"), 0, 0, new Location.LineAndColumn(2, 4));
+    factory.createDeclaredArtifact(Paths.get("path1"), declaredLocation);
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        "Artifact path1 declared by //my:foo is not bound to an action. Originally declared at "
+            + declaredLocation.print());
     factory.verifyAllArtifactsBound();
   }
 }

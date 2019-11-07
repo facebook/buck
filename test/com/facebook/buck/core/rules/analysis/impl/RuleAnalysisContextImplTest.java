@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BuildArtifact;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
@@ -155,7 +156,7 @@ public class RuleAnalysisContextImplTest {
 
     context.actionRegistry().declareArtifact(Paths.get("some/path"));
 
-    expectedException.expect(VerifyException.class);
+    expectedException.expect(HumanReadableException.class);
     context.getRegisteredActionData();
   }
 

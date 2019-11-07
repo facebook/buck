@@ -118,7 +118,19 @@ public class BuildArtifactFactory {
    */
   protected void verifyAllArtifactsBound() {
     for (ArtifactImpl artifact : declaredArtifacts) {
-      Verify.verify(artifact.isBound(), "Artifact %s is not bound", artifact);
+      if (!artifact.isBound()) {
+        if (artifact.getDeclaredLocation().equals(Location.BUILTIN)) {
+          throw new HumanReadableException(
+              "Artifact %s declared by %s is not bound to an action",
+              artifact.getOutputPath(), artifact.getBuildTarget().getFullyQualifiedName());
+        } else {
+          throw new HumanReadableException(
+              "Artifact %s declared by %s is not bound to an action. Originally declared at %s",
+              artifact.getOutputPath(),
+              artifact.getBuildTarget().getFullyQualifiedName(),
+              artifact.getDeclaredLocation().print());
+        }
+      }
     }
   }
 }
