@@ -246,6 +246,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
               outputPath,
               linkerArgs,
               linker,
+              buildTarget.getCell(),
               filesystem.getRootPath(),
               resolver));
 

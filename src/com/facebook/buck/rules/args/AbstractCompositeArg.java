@@ -16,11 +16,11 @@
 
 package com.facebook.buck.rules.args;
 
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.function.Consumer;
 import org.immutables.value.Value;
 
@@ -45,7 +45,7 @@ abstract class AbstractCompositeArg implements Arg {
 
   public void appendToCommandLineRel(
       Consumer<String> consumer,
-      Path cellPath,
+      CanonicalCellName cellName,
       SourcePathResolverAdapter pathResolver,
       boolean useUnixPathSeparator) {
     ImmutableList<Arg> args = getArgs();
@@ -53,7 +53,7 @@ abstract class AbstractCompositeArg implements Arg {
     for (Arg arg : args) {
       if (arg instanceof SourcePathArg) {
         ((SourcePathArg) arg)
-            .appendToCommandLineRel(builder::append, cellPath, pathResolver, useUnixPathSeparator);
+            .appendToCommandLineRel(builder::append, cellName, pathResolver, useUnixPathSeparator);
       } else {
         arg.appendToCommandLine(builder::append, pathResolver);
       }

@@ -259,6 +259,7 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
                   output,
                   args,
                   linker,
+                  buildTarget.getCell(),
                   filesystem.getRootPath(),
                   sourcePathResolverAdapter))
           .add(

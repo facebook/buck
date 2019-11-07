@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -44,6 +45,7 @@ public class CxxPrepareForLinkStep {
       Path output,
       ImmutableList<Arg> args,
       Linker linker,
+      CanonicalCellName currentCellName,
       Path currentCellPath,
       SourcePathResolverAdapter resolver) {
 
@@ -64,7 +66,7 @@ public class CxxPrepareForLinkStep {
           String.join(
               " ",
               CxxWriteArgsToFileStep.stringify(
-                  allArgs, currentCellPath, resolver, linker.getUseUnixPathSeparator())));
+                  allArgs, currentCellName, resolver, linker.getUseUnixPathSeparator())));
     }
 
     CxxWriteArgsToFileStep createArgFileStep =
@@ -76,7 +78,7 @@ public class CxxPrepareForLinkStep {
                     .collect(ImmutableList.toImmutableList())
                 : allArgs,
             Optional.of(Escaper.SHELL_ESCAPER),
-            currentCellPath,
+            currentCellName,
             resolver,
             linker.getUseUnixPathSeparator());
 
@@ -92,7 +94,7 @@ public class CxxPrepareForLinkStep {
                 .filter(input -> input instanceof FileListableLinkerInputArg)
                 .collect(ImmutableList.toImmutableList()),
             Optional.empty(),
-            currentCellPath,
+            currentCellName,
             resolver,
             linker.getUseUnixPathSeparator());
 

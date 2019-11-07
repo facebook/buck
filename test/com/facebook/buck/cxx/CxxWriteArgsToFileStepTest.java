@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -53,7 +54,7 @@ public class CxxWriteArgsToFileStepTest {
         Optional.empty(),
         ImmutableList.of(StringArg.of("-dummy"), StringArg.of("\"")),
         ImmutableList.of("-dummy", "\""),
-        projectFilesystem.getRootPath());
+        CanonicalCellName.rootCell());
   }
 
   @Test
@@ -68,7 +69,7 @@ public class CxxWriteArgsToFileStepTest {
         Optional.of(input -> "foo".equals(input) ? "bar" : input),
         ImmutableList.of(StringArg.of("-dummy"), StringArg.of("foo")),
         ImmutableList.of("-dummy", "bar"),
-        projectFilesystem.getRootPath());
+        CanonicalCellName.rootCell());
 
     // cleanup after test
     Files.deleteIfExists(fileListPath);
@@ -80,7 +81,7 @@ public class CxxWriteArgsToFileStepTest {
       Optional<Function<String, String>> escaper,
       ImmutableList<Arg> inputArgs,
       ImmutableList<String> expectedArgFileContents,
-      Path currentCellPath)
+      CanonicalCellName currentCellName)
       throws IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
@@ -88,7 +89,7 @@ public class CxxWriteArgsToFileStepTest {
         new TestActionGraphBuilder().getSourcePathResolver();
     CxxWriteArgsToFileStep step =
         CxxWriteArgsToFileStep.create(
-            argFilePath, inputArgs, escaper, currentCellPath, sourcePathResolverAdapter, false);
+            argFilePath, inputArgs, escaper, currentCellName, sourcePathResolverAdapter, false);
 
     step.execute(context);
 

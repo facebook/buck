@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.rules.args.Arg;
@@ -48,11 +49,11 @@ class CxxWriteArgsToFileStep implements Step {
       Path argFilePath,
       ImmutableList<Arg> args,
       Optional<Function<String, String>> escaper,
-      Path currentCellPath,
+      CanonicalCellName currentCellName,
       SourcePathResolverAdapter pathResolver,
       boolean useUnixPathSeparator) {
     ImmutableList<String> argFileContents =
-        stringify(args, currentCellPath, pathResolver, useUnixPathSeparator);
+        stringify(args, currentCellName, pathResolver, useUnixPathSeparator);
     if (escaper.isPresent()) {
       argFileContents =
           argFileContents.stream().map(escaper.get()).collect(ImmutableList.toImmutableList());
@@ -72,7 +73,7 @@ class CxxWriteArgsToFileStep implements Step {
 
   static ImmutableList<String> stringify(
       ImmutableCollection<Arg> args,
-      Path currentCellPath,
+      CanonicalCellName currentCellName,
       SourcePathResolverAdapter pathResolver,
       boolean useUnixPathSeparator) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
@@ -80,15 +81,15 @@ class CxxWriteArgsToFileStep implements Step {
       if (arg instanceof FileListableLinkerInputArg) {
         ((FileListableLinkerInputArg) arg)
             .appendToCommandLineRel(
-                builder::add, currentCellPath, pathResolver, useUnixPathSeparator);
+                builder::add, currentCellName, pathResolver, useUnixPathSeparator);
       } else if (arg instanceof SourcePathArg) {
         ((SourcePathArg) arg)
             .appendToCommandLineRel(
-                builder::add, currentCellPath, pathResolver, useUnixPathSeparator);
+                builder::add, currentCellName, pathResolver, useUnixPathSeparator);
       } else if (arg instanceof CompositeArg) {
         ((CompositeArg) arg)
             .appendToCommandLineRel(
-                builder::add, currentCellPath, pathResolver, useUnixPathSeparator);
+                builder::add, currentCellName, pathResolver, useUnixPathSeparator);
       } else {
         arg.appendToCommandLine(builder::add, pathResolver);
       }

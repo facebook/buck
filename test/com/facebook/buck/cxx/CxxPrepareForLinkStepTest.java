@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -67,6 +68,7 @@ public class CxxPrepareForLinkStepTest {
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .getLd()
                 .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
+            CanonicalCellName.rootCell(),
             dummyPath,
             buildRuleResolver.getSourcePathResolver());
 
@@ -87,6 +89,7 @@ public class CxxPrepareForLinkStepTest {
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .getLd()
                 .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
+            CanonicalCellName.rootCell(),
             dummyPath,
             buildRuleResolver.getSourcePathResolver());
 
@@ -176,6 +179,7 @@ public class CxxPrepareForLinkStepTest {
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .getLd()
                 .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
+            CanonicalCellName.rootCell(),
             currentCellPath,
             buildRuleResolver.getSourcePathResolver());
 
@@ -243,6 +247,7 @@ public class CxxPrepareForLinkStepTest {
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .getLd()
                 .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
+            CanonicalCellName.rootCell(),
             currentCellPath,
             buildRuleResolver.getSourcePathResolver());
 

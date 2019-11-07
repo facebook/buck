@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.args;
 
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -23,7 +24,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.function.Consumer;
 import org.immutables.value.Value;
 
@@ -52,15 +52,14 @@ abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
     consumer.accept(line);
   }
 
-  // TODO(T47190884): cellPath here is just used as a cell identifier. Change to CanonicalCellName.
   public void appendToCommandLineRel(
       Consumer<String> consumer,
-      Path cellPath,
+      CanonicalCellName cellName,
       SourcePathResolverAdapter pathResolver,
       boolean useUnixPathSeparator) {
     SourcePath path = getPath();
     if (path instanceof BuildTargetSourcePath
-        && cellPath.equals(((BuildTargetSourcePath) path).getTarget().getCellPath())) {
+        && cellName.equals(((BuildTargetSourcePath) path).getTarget().getCell())) {
       String line = pathResolver.getRelativePath(path).toString();
       if (useUnixPathSeparator) {
         line = PathFormatter.pathWithUnixSeparators(line);

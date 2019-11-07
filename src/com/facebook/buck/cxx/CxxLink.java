@@ -132,6 +132,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     @AddToRuleKey private final Optional<PublicOutputPath> linkerMapPath;
     @AddToRuleKey private final Optional<PublicOutputPath> thinLTOPath;
     @AddToRuleKey private final ImmutableList<PublicOutputPath> extraOutputs;
+    @AddToRuleKey private final BuildTarget buildTarget;
 
     public Impl(
         Linker linker,
@@ -170,6 +171,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
           relativeCellRoots.stream()
               .map(Object::toString)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+      this.buildTarget = buildTarget;
     }
 
     @Override
@@ -206,6 +208,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                       linkOutput,
                       args,
                       linker,
+                      buildTarget.getCell(),
                       filesystem.getRootPath(),
                       context.getSourcePathResolver()))
               .add(

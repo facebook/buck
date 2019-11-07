@@ -15,11 +15,11 @@
  */
 package com.facebook.buck.rules.args;
 
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.function.Consumer;
 
 /**
@@ -57,10 +57,10 @@ public class FileListableLinkerInputArg implements Arg, HasSourcePath {
 
   public void appendToCommandLineRel(
       Consumer<String> consumer,
-      Path currentCellPath,
+      CanonicalCellName currentCellName,
       SourcePathResolverAdapter pathResolver,
       boolean useUnixPathSeparator) {
-    value.appendToCommandLineRel(consumer, currentCellPath, pathResolver, useUnixPathSeparator);
+    value.appendToCommandLineRel(consumer, currentCellName, pathResolver, useUnixPathSeparator);
   }
 
   @Override
