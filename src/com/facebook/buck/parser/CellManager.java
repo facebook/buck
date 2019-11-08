@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import java.io.IOException;
@@ -30,22 +31,21 @@ import java.util.concurrent.ConcurrentHashMap;
 class CellManager {
 
   private final SymlinkCache symlinkCache;
-  private final Map<Path, Cell> cells = new ConcurrentHashMap<>();
+  private final Map<CanonicalCellName, Cell> cells = new ConcurrentHashMap<>();
 
   public CellManager(SymlinkCache symlinkCache) {
     this.symlinkCache = symlinkCache;
   }
 
   void register(Cell cell) {
-    Path root = cell.getFilesystem().getRootPath();
-    if (!cells.containsKey(root)) {
-      cells.put(root, cell);
+    if (!cells.containsKey(cell.getCanonicalName())) {
+      cells.put(cell.getCanonicalName(), cell);
       symlinkCache.registerCell(cell);
     }
   }
 
   Cell getCell(UnconfiguredBuildTargetView target) {
-    Cell cell = cells.get(target.getCellPath());
+    Cell cell = cells.get(target.getCell());
     if (cell != null) {
       return cell;
     }
