@@ -49,7 +49,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import junitparams.JUnitParamsRunner;
-import org.apache.commons.lang.NotImplementedException;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.After;
 import org.junit.Assume;
@@ -160,7 +159,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
                             query[1], query[1])));
 
               } else {
-                throw new NotImplementedException("Watchman query not implemented");
+                throw new RuntimeException("Watchman query not implemented");
               }
             });
 

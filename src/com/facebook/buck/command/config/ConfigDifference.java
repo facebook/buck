@@ -18,6 +18,7 @@ package com.facebook.buck.command.config;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapDifference;
@@ -29,7 +30,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Helper methods for calculating and logging the config differences that cause state invalidation
@@ -149,7 +149,7 @@ public class ConfigDifference {
     String prevVal = change.getValue().getPrevValue();
     String newVal = change.getValue().getNewValue();
     BiFunction<String, Integer, String> abbrev =
-        (value, width) -> truncate ? StringUtils.abbreviate(value, width) : value;
+        (value, width) -> truncate ? MoreStrings.abbreviate(value, width) : value;
     if (prevVal == null) {
       return String.format("New value %s='%s'", change.getKey(), abbrev.apply(newVal, 80));
     }

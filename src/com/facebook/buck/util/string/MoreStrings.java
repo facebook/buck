@@ -178,4 +178,16 @@ public final class MoreStrings {
         .map(Pair::getFirst)
         .collect(ImmutableList.toImmutableList());
   }
+
+  /** If string width exceeds passed parameter, replace string tail with dot-dot-dot. */
+  public static String abbreviate(String s, int width) {
+    String dotDotDot = "...";
+    if (s.length() <= width) {
+      return s;
+    } else if (width <= dotDotDot.length()) {
+      return dotDotDot;
+    } else {
+      return s.substring(0, width - dotDotDot.length()) + dotDotDot;
+    }
+  }
 }

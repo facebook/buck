@@ -143,4 +143,23 @@ public class MoreStringsTest {
         MoreStrings.getSpellingSuggestions("ppl:", ImmutableList.of("apple", "foo"), 1),
         ImmutableList.of());
   }
+
+  @Test
+  public void abbreviate() {
+    assertEquals("a", MoreStrings.abbreviate("a", 2));
+    assertEquals("abc", MoreStrings.abbreviate("abc", 3));
+    assertEquals("...", MoreStrings.abbreviate("abcde", 2));
+    assertEquals("...", MoreStrings.abbreviate("abcde", 2));
+    assertEquals("...", MoreStrings.abbreviate("abcde", 3));
+    assertEquals("a...", MoreStrings.abbreviate("abcde", 4));
+    assertEquals("abcde", MoreStrings.abbreviate("abcde", 5));
+    assertEquals("abcde", MoreStrings.abbreviate("abcde", 6));
+
+    // also test it doesn't crash
+    for (int width : new int[] {-10, -1, 0, 1, 3, 5, 20, 999999}) {
+      for (String s : new String[] {"", "a", "ab", "abc", "abcd", "abcde", "abcdefghijklmn"}) {
+        MoreStrings.abbreviate(s, width);
+      }
+    }
+  }
 }

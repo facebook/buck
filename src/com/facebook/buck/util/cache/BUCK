@@ -4,7 +4,7 @@ java_immutables_library(
     name = "cache",
     srcs = glob(["*.java"]),
     exported_deps = [
-        "//third-party/java/bazel:bazel",
+        "//third-party/java/guava:guava",
     ],
     tests = ["//test/com/facebook/buck/util/cache:cache"],
     visibility = ["PUBLIC"],

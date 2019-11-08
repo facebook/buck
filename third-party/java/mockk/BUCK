@@ -9,6 +9,7 @@ java_library(
         ":mockk-dsl-jvm",
         ":mockk-jar",
         "//third-party/java/kotlin:kotlin-reflect",
+        "//third-party/java/objenesis:objenesis",
     ],
     visibility = [
         "//test/...",
