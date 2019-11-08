@@ -183,18 +183,9 @@ public class AppleTestDescription
     args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    FlavorDomain<UnresolvedCxxPlatform> cxxPlatformFlavorDomain =
-        cxxPlatformsProvider.getUnresolvedCxxPlatforms();
-    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor();
     if (buildTarget.getFlavors().contains(COMPILE_DEPS)) {
       return createCompileDepsRule(
-          cxxPlatformFlavorDomain,
-          buildTarget,
-          defaultCxxFlavor,
-          graphBuilder,
-          context,
-          params,
-          args);
+          cxxPlatformsProvider, buildTarget, graphBuilder, context, params, args);
     }
     if (!appleConfig.shouldUseSwiftDelegate()) {
       Optional<BuildRule> buildRule =
@@ -238,6 +229,7 @@ public class AppleTestDescription
     }
     extraFlavorsBuilder.add(debugFormat.getFlavor());
     if (addDefaultPlatform) {
+      Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor();
       extraFlavorsBuilder.add(defaultCxxFlavor);
     }
 
@@ -249,6 +241,8 @@ public class AppleTestDescription
     AppleCxxPlatform appleCxxPlatform;
     ImmutableList<CxxPlatform> cxxPlatforms;
     if (multiarchFileInfo.isPresent()) {
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatformFlavorDomain =
+          cxxPlatformsProvider.getUnresolvedCxxPlatforms();
       ImmutableList.Builder<CxxPlatform> cxxPlatformBuilder = ImmutableList.builder();
       for (BuildTarget thinTarget : multiarchFileInfo.get().getThinTargets()) {
         cxxPlatformBuilder.add(
@@ -261,9 +255,8 @@ public class AppleTestDescription
       appleCxxPlatform = multiarchFileInfo.get().getRepresentativePlatform();
     } else {
       CxxPlatform cxxPlatform =
-          cxxPlatformFlavorDomain
-              .getValue(buildTarget)
-              .orElse(cxxPlatformFlavorDomain.getValue(defaultCxxFlavor))
+          ApplePlatforms.getCxxPlatformForBuildTarget(
+                  cxxPlatformsProvider, buildTarget, Optional.empty())
               .resolve(graphBuilder, buildTarget.getTargetConfiguration());
       cxxPlatforms = ImmutableList.of(cxxPlatform);
       appleCxxPlatform =
@@ -453,17 +446,15 @@ public class AppleTestDescription
   }
 
   private BuildRule createCompileDepsRule(
-      FlavorDomain<UnresolvedCxxPlatform> cxxPlatformFlavorDomain,
+      CxxPlatformsProvider cxxPlatformsProvider,
       BuildTarget buildTarget,
-      Flavor defaultCxxFlavor,
       ActionGraphBuilder graphBuilder,
       BuildRuleCreationContextWithTargetGraph context,
       BuildRuleParams params,
       AppleTestDescriptionArg args) {
     CxxPlatform cxxPlatform =
-        cxxPlatformFlavorDomain
-            .getValue(buildTarget)
-            .orElse(cxxPlatformFlavorDomain.getValue(defaultCxxFlavor))
+        ApplePlatforms.getCxxPlatformForBuildTarget(
+                cxxPlatformsProvider, buildTarget, Optional.empty())
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain =
         getAppleCxxPlatformsFlavorDomain();

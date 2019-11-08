@@ -58,7 +58,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
-import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -352,14 +351,10 @@ public class AppleBinaryDescription
           buildTarget.withAppendedFlavors(flavoredDebugFormat.getFlavor()));
     }
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
-        cxxPlatformsProvider.getUnresolvedCxxPlatforms();
-    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor();
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent()) {
       CxxPlatform cxxPlatform =
-          cxxPlatforms
-              .getValue(buildTarget)
-              .orElse(cxxPlatforms.getValue(defaultCxxFlavor))
+          ApplePlatforms.getCxxPlatformForBuildTarget(
+                  cxxPlatformsProvider, buildTarget, Optional.empty())
               .resolve(graphBuilder, buildTarget.getTargetConfiguration());
       ApplePlatform applePlatform =
           appleCxxPlatformsFlavorDomain
@@ -528,7 +523,8 @@ public class AppleBinaryDescription
                 graphBuilder.getSourcePathResolver(), delegateArg, args, buildTarget);
 
             Optional<ApplePlatform> applePlatform =
-                getApplePlatformForTarget(buildTarget, appleCxxPlatformsFlavorDomain, graphBuilder);
+                getApplePlatformForTarget(
+                    buildTarget, Optional.empty(), appleCxxPlatformsFlavorDomain, graphBuilder);
             if (applePlatform.isPresent()
                 && ApplePlatform.needsEntitlementsInBinary(applePlatform.get().getName())) {
               Optional<SourcePath> entitlements = args.getEntitlementsFile();
@@ -592,16 +588,13 @@ public class AppleBinaryDescription
 
   private Optional<ApplePlatform> getApplePlatformForTarget(
       BuildTarget buildTarget,
+      Optional<Flavor> defaultPlatform,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain,
       BuildRuleResolver ruleResolver) {
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
-        cxxPlatformsProvider.getUnresolvedCxxPlatforms();
-    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor();
     CxxPlatform cxxPlatform =
-        cxxPlatforms
-            .getValue(buildTarget)
-            .orElse(cxxPlatforms.getValue(defaultCxxFlavor))
+        ApplePlatforms.getCxxPlatformForBuildTarget(
+                cxxPlatformsProvider, buildTarget, defaultPlatform)
             .resolve(ruleResolver, buildTarget.getTargetConfiguration());
 
     if (!appleCxxPlatformsFlavorDomain.contains(cxxPlatform.getFlavor())) {
