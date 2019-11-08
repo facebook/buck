@@ -257,13 +257,13 @@ public class PreDexedFilesSorter {
       throw new HumanReadableException(message.toString());
     }
 
-    /** @see CanaryFactory#create(String, String) */
+    /** @see CanaryFactory#create(String, int) */
     private DexWithClasses createCanary(
         ProjectFilesystem filesystem,
         String storeName,
         int index,
         ImmutableList.Builder<Step> steps) {
-      FileLike fileLike = CanaryFactory.create(storeName, String.format("%07d", index));
+      FileLike fileLike = CanaryFactory.create(storeName, index);
       String canaryDirName = "canary_" + storeName + "_" + String.valueOf(index);
       Path scratchDirectoryForCanaryClass = scratchDirectory.resolve(canaryDirName);
 
