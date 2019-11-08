@@ -378,7 +378,9 @@ public class CacheCommandTest {
     @Override
     public ListenableFuture<CacheResult> fetchAsync(
         @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
-      requestedArtifacts.add(new Pair(Optional.ofNullable(target), ruleKey));
+      synchronized (this) {
+        requestedArtifacts.add(new Pair<>(Optional.ofNullable(target), ruleKey));
+      }
       return Futures.immediateFuture(cacheResult);
     }
 
