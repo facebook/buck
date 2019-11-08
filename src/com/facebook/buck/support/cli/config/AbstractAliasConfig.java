@@ -19,7 +19,6 @@ package com.facebook.buck.support.cli.config;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Splitter;
@@ -30,8 +29,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Streams;
-import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,31 +95,6 @@ abstract class AbstractAliasConfig implements ConfigView<BuckConfig> {
 
   public static void validateLabelName(String aliasName) throws HumanReadableException {
     validateAgainstAlias(aliasName, "Label");
-  }
-
-  /**
-   * Create a map of {@link BuildTarget} base paths to aliases. Note that there may be more than one
-   * alias to a base path, so the first one listed in the .buckconfig will be chosen.
-   */
-  public ImmutableMap<Path, String> getBasePathToAliasMap() {
-    ImmutableMap<String, String> aliases = getEntries();
-    if (aliases.isEmpty()) {
-      return ImmutableMap.of();
-    }
-
-    // Build up the Map with an ordinary HashMap because we need to be able to check whether the Map
-    // already contains the key before inserting.
-    Map<Path, String> basePathToAlias = new HashMap<>();
-    for (Map.Entry<String, UnconfiguredBuildTargetView> entry : getAliases().entries()) {
-      String alias = entry.getKey();
-      UnconfiguredBuildTargetView buildTarget = entry.getValue();
-
-      Path basePath = buildTarget.getBasePath();
-      if (!basePathToAlias.containsKey(basePath)) {
-        basePathToAlias.put(basePath, alias);
-      }
-    }
-    return ImmutableMap.copyOf(basePathToAlias);
   }
 
   /**

@@ -30,8 +30,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -39,56 +37,6 @@ import org.junit.rules.ExpectedException;
 public class AliasConfigTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
-
-  /**
-   * Ensure that whichever alias is listed first in the file is the one used in the reverse map if
-   * the value appears multiple times.
-   */
-  @Test
-  public void testGetBasePathToAliasMap() throws IOException, NoSuchBuildTargetException {
-    Reader reader1 =
-        new StringReader(
-            Joiner.on('\n')
-                .join(
-                    "[alias]",
-                    "debug   =   //java/com/example:app_debug",
-                    "release =   //java/com/example:app_release"));
-    AliasConfig config1 =
-        BuckConfigTestUtils.createWithDefaultFilesystem(
-            temporaryFolder, reader1, AliasConfig.class);
-    assertEquals(
-        ImmutableMap.of(Paths.get("java/com/example"), "debug"), config1.getBasePathToAliasMap());
-    assertEquals(
-        ImmutableMap.of(
-            "debug", "//java/com/example:app_debug",
-            "release", "//java/com/example:app_release"),
-        config1.getEntries());
-
-    Reader reader2 =
-        new StringReader(
-            Joiner.on('\n')
-                .join(
-                    "[alias]",
-                    "release =   //java/com/example:app_release",
-                    "debug   =   //java/com/example:app_debug"));
-    AliasConfig config2 =
-        BuckConfigTestUtils.createWithDefaultFilesystem(
-            temporaryFolder, reader2, AliasConfig.class);
-    assertEquals(
-        ImmutableMap.of(Paths.get("java/com/example"), "release"), config2.getBasePathToAliasMap());
-    assertEquals(
-        ImmutableMap.of(
-            "debug", "//java/com/example:app_debug",
-            "release", "//java/com/example:app_release"),
-        config2.getEntries());
-
-    Reader noAliasesReader = new StringReader("");
-    AliasConfig noAliasesConfig =
-        BuckConfigTestUtils.createWithDefaultFilesystem(
-            temporaryFolder, noAliasesReader, AliasConfig.class);
-    assertEquals(ImmutableMap.of(), noAliasesConfig.getBasePathToAliasMap());
-    assertEquals(ImmutableMap.of(), noAliasesConfig.getEntries());
-  }
 
   @Test
   public void testGetAliasesThrowsForMalformedBuildTarget() throws IOException {
@@ -162,7 +110,6 @@ public class AliasConfigTest {
     AliasConfig emptyConfig = AliasConfig.from(FakeBuckConfig.builder().build());
     assertEquals(ImmutableMap.<String, String>of(), emptyConfig.getEntries());
     assertEquals(ImmutableSet.of(), emptyConfig.getBuildTargetForAliasAsString("fb4a"));
-    assertEquals(ImmutableMap.<Path, String>of(), emptyConfig.getBasePathToAliasMap());
   }
 
   @Test
