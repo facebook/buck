@@ -1,8 +1,0 @@
-apple_binary(
-    name = "TestApp",
-    srcs = ["main.c"],
-    defaults = {
-        "platform": "iphoneos-arm64",
-    },
-    info_plist = "Info.plist",
-)
