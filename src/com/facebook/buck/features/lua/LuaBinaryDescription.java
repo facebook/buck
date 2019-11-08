@@ -616,38 +616,17 @@ public class LuaBinaryDescription
       nativeLibsLinktree.add(symlinkTree);
     }
 
-    return new Tool() {
-      @AddToRuleKey private final LuaPackageComponents toolComponents = components;
-      @AddToRuleKey private final SourcePath toolStarter = starter;
-
-      @AddToRuleKey
-      private final NonHashableSourcePathContainer toolModulesLinkTree =
-          new NonHashableSourcePathContainer(modulesLinkTree.getSourcePathToOutput());
-
-      @AddToRuleKey
-      private final List<NonHashableSourcePathContainer> toolNativeLibsLinkTree =
-          nativeLibsLinktree.stream()
-              .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
-              .collect(ImmutableList.toImmutableList());
-
-      @AddToRuleKey
-      private final List<NonHashableSourcePathContainer> toolPythonModulesLinktree =
-          pythonModulesLinktree.stream()
-              .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
-              .collect(ImmutableList.toImmutableList());
-
-      @AddToRuleKey private final List<SourcePath> toolExtraInputs = extraInputs;
-
-      @Override
-      public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
-        return ImmutableList.of(resolver.getAbsolutePath(starter).toString());
-      }
-
-      @Override
-      public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
-        return ImmutableMap.of();
-      }
-    };
+    return new LuaBinaryDescriptionTool(
+        components,
+        starter,
+        new NonHashableSourcePathContainer(modulesLinkTree.getSourcePathToOutput()),
+        nativeLibsLinktree.stream()
+            .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
+            .collect(ImmutableList.toImmutableList()),
+        pythonModulesLinktree.stream()
+            .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
+            .collect(ImmutableList.toImmutableList()),
+        ImmutableList.copyOf(extraInputs));
   }
 
   private Tool getStandaloneBinary(
@@ -825,6 +804,46 @@ public class LuaBinaryDescription
   public enum StarterType {
     PURE,
     NATIVE,
+  }
+
+  /** Tool wrapping a LuaBinaryDescription, suitable for serialization. */
+  private static final class LuaBinaryDescriptionTool implements Tool {
+    @AddToRuleKey private final LuaPackageComponents toolComponents;
+    @AddToRuleKey private final SourcePath toolStarter;
+    @AddToRuleKey private final NonHashableSourcePathContainer toolModulesLinkTree;
+
+    @AddToRuleKey
+    private final ImmutableList<NonHashableSourcePathContainer> toolNativeLibsLinkTree;
+
+    @AddToRuleKey
+    private final ImmutableList<NonHashableSourcePathContainer> toolPythonModulesLinktree;
+
+    @AddToRuleKey private final ImmutableList<SourcePath> toolExtraInputs;
+
+    public LuaBinaryDescriptionTool(
+        LuaPackageComponents toolComponents,
+        SourcePath toolStarter,
+        NonHashableSourcePathContainer toolModulesLinkTree,
+        ImmutableList<NonHashableSourcePathContainer> toolNativeLibsLinkTree,
+        ImmutableList<NonHashableSourcePathContainer> toolPythonModulesLinktree,
+        ImmutableList<SourcePath> toolExtraInputs) {
+      this.toolComponents = toolComponents;
+      this.toolStarter = toolStarter;
+      this.toolModulesLinkTree = toolModulesLinkTree;
+      this.toolNativeLibsLinkTree = toolNativeLibsLinkTree;
+      this.toolPythonModulesLinktree = toolPythonModulesLinktree;
+      this.toolExtraInputs = toolExtraInputs;
+    }
+
+    @Override
+    public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
+      return ImmutableList.of(resolver.getAbsolutePath(toolStarter).toString());
+    }
+
+    @Override
+    public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
+      return ImmutableMap.of();
+    }
   }
 
   @BuckStyleImmutable
