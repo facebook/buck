@@ -25,14 +25,12 @@ import java.nio.file.Path;
 public class BuildTargetMatcherTargetNodeParser extends BuildTargetMatcherParser<TargetNodeSpec> {
 
   @Override
-  public TargetNodeSpec createForDescendants(
-      CanonicalCellName cellName, Path cellPath, Path basePath) {
+  public TargetNodeSpec createForDescendants(CanonicalCellName cellName, Path basePath) {
     return ImmutableTargetNodePredicateSpec.of(BuildFileSpec.fromRecursivePath(basePath, cellName));
   }
 
   @Override
-  public TargetNodeSpec createForChildren(
-      CanonicalCellName cellName, Path cellPath, Path basePath) {
+  public TargetNodeSpec createForChildren(CanonicalCellName cellName, Path basePath) {
     return ImmutableTargetNodePredicateSpec.of(BuildFileSpec.fromPath(basePath, cellName));
   }
 

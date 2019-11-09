@@ -60,7 +60,7 @@ public abstract class BuildTargetMatcherParser<T> {
     UnconfiguredBuildTargetView target =
         unconfiguredBuildTargetFactory.createWithWildcard(cellNames, buildTargetPattern);
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
-      return createForChildren(target.getCell(), target.getCellPath(), target.getBasePath());
+      return createForChildren(target.getCell(), target.getBasePath());
     } else {
       return createForSingleton(target);
     }
@@ -106,7 +106,7 @@ public abstract class BuildTargetMatcherParser<T> {
     // Make sure the basePath comes from the same underlying filesystem.
     Path basePath = cellPath.getFileSystem().getPath(basePathWithSlash);
     CanonicalCellName cellName = cellNames.getNewCellPathResolver().getCanonicalCellName(cellPath);
-    return createForDescendants(cellName, cellPath, basePath);
+    return createForDescendants(cellName, basePath);
   }
 
   /** Used when parsing target names in the {@code visibility} argument to a build rule. */
@@ -119,24 +119,21 @@ public abstract class BuildTargetMatcherParser<T> {
    *     Examples are ":azzetz in build file //first-party/orca/orcaapp/BUCK" and
    *     "//first-party/orca/orcaapp:mezzenger in context FULLY_QUALIFIED"
    */
-  protected abstract T createForDescendants(
-      CanonicalCellName cellName, Path cellPath, Path basePath);
+  protected abstract T createForDescendants(CanonicalCellName cellName, Path basePath);
 
-  protected abstract T createForChildren(CanonicalCellName cellName, Path cellPath, Path basePath);
+  protected abstract T createForChildren(CanonicalCellName cellName, Path basePath);
 
   protected abstract T createForSingleton(UnconfiguredBuildTargetView target);
 
   private static class VisibilityContext extends BuildTargetMatcherParser<BuildTargetMatcher> {
 
     @Override
-    public BuildTargetMatcher createForDescendants(
-        CanonicalCellName cellName, Path cellPath, Path basePath) {
+    public BuildTargetMatcher createForDescendants(CanonicalCellName cellName, Path basePath) {
       return SubdirectoryBuildTargetMatcher.of(cellName, basePath);
     }
 
     @Override
-    public BuildTargetMatcher createForChildren(
-        CanonicalCellName cellName, Path cellPath, Path basePath) {
+    public BuildTargetMatcher createForChildren(CanonicalCellName cellName, Path basePath) {
       return ImmediateDirectoryBuildTargetMatcher.of(cellName, basePath);
     }
 
