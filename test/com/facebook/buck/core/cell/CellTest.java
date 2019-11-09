@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -66,10 +65,11 @@ public class CellTest {
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
-            FakeProjectFilesystem.createJavaOnlyFilesystem().getRootPath(), "//does/not:matter");
+            FakeProjectFilesystem.createJavaOnlyFilesystem().getRootPath(),
+            "unknown//does/not:matter");
 
-    // Target's filesystem root is unknown to cell.
-    expectedException.expect(HumanReadableException.class);
+    // Unregistered cell
+    expectedException.expect(Exception.class);
     cell.getCell(target);
   }
 

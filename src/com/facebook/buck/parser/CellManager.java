@@ -17,48 +17,38 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.util.types.Unit;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 class CellManager {
 
+  private final Cell rootCell;
+  private final ConcurrentHashMap<CanonicalCellName, Unit> cells = new ConcurrentHashMap<>();
   private final SymlinkCache symlinkCache;
-  private final Map<CanonicalCellName, Cell> cells = new ConcurrentHashMap<>();
 
-  public CellManager(SymlinkCache symlinkCache) {
+  public CellManager(Cell rootCell, SymlinkCache symlinkCache) {
+    this.rootCell = rootCell;
     this.symlinkCache = symlinkCache;
+    symlinkCache.registerCell(rootCell);
   }
 
   void register(Cell cell) {
     if (!cells.containsKey(cell.getCanonicalName())) {
-      cells.put(cell.getCanonicalName(), cell);
+      cells.put(cell.getCanonicalName(), Unit.UNIT);
       symlinkCache.registerCell(cell);
     }
   }
 
   Cell getCell(UnconfiguredBuildTargetView target) {
-    Cell cell = cells.get(target.getCell());
-    if (cell != null) {
-      return cell;
-    }
-
-    for (Cell possibleOwner : cells.values()) {
-      Optional<Cell> maybe = possibleOwner.getCellIfKnown(target);
-      if (maybe.isPresent()) {
-        register(maybe.get());
-        return maybe.get();
-      }
-    }
-    throw new HumanReadableException(
-        "From %s, unable to find cell rooted at: %s", target, target.getCellPath());
+    Cell cell = rootCell.getCell(target);
+    register(cell);
+    return cell;
   }
 
   Cell getCell(BuildTarget target) {

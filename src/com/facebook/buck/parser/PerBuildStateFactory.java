@@ -101,7 +101,7 @@ public class PerBuildStateFactory {
     Cell rootCell = parsingContext.getCell();
     ListeningExecutorService executorService = parsingContext.getExecutor();
     SymlinkCache symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
-    CellManager cellManager = new CellManager(symlinkCache);
+    CellManager cellManager = new CellManager(rootCell, symlinkCache);
 
     TargetNodeListener<TargetNode<?>> symlinkCheckers = cellManager::registerInputsUnderSymlinks;
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
@@ -255,8 +255,6 @@ public class PerBuildStateFactory {
             }
           }
         };
-
-    cellManager.register(rootCell);
 
     return new PerBuildState(
         cellManager,

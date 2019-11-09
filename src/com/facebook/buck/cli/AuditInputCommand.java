@@ -39,7 +39,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -113,8 +112,7 @@ public class AuditInputCommand extends AbstractCommand {
 
       @Override
       public void visit(TargetNode<?> node) {
-        Optional<Cell> cellRoot = params.getCell().getCellIfKnown(node.getBuildTarget());
-        Cell cell = cellRoot.orElse(params.getCell());
+        Cell cell = params.getCell().getCell(node.getBuildTarget());
         LOG.debug("Looking at inputs for %s", node.getBuildTarget().getFullyQualifiedName());
 
         ImmutableSortedSet.Builder<Path> targetInputs =
@@ -151,8 +149,7 @@ public class AuditInputCommand extends AbstractCommand {
 
       @Override
       public void visit(TargetNode<?> node) {
-        Optional<Cell> cellRoot = params.getCell().getCellIfKnown(node.getBuildTarget());
-        Cell cell = cellRoot.orElse(params.getCell());
+        Cell cell = params.getCell().getCell(node.getBuildTarget());
         for (Path input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {

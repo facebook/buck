@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, prehash = true)
@@ -115,26 +114,12 @@ abstract class AbstractImmutableCell implements Cell {
 
   @Override
   public Cell getCell(UnconfiguredBuildTargetView target) {
-    return getCell(target.getCellPath());
+    return getCellProvider().getCellByCanonicalCellName(target.getCell());
   }
 
   @Override
   public Cell getCell(BuildTarget target) {
-    // TODO(T47190884): implement getCell(CanonicalCellName) and use that instead.
-    return getCell(target.getCellPath());
-  }
-
-  @Override
-  public Optional<Cell> getCellIfKnown(BuildTarget target) {
-    return getCellIfKnown(target.getUnconfiguredBuildTargetView());
-  }
-
-  @Override
-  public Optional<Cell> getCellIfKnown(UnconfiguredBuildTargetView target) {
-    if (getKnownRootsOfAllCells().contains(target.getCellPath())) {
-      return Optional.of(getCell(target));
-    }
-    return Optional.empty();
+    return getCellProvider().getCellByCanonicalCellName(target.getCell());
   }
 
   @Override

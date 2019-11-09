@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -71,10 +70,6 @@ public interface Cell {
   Cell getCell(UnconfiguredBuildTargetView target);
 
   Cell getCell(BuildTarget target);
-
-  Optional<Cell> getCellIfKnown(BuildTarget target);
-
-  Optional<Cell> getCellIfKnown(UnconfiguredBuildTargetView target);
 
   /**
    * Returns a list of all cells, including this cell. If this cell is the root, getAllCells will
