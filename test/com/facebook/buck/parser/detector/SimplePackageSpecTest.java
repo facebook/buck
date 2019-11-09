@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.parser.detector;
 
-import com.facebook.buck.core.cell.TestCellNameResolver;
+import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import org.junit.Assert;
 import org.junit.Test;

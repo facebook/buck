@@ -13,15 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.cell;
+package com.facebook.buck.core.cell.nameresolver;
 
+import com.facebook.buck.core.cell.exception.UnknownCellException;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /** Implementation of {@link CellNameResolver} based on the known cells mapping. */
 @BuckStyleValue
@@ -42,7 +43,7 @@ public abstract class DefaultCellNameResolver implements CellNameResolver {
                 new UnknownCellException(
                     localName,
                     getKnownCells().keySet().stream()
-                        .flatMap(RichStream::from)
+                        .flatMap(optional -> optional.map(Stream::of).orElse(Stream.empty()))
                         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()))));
   }
 }

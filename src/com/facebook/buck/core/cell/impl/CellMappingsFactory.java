@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.core.cell.impl;
 
-import com.facebook.buck.core.cell.CellNameResolver;
-import com.facebook.buck.core.cell.ImmutableDefaultCellNameResolver;
 import com.facebook.buck.core.cell.ImmutableDefaultNewCellPathResolver;
 import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.cell.nameresolver.ImmutableDefaultCellNameResolver;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.ImmutableCanonicalCellName;
 import com.facebook.buck.util.config.Config;

@@ -18,8 +18,8 @@ package com.facebook.buck.core.cell.impl;
 import static com.facebook.buck.core.cell.impl.DefaultCellPathResolver.REPOSITORIES_SECTION;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.CellNameResolver;
 import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.CanonicalCellName;

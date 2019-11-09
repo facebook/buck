@@ -13,8 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.cell;
+package com.facebook.buck.core.cell.nameresolver;
 
+import com.facebook.buck.core.cell.exception.UnknownCellException;
 import com.facebook.buck.core.model.CanonicalCellName;
 import java.util.Map;
 import java.util.Optional;

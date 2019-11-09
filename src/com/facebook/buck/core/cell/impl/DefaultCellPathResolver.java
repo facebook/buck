@@ -18,8 +18,8 @@ package com.facebook.buck.core.cell.impl;
 
 import com.facebook.buck.core.cell.AbstractCellPathResolver;
 import com.facebook.buck.core.cell.CellName;
-import com.facebook.buck.core.cell.CellNameResolver;
 import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.config.Config;

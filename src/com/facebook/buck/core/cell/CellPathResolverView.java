@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.cell;
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;

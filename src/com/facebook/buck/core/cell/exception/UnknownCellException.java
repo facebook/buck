@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.cell;
+package com.facebook.buck.core.cell.exception;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.util.string.MoreStrings;

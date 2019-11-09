@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.cell;
 
+import com.facebook.buck.core.cell.exception.UnknownCellException;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;

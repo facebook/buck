@@ -26,7 +26,8 @@ import org.immutables.value.Value;
  * mapping between these.
  *
  * <p>These should not be constructed by users and instead should only be acquired from a {@link
- * com.facebook.buck.core.cell.Cell} or via a {@link com.facebook.buck.core.cell.CellNameResolver}.
+ * com.facebook.buck.core.cell.Cell} or via a {@link
+ * com.facebook.buck.core.cell.nameresolver.CellNameResolver}.
  */
 @Value.Immutable(prehash = true, builder = false, copy = false, intern = true)
 @JsonDeserialize

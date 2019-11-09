@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.cell;
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.model.BuildTarget;
@@ -90,8 +91,8 @@ public interface Cell {
   NewCellPathResolver getNewCellPathResolver();
 
   /**
-   * Return the {@link com.facebook.buck.core.cell.CellNameResolver} for this cell. This can be used
-   * to resolve user-provided cell aliases to their canonical names.
+   * Return the {@link CellNameResolver} for this cell. This can be used to resolve user-provided
+   * cell aliases to their canonical names.
    */
   CellNameResolver getCellNameResolver();
 
