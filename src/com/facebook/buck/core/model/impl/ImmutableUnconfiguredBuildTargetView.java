@@ -34,6 +34,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
@@ -66,15 +67,16 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
     this.hash = Objects.hash(this.data, this.unflavoredBuildTargetView);
   }
 
-  private ImmutableUnconfiguredBuildTargetView(Path cellPath, UnconfiguredBuildTarget data) {
+  private ImmutableUnconfiguredBuildTargetView(
+      FileSystem cellFileSystem, UnconfiguredBuildTarget data) {
     this.data = data;
     if (data.getFlavors().size() == 0) {
-      this.unflavoredBuildTargetView = ImmutableUnflavoredBuildTargetView.of(cellPath, data);
+      this.unflavoredBuildTargetView = ImmutableUnflavoredBuildTargetView.of(cellFileSystem, data);
     } else {
       // strip flavors for unflavored view
       this.unflavoredBuildTargetView =
           ImmutableUnflavoredBuildTargetView.of(
-              cellPath,
+              cellFileSystem,
               ImmutableUnconfiguredBuildTarget.of(
                   data.getCell(),
                   data.getBaseName(),
@@ -88,12 +90,11 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   /**
    * Create new immutable instance of {@link UnconfiguredBuildTargetView}
    *
-   * @param cellPath Absolute path to a cell containing this target
    * @param data Data object that backs this view
    */
   public static ImmutableUnconfiguredBuildTargetView of(
-      Path cellPath, UnconfiguredBuildTarget data) {
-    return new ImmutableUnconfiguredBuildTargetView(cellPath, data);
+      FileSystem cellFileSystem, UnconfiguredBuildTarget data) {
+    return new ImmutableUnconfiguredBuildTargetView(cellFileSystem, data);
   }
 
   /**
@@ -143,12 +144,12 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
 
   /** Helper for creating a build target in the root cell with no flavors. */
   public static ImmutableUnconfiguredBuildTargetView of(
-      Path cellPath, String baseName, String shortName) {
+      FileSystem cellFileSystem, String baseName, String shortName) {
     // TODO(buck_team): this is unsafe. It allows us to potentially create an inconsistent build
     // target where the cell name doesn't match the cell path.
     return ImmutableUnconfiguredBuildTargetView.of(
         ImmutableUnflavoredBuildTargetView.of(
-            cellPath, CanonicalCellName.unsafeRootCell(), baseName, shortName));
+            cellFileSystem, CanonicalCellName.unsafeRootCell(), baseName, shortName));
   }
 
   @JsonIgnore
@@ -167,12 +168,6 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   @Override
   public CanonicalCellName getCell() {
     return data.getCell();
-  }
-
-  @JsonIgnore
-  @Override
-  public Path getCellPath() {
-    return unflavoredBuildTargetView.getCellPath();
   }
 
   @JsonProperty("baseName")
@@ -242,7 +237,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   public UnconfiguredBuildTargetView withShortName(String shortName) {
     return ImmutableUnconfiguredBuildTargetView.of(
         ImmutableUnflavoredBuildTargetView.of(
-            getUnflavoredBuildTargetView().getCellPath(),
+            getUnflavoredBuildTargetView().getCellFileSystem(),
             getUnflavoredBuildTargetView().getCell(),
             getUnflavoredBuildTargetView().getBaseName(),
             shortName),

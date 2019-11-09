@@ -134,7 +134,8 @@ class BuildTargetParser {
       // be sure that if this doesn't throw an exception the target cell is visible to the
       // owning cell.
       UnflavoredBuildTargetView unflavoredBuildTargetView =
-          ImmutableUnflavoredBuildTargetView.of(cellPath, canonicalCellName, baseName, shortName);
+          ImmutableUnflavoredBuildTargetView.of(
+              cellPath.getFileSystem(), canonicalCellName, baseName, shortName);
       return flavoredTargetCache.intern(
           ImmutableUnconfiguredBuildTargetView.of(
               unflavoredBuildTargetView, RichStream.from(flavorNames).map(InternalFlavor::of)));

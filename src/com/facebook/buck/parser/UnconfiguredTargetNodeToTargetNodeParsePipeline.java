@@ -245,7 +245,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
                 for (UnconfiguredTargetNode from : allToConvert) {
                   UnconfiguredBuildTargetView unconfiguredTarget =
                       ImmutableUnconfiguredBuildTargetView.of(
-                          cell.getRoot(), from.getBuildTarget());
+                          cell.getRoot().getFileSystem(), from.getBuildTarget());
                   ListenableFuture<TargetNode<?>> targetNode =
                       configureRequestedTarget(
                           cell, unconfiguredTarget, globalTargetConfiguration, from);

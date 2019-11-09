@@ -183,7 +183,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   public void buildTarget() {
     assertEquals(
-        "target:path($OTHER$)Optional<\n"
+        "target:Optional<\n"
             + "  string(other)\n"
             + ">string(//some)string(target)SortedSet<\n"
             + "  string(flavor1)\n"
@@ -196,7 +196,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   public void buildTargetWithEmptyConfiguration() {
     assertEquals(
-        "target:path($OTHER$)Optional<\n"
+        "target:Optional<\n"
             + "  string(other)\n"
             + ">string(//some)string(target)SortedSet<\n"
             + "  string(flavor1)\n"
@@ -209,7 +209,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   public void buildTargetWithConfigurationForConfigurationTargets() {
     assertEquals(
-        "target:path($OTHER$)Optional<\n"
+        "target:Optional<\n"
             + "  string(other)\n"
             + ">string(//some)string(target)SortedSet<\n"
             + "  string(flavor1)\n"

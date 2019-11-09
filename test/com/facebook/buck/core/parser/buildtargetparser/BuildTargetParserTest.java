@@ -25,8 +25,6 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.cell.UnknownCellException;
-import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -34,7 +32,6 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -182,7 +179,7 @@ public class BuildTargetParserTest {
     UnconfiguredBuildTargetView buildTarget = parser.parse(cellRoots, targetStr, "", false);
     assertEquals("localreponame//foo/bar:baz", buildTarget.getFullyQualifiedName());
     assertTrue(buildTarget.getCell().getLegacyName().isPresent());
-    assertEquals(localRepoRoot, buildTarget.getCellPath());
+    assertEquals("localreponame", buildTarget.getCell().getName());
   }
 
   @Test
@@ -196,7 +193,7 @@ public class BuildTargetParserTest {
     UnconfiguredBuildTargetView buildTarget = parser.parse(cellRoots, targetStr, "", false);
     assertEquals("localreponame//foo/bar:baz", buildTarget.getFullyQualifiedName());
     assertTrue(buildTarget.getCell().getLegacyName().isPresent());
-    assertEquals(localRepoRoot, buildTarget.getCellPath());
+    assertEquals("localreponame", buildTarget.getCell().getName());
   }
 
   @Test

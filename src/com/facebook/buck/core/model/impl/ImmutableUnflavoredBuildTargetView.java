@@ -24,22 +24,25 @@ import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
-import java.nio.file.Path;
+import java.nio.file.FileSystem;
 import java.util.Objects;
 
 /** Immutable implementation of {@link UnflavoredBuildTargetView} */
 public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildTargetView {
 
+  private final FileSystem cellFileSystem;
   private final UnconfiguredBuildTarget data;
-  private final Path cellPath;
   private final int hash;
 
-  private ImmutableUnflavoredBuildTargetView(Path cellPath, UnconfiguredBuildTarget data) {
+  private ImmutableUnflavoredBuildTargetView(
+      FileSystem cellFileSystem, UnconfiguredBuildTarget data) {
+    this.cellFileSystem = cellFileSystem;
     this.data = data;
-    this.cellPath = cellPath;
 
-    // always precompute hash because we intern object anyways
-    hash = Objects.hash(cellPath, data);
+    // Note we ignore filesystem hash here, but do not ignore it in `equals`
+    // so that cache will be stable across restarts,
+    // but different filesystems will result in inequality for tests
+    hash = Objects.hash(data);
   }
 
   /** Interner for instances of UnflavoredBuildTargetView. */
@@ -52,8 +55,8 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
   }
 
   @Override
-  public Path getCellPath() {
-    return cellPath;
+  public FileSystem getCellFileSystem() {
+    return cellFileSystem;
   }
 
   @Override
@@ -79,15 +82,14 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
   /**
    * Create new instance of {@link UnflavoredBuildTargetView}
    *
-   * @param cellPath Absolute path to the cell root that owns this build target
    * @param cellName Name of the cell that owns this build target
    * @param baseName Base part of build target name, like "//some/target"
    * @param shortName Last part of build target name after colon
    */
   public static ImmutableUnflavoredBuildTargetView of(
-      Path cellPath, CanonicalCellName cellName, String baseName, String shortName) {
+      FileSystem cellFileSystem, CanonicalCellName cellName, String baseName, String shortName) {
     return of(
-        cellPath,
+        cellFileSystem,
         ImmutableUnconfiguredBuildTarget.of(
             cellName, baseName, shortName, UnconfiguredBuildTarget.NO_FLAVORS));
   }
@@ -95,11 +97,11 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
   /**
    * Create new instance of {@link UnflavoredBuildTargetView}
    *
-   * @param cellPath Absolute path to the cell root that owns this build target
    * @param data {@link UnconfiguredBuildTarget} which encapsulates build target data
    */
-  public static ImmutableUnflavoredBuildTargetView of(Path cellPath, UnconfiguredBuildTarget data) {
-    return interner.intern(new ImmutableUnflavoredBuildTargetView(cellPath, data));
+  public static ImmutableUnflavoredBuildTargetView of(
+      FileSystem cellFileSystem, UnconfiguredBuildTarget data) {
+    return interner.intern(new ImmutableUnflavoredBuildTargetView(cellFileSystem, data));
   }
 
   @Override
@@ -133,7 +135,7 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
       return false;
     }
 
-    return cellPath.equals(another.cellPath) && data.equals(another.data);
+    return cellFileSystem.equals(another.cellFileSystem) && data.equals(another.data);
   }
 
   @Override

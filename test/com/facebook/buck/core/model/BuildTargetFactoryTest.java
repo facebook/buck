@@ -64,7 +64,7 @@ public class BuildTargetFactoryTest {
     assertEquals(
         ImmutableUnconfiguredBuildTargetView.of(
                 ImmutableUnflavoredBuildTargetView.of(
-                    ROOT,
+                    ROOT.getFileSystem(),
                     ImmutableCanonicalCellName.of(Optional.of("xplat")),
                     "//example/base",
                     "one"))

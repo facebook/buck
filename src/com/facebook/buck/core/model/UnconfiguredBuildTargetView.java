@@ -50,20 +50,6 @@ public interface UnconfiguredBuildTargetView
   CanonicalCellName getCell();
 
   /**
-   * The path to the root of the cell where this build target is used.
-   *
-   * <p>Note that the same build target name can reference different build targets when used in
-   * different cells. For example, given a target name {@code external_cell//lib:target}, for a cell
-   * that maps {@code external_cell} to a cell with location {@code /cells/cell_a}, this build
-   * target would point to a target {@code //lib:target} in the {@code /cells/cell_a} cell (defined
-   * in a build file located in {@code /cells/cell_a/lib} folder. If another cell uses the same
-   * build target name, but points {@code external_cell} to a different cell, say {@code
-   * /cells/cell_b}, then this build target refers to a target {@code //lib:target} in the {@code
-   * /cells/cell_b} cell.
-   */
-  Path getCellPath();
-
-  /**
    * Part of build target name the colon excluding cell name.
    *
    * <p>For example, for {@code cell//third_party/java/guava:guava} this returns {@code

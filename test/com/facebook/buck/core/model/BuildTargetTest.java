@@ -137,7 +137,7 @@ public class BuildTargetTest {
   public void testGetUnflavoredTarget() {
     UnflavoredBuildTargetView unflavoredTarget =
         ImmutableUnflavoredBuildTargetView.of(
-            ROOT, CanonicalCellName.rootCell(), "//foo/bar", "baz");
+            ROOT.getFileSystem(), CanonicalCellName.rootCell(), "//foo/bar", "baz");
 
     BuildTarget flavoredTarget =
         BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz", InternalFlavor.of("biz"));
@@ -166,10 +166,12 @@ public class BuildTargetTest {
   @Test
   public void unflavoredBuildTargetsAreInterned() {
     UnflavoredBuildTargetView target1 =
-        ImmutableUnflavoredBuildTargetView.of(ROOT, CanonicalCellName.rootCell(), "//foo", "bar");
+        ImmutableUnflavoredBuildTargetView.of(
+            ROOT.getFileSystem(), CanonicalCellName.rootCell(), "//foo", "bar");
 
     UnflavoredBuildTargetView target2 =
-        ImmutableUnflavoredBuildTargetView.of(ROOT, CanonicalCellName.rootCell(), "//foo", "bar");
+        ImmutableUnflavoredBuildTargetView.of(
+            ROOT.getFileSystem(), CanonicalCellName.rootCell(), "//foo", "bar");
 
     assertSame(target1, target2);
   }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model;
 
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -33,9 +34,13 @@ public interface UnflavoredBuildTargetView extends Comparable<UnflavoredBuildTar
 
   String BUILD_TARGET_PREFIX = "//";
 
-  // TODO: remove cell root path from this object. Don't forget to remove TODOs from
-  // BuildTargetMacro after that
-  Path getCellPath();
+  /**
+   * Cell filesystem exists only to create {@link #getBasePath()} from {@link #getBaseName()}. It
+   * must not be used for anything else, and eventually either {@link Path} should be replaced with
+   * some other type or at least {@link Path} should be created with some special relative-path
+   * filesystem.
+   */
+  FileSystem getCellFileSystem();
 
   CanonicalCellName getCell();
 

@@ -29,7 +29,7 @@ import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
-import java.nio.file.Path;
+import java.nio.file.FileSystems;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -53,7 +53,6 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
   public <E extends Exception> void visit(
       UnconfiguredBuildTargetView value, ValueVisitor<E> visitor) throws E {
     UnflavoredBuildTargetView unflavored = value.getUnflavoredBuildTargetView();
-    visitor.visitPath(unflavored.getCellPath());
     Holder.cellNameTypeInfo.visit(unflavored.getCell().getLegacyName(), visitor);
     visitor.visitString(unflavored.getBaseName());
     visitor.visitString(unflavored.getShortName());
@@ -67,7 +66,6 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
   @Override
   public <E extends Exception> UnconfiguredBuildTargetView create(ValueCreator<E> creator)
       throws E {
-    Path cellPath = creator.createPath();
     CanonicalCellName cellName =
         ImmutableCanonicalCellName.of(Holder.cellNameTypeInfo.createNotNull(creator));
     String baseName = creator.createString();
@@ -75,6 +73,8 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
     Stream<Flavor> flavors =
         Holder.flavorsTypeInfo.createNotNull(creator).stream().map(InternalFlavor::of);
     return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(cellPath, cellName, baseName, shortName), flavors);
+        ImmutableUnflavoredBuildTargetView.of(
+            FileSystems.getDefault(), cellName, baseName, shortName),
+        flavors);
   }
 }

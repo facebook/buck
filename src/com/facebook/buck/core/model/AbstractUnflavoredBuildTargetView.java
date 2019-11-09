@@ -18,6 +18,7 @@ package com.facebook.buck.core.model;
 
 import java.nio.file.Path;
 
+/** Base for implementation of {@link com.facebook.buck.core.model.UnflavoredBuildTargetView}. */
 public abstract class AbstractUnflavoredBuildTargetView implements UnflavoredBuildTargetView {
 
   @Override
@@ -27,9 +28,7 @@ public abstract class AbstractUnflavoredBuildTargetView implements UnflavoredBui
 
   @Override
   public Path getBasePath() {
-    return getCellPath()
-        .getFileSystem()
-        .getPath(getBaseName().substring(BUILD_TARGET_PREFIX.length()));
+    return getCellFileSystem().getPath(getBaseName().substring(BUILD_TARGET_PREFIX.length()));
   }
 
   @Override

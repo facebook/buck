@@ -51,11 +51,13 @@ public class UnconfiguredBuildTargetFactoryForTests {
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
       return ImmutableUnconfiguredBuildTargetView.of(
-          ImmutableUnflavoredBuildTargetView.of(root, cellName, parts[0], parts[1]));
+          ImmutableUnflavoredBuildTargetView.of(
+              root.getFileSystem(), cellName, parts[0], parts[1]));
     }
     String[] flavors = nameAndFlavor[1].split(",");
     return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(root, cellName, parts[0], nameAndFlavor[0]),
+        ImmutableUnflavoredBuildTargetView.of(
+            root.getFileSystem(), cellName, parts[0], nameAndFlavor[0]),
         RichStream.from(flavors).map(InternalFlavor::of));
   }
 
@@ -64,7 +66,7 @@ public class UnconfiguredBuildTargetFactoryForTests {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return ImmutableUnconfiguredBuildTargetView.of(
         ImmutableUnflavoredBuildTargetView.of(
-            cellPath,
+            cellPath.getFileSystem(),
             ImmutableCanonicalCellName.of(arg.getCellName()),
             arg.getBasePath(),
             shortName));
@@ -75,7 +77,7 @@ public class UnconfiguredBuildTargetFactoryForTests {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return ImmutableUnconfiguredBuildTargetView.of(
         ImmutableUnflavoredBuildTargetView.of(
-            cellPath,
+            cellPath.getFileSystem(),
             ImmutableCanonicalCellName.of(arg.getCellName()),
             arg.getBasePath(),
             shortName),
