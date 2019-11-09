@@ -182,10 +182,8 @@ public class AndroidBinaryTest {
                         libraryOne.getBuildTarget().getShortNameAndFlavorPostfix()
                             + "-obfuscated.jar"))),
         ImmutableSet.of(
-            libraryTwo
-                .getBuildTarget()
-                .getUnflavoredBuildTarget()
-                .getCellPath()
+            androidBinary
+                .getProjectFilesystem()
                 .resolve(
                     BuildTargetPaths.getGenPath(
                             libraryTwoRule.getProjectFilesystem(),
