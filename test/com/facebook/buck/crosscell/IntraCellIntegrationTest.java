@@ -88,7 +88,7 @@ public class IntraCellIntegrationTest {
     Cell childCell =
         cell.getCell(
             BuildTargetFactory.newInstance(
-                workspace.getDestPath().resolve("child-repo"), "//:child-target"));
+                workspace.getDestPath().resolve("child-repo"), "child//:child-target"));
 
     try {
       // Whereas, because visibility is limited to the same cell, this won't.
@@ -121,7 +121,7 @@ public class IntraCellIntegrationTest {
     Cell childCell =
         cell.getCell(
             BuildTargetFactory.newInstance(
-                workspace.getDestPath().resolve("child-repo"), "//:child-target"));
+                workspace.getDestPath().resolve("child-repo"), "child//:child-target"));
     assertEquals(
         childCell.getFilesystem().getBuckPaths().getGenDir().toString(),
         MorePaths.pathWithPlatformSeparators("../buck-out/cells/child/gen"));

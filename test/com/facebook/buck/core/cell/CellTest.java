@@ -95,7 +95,7 @@ public class CellTest {
 
     Cell cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
     BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem2.getRootPath(), "//does/not:matter");
+        BuildTargetFactory.newInstance(filesystem2.getRootPath(), "example//does/not:matter");
     Cell other = cell1.getCell(target);
 
     assertEquals(cell2Root, other.getFilesystem().getRootPath());
@@ -167,14 +167,14 @@ public class CellTest {
                     .build())
             .build();
     BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem2.getRootPath(), "//does/not:matter");
+        BuildTargetFactory.newInstance(filesystem2.getRootPath(), "second//does/not:matter");
 
     Cell cell2 = cell1.getCell(target);
     assertThat(
         cell2.getBuckConfig().getValue("test", "value"), Matchers.equalTo(Optional.of("cell2")));
 
     BuildTarget target3 =
-        BuildTargetFactory.newInstance(filesystem3.getRootPath(), "//does/not:matter");
+        BuildTargetFactory.newInstance(filesystem3.getRootPath(), "third//does/not:matter");
     Cell cell3 = cell1.getCell(target3);
     assertThat(
         cell3.getBuckConfig().getValue("test", "common_value"),
