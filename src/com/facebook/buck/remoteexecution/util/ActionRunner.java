@@ -33,6 +33,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutorParams.Builder;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -81,7 +82,7 @@ public class ActionRunner {
   /** Runs an action and returns the result. */
   public ActionResult runAction(
       ImmutableList<String> command,
-      ImmutableMap<String, String> environment,
+      ImmutableMap<String, String> environmentOverrides,
       Set<Path> outputs,
       Path buildDir)
       throws IOException, InterruptedException {
@@ -90,7 +91,18 @@ public class ActionRunner {
     try (Scope ignored = LeafEvents.scope(eventBus, "preparing_action")) {
       paramsBuilder = ProcessExecutorParams.builder();
       paramsBuilder.setCommand(command);
-      paramsBuilder.setEnvironment(environment);
+
+      ImmutableMap.Builder<String, String> environment =
+          ImmutableMap.builderWithExpectedSize(environmentOverrides.size() + 1);
+      environment.putAll(environmentOverrides);
+      if (!environmentOverrides.containsKey("PATH")) {
+        // Propagate `PATH` so we can find the expected version of `java` in tests.
+        ImmutableMap<String, String> currentProcessEnvironment =
+            EnvVariablesProvider.getSystemEnv();
+        environment.put("PATH", currentProcessEnvironment.get("PATH"));
+      }
+      paramsBuilder.setEnvironment(environment.build());
+
       paramsBuilder.setDirectory(buildDir);
       CapturingPrintStream stdOut = new CapturingPrintStream();
       CapturingPrintStream stdErr = new CapturingPrintStream();

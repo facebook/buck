@@ -15,6 +15,7 @@ java_library(
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/filesystem:filesystem",
         "//src/com/facebook/buck/util/function:function",
         "//third-party/java/guava:guava",
