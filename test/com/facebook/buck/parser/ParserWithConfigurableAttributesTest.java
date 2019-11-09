@@ -2621,7 +2621,7 @@ public class ParserWithConfigurableAttributesTest {
                     ImmutableList.of(
                         ImmutableTargetNodePredicateSpec.of(
                             BuildFileSpec.fromRecursivePath(
-                                Paths.get(""), parsingContext.getCell().getRoot()))),
+                                Paths.get(""), parsingContext.getCell().getCanonicalName()))),
                     UnconfiguredTargetConfiguration.INSTANCE)
                 .getTargetGraph()
                 .getNodes())

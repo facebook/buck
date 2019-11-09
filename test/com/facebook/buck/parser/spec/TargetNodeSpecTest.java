@@ -133,8 +133,8 @@ public class TargetNodeSpecTest {
     Cell cellB = defaultCell.getCell(cellBPath);
 
     TargetNodeSpec spec = parseTargetNodeSpec(defaultCell, pattern);
-    thrown.expectMessage(Matchers.containsString(cellAPath.toString()));
-    thrown.expectMessage(Matchers.containsString(cellBPath.toString()));
+    thrown.expectMessage(Matchers.containsString("cell-a"));
+    thrown.expectMessage(Matchers.containsString("cell-b"));
     if (spec instanceof BuildTargetSpec) {
       // BuildTargetSpec has enough information to construct the pattern without a cell argument.
       // Ensure it includes the original pattern as part of its message.
@@ -159,7 +159,9 @@ public class TargetNodeSpecTest {
   }
 
   private Cell getCellOfTargetNodeSpec(Cell currentCell, TargetNodeSpec spec) {
-    return currentCell.getCell(spec.getBuildFileSpec().getCellPath());
+    return currentCell
+        .getCellProvider()
+        .getCellByCanonicalCellName(spec.getBuildFileSpec().getCellName());
   }
 
   private TargetNodeSpec parseTargetNodeSpec(Cell cell, String targetPattern) {

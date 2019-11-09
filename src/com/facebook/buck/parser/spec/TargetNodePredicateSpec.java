@@ -59,11 +59,11 @@ public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
   @Override
   public BuildTargetPattern getBuildTargetPattern(Cell cell) {
     BuildFileSpec buildFileSpec = getBuildFileSpec();
-    if (!cell.getRoot().equals(buildFileSpec.getCellPath())) {
+    if (!cell.getCanonicalName().equals(buildFileSpec.getCellName())) {
       throw new IllegalArgumentException(
           String.format(
-              "Root of cell should agree with build file spec: %s vs %s",
-              toString(), cell.getRoot(), buildFileSpec.getCellPath()));
+              "%s: Root of cell should agree with build file spec: %s vs %s",
+              toString(), cell.getRoot(), buildFileSpec.getCellName()));
     }
 
     String cellName = cell.getCanonicalName().getName();
@@ -73,7 +73,10 @@ public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
     // TODO(sergeyb): find out why
     Path basePath = buildFileSpec.getBasePath();
     if (basePath.isAbsolute()) {
-      basePath = buildFileSpec.getCellPath().relativize(basePath);
+      basePath =
+          cell.getNewCellPathResolver()
+              .getCellPath(buildFileSpec.getCellName())
+              .relativize(basePath);
     }
     return ImmutableBuildTargetPattern.of(
         cellName,

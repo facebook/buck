@@ -602,7 +602,7 @@ public class TargetsCommand extends AbstractCommand {
                   ImmutableList.of(
                       ImmutableTargetNodePredicateSpec.of(
                           BuildFileSpec.fromRecursivePath(
-                              Paths.get(""), params.getCell().getRoot()))),
+                              Paths.get(""), params.getCell().getCanonicalName()))),
                   params.getTargetConfiguration());
       SortedMap<String, TargetNode<?>> matchingNodes =
           getMatchingNodes(params, completeTargetGraphAndBuildTargets, descriptionClasses);
@@ -727,7 +727,7 @@ public class TargetsCommand extends AbstractCommand {
                       ImmutableList.of(
                           ImmutableTargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
-                                  Paths.get(""), params.getCell().getRoot()))),
+                                  Paths.get(""), params.getCell().getCanonicalName()))),
                       params.getTargetConfiguration())
                   .getTargetGraph(),
               ImmutableSet.of());

@@ -94,11 +94,11 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
   @Override
   public BuildTargetPattern getBuildTargetPattern(Cell cell) {
     BuildFileSpec buildFileSpec = getBuildFileSpec();
-    if (!cell.getRoot().equals(buildFileSpec.getCellPath())) {
+    if (!cell.getCanonicalName().equals(buildFileSpec.getCellName())) {
       throw new IllegalArgumentException(
           String.format(
               "Root of cell should agree with build file spec for %s: %s vs %s",
-              toString(), cell.getRoot(), buildFileSpec.getCellPath()));
+              toString(), cell.getCanonicalName(), buildFileSpec.getCellName()));
     }
     // TODO(strager): Check this invariant during construction.
     Preconditions.checkState(

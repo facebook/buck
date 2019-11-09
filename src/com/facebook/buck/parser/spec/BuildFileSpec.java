@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.spec;
 
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
@@ -36,7 +37,7 @@ public abstract class BuildFileSpec {
 
   // The absolute cell path in which the build spec exists
   @Value.Parameter
-  public abstract Path getCellPath();
+  public abstract CanonicalCellName getCellName();
 
   @Value.Check
   protected void check() {
@@ -48,11 +49,11 @@ public abstract class BuildFileSpec {
    * Create a {@link BuildFileSpec} for a recursive build target pattern like foo/bar/...
    *
    * @param basePath the relative path within the {@code cellPath}
-   * @param cellPath the absolute path to the cell that this target resides within
+   * @param cellName the absolute path to the cell that this target resides within
    * @return a new {@link BuildFileSpec} with {@link #isRecursive()}} set to {@code true}
    */
-  public static BuildFileSpec fromRecursivePath(Path basePath, Path cellPath) {
-    return ImmutableBuildFileSpec.of(basePath, /* recursive */ true, cellPath);
+  public static BuildFileSpec fromRecursivePath(Path basePath, CanonicalCellName cellName) {
+    return ImmutableBuildFileSpec.of(basePath, /* recursive */ true, cellName);
   }
 
   /**
@@ -60,15 +61,15 @@ public abstract class BuildFileSpec {
    *
    * @param basePath the relative path to the directory containing the build file within the {@code
    *     cellPath}
-   * @param cellPath the absolute path to the cell that this target resides within
+   * @param cellName the absolute path to the cell that this target resides within
    * @return a new {@link BuildFileSpec} with {@link #isRecursive()}} set to {@code false}
    */
-  public static BuildFileSpec fromPath(Path basePath, Path cellPath) {
-    return ImmutableBuildFileSpec.of(basePath, /* recursive */ false, cellPath);
+  public static BuildFileSpec fromPath(Path basePath, CanonicalCellName cellName) {
+    return ImmutableBuildFileSpec.of(basePath, /* recursive */ false, cellName);
   }
 
   /** @return a {@link BuildFileSpec} for a specific build target like //foo/bar:baz */
   public static BuildFileSpec fromUnconfiguredBuildTarget(UnconfiguredBuildTargetView target) {
-    return fromPath(target.getBasePath(), target.getCellPath());
+    return fromPath(target.getBasePath(), target.getCell());
   }
 }

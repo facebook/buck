@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.parser.spec.BuildTargetMatcherTargetNodeParser;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.support.cli.args.BuckCellArg;
@@ -153,9 +154,9 @@ public class CommandLineTargetNodeSpecParser {
    * for every single build target.
    */
   private void validateTargetSpec(TargetNodeSpec spec, String arg, Cell owningCell) {
-    Path cellPath = spec.getBuildFileSpec().getCellPath();
+    CanonicalCellName cellName = spec.getBuildFileSpec().getCellName();
     Path basePath = spec.getBuildFileSpec().getBasePath();
-    Cell realCell = owningCell.getCell(cellPath);
+    Cell realCell = owningCell.getCellProvider().getCellByCanonicalCellName(cellName);
     if (!realCell.getFilesystem().exists(basePath)) {
       // If someone passes in bar:baz while in subdir foo, and foo/bar does not exist, BUT <root
       // cell>/bar does, tell the user to fix their usage. We do not want to support too many

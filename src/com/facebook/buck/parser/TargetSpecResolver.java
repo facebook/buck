@@ -29,6 +29,7 @@ import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformati
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -172,7 +173,10 @@ public class TargetSpecResolver implements AutoCloseable {
     for (Path buildFile : perBuildFileSpecs.keySet()) {
       Collection<Integer> buildFileSpecs = perBuildFileSpecs.get(buildFile);
       TargetNodeSpec firstSpec = orderedSpecs.get(Iterables.get(buildFileSpecs, 0));
-      Cell cell = rootCell.getCell(firstSpec.getBuildFileSpec().getCellPath());
+      Cell cell =
+          rootCell
+              .getCellProvider()
+              .getCellByCanonicalCellName(firstSpec.getBuildFileSpec().getCellName());
 
       // Format a proper error message for non-existent build files.
       if (!cell.getFilesystem().isFile(buildFile)) {
@@ -206,8 +210,8 @@ public class TargetSpecResolver implements AutoCloseable {
     Multimap<Path, Integer> perBuildFileSpecs = LinkedHashMultimap.create();
     for (int index = 0; index < orderedSpecs.size(); index++) {
       TargetNodeSpec spec = orderedSpecs.get(index);
-      Path cellPath = spec.getBuildFileSpec().getCellPath();
-      Cell cell = rootCell.getCell(cellPath);
+      CanonicalCellName cellName = spec.getBuildFileSpec().getCellName();
+      Cell cell = rootCell.getCellProvider().getCellByCanonicalCellName(cellName);
       try (SimplePerfEvent.Scope perfEventScope =
           SimplePerfEvent.scope(
               eventBus, PerfEventId.of("FindBuildFiles"), "targetNodeSpec", spec)) {
@@ -228,7 +232,7 @@ public class TargetSpecResolver implements AutoCloseable {
           BuildTargetPattern pattern = spec.getBuildTargetPattern(cell);
           BuildPackagePaths paths =
               graphEngineForRecursiveSpecPerRoot
-                  .getUnchecked(cellPath)
+                  .getUnchecked(cell.getRoot())
                   .computeUnchecked(ImmutableBuildTargetPatternToBuildPackagePathKey.of(pattern));
 
           String buildFileName = cell.getBuckConfigView(ParserConfig.class).getBuildFileName();

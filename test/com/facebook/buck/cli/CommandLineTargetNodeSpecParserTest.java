@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -88,13 +89,13 @@ public class CommandLineTargetNodeSpecParserTest {
     Path basePath = filesystem.getPath("");
     filesystem.mkdirs(directory);
     assertEquals(
-        BuildFileSpec.fromRecursivePath(directory, filesystem.getRootPath()),
+        BuildFileSpec.fromRecursivePath(directory, CanonicalCellName.rootCell()),
         parseOne(createCell(filesystem), "//hello/...").getBuildFileSpec());
     assertEquals(
-        BuildFileSpec.fromRecursivePath(basePath, filesystem.getRootPath()),
+        BuildFileSpec.fromRecursivePath(basePath, CanonicalCellName.rootCell()),
         parseOne(createCell(filesystem), "//...").getBuildFileSpec());
     assertEquals(
-        BuildFileSpec.fromRecursivePath(basePath, filesystem.getRootPath()),
+        BuildFileSpec.fromRecursivePath(basePath, CanonicalCellName.rootCell()),
         parseOne(createCell(filesystem), "...").getBuildFileSpec());
     assertEquals(
         BuildTargetSpec.from(
@@ -135,7 +136,7 @@ public class CommandLineTargetNodeSpecParserTest {
     Path packageDirectory = filesystem.getPath("hello");
     filesystem.mkdirs(packageDirectory);
     assertEquals(
-        BuildFileSpec.fromPath(packageDirectory, filesystem.getRootPath()),
+        BuildFileSpec.fromPath(packageDirectory, CanonicalCellName.rootCell()),
         parseOne(createCell(filesystem), "//hello:").getBuildFileSpec());
   }
 
@@ -221,11 +222,11 @@ public class CommandLineTargetNodeSpecParserTest {
 
     // Absolute targets
     assertEquals(
-        BuildFileSpec.fromRecursivePath(Paths.get(""), rootCell.getRoot()),
+        BuildFileSpec.fromRecursivePath(Paths.get(""), CanonicalCellName.rootCell()),
         parseOne(rootCell, "//...").getBuildFileSpec());
 
     assertEquals(
-        BuildFileSpec.fromRecursivePath(Paths.get("foo"), rootCell.getRoot()),
+        BuildFileSpec.fromRecursivePath(Paths.get("foo"), CanonicalCellName.rootCell()),
         parseOne(rootCell, "//foo/...").getBuildFileSpec());
 
     assertEquals(
@@ -235,7 +236,7 @@ public class CommandLineTargetNodeSpecParserTest {
         parseOne(rootCell, "//foo/bar:baz"));
 
     assertEquals(
-        BuildFileSpec.fromPath(Paths.get("foo", "bar"), filesystem.getRootPath()),
+        BuildFileSpec.fromPath(Paths.get("foo", "bar"), CanonicalCellName.rootCell()),
         parseOne(rootCell, "//foo/bar:").getBuildFileSpec());
 
     assertEquals(
@@ -250,7 +251,7 @@ public class CommandLineTargetNodeSpecParserTest {
         parseOne(rootCell, "//foo:bar"));
 
     assertEquals(
-        BuildFileSpec.fromPath(Paths.get("foo"), filesystem.getRootPath()),
+        BuildFileSpec.fromPath(Paths.get("foo"), CanonicalCellName.rootCell()),
         parseOne(rootCell, "//foo:").getBuildFileSpec());
 
     assertEquals(
@@ -264,16 +265,16 @@ public class CommandLineTargetNodeSpecParserTest {
         parseOne(rootCell, "//:baz"));
 
     assertEquals(
-        BuildFileSpec.fromPath(Paths.get(""), filesystem.getRootPath()),
+        BuildFileSpec.fromPath(Paths.get(""), CanonicalCellName.rootCell()),
         parseOne(rootCell, "//:").getBuildFileSpec());
 
     // Relative targets
     assertEquals(
-        BuildFileSpec.fromRecursivePath(Paths.get("subdir"), rootCell.getRoot()),
+        BuildFileSpec.fromRecursivePath(Paths.get("subdir"), CanonicalCellName.rootCell()),
         parseOne(rootCell, "...").getBuildFileSpec());
 
     assertEquals(
-        BuildFileSpec.fromRecursivePath(Paths.get("subdir", "foo"), rootCell.getRoot()),
+        BuildFileSpec.fromRecursivePath(Paths.get("subdir", "foo"), CanonicalCellName.rootCell()),
         parseOne(rootCell, "foo/...").getBuildFileSpec());
 
     assertEquals(
@@ -283,7 +284,7 @@ public class CommandLineTargetNodeSpecParserTest {
         parseOne(rootCell, "foo/bar:baz"));
 
     assertEquals(
-        BuildFileSpec.fromPath(Paths.get("subdir", "foo", "bar"), filesystem.getRootPath()),
+        BuildFileSpec.fromPath(Paths.get("subdir", "foo", "bar"), CanonicalCellName.rootCell()),
         parseOne(rootCell, "foo/bar:").getBuildFileSpec());
 
     assertEquals(
@@ -299,7 +300,7 @@ public class CommandLineTargetNodeSpecParserTest {
         parseOne(rootCell, "foo:bar"));
 
     assertEquals(
-        BuildFileSpec.fromPath(Paths.get("subdir", "foo"), filesystem.getRootPath()),
+        BuildFileSpec.fromPath(Paths.get("subdir", "foo"), CanonicalCellName.rootCell()),
         parseOne(rootCell, "foo:").getBuildFileSpec());
 
     assertEquals(
@@ -314,7 +315,7 @@ public class CommandLineTargetNodeSpecParserTest {
         parseOne(rootCell, ":baz"));
 
     assertEquals(
-        BuildFileSpec.fromPath(Paths.get("subdir"), filesystem.getRootPath()),
+        BuildFileSpec.fromPath(Paths.get("subdir"), CanonicalCellName.rootCell()),
         parseOne(rootCell, ":").getBuildFileSpec());
   }
 

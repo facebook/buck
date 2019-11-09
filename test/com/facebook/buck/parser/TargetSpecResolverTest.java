@@ -151,7 +151,7 @@ public class TargetSpecResolverTest {
         resolve(
             ImmutableList.of(
                 ImmutableTargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))));
+                    BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getCanonicalName()))));
 
     ImmutableSet<BuildTarget> expectedTargets =
         ImmutableSet.of(
@@ -178,9 +178,9 @@ public class TargetSpecResolverTest {
     resolve(
         ImmutableList.of(
             ImmutableTargetNodePredicateSpec.of(
-                BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
+                BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getCanonicalName())),
             ImmutableTargetNodePredicateSpec.of(
-                BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))));
+                BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getCanonicalName()))));
   }
 
   @Test
@@ -199,18 +199,18 @@ public class TargetSpecResolverTest {
         resolve(
             ImmutableList.of(
                 ImmutableTargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
+                    BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getCanonicalName())),
                 ImmutableTargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))));
+                    BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getCanonicalName()))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(bar), ImmutableSet.of(foo))));
 
     targets =
         resolve(
             ImmutableList.of(
                 ImmutableTargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot())),
+                    BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getCanonicalName())),
                 ImmutableTargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot()))));
+                    BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getCanonicalName()))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(foo), ImmutableSet.of(bar))));
   }
 
@@ -225,7 +225,7 @@ public class TargetSpecResolverTest {
         resolve(
             ImmutableList.of(
                 ImmutableTargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(buckout, cell.getRoot()))));
+                    BuildFileSpec.fromRecursivePath(buckout, cell.getCanonicalName()))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of())));
   }
 
