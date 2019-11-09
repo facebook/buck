@@ -1,0 +1,24 @@
+platform(
+    name = "p-j",
+    constraint_values = [
+    ],
+)
+
+platform(
+    name = "p-k",
+    constraint_values = [
+    ],
+)
+
+java_library(
+    name = "j",
+    default_target_platform = ":p-j",
+)
+
+java_library(
+    name = "k",
+    default_target_platform = ":p-k",
+    deps = [
+        ":j",
+    ],
+)

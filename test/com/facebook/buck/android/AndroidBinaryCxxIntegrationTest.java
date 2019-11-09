@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import java.io.IOException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -262,6 +263,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     workspace.runBuckCommand("build", target).assertSuccess();
   }
 
+  @Ignore
   @Test
   public void testCxxLibraryDepWithConstraints() throws IOException {
     String target = "//apps/sample:app_cxx_lib_dep_with_constraints_without_cpu_map";
@@ -287,6 +289,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     }
   }
 
+  @Ignore
   @Test
   public void cannotBuildBinaryWithAndroidPlatformAndWithoutCpuMap() {
     String target = "//apps/sample:app_cxx_lib_dep_with_constraints_without_cpu_map";

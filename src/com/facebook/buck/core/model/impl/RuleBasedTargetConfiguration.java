@@ -41,4 +41,9 @@ public abstract class RuleBasedTargetConfiguration implements TargetConfiguratio
   public Optional<BuildTarget> getConfigurationTarget() {
     return Optional.of(getTargetPlatform());
   }
+
+  @Override
+  public String toString() {
+    return getTargetPlatform().toString();
+  }
 }

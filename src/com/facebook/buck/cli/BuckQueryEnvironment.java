@@ -46,6 +46,7 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.parser.temporarytargetuniquenesschecker.TemporaryUnconfiguredTargetToTargetUniquenessChecker;
 import com.facebook.buck.query.AllPathsFunction;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.AttrRegexFilterFunction;
@@ -140,6 +141,8 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   // traverses the graph in parallel.
   private MutableDirectedGraph<TargetNode<?>> graph = MutableDirectedGraph.createConcurrent();
   private Map<BuildTarget, TargetNode<?>> targetsToNodes = new ConcurrentHashMap<>();
+  private TemporaryUnconfiguredTargetToTargetUniquenessChecker checker =
+      new TemporaryUnconfiguredTargetToTargetUniquenessChecker();
 
   @VisibleForTesting
   protected BuckQueryEnvironment(
@@ -454,6 +457,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
             parser.getTargetNodeJob(parserState, buildTarget, dependencyStack),
             targetNode -> {
               targetsToNodes.put(buildTarget, targetNode);
+              checker.addTarget(buildTarget, dependencyStack);
               List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
               Set<BuildTarget> parseDeps = targetNode.getParseDeps();
               for (BuildTarget parseDep : parseDeps) {

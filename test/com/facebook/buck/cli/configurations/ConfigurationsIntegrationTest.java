@@ -26,6 +26,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.MoreStringsForTests;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -36,6 +37,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.MatcherAssert;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -478,5 +480,63 @@ public class ConfigurationsIntegrationTest {
     workspace
         .runBuckBuild("--target-platforms=//:p", "--target-platforms=//:p", "//:j")
         .assertSuccess();
+  }
+
+  @Test
+  public void prohibitNonUniqueConfAndFlavorInQuery() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "non_unique_conf_and_flavor_deny", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("query", "deps(//...)");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        Matchers.matchesPattern(
+            "(?s).*Target //:j has more than one configurations \\(//:p-. and //:p-.\\)"
+                + " with the same set of flavors \\[\\].*"));
+  }
+
+  @Test
+  public void prohibitNonUniqueConfAndFlavorInBuild() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "non_unique_conf_and_flavor_deny", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("build", "//...");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        Matchers.matchesPattern(
+            "(?s).*Target //:j has more than one configurations \\(//:p-. and //:p-.\\)"
+                + " with the same set of flavors \\[\\].*"));
+  }
+
+  @Test
+  public void allowNonUniqueTargersWithDifferentFlavorsInQuery() throws Exception {
+    // To avoid test failures on Windows because of missing compiler
+    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "non_unique_conf_and_flavor_allow", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("query", "deps(//...)").assertSuccess();
+  }
+
+  @Test
+  public void allowNonUniqueTargersWithDifferentFlavorsInBuild() throws Exception {
+    // To avoid test failures on Windows because of missing compiler
+    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "non_unique_conf_and_flavor_allow", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//...").assertSuccess();
   }
 }

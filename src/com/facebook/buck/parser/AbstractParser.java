@@ -34,6 +34,7 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
+import com.facebook.buck.parser.temporarytargetuniquenesschecker.TemporaryUnconfiguredTargetToTargetUniquenessChecker;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
@@ -176,6 +177,8 @@ abstract class AbstractParser implements Parser {
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
+    TemporaryUnconfiguredTargetToTargetUniquenessChecker checker =
+        new TemporaryUnconfiguredTargetToTargetUniquenessChecker();
 
     ParseEvent.Started parseStart = ParseEvent.started(toExplore);
     eventBus.post(parseStart);
@@ -228,10 +231,13 @@ abstract class AbstractParser implements Parser {
 
         graph.addNode(targetNode);
         MoreMaps.putCheckEquals(index, target, targetNode);
+        checker.addTarget(target, dependencyStack);
         if (target.isFlavored()) {
           BuildTarget unflavoredTarget = target.withoutFlavors();
           MoreMaps.putCheckEquals(
               index, unflavoredTarget, state.getTargetNode(unflavoredTarget, dependencyStack));
+          // NOTE: do not used uniqueness checked for unflavored target
+          // because `target.withoutFlavors()` does not switch unconfigured target
         }
         for (BuildTarget dep : targetNode.getParseDeps()) {
           graph.addEdge(targetNode, state.getTargetNode(dep, dependencyStack.child(dep)));
