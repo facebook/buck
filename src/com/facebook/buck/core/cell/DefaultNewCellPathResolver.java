@@ -46,7 +46,14 @@ public abstract class DefaultNewCellPathResolver implements NewCellPathResolver 
 
   @Override
   public Path getCellPath(CanonicalCellName cellName) {
-    return getCellToPathMap().get(cellName);
+    Path path = getCellToPathMap().get(cellName);
+    if (path == null) {
+      throw new RuntimeException(
+          String.format(
+              "Cell '%s' does not have a mapping to a path. Known cells are {%s}",
+              cellName, formatKnownCells()));
+    }
+    return path;
   }
 
   @Override
@@ -55,12 +62,14 @@ public abstract class DefaultNewCellPathResolver implements NewCellPathResolver 
     if (canonicalCellName == null) {
       throw new RuntimeException(
           String.format(
-              "No known cell with path %s. Known cells are {%s}",
-              path,
-              getCellToPathMap().entrySet().stream()
-                  .map(e -> String.format("%s: %s", e.getKey(), e.getValue()))
-                  .collect(Collectors.joining(", "))));
+              "No known cell with path %s. Known cells are {%s}", path, formatKnownCells()));
     }
     return canonicalCellName;
+  }
+
+  private String formatKnownCells() {
+    return getCellToPathMap().entrySet().stream()
+        .map(e -> String.format("%s: %s", e.getKey(), e.getValue()))
+        .collect(Collectors.joining(", "));
   }
 }
