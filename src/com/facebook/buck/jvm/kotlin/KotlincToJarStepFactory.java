@@ -94,7 +94,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   // output path for generated sources;
   private static final String SOURCES_ARG = KAPT3_PLUGIN + "sources=";
   private static final String CLASSES_ARG = KAPT3_PLUGIN + "classes=";
-  private static final String INCREMENTAL_ARG = KAPT3_PLUGIN + "incrementalData=";
   // output path for java stubs;
   private static final String STUBS_ARG = KAPT3_PLUGIN + "stubs=";
   private static final String LIGHT_ANALYSIS = KAPT3_PLUGIN + "useLightAnalysis=";
@@ -160,9 +159,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     Path kaptGeneratedOutput =
         BuildTargetPaths.getAnnotationPath(
             projectFilesystem, invokingRule, "__%s_kapt_generated__");
-    Path incrementalDataOutput =
-        BuildTargetPaths.getAnnotationPath(
-            projectFilesystem, invokingRule, "__%s_incremental_data__");
     Path tmpFolder =
         BuildTargetPaths.getScratchPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
     Path genOutputFolder =
@@ -186,7 +182,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       addCreateFolderStep(steps, projectFilesystem, buildContext, stubsOutput);
       addCreateFolderStep(steps, projectFilesystem, buildContext, classesOutput);
       addCreateFolderStep(steps, projectFilesystem, buildContext, kaptGeneratedOutput);
-      addCreateFolderStep(steps, projectFilesystem, buildContext, incrementalDataOutput);
       addCreateFolderStep(steps, projectFilesystem, buildContext, sourcesOutput);
       addCreateFolderStep(steps, projectFilesystem, buildContext, tmpFolder);
       addCreateFolderStep(steps, projectFilesystem, buildContext, genOutputFolder);
@@ -219,7 +214,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             kaptApOptions,
             kaptGeneratedOutput,
             stubsOutput,
-            incrementalDataOutput,
             classesOutput,
             sourcesOutput,
             parameters.getOutputPaths().getWorkingDirectory(),
@@ -365,7 +359,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       ImmutableMap<String, String> kaptApOptions,
       Path kaptGenerated,
       Path stubsOutput,
-      Path incrementalData,
       Path classesOutput,
       Path sourcesOutput,
       Path workingDirectory,
@@ -390,7 +383,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             .addAll(annotationProcessors)
             .add(SOURCES_ARG + filesystem.resolve(sourcesOutput))
             .add(CLASSES_ARG + filesystem.resolve(classesOutput))
-            .add(INCREMENTAL_ARG + filesystem.resolve(incrementalData))
             .add(STUBS_ARG + filesystem.resolve(stubsOutput))
             .add(
                 AP_OPTIONS
