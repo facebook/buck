@@ -59,5 +59,6 @@ buck_module(
     visibility = [
         "//src/com/facebook/buck/cli:main",
         "//test/com/facebook/buck/features/go/...",
+        "//test/com/facebook/buck/rules/modern:subclass_exclusion",
     ],
 )

@@ -49,5 +49,6 @@ buck_module(
     ],
     visibility = [
         "//test/com/facebook/buck/features/rust/...",
+        "//test/com/facebook/buck/rules/modern:subclass_exclusion",
     ],
 )

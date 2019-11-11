@@ -32,6 +32,7 @@ java_library_with_plugins(
         "//test/com/facebook/buck/file:",
         "//test/com/facebook/buck/maven:maven",
         "//test/com/facebook/buck/rules/keys:keys",
+        "//test/com/facebook/buck/rules/modern:subclass_exclusion",
     ],
     deps = [
         "//src/com/facebook/buck/core/model:model",
