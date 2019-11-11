@@ -50,6 +50,9 @@ import com.facebook.buck.file.RemoteFileBuilder;
 import com.facebook.buck.file.RemoteFileDescriptionArg;
 import com.facebook.buck.file.downloader.impl.ExplodingDownloader;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.JarGenrule;
+import com.facebook.buck.jvm.java.JarGenruleDescription;
+import com.facebook.buck.jvm.java.JarGenruleDescriptionArg;
 import com.facebook.buck.jvm.java.JavaBinaryDescriptionArg;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -60,6 +63,7 @@ import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.KeystoreDescriptionArg;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
@@ -89,6 +93,28 @@ public class IjProjectSourcePathResolverTest {
             .setOut("i_am_an_output")
             .setCmd("echo hi > $OUT")
             .build(filesystem);
+    assertOutputPathsEqual(node);
+  }
+
+  @Test
+  public void testJarGenrule() {
+    BuildTarget target = BuildTargetFactory.newInstance("//lib:jar_rule");
+    AbstractNodeBuilder<
+            JarGenruleDescriptionArg.Builder,
+            JarGenruleDescriptionArg,
+            JarGenruleDescription,
+            JarGenrule>
+        builder =
+            new AbstractNodeBuilder<
+                JarGenruleDescriptionArg.Builder,
+                JarGenruleDescriptionArg,
+                JarGenruleDescription,
+                JarGenrule>(
+                new JarGenruleDescription(
+                    JavaLibraryBuilder.createToolchainProviderForJavaLibrary(),
+                    new NoSandboxExecutionStrategy()),
+                target) {};
+    TargetNode<JarGenruleDescriptionArg> node = builder.build(filesystem);
     assertOutputPathsEqual(node);
   }
 

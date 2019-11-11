@@ -47,6 +47,7 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
+import com.facebook.buck.jvm.java.JarGenruleDescription;
 import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -94,7 +95,9 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
-    if (description instanceof AbstractGenruleDescription) {
+    if (description instanceof JarGenruleDescription) {
+      return getOutputPathForJarGenrule(buildTarget, filesystem);
+    } else if (description instanceof AbstractGenruleDescription) {
       return getOutputPathForGenrule(
           (GenruleDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
     } else if (description instanceof JavaBinaryDescription) {
@@ -140,6 +143,15 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       // instead opting to only implement those relevant for IjProject
       return Optional.empty();
     }
+  }
+
+  /**
+   * Resolve the default output path for a JarGenrule. Implementation matches that of JarGenrule's
+   * constructor
+   */
+  private Optional<Path> getOutputPathForJarGenrule(
+      BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar"));
   }
 
   /**
