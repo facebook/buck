@@ -385,6 +385,37 @@ public class MorePathsTest {
     assertFalse(result.isPresent());
   }
 
+  @Test
+  @Parameters({
+    "a/b/c",
+    "/a/b/c/d",
+    "a/b/../c/d/../../e",
+    "../a/.././../b",
+  })
+  public void windowsLongPathStringHasCorrectPrefix(String testPathString) {
+    String uncPrefix = "\\\\?\\";
+
+    Path path = Paths.get(testPathString);
+    String longPathString = MorePaths.getWindowsLongPathString(path);
+    assertTrue(longPathString.startsWith(uncPrefix));
+  }
+
+  @Test
+  @Parameters({
+    "a/b/c",
+    "/a/b/c/d",
+    "a/b/../c/d/../../e",
+    "../a/.././../b",
+  })
+  public void windowsLongPathStringIsAbsolute(String testPathString) {
+    String uncPrefix = "\\\\?\\";
+
+    Path path = Paths.get(testPathString);
+    String longPathString = MorePaths.getWindowsLongPathString(path);
+    Path pathComponent = Paths.get(longPathString.substring(uncPrefix.length()));
+    assertTrue(pathComponent.isAbsolute());
+  }
+
   private void validateSymlinklTarget(
       Path pathToExistingFileUnderProjectRoot,
       Path pathToDesiredLinkUnderProjectRoot,

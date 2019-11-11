@@ -454,4 +454,16 @@ public class MorePaths {
   public static boolean isDirectory(Path path, LinkOption... linkOptions) {
     return Files.isDirectory(normalize(path).toAbsolutePath(), linkOptions);
   }
+
+  /**
+   * Converts a path to an absolute Windows 'long path' as a string.
+   * https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
+   *
+   * @param path The path to transform to a long path appropriate string form
+   * @return The string representation of the path appropriate for long file name usage.
+   */
+  public static String getWindowsLongPathString(Path path) {
+    // The path must be normalized and absolutized first.
+    return "\\\\?\\" + MorePaths.normalize(path).toAbsolutePath();
+  }
 }

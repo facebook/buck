@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.Step;
@@ -197,15 +198,25 @@ class CxxPreprocessAndCompileStep implements Step {
     ProcessExecutorParams.Builder builder = makeSubprocessBuilder(context);
 
     if (useArgfile) {
+      Path argfilePath = getArgfile();
       filesystem.writeLinesToPath(
           Iterables.transform(
               getArguments(context.getAnsi().isAnsiTerminal()), Escaper.ARGFILE_ESCAPER::apply),
-          getArgfile());
+          argfilePath);
+
+      String argfilePathString;
+      if (context.getPlatform().getType().isWindows()) {
+        // argfiles can be rather lengthy in... length
+        argfilePathString = MorePaths.getWindowsLongPathString(argfilePath);
+      } else {
+        argfilePathString = argfilePath.toString();
+      }
+
       builder.setCommand(
           ImmutableList.<String>builder()
               .addAll(command.getCommandPrefix())
               .addAll(preArgfileArgs)
-              .add("@" + getArgfile())
+              .add("@" + argfilePathString)
               .build());
     } else {
       builder.setCommand(
