@@ -1,0 +1,7 @@
+[apple]
+  # need to keep these below 12.2 to ensure that we copy frameworks
+  iphoneos_target_sdk_version = 12.0
+  iphonesimulator_target_sdk_version = 12.0
+
+[cxx]
+  default_platform = iphonesimulator-x86_64
