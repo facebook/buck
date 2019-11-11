@@ -21,10 +21,9 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import java.io.ByteArrayOutputStream;
+import com.google.common.io.CountingOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.zip.Deflater;
@@ -48,8 +47,7 @@ class EntryAccounting {
 
   private static final int DATA_DESCRIPTOR_FLAG = 1 << 3;
   private static final int UTF8_NAMES_FLAG = 1 << 11;
-  private static final int ARBITRARY_SIZE = 1024;
-  private static final byte[] emptyBytes = new byte[] {};
+  private static final int ARBITRARY_SIZE = 8192;
 
   private final ZipEntry entry;
   private final Method method;
@@ -69,8 +67,8 @@ class EntryAccounting {
    */
   private int flags = UTF8_NAMES_FLAG;
 
-  private final Deflater deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
-  private final byte[] buffer = new byte[ARBITRARY_SIZE];
+  private Deflater deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
+  private byte[] buffer = new byte[ARBITRARY_SIZE];
 
   public EntryAccounting(Clock clock, ZipEntry entry, long currentOffset) {
     this.entry = entry;
@@ -190,80 +188,76 @@ class EntryAccounting {
       flags |= DATA_DESCRIPTOR_FLAG;
     }
 
-    try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-      ByteIo.writeInt(stream, ZipEntry.LOCSIG);
+    CountingOutputStream stream = new CountingOutputStream(out);
+    ByteIo.writeInt(stream, ZipEntry.LOCSIG);
 
-      boolean useZip64;
-      if (!requiresDataDescriptor() && entry.getSize() >= ZipConstants.ZIP64_MAGICVAL) {
-        useZip64 = true;
-      } else {
-        useZip64 = false;
-      }
-
-      ByteIo.writeShort(stream, getRequiredExtractVersion(useZip64));
-      ByteIo.writeShort(stream, flags);
-      ByteIo.writeShort(stream, getCompressionMethod());
-      ByteIo.writeInt(stream, getTime());
-
-      // If we don't know the size or CRC of the data in advance (such as when in deflate mode),
-      // we write zeros now, and append the actual values (the data descriptor) after the entry
-      // bytes has been fully written.
-      if (requiresDataDescriptor()) {
-        ByteIo.writeInt(stream, 0);
-        ByteIo.writeInt(stream, 0);
-        ByteIo.writeInt(stream, 0);
-      } else {
-        ByteIo.writeInt(stream, entry.getCrc());
-        if (entry.getSize() >= ZipConstants.ZIP64_MAGICVAL) {
-          ByteIo.writeInt(stream, ZipConstants.ZIP64_MAGICVAL);
-          ByteIo.writeInt(stream, ZipConstants.ZIP64_MAGICVAL);
-        } else {
-          ByteIo.writeInt(stream, entry.getSize());
-          ByteIo.writeInt(stream, entry.getSize());
-        }
-      }
-
-      byte[] nameBytes = entry.getName().getBytes(Charsets.UTF_8);
-      ByteIo.writeShort(stream, nameBytes.length);
-      ByteIo.writeShort(stream, useZip64 ? ZipConstants.ZIP64_LOCHDR : 0);
-      stream.write(nameBytes);
-      if (useZip64) {
-        ByteIo.writeShort(stream, ZipConstants.ZIP64_EXTID);
-        ByteIo.writeShort(stream, 16);
-        ByteIo.writeLong(stream, entry.getSize());
-        ByteIo.writeLong(stream, entry.getSize());
-      }
-
-      byte[] bytes = stream.toByteArray();
-      out.write(bytes);
-      return bytes.length;
+    boolean useZip64;
+    if (!requiresDataDescriptor() && entry.getSize() >= ZipConstants.ZIP64_MAGICVAL) {
+      useZip64 = true;
+    } else {
+      useZip64 = false;
     }
+
+    ByteIo.writeShort(stream, getRequiredExtractVersion(useZip64));
+    ByteIo.writeShort(stream, flags);
+    ByteIo.writeShort(stream, getCompressionMethod());
+    ByteIo.writeInt(stream, getTime());
+
+    // If we don't know the size or CRC of the data in advance (such as when in deflate mode),
+    // we write zeros now, and append the actual values (the data descriptor) after the entry
+    // bytes has been fully written.
+    if (requiresDataDescriptor()) {
+      ByteIo.writeInt(stream, 0);
+      ByteIo.writeInt(stream, 0);
+      ByteIo.writeInt(stream, 0);
+    } else {
+      ByteIo.writeInt(stream, entry.getCrc());
+      if (entry.getSize() >= ZipConstants.ZIP64_MAGICVAL) {
+        ByteIo.writeInt(stream, ZipConstants.ZIP64_MAGICVAL);
+        ByteIo.writeInt(stream, ZipConstants.ZIP64_MAGICVAL);
+      } else {
+        ByteIo.writeInt(stream, entry.getSize());
+        ByteIo.writeInt(stream, entry.getSize());
+      }
+    }
+
+    byte[] nameBytes = entry.getName().getBytes(Charsets.UTF_8);
+    ByteIo.writeShort(stream, nameBytes.length);
+    ByteIo.writeShort(stream, useZip64 ? ZipConstants.ZIP64_LOCHDR : 0);
+    stream.write(nameBytes);
+    if (useZip64) {
+      ByteIo.writeShort(stream, ZipConstants.ZIP64_EXTID);
+      ByteIo.writeShort(stream, 16);
+      ByteIo.writeLong(stream, entry.getSize());
+      ByteIo.writeLong(stream, entry.getSize());
+    }
+
+    return stream.getCount();
   }
 
-  private byte[] getDataDescriptor() throws IOException {
+  private long writeDataDescriptor(OutputStream rawOut) throws IOException {
     if (!requiresDataDescriptor()) {
-      return emptyBytes;
+      return 0;
     }
 
-    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-      ByteIo.writeInt(out, ZipEntry.EXTSIG);
-      ByteIo.writeInt(out, getCrc());
-      if (getCompressedSize() >= ZipConstants.ZIP64_MAGICVAL
-          || getSize() >= ZipConstants.ZIP64_MAGICVAL) {
-        ByteIo.writeLong(out, getCompressedSize());
-        ByteIo.writeLong(out, getSize());
-      } else {
-        ByteIo.writeInt(out, getCompressedSize());
-        ByteIo.writeInt(out, getSize());
-      }
-      return out.toByteArray();
+    CountingOutputStream out = new CountingOutputStream(rawOut);
+    ByteIo.writeInt(out, ZipEntry.EXTSIG);
+    ByteIo.writeInt(out, getCrc());
+    if (getCompressedSize() >= ZipConstants.ZIP64_MAGICVAL
+        || getSize() >= ZipConstants.ZIP64_MAGICVAL) {
+      ByteIo.writeLong(out, getCompressedSize());
+      ByteIo.writeLong(out, getSize());
+    } else {
+      ByteIo.writeInt(out, getCompressedSize());
+      ByteIo.writeInt(out, getSize());
     }
+    return out.getCount();
   }
 
   private int deflate(OutputStream out) throws IOException {
     int written = deflater.deflate(buffer, 0, buffer.length);
     if (written > 0) {
-      out.write(Arrays.copyOf(buffer, written));
+      out.write(buffer, 0, written);
     }
     return written;
   }
@@ -308,14 +302,15 @@ class EntryAccounting {
       entry.setCrc(calculateCrc());
     }
 
+    // write the data descriptor if required
+    long dataDescriptorLength = writeDataDescriptor(out);
+
     // regardless of the method used, end the deflater to free native resources.
     deflater.end();
+    deflater = null;
+    buffer = null;
 
-    // write the data descriptor if required
-    byte[] dataDescriptor = getDataDescriptor();
-    out.write(dataDescriptor);
-
-    return entry.getCompressedSize() + dataDescriptor.length;
+    return entry.getCompressedSize() + dataDescriptorLength;
   }
 
   private boolean requiresDataDescriptor() {
