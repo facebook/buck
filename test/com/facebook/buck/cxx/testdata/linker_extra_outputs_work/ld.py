@@ -12,7 +12,7 @@ def main():
         if arg.startswith("@"):
             with open(arg[1:], "rb") as f:
                 for arg1 in f:
-                    expanded_args.append(arg1.rstrip("\n").strip('"'))
+                    expanded_args.append(arg1.decode("utf-8").rstrip("\n").strip('"'))
         else:
             expanded_args.append(arg)
 

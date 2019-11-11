@@ -6,6 +6,8 @@ java_test(
     resources = [
         "sample-bytes.dat",
     ],
+    # In OSS tests, writing a large file as one of these tests requires can be slow
+    test_case_timeout_ms = 180000,
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
