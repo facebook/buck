@@ -42,4 +42,9 @@ public class ErrorTargetConfiguration implements TargetConfiguration {
   public Optional<BuildTarget> getConfigurationTarget() {
     return Optional.empty();
   }
+
+  @Override
+  public String toString() {
+    return ErrorTargetConfiguration.class.getSimpleName();
+  }
 }

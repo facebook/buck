@@ -46,4 +46,9 @@ public class UnconfiguredTargetConfiguration implements TargetConfiguration {
   public Optional<BuildTarget> getConfigurationTarget() {
     return Optional.empty();
   }
+
+  @Override
+  public String toString() {
+    return UnconfiguredTargetConfiguration.class.getSimpleName();
+  }
 }
