@@ -241,7 +241,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
         completeCombinedFutureWithException(
             new RemoteActionCancelledException(
                 "Unable to fall back to Local Strategy, execution has been cancelled"),
-            remoteBuildResult.get(),
+            Result.CANCELLED,
             Result.NOT_RUN);
         return;
       }
