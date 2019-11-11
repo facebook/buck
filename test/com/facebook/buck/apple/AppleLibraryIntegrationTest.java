@@ -958,8 +958,6 @@ public class AppleLibraryIntegrationTest {
                 "ObjCLibrary#header-mode-symlink-tree-with-umbrella-directory-modulemap,headers,iphonesimulator-x86_64")
             .resolve("ObjCLibrary");
 
-    Files.list(headersPath).forEach(path -> System.out.println("PATH " + path));
-
     Path umbrellaHeaderPath = headersPath.resolve("ObjCLibrary.h");
     assertThat("umbrella header should not exist", Files.exists(umbrellaHeaderPath), is(false));
 
