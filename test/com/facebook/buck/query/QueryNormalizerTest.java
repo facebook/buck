@@ -33,7 +33,7 @@ public class QueryNormalizerTest {
 
   @Test
   @Parameters(method = "getNormalizeData")
-  @TestCaseName("normalize{0}")
+  @TestCaseName("normalizePattern{0}")
   public void normalize(String testName, String query, String expected) throws Exception {
     assertEquals(expected, QueryNormalizer.normalize(query));
   }
@@ -46,7 +46,6 @@ public class QueryNormalizerTest {
         "bar" + System.lineSeparator() + "baz",
         "bar" + System.lineSeparator() + "baz"
       },
-      new Object[] {"SubPresentButNoSetsProvidedOutputAsIs", "query(%Ss)", "query(%Ss)"},
       new Object[] {
         "SingleSet",
         "query(%Ss)" + System.lineSeparator() + "bar" + System.lineSeparator() + "baz",
@@ -73,7 +72,7 @@ public class QueryNormalizerTest {
 
   @Test
   @Parameters(method = "getErrorData")
-  @TestCaseName("normalize{0}")
+  @TestCaseName("normalizePattern{0}")
   public void error(String testName, String query) throws Exception {
     thrown.expect(QueryException.class);
     QueryNormalizer.normalize(query);
@@ -100,7 +99,8 @@ public class QueryNormalizerTest {
             + "--"
             + System.lineSeparator()
             + "baz"
-      }
+      },
+      new Object[] {"SubPresentButNoSetsProvided", "query(%Ss)"}
     };
   }
 }

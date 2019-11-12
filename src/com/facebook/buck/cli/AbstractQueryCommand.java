@@ -240,7 +240,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     String queryFormat = arguments.get(0);
     List<String> formatArgs = arguments.subList(1, arguments.size());
     if (queryFormat.contains(QueryNormalizer.SET_SUBSTITUTOR)) {
-      runSingleQuery(params, env, QueryNormalizer.normalize(queryFormat, formatArgs));
+      runSingleQuery(params, env, QueryNormalizer.normalizePattern(queryFormat, formatArgs));
       return;
     }
     if (queryFormat.contains("%s")) {

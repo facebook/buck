@@ -16,7 +16,6 @@
 
 package com.facebook.buck.query;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import java.util.Arrays;
 import java.util.List;
@@ -34,27 +33,31 @@ public final class QueryNormalizer {
    */
   public static final String SET_SUBSTITUTOR = "%Ss";
 
-  /** Format query using list substitution */
-  public static String normalize(String pattern, List<String> formatArgs) throws QueryException {
-    int numberOfSetsProvided = Iterables.frequency(formatArgs, SET_SEPARATOR) + 1;
+  /**
+   * Format query using list substitution
+   *
+   * @param pattern Query that contains one or more %Ss
+   * @param formatArgs Replacement strings for each %Ss occurrence, if there is just on replacement
+   *     then all %sS instance would be replaced with it. If there is another mismatch between
+   *     number of %Ss and replacement strings then the error is raised
+   */
+  public static String normalizePattern(String pattern, List<String> formatArgs)
+      throws QueryException {
+    int numberOfSetsProvided =
+        formatArgs.isEmpty() ? 0 : Iterables.frequency(formatArgs, SET_SEPARATOR) + 1;
     int numberOfSetsRequested = countMatches(pattern, SET_SUBSTITUTOR);
 
-    if (numberOfSetsRequested == 0) {
-      // no pattern specified - wrap everything back
-      return pattern + System.lineSeparator() + Joiner.on(System.lineSeparator()).join(formatArgs);
+    // If they only provided one list as args, use that for every instance of `%Ss`
+    if (numberOfSetsProvided == 1) {
+      return pattern.replace(SET_SUBSTITUTOR, getSetRepresentation(formatArgs));
     }
 
-    if (numberOfSetsProvided != numberOfSetsRequested && numberOfSetsProvided > 1) {
+    if (numberOfSetsProvided != numberOfSetsRequested) {
       String message =
           String.format(
               "Incorrect number of sets. Query uses `%s` %d times but %d sets were given",
               SET_SUBSTITUTOR, numberOfSetsRequested, numberOfSetsProvided);
       throw new QueryException(message);
-    }
-
-    // If they only provided one list as args, use that for every instance of `%Ss`
-    if (numberOfSetsProvided == 1) {
-      return pattern.replace(SET_SUBSTITUTOR, getSetRepresentation(formatArgs));
     }
 
     List<String> unusedFormatArgs = formatArgs;
@@ -73,14 +76,19 @@ public final class QueryNormalizer {
     return formattedQuery;
   }
 
-  /** Format query using list substitution */
+  /**
+   * Format query using list substitution If the first line of the query contains %Ss then
+   * subsequent lines are treated as replacement strings
+   */
   public static String normalize(String query) throws QueryException {
     String[] lines = query.split(System.lineSeparator());
-    if (lines.length == 1) {
+
+    if (!lines[0].contains(SET_SUBSTITUTOR)) {
       // short-circuit for performance
       return query;
     }
-    return normalize(lines[0], Arrays.stream(lines).skip(1).collect(Collectors.toList()));
+
+    return normalizePattern(lines[0], Arrays.stream(lines).skip(1).collect(Collectors.toList()));
   }
 
   private static String getSetRepresentation(List<String> args) {
