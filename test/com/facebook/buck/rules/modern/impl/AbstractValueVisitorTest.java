@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
+import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -41,6 +43,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
@@ -104,6 +107,9 @@ public abstract class AbstractValueVisitorTest {
 
   @Test
   public abstract void optional() throws Exception;
+
+  @Test
+  public abstract void frameworkPath() throws Exception;
 
   @Test
   public abstract void simple() throws Exception;
@@ -317,6 +323,20 @@ public abstract class AbstractValueVisitorTest {
   public static class WithOptional implements FakeBuildable {
     @AddToRuleKey private final Optional<String> present = Optional.of("hello");
     @AddToRuleKey private final Optional<String> empty = Optional.empty();
+  }
+
+  public static class WithFrameworkPath implements FakeBuildable {
+    @AddToRuleKey
+    final FrameworkPath sourceTreePath =
+        FrameworkPath.ofSourceTreePath(
+            new SourceTreePath(
+                PBXReference.SourceTree.SDKROOT,
+                Paths.get("SomeSystem.framework"),
+                Optional.empty()));
+
+    @AddToRuleKey
+    final FrameworkPath sourcePath =
+        FrameworkPath.ofSourcePath(FakeSourcePath.of(rootFilesystem, "some/path"));
   }
 
   public static class Simple implements FakeBuildable {

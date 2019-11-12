@@ -207,6 +207,14 @@ public class InputsMapBuilderTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
+  public void frameworkPath() {
+    WithFrameworkPath value = new WithFrameworkPath();
+    inputsConsumer.accept(value.sourcePath.getSourcePath().get());
+    apply(value);
+  }
+
+  @Override
+  @Test
   public void simple() {
     apply(new Simple());
   }

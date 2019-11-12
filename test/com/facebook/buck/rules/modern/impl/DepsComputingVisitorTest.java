@@ -212,6 +212,17 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
+  public void frameworkPath() {
+    WithFrameworkPath value = new WithFrameworkPath();
+    FakeBuildRule rule = new FakeBuildRule("//some:target");
+    expect(inputRuleResolver.resolve(value.sourcePath.getSourcePath().get()))
+        .andReturn(Optional.of(rule));
+    depsBuilder.accept(rule);
+    apply(value);
+  }
+
+  @Override
+  @Test
   public void simple() {
     apply(new Simple());
   }

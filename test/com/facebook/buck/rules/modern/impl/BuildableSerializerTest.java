@@ -216,6 +216,12 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
 
   @Test
   @Override
+  public void frameworkPath() throws IOException {
+    test(new WithFrameworkPath());
+  }
+
+  @Test
+  @Override
   public void simple() throws IOException {
     test(new Simple());
   }

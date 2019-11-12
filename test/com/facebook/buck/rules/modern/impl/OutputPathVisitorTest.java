@@ -169,6 +169,12 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
+  public void frameworkPath() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithFrameworkPath()));
+  }
+
+  @Override
+  @Test
   public void simple() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new Simple()));
   }

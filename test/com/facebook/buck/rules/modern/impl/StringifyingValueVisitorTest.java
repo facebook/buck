@@ -91,6 +91,27 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
+  public void frameworkPath() {
+    assertEquals(
+        "sourceTreePath:com.facebook.buck.rules.coercer.FrameworkPath<\n"
+            + "  type:string(SOURCE_TREE_PATH)\n"
+            + "  sourceTreePath:com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath<\n"
+            + "    sourceTree:string(SDKROOT)\n"
+            + "    path:excluded\n"
+            + "    defaultType:Optional.empty()\n"
+            + "  >\n"
+            + "  sourcePath:null\n"
+            + ">\n"
+            + "sourcePath:com.facebook.buck.rules.coercer.FrameworkPath<\n"
+            + "  type:string(SOURCE_PATH)\n"
+            + "  sourceTreePath:null\n"
+            + "  sourcePath:SourcePath($ROOT$/some/path)\n"
+            + ">",
+        stringify(new WithFrameworkPath()));
+  }
+
+  @Override
+  @Test
   public void simple() {
     assertEquals(
         "string:string(string)\n"
