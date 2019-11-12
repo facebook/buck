@@ -330,7 +330,7 @@ public class AppleDescriptions {
         output::setSrcs,
         output::setHeaders,
         output::setHeaderNamespace);
-    output.setDefaultPlatform(Optional.empty());
+    output.setDefaultPlatform(arg.getDefaultPlatform());
   }
 
   public static void populateCxxLibraryDescriptionArg(

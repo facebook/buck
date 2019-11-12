@@ -384,7 +384,7 @@ public class AppleBinaryDescription
             ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
         Optional.of(binaryTarget),
         Optional.empty(),
-        Optional.empty(),
+        args.getDefaultPlatform(),
         Either.ofLeft(AppleBundleExtension.APP),
         Optional.empty(),
         args.getInfoPlist().get(),
@@ -524,7 +524,10 @@ public class AppleBinaryDescription
 
             Optional<ApplePlatform> applePlatform =
                 getApplePlatformForTarget(
-                    buildTarget, Optional.empty(), appleCxxPlatformsFlavorDomain, graphBuilder);
+                    buildTarget,
+                    args.getDefaultPlatform(),
+                    appleCxxPlatformsFlavorDomain,
+                    graphBuilder);
             if (applePlatform.isPresent()
                 && ApplePlatform.needsEntitlementsInBinary(applePlatform.get().getName())) {
               Optional<SourcePath> entitlements = args.getEntitlementsFile();

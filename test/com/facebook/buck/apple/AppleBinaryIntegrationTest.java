@@ -124,9 +124,7 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_binary_with_platform", tmp);
     workspace.setUp();
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
-            .withAppendedFlavors(InternalFlavor.of("iphoneos-arm64"));
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
@@ -138,6 +136,52 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         workspace.runCommand("otool", "-hv", outputPath.toString()).getStdout().get(),
         containsString("ARM64"));
+  }
+
+  public void testAppleBinaryRespectsFlavorOverrides() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_binary_with_platform", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
+    // buckconfig override is ignored
+    workspace
+        .runBuckCommand(
+            "build",
+            target.getFullyQualifiedName(),
+            "--config",
+            "cxx.default_platform=doesnotexist")
+        .assertSuccess();
+
+    BuildTarget simTarget = target.withFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
+    workspace.runBuckCommand("build", simTarget.getFullyQualifiedName()).assertSuccess();
+    Path simOutputPath =
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, simTarget, "%s"));
+    assertThat(Files.exists(simOutputPath), is(true));
+    assertThat(Files.exists(Paths.get(simOutputPath + "-LinkMap.txt")), is(true));
+    assertThat(
+        workspace.runCommand("file", simOutputPath.toString()).getStdout().get(),
+        containsString("executable"));
+    assertThat(
+        workspace.runCommand("otool", "-hv", simOutputPath.toString()).getStdout().get(),
+        containsString("X86_64"));
+
+    BuildTarget fatTarget =
+        target.withFlavors(
+            InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("iphonesimulator-i386"));
+    workspace.runBuckCommand("build", fatTarget.getFullyQualifiedName()).assertSuccess();
+
+    Path fatOutputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    assertThat(Files.exists(fatOutputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", fatOutputPath.toString()).getStdout().get(),
+        containsString("executable"));
+    ProcessExecutor.Result lipoVerifyResult =
+        workspace.runCommand("lipo", fatOutputPath.toString(), "-verify_arch", "i386", "x86_64");
+    assertEquals(lipoVerifyResult.getStderr().orElse(""), 0, lipoVerifyResult.getExitCode());
   }
 
   @Test
