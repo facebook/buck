@@ -178,7 +178,8 @@ public class AndroidPrebuiltAarDescription
           projectFilesystem,
           graphBuilder,
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-          unzipAar.getResDirectory());
+          unzipAar.getResDirectory(),
+          /* skipCrunchPngs */ false);
     }
 
     BuildRule prebuiltJarRule =

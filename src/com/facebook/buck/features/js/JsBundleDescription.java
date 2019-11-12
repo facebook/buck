@@ -286,7 +286,8 @@ public class JsBundleDescription
           projectFilesystem,
           graphBuilder,
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-          jsBundle.getSourcePathToResources());
+          jsBundle.getSourcePathToResources(),
+          /* skipCrunchPngs */ false);
     }
 
     BuildRuleParams params =

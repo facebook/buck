@@ -528,7 +528,8 @@ class AndroidBinaryResourcesGraphEnhancer {
                 projectFilesystem,
                 graphBuilder,
                 aapt2ToolProvider.resolve(graphBuilder, aapt2BuildTarget.getTargetConfiguration()),
-                resDir);
+                resDir,
+                skipCrunchPngs);
         graphBuilder.addToIndex(compileRule);
         compileListBuilder.add(compileRule);
         index++;

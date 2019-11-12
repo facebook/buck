@@ -69,10 +69,7 @@ public interface AndroidGraphEnhancerArgs
     return ResourceCompressionMode.DISABLED;
   }
 
-  @Value.Default
-  default boolean isSkipCrunchPngs() {
-    return false;
-  }
+  Optional<Boolean> isSkipCrunchPngs();
 
   @Value.Default
   default boolean isIncludesVectorDrawables() {

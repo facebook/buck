@@ -159,7 +159,8 @@ public class AndroidResourceDescription
           projectFilesystem,
           graphBuilder,
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-          resDir.get());
+          resDir.get(),
+          androidBuckConfig.getSkipCrunchPngsDefault().orElse(false));
     }
 
     params =

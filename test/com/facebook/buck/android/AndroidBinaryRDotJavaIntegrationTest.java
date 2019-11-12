@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -32,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -268,5 +270,28 @@ public class AndroidBinaryRDotJavaIntegrationTest {
     assertThat(secondaryClasses, hasItem("Lcom/secondary2/R$id;"));
     assertThat(secondaryClasses, hasItem("Lcom/secondary2/R$string;"));
     assertThat(secondaryClasses, hasItem("Lcom/secondary2/R$color;"));
+  }
+
+  @Test
+  public void testSkipCrunchPngs() throws IOException {
+    // By default, images are crunched. This test also makes sure that the image we're using is
+    // genuinely an unoptimized image so that the next test is actually testing something real.
+    long originalSize =
+        Files.size(workspace.getPath("res/com/sample/top/res/drawable/uncrunched.png"));
+    long crunchedSize =
+        buildAndGetOutputEntryLength("//apps/sample:app_with_aapt2", "res/drawable/uncrunched.png");
+    assertNotEquals(originalSize, crunchedSize);
+
+    // If we pass in the option to skip crunching, the image size should stay the same.
+    workspace.addBuckConfigLocalOption("android", "aapt_compile_skip_crunch_pngs_default", "true");
+    long uncrunchedSize =
+        buildAndGetOutputEntryLength("//apps/sample:app_with_aapt2", "res/drawable/uncrunched.png");
+    assertEquals(originalSize, uncrunchedSize);
+  }
+
+  private long buildAndGetOutputEntryLength(String target, String zipEntry) throws IOException {
+    ImmutableMap<String, Path> outputs = workspace.buildMultipleAndReturnOutputs(target);
+    ZipInspector zipInspector = new ZipInspector(outputs.get(target));
+    return zipInspector.getSize(zipEntry);
   }
 }

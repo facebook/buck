@@ -165,6 +165,7 @@ public class AndroidBinaryDescription
         androidBinaryGraphEnhancerFactory.create(
             toolchainProvider,
             javaBuckConfig,
+            androidBuckConfig,
             cxxBuckConfig,
             dxConfig,
             proGuardConfig,
@@ -180,7 +181,7 @@ public class AndroidBinaryDescription
             exopackageModes,
             rulesToExcludeFromDex,
             args,
-            false,
+            /* useProtoFormat */ false,
             javaOptions.get(),
             javacFactory,
             context.getConfigurationRuleRegistry());

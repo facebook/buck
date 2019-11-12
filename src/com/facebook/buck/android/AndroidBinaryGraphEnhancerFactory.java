@@ -55,6 +55,7 @@ public class AndroidBinaryGraphEnhancerFactory {
   public AndroidBinaryGraphEnhancer create(
       ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
+      AndroidBuckConfig androidBuckConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
       ProGuardConfig proGuardConfig,
@@ -95,6 +96,11 @@ public class AndroidBinaryGraphEnhancerFactory {
         !args.getDisablePreDex()
             && !shouldProguard
             && !args.getPreprocessJavaClassesBash().isPresent();
+
+    boolean shouldSkipCrunchPngs =
+        args.isSkipCrunchPngs().isPresent()
+            ? args.isSkipCrunchPngs().get()
+            : androidBuckConfig.getSkipCrunchPngsDefault().orElse(false);
 
     APKModuleGraph apkModuleGraph;
     if (args.getApplicationModuleConfigs().isEmpty()) {
@@ -168,7 +174,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         /* nativeLinkablesToExclude */ ImmutableSet.of(),
         /* nativeLibAssetsToExclude */ ImmutableSet.of(),
         /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
-        args.isSkipCrunchPngs(),
+        shouldSkipCrunchPngs,
         args.isIncludesVectorDrawables(),
         args.isNoAutoVersionResources(),
         args.isNoVersionTransitionsResources(),
