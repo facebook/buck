@@ -132,7 +132,7 @@ public class CriticalPathEventListenerTest {
         new FakeBuildRule(
             BuildTargetFactory.newInstance("//:" + buildTargetName),
             ImmutableSortedSet.copyOf(buildRules));
-    listener.handleBuildRule(buildRule, execTime);
+    listener.handleBuildRule(buildRule, new ImmutableExecutionTimeInfo(execTime, 0L));
     return buildRule;
   }
 
@@ -154,7 +154,9 @@ public class CriticalPathEventListenerTest {
     assertBuildTarget(criticalPathPair.getFirst(), nodeName);
 
     CriticalPathNode criticalPathNode = criticalPathPair.getSecond();
-    assertThat(criticalPathNode.getElapsedTimeMs(), equalTo(expectedElapsedTime));
+    assertThat(
+        criticalPathNode.getExecutionTimeInfo().getExecutionDurationMs(),
+        equalTo(expectedElapsedTime));
     assertThat(criticalPathNode.getTotalElapsedTimeMs(), equalTo(expectedTotalTime));
     if (prevNodeName == null) {
       assertThat(criticalPathNode.getPreviousNode(), nullValue());

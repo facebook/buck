@@ -2167,6 +2167,13 @@ public final class MainRunner {
       eventListenersBuilder.add(new JavaUtilsLoggingBuildListener(projectFilesystem));
     }
 
+    Path logDirectoryPath = invocationInfo.getLogDirectoryPath();
+    Path criticalPathDir = projectFilesystem.resolve(logDirectoryPath);
+    projectFilesystem.mkdirs(criticalPathDir);
+    CriticalPathEventListener criticalPathEventListener =
+        new CriticalPathEventListener(criticalPathDir.resolve(CRITICAL_PATH_FILE_NAME));
+    buckEventBus.register(criticalPathEventListener);
+
     ChromeTraceBuckConfig chromeTraceConfig = buckConfig.getView(ChromeTraceBuckConfig.class);
     if (chromeTraceConfig.isChromeTraceCreationEnabled()) {
       try {
@@ -2177,7 +2184,8 @@ public final class MainRunner {
                 clock,
                 chromeTraceConfig,
                 managerScope,
-                reStatsProvider);
+                reStatsProvider,
+                criticalPathEventListener);
         eventListenersBuilder.add(chromeTraceBuildListener);
       } catch (IOException e) {
         LOG.error("Unable to create ChromeTrace listener!");
@@ -2188,13 +2196,6 @@ public final class MainRunner {
     webServer.map(WebServer::createListener).ifPresent(eventListenersBuilder::add);
 
     ArtifactCacheBuckConfig artifactCacheConfig = new ArtifactCacheBuckConfig(buckConfig);
-
-    Path logDirectoryPath = invocationInfo.getLogDirectoryPath();
-    Path criticalPathDir = projectFilesystem.resolve(logDirectoryPath);
-    projectFilesystem.mkdirs(criticalPathDir);
-    CriticalPathEventListener criticalPathEventListener =
-        new CriticalPathEventListener(criticalPathDir.resolve(CRITICAL_PATH_FILE_NAME));
-    buckEventBus.register(criticalPathEventListener);
 
 
     CommonThreadFactoryState commonThreadFactoryState =

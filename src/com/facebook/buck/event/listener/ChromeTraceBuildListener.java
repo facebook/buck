@@ -134,6 +134,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final BuildId buildId;
 
   private final Optional<RemoteExecutionStatsProvider> reStatsProvider;
+  private final CriticalPathEventListener criticalPathEventListener;
 
   public ChromeTraceBuildListener(
       ProjectFilesystem projectFilesystem,
@@ -141,7 +142,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       Clock clock,
       ChromeTraceBuckConfig config,
       TaskManagerCommandScope managerScope,
-      Optional<RemoteExecutionStatsProvider> reStatsProvider)
+      Optional<RemoteExecutionStatsProvider> reStatsProvider,
+      CriticalPathEventListener criticalPathEventListener)
       throws IOException {
     this(
         projectFilesystem,
@@ -152,7 +154,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ManagementFactory.getThreadMXBean(),
         config,
         managerScope,
-        reStatsProvider);
+        reStatsProvider,
+        criticalPathEventListener);
   }
 
   @VisibleForTesting
@@ -165,13 +168,15 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       ThreadMXBean threadMXBean,
       ChromeTraceBuckConfig config,
       TaskManagerCommandScope managerScope,
-      Optional<RemoteExecutionStatsProvider> reStatsProvider)
+      Optional<RemoteExecutionStatsProvider> reStatsProvider,
+      CriticalPathEventListener criticalPathEventListener)
       throws IOException {
     this.logDirectoryPath = invocationInfo.getLogDirectoryPath();
     this.projectFilesystem = projectFilesystem;
     this.clock = clock;
     this.buildId = invocationInfo.getBuildId();
     this.reStatsProvider = reStatsProvider;
+    this.criticalPathEventListener = criticalPathEventListener;
     this.dateFormat =
         new ThreadLocal<SimpleDateFormat>() {
           @Override
@@ -290,6 +295,43 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             "command_args", Joiner.on(' ').join(finished.getArgs()),
             "daemon", Boolean.toString(finished.isDaemon())),
         finished);
+
+    addCriticalPathEvents(finished);
+  }
+
+  private void addCriticalPathEvents(CommandEvent.Finished finished) {
+    for (CriticalPathReportableNode node : criticalPathEventListener.getCriticalPathReportNodes()) {
+      long startMicros =
+          TimeUnit.NANOSECONDS.toMicros(
+              node.getEventNanoTime() - TimeUnit.MILLISECONDS.toNanos(node.getElapsedTimeMs()));
+      ChromeTraceEvent startTraceEvent =
+          new ChromeTraceEvent(
+              "critical_path",
+              "critical_path",
+              ChromeTraceEvent.Phase.BEGIN,
+              0,
+              finished.getThreadId(),
+              startMicros,
+              startMicros,
+              ImmutableMap.of("rule", node.getBuildTarget().getFullyQualifiedName()));
+      submitTraceEvent(startTraceEvent);
+
+      ChromeTraceEvent endTraceEvent =
+          new ChromeTraceEvent(
+              "critical_path",
+              "critical_path",
+              ChromeTraceEvent.Phase.END,
+              0,
+              finished.getThreadId(),
+              TimeUnit.NANOSECONDS.toMicros(node.getEventNanoTime()),
+              TimeUnit.NANOSECONDS.toMicros(node.getEventNanoTime()),
+              ImmutableMap.of(
+                  "rule",
+                  node.getBuildTarget().getFullyQualifiedName(),
+                  "elapsed_time_ms",
+                  node.getElapsedTimeMs()));
+      submitTraceEvent(endTraceEvent);
+    }
   }
 
   @Subscribe

@@ -27,6 +27,8 @@ public interface CriticalPathReportableNode {
 
   long getElapsedTimeMs();
 
+  long getEventNanoTime();
+
   @Nullable
   String getType();
 }
