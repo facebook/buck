@@ -229,7 +229,9 @@ public class AppleTestDescription
     }
     extraFlavorsBuilder.add(debugFormat.getFlavor());
     if (addDefaultPlatform) {
-      Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor();
+      Flavor defaultCxxFlavor =
+          args.getDefaultPlatform()
+              .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor());
       extraFlavorsBuilder.add(defaultCxxFlavor);
     }
 
@@ -256,7 +258,7 @@ public class AppleTestDescription
     } else {
       CxxPlatform cxxPlatform =
           ApplePlatforms.getCxxPlatformForBuildTarget(
-                  cxxPlatformsProvider, buildTarget, Optional.empty())
+                  cxxPlatformsProvider, buildTarget, args.getDefaultPlatform())
               .resolve(graphBuilder, buildTarget.getTargetConfiguration());
       cxxPlatforms = ImmutableList.of(cxxPlatform);
       appleCxxPlatform =
@@ -329,7 +331,7 @@ public class AppleTestDescription
                             ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
                         Optional.of(library.getBuildTarget()),
                         Optional.empty(),
-                        Optional.empty(),
+                        args.getDefaultPlatform(),
                         args.getExtension(),
                         Optional.empty(),
                         args.getInfoPlist(),
@@ -454,7 +456,7 @@ public class AppleTestDescription
       AppleTestDescriptionArg args) {
     CxxPlatform cxxPlatform =
         ApplePlatforms.getCxxPlatformForBuildTarget(
-                cxxPlatformsProvider, buildTarget, Optional.empty())
+                cxxPlatformsProvider, buildTarget, args.getDefaultPlatform())
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain =
         getAppleCxxPlatformsFlavorDomain();

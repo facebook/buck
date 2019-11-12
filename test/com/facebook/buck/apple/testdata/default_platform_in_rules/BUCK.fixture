@@ -29,3 +29,14 @@ apple_package(
     bundle = ":DemoApp",
     default_platform = "iphonesimulator-x86_64",
 )
+
+apple_test(
+    name = "DemoTest",
+    srcs = ["DemoTest/DemoTest.m"],
+    default_platform = "iphonesimulator-x86_64",
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    info_plist = "Test.plist",
+)

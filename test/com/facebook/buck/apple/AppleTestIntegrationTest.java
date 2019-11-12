@@ -201,6 +201,52 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  public void testDefaultPlatformInRules() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "default_platform_in_rules", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoTest");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        Paths.get("DemoTest_output.expected"),
+        BuildTargetPaths.getGenPath(
+            filesystem,
+            target.withAppendedFlavors(
+                AppleTestDescription.BUNDLE_FLAVOR,
+                AppleDebugFormat.DWARF.getFlavor(),
+                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s"));
+  }
+
+  @Test
+  public void testDefaultPlatformRespectsFlavorOverrides() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "default_platform_in_rules", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoTest");
+    // buckconfig override is ignored
+    workspace
+        .runBuckCommand(
+            "build",
+            target.getFullyQualifiedName(),
+            "--config",
+            "cxx.default_platform=doesnotexist")
+        .assertSuccess();
+
+    BuildTarget simTarget = target.withFlavors(InternalFlavor.of("iphonesimulator-i386"));
+    workspace.runBuckCommand("build", simTarget.getFullyQualifiedName()).assertSuccess();
+
+    BuildTarget fatTarget =
+        target.withFlavors(
+            InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("iphonesimulator-i386"));
+    workspace.runBuckCommand("build", fatTarget.getFullyQualifiedName()).assertSuccess();
+  }
+
+  @Test
   public void testLinkedAsMachOBundleWithNoDylibDeps() throws Exception {
 
     doTestLinkedAsMachOBundleWithNoDylibDeps(true);
