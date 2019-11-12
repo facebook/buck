@@ -16,7 +16,9 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.common.SdkConstants;
@@ -33,7 +35,9 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -43,6 +47,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Rule;
@@ -641,6 +646,36 @@ public class AndroidBinaryInstallIntegrationTest {
     ProcessResult installResult = projectWorkspace.runBuckCommand("install", BINARY_TARGET);
     installResult.assertSuccess();
     installLimiter.assertExpectedInstallsAreConsumed();
+
+    // Check that dex file names in metadata.txt match installed files.
+    // To check dex directories for all modules, assumes that all directories that contain a
+    // metadata.txt file that starts with '.' also contain dex files
+    for (Path metadataDevicePath :
+        installLimiter.listDirRecursive(INSTALL_ROOT).stream()
+            .filter(path -> path.getFileName().toString().equals("metadata.txt"))
+            .collect(Collectors.toSet())) {
+
+      Path metadataPath = devicePath(metadataDevicePath);
+      List<Path> dexDirContents =
+          Files.list(metadataPath.getParent())
+              .map(Path::getFileName)
+              .collect(ImmutableList.toImmutableList());
+
+      List<String> canaryLines = Files.readAllLines(metadataPath, Charsets.UTF_8);
+      if (!canaryLines.isEmpty() && canaryLines.get(0).startsWith(".")) {
+        for (String canaryLine : canaryLines) {
+          if (!canaryLine.startsWith(".")) {
+            Path expectedDexFile = Paths.get(canaryLine.split(" ")[0]);
+            assertThat(dexDirContents, hasItem(expectedDexFile));
+          }
+        }
+      }
+    }
+  }
+
+  private Path devicePath(Path path) {
+    Path resolved = INSTALL_ROOT.getRoot().relativize(INSTALL_ROOT).resolve(path);
+    return deviceStateDirectory.getRoot().resolve(resolved);
   }
 
   private class ExoState {
