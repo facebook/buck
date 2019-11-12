@@ -22,6 +22,7 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -58,8 +59,10 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.DependencyMode;
-import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -71,7 +74,7 @@ import com.google.common.collect.Maps;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class RobolectricTestDescription
@@ -82,8 +85,8 @@ public class RobolectricTestDescription
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
-  private final Supplier<JavaOptions> javaOptionsForTests;
-  private final Supplier<JavacOptions> defaultJavacOptions;
+  private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
+  private final LoadingCache<TargetConfiguration, JavacOptions> defaultJavacOptions;
   private final JavacFactory javacFactory;
 
   public RobolectricTestDescription(
@@ -95,11 +98,20 @@ public class RobolectricTestDescription
     this.compilerFactory = compilerFactory;
     this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
     this.defaultJavacOptions =
-        MoreSuppliers.memoize(
-            () ->
-                toolchainProvider
-                    .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
-                    .getJavacOptions());
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<TargetConfiguration, JavacOptions>() {
+                  @Override
+                  public JavacOptions load(TargetConfiguration toolchainTargetConfiguration)
+                      throws Exception {
+                    return toolchainProvider
+                        .getByName(
+                            JavacOptionsProvider.DEFAULT_NAME,
+                            toolchainTargetConfiguration,
+                            JavacOptionsProvider.class)
+                        .getJavacOptions();
+                  }
+                });
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
@@ -108,16 +120,23 @@ public class RobolectricTestDescription
     return RobolectricTestDescriptionArg.class;
   }
 
-  private UnresolvedCxxPlatform getCxxPlatform(RobolectricTestDescriptionArg args) {
+  private UnresolvedCxxPlatform getCxxPlatform(
+      RobolectricTestDescriptionArg args, TargetConfiguration toolchainTargetConfiguration) {
     return args.getDefaultCxxPlatform()
         .map(
             toolchainProvider
-                    .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+                    .getByName(
+                        CxxPlatformsProvider.DEFAULT_NAME,
+                        toolchainTargetConfiguration,
+                        CxxPlatformsProvider.class)
                     .getUnresolvedCxxPlatforms()
                 ::getValue)
         .orElse(
             toolchainProvider
-                .getByName(JavaCxxPlatformProvider.DEFAULT_NAME, JavaCxxPlatformProvider.class)
+                .getByName(
+                    JavaCxxPlatformProvider.DEFAULT_NAME,
+                    toolchainTargetConfiguration,
+                    JavaCxxPlatformProvider.class)
                 .getDefaultJavaCxxPlatform());
   }
 
@@ -143,7 +162,11 @@ public class RobolectricTestDescription
     }
 
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(defaultJavacOptions.get(), buildTarget, graphBuilder, args);
+        JavacOptionsFactory.create(
+            defaultJavacOptions.getUnchecked(buildTarget.getTargetConfiguration()),
+            buildTarget,
+            graphBuilder,
+            args);
 
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
@@ -152,7 +175,7 @@ public class RobolectricTestDescription
             ImmutableSortedSet.copyOf(
                 Iterables.concat(
                     params.getBuildDeps(), graphBuilder.getAllRules(args.getExportedDeps()))),
-            javacFactory.create(graphBuilder, args),
+            javacFactory.create(graphBuilder, args, buildTarget.getTargetConfiguration()),
             javacOptions,
             DependencyMode.TRANSITIVE,
             args.isForceFinalResourceIds(),
@@ -198,7 +221,8 @@ public class RobolectricTestDescription
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
             graphBuilder,
-            getCxxPlatform(args).resolve(graphBuilder, buildTarget.getTargetConfiguration()));
+            getCxxPlatform(args, buildTarget.getTargetConfiguration())
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()));
     params = cxxLibraryEnhancement.updatedParams;
 
     BuildTarget testLibraryBuildTarget =
@@ -214,7 +238,8 @@ public class RobolectricTestDescription
                     graphBuilder,
                     compilerFactory.getCompiler(
                         args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA),
-                        javacFactory),
+                        javacFactory,
+                        buildTarget.getTargetConfiguration()),
                     javaBuckConfig,
                     testLibraryArgs)
                 .setJavacOptions(javacOptions)
@@ -223,7 +248,9 @@ public class RobolectricTestDescription
     params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(testsLibrary));
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+            AndroidPlatformTarget.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidPlatformTarget.class);
 
     Optional<BuildTarget> runner = args.getRunner();
     Optional<TestRunnerSpec> runnerSpecs = args.getSpecs();
@@ -255,7 +282,7 @@ public class RobolectricTestDescription
               projectFilesystem,
               params.copyAppendingExtraDeps(transitiveClasspathDeps),
               javaOptionsForTests
-                  .get()
+                  .apply(buildTarget.getTargetConfiguration())
                   .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
               testRunner.getMainClass(),
               args.getManifestFile().orElse(null),
@@ -323,7 +350,7 @@ public class RobolectricTestDescription
             .getDelegate()
             .getBooleanValue("test", "pass_robolectric_directories_in_file", false),
         javaOptionsForTests
-            .get()
+            .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
   }
 
@@ -336,12 +363,14 @@ public class RobolectricTestDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.getUseCxxLibraries().orElse(false)) {
       targetGraphOnlyDepsBuilder.addAll(
-          getCxxPlatform(constructorArg).getParseTimeDeps(buildTarget.getTargetConfiguration()));
+          getCxxPlatform(constructorArg, buildTarget.getTargetConfiguration())
+              .getParseTimeDeps(buildTarget.getTargetConfiguration()));
     }
     javaOptionsForTests
-        .get()
+        .apply(buildTarget.getTargetConfiguration())
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
   }
 
   @BuckStyleImmutable

@@ -36,6 +36,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -91,7 +92,8 @@ public class JsBundleDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return supportsFlavors(flavors);
   }
 
@@ -100,7 +102,8 @@ public class JsBundleDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(FLAVOR_DOMAINS);
   }
 
@@ -279,7 +282,9 @@ public class JsBundleDescription
     if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
       AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
-              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+              AndroidPlatformTarget.DEFAULT_NAME,
+              buildTarget.getTargetConfiguration(),
+              AndroidPlatformTarget.class);
       ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
       return new Aapt2Compile(
           buildTarget,

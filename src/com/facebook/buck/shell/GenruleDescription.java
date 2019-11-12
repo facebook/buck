@@ -77,7 +77,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
               && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
-          getAndroidToolsOptional(args));
+          getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()));
     } else {
       return new GenruleBinary(
           buildTarget,
@@ -92,7 +92,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getOut(),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
-          getAndroidToolsOptional(args));
+          getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()));
     }
   }
 

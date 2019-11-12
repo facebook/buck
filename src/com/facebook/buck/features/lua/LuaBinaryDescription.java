@@ -707,7 +707,10 @@ public class LuaBinaryDescription
   // Return the C/C++ platform to build against.
   private LuaPlatform getPlatform(BuildTarget target, AbstractLuaBinaryDescriptionArg arg) {
     LuaPlatformsProvider luaPlatformsProvider =
-        toolchainProvider.getByName(LuaPlatformsProvider.DEFAULT_NAME, LuaPlatformsProvider.class);
+        toolchainProvider.getByName(
+            LuaPlatformsProvider.DEFAULT_NAME,
+            target.getTargetConfiguration(),
+            LuaPlatformsProvider.class);
 
     FlavorDomain<LuaPlatform> luaPlatforms = luaPlatformsProvider.getLuaPlatforms();
 
@@ -734,7 +737,10 @@ public class LuaBinaryDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<PythonPlatform> pythonPlatforms =
         toolchainProvider
-            .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+            .getByName(
+                PythonPlatformsProvider.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                PythonPlatformsProvider.class)
             .getPythonPlatforms();
     PythonPlatform pythonPlatform =
         pythonPlatforms

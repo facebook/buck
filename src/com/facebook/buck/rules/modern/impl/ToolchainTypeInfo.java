@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.rules.modern.ValueCreator;
@@ -39,8 +40,9 @@ public class ToolchainTypeInfo<T extends Toolchain> implements ValueTypeInfo<T> 
   @Nullable
   @Override
   public <E extends Exception> T create(ValueCreator<E> creator) throws E {
+    // TODO(nga): use appropriate target configuration
     return creator
         .createSpecial(ToolchainProvider.class)
-        .getByName(creator.createString(), rawClass);
+        .getByName(creator.createString(), UnconfiguredTargetConfiguration.INSTANCE, rawClass);
   }
 }

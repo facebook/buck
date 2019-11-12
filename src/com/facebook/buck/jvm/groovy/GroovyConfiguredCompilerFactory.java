@@ -56,7 +56,7 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public Optional<ExtraClasspathProvider> getExtraClasspathProvider(
-      ToolchainProvider toolchainProvider) {
+      ToolchainProvider toolchainProvider, TargetConfiguration toolchainTargetConfiguration) {
     return Optional.empty();
   }
 

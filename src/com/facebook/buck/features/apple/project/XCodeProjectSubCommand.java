@@ -104,7 +104,10 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
         params
             .getCell()
             .getToolchainProvider()
-            .getByName(AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
+            .getByName(
+                AppleCxxPlatformsProvider.DEFAULT_NAME,
+                params.getTargetConfiguration(),
+                AppleCxxPlatformsProvider.class);
     if (!experimental) {
       XCodeProjectCommandHelper xcodeProjectCommandHelper =
           new XCodeProjectCommandHelper(

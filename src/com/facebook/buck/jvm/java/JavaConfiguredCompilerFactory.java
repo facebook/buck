@@ -21,21 +21,26 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
 public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final JavaBuckConfig javaBuckConfig;
-  private final Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier;
+  private final BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
+      extraClasspathProviderSupplier;
   private final JavacFactory javacFactory;
 
   public JavaConfiguredCompilerFactory(JavaBuckConfig javaBuckConfig, JavacFactory javacFactory) {
-    this(javaBuckConfig, (toolchainProvider) -> ExtraClasspathProvider.EMPTY, javacFactory);
+    this(
+        javaBuckConfig,
+        (toolchainProvider, toolchainTargetConfiguration) -> ExtraClasspathProvider.EMPTY,
+        javacFactory);
   }
 
   public JavaConfiguredCompilerFactory(
       JavaBuckConfig javaBuckConfig,
-      Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier,
+      BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
+          extraClasspathProviderSupplier,
       JavacFactory javacFactory) {
     this.javaBuckConfig = javaBuckConfig;
     this.extraClasspathProviderSupplier = extraClasspathProviderSupplier;
@@ -86,18 +91,22 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       ToolchainProvider toolchainProvider) {
 
     return new JavacToJarStepFactory(
-        getJavac(buildRuleResolver, arg),
+        getJavac(buildRuleResolver, arg, targetConfiguration),
         javacOptions,
-        extraClasspathProviderSupplier.apply(toolchainProvider));
+        extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration));
   }
 
   @Override
   public Optional<ExtraClasspathProvider> getExtraClasspathProvider(
-      ToolchainProvider toolchainProvider) {
-    return Optional.of(extraClasspathProviderSupplier.apply(toolchainProvider));
+      ToolchainProvider toolchainProvider, TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        extraClasspathProviderSupplier.apply(toolchainProvider, toolchainTargetConfiguration));
   }
 
-  private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
-    return javacFactory.create(resolver, arg);
+  private Javac getJavac(
+      BuildRuleResolver resolver,
+      @Nullable JvmLibraryArg arg,
+      TargetConfiguration toolchainTargetConfiguration) {
+    return javacFactory.create(resolver, arg, toolchainTargetConfiguration);
   }
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -77,7 +78,10 @@ public class LuaBinaryDescriptionTest {
       new TestPythonPlatform(
           InternalFlavor.of("py2"),
           new PythonEnvironment(
-              Paths.get("python2"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
+              Paths.get("python2"),
+              PythonVersion.of("CPython", "2.6"),
+              PythonBuckConfig.SECTION,
+              UnconfiguredTargetConfiguration.INSTANCE),
           Optional.of(PYTHON2_DEP_TARGET));
 
   private static final BuildTarget PYTHON3_DEP_TARGET =
@@ -86,7 +90,10 @@ public class LuaBinaryDescriptionTest {
       new TestPythonPlatform(
           InternalFlavor.of("py3"),
           new PythonEnvironment(
-              Paths.get("python3"), PythonVersion.of("CPython", "3.5"), PythonBuckConfig.SECTION),
+              Paths.get("python3"),
+              PythonVersion.of("CPython", "3.5"),
+              PythonBuckConfig.SECTION,
+              UnconfiguredTargetConfiguration.INSTANCE),
           Optional.of(PYTHON3_DEP_TARGET));
 
   @Rule public ExpectedException expectedException = ExpectedException.none();

@@ -197,8 +197,11 @@ public class NdkLibraryDescription
 
     NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
         toolchainProvider.getByName(
-            NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
-    AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+            NdkCxxPlatformsProvider.DEFAULT_NAME,
+            targetConfiguration,
+            NdkCxxPlatformsProvider.class);
+    AndroidNdk androidNdk =
+        toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, targetConfiguration, AndroidNdk.class);
 
     for (Map.Entry<TargetCpuType, UnresolvedNdkCxxPlatform> entry :
         ndkCxxPlatformsProvider.getNdkCxxPlatforms().entrySet()) {
@@ -434,11 +437,14 @@ public class NdkLibraryDescription
             .map(macrosConverter::convert)
             .collect(ImmutableList.toImmutableList());
 
-    AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+    AndroidNdk androidNdk =
+        toolchainProvider.getByName(
+            AndroidNdk.DEFAULT_NAME, buildTarget.getTargetConfiguration(), AndroidNdk.class);
     return new NdkLibrary(
         buildTarget,
         projectFilesystem,
-        toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
+        toolchainProvider.getByName(
+            AndroidNdk.DEFAULT_NAME, buildTarget.getTargetConfiguration(), AndroidNdk.class),
         params.copyAppendingExtraDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder().addAll(makefilePair.getSecond()).build()),
         getGeneratedMakefilePath(buildTarget, projectFilesystem),
@@ -457,7 +463,10 @@ public class NdkLibraryDescription
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     toolchainProvider
-        .getByNameIfPresent(NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class)
+        .getByNameIfPresent(
+            NdkCxxPlatformsProvider.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            NdkCxxPlatformsProvider.class)
         .ifPresent(
             ndkCxxPlatformsProvider ->
                 ndkCxxPlatformsProvider

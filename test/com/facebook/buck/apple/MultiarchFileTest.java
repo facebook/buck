@@ -35,6 +35,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -123,7 +124,8 @@ public class MultiarchFileTest {
         ((Flavored) descriptionFactory.get())
             .hasFlavors(
                 ImmutableSet.of(
-                    InternalFlavor.of("iphoneos-i386"), InternalFlavor.of("iphoneos-x86_64"))));
+                    InternalFlavor.of("iphoneos-i386"), InternalFlavor.of("iphoneos-x86_64")),
+                UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @SuppressWarnings({"unchecked"})

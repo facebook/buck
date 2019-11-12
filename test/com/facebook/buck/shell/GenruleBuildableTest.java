@@ -28,6 +28,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -209,7 +210,10 @@ public class GenruleBuildableTest {
 
     GenruleAndroidTools androidTools =
         GenruleAndroidTools.of(
-            AndroidTools.getAndroidTools(toolchainProvider), target, graphBuilder);
+            AndroidTools.getAndroidTools(
+                toolchainProvider, UnconfiguredTargetConfiguration.INSTANCE),
+            target,
+            graphBuilder);
     GenruleBuildable buildable =
         GenruleBuildableBuilder.builder()
             .setBuildTarget(target)

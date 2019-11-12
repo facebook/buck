@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -66,7 +67,9 @@ public class PrebuiltGoLibraryDescription
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
     Optional<GoPlatform> platform =
-        getGoToolchain().getPlatformFlavorDomain().getValue(buildTarget);
+        getGoToolchain(buildTarget.getTargetConfiguration())
+            .getPlatformFlavorDomain()
+            .getValue(buildTarget);
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)) {
       Preconditions.checkState(platform.isPresent());
@@ -98,8 +101,9 @@ public class PrebuiltGoLibraryDescription
     }
   }
 
-  private GoToolchain getGoToolchain() {
-    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
+  private GoToolchain getGoToolchain(TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider.getByName(
+        GoToolchain.DEFAULT_NAME, toolchainTargetConfiguration, GoToolchain.class);
   }
 
   @Override

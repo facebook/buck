@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -94,8 +95,11 @@ public class GoTestDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return getGoToolchain().getPlatformFlavorDomain().containsAnyOf(flavors)
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return getGoToolchain(toolchainTargetConfiguration)
+            .getPlatformFlavorDomain()
+            .containsAnyOf(flavors)
         || flavors.contains(TEST_LIBRARY_FLAVOR);
   }
 
@@ -108,7 +112,9 @@ public class GoTestDescription
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
     Optional<GoPlatform> platform =
-        getGoToolchain().getPlatformFlavorDomain().getValue(buildTarget);
+        getGoToolchain(buildTarget.getTargetConfiguration())
+            .getPlatformFlavorDomain()
+            .getValue(buildTarget);
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)
         && buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
@@ -198,7 +204,11 @@ public class GoTestDescription
       BuildRuleParams params,
       GoTestDescriptionArg args) {
     GoPlatform platform =
-        GoDescriptors.getPlatformForRule(getGoToolchain(), this.goBuckConfig, buildTarget, args);
+        GoDescriptors.getPlatformForRule(
+            getGoToolchain(buildTarget.getTargetConfiguration()),
+            this.goBuckConfig,
+            buildTarget,
+            args);
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
@@ -545,14 +555,18 @@ public class GoTestDescription
     // Add the C/C++ platform parse time deps.
     GoPlatform platform =
         GoDescriptors.getPlatformForRule(
-            getGoToolchain(), this.goBuckConfig, buildTarget, constructorArg);
+            getGoToolchain(buildTarget.getTargetConfiguration()),
+            this.goBuckConfig,
+            buildTarget,
+            constructorArg);
     targetGraphOnlyDepsBuilder.addAll(
         CxxPlatforms.getParseTimeDeps(
             buildTarget.getTargetConfiguration(), platform.getCxxPlatform()));
   }
 
-  private GoToolchain getGoToolchain() {
-    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
+  private GoToolchain getGoToolchain(TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider.getByName(
+        GoToolchain.DEFAULT_NAME, toolchainTargetConfiguration, GoToolchain.class);
   }
 
   @BuckStyleImmutable

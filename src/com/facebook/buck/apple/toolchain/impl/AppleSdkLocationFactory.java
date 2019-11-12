@@ -22,6 +22,7 @@ import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -35,21 +36,28 @@ public class AppleSdkLocationFactory implements ToolchainFactory<AppleSdkLocatio
 
   @Override
   public Optional<AppleSdkLocation> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
-    if (!toolchainProvider.isToolchainPresent(AbstractAppleToolchainProvider.DEFAULT_NAME)) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
+    if (!toolchainProvider.isToolchainPresent(
+        AbstractAppleToolchainProvider.DEFAULT_NAME, toolchainTargetConfiguration)) {
       return Optional.empty();
     }
 
     Optional<Path> appleDeveloperDir =
         toolchainProvider
             .getByNameIfPresent(
-                AppleDeveloperDirectoryProvider.DEFAULT_NAME, AppleDeveloperDirectoryProvider.class)
+                AppleDeveloperDirectoryProvider.DEFAULT_NAME,
+                toolchainTargetConfiguration,
+                AppleDeveloperDirectoryProvider.class)
             .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
 
     AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
     AbstractAppleToolchainProvider appleToolchainProvider =
         toolchainProvider.getByName(
-            AbstractAppleToolchainProvider.DEFAULT_NAME, AbstractAppleToolchainProvider.class);
+            AbstractAppleToolchainProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            AbstractAppleToolchainProvider.class);
     try {
       ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths =
           AppleSdkDiscovery.discoverAppleSdkPaths(

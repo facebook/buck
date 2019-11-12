@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -142,13 +143,15 @@ public class CxxLibraryDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return cxxLibraryFlavored.flavorDomains();
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return cxxLibraryFlavored.flavorDomains(toolchainTargetConfiguration);
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return cxxLibraryFlavored.hasFlavors(flavors);
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return cxxLibraryFlavored.hasFlavors(flavors, toolchainTargetConfiguration);
   }
 
   /**
@@ -288,9 +291,10 @@ public class CxxLibraryDescription
 
   @Override
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
-      ImmutableSortedSet<Flavor> argDefaultFlavors) {
+      ImmutableSortedSet<Flavor> argDefaultFlavors,
+      TargetConfiguration toolchainTargetConfiguration) {
     return cxxLibraryImplicitFlavors.addImplicitFlavorsForRuleTypes(
-        argDefaultFlavors, DescriptionCache.getRuleType(this));
+        argDefaultFlavors, toolchainTargetConfiguration, DescriptionCache.getRuleType(this));
   }
 
   @Override

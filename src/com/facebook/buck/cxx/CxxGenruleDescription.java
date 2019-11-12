@@ -185,8 +185,9 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return getCxxPlatforms().containsAnyOf(flavors)
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return getCxxPlatforms(toolchainTargetConfiguration).containsAnyOf(flavors)
         || !Sets.intersection(declaredPlatforms, flavors).isEmpty();
   }
 
@@ -198,7 +199,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       TargetGraph targetGraph,
       CxxGenruleDescriptionArg args) {
 
-    Optional<UnresolvedCxxPlatform> maybeCxxPlatform = getCxxPlatforms().getValue(buildTarget);
+    Optional<UnresolvedCxxPlatform> maybeCxxPlatform =
+        getCxxPlatforms(buildTarget.getTargetConfiguration()).getValue(buildTarget);
     if (!maybeCxxPlatform.isPresent()) {
       return Optional.empty();
     }
@@ -265,7 +267,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       BuildTarget buildTarget,
       BuildRuleParams params,
       CxxGenruleDescriptionArg args) {
-    Optional<UnresolvedCxxPlatform> cxxPlatform = getCxxPlatforms().getValue(buildTarget);
+    Optional<UnresolvedCxxPlatform> cxxPlatform =
+        getCxxPlatforms(buildTarget.getTargetConfiguration()).getValue(buildTarget);
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
           context, buildTarget.withAppendedFlavors(cxxPlatform.get().getFlavor()), params, args);
@@ -296,7 +299,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add in all parse time deps from the C/C++ platforms.
-    for (UnresolvedCxxPlatform cxxPlatform : getCxxPlatforms().getValues()) {
+    for (UnresolvedCxxPlatform cxxPlatform :
+        getCxxPlatforms(buildTarget.getTargetConfiguration()).getValues()) {
       targetGraphOnlyDepsBuilder.addAll(
           cxxPlatform.getParseTimeDeps(buildTarget.getTargetConfiguration()));
     }
@@ -307,9 +311,13 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     return true;
   }
 
-  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms() {
+  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider
-        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class)
         .getUnresolvedCxxPlatforms();
   }
 

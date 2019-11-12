@@ -74,7 +74,10 @@ public class GroovyLibraryDescription
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,

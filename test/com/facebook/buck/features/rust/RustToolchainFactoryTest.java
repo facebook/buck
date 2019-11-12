@@ -67,11 +67,11 @@ public class RustToolchainFactoryTest {
             filesystem,
             new FakeProcessExecutor(),
             new AlwaysFoundExecutableFinder(),
-            TestRuleKeyConfigurationFactory.create(),
-            () -> UnconfiguredTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
     RustToolchainFactory factory = new RustToolchainFactory();
     Optional<RustToolchain> toolchain =
-        factory.createToolchain(toolchainProvider, toolchainCreationContext);
+        factory.createToolchain(
+            toolchainProvider, toolchainCreationContext, UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         toolchain
             .get()
@@ -130,12 +130,12 @@ public class RustToolchainFactoryTest {
             filesystem,
             processExecutor,
             executableFinder,
-            TestRuleKeyConfigurationFactory.create(),
-            () -> UnconfiguredTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     RustToolchainFactory factory = new RustToolchainFactory();
     Optional<RustToolchain> toolchain =
-        factory.createToolchain(toolchainProvider, toolchainCreationContext);
+        factory.createToolchain(
+            toolchainProvider, toolchainCreationContext, UnconfiguredTargetConfiguration.INSTANCE);
     RustPlatform platform =
         toolchain
             .get()

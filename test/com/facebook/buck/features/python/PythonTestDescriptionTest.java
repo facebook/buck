@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -218,7 +219,8 @@ public class PythonTestDescriptionTest {
             new PythonEnvironment(
                 Paths.get("python2.6"),
                 PythonVersion.of("CPython", "2.6"),
-                PythonBuckConfig.SECTION),
+                PythonBuckConfig.SECTION,
+                UnconfiguredTargetConfiguration.INSTANCE),
             Optional.empty());
     PythonPlatform platform2 =
         new TestPythonPlatform(
@@ -226,7 +228,8 @@ public class PythonTestDescriptionTest {
             new PythonEnvironment(
                 Paths.get("python2.7"),
                 PythonVersion.of("CPython", "2.7"),
-                PythonBuckConfig.SECTION),
+                PythonBuckConfig.SECTION,
+                UnconfiguredTargetConfiguration.INSTANCE),
             Optional.empty());
     PythonTestBuilder builder =
         PythonTestBuilder.create(

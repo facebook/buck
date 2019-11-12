@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -87,7 +88,7 @@ public class RustBinaryDescription
     RustBinaryDescription.Type type =
         BINARY_TYPE.getFlavorAndValue(buildTarget).map(Entry::getValue).orElse(Type.STATIC);
 
-    RustToolchain rustToolchain = getRustToolchain();
+    RustToolchain rustToolchain = getRustToolchain(buildTarget.getTargetConfiguration());
     RustPlatform rustPlatform =
         RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
             .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
@@ -132,7 +133,8 @@ public class RustBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget, constructorArg));
+        RustCompileUtils.getPlatformParseTimeDeps(
+            getRustToolchain(buildTarget.getTargetConfiguration()), buildTarget, constructorArg));
   }
 
   protected enum Type implements FlavorConvertible {
@@ -180,12 +182,16 @@ public class RustBinaryDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getRustToolchain().getRustPlatforms(), BINARY_TYPE));
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        ImmutableSet.of(
+            getRustToolchain(toolchainTargetConfiguration).getRustPlatforms(), BINARY_TYPE));
   }
 
-  private RustToolchain getRustToolchain() {
-    return toolchainProvider.getByName(RustToolchain.DEFAULT_NAME, RustToolchain.class);
+  private RustToolchain getRustToolchain(TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider.getByName(
+        RustToolchain.DEFAULT_NAME, toolchainTargetConfiguration, RustToolchain.class);
   }
 
   @BuckStyleImmutable

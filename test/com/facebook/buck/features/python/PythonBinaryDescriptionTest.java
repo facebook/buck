@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -100,7 +101,10 @@ public class PythonBinaryDescriptionTest {
       new TestPythonPlatform(
           InternalFlavor.of("py2"),
           new PythonEnvironment(
-              Paths.get("python2"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
+              Paths.get("python2"),
+              PythonVersion.of("CPython", "2.6"),
+              PythonBuckConfig.SECTION,
+              UnconfiguredTargetConfiguration.INSTANCE),
           Optional.of(PYTHON2_DEP_TARGET));
 
   @Test
@@ -244,7 +248,8 @@ public class PythonBinaryDescriptionTest {
             new PythonEnvironment(
                 Paths.get("python2.6"),
                 PythonVersion.of("CPython", "2.6.9"),
-                PythonBuckConfig.SECTION),
+                PythonBuckConfig.SECTION,
+                UnconfiguredTargetConfiguration.INSTANCE),
             Optional.empty());
     PythonPlatform platform2 =
         new TestPythonPlatform(
@@ -252,7 +257,8 @@ public class PythonBinaryDescriptionTest {
             new PythonEnvironment(
                 Paths.get("python2.7"),
                 PythonVersion.of("CPython", "2.7.11"),
-                PythonBuckConfig.SECTION),
+                PythonBuckConfig.SECTION,
+                UnconfiguredTargetConfiguration.INSTANCE),
             Optional.empty());
     PythonBinaryBuilder builder =
         PythonBinaryBuilder.create(

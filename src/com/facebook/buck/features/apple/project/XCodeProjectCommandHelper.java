@@ -474,7 +474,10 @@ public class XCodeProjectCommandHelper {
 
       CxxPlatformsProvider cxxPlatformsProvider =
           cell.getToolchainProvider()
-              .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+              .getByName(
+                  CxxPlatformsProvider.DEFAULT_NAME,
+                  inputTarget.getTargetConfiguration(),
+                  CxxPlatformsProvider.class);
 
       CxxPlatform defaultCxxPlatform =
           LegacyToolchainProvider.getLegacyTotallyUnsafe(

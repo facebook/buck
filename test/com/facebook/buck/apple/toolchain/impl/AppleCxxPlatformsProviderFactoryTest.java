@@ -85,12 +85,14 @@ public class AppleCxxPlatformsProviderFactoryTest {
             projectFilesystem,
             processExecutor,
             new ExecutableFinder(),
-            TestRuleKeyConfigurationFactory.create(),
-            () -> UnconfiguredTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     Optional<Path> appleDeveloperDir =
         new AppleDeveloperDirectoryProviderFactory()
-            .createToolchain(toolchainProviderBuilder.build(), toolchainCreationContext)
+            .createToolchain(
+                toolchainProviderBuilder.build(),
+                toolchainCreationContext,
+                UnconfiguredTargetConfiguration.INSTANCE)
             .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
 
     ImmutableMap<String, AppleToolchain> appleToolchains =
@@ -120,7 +122,8 @@ public class AppleCxxPlatformsProviderFactoryTest {
             "There are two conflicting SDKs providing the same platform \"macosx-i386\":\n"));
 
     new AppleCxxPlatformsProviderFactory()
-        .createToolchain(toolchainProvider, toolchainCreationContext);
+        .createToolchain(
+            toolchainProvider, toolchainCreationContext, UnconfiguredTargetConfiguration.INSTANCE);
 
     fail("AppleCxxPlatformsProviderFactory.createToolchain should fail");
   }

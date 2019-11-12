@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -37,7 +38,9 @@ public class PythonEnvironmentTest {
     PythonVersion pythonVersion = PythonVersion.of("python", "pypypy-3");
     Path pythonPath = Paths.get("pypypy");
     Path otherPythonPath = Paths.get("pppyyy");
-    PythonEnvironment environment = new PythonEnvironment(pythonPath, pythonVersion, configSection);
+    PythonEnvironment environment =
+        new PythonEnvironment(
+            pythonPath, pythonVersion, configSection, UnconfiguredTargetConfiguration.INSTANCE);
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     Path root = Paths.get("root");

@@ -24,6 +24,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -66,7 +67,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.logging.Level;
 import org.immutables.value.Value;
 
@@ -80,7 +81,7 @@ public class JavaTestDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  private final Supplier<JavaOptions> javaOptionsForTests;
+  private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
   private final JavacFactory javacFactory;
 
   public JavaTestDescription(ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
@@ -95,16 +96,23 @@ public class JavaTestDescription
     return JavaTestDescriptionArg.class;
   }
 
-  private UnresolvedCxxPlatform getUnresolvedCxxPlatform(AbstractJavaTestDescriptionArg args) {
+  private UnresolvedCxxPlatform getUnresolvedCxxPlatform(
+      AbstractJavaTestDescriptionArg args, TargetConfiguration toolchainTargetConfiguration) {
     return args.getDefaultCxxPlatform()
         .map(
             toolchainProvider
-                    .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+                    .getByName(
+                        CxxPlatformsProvider.DEFAULT_NAME,
+                        toolchainTargetConfiguration,
+                        CxxPlatformsProvider.class)
                     .getUnresolvedCxxPlatforms()
                 ::getValue)
         .orElse(
             toolchainProvider
-                .getByName(JavaCxxPlatformProvider.DEFAULT_NAME, JavaCxxPlatformProvider.class)
+                .getByName(
+                    JavaCxxPlatformProvider.DEFAULT_NAME,
+                    toolchainTargetConfiguration,
+                    JavaCxxPlatformProvider.class)
                 .getDefaultJavaCxxPlatform());
   }
 
@@ -120,7 +128,10 @@ public class JavaTestDescription
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
@@ -134,7 +145,7 @@ public class JavaTestDescription
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
             graphBuilder,
-            getUnresolvedCxxPlatform(args)
+            getUnresolvedCxxPlatform(args, buildTarget.getTargetConfiguration())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()));
     params = cxxLibraryEnhancement.updatedParams;
 
@@ -198,7 +209,7 @@ public class JavaTestDescription
               projectFilesystem,
               params.copyAppendingExtraDeps(transitiveClasspathDeps),
               javaOptionsForTests
-                  .get()
+                  .apply(buildTarget.getTargetConfiguration())
                   .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
               testRunner.getMainClass(),
               args.getManifestFile().orElse(null),
@@ -238,7 +249,7 @@ public class JavaTestDescription
         args.getTestType().orElse(TestType.JUNIT),
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
         javaOptionsForTests
-            .get()
+            .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
@@ -267,12 +278,13 @@ public class JavaTestDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.getUseCxxLibraries().orElse(false)) {
       targetGraphOnlyDepsBuilder.addAll(
-          getUnresolvedCxxPlatform(constructorArg)
+          getUnresolvedCxxPlatform(constructorArg, buildTarget.getTargetConfiguration())
               .getParseTimeDeps(buildTarget.getTargetConfiguration()));
     }
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
     javaOptionsForTests
-        .get()
+        .apply(buildTarget.getTargetConfiguration())
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 

@@ -152,7 +152,8 @@ public class AndroidInstrumentationApkDescription
 
     ListeningExecutorService dxExecutorService =
         toolchainProvider
-            .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
+            .getByName(
+                DxToolchain.DEFAULT_NAME, buildTarget.getTargetConfiguration(), DxToolchain.class)
             .getDxExecutorService();
 
     boolean shouldProguard =
@@ -182,7 +183,9 @@ public class AndroidInstrumentationApkDescription
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+            AndroidPlatformTarget.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidPlatformTarget.class);
 
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
@@ -224,7 +227,10 @@ public class AndroidInstrumentationApkDescription
             javaBuckConfig,
             javacFactory,
             toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             EnumSet.noneOf(ExopackageMode.class),
             /* buildConfigValues */ BuildConfigFields.of(),
@@ -259,7 +265,10 @@ public class AndroidInstrumentationApkDescription
     return new AndroidInstrumentationApk(
         buildTarget,
         context.getProjectFilesystem(),
-        toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
+        toolchainProvider.getByName(
+            AndroidSdkLocation.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidSdkLocation.class),
         androidPlatformTarget,
         params,
         graphBuilder,
@@ -289,7 +298,8 @@ public class AndroidInstrumentationApkDescription
       AndroidInstrumentationApkDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
     AndroidTools.addParseTimeDepsToAndroidTools(
         toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }

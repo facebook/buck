@@ -16,11 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-
 public class JavacFactoryHelper {
   public static JavacFactory createJavacFactory(JavaBuckConfig config) {
     return new JavacFactory(
-        () -> config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacProvider());
+        targetConfiguration -> config.getJavacSpec(targetConfiguration).getJavacProvider());
   }
 }

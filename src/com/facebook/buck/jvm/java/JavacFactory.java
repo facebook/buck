@@ -17,42 +17,48 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
-import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.MoreFunctions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public final class JavacFactory {
-  private final Supplier<JavacProvider> javacProvider;
+  private final Function<TargetConfiguration, JavacProvider> javacProvider;
 
-  public JavacFactory(Supplier<JavacProvider> javacProvider) {
+  public JavacFactory(Function<TargetConfiguration, JavacProvider> javacProvider) {
     this.javacProvider = javacProvider;
   }
 
   /** Returns either the defautl javac or one created from the provided args. */
-  public Javac create(SourcePathRuleFinder ruleFinder, @Nullable JvmLibraryArg args) {
+  public Javac create(
+      SourcePathRuleFinder ruleFinder,
+      @Nullable JvmLibraryArg args,
+      TargetConfiguration toolchainTargetConfiguration) {
     if (args != null) {
       JavacSpec spec = args.getJavacSpec(ruleFinder);
       if (spec != null) {
         return spec.getJavacProvider().resolve(ruleFinder);
       }
     }
-    return javacProvider.get().resolve(ruleFinder);
+    return javacProvider.apply(toolchainTargetConfiguration).resolve(ruleFinder);
   }
 
   /** Creates a JavacFactory for the default Java toolchain. */
   public static JavacFactory getDefault(ToolchainProvider toolchainProvider) {
     return new JavacFactory(
-        MoreSuppliers.memoize(
-            () ->
-                toolchainProvider
-                    .getByName(JavaToolchain.DEFAULT_NAME, JavaToolchain.class)
-                    .getJavacProvider()));
+        MoreFunctions.memoize(
+            toolchainTargetConfiguration -> {
+              return toolchainProvider
+                  .getByName(
+                      JavaToolchain.DEFAULT_NAME, toolchainTargetConfiguration, JavaToolchain.class)
+                  .getJavacProvider();
+            }));
   }
 
   /**
@@ -61,13 +67,17 @@ public final class JavacFactory {
    */
   public void addParseTimeDeps(
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder,
-      @Nullable JvmLibraryArg args) {
+      @Nullable JvmLibraryArg args,
+      TargetConfiguration toolchainTargetConfiguration) {
     if (args == null || !args.hasJavacSpec()) {
-      javacProvider.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+      javacProvider
+          .apply(toolchainTargetConfiguration)
+          .addParseTimeDeps(targetGraphOnlyDepsBuilder);
     }
   }
 
-  public ImmutableSet<BuildRule> getBuildDeps(SourcePathRuleFinder ruleFinder) {
-    return javacProvider.get().getBuildDeps(ruleFinder);
+  public ImmutableSet<BuildRule> getBuildDeps(
+      SourcePathRuleFinder ruleFinder, TargetConfiguration toolchainTargetConfiguration) {
+    return javacProvider.apply(toolchainTargetConfiguration).getBuildDeps(ruleFinder);
   }
 }

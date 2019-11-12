@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -132,22 +133,24 @@ public class SwiftLibraryDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(
         ImmutableSet.of(
             // Missing: swift-companion
             // Missing: swift-compile
-            getCxxPlatforms()));
+            getCxxPlatforms(toolchainTargetConfiguration)));
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     ImmutableSet<Flavor> currentUnsupportedFlavors =
         ImmutableSet.copyOf(Sets.filter(flavors, Predicates.not(SUPPORTED_FLAVORS::contains)));
     if (currentUnsupportedFlavors.isEmpty()) {
       return true;
     }
-    return getCxxPlatforms().containsAnyOf(flavors);
+    return getCxxPlatforms(toolchainTargetConfiguration).containsAnyOf(flavors);
   }
 
   @Override
@@ -166,7 +169,7 @@ public class SwiftLibraryDescription
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, UnresolvedCxxPlatform>> platform =
-        getCxxPlatforms().getFlavorAndValue(buildTarget);
+        getCxxPlatforms(buildTarget.getTargetConfiguration()).getFlavorAndValue(buildTarget);
     ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
     ImmutableSortedSet<BuildRule> filteredExtraDeps =
         params.getExtraDeps().get().stream()
@@ -181,7 +184,9 @@ public class SwiftLibraryDescription
 
     SwiftPlatformsProvider swiftPlatformsProvider =
         toolchainProvider.getByName(
-            SwiftPlatformsProvider.DEFAULT_NAME, SwiftPlatformsProvider.class);
+            SwiftPlatformsProvider.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            SwiftPlatformsProvider.class);
 
     FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain =
         swiftPlatformsProvider.getSwiftCxxPlatforms();
@@ -489,9 +494,13 @@ public class SwiftLibraryDescription
         || buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);
   }
 
-  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms() {
+  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider
-        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class)
         .getUnresolvedCxxPlatforms();
   }
 

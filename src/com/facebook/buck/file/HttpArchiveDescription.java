@@ -74,7 +74,10 @@ public class HttpArchiveDescription
     // Setup the implicit download rule
     BuildTarget httpFileTarget = buildTarget.withAppendedFlavors(ARCHIVE_DOWNLOAD);
     Downloader downloader =
-        context.getToolchainProvider().getByName(Downloader.DEFAULT_NAME, Downloader.class);
+        context
+            .getToolchainProvider()
+            .getByName(
+                Downloader.DEFAULT_NAME, buildTarget.getTargetConfiguration(), Downloader.class);
 
     HttpFile httpFile =
         new HttpFile(

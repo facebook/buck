@@ -172,7 +172,7 @@ public class RustLibraryDescription
 
     String crate = args.getCrate().orElse(ruleToCrateName(buildTarget.getShortName()));
 
-    RustToolchain rustToolchain = getRustToolchain();
+    RustToolchain rustToolchain = getRustToolchain(buildTarget.getTargetConfiguration());
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -384,7 +384,7 @@ public class RustLibraryDescription
         ImmutableList.Builder<NativeLinkableGroup> nativedeps = ImmutableList.builder();
 
         RustPlatform rustPlatform =
-            getRustToolchain()
+            getRustToolchain(buildTarget.getTargetConfiguration())
                 .getRustPlatforms()
                 .getValue(cxxPlatform.getFlavor())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration());
@@ -430,7 +430,7 @@ public class RustLibraryDescription
         }
 
         RustPlatform rustPlatform =
-            getRustToolchain()
+            getRustToolchain(targetConfiguration)
                 .getRustPlatforms()
                 .getValue(cxxPlatform.getFlavor())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration());
@@ -474,7 +474,7 @@ public class RustLibraryDescription
         String sharedLibrarySoname =
             CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform);
         RustPlatform rustPlatform =
-            getRustToolchain()
+            getRustToolchain(buildTarget.getTargetConfiguration())
                 .getRustPlatforms()
                 .getValue(cxxPlatform.getFlavor())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration());
@@ -516,7 +516,7 @@ public class RustLibraryDescription
     // Add parse-time deps for *all* platforms, as we don't know which platform will be
     // selected by a top-level binary rule (e.g. a Python binary transitively depending on
     // this library may choose platform "foo").
-    getRustToolchain().getRustPlatforms().getValues().stream()
+    getRustToolchain(buildTarget.getTargetConfiguration()).getRustPlatforms().getValues().stream()
         .flatMap(
             p ->
                 RichStream.from(
@@ -526,12 +526,16 @@ public class RustLibraryDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getRustToolchain().getRustPlatforms(), LIBRARY_TYPE));
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        ImmutableSet.of(
+            getRustToolchain(toolchainTargetConfiguration).getRustPlatforms(), LIBRARY_TYPE));
   }
 
-  private RustToolchain getRustToolchain() {
-    return toolchainProvider.getByName(RustToolchain.DEFAULT_NAME, RustToolchain.class);
+  private RustToolchain getRustToolchain(TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider.getByName(
+        RustToolchain.DEFAULT_NAME, toolchainTargetConfiguration, RustToolchain.class);
   }
 
   @BuckStyleImmutable

@@ -87,7 +87,10 @@ public class CxxPythonExtensionDescriptionTest {
     return new TestPythonPlatform(
         InternalFlavor.of("py-default"),
         new PythonEnvironment(
-            Paths.get("python2"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
+            Paths.get("python2"),
+            PythonVersion.of("CPython", "2.6"),
+            PythonBuckConfig.SECTION,
+            UnconfiguredTargetConfiguration.INSTANCE),
         Optional.empty());
   }
 
@@ -95,7 +98,10 @@ public class CxxPythonExtensionDescriptionTest {
     return new TestPythonPlatform(
         InternalFlavor.of("py2"),
         new PythonEnvironment(
-            Paths.get("python2"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
+            Paths.get("python2"),
+            PythonVersion.of("CPython", "2.6"),
+            PythonBuckConfig.SECTION,
+            UnconfiguredTargetConfiguration.INSTANCE),
         cxxLibrary);
   }
 
@@ -103,7 +109,10 @@ public class CxxPythonExtensionDescriptionTest {
     return new TestPythonPlatform(
         InternalFlavor.of("py3"),
         new PythonEnvironment(
-            Paths.get("python3"), PythonVersion.of("CPython", "3.5"), PythonBuckConfig.SECTION),
+            Paths.get("python3"),
+            PythonVersion.of("CPython", "3.5"),
+            PythonBuckConfig.SECTION,
+            UnconfiguredTargetConfiguration.INSTANCE),
         cxxLibrary);
   }
 

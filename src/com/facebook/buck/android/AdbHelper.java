@@ -32,6 +32,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.event.BuckEventBus;
@@ -521,13 +522,20 @@ public class AdbHelper implements AndroidDevicesHelper {
     if (devicesSupplierForTests.isPresent()) {
       return devicesSupplierForTests.get().get();
     }
+
+    // TODO(nga): use something else
+    UnconfiguredTargetConfiguration toolchainTargetConfiguration =
+        UnconfiguredTargetConfiguration.INSTANCE;
+
     // Initialize adb connection.
     AndroidDebugBridge adb;
     try {
       adb =
           createAdb(
               toolchainProvider.getByName(
-                  AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+                  AndroidPlatformTarget.DEFAULT_NAME,
+                  toolchainTargetConfiguration,
+                  AndroidPlatformTarget.class),
               contextSupplier.get(),
               options.getAdbTimeout());
     } catch (InterruptedException e) {
@@ -542,7 +550,9 @@ public class AdbHelper implements AndroidDevicesHelper {
         adb =
             createAdb(
                 toolchainProvider.getByName(
-                    AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+                    AndroidPlatformTarget.DEFAULT_NAME,
+                    toolchainTargetConfiguration,
+                    AndroidPlatformTarget.class),
                 contextSupplier.get(),
                 options.getAdbTimeout());
       } catch (InterruptedException e) {
@@ -579,7 +589,9 @@ public class AdbHelper implements AndroidDevicesHelper {
         adb =
             createAdb(
                 toolchainProvider.getByName(
-                    AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+                    AndroidPlatformTarget.DEFAULT_NAME,
+                    toolchainTargetConfiguration,
+                    AndroidPlatformTarget.class),
                 contextSupplier.get(),
                 options.getAdbTimeout());
         if (adb == null) {

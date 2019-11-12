@@ -101,7 +101,8 @@ public class CxxLibraryFactory {
           transitiveCxxPreprocessorInputFunction,
       CxxLibraryDescriptionDelegate delegate) {
 
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
     FlavorDomain<CxxPlatform> cxxPlatforms =
         cxxPlatformsProvider.getResolvedCxxPlatforms(
             graphBuilder, buildTarget.getTargetConfiguration());
@@ -370,7 +371,8 @@ public class CxxLibraryFactory {
     // Since we don't have context on the top-level rules using this C/C++ library (e.g. it may be
     // a `python_binary`), we eagerly add the deps for all possible platforms to guarantee that the
     // correct ones are included.
-    return getCxxPlatformsProvider().getUnresolvedCxxPlatforms().getValues().stream()
+    return getCxxPlatformsProvider(targetConfiguration).getUnresolvedCxxPlatforms().getValues()
+        .stream()
         .flatMap(p -> RichStream.from(p.getParseTimeDeps(targetConfiguration)))
         .collect(ImmutableList.toImmutableList());
   }
@@ -943,8 +945,11 @@ public class CxxLibraryFactory {
             baseTarget, projectFilesystem, graphBuilder, cxxPlatform, params.get());
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 }

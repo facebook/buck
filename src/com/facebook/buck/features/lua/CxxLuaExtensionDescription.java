@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -271,7 +272,8 @@ public class CxxLuaExtensionDescription
       BuildRuleParams params,
       CxxLuaExtensionDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    FlavorDomain<LuaPlatform> luaPlatforms = getLuaPlatformsProvider().getLuaPlatforms();
+    FlavorDomain<LuaPlatform> luaPlatforms =
+        getLuaPlatformsProvider(buildTarget.getTargetConfiguration()).getLuaPlatforms();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
     args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
@@ -347,7 +349,10 @@ public class CxxLuaExtensionDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
-    for (LuaPlatform luaPlatform : getLuaPlatformsProvider().getLuaPlatforms().getValues()) {
+    for (LuaPlatform luaPlatform :
+        getLuaPlatformsProvider(buildTarget.getTargetConfiguration())
+            .getLuaPlatforms()
+            .getValues()) {
 
       // Add deps from lua C/C++ library.
       Optionals.addIfPresent(luaPlatform.getLuaCxxLibraryTarget(), extraDepsBuilder);
@@ -360,13 +365,18 @@ public class CxxLuaExtensionDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getLuaPlatformsProvider().getLuaPlatforms()));
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        ImmutableSet.of(getLuaPlatformsProvider(toolchainTargetConfiguration).getLuaPlatforms()));
   }
 
-  private LuaPlatformsProvider getLuaPlatformsProvider() {
+  private LuaPlatformsProvider getLuaPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        LuaPlatformsProvider.DEFAULT_NAME, LuaPlatformsProvider.class);
+        LuaPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        LuaPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

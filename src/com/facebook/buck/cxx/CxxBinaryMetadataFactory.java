@@ -43,7 +43,10 @@ public class CxxBinaryMetadataFactory {
     return CxxDescriptionEnhancer.createCompilationDatabaseDependencies(
             buildTarget,
             toolchainProvider
-                .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+                .getByName(
+                    CxxPlatformsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    CxxPlatformsProvider.class)
                 .getUnresolvedCxxPlatforms(),
             graphBuilder,
             deps)

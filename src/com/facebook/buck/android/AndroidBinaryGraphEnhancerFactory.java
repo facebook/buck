@@ -78,11 +78,14 @@ public class AndroidBinaryGraphEnhancerFactory {
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+            AndroidPlatformTarget.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidPlatformTarget.class);
 
     ListeningExecutorService dxExecutorService =
         toolchainProvider
-            .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
+            .getByName(
+                DxToolchain.DEFAULT_NAME, buildTarget.getTargetConfiguration(), DxToolchain.class)
             .getDxExecutorService();
 
     ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
@@ -182,7 +185,10 @@ public class AndroidBinaryGraphEnhancerFactory {
         javaBuckConfig,
         javacFactory,
         toolchainProvider
-            .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+            .getByName(
+                JavacOptionsProvider.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                JavacOptionsProvider.class)
             .getJavacOptions(),
         exopackageModes,
         args.getBuildConfigValues(),

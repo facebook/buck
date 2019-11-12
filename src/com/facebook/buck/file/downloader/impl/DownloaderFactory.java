@@ -16,6 +16,7 @@
 
 package com.facebook.buck.file.downloader.impl;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -26,12 +27,16 @@ public class DownloaderFactory implements ToolchainFactory<Downloader> {
 
   @Override
   public Optional<Downloader> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
     // Prepare the downloader if we're allowing mid-build downloads
     Downloader downloader;
     DownloadConfig downloadConfig = new DownloadConfig(context.getBuckConfig());
     if (downloadConfig.isDownloadAtRuntimeOk()) {
-      downloader = StackedDownloader.createFromConfig(context.getBuckConfig(), toolchainProvider);
+      downloader =
+          StackedDownloader.createFromConfig(
+              context.getBuckConfig(), toolchainProvider, toolchainTargetConfiguration);
     } else {
       // Or just set one that blows up
       downloader = new ExplodingDownloader();

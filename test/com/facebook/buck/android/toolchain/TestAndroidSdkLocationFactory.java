@@ -37,11 +37,13 @@ public class TestAndroidSdkLocationFactory {
             filesystem,
             new DefaultProcessExecutor(new TestConsole()),
             new ExecutableFinder(),
-            TestRuleKeyConfigurationFactory.create(),
-            () -> UnconfiguredTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     return new AndroidSdkLocationFactory()
-        .createToolchain(new ToolchainProviderBuilder().build(), toolchainCreationContext)
+        .createToolchain(
+            new ToolchainProviderBuilder().build(),
+            toolchainCreationContext,
+            UnconfiguredTargetConfiguration.INSTANCE)
         .get();
   }
 }

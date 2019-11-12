@@ -24,6 +24,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -46,11 +47,13 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.util.MoreFunctions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class AndroidLibraryDescription
@@ -71,7 +74,8 @@ public class AndroidLibraryDescription
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
   private final JavacFactory javacFactory;
-  private final Optional<UnresolvedInferPlatform> unresolvedInferPlatform;
+  private final Function<TargetConfiguration, Optional<UnresolvedInferPlatform>>
+      unresolvedInferPlatform;
 
   public AndroidLibraryDescription(
       JavaBuckConfig javaBuckConfig,
@@ -81,9 +85,15 @@ public class AndroidLibraryDescription
     this.compilerFactory = compilerFactory;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.unresolvedInferPlatform =
-        toolchainProvider
-            .getByNameIfPresent(InferToolchain.DEFAULT_NAME, InferToolchain.class)
-            .map(InferToolchain::getDefaultPlatform);
+        MoreFunctions.memoize(
+            toolchainTargetConfiguration -> {
+              return toolchainProvider
+                  .getByNameIfPresent(
+                      InferToolchain.DEFAULT_NAME,
+                      toolchainTargetConfiguration,
+                      InferToolchain.class)
+                  .map(InferToolchain::getDefaultPlatform);
+            });
   }
 
   @Override
@@ -114,13 +124,19 @@ public class AndroidLibraryDescription
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
             context.getActionGraphBuilder(),
             args);
     ConfiguredCompilerFactory compilerFactory =
-        this.compilerFactory.getCompiler(args.getLanguage().orElse(JvmLanguage.JAVA), javacFactory);
+        this.compilerFactory.getCompiler(
+            args.getLanguage().orElse(JvmLanguage.JAVA),
+            javacFactory,
+            buildTarget.getTargetConfiguration());
 
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
@@ -130,11 +146,14 @@ public class AndroidLibraryDescription
           projectFilesystem,
           context.getActionGraphBuilder(),
           javacOptions,
-          compilerFactory.getExtraClasspathProvider(toolchainProvider),
-          unresolvedInferPlatform.orElseThrow(
-              () ->
-                  new HumanReadableException(
-                      "Cannot use #nullsafe flavor: infer platform not configured")),
+          compilerFactory.getExtraClasspathProvider(
+              toolchainProvider, buildTarget.getTargetConfiguration()),
+          unresolvedInferPlatform
+              .apply(buildTarget.getTargetConfiguration())
+              .orElseThrow(
+                  () ->
+                      new HumanReadableException(
+                          "Cannot use #nullsafe flavor: infer platform not configured")),
           new ImmutableInferConfig(javaBuckConfig.getDelegate()));
     }
 
@@ -160,7 +179,8 @@ public class AndroidLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return flavors.isEmpty()
         || flavors.equals(ImmutableSet.of(JavaLibrary.SRC_JAR))
         || flavors.equals(ImmutableSet.of(DUMMY_R_DOT_JAVA_FLAVOR))
@@ -179,15 +199,21 @@ public class AndroidLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     compilerFactory
-        .getCompiler(constructorArg.getLanguage().orElse(JvmLanguage.JAVA), javacFactory)
+        .getCompiler(
+            constructorArg.getLanguage().orElse(JvmLanguage.JAVA),
+            javacFactory,
+            buildTarget.getTargetConfiguration())
         .addTargetDeps(
             buildTarget.getTargetConfiguration(), extraDepsBuilder, targetGraphOnlyDepsBuilder);
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
 
-    unresolvedInferPlatform.ifPresent(
-        p ->
-            UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
-                targetGraphOnlyDepsBuilder, buildTarget, p));
+    unresolvedInferPlatform
+        .apply(buildTarget.getTargetConfiguration())
+        .ifPresent(
+            p ->
+                UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
+                    targetGraphOnlyDepsBuilder, buildTarget, p));
   }
 
   public interface CoreArg

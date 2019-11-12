@@ -16,6 +16,7 @@
 package com.facebook.buck.infer.toolchain;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -26,7 +27,9 @@ import java.util.Optional;
 public class InferToolchainFactory implements ToolchainFactory<InferToolchain> {
   @Override
   public Optional<InferToolchain> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
     BuckConfig config = context.getBuckConfig();
     ExecutableFinder executableFinder = context.getExecutableFinder();
 

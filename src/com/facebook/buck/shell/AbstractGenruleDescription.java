@@ -22,6 +22,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -112,16 +113,17 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         args.getEnableSandbox().orElse(enableSandbox),
         args.getCacheable().orElse(true),
         args.getEnvironmentExpansionSeparator(),
-        getAndroidToolsOptional(args));
+        getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()));
   }
 
   /**
    * Returns android tools if {@code args} has need_android_tools option set or empty optional
    * otherwise.
    */
-  protected Optional<AndroidTools> getAndroidToolsOptional(T args) {
+  protected Optional<AndroidTools> getAndroidToolsOptional(
+      T args, TargetConfiguration toolchainTargetConfiguration) {
     return args.isNeedAndroidTools()
-        ? Optional.of(AndroidTools.getAndroidTools(toolchainProvider))
+        ? Optional.of(AndroidTools.getAndroidTools(toolchainProvider, toolchainTargetConfiguration))
         : Optional.empty();
   }
 

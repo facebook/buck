@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -77,7 +78,10 @@ public class OcamlLibraryDescription
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
 
     OcamlToolchain ocamlToolchain =
-        toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
+        toolchainProvider.getByName(
+            OcamlToolchain.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            OcamlToolchain.class);
     FlavorDomain<OcamlPlatform> ocamlPlatforms = ocamlToolchain.getOcamlPlatforms();
     Optional<OcamlPlatform> ocamlPlatform = ocamlPlatforms.getValue(buildTarget);
     if (ocamlPlatform.isPresent()) {
@@ -229,7 +233,10 @@ public class OcamlLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     for (OcamlPlatform platform :
         toolchainProvider
-            .getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class)
+            .getByName(
+                OcamlToolchain.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                OcamlToolchain.class)
             .getOcamlPlatforms()
             .getValues()) {
       targetGraphOnlyDepsBuilder.addAll(
@@ -238,11 +245,13 @@ public class OcamlLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return flavors.equals(
         ImmutableSet.of(
             toolchainProvider
-                .getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class)
+                .getByName(
+                    OcamlToolchain.DEFAULT_NAME, toolchainTargetConfiguration, OcamlToolchain.class)
                 .getDefaultOcamlPlatform()
                 .getFlavor()));
   }

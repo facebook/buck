@@ -26,6 +26,7 @@ import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -72,8 +73,11 @@ public class GoLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return getGoToolchain().getPlatformFlavorDomain().containsAnyOf(flavors);
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return getGoToolchain(toolchainTargetConfiguration)
+        .getPlatformFlavorDomain()
+        .containsAnyOf(flavors);
   }
 
   @Override
@@ -85,7 +89,9 @@ public class GoLibraryDescription
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
     Optional<GoPlatform> platform =
-        getGoToolchain().getPlatformFlavorDomain().getValue(buildTarget);
+        getGoToolchain(buildTarget.getTargetConfiguration())
+            .getPlatformFlavorDomain()
+            .getValue(buildTarget);
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)) {
       Preconditions.checkState(platform.isPresent());
@@ -123,7 +129,7 @@ public class GoLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       GoLibraryDescriptionArg args) {
-    GoToolchain goToolchain = getGoToolchain();
+    GoToolchain goToolchain = getGoToolchain(buildTarget.getTargetConfiguration());
     Optional<GoPlatform> platform = goToolchain.getPlatformFlavorDomain().getValue(buildTarget);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
@@ -160,7 +166,7 @@ public class GoLibraryDescription
       GoLibraryDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    GoToolchain toolchain = getGoToolchain();
+    GoToolchain toolchain = getGoToolchain(buildTarget.getTargetConfiguration());
     toolchain
         .getPlatformFlavorDomain()
         .getValue(buildTarget)
@@ -171,8 +177,9 @@ public class GoLibraryDescription
                         buildTarget.getTargetConfiguration(), platform.getCxxPlatform())));
   }
 
-  private GoToolchain getGoToolchain() {
-    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
+  private GoToolchain getGoToolchain(TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider.getByName(
+        GoToolchain.DEFAULT_NAME, toolchainTargetConfiguration, GoToolchain.class);
   }
 
   @BuckStyleImmutable

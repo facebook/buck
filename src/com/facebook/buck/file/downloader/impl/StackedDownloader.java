@@ -19,6 +19,7 @@ package com.facebook.buck.file.downloader.impl;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -56,7 +57,9 @@ public class StackedDownloader implements Downloader {
   }
 
   public static Downloader createFromConfig(
-      BuckConfig config, ToolchainProvider toolchainProvider) {
+      BuckConfig config,
+      ToolchainProvider toolchainProvider,
+      TargetConfiguration toolchainTargetConfiguration) {
     ImmutableList.Builder<Downloader> downloaders = ImmutableList.builder();
 
     DownloadConfig downloadConfig = new DownloadConfig(config);
@@ -108,9 +111,13 @@ public class StackedDownloader implements Downloader {
       }
     }
 
-    if (toolchainProvider.isToolchainPresent(AndroidSdkLocation.DEFAULT_NAME)) {
+    if (toolchainProvider.isToolchainPresent(
+        AndroidSdkLocation.DEFAULT_NAME, toolchainTargetConfiguration)) {
       AndroidSdkLocation androidSdkLocation =
-          toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+          toolchainProvider.getByName(
+              AndroidSdkLocation.DEFAULT_NAME,
+              toolchainTargetConfiguration,
+              AndroidSdkLocation.class);
       Path androidSdkRootPath = androidSdkLocation.getSdkRootPath();
       Path androidMavenRepo = androidSdkRootPath.resolve("extras/android/m2repository");
       try {

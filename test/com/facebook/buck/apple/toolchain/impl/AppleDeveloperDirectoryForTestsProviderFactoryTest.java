@@ -57,12 +57,14 @@ public class AppleDeveloperDirectoryForTestsProviderFactoryTest {
             new FakeProjectFilesystem(),
             new FakeProcessExecutor(),
             new ExecutableFinder(),
-            TestRuleKeyConfigurationFactory.create(),
-            () -> UnconfiguredTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     AppleDeveloperDirectoryProvider appleDeveloperDirectoryProvider =
         new AppleDeveloperDirectoryProviderFactory()
-            .createToolchain(new ToolchainProviderBuilder().build(), context)
+            .createToolchain(
+                new ToolchainProviderBuilder().build(),
+                context,
+                UnconfiguredTargetConfiguration.INSTANCE)
             .get();
 
     // Developer directory for tests should fall back to developer dir if not separately specified.
@@ -74,7 +76,8 @@ public class AppleDeveloperDirectoryForTestsProviderFactoryTest {
                         AppleDeveloperDirectoryProvider.DEFAULT_NAME,
                         appleDeveloperDirectoryProvider)
                     .build(),
-                context)
+                context,
+                UnconfiguredTargetConfiguration.INSTANCE)
             .get();
 
     assertEquals(
@@ -101,12 +104,14 @@ public class AppleDeveloperDirectoryForTestsProviderFactoryTest {
             new FakeProjectFilesystem(),
             new FakeProcessExecutor(),
             new ExecutableFinder(),
-            TestRuleKeyConfigurationFactory.create(),
-            () -> UnconfiguredTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     AppleDeveloperDirectoryProvider appleDeveloperDirectoryProvider =
         new AppleDeveloperDirectoryProviderFactory()
-            .createToolchain(new ToolchainProviderBuilder().build(), context)
+            .createToolchain(
+                new ToolchainProviderBuilder().build(),
+                context,
+                UnconfiguredTargetConfiguration.INSTANCE)
             .get();
 
     AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider =
@@ -117,7 +122,8 @@ public class AppleDeveloperDirectoryForTestsProviderFactoryTest {
                         AppleDeveloperDirectoryProvider.DEFAULT_NAME,
                         appleDeveloperDirectoryProvider)
                     .build(),
-                context)
+                context,
+                UnconfiguredTargetConfiguration.INSTANCE)
             .get();
 
     assertEquals(

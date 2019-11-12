@@ -22,7 +22,6 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
@@ -36,7 +35,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.function.Supplier;
 import org.pf4j.PluginManager;
 
 /**
@@ -59,8 +57,7 @@ public class RootCellFactory {
       BuckConfig rootConfig,
       ImmutableMap<String, String> environment,
       ProcessExecutor processExecutor,
-      ExecutableFinder executableFinder,
-      Supplier<TargetConfiguration> targetConfiguration) {
+      ExecutableFinder executableFinder) {
     Preconditions.checkState(
         !rootCellCellPathResolver.getCanonicalCellName(rootFilesystem.getRootPath()).isPresent(),
         "Root cell should be nameless");
@@ -74,8 +71,7 @@ public class RootCellFactory {
             rootFilesystem,
             processExecutor,
             executableFinder,
-            ruleKeyConfiguration,
-            targetConfiguration);
+            ruleKeyConfiguration);
 
     return ImmutableCell.of(
         knownRoots,

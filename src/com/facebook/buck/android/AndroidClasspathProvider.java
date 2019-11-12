@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -27,10 +28,13 @@ import javax.annotation.Nullable;
 public class AndroidClasspathProvider implements ExtraClasspathProvider {
   @AddToRuleKey @Nullable private final AndroidPlatformTarget androidPlatformTarget;
 
-  public AndroidClasspathProvider(ToolchainProvider toolchainProvider) {
+  public AndroidClasspathProvider(
+      ToolchainProvider toolchainProvider, TargetConfiguration toolchainTargetConfiguration) {
     this.androidPlatformTarget =
         toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+            AndroidPlatformTarget.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            AndroidPlatformTarget.class);
   }
 
   @Override

@@ -17,6 +17,7 @@ package com.facebook.buck.android.toolchain;
 
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableCollection;
@@ -33,14 +34,21 @@ public interface AndroidTools {
   Optional<AndroidNdk> getAndroidNdk();
 
   /** Returns {@code AndroidTools} derived from a given {@code toolProvider} */
-  static AndroidTools getAndroidTools(ToolchainProvider toolchainProvider) {
+  static AndroidTools getAndroidTools(
+      ToolchainProvider toolchainProvider, TargetConfiguration toolchainTargetConfiguration) {
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+            AndroidPlatformTarget.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            AndroidPlatformTarget.class);
     Optional<AndroidNdk> androidNdk =
-        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+        toolchainProvider.getByNameIfPresent(
+            AndroidNdk.DEFAULT_NAME, toolchainTargetConfiguration, AndroidNdk.class);
     AndroidSdkLocation androidSdkLocation =
-        toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+        toolchainProvider.getByName(
+            AndroidSdkLocation.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            AndroidSdkLocation.class);
 
     return new ImmutableAndroidTools(androidPlatformTarget, androidSdkLocation, androidNdk);
   }
@@ -51,7 +59,10 @@ public interface AndroidTools {
       BuildTarget buildTarget,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     toolchainProvider
-        .getByNameIfPresent(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class)
+        .getByNameIfPresent(
+            AndroidPlatformTarget.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidPlatformTarget.class)
         .ifPresent(
             androidPlatformTarget ->
                 androidPlatformTarget.addParseTimeDeps(

@@ -27,6 +27,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -73,25 +74,31 @@ public class JavaLibraryDescription
           JavaAbis.SOURCE_ONLY_ABI_FLAVOR,
           JavaAbis.VERIFIED_SOURCE_ABI_FLAVOR);
 
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final JavacFactory javacFactory;
   private final JavaConfiguredCompilerFactory defaultJavaCompilerFactory;
-  private final Optional<UnresolvedInferPlatform> unresolvedInferPlatform;
 
   public JavaLibraryDescription(
       ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.defaultJavaCompilerFactory =
         new JavaConfiguredCompilerFactory(this.javaBuckConfig, this.javacFactory);
-    this.unresolvedInferPlatform =
-        toolchainProvider
-            .getByNameIfPresent(InferToolchain.DEFAULT_NAME, InferToolchain.class)
-            .map(InferToolchain::getDefaultPlatform);
+  }
+
+  private Optional<UnresolvedInferPlatform> unresolvedInferPlatform(
+      ToolchainProvider toolchainProvider, TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider
+        .getByNameIfPresent(
+            InferToolchain.DEFAULT_NAME, toolchainTargetConfiguration, InferToolchain.class)
+        .map(InferToolchain::getDefaultPlatform);
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return SUPPORTED_FLAVORS.containsAll(flavors);
   }
 
@@ -117,7 +124,10 @@ public class JavaLibraryDescription
         JavacOptionsFactory.create(
             context
                 .getToolchainProvider()
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
@@ -129,11 +139,13 @@ public class JavaLibraryDescription
           projectFilesystem,
           graphBuilder,
           javacOptions,
-          defaultJavaCompilerFactory.getExtraClasspathProvider(toolchainProvider),
-          unresolvedInferPlatform.orElseThrow(
-              () ->
-                  new HumanReadableException(
-                      "Cannot use #nullsafe flavor: infer platform not configured")),
+          defaultJavaCompilerFactory.getExtraClasspathProvider(
+              toolchainProvider, buildTarget.getTargetConfiguration()),
+          unresolvedInferPlatform(toolchainProvider, buildTarget.getTargetConfiguration())
+              .orElseThrow(
+                  () ->
+                      new HumanReadableException(
+                          "Cannot use #nullsafe flavor: infer platform not configured")),
           new ImmutableInferConfig(javaBuckConfig.getDelegate()));
     }
 
@@ -249,12 +261,14 @@ public class JavaLibraryDescription
       JavaLibraryDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
 
-    unresolvedInferPlatform.ifPresent(
-        p ->
-            UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
-                targetGraphOnlyDepsBuilder, buildTarget, p));
+    unresolvedInferPlatform(toolchainProvider, buildTarget.getTargetConfiguration())
+        .ifPresent(
+            p ->
+                UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
+                    targetGraphOnlyDepsBuilder, buildTarget, p));
   }
 
   public interface CoreArg

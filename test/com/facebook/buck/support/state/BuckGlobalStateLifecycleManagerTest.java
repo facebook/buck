@@ -33,6 +33,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -425,7 +426,8 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider().getByName(AndroidSdkLocation.DEFAULT_NAME);
+    cell.getToolchainProvider()
+        .getByName(AndroidSdkLocation.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE);
 
     Object buckGlobalState3 =
         buckGlobalStateLifecycleManager
@@ -474,7 +476,10 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
-        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+        .getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
@@ -514,7 +519,10 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
-        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+        .getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithWorkingAndroidSdk =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
@@ -554,7 +562,10 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
-        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+        .getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk1 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
@@ -569,7 +580,10 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
-        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+        .getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk2 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
@@ -595,7 +609,10 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
-        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+        .getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk1 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
@@ -633,7 +650,10 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
-        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+        .getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidSdkLocation.class);
     Object buckGlobalStateWithBrokenAndroidSdk1 =
         buckGlobalStateLifecycleManager.getBuckGlobalState(
             cell,

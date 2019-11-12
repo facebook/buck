@@ -24,6 +24,7 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -48,7 +49,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
@@ -62,7 +63,7 @@ public class JavaBinaryDescription
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final JavacFactory javacFactory;
-  private final Supplier<JavaOptions> javaOptions;
+  private final Function<TargetConfiguration, JavaOptions> javaOptions;
 
   public JavaBinaryDescription(ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
@@ -76,16 +77,23 @@ public class JavaBinaryDescription
     return JavaBinaryDescriptionArg.class;
   }
 
-  private UnresolvedCxxPlatform getCxxPlatform(AbstractJavaBinaryDescriptionArg args) {
+  private UnresolvedCxxPlatform getCxxPlatform(
+      AbstractJavaBinaryDescriptionArg args, TargetConfiguration toolchainTargetConfiguration) {
     return args.getDefaultCxxPlatform()
         .map(
             toolchainProvider
-                    .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+                    .getByName(
+                        CxxPlatformsProvider.DEFAULT_NAME,
+                        toolchainTargetConfiguration,
+                        CxxPlatformsProvider.class)
                     .getUnresolvedCxxPlatforms()
                 ::getValue)
         .orElse(
             toolchainProvider
-                .getByName(JavaCxxPlatformProvider.DEFAULT_NAME, JavaCxxPlatformProvider.class)
+                .getByName(
+                    JavaCxxPlatformProvider.DEFAULT_NAME,
+                    toolchainTargetConfiguration,
+                    JavaCxxPlatformProvider.class)
                 .getDefaultJavaCxxPlatform());
   }
 
@@ -100,7 +108,8 @@ public class JavaBinaryDescription
     ImmutableMap<String, SourcePath> nativeLibraries =
         JavaLibraryRules.getNativeLibraries(
             params.getBuildDeps(),
-            getCxxPlatform(args).resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+            getCxxPlatform(args, buildTarget.getTargetConfiguration())
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
             context.getActionGraphBuilder());
     BuildTarget binaryBuildTarget = buildTarget;
 
@@ -123,7 +132,7 @@ public class JavaBinaryDescription
             projectFilesystem,
             params.copyAppendingExtraDeps(transitiveClasspathDeps),
             javaOptions
-                .get()
+                .apply(buildTarget.getTargetConfiguration())
                 .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
             args.getMainClass().orElse(null),
             args.getManifestFile().orElse(null),
@@ -157,16 +166,20 @@ public class JavaBinaryDescription
                                   .add(innerJar)
                                   .addAll(nativeLibraries.values())
                                   .build()),
-                          javacFactory.getBuildDeps(graphBuilder)))),
-              javacFactory.create(graphBuilder, null),
+                          javacFactory.getBuildDeps(
+                              graphBuilder, binaryBuildTarget.getTargetConfiguration())))),
+              javacFactory.create(graphBuilder, null, binaryBuildTarget.getTargetConfiguration()),
               toolchainProvider
-                  .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                  .getByName(
+                      JavacOptionsProvider.DEFAULT_NAME,
+                      binaryBuildTarget.getTargetConfiguration(),
+                      JavacOptionsProvider.class)
                   .getJavacOptions(),
               innerJar,
               javaBinary,
               nativeLibraries,
               javaOptions
-                  .get()
+                  .apply(buildTarget.getTargetConfiguration())
                   .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
     }
 
@@ -181,10 +194,12 @@ public class JavaBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        getCxxPlatform(constructorArg).getParseTimeDeps(buildTarget.getTargetConfiguration()));
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+        getCxxPlatform(constructorArg, buildTarget.getTargetConfiguration())
+            .getParseTimeDeps(buildTarget.getTargetConfiguration()));
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
     javaOptions
-        .get()
+        .apply(buildTarget.getTargetConfiguration())
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 

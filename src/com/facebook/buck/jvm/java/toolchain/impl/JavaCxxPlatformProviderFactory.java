@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.toolchain.impl;
 
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -30,10 +31,15 @@ public class JavaCxxPlatformProviderFactory implements ToolchainFactory<JavaCxxP
 
   @Override
   public Optional<JavaCxxPlatformProvider> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
     JavaBuckConfig javaConfig = context.getBuckConfig().getView(JavaBuckConfig.class);
     CxxPlatformsProvider cxxPlatformsProvider =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        toolchainProvider.getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class);
     UnresolvedCxxPlatform defaultJavaCxxPlatform =
         javaConfig
             .getDefaultCxxPlatform()

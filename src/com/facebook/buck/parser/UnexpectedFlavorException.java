@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.util.PatternAndMessage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -90,15 +91,23 @@ public class UnexpectedFlavorException extends HumanReadableException {
 
   private static ImmutableSet<Flavor> getInvalidFlavors(
       Flavored flavored, UnconfiguredBuildTargetView target) {
+    // TODO(nga): wrong target configuration
     return target.getFlavors().stream()
-        .filter(flavor -> !flavored.hasFlavors(ImmutableSet.of(flavor)))
+        .filter(
+            flavor ->
+                !flavored.hasFlavors(
+                    ImmutableSet.of(flavor), UnconfiguredTargetConfiguration.INSTANCE))
         .collect(ImmutableSet.toImmutableSet());
   }
 
   private static ImmutableSet<Flavor> getValidFlavors(
       Flavored flavored, UnconfiguredBuildTargetView target) {
+    // TODO(nga): wrong target configuration
     return target.getFlavors().stream()
-        .filter(flavor -> flavored.hasFlavors(ImmutableSet.of(flavor)))
+        .filter(
+            flavor ->
+                flavored.hasFlavors(
+                    ImmutableSet.of(flavor), UnconfiguredTargetConfiguration.INSTANCE))
         .collect(ImmutableSet.toImmutableSet());
   }
 

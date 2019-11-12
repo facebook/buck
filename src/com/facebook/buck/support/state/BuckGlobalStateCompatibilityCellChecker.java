@@ -16,6 +16,8 @@
 package com.facebook.buck.support.state;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.ComparableToolchain;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -42,7 +44,12 @@ class BuckGlobalStateCompatibilityCellChecker {
         otherToolchainProvider.getToolchainsWithCapability(ComparableToolchain.class));
 
     for (String toolchain : toolchains) {
-      if (!toolchainsStateEqual(toolchain, toolchainProvider, otherToolchainProvider)) {
+      // TODO(nga): use some meaningful toolchain here
+      if (!toolchainsStateEqual(
+          toolchain,
+          UnconfiguredTargetConfiguration.INSTANCE,
+          toolchainProvider,
+          otherToolchainProvider)) {
         return false;
       }
     }
@@ -69,13 +76,18 @@ class BuckGlobalStateCompatibilityCellChecker {
    */
   private static boolean toolchainsStateEqual(
       String toolchain,
+      TargetConfiguration toolchainTargetConfiguration,
       ToolchainProvider toolchainProvider,
       ToolchainProvider otherToolchainProvider) {
 
-    boolean toolchainFailed = toolchainProvider.isToolchainFailed(toolchain);
-    boolean otherToolchainFailed = otherToolchainProvider.isToolchainFailed(toolchain);
-    boolean toolchainCreated = toolchainProvider.isToolchainCreated(toolchain);
-    boolean otherToolchainCreated = otherToolchainProvider.isToolchainCreated(toolchain);
+    boolean toolchainFailed =
+        toolchainProvider.isToolchainFailed(toolchain, toolchainTargetConfiguration);
+    boolean otherToolchainFailed =
+        otherToolchainProvider.isToolchainFailed(toolchain, toolchainTargetConfiguration);
+    boolean toolchainCreated =
+        toolchainProvider.isToolchainCreated(toolchain, toolchainTargetConfiguration);
+    boolean otherToolchainCreated =
+        otherToolchainProvider.isToolchainCreated(toolchain, toolchainTargetConfiguration);
 
     boolean toolchainInstantiated = toolchainFailed || toolchainCreated;
     boolean otherToolchainInstantiated = otherToolchainFailed || otherToolchainCreated;
@@ -86,9 +98,10 @@ class BuckGlobalStateCompatibilityCellChecker {
 
     if (toolchainFailed || otherToolchainFailed) {
       Optional<ToolchainInstantiationException> exception =
-          getFailedToolchainException(toolchainProvider, toolchain);
+          getFailedToolchainException(toolchainProvider, toolchain, toolchainTargetConfiguration);
       Optional<ToolchainInstantiationException> otherException =
-          getFailedToolchainException(otherToolchainProvider, toolchain);
+          getFailedToolchainException(
+              otherToolchainProvider, toolchain, toolchainTargetConfiguration);
 
       return exception.isPresent()
           && otherException.isPresent()
@@ -98,25 +111,30 @@ class BuckGlobalStateCompatibilityCellChecker {
               .equals(otherException.get().getHumanReadableErrorMessage());
     }
 
-    boolean toolchainPresent = toolchainProvider.isToolchainPresent(toolchain);
-    boolean otherToolchainPresent = otherToolchainProvider.isToolchainPresent(toolchain);
+    boolean toolchainPresent =
+        toolchainProvider.isToolchainPresent(toolchain, toolchainTargetConfiguration);
+    boolean otherToolchainPresent =
+        otherToolchainProvider.isToolchainPresent(toolchain, toolchainTargetConfiguration);
 
     // Both toolchains exist, compare them
     if (toolchainPresent && otherToolchainPresent) {
       return toolchainProvider
-          .getByName(toolchain)
-          .equals(otherToolchainProvider.getByName(toolchain));
+          .getByName(toolchain, toolchainTargetConfiguration)
+          .equals(otherToolchainProvider.getByName(toolchain, toolchainTargetConfiguration));
     } else {
       return !toolchainPresent && !otherToolchainPresent;
     }
   }
 
   private static Optional<ToolchainInstantiationException> getFailedToolchainException(
-      ToolchainProvider toolchainProvider, String toolchainName) {
-    if (toolchainProvider.isToolchainPresent(toolchainName)) {
+      ToolchainProvider toolchainProvider,
+      String toolchainName,
+      TargetConfiguration toolchainTargetConfiguration) {
+    if (toolchainProvider.isToolchainPresent(toolchainName, toolchainTargetConfiguration)) {
       return Optional.empty();
     } else {
-      return toolchainProvider.getToolchainInstantiationException(toolchainName);
+      return toolchainProvider.getToolchainInstantiationException(
+          toolchainName, toolchainTargetConfiguration);
     }
   }
 }

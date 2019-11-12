@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -151,7 +152,9 @@ public class JsBundleGenruleDescription
         cmdExe,
         args.getEnvironmentExpansionSeparator(),
         args.isNeedAndroidTools()
-            ? Optional.of(AndroidTools.getAndroidTools(toolchainProvider))
+            ? Optional.of(
+                AndroidTools.getAndroidTools(
+                    toolchainProvider, buildTarget.getTargetConfiguration()))
             : Optional.empty(),
         bundleOutputs,
         jsDepsFileRule,
@@ -174,12 +177,14 @@ public class JsBundleGenruleDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return JsBundleDescription.supportsFlavors(flavors);
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(JsBundleDescription.FLAVOR_DOMAINS);
   }
 

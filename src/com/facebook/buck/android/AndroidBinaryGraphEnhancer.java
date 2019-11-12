@@ -291,7 +291,8 @@ public class AndroidBinaryGraphEnhancer {
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
     this.dexTool = dexTool;
     this.javacFactory = javacFactory;
-    this.javac = javacFactory.create(graphBuilder, null);
+    this.javac =
+        javacFactory.create(graphBuilder, null, originalBuildTarget.getTargetConfiguration());
     this.androidNativeTargetConfigurationMatcher = androidNativeTargetConfigurationMatcher;
   }
 

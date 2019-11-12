@@ -86,10 +86,13 @@ public class AndroidBuildConfigDescription
         args.getValues(),
         args.getValuesFile(),
         /* useConstantExpressions */ false,
-        javacFactory.create(graphBuilder, null),
+        javacFactory.create(graphBuilder, null, buildTarget.getTargetConfiguration()),
         context
             .getToolchainProvider()
-            .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+            .getByName(
+                JavacOptionsProvider.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                JavacOptionsProvider.class)
             .getJavacOptions(),
         graphBuilder);
   }
@@ -171,7 +174,8 @@ public class AndroidBuildConfigDescription
       AndroidBuildConfigDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
   }
 
   @BuckStyleImmutable

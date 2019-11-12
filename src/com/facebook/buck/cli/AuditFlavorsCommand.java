@@ -122,7 +122,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
       stdout.println(node.getBuildTarget().getFullyQualifiedName());
       if (description instanceof Flavored) {
         Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains =
-            ((Flavored) description).flavorDomains();
+            ((Flavored) description).flavorDomains(node.getBuildTarget().getTargetConfiguration());
         if (flavorDomains.isPresent()) {
           for (FlavorDomain<?> domain : flavorDomains.get()) {
             ImmutableSet<UserFlavor> userFlavors =
@@ -162,7 +162,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
 
       if (description instanceof Flavored) {
         Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains =
-            ((Flavored) description).flavorDomains();
+            ((Flavored) description).flavorDomains(node.getBuildTarget().getTargetConfiguration());
         if (flavorDomains.isPresent()) {
           for (FlavorDomain<?> domain : flavorDomains.get()) {
             ImmutableSet<UserFlavor> userFlavors =

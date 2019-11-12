@@ -159,7 +159,8 @@ public class DLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(
-        DDescriptionUtils.getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig)
+        DDescriptionUtils.getUnresolvedCxxPlatform(
+                toolchainProvider, buildTarget.getTargetConfiguration(), dBuckConfig)
             .getParseTimeDeps(buildTarget.getTargetConfiguration()));
   }
 

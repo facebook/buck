@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.toolchain;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -23,27 +24,34 @@ import java.util.Optional;
 public interface ToolchainProvider {
 
   /** @throws ToolchainInstantiationException when a toolchain cannot be created */
-  Toolchain getByName(String toolchainName);
+  Toolchain getByName(String toolchainName, TargetConfiguration toolchainTargetConfiguration);
 
   /** @throws ToolchainInstantiationException when a toolchain cannot be created */
-  <T extends Toolchain> T getByName(String toolchainName, Class<T> toolchainClass);
+  <T extends Toolchain> T getByName(
+      String toolchainName,
+      TargetConfiguration toolchainTargetConfiguration,
+      Class<T> toolchainClass);
 
   <T extends Toolchain> Optional<T> getByNameIfPresent(
-      String toolchainName, Class<T> toolchainClass);
+      String toolchainName,
+      TargetConfiguration toolchainTargetConfiguration,
+      Class<T> toolchainClass);
 
   /** @return <code>true</code> if toolchain exists (triggering instantiation if needed) */
-  boolean isToolchainPresent(String toolchainName);
+  boolean isToolchainPresent(
+      String toolchainName, TargetConfiguration toolchainTargetConfiguration);
 
   /**
    * @return <code>true</code> if toolchain has already been created (without triggering
    *     instantiation)
    */
-  boolean isToolchainCreated(String toolchainName);
+  boolean isToolchainCreated(
+      String toolchainName, TargetConfiguration toolchainTargetConfiguration);
 
   /**
    * @return <code>true</code> if toolchain failed to instantiate (without triggering instantiation)
    */
-  boolean isToolchainFailed(String toolchainName);
+  boolean isToolchainFailed(String toolchainName, TargetConfiguration toolchainTargetConfiguration);
 
   /**
    * Provides access to all known toolchains that support the provided capability.
@@ -57,5 +65,5 @@ public interface ToolchainProvider {
 
   /** @return the exception that was thrown during toolchain instantiation */
   Optional<ToolchainInstantiationException> getToolchainInstantiationException(
-      String toolchainName);
+      String toolchainName, TargetConfiguration toolchainTargetConfiguration);
 }

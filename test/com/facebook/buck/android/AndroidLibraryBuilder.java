@@ -44,7 +44,7 @@ public class AndroidLibraryBuilder
         AndroidLibrary> {
 
   private static final AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
-      (language, factory) ->
+      (language, factory, toolchainTargetConfiguration) ->
           new JavaConfiguredCompilerFactory(
               DEFAULT_JAVA_CONFIG, AndroidClasspathProvider::new, factory);
 

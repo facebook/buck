@@ -24,6 +24,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -72,15 +73,20 @@ public class AndroidAppModularityGraphEnhancer {
     this.configurationRuleRegistry = configurationRuleRegistry;
   }
 
-  private ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms() {
+  private ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider
-        .getByName(NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class)
+        .getByName(
+            NdkCxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            NdkCxxPlatformsProvider.class)
         .getResolvedNdkCxxPlatforms(ruleResolver);
   }
 
   private ImmutableMultimap<APKModule, String> buildModuleToSharedLibraries(
       AndroidPackageableCollection collection) {
-    ImmutableCollection<NdkCxxPlatform> platforms = getPlatforms().values();
+    ImmutableCollection<NdkCxxPlatform> platforms =
+        getPlatforms(originalBuildTarget.getTargetConfiguration()).values();
     ImmutableMultimap.Builder<APKModule, String> builder = ImmutableMultimap.builder();
     for (Map.Entry<APKModule, NativeLinkableGroup> item :
         collection.getNativeLinkablesAssets().entries()) {

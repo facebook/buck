@@ -70,8 +70,8 @@ public class AndroidSdkLocationFactoryTest {
             projectFilesystem,
             new DefaultProcessExecutor(new TestConsole()),
             new ExecutableFinder(),
-            TestRuleKeyConfigurationFactory.create(),
-            () -> UnconfiguredTargetConfiguration.INSTANCE));
+            TestRuleKeyConfigurationFactory.create()),
+        UnconfiguredTargetConfiguration.INSTANCE);
   }
 
   @Test
@@ -91,8 +91,8 @@ public class AndroidSdkLocationFactoryTest {
                 projectFilesystem,
                 new DefaultProcessExecutor(new TestConsole()),
                 new ExecutableFinder(),
-                TestRuleKeyConfigurationFactory.create(),
-                () -> UnconfiguredTargetConfiguration.INSTANCE));
+                TestRuleKeyConfigurationFactory.create()),
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     assertEquals(sdkPath, toolchain.get().getSdkRootPath());
   }

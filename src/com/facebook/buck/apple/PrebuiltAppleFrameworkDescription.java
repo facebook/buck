@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -63,20 +64,24 @@ public class PrebuiltAppleFrameworkDescription
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
-  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformsFlavorDomain() {
+  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
+      TargetConfiguration toolchainTargetConfiguration) {
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
         toolchainProvider.getByName(
-            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
+            AppleCxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            AppleCxxPlatformsProvider.class);
     return appleCxxPlatformsProvider.getAppleCxxPlatforms();
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     // This class supports flavors that other apple targets support.
     // It's mainly there to be compatible with other apple rules which blindly add flavor tags to
     // all its targets.
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
-        getAppleCxxPlatformsFlavorDomain();
+        getAppleCxxPlatformsFlavorDomain(toolchainTargetConfiguration);
     return RichStream.from(flavors)
         .allMatch(
             flavor ->
@@ -89,10 +94,11 @@ public class PrebuiltAppleFrameworkDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(
         ImmutableSet.of(
-            getAppleCxxPlatformsFlavorDomain(),
+            getAppleCxxPlatformsFlavorDomain(toolchainTargetConfiguration),
             AppleDebugFormat.FLAVOR_DOMAIN,
             AppleDescriptions.INCLUDE_FRAMEWORKS,
             StripStyle.FLAVOR_DOMAIN));
@@ -121,7 +127,7 @@ public class PrebuiltAppleFrameworkDescription
         input ->
             CxxFlags.getFlagsWithPlatformMacroExpansion(
                 args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), input),
-        getAppleCxxPlatformsFlavorDomain());
+        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()));
   }
 
   @Override

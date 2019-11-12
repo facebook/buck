@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.toolchain.impl;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -29,14 +30,16 @@ public class JavaToolchainFactory implements ToolchainFactory<JavaToolchain> {
   /** Creates a java toolchain from the .buckconfig. */
   @Override
   public Optional<JavaToolchain> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(
         JavaToolchain.builder()
             .setJavacProvider(
                 context
                     .getBuckConfig()
                     .getView(JavaBuckConfig.class)
-                    .getJavacSpec(context.getTargetConfiguration().get())
+                    .getJavacSpec(toolchainTargetConfiguration)
                     .getJavacProvider())
             .build());
   }

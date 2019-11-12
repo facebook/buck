@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -78,7 +79,8 @@ public class AndroidPrebuiltAarDescription
       ImmutableSet.of(AAR_PREBUILT_JAR_FLAVOR, AAR_UNZIP_FLAVOR);
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return Sets.difference(flavors, KNOWN_FLAVORS).isEmpty();
   }
 
@@ -170,7 +172,9 @@ public class AndroidPrebuiltAarDescription
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
       AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
-              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+              AndroidPlatformTarget.DEFAULT_NAME,
+              buildTarget.getTargetConfiguration(),
+              AndroidPlatformTarget.class);
       ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
 
       return new Aapt2Compile(
@@ -214,9 +218,12 @@ public class AndroidPrebuiltAarDescription
         /* prebuiltJar */ prebuiltJar,
         /* unzipRule */ unzipAar,
         new JavacToJarStepFactory(
-            javacFactory.create(graphBuilder, null),
+            javacFactory.create(graphBuilder, null, buildTarget.getTargetConfiguration()),
             toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             ExtraClasspathProvider.EMPTY),
         /* exportedDeps */ javaDeps,
@@ -232,7 +239,8 @@ public class AndroidPrebuiltAarDescription
       AndroidPrebuiltAarDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
     AndroidTools.addParseTimeDepsToAndroidTools(
         toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }

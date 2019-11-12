@@ -52,8 +52,8 @@ public class PythonPlatformsProviderFactoryUtils {
                 new FakeProjectFilesystem(),
                 processExecutor,
                 executableFinder,
-                TestRuleKeyConfigurationFactory.create(),
-                () -> UnconfiguredTargetConfiguration.INSTANCE))
+                TestRuleKeyConfigurationFactory.create()),
+            UnconfiguredTargetConfiguration.INSTANCE)
         .get()
         .getPythonPlatforms()
         .getValue(PythonBuckConfig.DEFAULT_PYTHON_PLATFORM);

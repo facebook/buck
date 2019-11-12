@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -45,15 +46,18 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
 
   @Override
   public Optional<CxxPlatformsProvider> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
     Iterable<String> toolchainNames =
         toolchainProvider.getToolchainsWithCapability(CxxPlatformsSupplier.class);
 
     ImmutableMap.Builder<Flavor, UnresolvedCxxPlatform> cxxSystemPlatforms = ImmutableMap.builder();
     for (String toolchainName : toolchainNames) {
-      if (toolchainProvider.isToolchainPresent(toolchainName)) {
+      if (toolchainProvider.isToolchainPresent(toolchainName, toolchainTargetConfiguration)) {
         CxxPlatformsSupplier cxxPlatformsSupplier =
-            toolchainProvider.getByName(toolchainName, CxxPlatformsSupplier.class);
+            toolchainProvider.getByName(
+                toolchainName, toolchainTargetConfiguration, CxxPlatformsSupplier.class);
         cxxSystemPlatforms.putAll(cxxPlatformsSupplier.getCxxPlatforms());
       }
     }

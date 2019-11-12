@@ -32,16 +32,20 @@ public interface Flavored {
 
   /**
    * @param flavors The set of {@link Flavor}s to consider. All must match.
+   * @param toolchainTargetConfiguration
    * @return Whether a {@link com.facebook.buck.core.rules.BuildRule} of the given {@link Flavor}
    *     can be created.
    */
-  default boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return flavorDomains()
+  default boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return flavorDomains(toolchainTargetConfiguration)
         .map(domains -> domains.stream().anyMatch(domain -> domain.containsAnyOf(flavors)))
         .orElse(false);
   }
 
-  default Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  @SuppressWarnings("unused") // mute incorrect ant linter error
+  default Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.empty();
   }
 }

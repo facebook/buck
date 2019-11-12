@@ -34,14 +34,16 @@ public class PythonPlatformsProviderFactory implements ToolchainFactory<PythonPl
 
   @Override
   public Optional<PythonPlatformsProvider> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(context.getBuckConfig());
     ImmutableList<PythonPlatform> pythonPlatformsList =
         getPythonPlatforms(
             toolchainProvider,
             pythonBuckConfig,
             context.getProcessExecutor(),
-            context.getTargetConfiguration().get());
+            toolchainTargetConfiguration);
     FlavorDomain<PythonPlatform> pythonPlatforms =
         FlavorDomain.from("Python Platform", pythonPlatformsList);
     return Optional.of(PythonPlatformsProvider.of(pythonPlatforms));

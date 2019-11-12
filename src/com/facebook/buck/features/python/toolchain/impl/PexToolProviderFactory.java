@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.python.toolchain.impl;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -27,7 +28,9 @@ public class PexToolProviderFactory implements ToolchainFactory<PexToolProvider>
 
   @Override
   public Optional<PexToolProvider> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(context.getBuckConfig());
     return Optional.of(
         new DefaultPexToolProvider(

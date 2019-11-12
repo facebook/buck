@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
@@ -36,7 +37,10 @@ public class PythonTestUtils {
       new TestPythonPlatform(
           InternalFlavor.of("default-py-platform"),
           new PythonEnvironment(
-              Paths.get("python"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
+              Paths.get("python"),
+              PythonVersion.of("CPython", "2.6"),
+              PythonBuckConfig.SECTION,
+              UnconfiguredTargetConfiguration.INSTANCE),
           Optional.empty());
 
   public static final FlavorDomain<PythonPlatform> PYTHON_PLATFORMS =

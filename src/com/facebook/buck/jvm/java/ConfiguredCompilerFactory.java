@@ -38,7 +38,7 @@ public abstract class ConfiguredCompilerFactory {
       ToolchainProvider toolchainProvider);
 
   public abstract Optional<ExtraClasspathProvider> getExtraClasspathProvider(
-      ToolchainProvider toolchainProvider);
+      ToolchainProvider toolchainProvider, TargetConfiguration toolchainTargetConfiguration);
 
   public boolean trackClassUsage(@SuppressWarnings("unused") JavacOptions javacOptions) {
     return false;

@@ -302,32 +302,43 @@ public class ParserWithConfigurableAttributesTest {
             filesystem,
             processExecutor,
             executableFinder,
-            TestRuleKeyConfigurationFactory.create(),
-            () -> UnconfiguredTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     ToolchainProviderBuilder toolchainProviderBuilder = new ToolchainProviderBuilder();
     Optional<AppleDeveloperDirectoryProvider> appleDeveloperDirectoryProvider =
         new AppleDeveloperDirectoryProviderFactory()
-            .createToolchain(toolchainProviderBuilder.build(), toolchainCreationContext);
+            .createToolchain(
+                toolchainProviderBuilder.build(),
+                toolchainCreationContext,
+                UnconfiguredTargetConfiguration.INSTANCE);
     appleDeveloperDirectoryProvider.ifPresent(
         provider ->
             toolchainProviderBuilder.withToolchain(
                 AppleDeveloperDirectoryProvider.DEFAULT_NAME, provider));
     Optional<AppleToolchainProvider> appleToolchainProvider =
         new AppleToolchainProviderFactory()
-            .createToolchain(toolchainProviderBuilder.build(), toolchainCreationContext);
+            .createToolchain(
+                toolchainProviderBuilder.build(),
+                toolchainCreationContext,
+                UnconfiguredTargetConfiguration.INSTANCE);
     appleToolchainProvider.ifPresent(
         provider ->
             toolchainProviderBuilder.withToolchain(AppleToolchainProvider.DEFAULT_NAME, provider));
     Optional<AppleSdkLocation> appleSdkLocation =
         new AppleSdkLocationFactory()
-            .createToolchain(toolchainProviderBuilder.build(), toolchainCreationContext);
+            .createToolchain(
+                toolchainProviderBuilder.build(),
+                toolchainCreationContext,
+                UnconfiguredTargetConfiguration.INSTANCE);
     appleSdkLocation.ifPresent(
         provider ->
             toolchainProviderBuilder.withToolchain(AppleSdkLocation.DEFAULT_NAME, provider));
     Optional<AppleCxxPlatformsProvider> appleCxxPlatformsProvider =
         new AppleCxxPlatformsProviderFactory()
-            .createToolchain(toolchainProviderBuilder.build(), toolchainCreationContext);
+            .createToolchain(
+                toolchainProviderBuilder.build(),
+                toolchainCreationContext,
+                UnconfiguredTargetConfiguration.INSTANCE);
     appleCxxPlatformsProvider.ifPresent(
         provider ->
             toolchainProviderBuilder.withToolchain(

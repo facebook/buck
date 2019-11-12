@@ -203,7 +203,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     if (hasLinkables) {
       NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
           toolchainProvider.getByName(
-              NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
+              NdkCxxPlatformsProvider.DEFAULT_NAME,
+              originalBuildTarget.getTargetConfiguration(),
+              NdkCxxPlatformsProvider.class);
 
       nativePlatforms = ndkCxxPlatformsProvider.getResolvedNdkCxxPlatforms(graphBuilder);
 

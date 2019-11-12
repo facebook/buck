@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -32,14 +33,19 @@ public class AndroidBuildToolsLocationFactory
 
   @Override
   public Optional<AndroidBuildToolsLocation> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
     AndroidBuckConfig androidBuckConfig =
         new AndroidBuckConfig(context.getBuckConfig(), Platform.detect());
 
     AndroidBuildToolsResolver androidBuildToolsResolver =
         new AndroidBuildToolsResolver(
             androidBuckConfig,
-            toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
+            toolchainProvider.getByName(
+                AndroidSdkLocation.DEFAULT_NAME,
+                toolchainTargetConfiguration,
+                AndroidSdkLocation.class));
 
     try {
       return Optional.of(

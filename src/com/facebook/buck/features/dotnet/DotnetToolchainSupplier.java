@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.features.dotnet;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainDescriptor;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
@@ -44,7 +45,9 @@ public class DotnetToolchainSupplier implements ToolchainSupplier {
 
     @Override
     public Optional<DotnetToolchain> createToolchain(
-        ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+        ToolchainProvider toolchainProvider,
+        ToolchainCreationContext context,
+        TargetConfiguration toolchainTargetConfiguration) {
       DotnetBuckConfig dotnetBuckConfig = context.getBuckConfig().getView(DotnetBuckConfig.class);
       SystemToolProvider systemCsharpCompiler =
           SystemToolProvider.builder()

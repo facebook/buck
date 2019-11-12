@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,17 +13,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.facebook.buck.util;
 
-package com.facebook.buck.core.toolchain;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
-import com.facebook.buck.core.model.TargetConfiguration;
-import java.util.Optional;
+/** Utilities to work with {@link Function}. */
+public class MoreFunctions {
 
-public interface ToolchainFactory<T extends Toolchain> {
+  private MoreFunctions() {}
 
-  /** @throws ToolchainInstantiationException when a toolchain cannot be created */
-  Optional<T> createToolchain(
-      ToolchainProvider toolchainProvider,
-      ToolchainCreationContext context,
-      TargetConfiguration toolchainTargetConfiguration);
+  /** Thread-safe memoizer: computed value is cached and taken from cache on the second call. */
+  public static <A, B> Function<A, B> memoize(Function<A, B> function) {
+    ConcurrentHashMap<A, B> map = new ConcurrentHashMap<>();
+    return a -> map.computeIfAbsent(a, function);
+  }
 }

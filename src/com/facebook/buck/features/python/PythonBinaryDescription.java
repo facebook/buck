@@ -220,7 +220,10 @@ public class PythonBinaryDescription
             params.getDeclaredDeps(),
             pythonPlatform,
             toolchainProvider
-                .getByName(PexToolProvider.DEFAULT_NAME, PexToolProvider.class)
+                .getByName(
+                    PexToolProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    PexToolProvider.class)
                 .getPexTool(graphBuilder, buildTarget.getTargetConfiguration()),
             buildArgs,
             pythonBuckConfig
@@ -242,7 +245,10 @@ public class PythonBinaryDescription
   private UnresolvedCxxPlatform getCxxPlatform(
       BuildTarget target, AbstractPythonBinaryDescriptionArg args) {
     CxxPlatformsProvider cxxPlatformsProvider =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        toolchainProvider.getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            target.getTargetConfiguration(),
+            CxxPlatformsProvider.class);
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         cxxPlatformsProvider.getUnresolvedCxxPlatforms();
     return cxxPlatforms
@@ -293,7 +299,10 @@ public class PythonBinaryDescription
 
     FlavorDomain<PythonPlatform> pythonPlatforms =
         toolchainProvider
-            .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+            .getByName(
+                PythonPlatformsProvider.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                PythonPlatformsProvider.class)
             .getPythonPlatforms();
 
     // Extract the platforms from the flavor, falling back to the default platforms if none are

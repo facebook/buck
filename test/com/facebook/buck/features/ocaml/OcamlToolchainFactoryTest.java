@@ -76,12 +76,12 @@ public class OcamlToolchainFactoryTest {
             new FakeProjectFilesystem(),
             processExecutor,
             executableFinder,
-            TestRuleKeyConfigurationFactory.create(),
-            () -> UnconfiguredTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     OcamlToolchainFactory factory = new OcamlToolchainFactory();
     Optional<OcamlToolchain> toolchain =
-        factory.createToolchain(toolchainProvider, toolchainCreationContext);
+        factory.createToolchain(
+            toolchainProvider, toolchainCreationContext, UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         toolchain.get().getDefaultOcamlPlatform().getCFlags(),
         Matchers.contains("-cppflag", "-cflag", "-asflag"));
@@ -119,12 +119,12 @@ public class OcamlToolchainFactoryTest {
             filesystem,
             processExecutor,
             executableFinder,
-            TestRuleKeyConfigurationFactory.create(),
-            () -> UnconfiguredTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     OcamlToolchainFactory factory = new OcamlToolchainFactory();
     Optional<OcamlToolchain> toolchain =
-        factory.createToolchain(toolchainProvider, toolchainCreationContext);
+        factory.createToolchain(
+            toolchainProvider, toolchainCreationContext, UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         toolchain
             .get()

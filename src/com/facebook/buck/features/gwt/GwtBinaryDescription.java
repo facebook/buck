@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -40,7 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 /** Description for gwt_binary. */
@@ -63,7 +64,7 @@ public class GwtBinaryDescription
   /** This value is taken from GWT's source code: http://bit.ly/1nZtmMv */
   private static final Integer DEFAULT_OPTIMIZE = Integer.valueOf(9);
 
-  private final Supplier<JavaOptions> javaOptions;
+  private final Function<TargetConfiguration, JavaOptions> javaOptions;
 
   public GwtBinaryDescription(ToolchainProvider toolchainProvider) {
     this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
@@ -149,7 +150,7 @@ public class GwtBinaryDescription
         params.withExtraDeps(extraDeps.build()),
         args.getModules(),
         javaOptions
-            .get()
+            .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         args.getVmArgs(),
         args.getStyle().orElse(DEFAULT_STYLE),
@@ -169,7 +170,7 @@ public class GwtBinaryDescription
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javaOptions
-        .get()
+        .apply(buildTarget.getTargetConfiguration())
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 

@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -152,7 +153,10 @@ public class AndroidResourceDescription
       AndroidPlatformTarget androidPlatformTarget =
           context
               .getToolchainProvider()
-              .getByName(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+              .getByName(
+                  AndroidPlatformTarget.DEFAULT_NAME,
+                  buildTarget.getTargetConfiguration(),
+                  AndroidPlatformTarget.class);
       ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
       return new Aapt2Compile(
           buildTarget,
@@ -327,7 +331,8 @@ public class AndroidResourceDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     if (flavors.isEmpty()) {
       return true;
     }

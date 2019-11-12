@@ -93,9 +93,14 @@ public class AndroidBundleFactory {
     return new AndroidBundle(
         buildTarget,
         projectFilesystem,
-        toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
         toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+            AndroidSdkLocation.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidSdkLocation.class),
+        toolchainProvider.getByName(
+            AndroidPlatformTarget.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidPlatformTarget.class),
         params,
         graphBuilder,
         Optional.of(args.getProguardJvmArgs()),

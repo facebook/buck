@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.python.toolchain;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -37,12 +38,18 @@ public class PythonEnvironment implements Tool {
 
   private final Path pythonPath;
   private final String configSection;
+  private final TargetConfiguration targetConfiguration;
   @AddToRuleKey private final PythonVersion pythonVersion;
 
-  public PythonEnvironment(Path pythonPath, PythonVersion pythonVersion, String configSection) {
+  public PythonEnvironment(
+      Path pythonPath,
+      PythonVersion pythonVersion,
+      String configSection,
+      TargetConfiguration targetConfiguration) {
     this.pythonPath = pythonPath;
     this.pythonVersion = pythonVersion;
     this.configSection = configSection;
+    this.targetConfiguration = targetConfiguration;
   }
 
   public Path getPythonPath() {
@@ -77,6 +84,7 @@ public class PythonEnvironment implements Tool {
         PythonEnvironment instance, ValueVisitor<E> serializer) throws E {
       VERSION_TYPE_INFO.visit(instance.pythonVersion, serializer);
       serializer.visitString(instance.configSection);
+      serializer.visitTargetConfiguration(instance.targetConfiguration);
     }
 
     @Override
@@ -84,12 +92,14 @@ public class PythonEnvironment implements Tool {
         throws E {
       PythonVersion version = VERSION_TYPE_INFO.create(deserializer);
       String configSection = deserializer.createString();
+      TargetConfiguration targetConfiguration = deserializer.createTargetConfiguration();
       Path pythonPath =
           deserializer
               .createSpecial(ToolchainProvider.class)
-              .getByName(PythonInterpreter.DEFAULT_NAME, PythonInterpreter.class)
+              .getByName(
+                  PythonInterpreter.DEFAULT_NAME, targetConfiguration, PythonInterpreter.class)
               .getPythonInterpreterPath(configSection);
-      return new PythonEnvironment(pythonPath, version, configSection);
+      return new PythonEnvironment(pythonPath, version, configSection, targetConfiguration);
     }
   }
 }

@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
@@ -113,7 +114,8 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     private Map<String, Toolchain> toolchains = new HashMap<>();
 
     @Override
-    public Toolchain getByName(String toolchainName) {
+    public Toolchain getByName(
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
       if (toolchains.containsKey(toolchainName)) {
         return toolchains.get(toolchainName);
       }
@@ -121,18 +123,21 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     }
 
     @Override
-    public boolean isToolchainPresent(String toolchainName) {
+    public boolean isToolchainPresent(
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
       return toolchains.containsKey(toolchainName);
     }
 
     @Override
-    public boolean isToolchainCreated(String toolchainName) {
-      return isToolchainPresent(toolchainName);
+    public boolean isToolchainCreated(
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
+      return isToolchainPresent(toolchainName, toolchainTargetConfiguration);
     }
 
     @Override
-    public boolean isToolchainFailed(String toolchainName) {
-      return !isToolchainPresent(toolchainName);
+    public boolean isToolchainFailed(
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
+      return !isToolchainPresent(toolchainName, toolchainTargetConfiguration);
     }
 
     @Override
@@ -143,7 +148,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
 
     @Override
     public Optional<ToolchainInstantiationException> getToolchainInstantiationException(
-        String toolchainName) {
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
       throw new UnsupportedOperationException();
     }
   }

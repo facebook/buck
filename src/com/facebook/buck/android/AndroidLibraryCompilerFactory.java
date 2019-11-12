@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavacFactory;
 
@@ -28,5 +29,8 @@ import com.facebook.buck.jvm.java.JavacFactory;
  */
 public interface AndroidLibraryCompilerFactory {
 
-  ConfiguredCompilerFactory getCompiler(JvmLanguage language, JavacFactory javacFactory);
+  ConfiguredCompilerFactory getCompiler(
+      JvmLanguage language,
+      JavacFactory javacFactory,
+      TargetConfiguration toolchainTargetConfiguration);
 }

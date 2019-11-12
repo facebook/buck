@@ -231,7 +231,8 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
         new AndroidClasspathProvider(
             new ToolchainProviderBuilder()
                 .withToolchain(AndroidPlatformTarget.DEFAULT_NAME, androidPlatformTarget)
-                .build());
+                .build(),
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     JavacOptions options =
         JavacOptions.builder()

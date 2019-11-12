@@ -24,6 +24,7 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -57,8 +58,11 @@ public class GoBinaryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return getGoToolchain().getPlatformFlavorDomain().containsAnyOf(flavors);
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return getGoToolchain(toolchainTargetConfiguration)
+        .getPlatformFlavorDomain()
+        .containsAnyOf(flavors);
   }
 
   @Override
@@ -68,7 +72,11 @@ public class GoBinaryDescription
       BuildRuleParams params,
       GoBinaryDescriptionArg args) {
     GoPlatform platform =
-        GoDescriptors.getPlatformForRule(getGoToolchain(), this.goBuckConfig, buildTarget, args);
+        GoDescriptors.getPlatformForRule(
+            getGoToolchain(buildTarget.getTargetConfiguration()),
+            this.goBuckConfig,
+            buildTarget,
+            args);
     return GoDescriptors.createGoBinaryRule(
         buildTarget,
         context.getProjectFilesystem(),
@@ -96,14 +104,18 @@ public class GoBinaryDescription
     // Add the C/C++ linker parse time deps.
     GoPlatform platform =
         GoDescriptors.getPlatformForRule(
-            getGoToolchain(), this.goBuckConfig, buildTarget, constructorArg);
+            getGoToolchain(buildTarget.getTargetConfiguration()),
+            this.goBuckConfig,
+            buildTarget,
+            constructorArg);
     targetGraphOnlyDepsBuilder.addAll(
         CxxPlatforms.getParseTimeDeps(
             buildTarget.getTargetConfiguration(), platform.getCxxPlatform()));
   }
 
-  private GoToolchain getGoToolchain() {
-    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
+  private GoToolchain getGoToolchain(TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider.getByName(
+        GoToolchain.DEFAULT_NAME, toolchainTargetConfiguration, GoToolchain.class);
   }
 
   @BuckStyleImmutable

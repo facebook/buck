@@ -64,8 +64,8 @@ public class PexToolProviderFactoryTest {
                     new FakeProjectFilesystem(),
                     new FakeProcessExecutor(),
                     new AlwaysFoundExecutableFinder(),
-                    TestRuleKeyConfigurationFactory.create(),
-                    () -> UnconfiguredTargetConfiguration.INSTANCE))
+                    TestRuleKeyConfigurationFactory.create()),
+                UnconfiguredTargetConfiguration.INSTANCE)
             .get();
     assertThat(
         pexToolProvider

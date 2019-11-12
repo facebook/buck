@@ -18,6 +18,7 @@ package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -108,10 +109,15 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
 
   @Override
   public Optional<OcamlToolchain> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
 
     CxxPlatformsProvider cxxPlatformsProviderFactory =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        toolchainProvider.getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class);
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         cxxPlatformsProviderFactory.getUnresolvedCxxPlatforms();
     UnresolvedCxxPlatform defaultCxxPlatform =

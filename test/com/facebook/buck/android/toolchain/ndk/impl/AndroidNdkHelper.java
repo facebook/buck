@@ -88,8 +88,8 @@ public class AndroidNdkHelper {
                   filesystem,
                   new DefaultProcessExecutor(new TestConsole()),
                   new ExecutableFinder(),
-                  TestRuleKeyConfigurationFactory.create(),
-                  () -> UnconfiguredTargetConfiguration.INSTANCE));
+                  TestRuleKeyConfigurationFactory.create()),
+              UnconfiguredTargetConfiguration.INSTANCE);
     } catch (HumanReadableException e) {
       LOG.info(e, "Cannot detect Android NDK");
       return Optional.empty();

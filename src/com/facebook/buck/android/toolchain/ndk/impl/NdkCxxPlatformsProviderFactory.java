@@ -37,13 +37,15 @@ public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPl
 
   @Override
   public Optional<NdkCxxPlatformsProvider> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
 
     ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> ndkCxxPlatforms =
         getNdkCxxPlatforms(
             context.getBuckConfig(),
             context.getFilesystem(),
-            context.getTargetConfiguration().get(),
+            toolchainTargetConfiguration,
             toolchainProvider);
 
     return Optional.of(NdkCxxPlatformsProvider.of(ndkCxxPlatforms));
@@ -64,7 +66,8 @@ public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPl
       ndkVersion = androidConfig.getNdkVersion().get();
     } else {
       AndroidNdk androidNdk =
-          toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+          toolchainProvider.getByName(
+              AndroidNdk.DEFAULT_NAME, targetConfiguration, AndroidNdk.class);
       ndkVersion = androidNdk.getNdkVersion();
     }
 

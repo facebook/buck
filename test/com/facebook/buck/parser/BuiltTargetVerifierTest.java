@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -197,7 +198,8 @@ public class BuiltTargetVerifierTest {
     }
 
     @Override
-    public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+        TargetConfiguration toolchainTargetConfiguration) {
       return Optional.of(flavorDomains);
     }
   }

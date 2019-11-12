@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.FlavorDomainException;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -112,18 +113,31 @@ public class JsFlavorsTest {
 
   @Test
   public void testBundleFlavors() {
-    assertTrue(bundleDescription.hasFlavors(ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES)));
-    assertTrue(bundleDescription.hasFlavors(ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED)));
-    assertFalse(libraryDescription.hasFlavors(ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES)));
-    assertFalse(libraryDescription.hasFlavors(ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED)));
+    assertTrue(
+        bundleDescription.hasFlavors(
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES), UnconfiguredTargetConfiguration.INSTANCE));
+    assertTrue(
+        bundleDescription.hasFlavors(
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED),
+            UnconfiguredTargetConfiguration.INSTANCE));
+    assertFalse(
+        libraryDescription.hasFlavors(
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES), UnconfiguredTargetConfiguration.INSTANCE));
+    assertFalse(
+        libraryDescription.hasFlavors(
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED),
+            UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
   public void testBundleFlavorsWithOtherFlavors() {
     assertTrue(
         bundleDescription.hasFlavors(
-            ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES, JsFlavors.RELEASE)));
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES, JsFlavors.RELEASE),
+            UnconfiguredTargetConfiguration.INSTANCE));
     assertTrue(
-        bundleDescription.hasFlavors(ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED, JsFlavors.IOS)));
+        bundleDescription.hasFlavors(
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED, JsFlavors.IOS),
+            UnconfiguredTargetConfiguration.INSTANCE));
   }
 }

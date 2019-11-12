@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -91,8 +92,11 @@ public class HalideLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return getCxxPlatformsProvider().getUnresolvedCxxPlatforms().containsAnyOf(flavors)
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return getCxxPlatformsProvider(toolchainTargetConfiguration)
+            .getUnresolvedCxxPlatforms()
+            .containsAnyOf(flavors)
         || flavors.contains(HALIDE_COMPILE_FLAVOR)
         || flavors.contains(HALIDE_COMPILER_FLAVOR)
         || StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors);
@@ -276,7 +280,8 @@ public class HalideLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       HalideLibraryDescriptionArg args) {
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         cxxPlatformsProvider.getUnresolvedCxxPlatforms();
 
@@ -358,9 +363,12 @@ public class HalideLibraryDescription
         buildTarget, projectFilesystem, params, graphBuilder, args.getSupportedPlatformsRegex());
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 
   @Override

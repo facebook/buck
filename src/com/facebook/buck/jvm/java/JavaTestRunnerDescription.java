@@ -75,7 +75,10 @@ public class JavaTestRunnerDescription
         JavacOptionsFactory.create(
             context
                 .getToolchainProvider()
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
@@ -108,7 +111,8 @@ public class JavaTestRunnerDescription
       JavaTestRunnerDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
   }
 
   @BuckStyleImmutable

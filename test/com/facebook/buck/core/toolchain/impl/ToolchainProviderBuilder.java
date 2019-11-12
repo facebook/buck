@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.toolchain.impl;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.BaseToolchainProvider;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -55,22 +56,26 @@ public class ToolchainProviderBuilder {
     }
 
     @Override
-    public Toolchain getByName(String toolchainName) {
+    public Toolchain getByName(
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
       return toolchains.get(toolchainName);
     }
 
     @Override
-    public boolean isToolchainPresent(String toolchainName) {
+    public boolean isToolchainPresent(
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
       return toolchains.containsKey(toolchainName);
     }
 
     @Override
-    public boolean isToolchainCreated(String toolchainName) {
-      return isToolchainPresent(toolchainName);
+    public boolean isToolchainCreated(
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
+      return isToolchainPresent(toolchainName, toolchainTargetConfiguration);
     }
 
     @Override
-    public boolean isToolchainFailed(String toolchainName) {
+    public boolean isToolchainFailed(
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
       return false;
     }
 
@@ -90,7 +95,7 @@ public class ToolchainProviderBuilder {
 
     @Override
     public Optional<ToolchainInstantiationException> getToolchainInstantiationException(
-        String toolchainName) {
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
       return Optional.empty();
     }
   }

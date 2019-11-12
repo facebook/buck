@@ -17,6 +17,7 @@
 package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -28,9 +29,14 @@ public class LuaPlatformsProviderFactory implements ToolchainFactory<LuaPlatform
 
   @Override
   public Optional<LuaPlatformsProvider> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
     CxxPlatformsProvider cxxPlatformsProviderFactory =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        toolchainProvider.getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class);
 
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         cxxPlatformsProviderFactory.getUnresolvedCxxPlatforms();
@@ -41,7 +47,7 @@ public class LuaPlatformsProviderFactory implements ToolchainFactory<LuaPlatform
         new LuaBuckConfig(context.getBuckConfig(), context.getExecutableFinder());
 
     FlavorDomain<LuaPlatform> luaPlatforms =
-        luaBuckConfig.getPlatforms(context.getTargetConfiguration().get(), cxxPlatforms);
+        luaBuckConfig.getPlatforms(toolchainTargetConfiguration, cxxPlatforms);
     LuaPlatform defaultLuaPlatform = luaPlatforms.getValue(defaultCxxPlatform.getFlavor());
 
     return Optional.of(LuaPlatformsProvider.of(defaultLuaPlatform, luaPlatforms));

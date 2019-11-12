@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -87,7 +88,7 @@ public class CxxLibraryMetadataFactory {
       case CXX_PREPROCESSOR_INPUT:
         {
           Map.Entry<Flavor, UnresolvedCxxPlatform> platform =
-              getCxxPlatformsProvider()
+              getCxxPlatformsProvider(buildTarget.getTargetConfiguration())
                   .getUnresolvedCxxPlatforms()
                   .getFlavorAndValue(buildTarget)
                   .orElseThrow(
@@ -96,7 +97,7 @@ public class CxxLibraryMetadataFactory {
                               String.format(
                                   "%s: cannot extract platform from target flavors (available platforms: %s)",
                                   buildTarget,
-                                  getCxxPlatformsProvider()
+                                  getCxxPlatformsProvider(buildTarget.getTargetConfiguration())
                                       .getUnresolvedCxxPlatforms()
                                       .getFlavors())));
           Map.Entry<Flavor, HeaderVisibility> visibility =
@@ -237,8 +238,11 @@ public class CxxLibraryMetadataFactory {
         CxxHeaders.class);
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 }

@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
@@ -40,7 +41,9 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
 
   @Override
   public ConfiguredCompilerFactory getCompiler(
-      AndroidLibraryDescription.JvmLanguage language, JavacFactory javacFactory) {
+      AndroidLibraryDescription.JvmLanguage language,
+      JavacFactory javacFactory,
+      TargetConfiguration toolchainTargetConfiguration) {
     switch (language) {
       case JAVA:
         return new JavaConfiguredCompilerFactory(

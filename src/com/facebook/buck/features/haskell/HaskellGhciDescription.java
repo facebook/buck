@@ -259,7 +259,8 @@ public class HaskellGhciDescription
 
   // Return the C/C++ platform to build against.
   private HaskellPlatform getPlatform(BuildTarget target, AbstractHaskellGhciDescriptionArg arg) {
-    HaskellPlatformsProvider haskellPlatformsProvider = getHaskellPlatformsProvider();
+    HaskellPlatformsProvider haskellPlatformsProvider =
+        getHaskellPlatformsProvider(target.getTargetConfiguration());
     FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
     Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
@@ -323,9 +324,12 @@ public class HaskellGhciDescription
                     .forEach(targetGraphOnlyDepsBuilder::add));
   }
 
-  private HaskellPlatformsProvider getHaskellPlatformsProvider() {
+  private HaskellPlatformsProvider getHaskellPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        HaskellPlatformsProvider.DEFAULT_NAME, HaskellPlatformsProvider.class);
+        HaskellPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        HaskellPlatformsProvider.class);
   }
 
   /** Composition of {@link NativeLinkableGroup}s in the omnibus link. */

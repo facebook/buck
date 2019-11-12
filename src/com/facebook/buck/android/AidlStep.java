@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -34,6 +35,7 @@ public class AidlStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
   private final ToolchainProvider toolchainProvider;
+  private final TargetConfiguration toolchainTargetConfiguration;
   private final Path aidlFilePath;
   private final Set<String> importDirectoryPaths;
   private final Path destinationDirectory;
@@ -41,6 +43,7 @@ public class AidlStep extends ShellStep {
   public AidlStep(
       ProjectFilesystem filesystem,
       ToolchainProvider toolchainProvider,
+      TargetConfiguration toolchainTargetConfiguration,
       Path aidlFilePath,
       Set<String> importDirectoryPaths,
       Path destinationDirectory) {
@@ -48,6 +51,7 @@ public class AidlStep extends ShellStep {
 
     this.filesystem = filesystem;
     this.toolchainProvider = toolchainProvider;
+    this.toolchainTargetConfiguration = toolchainTargetConfiguration;
     this.aidlFilePath = aidlFilePath;
     this.importDirectoryPaths = ImmutableSet.copyOf(importDirectoryPaths);
     this.destinationDirectory = destinationDirectory;
@@ -63,7 +67,9 @@ public class AidlStep extends ShellStep {
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+            AndroidPlatformTarget.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            AndroidPlatformTarget.class);
 
     args.add(androidPlatformTarget.getAidlExecutable().toString());
 

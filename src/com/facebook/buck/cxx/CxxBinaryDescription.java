@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -105,7 +106,9 @@ public class CxxBinaryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(
         CxxPlatforms.findDepsForTargetFromConstructorArgs(
-            getCxxPlatformsProvider(), buildTarget, constructorArg.getDefaultPlatform()));
+            getCxxPlatformsProvider(buildTarget.getTargetConfiguration()),
+            buildTarget,
+            constructorArg.getDefaultPlatform()));
     constructorArg
         .getDepsQuery()
         .ifPresent(
@@ -115,13 +118,15 @@ public class CxxBinaryDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return cxxBinaryFlavored.flavorDomains();
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return cxxBinaryFlavored.flavorDomains(toolchainTargetConfiguration);
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> inputFlavors) {
-    return cxxBinaryFlavored.hasFlavors(inputFlavors);
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> inputFlavors, TargetConfiguration toolchainTargetConfiguration) {
+    return cxxBinaryFlavored.hasFlavors(inputFlavors, toolchainTargetConfiguration);
   }
 
   @Override
@@ -138,9 +143,10 @@ public class CxxBinaryDescription
 
   @Override
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
-      ImmutableSortedSet<Flavor> argDefaultFlavors) {
+      ImmutableSortedSet<Flavor> argDefaultFlavors,
+      TargetConfiguration toolchainTargetConfiguration) {
     return cxxBinaryImplicitFlavors.addImplicitFlavorsForRuleTypes(
-        argDefaultFlavors, DescriptionCache.getRuleType(this));
+        argDefaultFlavors, toolchainTargetConfiguration, DescriptionCache.getRuleType(this));
   }
 
   @Override
@@ -148,9 +154,12 @@ public class CxxBinaryDescription
     return true;
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 
   public interface CommonArg extends LinkableCxxConstructorArg, HasVersionUniverse, HasDepsQuery {

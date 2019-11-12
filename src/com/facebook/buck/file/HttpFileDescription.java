@@ -54,7 +54,10 @@ public class HttpFileDescription implements DescriptionWithTargetGraph<HttpFileD
 
     boolean executable = args.getExecutable().orElse(false);
     Downloader downloader =
-        context.getToolchainProvider().getByName(Downloader.DEFAULT_NAME, Downloader.class);
+        context
+            .getToolchainProvider()
+            .getByName(
+                Downloader.DEFAULT_NAME, buildTarget.getTargetConfiguration(), Downloader.class);
     if (executable) {
       return new HttpFileBinary(
           buildTarget,

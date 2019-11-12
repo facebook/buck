@@ -25,6 +25,7 @@ import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -39,7 +40,7 @@ import com.facebook.buck.test.config.TestBuckConfig;
 import com.google.common.collect.ImmutableCollection.Builder;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class AndroidInstrumentationTestDescription
@@ -49,7 +50,7 @@ public class AndroidInstrumentationTestDescription
   private final BuckConfig buckConfig;
   private final ConcurrentHashMap<ProjectFilesystem, ConcurrentHashMap<String, PackagedResource>>
       resourceSupplierCache;
-  private final Supplier<JavaOptions> javaOptions;
+  private final Function<TargetConfiguration, JavaOptions> javaOptions;
 
   public AndroidInstrumentationTestDescription(
       BuckConfig buckConfig, ToolchainProvider toolchainProvider) {
@@ -83,13 +84,15 @@ public class AndroidInstrumentationTestDescription
         buildTarget,
         projectFilesystem,
         toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+            AndroidPlatformTarget.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidPlatformTarget.class),
         params.copyAppendingExtraDeps(BuildRules.getExportedRules(params.getDeclaredDeps().get())),
         (HasInstallableApk) apk,
         args.getLabels(),
         args.getContacts(),
         javaOptions
-            .get()
+            .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(
                 context.getActionGraphBuilder(), buildTarget.getTargetConfiguration()),
         args.getTestRuleTimeoutMs()
@@ -126,7 +129,7 @@ public class AndroidInstrumentationTestDescription
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javaOptions
-        .get()
+        .apply(buildTarget.getTargetConfiguration())
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 

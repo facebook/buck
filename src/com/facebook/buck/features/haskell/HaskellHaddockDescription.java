@@ -109,7 +109,9 @@ public class HaskellHaddockDescription
       BuildTarget target, AbstractHaskellHaddockDescriptionArg arg) {
     HaskellPlatformsProvider haskellPlatformsProvider =
         toolchainProvider.getByName(
-            HaskellPlatformsProvider.DEFAULT_NAME, HaskellPlatformsProvider.class);
+            HaskellPlatformsProvider.DEFAULT_NAME,
+            target.getTargetConfiguration(),
+            HaskellPlatformsProvider.class);
     FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
     Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);

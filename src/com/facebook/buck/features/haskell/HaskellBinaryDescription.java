@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -103,7 +104,8 @@ public class HaskellBinaryDescription
 
   // Return the C/C++ platform to build against.
   private HaskellPlatform getPlatform(BuildTarget target, AbstractHaskellBinaryDescriptionArg arg) {
-    HaskellPlatformsProvider haskellPlatformsProvider = getHaskellPlatformsProvider();
+    HaskellPlatformsProvider haskellPlatformsProvider =
+        getHaskellPlatformsProvider(target.getTargetConfiguration());
     FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
     Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
@@ -320,8 +322,11 @@ public class HaskellBinaryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (getHaskellPlatformsProvider().getHaskellPlatforms().containsAnyOf(flavors)) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    if (getHaskellPlatformsProvider(toolchainTargetConfiguration)
+        .getHaskellPlatforms()
+        .containsAnyOf(flavors)) {
       return true;
     }
 
@@ -334,9 +339,12 @@ public class HaskellBinaryDescription
     return false;
   }
 
-  private HaskellPlatformsProvider getHaskellPlatformsProvider() {
+  private HaskellPlatformsProvider getHaskellPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        HaskellPlatformsProvider.DEFAULT_NAME, HaskellPlatformsProvider.class);
+        HaskellPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        HaskellPlatformsProvider.class);
   }
 
   protected enum Type implements FlavorConvertible {

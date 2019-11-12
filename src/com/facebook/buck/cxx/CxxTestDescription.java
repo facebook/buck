@@ -122,7 +122,8 @@ public class CxxTestDescription
 
   private UnresolvedCxxPlatform getCxxPlatform(
       BuildTarget target, CxxBinaryDescription.CommonArg constructorArg) {
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(target.getTargetConfiguration());
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         cxxPlatformsProvider.getUnresolvedCxxPlatforms();
 
@@ -191,7 +192,10 @@ public class CxxTestDescription
 
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
-          getCxxPlatformsProvider().getUnresolvedCxxPlatforms().getValue(buildTarget).isPresent()
+          getCxxPlatformsProvider(buildTarget.getTargetConfiguration())
+                  .getUnresolvedCxxPlatforms()
+                  .getValue(buildTarget)
+                  .isPresent()
               ? buildTarget
               : buildTarget.withAppendedFlavors(cxxPlatform.getFlavor()),
           projectFilesystem,
@@ -363,7 +367,8 @@ public class CxxTestDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
 
     if (flavors.isEmpty()) {
       return true;
@@ -385,7 +390,9 @@ public class CxxTestDescription
       return true;
     }
 
-    return getCxxPlatformsProvider().getUnresolvedCxxPlatforms().containsAnyOf(flavors)
+    return getCxxPlatformsProvider(toolchainTargetConfiguration)
+            .getUnresolvedCxxPlatforms()
+            .containsAnyOf(flavors)
         || !Sets.intersection(declaredPlatforms, flavors).isEmpty();
   }
 
@@ -406,9 +413,12 @@ public class CxxTestDescription
     return true;
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

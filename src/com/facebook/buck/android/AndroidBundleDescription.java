@@ -32,6 +32,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -57,6 +58,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
 
@@ -77,7 +79,7 @@ public class AndroidBundleDescription
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidBuckConfig androidBuckConfig;
   private final JavacFactory javacFactory;
-  private final Supplier<JavaOptions> javaOptions;
+  private final Function<TargetConfiguration, JavaOptions> javaOptions;
   private final ProGuardConfig proGuardConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
@@ -182,7 +184,7 @@ public class AndroidBundleDescription
             rulesToExcludeFromDex,
             args,
             /* useProtoFormat */ true,
-            javaOptions.get(),
+            javaOptions.apply(buildTarget.getTargetConfiguration()),
             javacFactory,
             context.getConfigurationRuleRegistry());
     AndroidBundle androidBundle =
@@ -198,7 +200,7 @@ public class AndroidBundleDescription
             exopackageModes,
             resourceFilter,
             args,
-            javaOptions.get());
+            javaOptions.apply(buildTarget.getTargetConfiguration()));
     // The exo installer is always added to the index so that the action graph is the same
     // between build and install calls.
     new AndroidBinaryInstallGraphEnhancer(
@@ -231,7 +233,8 @@ public class AndroidBundleDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     for (Flavor flavor : flavors) {
       if (!FLAVORS.contains(flavor)) {
         return false;
@@ -247,9 +250,10 @@ public class AndroidBundleDescription
       AbstractAndroidBundleDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
     javaOptions
-        .get()
+        .apply(buildTarget.getTargetConfiguration())
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
 
     Optionals.addIfPresent(

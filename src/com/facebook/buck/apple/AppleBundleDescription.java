@@ -111,22 +111,28 @@ public class AppleBundleDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     ImmutableSet.Builder<FlavorDomain<?>> builder = ImmutableSet.builder();
 
     ImmutableSet<FlavorDomain<?>> localDomains =
         ImmutableSet.of(AppleDebugFormat.FLAVOR_DOMAIN, AppleDescriptions.INCLUDE_FRAMEWORKS);
 
     builder.addAll(localDomains);
-    appleLibraryDescription.flavorDomains().ifPresent(domains -> builder.addAll(domains));
-    appleBinaryDescription.flavorDomains().ifPresent(domains -> builder.addAll(domains));
+    appleLibraryDescription
+        .flavorDomains(toolchainTargetConfiguration)
+        .ifPresent(domains -> builder.addAll(domains));
+    appleBinaryDescription
+        .flavorDomains(toolchainTargetConfiguration)
+        .ifPresent(domains -> builder.addAll(domains));
 
     return Optional.of(builder.build());
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (appleLibraryDescription.hasFlavors(flavors)) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    if (appleLibraryDescription.hasFlavors(flavors, toolchainTargetConfiguration)) {
       return true;
     }
     ImmutableSet.Builder<Flavor> flavorBuilder = ImmutableSet.builder();
@@ -139,7 +145,7 @@ public class AppleBundleDescription
       }
       flavorBuilder.add(flavor);
     }
-    return appleBinaryDescription.hasFlavors(flavorBuilder.build());
+    return appleBinaryDescription.hasFlavors(flavorBuilder.build(), toolchainTargetConfiguration);
   }
 
   @Override
@@ -163,7 +169,8 @@ public class AppleBundleDescription
           graphBuilder.requireRule(
               buildTarget.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
 
     Predicate<BuildTarget> resourceFilter =
         LinkableListFilterFactory.resourcePredicateFrom(
@@ -175,16 +182,20 @@ public class AppleBundleDescription
     return AppleDescriptions.createAppleBundle(
         xcodeDescriptions,
         cxxPlatformsProvider,
-        getAppleCxxPlatformFlavorDomain(),
+        getAppleCxxPlatformFlavorDomain(buildTarget.getTargetConfiguration()),
         context.getTargetGraph(),
         buildTarget,
         context.getProjectFilesystem(),
         params,
         graphBuilder,
         toolchainProvider.getByName(
-            CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
+            CodeSignIdentityStore.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            CodeSignIdentityStore.class),
         toolchainProvider.getByName(
-            ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
+            ProvisioningProfileStore.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            ProvisioningProfileStore.class),
         args.getBinary(),
         args.getPlatformBinary(),
         args.getDefaultPlatform(),
@@ -222,7 +233,8 @@ public class AppleBundleDescription
       AbstractAppleBundleDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
     if (!cxxPlatformsProvider.getUnresolvedCxxPlatforms().containsAnyOf(buildTarget.getFlavors())) {
       buildTarget =
           buildTarget.withAppendedFlavors(
@@ -230,7 +242,7 @@ public class AppleBundleDescription
     }
 
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
-        getAppleCxxPlatformFlavorDomain();
+        getAppleCxxPlatformFlavorDomain(buildTarget.getTargetConfiguration());
     Optional<MultiarchFileInfo> fatBinaryInfo =
         MultiarchFileInfos.create(appleCxxPlatformsFlavorDomain, buildTarget);
     UnresolvedCxxPlatform cxxPlatform;
@@ -340,8 +352,10 @@ public class AppleBundleDescription
       // Bundles should be opaque to framework dependencies.
       return Optional.empty();
     }
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    FlavorDomain<AppleCxxPlatform> appleCxxPlatforms = getAppleCxxPlatformFlavorDomain();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
+    FlavorDomain<AppleCxxPlatform> appleCxxPlatforms =
+        getAppleCxxPlatformFlavorDomain(buildTarget.getTargetConfiguration());
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -356,16 +370,22 @@ public class AppleBundleDescription
     return graphBuilder.requireMetadata(binaryTarget, metadataClass);
   }
 
-  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformFlavorDomain() {
+  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformFlavorDomain(
+      TargetConfiguration toolchainTargetConfiguration) {
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
         toolchainProvider.getByName(
-            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
+            AppleCxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            AppleCxxPlatformsProvider.class);
     return appleCxxPlatformsProvider.getAppleCxxPlatforms();
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

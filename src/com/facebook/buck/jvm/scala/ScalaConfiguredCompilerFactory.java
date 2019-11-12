@@ -32,23 +32,28 @@ import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final ScalaBuckConfig scalaBuckConfig;
-  private final Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier;
+  private final BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
+      extraClasspathProviderSupplier;
   private @Nullable Tool scalac;
   private final JavacFactory javacFactory;
 
   public ScalaConfiguredCompilerFactory(ScalaBuckConfig config, JavacFactory javacFactory) {
-    this(config, (toolchainProvider) -> ExtraClasspathProvider.EMPTY, javacFactory);
+    this(
+        config,
+        (toolchainProvider, toolchainTargetConfiguration) -> ExtraClasspathProvider.EMPTY,
+        javacFactory);
   }
 
   public ScalaConfiguredCompilerFactory(
       ScalaBuckConfig config,
-      Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier,
+      BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
+          extraClasspathProviderSupplier,
       JavacFactory javacFactory) {
     this.scalaBuckConfig = config;
     this.extraClasspathProviderSupplier = extraClasspathProviderSupplier;
@@ -74,15 +79,16 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         scalaBuckConfig.getCompilerFlags(),
         Objects.requireNonNull(arg).getExtraArguments(),
         buildRuleResolver.getAllRules(scalaBuckConfig.getCompilerPlugins(targetConfiguration)),
-        getJavac(buildRuleResolver, arg),
+        getJavac(buildRuleResolver, arg, targetConfiguration),
         javacOptions,
-        extraClasspathProviderSupplier.apply(toolchainProvider));
+        extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration));
   }
 
   @Override
   public Optional<ExtraClasspathProvider> getExtraClasspathProvider(
-      ToolchainProvider toolchainProvider) {
-    return Optional.of(extraClasspathProviderSupplier.apply(toolchainProvider));
+      ToolchainProvider toolchainProvider, TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        extraClasspathProviderSupplier.apply(toolchainProvider, toolchainTargetConfiguration));
   }
 
   @Override
@@ -103,7 +109,10 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     depsConsumer.accept(scalaBuckConfig.getScalaLibraryTarget(targetConfiguration));
   }
 
-  private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
-    return javacFactory.create(resolver, arg);
+  private Javac getJavac(
+      BuildRuleResolver resolver,
+      @Nullable JvmLibraryArg arg,
+      TargetConfiguration toolchainTargetConfiguration) {
+    return javacFactory.create(resolver, arg, toolchainTargetConfiguration);
   }
 }

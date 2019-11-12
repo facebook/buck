@@ -890,7 +890,10 @@ public class PrebuiltCxxLibraryDescription
   private Optional<Entry<Flavor, UnresolvedCxxPlatform>> getUnresolvedCxxPlatform(
       BuildTarget buildTarget) {
     return toolchainProvider
-        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            CxxPlatformsProvider.class)
         .getUnresolvedCxxPlatforms()
         .getFlavorAndValue(buildTarget);
   }

@@ -204,7 +204,8 @@ public class NdkCxxPlatforms {
       Platform platform,
       ToolchainProvider toolchainProvider,
       String ndkVersion) {
-    AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+    AndroidNdk androidNdk =
+        toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, targetConfiguration, AndroidNdk.class);
     Path ndkRoot = androidNdk.getNdkRootPath();
 
     NdkCompilerType compilerType =

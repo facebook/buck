@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -57,36 +58,62 @@ public class JsFlavorValidationCommonTest {
 
   @Test
   public void testEmptyFlavors() {
-    assertTrue(getTestInstance().hasFlavors(ImmutableSet.of()));
+    assertTrue(
+        getTestInstance().hasFlavors(ImmutableSet.of(), UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
   public void testReleaseFlavor() {
-    assertTrue(getTestInstance().hasFlavors(ImmutableSet.of(JsFlavors.RELEASE)));
+    assertTrue(
+        getTestInstance()
+            .hasFlavors(
+                ImmutableSet.of(JsFlavors.RELEASE), UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
   public void testAndroidFlavor() {
-    assertTrue(getTestInstance().hasFlavors(ImmutableSet.of(JsFlavors.ANDROID)));
-    assertTrue(getTestInstance().hasFlavors(ImmutableSet.of(JsFlavors.ANDROID, JsFlavors.RELEASE)));
+    assertTrue(
+        getTestInstance()
+            .hasFlavors(
+                ImmutableSet.of(JsFlavors.ANDROID), UnconfiguredTargetConfiguration.INSTANCE));
+    assertTrue(
+        getTestInstance()
+            .hasFlavors(
+                ImmutableSet.of(JsFlavors.ANDROID, JsFlavors.RELEASE),
+                UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
   public void testIosFlavor() {
-    assertTrue(getTestInstance().hasFlavors(ImmutableSet.of(JsFlavors.IOS)));
-    assertTrue(getTestInstance().hasFlavors(ImmutableSet.of(JsFlavors.IOS, JsFlavors.RELEASE)));
+    assertTrue(
+        getTestInstance()
+            .hasFlavors(ImmutableSet.of(JsFlavors.IOS), UnconfiguredTargetConfiguration.INSTANCE));
+    assertTrue(
+        getTestInstance()
+            .hasFlavors(
+                ImmutableSet.of(JsFlavors.IOS, JsFlavors.RELEASE),
+                UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test(expected = FlavorDomainException.class)
   public void testMultiplePlatforms() {
-    getTestInstance().hasFlavors(ImmutableSet.of(JsFlavors.ANDROID, JsFlavors.IOS));
+    getTestInstance()
+        .hasFlavors(
+            ImmutableSet.of(JsFlavors.ANDROID, JsFlavors.IOS),
+            UnconfiguredTargetConfiguration.INSTANCE);
   }
 
   @Test
   public void testUnknownFlavors() {
-    assertFalse(getTestInstance().hasFlavors(ImmutableSet.of(InternalFlavor.of("unknown"))));
     assertFalse(
         getTestInstance()
-            .hasFlavors(ImmutableSet.of(InternalFlavor.of("unknown"), JsFlavors.RELEASE)));
+            .hasFlavors(
+                ImmutableSet.of(InternalFlavor.of("unknown")),
+                UnconfiguredTargetConfiguration.INSTANCE));
+    assertFalse(
+        getTestInstance()
+            .hasFlavors(
+                ImmutableSet.of(InternalFlavor.of("unknown"), JsFlavors.RELEASE),
+                UnconfiguredTargetConfiguration.INSTANCE));
   }
 }

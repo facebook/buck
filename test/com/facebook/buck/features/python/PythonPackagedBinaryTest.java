@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -86,7 +87,8 @@ public class PythonPackagedBinaryTest {
             new PythonEnvironment(
                 Paths.get("fake_python"),
                 PythonVersion.of("CPython", "2.7"),
-                PythonBuckConfig.SECTION),
+                PythonBuckConfig.SECTION,
+                UnconfiguredTargetConfiguration.INSTANCE),
             "main",
             PythonPackageComponents.of(
                 ImmutableMap.of(

@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -40,9 +41,12 @@ public class CxxLibraryImplicitFlavors {
   }
 
   public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(
-      ImmutableSortedSet<Flavor> argDefaultFlavors, RuleType... types) {
+      ImmutableSortedSet<Flavor> argDefaultFlavors,
+      TargetConfiguration toolchainTargetConfiguration,
+      RuleType... types) {
     Optional<Flavor> typeFlavor = CxxLibraryDescription.LIBRARY_TYPE.getFlavor(argDefaultFlavors);
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(toolchainTargetConfiguration);
     Optional<Flavor> platformFlavor =
         cxxPlatformsProvider.getUnresolvedCxxPlatforms().getFlavor(argDefaultFlavors);
 
@@ -74,8 +78,11 @@ public class CxxLibraryImplicitFlavors {
     return result;
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 }

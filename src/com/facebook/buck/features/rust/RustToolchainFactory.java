@@ -17,6 +17,7 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -30,10 +31,15 @@ public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
 
   @Override
   public Optional<RustToolchain> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
 
     CxxPlatformsProvider cxxPlatformsProviderFactory =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        toolchainProvider.getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class);
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         cxxPlatformsProviderFactory.getUnresolvedCxxPlatforms();
     UnresolvedCxxPlatform defaultCxxPlatform =

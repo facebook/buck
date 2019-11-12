@@ -65,12 +65,13 @@ public class LazyPythonPlatform implements PythonPlatform {
             () -> {
               PythonInterpreter pythonInterpreter =
                   toolchainProvider.getByName(
-                      PythonInterpreter.DEFAULT_NAME, PythonInterpreter.class);
+                      PythonInterpreter.DEFAULT_NAME, targetConfiguration, PythonInterpreter.class);
 
               Path pythonPath = pythonInterpreter.getPythonInterpreterPath(configSection);
               PythonVersion pythonVersion =
                   getVersion(pythonBuckConfig, this.processExecutor, configSection, pythonPath);
-              return new PythonEnvironment(pythonPath, pythonVersion, configSection);
+              return new PythonEnvironment(
+                  pythonPath, pythonVersion, configSection, targetConfiguration);
             });
   }
 

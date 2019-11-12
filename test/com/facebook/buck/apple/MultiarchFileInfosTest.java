@@ -27,6 +27,7 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -253,7 +254,9 @@ public class MultiarchFileInfosTest {
 
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
         toolchainProvider.getByName(
-            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
+            AppleCxxPlatformsProvider.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AppleCxxPlatformsProvider.class);
     return appleCxxPlatformsProvider.getAppleCxxPlatforms();
   }
 }

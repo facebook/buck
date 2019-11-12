@@ -62,6 +62,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
 
@@ -83,7 +84,7 @@ public class AndroidBinaryDescription
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidBuckConfig androidBuckConfig;
   private final JavacFactory javacFactory;
-  private final Supplier<JavaOptions> javaOptions;
+  private final Function<TargetConfiguration, JavaOptions> javaOptions;
   private final ProGuardConfig proGuardConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
@@ -182,7 +183,7 @@ public class AndroidBinaryDescription
             rulesToExcludeFromDex,
             args,
             /* useProtoFormat */ false,
-            javaOptions.get(),
+            javaOptions.apply(buildTarget.getTargetConfiguration()),
             javacFactory,
             context.getConfigurationRuleRegistry());
     AndroidBinary androidBinary =
@@ -199,7 +200,7 @@ public class AndroidBinaryDescription
             resourceFilter,
             rulesToExcludeFromDex,
             args,
-            javaOptions.get());
+            javaOptions.apply(buildTarget.getTargetConfiguration()));
     // The exo installer is always added to the index so that the action graph is the same
     // between build and install calls.
     new AndroidBinaryInstallGraphEnhancer(
@@ -232,7 +233,8 @@ public class AndroidBinaryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     for (Flavor flavor : flavors) {
       if (!FLAVORS.contains(flavor)) {
         return false;
@@ -248,9 +250,12 @@ public class AndroidBinaryDescription
       AbstractAndroidBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
     TargetConfiguration targetConfiguration = buildTarget.getTargetConfiguration();
-    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder, targetConfiguration);
+    javaOptions
+        .apply(targetConfiguration)
+        .addParseTimeDeps(targetGraphOnlyDepsBuilder, targetConfiguration);
 
     Optionals.addIfPresent(proGuardConfig.getProguardTarget(targetConfiguration), extraDepsBuilder);
 
@@ -261,7 +266,10 @@ public class AndroidBinaryDescription
     }
     // TODO(cjhopman): we could filter this by the abis that this binary supports.
     toolchainProvider
-        .getByNameIfPresent(NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class)
+        .getByNameIfPresent(
+            NdkCxxPlatformsProvider.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            NdkCxxPlatformsProvider.class)
         .map(NdkCxxPlatformsProvider::getNdkCxxPlatforms).map(Map::values)
         .orElse(ImmutableList.of()).stream()
         .map(platform -> platform.getParseTimeDeps(targetConfiguration))

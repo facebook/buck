@@ -59,7 +59,10 @@ public class RemoteFileDescription implements DescriptionWithTargetGraph<RemoteF
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     RemoteFile.Type type = args.getType().orElse(RemoteFile.Type.DATA);
     Downloader downloader =
-        context.getToolchainProvider().getByName(Downloader.DEFAULT_NAME, Downloader.class);
+        context
+            .getToolchainProvider()
+            .getByName(
+                Downloader.DEFAULT_NAME, buildTarget.getTargetConfiguration(), Downloader.class);
     if (type == RemoteFile.Type.EXECUTABLE) {
       return new RemoteFileBinary(
           buildTarget, projectFilesystem, params, downloader, args.getUrl(), sha1, out, type);

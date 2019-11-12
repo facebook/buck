@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -120,8 +121,13 @@ public class CxxPythonExtensionDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getPythonPlatforms(), getCxxPlatforms(), LIBRARY_TYPE));
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        ImmutableSet.of(
+            getPythonPlatforms(toolchainTargetConfiguration),
+            getCxxPlatforms(toolchainTargetConfiguration),
+            LIBRARY_TYPE));
   }
 
   @Override
@@ -386,8 +392,10 @@ public class CxxPythonExtensionDescription
     Optional<Type> type = LIBRARY_TYPE.getValue(buildTarget);
     if (type.isPresent()) {
 
-      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms = getCxxPlatforms();
-      FlavorDomain<PythonPlatform> pythonPlatforms = getPythonPlatforms();
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+          getCxxPlatforms(buildTarget.getTargetConfiguration());
+      FlavorDomain<PythonPlatform> pythonPlatforms =
+          getPythonPlatforms(buildTarget.getTargetConfiguration());
 
       // If we *are* building a specific type of this lib, call into the type specific rule builder
       // methods.
@@ -416,7 +424,9 @@ public class CxxPythonExtensionDescription
             // we keep the platform default as a final fallback
             ImmutableSet<Flavor> defaultCxxFlavors = args.getDefaultFlavors();
             if (!cxxPlatforms.containsAnyOf(defaultCxxFlavors)) {
-              defaultCxxFlavors = ImmutableSet.of(getDefaultCxxPlatform().getFlavor());
+              defaultCxxFlavors =
+                  ImmutableSet.of(
+                      getDefaultCxxPlatform(buildTarget.getTargetConfiguration()).getFlavor());
             }
 
             target = target.withAppendedFlavors(defaultCxxFlavors);
@@ -532,12 +542,13 @@ public class CxxPythonExtensionDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Get any parse time deps from the C/C++ platforms.
-    getCxxPlatforms()
+    getCxxPlatforms(buildTarget.getTargetConfiguration())
         .getValues(buildTarget)
         .forEach(
             p -> extraDepsBuilder.addAll(p.getParseTimeDeps(buildTarget.getTargetConfiguration())));
 
-    for (PythonPlatform pythonPlatform : getPythonPlatforms().getValues()) {
+    for (PythonPlatform pythonPlatform :
+        getPythonPlatforms(buildTarget.getTargetConfiguration()).getValues()) {
       Optionals.addIfPresent(pythonPlatform.getCxxLibrary(), extraDepsBuilder);
     }
   }
@@ -547,21 +558,33 @@ public class CxxPythonExtensionDescription
     return true;
   }
 
-  private FlavorDomain<PythonPlatform> getPythonPlatforms() {
+  private FlavorDomain<PythonPlatform> getPythonPlatforms(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider
-        .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+        .getByName(
+            PythonPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            PythonPlatformsProvider.class)
         .getPythonPlatforms();
   }
 
-  private UnresolvedCxxPlatform getDefaultCxxPlatform() {
+  private UnresolvedCxxPlatform getDefaultCxxPlatform(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider
-        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class)
         .getDefaultUnresolvedCxxPlatform();
   }
 
-  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms() {
+  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider
-        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class)
         .getUnresolvedCxxPlatforms();
   }
 

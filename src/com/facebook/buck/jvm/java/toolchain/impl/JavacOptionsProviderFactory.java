@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.toolchain.impl;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -28,10 +29,12 @@ public class JavacOptionsProviderFactory implements ToolchainFactory<JavacOption
 
   @Override
   public Optional<JavacOptionsProvider> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
     JavaBuckConfig javaConfig = context.getBuckConfig().getView(JavaBuckConfig.class);
     JavacOptions defaultJavacOptions =
-        javaConfig.getDefaultJavacOptions(context.getTargetConfiguration().get());
+        javaConfig.getDefaultJavacOptions(toolchainTargetConfiguration);
 
     return Optional.of(JavacOptionsProvider.of(defaultJavacOptions));
   }

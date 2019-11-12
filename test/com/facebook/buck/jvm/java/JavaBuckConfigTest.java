@@ -316,7 +316,9 @@ public class JavaBuckConfigTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
 
-    Javac javac = JavacFactoryHelper.createJavacFactory(javaConfig).create(null, null);
+    Javac javac =
+        JavacFactoryHelper.createJavacFactory(javaConfig)
+            .create(null, null, UnconfiguredTargetConfiguration.INSTANCE);
     assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
   }
 
@@ -332,7 +334,10 @@ public class JavaBuckConfigTest {
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
 
     assertEquals(
-        javac, JavacFactoryHelper.createJavacFactory(javaConfig).create(null, null).getShortName());
+        javac,
+        JavacFactoryHelper.createJavacFactory(javaConfig)
+            .create(null, null, UnconfiguredTargetConfiguration.INSTANCE)
+            .getShortName());
   }
 
   @Test

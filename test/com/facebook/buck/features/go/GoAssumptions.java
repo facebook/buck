@@ -81,8 +81,8 @@ abstract class GoAssumptions {
                   new FakeProjectFilesystem(),
                   executor,
                   new ExecutableFinder(),
-                  TestRuleKeyConfigurationFactory.create(),
-                  () -> UnconfiguredTargetConfiguration.INSTANCE))
+                  TestRuleKeyConfigurationFactory.create()),
+              UnconfiguredTargetConfiguration.INSTANCE)
           .get()
           .getDefaultPlatform()
           .getCompiler();

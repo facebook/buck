@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -38,20 +39,24 @@ public class CxxLibraryFlavored implements Flavored {
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(
         ImmutableSet.of(
             // Missing: CXX Compilation Database
             // Missing: CXX Description Enhancer
             // Missing: CXX Infer Enhancer
-            getCxxPlatformsProvider().getUnresolvedCxxPlatforms(),
+            getCxxPlatformsProvider(toolchainTargetConfiguration).getUnresolvedCxxPlatforms(),
             LinkerMapMode.FLAVOR_DOMAIN,
             StripStyle.FLAVOR_DOMAIN));
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return getCxxPlatformsProvider().getUnresolvedCxxPlatforms().containsAnyOf(flavors)
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return getCxxPlatformsProvider(toolchainTargetConfiguration)
+            .getUnresolvedCxxPlatforms()
+            .containsAnyOf(flavors)
         || flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)
         || flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
         || CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(flavors)
@@ -62,8 +67,11 @@ public class CxxLibraryFlavored implements Flavored {
         || !Sets.intersection(cxxBuckConfig.getDeclaredPlatforms(), flavors).isEmpty();
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 }

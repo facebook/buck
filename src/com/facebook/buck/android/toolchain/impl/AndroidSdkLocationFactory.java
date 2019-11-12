@@ -19,6 +19,7 @@ package com.facebook.buck.android.toolchain.impl;
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -30,7 +31,9 @@ public class AndroidSdkLocationFactory implements ToolchainFactory<AndroidSdkLoc
 
   @Override
   public Optional<AndroidSdkLocation> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
 
     AndroidBuckConfig androidBuckConfig =
         new AndroidBuckConfig(context.getBuckConfig(), Platform.detect());

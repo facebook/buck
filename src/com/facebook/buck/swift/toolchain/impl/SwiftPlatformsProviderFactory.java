@@ -20,6 +20,7 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -32,10 +33,14 @@ public class SwiftPlatformsProviderFactory implements ToolchainFactory<SwiftPlat
 
   @Override
   public Optional<SwiftPlatformsProvider> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
         toolchainProvider.getByName(
-            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
+            AppleCxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            AppleCxxPlatformsProvider.class);
 
     return Optional.of(SwiftPlatformsProvider.of(createSwiftPlatforms(appleCxxPlatformsProvider)));
   }

@@ -81,7 +81,8 @@ public class DefaultPexToolProvider implements PexToolProvider {
     }
 
     PythonInterpreter pythonInterpreter =
-        toolchainProvider.getByName(PythonInterpreter.DEFAULT_NAME, PythonInterpreter.class);
+        toolchainProvider.getByName(
+            PythonInterpreter.DEFAULT_NAME, targetConfiguration, PythonInterpreter.class);
 
     return VersionedTool.builder()
         .setName("pex")

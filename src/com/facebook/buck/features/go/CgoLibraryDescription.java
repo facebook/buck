@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -78,12 +79,16 @@ public class CgoLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return getGoToolchain().getPlatformFlavorDomain().containsAnyOf(flavors);
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return getGoToolchain(toolchainTargetConfiguration)
+        .getPlatformFlavorDomain()
+        .containsAnyOf(flavors);
   }
 
-  private GoToolchain getGoToolchain() {
-    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
+  private GoToolchain getGoToolchain(TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider.getByName(
+        GoToolchain.DEFAULT_NAME, toolchainTargetConfiguration, GoToolchain.class);
   }
 
   @Override
@@ -95,7 +100,9 @@ public class CgoLibraryDescription
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
     Optional<GoPlatform> platform =
-        getGoToolchain().getPlatformFlavorDomain().getValue(buildTarget);
+        getGoToolchain(buildTarget.getTargetConfiguration())
+            .getPlatformFlavorDomain()
+            .getValue(buildTarget);
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)) {
       Preconditions.checkState(platform.isPresent());
@@ -140,7 +147,7 @@ public class CgoLibraryDescription
       BuildRuleParams params,
       CgoLibraryDescriptionArg args) {
 
-    GoToolchain goToolchain = getGoToolchain();
+    GoToolchain goToolchain = getGoToolchain(buildTarget.getTargetConfiguration());
     Optional<GoPlatform> platform = goToolchain.getPlatformFlavorDomain().getValue(buildTarget);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
@@ -206,7 +213,7 @@ public class CgoLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ platform deps.
-    GoToolchain toolchain = getGoToolchain();
+    GoToolchain toolchain = getGoToolchain(buildTarget.getTargetConfiguration());
     toolchain
         .getPlatformFlavorDomain()
         .getValue(buildTarget)

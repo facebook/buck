@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -97,7 +98,10 @@ public class PythonLibraryDescription
 
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         toolchainProvider
-            .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+            .getByName(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                CxxPlatformsProvider.class)
             .getUnresolvedCxxPlatforms();
 
     Map.Entry<Flavor, MetadataType> type = optionalType.get();
@@ -107,7 +111,7 @@ public class PythonLibraryDescription
       case PACKAGE_COMPONENTS:
         {
           Map.Entry<Flavor, PythonPlatform> pythonPlatform =
-              getPythonPlatforms()
+              getPythonPlatforms(buildTarget.getTargetConfiguration())
                   .getFlavorAndValue(baseTarget)
                   .orElseThrow(IllegalArgumentException::new);
           Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
@@ -153,7 +157,7 @@ public class PythonLibraryDescription
       case PACKAGE_DEPS:
         {
           Map.Entry<Flavor, PythonPlatform> pythonPlatform =
-              getPythonPlatforms()
+              getPythonPlatforms(buildTarget.getTargetConfiguration())
                   .getFlavorAndValue(baseTarget)
                   .orElseThrow(IllegalArgumentException::new);
           Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
@@ -178,9 +182,13 @@ public class PythonLibraryDescription
     return true;
   }
 
-  private FlavorDomain<PythonPlatform> getPythonPlatforms() {
+  private FlavorDomain<PythonPlatform> getPythonPlatforms(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider
-        .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+        .getByName(
+            PythonPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            PythonPlatformsProvider.class)
         .getPythonPlatforms();
   }
 

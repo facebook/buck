@@ -170,9 +170,14 @@ abstract class DDescriptionUtils {
   }
 
   static UnresolvedCxxPlatform getUnresolvedCxxPlatform(
-      ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      TargetConfiguration toolchainTargetConfiguration,
+      DBuckConfig dBuckConfig) {
     CxxPlatformsProvider cxxPlatformsProviderFactory =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        toolchainProvider.getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class);
     return dBuckConfig
         .getDefaultCxxPlatform()
         .map(InternalFlavor::of)
@@ -185,7 +190,7 @@ abstract class DDescriptionUtils {
       ToolchainProvider toolchainProvider,
       DBuckConfig dBuckConfig,
       TargetConfiguration targetConfiguration) {
-    return getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig)
+    return getUnresolvedCxxPlatform(toolchainProvider, targetConfiguration, dBuckConfig)
         .resolve(resolver, targetConfiguration);
   }
 
@@ -288,7 +293,6 @@ abstract class DDescriptionUtils {
    * @param compilerFlags flags to pass to the compiler
    * @param baseParams build parameters for the compilation
    * @param graphBuilder graphBuilder for build rules
-   * @param sourcePathResolver resolver for source paths
    * @param cxxPlatform the C++ platform to compile for
    * @param dBuckConfig the Buck configuration for D
    * @return SourcePaths of the generated object files

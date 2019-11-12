@@ -16,12 +16,13 @@
 
 package com.facebook.buck.jvm.java.toolchain;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.jvm.java.JavaOptions;
-import com.facebook.buck.util.MoreSuppliers;
-import java.util.function.Supplier;
+import com.facebook.buck.util.MoreFunctions;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, copy = false)
@@ -40,15 +41,19 @@ public abstract class AbstractJavaOptionsProvider implements Toolchain {
   @Value.Parameter
   abstract JavaOptions getJavaOptionsForTests();
 
-  private static JavaOptionsProvider getDefault(ToolchainProvider provider) {
-    return provider.getByName(DEFAULT_NAME, JavaOptionsProvider.class);
+  private static JavaOptionsProvider getDefault(
+      ToolchainProvider provider, TargetConfiguration toolchainTargetConfiguration) {
+    return provider.getByName(
+        DEFAULT_NAME, toolchainTargetConfiguration, JavaOptionsProvider.class);
   }
 
-  public static Supplier<JavaOptions> getDefaultJavaOptions(ToolchainProvider provider) {
-    return MoreSuppliers.memoize(() -> getDefault(provider).getJavaOptions());
+  public static Function<TargetConfiguration, JavaOptions> getDefaultJavaOptions(
+      ToolchainProvider provider) {
+    return MoreFunctions.memoize(c -> getDefault(provider, c).getJavaOptions());
   }
 
-  public static Supplier<JavaOptions> getDefaultJavaOptionsForTests(ToolchainProvider provider) {
-    return MoreSuppliers.memoize(() -> getDefault(provider).getJavaOptionsForTests());
+  public static Function<TargetConfiguration, JavaOptions> getDefaultJavaOptionsForTests(
+      ToolchainProvider provider) {
+    return MoreFunctions.memoize(c -> getDefault(provider, c).getJavaOptionsForTests());
   }
 }

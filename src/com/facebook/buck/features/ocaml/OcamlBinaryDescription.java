@@ -23,6 +23,7 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -59,9 +60,11 @@ public class OcamlBinaryDescription
     return OcamlBinaryDescriptionArg.class;
   }
 
-  private OcamlPlatform getPlatform(Optional<Flavor> platformFlavor) {
+  private OcamlPlatform getPlatform(
+      Optional<Flavor> platformFlavor, TargetConfiguration toolchainTargetConfiguration) {
     OcamlToolchain ocamlToolchain =
-        toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
+        toolchainProvider.getByName(
+            OcamlToolchain.DEFAULT_NAME, toolchainTargetConfiguration, OcamlToolchain.class);
     FlavorDomain<OcamlPlatform> ocamlPlatforms = ocamlToolchain.getOcamlPlatforms();
     return platformFlavor
         .map(ocamlPlatforms::getValue)
@@ -75,7 +78,8 @@ public class OcamlBinaryDescription
       BuildRuleParams params,
       OcamlBinaryDescriptionArg args) {
 
-    OcamlPlatform ocamlPlatform = getPlatform(args.getPlatform());
+    OcamlPlatform ocamlPlatform =
+        getPlatform(args.getPlatform(), buildTarget.getTargetConfiguration());
 
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
@@ -152,7 +156,8 @@ public class OcamlBinaryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
         OcamlUtil.getParseTimeDeps(
-            buildTarget.getTargetConfiguration(), getPlatform(constructorArg.getPlatform())));
+            buildTarget.getTargetConfiguration(),
+            getPlatform(constructorArg.getPlatform(), buildTarget.getTargetConfiguration())));
   }
 
   @BuckStyleImmutable

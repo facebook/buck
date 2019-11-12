@@ -38,23 +38,28 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
 public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   private final KotlinBuckConfig kotlinBuckConfig;
-  private final Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier;
+  private final BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
+      extraClasspathProviderSupplier;
   private final JavacFactory javacFactory;
 
   public KotlinConfiguredCompilerFactory(
       KotlinBuckConfig kotlinBuckConfig, JavacFactory javacFactory) {
-    this(kotlinBuckConfig, (toolchainProvider) -> ExtraClasspathProvider.EMPTY, javacFactory);
+    this(
+        kotlinBuckConfig,
+        (toolchainProvider, toolchainTargetConfiguration) -> ExtraClasspathProvider.EMPTY,
+        javacFactory);
   }
 
   public KotlinConfiguredCompilerFactory(
       KotlinBuckConfig kotlinBuckConfig,
-      Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier,
+      BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
+          extraClasspathProviderSupplier,
       JavacFactory javacFactory) {
     super();
     this.kotlinBuckConfig = kotlinBuckConfig;
@@ -81,19 +86,23 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         getFriendSourcePaths(buildRuleResolver, kotlinArgs.getFriendPaths(), kotlinBuckConfig),
         kotlinArgs.getAnnotationProcessingTool().orElse(AnnotationProcessingTool.KAPT),
         kotlinArgs.getKaptApOptions(),
-        extraClasspathProviderSupplier.apply(toolchainProvider),
-        getJavac(buildRuleResolver, args),
+        extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
+        getJavac(buildRuleResolver, args, targetConfiguration),
         javacOptions);
   }
 
   @Override
   public Optional<ExtraClasspathProvider> getExtraClasspathProvider(
-      ToolchainProvider toolchainProvider) {
-    return Optional.ofNullable(extraClasspathProviderSupplier.apply(toolchainProvider));
+      ToolchainProvider toolchainProvider, TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.ofNullable(
+        extraClasspathProviderSupplier.apply(toolchainProvider, toolchainTargetConfiguration));
   }
 
-  private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
-    return javacFactory.create(resolver, arg);
+  private Javac getJavac(
+      BuildRuleResolver resolver,
+      @Nullable JvmLibraryArg arg,
+      TargetConfiguration toolchainTargetConfiguration) {
+    return javacFactory.create(resolver, arg, toolchainTargetConfiguration);
   }
 
   @Override

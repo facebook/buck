@@ -173,7 +173,10 @@ public class PythonTestDescription
   private UnresolvedCxxPlatform getCxxPlatform(
       BuildTarget target, AbstractPythonTestDescriptionArg args) {
     CxxPlatformsProvider cxxPlatformsProvider =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        toolchainProvider.getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            target.getTargetConfiguration(),
+            CxxPlatformsProvider.class);
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         cxxPlatformsProvider.getUnresolvedCxxPlatforms();
 
@@ -243,7 +246,10 @@ public class PythonTestDescription
 
     FlavorDomain<PythonPlatform> pythonPlatforms =
         toolchainProvider
-            .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+            .getByName(
+                PythonPlatformsProvider.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                PythonPlatformsProvider.class)
             .getPythonPlatforms();
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();

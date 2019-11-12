@@ -76,11 +76,11 @@ public class AndroidNdkFactoryTest {
             projectFilesystem,
             processExecutor,
             executableFinder,
-            ruleKeyConfiguration,
-            () -> UnconfiguredTargetConfiguration.INSTANCE);
+            ruleKeyConfiguration);
 
     Optional<AndroidNdk> androidNdk =
-        defaultToolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+        defaultToolchainProvider.getByNameIfPresent(
+            AndroidNdk.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE, AndroidNdk.class);
 
     assertFalse(androidNdk.isPresent());
   }
@@ -96,11 +96,11 @@ public class AndroidNdkFactoryTest {
             projectFilesystem,
             processExecutor,
             executableFinder,
-            ruleKeyConfiguration,
-            () -> UnconfiguredTargetConfiguration.INSTANCE);
+            ruleKeyConfiguration);
 
     try {
-      defaultToolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+      defaultToolchainProvider.getByName(
+          AndroidNdk.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE, AndroidNdk.class);
     } catch (ToolchainInstantiationException e) {
       assertEquals(
           "Android NDK could not be found. Make sure to set one of these  environment "
@@ -132,8 +132,8 @@ public class AndroidNdkFactoryTest {
                     projectFilesystem,
                     processExecutor,
                     executableFinder,
-                    ruleKeyConfiguration,
-                    () -> UnconfiguredTargetConfiguration.INSTANCE))
+                    ruleKeyConfiguration),
+                UnconfiguredTargetConfiguration.INSTANCE)
             .get();
 
     assertFalse(androidNdk.shouldEscapeCFlagsInDoubleQuotes());
@@ -161,8 +161,8 @@ public class AndroidNdkFactoryTest {
                     projectFilesystem,
                     processExecutor,
                     executableFinder,
-                    ruleKeyConfiguration,
-                    () -> UnconfiguredTargetConfiguration.INSTANCE))
+                    ruleKeyConfiguration),
+                UnconfiguredTargetConfiguration.INSTANCE)
             .get();
 
     assertTrue(androidNdk.shouldEscapeCFlagsInDoubleQuotes());

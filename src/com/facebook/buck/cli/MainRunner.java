@@ -847,11 +847,7 @@ public final class MainRunner {
 
       ToolchainProviderFactory toolchainProviderFactory =
           new DefaultToolchainProviderFactory(
-              pluginManager,
-              environment,
-              processExecutor,
-              executableFinder,
-              targetConfigurationSupplier);
+              pluginManager, environment, processExecutor, executableFinder);
 
       Cell rootCell =
           LocalCellProviderFactory.create(

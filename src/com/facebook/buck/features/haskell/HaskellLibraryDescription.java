@@ -569,7 +569,8 @@ public class HaskellLibraryDescription
       BuildRuleParams params,
       HaskellLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    HaskellPlatformsProvider haskellPlatformsProvider = getHaskellPlatformsProvider();
+    HaskellPlatformsProvider haskellPlatformsProvider =
+        getHaskellPlatformsProvider(buildTarget.getTargetConfiguration());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
@@ -871,8 +872,11 @@ public class HaskellLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (getHaskellPlatformsProvider().getHaskellPlatforms().containsAnyOf(flavors)) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    if (getHaskellPlatformsProvider(toolchainTargetConfiguration)
+        .getHaskellPlatforms()
+        .containsAnyOf(flavors)) {
       return true;
     }
 
@@ -894,13 +898,18 @@ public class HaskellLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     HaskellDescriptionUtils.getParseTimeDeps(
         buildTarget.getTargetConfiguration(),
-        getHaskellPlatformsProvider().getHaskellPlatforms().getValues(),
+        getHaskellPlatformsProvider(buildTarget.getTargetConfiguration())
+            .getHaskellPlatforms()
+            .getValues(),
         targetGraphOnlyDepsBuilder);
   }
 
-  private HaskellPlatformsProvider getHaskellPlatformsProvider() {
+  private HaskellPlatformsProvider getHaskellPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        HaskellPlatformsProvider.DEFAULT_NAME, HaskellPlatformsProvider.class);
+        HaskellPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        HaskellPlatformsProvider.class);
   }
 
   protected enum Type implements FlavorConvertible {

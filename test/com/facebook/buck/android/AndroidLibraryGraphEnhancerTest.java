@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
@@ -233,7 +234,8 @@ public class AndroidLibraryGraphEnhancerTest {
             target,
             new FakeProjectFilesystem(),
             ImmutableSortedSet.of(dep),
-            JavacFactoryHelper.createJavacFactory(javaConfig).create(graphBuilder, null),
+            JavacFactoryHelper.createJavacFactory(javaConfig)
+                .create(graphBuilder, null, UnconfiguredTargetConfiguration.INSTANCE),
             options,
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,

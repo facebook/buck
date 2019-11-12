@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -142,12 +143,14 @@ public class JsLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return JsFlavors.validateFlavors(flavors, FLAVOR_DOMAINS);
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(FLAVOR_DOMAINS);
   }
 

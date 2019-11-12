@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.base.Joiner;
@@ -47,7 +48,11 @@ public class BuiltTargetVerifier {
     UnflavoredBuildTargetView unflavoredBuildTargetView = target.getUnflavoredBuildTargetView();
     if (target.isFlavored()) {
       if (description instanceof Flavored) {
-        if (!((Flavored) description).hasFlavors(ImmutableSet.copyOf(target.getFlavors()))) {
+        // TODO(nga): use proper target configuration
+        if (!((Flavored) description)
+            .hasFlavors(
+                ImmutableSet.copyOf(target.getFlavors()),
+                UnconfiguredTargetConfiguration.INSTANCE)) {
           throw UnexpectedFlavorException.createWithSuggestions((Flavored) description, target);
         }
       } else {

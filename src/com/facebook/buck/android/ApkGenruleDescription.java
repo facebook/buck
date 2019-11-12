@@ -89,7 +89,9 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         args.getIsCacheable(),
         args.getEnvironmentExpansionSeparator(),
         args.isNeedAndroidTools()
-            ? Optional.of(AndroidTools.getAndroidTools(toolchainProvider))
+            ? Optional.of(
+                AndroidTools.getAndroidTools(
+                    toolchainProvider, buildTarget.getTargetConfiguration()))
             : Optional.empty());
   }
 

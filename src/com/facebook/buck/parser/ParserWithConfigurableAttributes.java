@@ -99,7 +99,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     if (targetNode.getDescription() instanceof ImplicitFlavorsInferringDescription) {
       defaultFlavors =
           ((ImplicitFlavorsInferringDescription) targetNode.getDescription())
-              .addImplicitFlavors(defaultFlavors);
+              .addImplicitFlavors(defaultFlavors, target.getTargetConfiguration());
       LOG.debug("Got default flavors %s from description of %s", defaultFlavors, target);
     }
 

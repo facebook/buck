@@ -27,6 +27,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -43,16 +44,21 @@ public class AppleCxxPlatformsProviderFactory
 
   @Override
   public Optional<AppleCxxPlatformsProvider> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
 
     Optional<AppleSdkLocation> appleSdkLocation =
-        toolchainProvider.getByNameIfPresent(AppleSdkLocation.DEFAULT_NAME, AppleSdkLocation.class);
+        toolchainProvider.getByNameIfPresent(
+            AppleSdkLocation.DEFAULT_NAME, toolchainTargetConfiguration, AppleSdkLocation.class);
     Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths =
         appleSdkLocation.map(AppleSdkLocation::getAppleSdkPaths);
 
     Optional<AppleToolchainProvider> appleToolchainProvider =
         toolchainProvider.getByNameIfPresent(
-            AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.class);
+            AppleToolchainProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            AppleToolchainProvider.class);
     Optional<ImmutableMap<String, AppleToolchain>> appleToolchains =
         appleToolchainProvider.map(AppleToolchainProvider::getAppleToolchains);
 

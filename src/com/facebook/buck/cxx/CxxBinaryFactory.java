@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -73,7 +74,8 @@ public class CxxBinaryFactory {
     target = CxxStrip.removeStripStyleFlavorInTarget(target, flavoredStripStyle);
     target = LinkerMapMode.removeLinkerMapModeFlavorInTarget(target, flavoredLinkerMapMode);
 
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(target.getTargetConfiguration());
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
@@ -196,9 +198,12 @@ public class CxxBinaryFactory {
         cxxBuckConfig.shouldCacheBinaries());
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 
   /** @return a {@link HeaderSymlinkTree} for the headers of this C/C++ binary. */

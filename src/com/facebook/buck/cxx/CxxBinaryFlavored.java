@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -40,14 +41,17 @@ public class CxxBinaryFlavored implements Flavored {
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> inputFlavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> inputFlavors, TargetConfiguration toolchainTargetConfiguration) {
     Set<Flavor> flavors = inputFlavors;
 
     Set<Flavor> platformFlavors =
         Sets.intersection(
             flavors,
             Sets.union(
-                getCxxPlatformsProvider().getUnresolvedCxxPlatforms().getFlavors(),
+                getCxxPlatformsProvider(toolchainTargetConfiguration)
+                    .getUnresolvedCxxPlatforms()
+                    .getFlavors(),
                 cxxBuckConfig.getDeclaredPlatforms()));
     if (platformFlavors.size() > 1) {
       return false;
@@ -75,19 +79,23 @@ public class CxxBinaryFlavored implements Flavored {
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(
         ImmutableSet.of(
             // Missing: CXX Compilation Database
             // Missing: CXX Description Enhancer
             // Missing: CXX Infer Enhancer
-            getCxxPlatformsProvider().getUnresolvedCxxPlatforms(),
+            getCxxPlatformsProvider(toolchainTargetConfiguration).getUnresolvedCxxPlatforms(),
             LinkerMapMode.FLAVOR_DOMAIN,
             StripStyle.FLAVOR_DOMAIN));
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 }

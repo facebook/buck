@@ -34,6 +34,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -1359,7 +1360,10 @@ public class IncrementalActionGraphScenarioTest {
     return new TestPythonPlatform(
         InternalFlavor.of("py2"),
         new PythonEnvironment(
-            Paths.get("python2"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
+            Paths.get("python2"),
+            PythonVersion.of("CPython", "2.6"),
+            PythonBuckConfig.SECTION,
+            UnconfiguredTargetConfiguration.INSTANCE),
         cxxLibrary);
   }
 
@@ -1367,7 +1371,10 @@ public class IncrementalActionGraphScenarioTest {
     return new TestPythonPlatform(
         InternalFlavor.of("py3"),
         new PythonEnvironment(
-            Paths.get("python3"), PythonVersion.of("CPython", "3.5"), PythonBuckConfig.SECTION),
+            Paths.get("python3"),
+            PythonVersion.of("CPython", "3.5"),
+            PythonBuckConfig.SECTION,
+            UnconfiguredTargetConfiguration.INSTANCE),
         cxxLibrary);
   }
 }

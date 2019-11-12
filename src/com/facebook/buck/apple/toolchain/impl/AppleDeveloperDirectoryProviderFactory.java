@@ -19,6 +19,7 @@ package com.facebook.buck.apple.toolchain.impl;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -36,7 +37,9 @@ public class AppleDeveloperDirectoryProviderFactory
 
   @Override
   public Optional<AppleDeveloperDirectoryProvider> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+      ToolchainProvider toolchainProvider,
+      ToolchainCreationContext context,
+      TargetConfiguration toolchainTargetConfiguration) {
     Optional<Path> appleDeveloperDir =
         getAppleDeveloperDirectory(context.getBuckConfig(), context.getProcessExecutor());
     return appleDeveloperDir.map(AppleDeveloperDirectoryProvider::of);

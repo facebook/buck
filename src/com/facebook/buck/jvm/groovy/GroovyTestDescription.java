@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.groovy;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -47,7 +48,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 /** Description for groovy_test. */
@@ -58,7 +59,7 @@ public class GroovyTestDescription
   private final ToolchainProvider toolchainProvider;
   private final GroovyBuckConfig groovyBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  private final Supplier<JavaOptions> javaOptionsForTests;
+  private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
 
   public GroovyTestDescription(
       ToolchainProvider toolchainProvider,
@@ -90,7 +91,10 @@ public class GroovyTestDescription
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
@@ -133,7 +137,7 @@ public class GroovyTestDescription
         args.getTestType().orElse(TestType.JUNIT),
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
         javaOptionsForTests
-            .get()
+            .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),
         /* nativeLibsEnvironment */ ImmutableMap.of(),
@@ -161,7 +165,7 @@ public class GroovyTestDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javaOptionsForTests
-        .get()
+        .apply(buildTarget.getTargetConfiguration())
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 

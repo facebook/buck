@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -31,7 +32,7 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.google.common.collect.ImmutableCollection.Builder;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 /**
@@ -43,7 +44,7 @@ import org.immutables.value.Value;
 public class JarGenruleDescription extends AbstractGenruleDescription<JarGenruleDescriptionArg>
     implements ImplicitDepsInferringDescription<JarGenruleDescriptionArg> {
 
-  private final Supplier<JavaOptions> javaOptions;
+  private final Function<TargetConfiguration, JavaOptions> javaOptions;
 
   public JarGenruleDescription(
       ToolchainProvider toolchainProvider, SandboxExecutionStrategy sandboxExecutionStrategy) {
@@ -82,7 +83,7 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
         args.getCacheable().orElse(true),
         args.getEnvironmentExpansionSeparator(),
         javaOptions
-            .get()
+            .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
   }
 
@@ -94,7 +95,7 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javaOptions
-        .get()
+        .apply(buildTarget.getTargetConfiguration())
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
