@@ -1034,9 +1034,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
               swiftStdlibTool.get().getCommandPrefix(resolver),
               lipo.getCommandPrefix(resolver),
               bundleBinaryPath,
-              ImmutableSet.of(
-                  bundleRoot.resolve(destinations.getFrameworksPath()),
-                  bundleRoot.resolve(destinations.getPlugInsPath())),
+              ImmutableSet.of(destinations.getFrameworksPath(), destinations.getPlugInsPath()),
               codeSignIdentitySupplier));
     }
   }
