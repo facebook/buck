@@ -208,6 +208,7 @@ public class AppleResourceProcessing {
   public static void addSwiftStdlibStepIfNeeded(
       SourcePathResolverAdapter resolver,
       Path destinationPath,
+      Path bundleRoot,
       Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier,
       ImmutableList.Builder<Step> stepsBuilder,
       boolean isForPackaging,
@@ -238,7 +239,9 @@ public class AppleResourceProcessing {
               swiftStdlibTool.get().getCommandPrefix(resolver),
               lipo.getCommandPrefix(resolver),
               bundleBinaryPath,
-              ImmutableSet.of(destinations.getFrameworksPath(), destinations.getPlugInsPath()),
+              ImmutableSet.of(
+                  bundleRoot.resolve(destinations.getFrameworksPath()),
+                  bundleRoot.resolve(destinations.getPlugInsPath())),
               codeSignIdentitySupplier));
     }
   }
