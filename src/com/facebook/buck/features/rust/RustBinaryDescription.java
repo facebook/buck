@@ -37,6 +37,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -196,7 +197,7 @@ public class RustBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractRustBinaryDescriptionArg extends RustCommonArgs, HasTests {
+  interface AbstractRustBinaryDescriptionArg extends RustCommonArgs, HasTests, HasVersionUniverse {
 
     ImmutableList<StringWithMacros> getLinkerFlags();
 

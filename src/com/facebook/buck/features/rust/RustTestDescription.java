@@ -41,6 +41,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -179,7 +180,7 @@ public class RustTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractRustTestDescriptionArg extends RustCommonArgs {
+  interface AbstractRustTestDescriptionArg extends RustCommonArgs, HasVersionUniverse {
     ImmutableSet<String> getContacts();
 
     ImmutableList<StringWithMacros> getLinkerFlags();
