@@ -50,8 +50,10 @@ class DefaultUnresolvedInferPlatform implements UnresolvedInferPlatform {
     Optional<String> version = inferConfig.getVersion();
     Optional<SourcePath> nullsafeThirdPartySignatures =
         inferConfig.getNullsafeThirdPartySignatures(configuration);
+    Boolean executeRemotely = inferConfig.executeRemotely();
 
-    return new ImmutableInferPlatform(tool, version, configFile, nullsafeThirdPartySignatures);
+    return new ImmutableInferPlatform(
+        tool, version, configFile, nullsafeThirdPartySignatures, executeRemotely);
   }
 
   @Override

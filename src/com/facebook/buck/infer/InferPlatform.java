@@ -17,9 +17,11 @@ package com.facebook.buck.infer;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import java.util.Optional;
 
 /**
@@ -42,4 +44,9 @@ public abstract class InferPlatform implements AddsToRuleKey {
 
   @AddToRuleKey
   abstract Optional<SourcePath> getNullsafeThirdPartySignatures();
+
+  /** Whether or not infer rules can be executed remotely. Fails serialization if false. */
+  @AddToRuleKey
+  @CustomFieldBehavior(RemoteExecutionEnabled.class)
+  abstract boolean executeRemotely();
 }

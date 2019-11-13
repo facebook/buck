@@ -100,7 +100,12 @@ public abstract class InferConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public Boolean getPrettyPrint() {
-    return getDelegate().getBoolean(SECTION, "pretty_print").orElse(false);
+    return getDelegate().getBooleanValue(SECTION, "pretty_print", false);
+  }
+
+  @Value.Lazy
+  public Boolean executeRemotely() {
+    return getDelegate().getBooleanValue(SECTION, "execute_remotely", false);
   }
 
   private ToolProvider mkDistProviderFromTarget(UnconfiguredBuildTargetView target) {
