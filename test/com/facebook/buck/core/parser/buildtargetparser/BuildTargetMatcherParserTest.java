@@ -27,15 +27,22 @@ import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.parser.spec.BuildTargetMatcherTargetNodeParser;
+import com.facebook.buck.parser.spec.BuildTargetSpec;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.FileSystem;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -214,5 +221,47 @@ public class BuildTargetMatcherParserTest {
     // And the suggestion
     exception.expectMessage("localreponame");
     buildTargetPatternParser.parse(rootCellPathResolver, "lclreponame//facebook/...");
+  }
+
+  @Test
+  public void parsesOutputLabel() {
+    BuildTargetMatcherParser<TargetNodeSpec> buildTargetPatternParser =
+        new BuildTargetMatcherTargetNodeParser();
+    UnconfiguredBuildTargetView unconfiguredBuildTargetView =
+        UnconfiguredBuildTargetFactoryForTests.newInstance(
+            filesystem, "//test/com/facebook/buck/parser:parser");
+
+    assertEquals(
+        BuildTargetSpec.from(
+            ImmutableUnconfiguredBuildTargetWithOutputs.of(
+                unconfiguredBuildTargetView, Optional.of("label"))),
+        buildTargetPatternParser.parse(
+            createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser[label]"));
+
+    assertEquals(
+        BuildTargetSpec.from(
+            ImmutableUnconfiguredBuildTargetWithOutputs.of(
+                unconfiguredBuildTargetView, Optional.empty())),
+        buildTargetPatternParser.parse(
+            createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser"));
+  }
+
+  @Test
+  public void descendantSyntaxCannotHaveOutputLabel() {
+    exception.expect(Matchers.instanceOf(BuildTargetParseException.class));
+    exception.expectMessage("//test/com/facebook/buck/parser: should not have output label noms");
+
+    new BuildTargetMatcherTargetNodeParser()
+        .parse(createCellRoots(filesystem), "//test/com/facebook/buck/parser:[noms]");
+  }
+
+  @Test
+  public void wildcardSyntaxCannotHaveOutputLabel() {
+    exception.expect(Matchers.instanceOf(BuildTargetParseException.class));
+    exception.expectMessage(
+        "//test/com/facebook/buck/parser/... should not have output label noms");
+
+    new BuildTargetMatcherTargetNodeParser()
+        .parse(createCellRoots(filesystem), "//test/com/facebook/buck/parser/...[noms]");
   }
 }

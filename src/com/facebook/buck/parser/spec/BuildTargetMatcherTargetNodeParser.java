@@ -17,7 +17,7 @@
 package com.facebook.buck.parser.spec;
 
 import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import java.nio.file.Path;
 
@@ -35,7 +35,8 @@ public class BuildTargetMatcherTargetNodeParser extends BuildTargetMatcherParser
   }
 
   @Override
-  public TargetNodeSpec createForSingleton(UnconfiguredBuildTargetView target) {
-    return BuildTargetSpec.from(target);
+  public TargetNodeSpec createForSingleton(
+      ImmutableUnconfiguredBuildTargetWithOutputs targetWithOutputs) {
+    return BuildTargetSpec.from(targetWithOutputs);
   }
 }

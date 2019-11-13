@@ -85,7 +85,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
-        Matchers.containsString("//simple/.... references non-existent directory simple"));
+        Matchers.containsString("The /... pattern must occur at the end of the command"));
   }
 
   @Test

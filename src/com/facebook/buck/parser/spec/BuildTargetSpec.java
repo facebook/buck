@@ -57,8 +57,23 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
   public abstract BuildFileSpec getBuildFileSpec();
 
   /**
+   * Returns a new instance of {@link BuildTargetSpec} and automatically resolve {@link
+   * BuildFileSpec} based on {@link UnconfiguredBuildTargetView} properties. The returned {@link
+   * BuildTargetSpec} may carry a non-empty output label through {@link
+   * UnconfiguredBuildTargetWithOutputs}.
+   *
+   * @param targetWithOutputs Build target to match
+   */
+  public static BuildTargetSpec from(UnconfiguredBuildTargetWithOutputs targetWithOutputs) {
+    return ImmutableBuildTargetSpec.of(
+        targetWithOutputs,
+        BuildFileSpec.fromUnconfiguredBuildTarget(targetWithOutputs.getBuildTarget()));
+  }
+
+  /**
    * Create new instance of {@link BuildTargetSpec} and automatically resolve {@link BuildFileSpec}
-   * based on {@link UnconfiguredBuildTargetView} properties
+   * based on {@link UnconfiguredBuildTargetView} properties. The returned {@link BuildTargetSpec}
+   * carries an empty output label.
    *
    * @param target Build target to match
    */

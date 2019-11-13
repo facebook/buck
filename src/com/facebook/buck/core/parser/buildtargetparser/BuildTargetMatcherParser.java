@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.exception.UnknownCellException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
@@ -35,6 +36,7 @@ import java.util.Optional;
 public abstract class BuildTargetMatcherParser<T> {
 
   private static final String BUILD_RULE_PREFIX = "//";
+  private static final String WILDCARD_SEPARATOR = "/";
   private static final String WILDCARD_BUILD_RULE_SUFFIX = "...";
   private static final String BUILD_RULE_SEPARATOR = ":";
 
@@ -42,10 +44,16 @@ public abstract class BuildTargetMatcherParser<T> {
       new ParsingUnconfiguredBuildTargetViewFactory();
 
   /**
-   * 1. //src/com/facebook/buck/cli:cli will be converted to a single build target 2.
-   * //src/com/facebook/buck/cli: will match all in the same directory. 3.
-   * //src/com/facebook/buck/cli/... will match all in or under that directory. For case 2 and 3,
-   * parseContext is expected to be {@link BuildTargetMatcherParser#forVisibilityArgument()}.
+   * Matches the given {@code buildTargetPattern} according to the following rules:
+   *
+   * <ul>
+   *   <li>//src/com/facebook/buck/cli:cli will be converted to a single build target;
+   *   <li>//src/com/facebook/buck/cli: will match all in the same directory;
+   *   <li>//src/com/facebook/buck/cli/... will match all in or under that directory.
+   * </ul>
+   *
+   * For cases 2 and 3, parseContext is expected to be {@link
+   * BuildTargetMatcherParser#forVisibilityArgument()}.
    */
   public final T parse(CellPathResolver cellNames, String buildTargetPattern) {
     Preconditions.checkArgument(
@@ -53,16 +61,33 @@ public abstract class BuildTargetMatcherParser<T> {
         "'%s' must start with '//' or a cell followed by '//'",
         buildTargetPattern);
 
-    if (buildTargetPattern.endsWith("/" + WILDCARD_BUILD_RULE_SUFFIX)) {
+    BuildTargetOutputLabelParser.TargetWithOutputLabel targetWithOutputLabel =
+        BuildTargetOutputLabelParser.getBuildTargetNameWithOutputLabel(buildTargetPattern);
+
+    String wildcardSuffix = WILDCARD_SEPARATOR + WILDCARD_BUILD_RULE_SUFFIX;
+    if (buildTargetPattern.contains(wildcardSuffix)) {
+      if (targetWithOutputLabel.getOutputLabel().isPresent()) {
+        throw createOutputLabelParseException(targetWithOutputLabel);
+      }
+      if (!buildTargetPattern.endsWith(wildcardSuffix)) {
+        throw new BuildTargetParseException(
+            String.format("The %s pattern must occur at the end of the command", wildcardSuffix));
+      }
       return createWildCardPattern(cellNames, buildTargetPattern);
     }
 
     UnconfiguredBuildTargetView target =
-        unconfiguredBuildTargetFactory.createWithWildcard(cellNames, buildTargetPattern);
+        unconfiguredBuildTargetFactory.createWithWildcard(
+            cellNames, targetWithOutputLabel.getTargetName());
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
+      if (targetWithOutputLabel.getOutputLabel().isPresent()) {
+        throw createOutputLabelParseException(targetWithOutputLabel);
+      }
       return createForChildren(target.getCell(), target.getBasePath());
     } else {
-      return createForSingleton(target);
+      return createForSingleton(
+          ImmutableUnconfiguredBuildTargetWithOutputs.of(
+              target, targetWithOutputLabel.getOutputLabel()));
     }
   }
 
@@ -123,7 +148,16 @@ public abstract class BuildTargetMatcherParser<T> {
 
   protected abstract T createForChildren(CanonicalCellName cellName, Path basePath);
 
-  protected abstract T createForSingleton(UnconfiguredBuildTargetView target);
+  protected abstract T createForSingleton(
+      ImmutableUnconfiguredBuildTargetWithOutputs targetWithOutputs);
+
+  private BuildTargetParseException createOutputLabelParseException(
+      BuildTargetOutputLabelParser.TargetWithOutputLabel targetWithOutputs) {
+    return new BuildTargetParseException(
+        String.format(
+            "%s should not have output label %s",
+            targetWithOutputs.getTargetName(), targetWithOutputs.getOutputLabel().get()));
+  }
 
   private static class VisibilityContext extends BuildTargetMatcherParser<BuildTargetMatcher> {
 
@@ -138,8 +172,9 @@ public abstract class BuildTargetMatcherParser<T> {
     }
 
     @Override
-    public BuildTargetMatcher createForSingleton(UnconfiguredBuildTargetView target) {
-      return SingletonBuildTargetMatcher.of(target.getData());
+    public BuildTargetMatcher createForSingleton(
+        ImmutableUnconfiguredBuildTargetWithOutputs targetWithOutputs) {
+      return SingletonBuildTargetMatcher.of(targetWithOutputs.getBuildTarget().getData());
     }
   }
 }
