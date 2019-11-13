@@ -60,6 +60,7 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder = ImmutableList.builder();
 
     stepsBuilder.addAll(
         MakeCleanDirectoryStep.of(
@@ -81,6 +82,7 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
     AppleResourceProcessing.addStepsToCopyResources(
         context,
         stepsBuilder,
+        codeSignOnCopyPathsBuilder,
         resources,
         false,
         resourcesDir,

@@ -324,6 +324,7 @@ public class AppleResourceProcessing {
   public static void addStepsToCopyResources(
       BuildContext context,
       ImmutableList.Builder<Step> stepsBuilder,
+      ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
       AppleBundleResources resources,
       boolean verifyResources,
       Path dirRoot,
@@ -399,6 +400,9 @@ public class AppleResourceProcessing {
           ibtoolModuleFlag,
           buildTarget,
           binaryName);
+      if (fileWithDestination.getCodesignOnCopy()) {
+        codeSignOnCopyPathsBuilder.add(destinationPath);
+      }
     }
   }
 

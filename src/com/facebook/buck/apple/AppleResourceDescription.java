@@ -79,11 +79,16 @@ public class AppleResourceDescription
     Supplier<SortedSet<SourcePathWithAppleBundleDestination>> supplier = TreeSet::new;
     builder.addAllResourceDirs(
         appleResource.getDirs().stream()
-            .map(sourcePath -> SourcePathWithAppleBundleDestination.of(sourcePath, destination))
+            .map(
+                sourcePath ->
+                    SourcePathWithAppleBundleDestination.of(sourcePath, destination, false))
             .collect(Collectors.toCollection(supplier)));
     builder.addAllResourceFiles(
         appleResource.getFiles().stream()
-            .map(sourcePath -> SourcePathWithAppleBundleDestination.of(sourcePath, destination))
+            .map(
+                sourcePath ->
+                    SourcePathWithAppleBundleDestination.of(
+                        sourcePath, destination, appleResource.getCodesignOnCopy()))
             .collect(Collectors.toCollection(supplier)));
     ImmutableSet<SourcePath> variants = appleResource.getVariants();
     if (!variants.isEmpty() && destination != AppleBundleDestination.RESOURCES) {
@@ -109,5 +114,10 @@ public class AppleResourceDescription
     ImmutableSet<BuildTarget> getResourcesFromDeps();
 
     Optional<AppleBundleDestination> getDestination();
+
+    @Value.Default
+    default boolean getCodesignOnCopy() {
+      return false;
+    }
   }
 }

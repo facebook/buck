@@ -40,6 +40,10 @@ public abstract class AbstractSourcePathWithAppleBundleDestination
   @AddToRuleKey
   public abstract AppleBundleDestination getDestination();
 
+  @Value.Parameter
+  @AddToRuleKey
+  public abstract Boolean getCodesignOnCopy();
+
   /**
    * Construct a new immutable {@code SourcePathWithAppleBundleDestination} instance with default
    * value of apple bundle destination.
@@ -48,10 +52,13 @@ public abstract class AbstractSourcePathWithAppleBundleDestination
    * @return An immutable SourcePathWithAppleBundleDestination instance
    */
   public static SourcePathWithAppleBundleDestination of(SourcePath sourcePath) {
-    return SourcePathWithAppleBundleDestination.builder()
-        .setSourcePath(sourcePath)
-        .setDestination(AppleBundleDestination.defaultValue())
-        .build();
+    return SourcePathWithAppleBundleDestination.of(
+        sourcePath, AppleBundleDestination.defaultValue());
+  }
+
+  public static SourcePathWithAppleBundleDestination of(
+      SourcePath sourcePath, AppleBundleDestination destination) {
+    return SourcePathWithAppleBundleDestination.of(sourcePath, destination, false);
   }
 
   @Override
@@ -61,6 +68,9 @@ public abstract class AbstractSourcePathWithAppleBundleDestination
     }
     if (getDestination() != o.getDestination()) {
       return getDestination().compareTo(o.getDestination());
+    }
+    if (getCodesignOnCopy() != o.getCodesignOnCopy()) {
+      return getCodesignOnCopy().compareTo(o.getCodesignOnCopy());
     }
     return 0;
   }

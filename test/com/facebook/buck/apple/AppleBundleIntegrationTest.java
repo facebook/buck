@@ -241,6 +241,36 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void simpleApplicationBundleWithCodeSigningResources() throws Exception {
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_with_codesigning", tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        workspace.newBuildTarget("//:DemoAppWithAppleResource#iphoneos-arm64,no-debug");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve("DemoAppWithAppleResource.app"));
+    Path codesignedResourcePath = appPath.resolve("BinaryToBeCodesigned");
+    assertTrue(Files.exists(codesignedResourcePath));
+    assertTrue(checkCodeSigning(codesignedResourcePath));
+
+    Path nonCodesignedResourcePath = appPath.resolve("OtherBinary");
+    assertTrue(Files.exists(nonCodesignedResourcePath));
+    assertFalse(checkCodeSigning(nonCodesignedResourcePath));
+  }
+
+  @Test
   public void simpleApplicationBundleWithTargetCodeSigning() throws Exception {
     assertTargetCodesignToolIsUsedFor("//:DemoApp#iphoneos-arm64,no-debug");
   }

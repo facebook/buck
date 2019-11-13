@@ -87,6 +87,14 @@ an <a href="{ROOT}rule/apple_bundle.html"><code>apple_bundle()</code> rule</a>.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'codesign_on_copy' /}
+  {param default : 'False' /}
+  {param desc}
+  Indicates whether the files specified in the files arg in this resource should be code signed with the identity used to sign the overall bundle.  This is useful for e.g.
+  dylibs or other additional binaries copied into the bundle.  The caller is responsible to ensure that the file format is valid for codesigning.
+  {/param}
+{/call}
 
 {/param} // args
 

@@ -42,3 +42,40 @@ apple_bundle(
     info_plist = "Info.plist",
     deps = [":DemoFramework"],
 )
+
+apple_bundle(
+    name = "DemoAppWithAppleResource",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [
+        ":ResourceWithCodesigning",
+        ":ResourceWithoutCodesigning",
+    ],
+)
+
+# Just make a copy of the binary to get something which can be code signed
+export_file(
+    name = "BinaryToBeCodesigned",
+    src = ":DemoAppBinary",
+)
+
+export_file(
+    name = "OtherBinary",
+    src = ":DemoAppBinary",
+)
+
+apple_resource(
+    name = "ResourceWithCodesigning",
+    codesign_on_copy = True,
+    dirs = [],
+    files = [":BinaryToBeCodesigned"],
+    visibility = ["PUBLIC"],
+)
+
+apple_resource(
+    name = "ResourceWithoutCodesigning",
+    dirs = [],
+    files = [":OtherBinary"],
+    visibility = ["PUBLIC"],
+)

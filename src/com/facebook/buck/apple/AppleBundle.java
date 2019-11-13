@@ -460,9 +460,12 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       appendCopyDsymStep(stepsBuilder, buildableContext, context);
     }
 
+    ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder = ImmutableList.builder();
+
     AppleResourceProcessing.addStepsToCopyResources(
         context,
         stepsBuilder,
+        codeSignOnCopyPathsBuilder,
         resources,
         verifyResources,
         bundleRoot,
@@ -476,8 +479,6 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         ibtoolModuleFlag,
         getBuildTarget(),
         Optional.of(binaryName));
-
-    ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder = ImmutableList.builder();
 
     addStepsToCopyExtensionBundlesDependencies(context, stepsBuilder, codeSignOnCopyPathsBuilder);
 
