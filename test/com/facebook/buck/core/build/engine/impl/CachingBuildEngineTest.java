@@ -2462,9 +2462,10 @@ public class CachingBuildEngineTest {
       assertThat(
           fetchedArtifactEntries,
           Matchers.hasEntry(
-              BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem)
-                  .resolve(BuildInfo.MetadataKey.DEP_FILE)
-                  .toString(),
+              PathFormatter.pathWithUnixSeparators(
+                  BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem)
+                      .resolve(BuildInfo.MetadataKey.DEP_FILE)
+                      .toString()),
               ObjectMappers.WRITER
                   .writeValueAsString(ImmutableList.of(fileToDepFileEntryString(input)))
                   .getBytes(UTF_8)));

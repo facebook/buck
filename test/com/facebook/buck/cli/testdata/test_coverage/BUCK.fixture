@@ -18,6 +18,7 @@ genrule(
     srcs = [":foo"],
     out = "out.jar",
     cmd = "cp $SRCS $OUT",
+    cmd_exe = "copy %SRCS% %OUT%",
 )
 
 prebuilt_jar(

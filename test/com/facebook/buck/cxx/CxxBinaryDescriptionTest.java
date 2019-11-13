@@ -63,6 +63,7 @@ import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.CloseableResource;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionUniverse;
@@ -352,10 +353,18 @@ public class CxxBinaryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxBinary binary = binaryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(binary.getLinkRule(), Matchers.instanceOf(CxxLink.class));
-    assertThat(
-        Arg.stringify(
-            ((CxxLink) binary.getLinkRule()).getArgs(), graphBuilder.getSourcePathResolver()),
-        Matchers.hasItems("-L", "/another/path", "/some/path", "-la", "-ls"));
+    if (Platform.detect() == Platform.WINDOWS) {
+        assertThat(
+            Arg.stringify(
+                ((CxxLink) binary.getLinkRule()).getArgs(), graphBuilder.getSourcePathResolver()),
+                Matchers.hasItems("-L", "C:\\another\\path", "C:\\some\\path", "-la", "-ls"));
+    }
+    else {
+        assertThat(
+            Arg.stringify(
+                ((CxxLink) binary.getLinkRule()).getArgs(), graphBuilder.getSourcePathResolver()),
+                Matchers.hasItems("-L", "/another/path", "/some/path", "-la", "-ls"));
+    }
   }
 
   @Test
