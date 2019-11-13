@@ -1,0 +1,14 @@
+#!/bin/bash
+
+ARG_FILE=${1:1}
+RESULTS_DIR=$(cat $ARG_FILE | grep -C1 -e --results-dir | tail -n1)
+
+mkdir -p $RESULTS_DIR
+
+if [[ -d $RESULTS_DIR ]]; then
+    REPORT="$RESULTS_DIR/report.json"
+    touch "$REPORT"
+    echo "fake infer results" | tee "$REPORT"
+else
+    echo "--results-dir $RESULTS_DIR not found" >&2 && exit 1
+fi

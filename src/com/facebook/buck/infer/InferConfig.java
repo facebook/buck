@@ -18,12 +18,14 @@ package com.facebook.buck.infer;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Paths;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -31,30 +33,61 @@ import org.immutables.value.Value;
 @BuckStyleValue
 public abstract class InferConfig implements ConfigView<BuckConfig> {
   // TODO(arr): change to just "infer" when cxx and java configs are consolidated
-  private static final String INFER_CONFIG_SECTION = "infer_java";
+  private static final String SECTION = "infer_java";
+
+  private static final String DIST_FIELD = "dist";
+  private static final String DEFAULT_DIST_BINARY = "infer";
 
   @Override
   public abstract BuckConfig getDelegate();
 
   @Value.Lazy
   public Optional<ToolProvider> getBinary() {
-    return getDelegate().getView(ToolConfig.class).getToolProvider(INFER_CONFIG_SECTION, "binary");
+    return getDelegate().getView(ToolConfig.class).getToolProvider(SECTION, "binary");
+  }
+
+  /**
+   * Depending on the type of dist (plain path vs target) either return a {@link
+   * ConstantToolProvider} or {@link InferDistFromTargetProvider} with properly set up parse time
+   * deps.
+   */
+  @Value.Lazy
+  public Optional<ToolProvider> getDist() {
+    Optional<String> valueOpt = getDelegate().getValue(SECTION, DIST_FIELD);
+    if (!valueOpt.isPresent()) {
+      return Optional.empty();
+    }
+    String value = valueOpt.get();
+
+    Optional<UnconfiguredBuildTargetView> targetOpt =
+        getDelegate().getMaybeUnconfiguredBuildTarget(SECTION, DIST_FIELD);
+
+    ToolProvider toolProvider =
+        targetOpt
+            .map(this::mkDistProviderFromTarget)
+            .orElseGet(() -> this.mkDistProviderFromPath(value));
+
+    return Optional.of(toolProvider);
+  }
+
+  @Value.Lazy
+  public String getDistBinary() {
+    return getDelegate().getValue(SECTION, "dist_binary").orElse(DEFAULT_DIST_BINARY);
   }
 
   @Value.Lazy
   public Optional<String> getVersion() {
-    return getDelegate().getValue(INFER_CONFIG_SECTION, "version");
+    return getDelegate().getValue(SECTION, "version");
   }
 
   @Value.Lazy
   public Optional<SourcePath> getConfigFile(TargetConfiguration targetConfiguration) {
-    return getDelegate().getSourcePath(INFER_CONFIG_SECTION, "config_file", targetConfiguration);
+    return getDelegate().getSourcePath(SECTION, "config_file", targetConfiguration);
   }
 
   @Value.Lazy
-  @AddToRuleKey
   public ImmutableList<String> getNullsafeArgs() {
-    return getDelegate().getListWithoutComments(INFER_CONFIG_SECTION, "nullsafe_args");
+    return getDelegate().getListWithoutComments(SECTION, "nullsafe_args");
   }
 
   /** Directory with third party signatures for nullsafe. */
@@ -62,11 +95,24 @@ public abstract class InferConfig implements ConfigView<BuckConfig> {
   public Optional<SourcePath> getNullsafeThirdPartySignatures(
       TargetConfiguration targetConfiguration) {
     return getDelegate()
-        .getSourcePath(
-            INFER_CONFIG_SECTION, "nullsafe_third_party_signatures", targetConfiguration);
+        .getSourcePath(SECTION, "nullsafe_third_party_signatures", targetConfiguration);
   }
 
+  @Value.Lazy
   public Boolean getPrettyPrint() {
-    return getDelegate().getBoolean(INFER_CONFIG_SECTION, "pretty_print").orElse(false);
+    return getDelegate().getBoolean(SECTION, "pretty_print").orElse(false);
+  }
+
+  private ToolProvider mkDistProviderFromTarget(UnconfiguredBuildTargetView target) {
+    String source = String.format("[%s] %s", SECTION, DIST_FIELD);
+    return new InferDistFromTargetProvider(target, getDistBinary(), source);
+  }
+
+  private ToolProvider mkDistProviderFromPath(String path) {
+    String errorMessage = String.format("%s:%s path not found", SECTION, DIST_FIELD);
+
+    return new ConstantToolProvider(
+        new InferDistTool(
+            () -> getDelegate().getPathSourcePath(Paths.get(path), errorMessage), getDistBinary()));
   }
 }

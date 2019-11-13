@@ -59,6 +59,17 @@ public class InferJavaIntegrationTest {
   }
 
   @Test
+  public void inferJavaFromDist() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "dist", tmp);
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("//:l1#nullsafe");
+    String content = workspace.getFileContents(output);
+    assertEquals("fake infer results\n", content);
+  }
+
+  @Test
   @Ignore(
       "TODO: `buck test` fails with unknown android-platform-target toolchain (but works in Idea)")
   public void inferAndroidLibraryBuild() throws IOException {

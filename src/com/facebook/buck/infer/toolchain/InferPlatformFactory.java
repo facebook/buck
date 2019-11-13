@@ -16,22 +16,14 @@
 package com.facebook.buck.infer.toolchain;
 
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.infer.ImmutableInferConfig;
-import com.facebook.buck.infer.ImmutableInferPlatform;
 import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.infer.InferPlatform;
 import com.facebook.buck.infer.UnresolvedInferPlatform;
 import com.facebook.buck.io.ExecutableFinder;
-import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -44,67 +36,29 @@ public class InferPlatformFactory {
   public static Optional<UnresolvedInferPlatform> getBasedOnConfigAndPath(
       BuckConfig buckConfig, ExecutableFinder executableFinder) {
     InferConfig inferConfig = new ImmutableInferConfig(buckConfig);
-
-    Optional<ToolProvider> fromConfig = getBinaryFromConfig(inferConfig);
     Optional<ToolProvider> toolProviderOpt;
 
-    if (fromConfig.isPresent()) {
-      toolProviderOpt = fromConfig;
+    Optional<ToolProvider> binaryProvider = inferConfig.getBinary();
+    if (binaryProvider.isPresent()) {
+      toolProviderOpt = binaryProvider;
     } else {
-      toolProviderOpt = getBinaryFromEnv(buckConfig, executableFinder);
+      Optional<ToolProvider> distProvider = inferConfig.getDist();
+      if (distProvider.isPresent()) {
+        toolProviderOpt = distProvider;
+      } else {
+        toolProviderOpt = getBinaryFromEnv(inferConfig, executableFinder);
+      }
     }
 
     return toolProviderOpt.map(
-        provider ->
-            new UnresolvedInferPlatform() {
-              private final InferConfig config = inferConfig;
-              private final ToolProvider toolProvider = provider;
-
-              @Override
-              public InferPlatform resolve(
-                  BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
-                Tool tool = provider.resolve(resolver, targetConfiguration);
-
-                Optional<SourcePath> configFile = config.getConfigFile(targetConfiguration);
-                Optional<String> version = config.getVersion();
-                Optional<SourcePath> nullsafeThirdPartySignatures =
-                    config.getNullsafeThirdPartySignatures(targetConfiguration);
-
-                return new ImmutableInferPlatform(
-                    tool, version, configFile, nullsafeThirdPartySignatures);
-              }
-
-              @Override
-              public Iterable<BuildTarget> getParseTimeDeps(
-                  TargetConfiguration targetConfiguration) {
-                ImmutableList.Builder<BuildTarget> deps = ImmutableList.builder();
-
-                deps.addAll(toolProvider.getParseTimeDeps(targetConfiguration));
-
-                ImmutableList.of(
-                        inferConfig.getConfigFile(targetConfiguration),
-                        inferConfig.getNullsafeThirdPartySignatures(targetConfiguration))
-                    .forEach(
-                        sourcePathOpt ->
-                            sourcePathOpt
-                                .filter(BuildTargetSourcePath.class::isInstance)
-                                .ifPresent(
-                                    cf -> deps.add(((BuildTargetSourcePath) cf).getTarget())));
-
-                return deps.build();
-              }
-            });
-  }
-
-  private static Optional<ToolProvider> getBinaryFromConfig(InferConfig inferConfig) {
-    return inferConfig.getBinary();
+        (toolProvider) -> new DefaultUnresolvedInferPlatform(inferConfig, toolProvider));
   }
 
   private static Optional<ToolProvider> getBinaryFromEnv(
-      BuckConfig buckConfig, ExecutableFinder executableFinder) {
+      InferConfig inferConfig, ExecutableFinder executableFinder) {
     return executableFinder
-        .getOptionalExecutable(DEFAULT_INFER_TOOL, buckConfig.getEnvironment())
-        .map(path -> new HashedFileTool(() -> buckConfig.getPathSourcePath(path)))
+        .getOptionalExecutable(DEFAULT_INFER_TOOL, inferConfig.getDelegate().getEnvironment())
+        .map(path -> new HashedFileTool(() -> inferConfig.getDelegate().getPathSourcePath(path)))
         .map(ConstantToolProvider::new);
   }
 }
