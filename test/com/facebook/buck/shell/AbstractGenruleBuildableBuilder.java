@@ -79,8 +79,8 @@ abstract class AbstractGenruleBuildableBuilder {
   }
 
   @Value.Default
-  public SandboxProperties getSandboxProperties() {
-    return SandboxProperties.builder().build();
+  public Optional<SandboxProperties> getSandboxProperties() {
+    return Optional.empty();
   }
 
   public abstract Optional<GenruleAndroidTools> getAndroidTools();

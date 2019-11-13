@@ -56,6 +56,7 @@ import com.facebook.buck.worker.WorkerProcessParams;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -163,7 +164,8 @@ public class GenruleBuildable implements Buildable {
 
   /**
    * Sandbox properties for this genrule. The properties contain the set of permissions available to
-   * the genrule process.
+   * the genrule process. This field is optional since retains a significant amount of memory when
+   * present, even if left empty.
    *
    * <p>This field is also serialized as an empty property set since sandboxing does not make sense
    * when executing remotely.
@@ -172,7 +174,7 @@ public class GenruleBuildable implements Buildable {
       reason = "Non-default sandbox execution not useful when executing remotely",
       serialization = SandboxPropertiesBehavior.class,
       inputs = SandboxPropertiesBehavior.class)
-  private final SandboxProperties sandboxProperties;
+  private final Optional<SandboxProperties> sandboxProperties;
 
   public GenruleBuildable(
       BuildTarget buildTarget,
@@ -187,7 +189,7 @@ public class GenruleBuildable implements Buildable {
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       String environmentExpansionSeparator,
-      SandboxProperties sandboxProperties,
+      Optional<SandboxProperties> sandboxProperties,
       Optional<GenruleAndroidTools> androidTools) {
     this.buildTarget = buildTarget;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
@@ -403,7 +405,10 @@ public class GenruleBuildable implements Buildable {
     ProgramRunner programRunner;
 
     if (sandboxExecutionStrategy.isSandboxEnabled() && enableSandboxingInGenrule) {
-      programRunner = sandboxExecutionStrategy.createSandboxProgramRunner(sandboxProperties);
+      Preconditions.checkState(
+          sandboxProperties.isPresent(),
+          "SandboxProperties must have been calculated earlier if sandboxing was requested");
+      programRunner = sandboxExecutionStrategy.createSandboxProgramRunner(sandboxProperties.get());
     } else {
       programRunner = new DirectProgramRunner();
     }
@@ -584,23 +589,24 @@ public class GenruleBuildable implements Buildable {
    * the builder and takes up no bytes on the wire.
    */
   private static class SandboxPropertiesBehavior
-      implements CustomFieldSerialization<SandboxProperties>, CustomFieldInputs<SandboxProperties> {
+      implements CustomFieldSerialization<Optional<SandboxProperties>>,
+          CustomFieldInputs<Optional<SandboxProperties>> {
 
     @Override
-    public void getInputs(SandboxProperties value, Consumer<SourcePath> consumer) {
+    public void getInputs(Optional<SandboxProperties> value, Consumer<SourcePath> consumer) {
       // No inputs, don't populate anything.
     }
 
     @Override
-    public <E extends Exception> void serialize(SandboxProperties value, ValueVisitor<E> serializer)
-        throws E {
+    public <E extends Exception> void serialize(
+        Optional<SandboxProperties> value, ValueVisitor<E> serializer) throws E {
       // Don't place anything on the wire, there's no information to convey.
     }
 
     @Override
-    public <E extends Exception> SandboxProperties deserialize(ValueCreator<E> deserializer)
-        throws E {
-      return SandboxProperties.builder().build();
+    public <E extends Exception> Optional<SandboxProperties> deserialize(
+        ValueCreator<E> deserializer) throws E {
+      return Optional.empty();
     }
   }
 

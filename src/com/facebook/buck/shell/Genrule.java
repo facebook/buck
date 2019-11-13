@@ -129,8 +129,11 @@ public class Genrule extends ModernBuildRule<GenruleBuildable> implements HasOut
             enableSandboxingInGenrule,
             isCacheable,
             environmentExpansionSeparator.orElse(" "),
-            createSandboxConfiguration(
-                buildRuleResolver, buildTarget, projectFilesystem, srcs, cmd, bash, cmdExe),
+            enableSandboxingInGenrule
+                ? Optional.of(
+                    createSandboxConfiguration(
+                        buildRuleResolver, buildTarget, projectFilesystem, srcs, cmd, bash, cmdExe))
+                : Optional.empty(),
             androidTools.map(
                 tools -> GenruleAndroidTools.of(tools, buildTarget, buildRuleResolver))));
   }
