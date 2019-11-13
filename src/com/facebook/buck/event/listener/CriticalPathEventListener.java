@@ -24,10 +24,11 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.remoteexecution.event.RemoteBuildRuleExecutionEvent;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Pair;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.io.BufferedWriter;
@@ -171,7 +172,6 @@ public class CriticalPathEventListener implements BuckEventListener {
   /** Dumps critical path into the given {@code outputPath} */
   private void dumpCriticalPath() throws IOException {
     try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
-      writeHeader(writer);
       for (Pair<BuildTarget, CriticalPathNode> pair : getCriticalPath()) {
         writer.write(convertToLine(pair));
         writer.newLine();
@@ -208,18 +208,18 @@ public class CriticalPathEventListener implements BuckEventListener {
     return criticalPathDeque;
   }
 
-  private void writeHeader(BufferedWriter writer) throws IOException {
-    writer.write(
-        String.format(
-            FORMAT, "Elapsed time", "Total time", "% in Total Time", "Rule Type", "Build Target"));
-    writer.newLine();
-    writer.write(Strings.repeat("-", 180));
-    writer.newLine();
-  }
-
   private String convertToLine(Pair<BuildTarget, CriticalPathNode> pair) {
     BuildTarget buildTarget = pair.getFirst();
     CriticalPathNode criticalPathNode = pair.getSecond();
+    try {
+      return String.format(
+          "%s: %s",
+          buildTarget.getFullyQualifiedName(),
+          ObjectMappers.WRITER.writeValueAsString(criticalPathNode));
+    } catch (JsonProcessingException e) {
+      LOG.info(
+          e, "Failed to process critical path node: " + pair.getFirst().getFullyQualifiedName());
+    }
     long elapsedTime = criticalPathNode.getExecutionTimeInfo().getExecutionDurationMs();
 
     return String.format(
