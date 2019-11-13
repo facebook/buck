@@ -1498,6 +1498,37 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
+  public void testSwiftStdlibsAreCopiedWithSwiftOnlyInAppExtension() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_stdlibs_in_extension", tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:TestApp#iphonesimulator-x86_64,no-linkermap");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path frameworks =
+        tmp.getRoot()
+            .resolve(workspace.getProjectFileSystem().getBuckPaths().getGenDir())
+            .resolve(
+                "TestApp#dwarf-and-dsym,iphonesimulator-x86_64,no-include-frameworks,no-linkermap")
+            .resolve("TestApp.app")
+            .resolve("Frameworks");
+
+    assertTrue(
+        "the Frameworks directory should be created within the app bundle",
+        Files.exists(frameworks));
+
+    Path libSwiftCore = frameworks.resolve("libswiftCore.dylib");
+    assertTrue(
+        "the Swift stdlibs should be copied to the Frameworks directory",
+        Files.exists(libSwiftCore));
+  }
+
+  @Test
   public void linkerExtraOutputsWork() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
