@@ -157,6 +157,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final ImmutableMap<SourcePath, String> extensionBundlePaths;
 
   @AddToRuleKey private final boolean copySwiftStdlibToFrameworks;
+  @AddToRuleKey private final boolean useLipoThin;
 
   @AddToRuleKey private final boolean useEntitlementsWhenAdhocCodeSigning;
 
@@ -215,6 +216,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<String> ibtoolFlags,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
+      boolean useLipoThin,
       boolean useEntitlementsWhenAdhocCodeSigning) {
     super(buildTarget, projectFilesystem, params);
     this.extension =
@@ -288,6 +290,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     this.codesignTimeout = codesignTimeout;
     this.copySwiftStdlibToFrameworks = copySwiftStdlibToFrameworks;
+    this.useLipoThin = useLipoThin;
     this.useEntitlementsWhenAdhocCodeSigning = useEntitlementsWhenAdhocCodeSigning;
   }
 
@@ -588,6 +591,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
           false,
           extension,
           copySwiftStdlibToFrameworks,
+          useLipoThin,
           swiftStdlibTool,
           getProjectFilesystem(),
           getBuildTarget(),
@@ -642,6 +646,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
           false,
           extension,
           copySwiftStdlibToFrameworks,
+          useLipoThin,
           swiftStdlibTool,
           getProjectFilesystem(),
           getBuildTarget(),
@@ -778,6 +783,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         isForPackaging,
         extension,
         copySwiftStdlibToFrameworks,
+        useLipoThin,
         swiftStdlibTool,
         getProjectFilesystem(),
         getBuildTarget(),

@@ -214,6 +214,7 @@ public class AppleResourceProcessing {
       boolean isForPackaging,
       String bundleExtension,
       boolean copySwiftStdlibToFrameworks,
+      boolean useLipoThin,
       Optional<Tool> swiftStdlibTool,
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
@@ -238,6 +239,7 @@ public class AppleResourceProcessing {
               destinationPath,
               swiftStdlibTool.get().getCommandPrefix(resolver),
               lipo.getCommandPrefix(resolver),
+              useLipoThin,
               bundleBinaryPath,
               ImmutableSet.of(
                   bundleRoot.resolve(destinations.getFrameworksPath()),

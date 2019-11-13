@@ -637,6 +637,7 @@ public class AppleDescriptions {
       Optional<ImmutableList<String>> ibtoolFlags,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
+      boolean useLipoThin,
       boolean cacheStrips,
       boolean useEntitlementsWhenAdhocCodeSigning,
       Predicate<BuildTarget> filter) {
@@ -882,6 +883,7 @@ public class AppleDescriptions {
         ibtoolFlagsUnwrapped,
         codesignTimeout,
         copySwiftStdlibToFrameworks,
+        useLipoThin,
         useEntitlementsWhenAdhocCodeSigning);
   }
 
