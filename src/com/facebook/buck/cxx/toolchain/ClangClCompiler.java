@@ -29,6 +29,14 @@ public class ClangClCompiler extends WindowsCompiler {
   }
 
   @Override
+  public boolean isArgFileSupported() {
+    // argfiles can't be supported until parsing mode for multi token
+    // arguments is fixed. clang can't handle eg. -Xclang <whatever> split
+    // across multiple lines.
+    return false;
+  }
+
+  @Override
   public ImmutableList<String> getFlagsForReproducibleBuild(
       String altCompilationDir, Path currentCellPath) {
     return ImmutableList.of(

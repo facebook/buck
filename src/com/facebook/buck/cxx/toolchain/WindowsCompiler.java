@@ -34,7 +34,7 @@ public class WindowsCompiler extends DefaultCompiler {
 
   @Override
   public boolean isArgFileSupported() {
-    return false;
+    return true;
   }
 
   @Override

@@ -67,12 +67,9 @@ public class WindowsPreprocessorTest {
     List<String> expected =
         Arrays.asList(
             "/experimental:external",
-            "/external:I",
-            "/test/dir",
-            "/external:I",
-            "/another/test/dir",
-            "/external:I",
-            "one/more/test/dir");
+            "/external:I/test/dir",
+            "/external:I/another/test/dir",
+            "/external:Ione/more/test/dir");
 
     Assert.assertFalse(resultSystemIncludes.isEmpty());
     Assert.assertEquals(resultSystemIncludes.get(0), "/experimental:external");

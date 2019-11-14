@@ -4,8 +4,7 @@ cxx_library(
         "test.cpp",
     ],
     compiler_flags = [
-        "-I",
-        "depfiles2/headers",
+        "-Idepfiles2/headers",
     ],
     deps = ["//depfiles2/headers:headers"],
 )
