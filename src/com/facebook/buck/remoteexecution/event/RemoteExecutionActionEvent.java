@@ -18,13 +18,17 @@ package com.facebook.buck.remoteexecution.event;
 
 import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.WorkAdvanceEvent;
+import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.util.Scope;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.util.Map;
@@ -58,6 +62,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     }
 
     /** Abbreviated name for the current state. */
+    @JsonView(JsonViews.MachineReadableLog.class)
     public String getAbbreviateName() {
       return abbreviateName;
     }
@@ -65,8 +70,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
   /** Takes care of sending both Started and Finished events within a Scope. */
   public static Scope sendEvent(
-      BuckEventBus eventBus, State state, BuildTarget buildTarget, Optional<Digest> actionDigest) {
-    final Started startedEvent = new Started(state, buildTarget, actionDigest);
+      BuckEventBus eventBus, State state, BuildRule buildRule, Optional<Digest> actionDigest) {
+    final Started startedEvent = new Started(state, buildRule, actionDigest);
     eventBus.post(startedEvent);
     final Scope leftEventScope = LeafEvents.scope(eventBus, state.toString().toLowerCase(), false);
     return () -> {
@@ -79,7 +84,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
   public static void sendTerminalEvent(
       BuckEventBus eventBus,
       State state,
-      BuildTarget buildTarget,
+      BuildRule buildRule,
       Optional<Digest> actionDigest,
       Optional<ExecutedActionMetadata> executedActionMetadata,
       Optional<Map<State, Long>> stateMetadata,
@@ -87,7 +92,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     final Terminal event =
         new Terminal(
             state,
-            buildTarget,
+            buildRule,
             actionDigest,
             executedActionMetadata,
             stateMetadata,
@@ -95,8 +100,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     eventBus.post(event);
   }
 
-  public static void sendScheduledEvent(BuckEventBus eventBus, BuildTarget buildTarget) {
-    eventBus.post(new Scheduled(buildTarget));
+  public static void sendScheduledEvent(BuckEventBus eventBus, BuildRule buildRule) {
+    eventBus.post(new Scheduled(buildRule));
   }
 
   public static boolean isTerminalState(State state) {
@@ -108,7 +113,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
   /** Sends a one off terminal event for a Remote Execution Action. */
   public static class Terminal extends RemoteExecutionActionEvent {
     private final State state;
-    private final BuildTarget buildTarget;
+    private final BuildRule buildRule;
     private final Optional<Digest> actionDigest;
     private final Optional<ExecutedActionMetadata> executedActionMetadata;
     private final Optional<Map<State, Long>> stateMetadata;
@@ -117,7 +122,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     @VisibleForTesting
     Terminal(
         State state,
-        BuildTarget buildTarget,
+        BuildRule buildRule,
         Optional<Digest> actionDigest,
         Optional<ExecutedActionMetadata> executedActionMetadata,
         Optional<Map<State, Long>> stateMetadata,
@@ -128,37 +133,49 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
           "State [%s] is not a terminal state.",
           state);
       this.state = state;
-      this.buildTarget = buildTarget;
+      this.buildRule = buildRule;
       this.actionDigest = actionDigest;
       this.executedActionMetadata = executedActionMetadata;
       this.stateMetadata = stateMetadata;
       this.stateWaitingMetadata = stateWaitingMetadata;
     }
 
+    @JsonView(JsonViews.MachineReadableLog.class)
     public State getState() {
       return state;
     }
 
-    public BuildTarget getBuildTarget() {
-      return buildTarget;
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public BuildRule getBuildRule() {
+      return buildRule;
     }
 
+    @JsonIgnore
+    public BuildTarget getBuildTarget() {
+      return buildRule.getBuildTarget();
+    }
+
+    @JsonIgnore
     public Optional<Digest> getActionDigest() {
       return actionDigest;
     }
 
+    @JsonIgnore
     public Optional<ExecutedActionMetadata> getExecutedActionMetadata() {
       return executedActionMetadata;
     }
 
+    @JsonIgnore
     public Optional<Map<State, Long>> getStateMetadata() {
       return stateMetadata;
     }
 
+    @JsonIgnore
     public Optional<Map<State, Long>> getStateWaitingMetadata() {
       return stateWaitingMetadata;
     }
 
+    @JsonIgnore
     @Override
     protected String getValueString() {
       return state.toString();
@@ -168,29 +185,37 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
   /** An action just moved into this state. */
   public static class Started extends RemoteExecutionActionEvent {
     private final State state;
-    private final BuildTarget buildTarget;
+    private final BuildRule buildRule;
     private final Optional<Digest> actionDigest;
 
     @VisibleForTesting
-    Started(State state, BuildTarget buildTarget, Optional<Digest> actionDigest) {
+    Started(State state, BuildRule buildRule, Optional<Digest> actionDigest) {
       super(EventKey.unique());
       Preconditions.checkArgument(
           !RemoteExecutionActionEvent.isTerminalState(state),
           "Argument state [%s] cannot be a terminal state.",
           state);
-      this.buildTarget = buildTarget;
+      this.buildRule = buildRule;
       this.state = state;
       this.actionDigest = actionDigest;
     }
 
+    @JsonView(JsonViews.MachineReadableLog.class)
     public State getState() {
       return state;
     }
 
+    @JsonIgnore
     public BuildTarget getBuildTarget() {
-      return buildTarget;
+      return buildRule.getBuildTarget();
     }
 
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public BuildRule getBuildRule() {
+      return buildRule;
+    }
+
+    @JsonIgnore
     public Optional<Digest> getActionDigest() {
       return actionDigest;
     }
@@ -207,20 +232,27 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
    * any others).
    */
   public static class Scheduled extends RemoteExecutionActionEvent {
-    private final BuildTarget buildTarget;
+    private final BuildRule buildRule;
 
-    protected Scheduled(BuildTarget buildTarget) {
+    protected Scheduled(BuildRule buildRule) {
       super(EventKey.unique());
-      this.buildTarget = buildTarget;
+      this.buildRule = buildRule;
     }
 
+    @JsonIgnore
     @Override
     protected String getValueString() {
       return "scheduled";
     }
 
+    @JsonIgnore
     public BuildTarget getBuildTarget() {
-      return buildTarget;
+      return buildRule.getBuildTarget();
+    }
+
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public BuildRule getBuildRule() {
+      return buildRule;
     }
   }
 
@@ -237,6 +269,11 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
     public Started getStartedEvent() {
       return startedEvent;
+    }
+
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public BuildRule getBuildRule() {
+      return startedEvent.getBuildRule();
     }
 
     @Override

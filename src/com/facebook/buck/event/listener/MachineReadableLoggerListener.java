@@ -31,6 +31,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.build.event.BuildRuleExecutionEvent;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
@@ -44,6 +45,7 @@ import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
@@ -201,6 +203,31 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   @Subscribe
   public void buildRuleEventWillBuildLocally(BuildRuleEvent.WillBuildLocally event) {
     writeToLog("BuildRuleEvent.WillBuildLocally", event);
+  }
+
+  @Subscribe
+  public void buildRuleExecutionStartedEvent(BuildRuleExecutionEvent.Started event) {
+    writeToLog("ExecutionStarted", event);
+  }
+
+  @Subscribe
+  public void buildRuleExecutionFinishedEvent(BuildRuleExecutionEvent.Finished event) {
+    writeToLog("ExecutionFinished", event);
+  }
+
+  @Subscribe
+  public void buildRuleRemoteExecutionStartedEvent(RemoteExecutionActionEvent.Started event) {
+    writeToLog("RemoteExecutionStarted", event);
+  }
+
+  @Subscribe
+  public void buildRuleRemoteExecutionFinishedEvent(RemoteExecutionActionEvent.Finished event) {
+    writeToLog("RemoteExecutionFinished", event);
+  }
+
+  @Subscribe
+  public void buildRuleRemoteExecutionScheduledEvent(RemoteExecutionActionEvent.Scheduled event) {
+    writeToLog("RemoteExecutionScheduled", event);
   }
 
   @Subscribe

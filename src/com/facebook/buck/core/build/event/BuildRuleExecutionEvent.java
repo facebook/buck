@@ -22,7 +22,10 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.Scope;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 
 /** Events used to track time spent executing rule. */
 public interface BuildRuleExecutionEvent extends BuckEvent {
@@ -32,26 +35,33 @@ public interface BuildRuleExecutionEvent extends BuckEvent {
   /** Common event implementation */
   class Event extends AbstractBuckEvent implements BuildRuleExecutionEvent {
 
-    private final BuildTarget target;
+    private final BuildRule buildRule;
     private final String name;
 
     public Event(EventKey eventKey, BuildRule buildRule) {
       super(eventKey);
-      this.target = buildRule.getBuildTarget();
+      this.buildRule = buildRule;
       this.name = buildRule.getFullyQualifiedName();
     }
 
     @Override
     public BuildTarget getTarget() {
-      return target;
+      return buildRule.getBuildTarget();
+    }
+
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public BuildRule getBuildRule() {
+      return buildRule;
     }
 
     @Override
+    @JsonIgnore
     public String getEventName() {
       return BuildRuleExecutionEvent.class.getSimpleName();
     }
 
     @Override
+    @JsonIgnore
     protected String getValueString() {
       return name;
     }
@@ -75,6 +85,7 @@ public interface BuildRuleExecutionEvent extends BuckEvent {
       this.statEventNanoTime = statEventNanoTime;
     }
 
+    @JsonView(JsonViews.MachineReadableLog.class)
     public long getElapsedTimeNano() {
       return getNanoTime() - statEventNanoTime;
     }

@@ -183,10 +183,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   @Override
   public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
     Preconditions.checkState(rule instanceof ModernBuildRule);
-    BuildTarget buildTarget = rule.getBuildTarget();
 
-    RemoteExecutionActionEvent.sendScheduledEvent(eventBus, rule.getBuildTarget());
-    RuleContext ruleContext = new RuleContext(eventBus, rule.getBuildTarget());
+    RemoteExecutionActionEvent.sendScheduledEvent(eventBus, rule);
+    RuleContext ruleContext = new RuleContext(eventBus, rule);
 
     ListenableFuture<RemoteExecutionActionInfo> actionInfoFuture =
         pendingUploadsLimiter.schedule(
@@ -241,7 +240,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               RemoteExecutionActionEvent.sendTerminalEvent(
                   eventBus,
                   State.ACTION_CANCELLED,
-                  buildTarget,
+                  rule,
                   Optional.ofNullable(actionInfo.get())
                       .map(RemoteExecutionActionInfo::getActionDigest),
                   Optional.empty(),
@@ -255,7 +254,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               RemoteExecutionActionEvent.sendTerminalEvent(
                   eventBus,
                   State.ACTION_SUCCEEDED,
-                  buildTarget,
+                  rule,
                   Optional.ofNullable(actionInfo.get())
                       .map(RemoteExecutionActionInfo::getActionDigest),
                   Optional.ofNullable(executionInfo.get()).map(ExecutionResult::getActionMetadata),
@@ -269,7 +268,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             RemoteExecutionActionEvent.sendTerminalEvent(
                 eventBus,
                 t instanceof InterruptedException ? State.ACTION_CANCELLED : State.ACTION_FAILED,
-                buildTarget,
+                rule,
                 Optional.ofNullable(actionInfo.get())
                     .map(RemoteExecutionActionInfo::getActionDigest),
                 Optional.empty(),
@@ -577,14 +576,14 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     ConcurrentLinkedQueue<Consumer<Throwable>> callbackQueue = new ConcurrentLinkedQueue<>();
     State actionState;
     State prevState;
-    final BuildTarget buildTarget;
+    final BuildRule buildRule;
     final BuckEventBus eventBus;
     Map<State, Long> timeMsInState;
     Map<State, Long> timeMsAfterState;
     long prevStateTime;
 
-    public RuleContext(BuckEventBus eventBus, BuildTarget target) {
-      this.buildTarget = target;
+    public RuleContext(BuckEventBus eventBus, BuildRule rule) {
+      this.buildRule = rule;
       this.eventBus = eventBus;
       this.actionState = State.WAITING;
       this.prevState = State.WAITING;
@@ -643,8 +642,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           prevState, TimeUnit.NANOSECONDS.toMillis(System.nanoTime()) - prevStateTime);
       actionState = state;
       long startMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
-      Scope inner =
-          RemoteExecutionActionEvent.sendEvent(eventBus, state, buildTarget, actionDigest);
+      Scope inner = RemoteExecutionActionEvent.sendEvent(eventBus, state, buildRule, actionDigest);
 
       return () -> {
         if (actionState != State.WAITING) {
