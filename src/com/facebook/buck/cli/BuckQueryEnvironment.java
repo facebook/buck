@@ -513,7 +513,12 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
       BuildTarget buildTarget = target.getBuildTarget();
       Cell cell = rootCell.getCell(buildTarget);
       BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
-      Optional<Path> path = buildFileTree.getBasePathOfAncestorTarget(buildTarget.getBasePath());
+      Optional<Path> path =
+          buildFileTree.getBasePathOfAncestorTarget(
+              buildTarget
+                  .getCellRelativeBasePath()
+                  .getPath()
+                  .toPath(cellFilesystem.getFileSystem()));
       Preconditions.checkState(path.isPresent());
 
       Path buildFilePath =

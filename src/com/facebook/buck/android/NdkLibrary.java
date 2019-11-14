@@ -106,7 +106,8 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.androidNdk = androidNdk;
     this.isAsset = isAsset;
 
-    this.root = buildTarget.getBasePath();
+    this.root =
+        buildTarget.getCellRelativeBasePath().getPath().toPath(projectFilesystem.getFileSystem());
     this.makefile = Objects.requireNonNull(makefile);
     this.makefileContents = makefileContents;
     this.buildArtifactsDirectory = getBuildArtifactsDirectory(buildTarget, true /* isScratchDir */);

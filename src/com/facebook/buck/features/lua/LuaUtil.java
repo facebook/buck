@@ -66,7 +66,7 @@ public class LuaUtil {
   public static String getBaseModule(BuildTarget target, Optional<String> override) {
     return override
         .map(s -> s.replace('.', File.separatorChar))
-        .orElseGet(() -> target.getBasePath().toString());
+        .orElseGet(() -> target.getCellRelativeBasePath().getPath().toString());
   }
 
   public static ImmutableList<BuildTarget> getDeps(

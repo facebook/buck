@@ -130,14 +130,14 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     Path genDirectory = getProjectFilesystem().getBuckPaths().getGenDir().resolve(importPath);
 
     // Warn the user if the genDirectory is not under the output directory.
-    if (!importPath.startsWith(target.getBasePath().toString())) {
+    if (!importPath.startsWith(target.getCellRelativeBasePath().getPath().toString())) {
       // TODO(simons): Make this fatal. Give people some time to clean up their rules.
       context
           .getEventBus()
           .post(
               ConsoleEvent.warning(
                   "%s, gen_aidl import path (%s) should be a child of %s",
-                  target, importPath, target.getBasePath()));
+                  target, importPath, target.getCellRelativeBasePath().getPath()));
     }
 
     commands.add(

@@ -421,7 +421,13 @@ public class NdkLibraryDescription
     if (!args.getSrcs().isEmpty()) {
       sources = args.getSrcs();
     } else {
-      sources = findSources(projectFilesystem, buildTarget.getBasePath());
+      sources =
+          findSources(
+              projectFilesystem,
+              buildTarget
+                  .getCellRelativeBasePath()
+                  .getPath()
+                  .toPath(projectFilesystem.getFileSystem()));
     }
 
     StringWithMacrosConverter macrosConverter =

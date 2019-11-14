@@ -55,7 +55,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.URISyntaxException;
@@ -521,7 +520,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   private static String getModuleName(BuildTarget invokingRule) {
     return new StringBuilder()
-        .append(invokingRule.getBasePath().toString().replace(File.separatorChar, '.'))
+        .append(invokingRule.getCellRelativeBasePath().getPath().toString().replace('/', '.'))
         .append(".")
         .append(invokingRule.getShortName())
         .toString();

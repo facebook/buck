@@ -155,7 +155,11 @@ public class AabBuilderStep implements Step {
     return filesystem
         .getBuckPaths()
         .getGenDir()
-        .resolve(buildTarget.getBasePath())
+        .resolve(
+            buildTarget
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPath(filesystem.getRootPath().getFileSystem()))
         .resolve(String.format("%s.zip", moduleInfo.getModuleName()));
   }
 

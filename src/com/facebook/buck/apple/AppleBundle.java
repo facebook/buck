@@ -675,7 +675,14 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions.
     if (!entitlementsPlist.isPresent()) {
-      Path srcRoot = getProjectFilesystem().getRootPath().resolve(getBuildTarget().getBasePath());
+      Path srcRoot =
+          getProjectFilesystem()
+              .getRootPath()
+              .resolve(
+                  getBuildTarget()
+                      .getCellRelativeBasePath()
+                      .getPath()
+                      .toPath(getProjectFilesystem().getFileSystem()));
       Optional<String> entitlementsPlistString =
           InfoPlistSubstitution.getVariableExpansionForPlatform(
               CODE_SIGN_ENTITLEMENTS,

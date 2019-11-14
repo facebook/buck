@@ -54,6 +54,10 @@ public interface ProjectFilesystem {
 
   Path getRootPath();
 
+  default FileSystem getFileSystem() {
+    return getRootPath().getFileSystem();
+  }
+
   /**
    * @return details about the delegate suitable for writing to a logger. It is recommended that the
    *     keys of this map are unique in namespace of the things a logger may want to log. Values
