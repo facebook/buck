@@ -39,6 +39,8 @@ public interface BuildTarget extends Comparable<BuildTarget>, DependencyStack.El
 
   Path getBasePath();
 
+  CellRelativePath getCellRelativeBasePath();
+
   String getShortName();
 
   /**

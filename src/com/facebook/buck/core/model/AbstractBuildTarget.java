@@ -51,6 +51,11 @@ public abstract class AbstractBuildTarget implements BuildTarget {
   }
 
   @Override
+  public CellRelativePath getCellRelativeBasePath() {
+    return getUnconfiguredBuildTargetView().getCellRelativeBasePath();
+  }
+
+  @Override
   public String getShortName() {
     return getUnconfiguredBuildTargetView().getShortName();
   }

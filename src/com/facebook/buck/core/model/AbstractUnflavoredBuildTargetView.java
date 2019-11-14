@@ -28,7 +28,12 @@ public abstract class AbstractUnflavoredBuildTargetView implements UnflavoredBui
 
   @Override
   public Path getBasePath() {
-    return getCellFileSystem().getPath(getBaseName().substring(BUILD_TARGET_PREFIX.length()));
+    return getCellRelativeBasePath().getPath().toPath(getCellFileSystem());
+  }
+
+  @Override
+  public CellRelativePath getCellRelativeBasePath() {
+    return getData().getCellRelativeBasePath();
   }
 
   @Override

@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -181,6 +182,12 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   @Override
   public Path getBasePath() {
     return unflavoredBuildTargetView.getBasePath();
+  }
+
+  @JsonIgnore
+  @Override
+  public CellRelativePath getCellRelativeBasePath() {
+    return unflavoredBuildTargetView.getCellRelativeBasePath();
   }
 
   @JsonProperty("shortName")

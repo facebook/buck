@@ -37,7 +37,7 @@ public class ImmediateDirectoryBuildTargetMatcherTest {
     assertTrue(
         pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "buck")));
     assertFalse(
-        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/foo/", "foo")));
+        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/foo", "foo")));
     assertFalse(
         pattern.matches(
             BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck/bar", "bar")));

@@ -65,6 +65,8 @@ public interface UnconfiguredBuildTargetView
    */
   Path getBasePath();
 
+  CellRelativePath getCellRelativeBasePath();
+
   /**
    * The part of the build target name after the colon.
    *

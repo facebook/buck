@@ -65,6 +65,8 @@ public interface UnflavoredBuildTargetView extends Comparable<UnflavoredBuildTar
    */
   Path getBasePath();
 
+  CellRelativePath getCellRelativeBasePath();
+
   /** Data object that backs current instance */
   UnconfiguredBuildTarget getData();
 }

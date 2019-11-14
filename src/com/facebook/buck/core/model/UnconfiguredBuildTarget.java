@@ -17,6 +17,7 @@
 package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -72,6 +73,15 @@ public abstract class UnconfiguredBuildTarget
   @Value.Parameter
   @JsonProperty("baseName")
   public abstract String getBaseName();
+
+  /** Typed version of {@link #getBaseName()}. */
+  @Value.Derived
+  @JsonIgnore
+  public CellRelativePath getCellRelativeBasePath() {
+    // TODO(nga): store only this property, and make `getBaseName` computed
+    return new ImmutableCellRelativePath(
+        getCell(), ForwardRelativePath.ofSubstring(getBaseName(), BUILD_TARGET_PREFIX.length()));
+  }
 
   /**
    * Name of the build target, i.e. part of fully qualified name after the colon If this build
