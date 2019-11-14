@@ -98,6 +98,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final boolean noAutoAddOverlayResources;
   private final APKModuleGraph apkModuleGraph;
   private final boolean useProtoFormat;
+  private final boolean failOnLegacyAapt2Errors;
 
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
@@ -127,7 +128,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean noVersionTransitionsResources,
       boolean noAutoAddOverlayResources,
       APKModuleGraph apkModuleGraph,
-      boolean useProtoFormat) {
+      boolean useProtoFormat,
+      boolean failOnLegacyAapt2Errors) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
@@ -156,6 +158,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.noAutoAddOverlayResources = noAutoAddOverlayResources;
     this.apkModuleGraph = apkModuleGraph;
     this.useProtoFormat = useProtoFormat;
+    this.failOnLegacyAapt2Errors = failOnLegacyAapt2Errors;
   }
 
   @Value.Immutable
@@ -529,7 +532,8 @@ class AndroidBinaryResourcesGraphEnhancer {
                 graphBuilder,
                 aapt2ToolProvider.resolve(graphBuilder, aapt2BuildTarget.getTargetConfiguration()),
                 resDir,
-                skipCrunchPngs);
+                skipCrunchPngs,
+                failOnLegacyAapt2Errors);
         graphBuilder.addToIndex(compileRule);
         compileListBuilder.add(compileRule);
         index++;

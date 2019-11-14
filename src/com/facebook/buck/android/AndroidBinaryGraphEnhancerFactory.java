@@ -215,7 +215,8 @@ public class AndroidBinaryGraphEnhancerFactory {
         rulesToExcludeFromDex,
         useProtoFormat,
         AndroidNativeTargetConfigurationMatcherFactory.create(
-            configurationRuleRegistry, buildTarget, dependencyStack, args.getCpuFilters()));
+            configurationRuleRegistry, buildTarget, dependencyStack, args.getCpuFilters()),
+        androidBuckConfig.getFailOnLegacyAaptErrors());
   }
 
   public static String chooseDexTool(String dexTool, JavaBuckConfig javaBuckConfig) {

@@ -17,6 +17,7 @@
 package com.facebook.buck.features.js;
 
 import com.facebook.buck.android.Aapt2Compile;
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.AndroidResourceDescription;
@@ -86,9 +87,12 @@ public class JsBundleDescription
           JsFlavors.OUTPUT_OPTIONS_DOMAIN);
 
   private final ToolchainProvider toolchainProvider;
+  private final AndroidBuckConfig androidBuckConfig;
 
-  public JsBundleDescription(ToolchainProvider toolchainProvider) {
+  public JsBundleDescription(
+      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
     this.toolchainProvider = toolchainProvider;
+    this.androidBuckConfig = androidBuckConfig;
   }
 
   @Override
@@ -224,7 +228,7 @@ public class JsBundleDescription
         graphBuilder.getRuleWithType(args.getWorker(), ProvidesWorkerTool.class).getWorkerTool());
   }
 
-  private static BuildRule createAndroidRule(
+  private BuildRule createAndroidRule(
       ToolchainProvider toolchainProvider,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -272,7 +276,7 @@ public class JsBundleDescription
         graphBuilder.getRuleWithType(resourceTarget, AndroidResource.class));
   }
 
-  private static BuildRule createAndroidResources(
+  private BuildRule createAndroidResources(
       ToolchainProvider toolchainProvider,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -292,7 +296,8 @@ public class JsBundleDescription
           graphBuilder,
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           jsBundle.getSourcePathToResources(),
-          /* skipCrunchPngs */ false);
+          /* skipCrunchPngs */ false,
+          androidBuckConfig.getFailOnLegacyAaptErrors());
     }
 
     BuildRuleParams params =

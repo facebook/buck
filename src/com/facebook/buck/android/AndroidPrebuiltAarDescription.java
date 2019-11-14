@@ -86,9 +86,12 @@ public class AndroidPrebuiltAarDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavacFactory javacFactory;
+  private final AndroidBuckConfig androidBuckConfig;
 
-  public AndroidPrebuiltAarDescription(ToolchainProvider toolchainProvider) {
+  public AndroidPrebuiltAarDescription(
+      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
     this.toolchainProvider = toolchainProvider;
+    this.androidBuckConfig = androidBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
@@ -183,7 +186,8 @@ public class AndroidPrebuiltAarDescription
           graphBuilder,
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           unzipAar.getResDirectory(),
-          /* skipCrunchPngs */ false);
+          /* skipCrunchPngs */ false,
+          androidBuckConfig.getFailOnLegacyAaptErrors());
     }
 
     BuildRule prebuiltJarRule =

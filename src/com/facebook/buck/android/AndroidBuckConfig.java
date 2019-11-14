@@ -88,6 +88,11 @@ public class AndroidBuckConfig {
     return delegate.getBoolean("android", "aapt_compile_skip_crunch_pngs_default");
   }
 
+  /** Whether to fail (vs warn) on legacy aapt2 compile errors. */
+  public boolean getFailOnLegacyAaptErrors() {
+    return delegate.getBoolean("android", "aapt_fail_on_legacy_errors").orElse(false);
+  }
+
   public Optional<String> getAndroidCompileSdkVersion() {
     Optional<String> compileSdkVersion = delegate.getValue("android", "compile_sdk_version");
     return compileSdkVersion.isPresent() ? compileSdkVersion : getAndroidTarget();

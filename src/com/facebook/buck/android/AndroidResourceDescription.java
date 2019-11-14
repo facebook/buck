@@ -164,7 +164,8 @@ public class AndroidResourceDescription
           graphBuilder,
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           resDir.get(),
-          androidBuckConfig.getSkipCrunchPngsDefault().orElse(false));
+          androidBuckConfig.getSkipCrunchPngsDefault().orElse(false),
+          androidBuckConfig.getFailOnLegacyAaptErrors());
     }
 
     params =

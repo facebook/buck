@@ -79,10 +79,15 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBundleFactory(androidBuckConfig)),
         new AndroidInstrumentationApkDescription(
-            javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, toolchainProvider),
+            javaConfig,
+            proGuardConfig,
+            cxxBuckConfig,
+            dxConfig,
+            toolchainProvider,
+            androidBuckConfig),
         new AndroidInstrumentationTestDescription(config, toolchainProvider),
         new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory, toolchainProvider),
-        new AndroidPrebuiltAarDescription(toolchainProvider),
+        new AndroidPrebuiltAarDescription(toolchainProvider, androidBuckConfig),
         new AndroidResourceDescription(toolchainProvider, androidBuckConfig),
         new RobolectricTestDescription(
             toolchainProvider, javaConfig, defaultAndroidCompilerFactory),

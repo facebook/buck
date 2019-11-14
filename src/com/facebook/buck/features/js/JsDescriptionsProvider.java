@@ -16,10 +16,13 @@
 
 package com.facebook.buck.features.js;
 
+import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.util.environment.Platform;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -30,9 +33,13 @@ public class JsDescriptionsProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
+
+    BuckConfig config = context.getBuckConfig();
+    AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(config, Platform.detect());
+
     return Arrays.asList(
         new JsLibraryDescription(),
         new JsBundleGenruleDescription(toolchainProvider, context.getSandboxExecutionStrategy()),
-        new JsBundleDescription(toolchainProvider));
+        new JsBundleDescription(toolchainProvider, androidBuckConfig));
   }
 }

@@ -38,6 +38,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
@@ -124,7 +125,8 @@ public class AndroidInstrumentationApkTest {
                     new ProGuardConfig(FakeBuckConfig.builder().build()),
                     CxxPlatformUtils.DEFAULT_CONFIG,
                     new DxConfig(FakeBuckConfig.builder().build()),
-                    toolchainProvider)
+                    toolchainProvider,
+                    new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()))
                 .createBuildRule(
                     TestBuildRuleCreationContextFactory.create(
                         graphBuilder, projectFilesystem, toolchainProvider),

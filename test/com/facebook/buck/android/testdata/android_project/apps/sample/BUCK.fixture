@@ -815,6 +815,7 @@ android_binary(
     manifest = "AndroidManifest.xml",
     deps = [
         "//java/com/sample/lib:lib",
+        "//res/com/sample/aapt2:aapt2",
         "//res/com/sample/base:base",
     ],
 )

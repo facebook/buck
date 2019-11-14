@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="http://schemas.android.com/apk/res-auto">
+  <string
+      name="positional_args" 
+      description="Contains multiple positional arguments which causes an error when --legacy is not passed."
+  >foo %s bar %s</string>
+</resources>

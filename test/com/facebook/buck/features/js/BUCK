@@ -15,6 +15,7 @@ java_library(
     visibility = ["//test/..."],
     deps = [
         "//src-gen:thrift",
+        "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
@@ -85,6 +86,7 @@ java_library(
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/android:testutil",
         "//test/com/facebook/buck/apple:testutil",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
@@ -123,6 +125,7 @@ standard_java_test(
     deps = [
         ":testutil",
         "//src-gen:thrift",
+        "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
@@ -216,6 +219,7 @@ standard_java_test(
         "//test/com/facebook/buck/apple:testutil",
         "//test/com/facebook/buck/core/build/buildable/context:testutil",
         "//test/com/facebook/buck/core/build/context:testutil",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",

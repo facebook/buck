@@ -69,6 +69,7 @@ public class AndroidInstrumentationApkDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
   private final ToolchainProvider toolchainProvider;
+  private final AndroidBuckConfig androidBuckConfig;
 
   private final JavacFactory javacFactory;
 
@@ -77,13 +78,15 @@ public class AndroidInstrumentationApkDescription
       ProGuardConfig proGuardConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
-      ToolchainProvider toolchainProvider) {
+      ToolchainProvider toolchainProvider,
+      AndroidBuckConfig androidBuckConfig) {
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
     this.toolchainProvider = toolchainProvider;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.androidBuckConfig = androidBuckConfig;
   }
 
   @Override
@@ -257,7 +260,8 @@ public class AndroidInstrumentationApkDescription
             createRulesToExcludeFromDexSupplier(
                 apkUnderTest.getRulesToExcludeFromDex(), apkUnderTestTransitiveClasspathDeps),
             false,
-            new NoopAndroidNativeTargetConfigurationMatcher());
+            new NoopAndroidNativeTargetConfigurationMatcher(),
+            androidBuckConfig.getFailOnLegacyAaptErrors());
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
     AndroidBinaryFilesInfo filesInfo =

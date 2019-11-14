@@ -16,6 +16,8 @@
 
 package com.facebook.buck.features.js;
 
+import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -23,6 +25,7 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableSet;
@@ -32,7 +35,9 @@ public class JsBundleBuilder
     extends AbstractNodeBuilder<
         JsBundleDescriptionArg.Builder, JsBundleDescriptionArg, JsBundleDescription, JsBundle> {
   private static final JsBundleDescription bundleDescription =
-      new JsBundleDescription(new ToolchainProviderBuilder().build());
+      new JsBundleDescription(
+          new ToolchainProviderBuilder().build(),
+          new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()));
 
   JsBundleBuilder(
       BuildTarget target,

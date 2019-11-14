@@ -47,12 +47,13 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
       SourcePathRuleFinder ruleFinder,
       Tool aapt2ExecutableTool,
       SourcePath resDir,
-      boolean skipCrunchPngs) {
+      boolean skipCrunchPngs,
+      boolean failOnLegacyErrors) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new Impl(aapt2ExecutableTool, resDir, skipCrunchPngs));
+        new Impl(aapt2ExecutableTool, resDir, skipCrunchPngs, failOnLegacyErrors));
   }
 
   /** internal buildable implementation */
@@ -65,11 +66,17 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
     @AddToRuleKey private final SourcePath resDir;
     @AddToRuleKey private final OutputPath output = new OutputPath("resources.flata");
     @AddToRuleKey private final boolean skipCrunchPngs;
+    @AddToRuleKey private final boolean failOnLegacyErrors;
 
-    private Impl(Tool aapt2ExecutableTool, SourcePath resDir, boolean skipCrunchPngs) {
+    private Impl(
+        Tool aapt2ExecutableTool,
+        SourcePath resDir,
+        boolean skipCrunchPngs,
+        boolean failOnLegacyErrors) {
       this.aapt2ExecutableTool = aapt2ExecutableTool;
       this.resDir = resDir;
       this.skipCrunchPngs = skipCrunchPngs;
+      this.failOnLegacyErrors = failOnLegacyErrors;
     }
 
     @Override
@@ -88,7 +95,8 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
               aapt2ExecutableTool.getCommandPrefix(sourcePathResolverAdapter),
               sourcePathResolverAdapter.getAbsolutePath(resDir),
               outputPath,
-              skipCrunchPngs);
+              skipCrunchPngs,
+              failOnLegacyErrors);
       ZipScrubberStep zipScrubberStep = ZipScrubberStep.of(filesystem.resolve(outputPath));
       return ImmutableList.of(aapt2CompileStep, zipScrubberStep);
     }
@@ -99,18 +107,21 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
     private final Path resDirPath;
     private final Path outputPath;
     private final boolean skipCrunchPngs;
+    private final boolean failOnLegacyErrors;
 
     Aapt2CompileStep(
         Path workingDirectory,
         ImmutableList<String> commandPrefix,
         Path resDirPath,
         Path outputPath,
-        boolean skipCrunchPngs) {
+        boolean skipCrunchPngs,
+        boolean failOnLegacyErrors) {
       super(workingDirectory);
       this.commandPrefix = commandPrefix;
       this.resDirPath = resDirPath;
       this.outputPath = outputPath;
       this.skipCrunchPngs = skipCrunchPngs;
+      this.failOnLegacyErrors = failOnLegacyErrors;
     }
 
     @Override
@@ -123,7 +134,9 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.addAll(commandPrefix);
       builder.add("compile");
-      builder.add("--legacy");
+      if (!failOnLegacyErrors) {
+        builder.add("--legacy");
+      }
       if (skipCrunchPngs) {
         builder.add("--no-crunch");
       }
