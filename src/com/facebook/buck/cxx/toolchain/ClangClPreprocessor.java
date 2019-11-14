@@ -17,7 +17,9 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.util.MoreIterables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import java.nio.file.Path;
 
 /** Preprocessor implementation for compilations using clang-cl. */
 public class ClangClPreprocessor extends WindowsPreprocessor implements Preprocessor {
@@ -30,6 +32,11 @@ public class ClangClPreprocessor extends WindowsPreprocessor implements Preproce
   }
 
   @Override
+  public boolean supportsPrecompiledHeaders() {
+    return true;
+  }
+
+  @Override
   // Clang-cl doesn't understand '/external:I' flag for system includes, so we have to pass
   // it '-isystem'. Other than that, clang-cl is pretty much drop in compatible with cl settings.
   public Iterable<String> systemIncludeArgs(Iterable<String> includeRoots) {
@@ -38,5 +45,18 @@ public class ClangClPreprocessor extends WindowsPreprocessor implements Preproce
         Iterables.cycle(CLANG_SYSTEM_INCLUDE_FLAG),
         Iterables.cycle(FORWARD_FLAG_TO_CLANG),
         includeRoots);
+  }
+
+  @Override
+  public Iterable<String> prefixHeaderArgs(Path prefixHeader) {
+    return ImmutableList.of("/FI" + prefixHeader);
+  }
+
+  @Override
+  public Iterable<String> precompiledHeaderArgs(Path pchOutputPath) {
+    // Formally we should use MSVC flag /Yu to add precompiled header, but clang-cl doesn't
+    // handle it properly. Therefore we had to fallback to the "clang" way using -Xclang
+    // pass through flag.
+    return ImmutableList.of("-Xclang", "-include-pch", "-Xclang", pchOutputPath.toString());
   }
 }

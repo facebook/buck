@@ -29,7 +29,13 @@ public class WindowsCompiler extends DefaultCompiler {
 
   @Override
   public ImmutableList<String> outputArgs(String outputPath) {
-    return ImmutableList.of("/Fo" + outputPath);
+    // When compiling PCH, MSVC compiler expects a different flag with path configuration:
+    // https://docs.microsoft.com/en-us/cpp/build/reference/fp-name-dot-pch-file?view=vs-2019
+    if (outputPath.endsWith(".gch")) {
+      return ImmutableList.of("/Fp" + outputPath, "/Yc");
+    } else {
+      return ImmutableList.of("/Fo" + outputPath);
+    }
   }
 
   @Override
