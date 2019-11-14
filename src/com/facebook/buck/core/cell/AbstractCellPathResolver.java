@@ -17,6 +17,7 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.exception.UnknownCellException;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -45,5 +46,11 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
   @Override
   public Path getCellPathOrThrow(UnflavoredBuildTargetView buildTarget) {
     return getNewCellPathResolver().getCellPath(buildTarget.getCell());
+  }
+
+  @Override
+  public Path resolveCellRelativePath(CellRelativePath cellRelativePath) {
+    Path cellPath = getNewCellPathResolver().getCellPath(cellRelativePath.getCellName());
+    return cellPath.resolve(cellRelativePath.getPath().toPath(cellPath.getFileSystem()));
   }
 }

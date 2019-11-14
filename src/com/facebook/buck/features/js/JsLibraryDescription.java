@@ -377,8 +377,8 @@ public class JsLibraryDescription
       SourcePathResolverAdapter sourcePathResolverAdapter,
       CellPathResolver cellPathResolver,
       UnflavoredBuildTargetView target) {
-    Path cellPath = cellPathResolver.getCellPathOrThrow(target);
-    Path directoryOfBuildFile = cellPath.resolve(target.getBasePath());
+    Path directoryOfBuildFile =
+        cellPathResolver.resolveCellRelativePath(target.getCellRelativeBasePath());
     Path transplantTo = MorePaths.normalize(directoryOfBuildFile.resolve(basePath));
     Path absolutePath =
         PathSourcePath.from(sourcePath)

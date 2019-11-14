@@ -16,6 +16,7 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -55,6 +56,9 @@ public interface CellPathResolver {
    * @throws AssertionError if cell is not known
    */
   Path getCellPathOrThrow(UnflavoredBuildTargetView buildTarget);
+
+  /** Resolve a cell-relative path to an absolute path. */
+  Path resolveCellRelativePath(CellRelativePath cellRelativePath);
 
   /**
    * @return absolute paths to all cells this resolver knows about. The key is the name of the cell
