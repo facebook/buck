@@ -137,6 +137,20 @@ public class BuckFileSystem extends FileSystem {
     return BuckUnixPath.of(this, path);
   }
 
+  /**
+   * Construct a path object from given segments without and validation or postprocessing.
+   *
+   * <p>This function is only used for implementation of {@link
+   * com.facebook.buck.core.path.ForwardRelativePath} and must not be used elsewhere.
+   */
+  public Path getPathFromSegmentsUnsafe(String[] segments) {
+    if (segments.length == 0) {
+      return emptyPath;
+    } else {
+      return BuckUnixPath.ofComponentsUnsafe(this, segments);
+    }
+  }
+
   @Override
   public PathMatcher getPathMatcher(String syntaxAndPattern) {
     return getDefaultFileSystem().getPathMatcher(syntaxAndPattern);

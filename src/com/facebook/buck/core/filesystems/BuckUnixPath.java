@@ -73,6 +73,10 @@ public class BuckUnixPath implements Path {
     return new BuckUnixPath(fs, splitAndInternPath(path));
   }
 
+  static BuckUnixPath ofComponentsUnsafe(BuckFileSystem fs, String[] segments) {
+    return new BuckUnixPath(fs, segments);
+  }
+
   private static String[] splitAndInternPath(String path) {
     int n = path.length();
     int segment_start = 0;
@@ -205,6 +209,14 @@ public class BuckUnixPath implements Path {
     }
 
     return segments[index];
+  }
+
+  /**
+   * Access path segments. This operation must not be used anywhere except in {@link
+   * com.facebook.buck.core.path.ForwardRelativePath} implementation.
+   */
+  public String[] getSegmentsUnsafe() {
+    return segments;
   }
 
   @Override

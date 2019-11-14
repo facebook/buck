@@ -7,6 +7,8 @@ java_library(
         "//programs:calculate-buck-binary-hash",
         # `BuckUnixPath` needs to be visible in `MorePaths.dropInternalCaches`
         "//src/com/facebook/buck/io/file:file",
+        # `ForwardRelativePath` works with `BuckFileSystem` internals
+        "//src/com/facebook/buck/core/path:path",
         "//test/...",
     ],
     deps = [
