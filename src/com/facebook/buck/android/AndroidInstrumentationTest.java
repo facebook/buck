@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
@@ -306,8 +305,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
 
   private String getPathForResourceJar(PackagedResource packagedResource) {
     ProjectFilesystem filesystem = this.getProjectFilesystem();
-    Path relativePath = PathSourcePath.of(filesystem, packagedResource.get()).getRelativePath();
-    return filesystem.resolve(relativePath).toString();
+    return filesystem.resolve(packagedResource.get()).toString();
   }
 
   @Override
