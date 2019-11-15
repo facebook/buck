@@ -86,7 +86,11 @@ public class ExportFileDescription
       src =
           PathSourcePath.of(
               projectFilesystem,
-              buildTarget.getBasePath().resolve(buildTarget.getShortNameAndFlavorPostfix()));
+              buildTarget
+                  .getCellRelativeBasePath()
+                  .getPath()
+                  .toPath(projectFilesystem.getFileSystem())
+                  .resolve(buildTarget.getShortNameAndFlavorPostfix()));
     }
 
     return new ExportFile(

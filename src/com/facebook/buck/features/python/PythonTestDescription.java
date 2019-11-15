@@ -413,7 +413,12 @@ public class PythonTestDescription
         ImmutableSortedSet<Path> paths;
         if (coverageSpec.getPathName().isPresent()) {
           Path path =
-              coverageSpec.getBuildTarget().getBasePath().resolve(coverageSpec.getPathName().get());
+              coverageSpec
+                  .getBuildTarget()
+                  .getCellRelativeBasePath()
+                  .getPath()
+                  .toPath(projectFilesystem.getFileSystem())
+                  .resolve(coverageSpec.getPathName().get());
           if (!pythonLibrary
               .getPythonPackageComponents(pythonPlatform, cxxPlatform, graphBuilder)
               .getModules()

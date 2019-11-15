@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -169,7 +170,7 @@ abstract class GoDescriptors {
         packageName,
         getPackageImportMap(
             goBuckConfig.getVendorPaths(),
-            buildTarget.getBasePath(),
+            buildTarget.getCellRelativeBasePath().getPath(),
             linkables.stream()
                 .flatMap(input -> input.getGoLinkInput().keySet().stream())
                 .collect(ImmutableList.toImmutableList())),
@@ -185,14 +186,18 @@ abstract class GoDescriptors {
 
   @VisibleForTesting
   static ImmutableMap<Path, Path> getPackageImportMap(
-      ImmutableList<Path> globalVendorPaths, Path basePackagePath, Iterable<Path> packageNameIter) {
+      ImmutableList<Path> globalVendorPaths,
+      ForwardRelativePath basePackagePath,
+      Iterable<Path> packageNameIter) {
     Map<Path, Path> importMapBuilder = new HashMap<>();
     ImmutableSortedSet<Path> packageNames = ImmutableSortedSet.copyOf(packageNameIter);
 
     ImmutableList.Builder<Path> vendorPathsBuilder = ImmutableList.builder();
     vendorPathsBuilder.addAll(globalVendorPaths);
     Path prefix = Paths.get("");
-    for (Path component : FluentIterable.from(new Path[] {Paths.get("")}).append(basePackagePath)) {
+    for (Path component :
+        FluentIterable.from(new Path[] {Paths.get("")})
+            .append(basePackagePath.toPathDefaultFileSystem())) {
       prefix = prefix.resolve(component);
       vendorPathsBuilder.add(prefix.resolve("vendor"));
     }

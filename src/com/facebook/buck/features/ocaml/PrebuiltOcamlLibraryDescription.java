@@ -62,7 +62,12 @@ public class PrebuiltOcamlLibraryDescription
     ImmutableList<String> nativeCLibs = args.getNativeCLibs();
     ImmutableList<String> bytecodeCLibs = args.getBytecodeCLibs();
 
-    Path libPath = buildTarget.getBasePath().resolve(libDir);
+    Path libPath =
+        buildTarget
+            .getCellRelativeBasePath()
+            .getPath()
+            .toPath(context.getProjectFilesystem().getFileSystem())
+            .resolve(libDir);
     Path includeDir = libPath.resolve(args.getIncludeDir());
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();

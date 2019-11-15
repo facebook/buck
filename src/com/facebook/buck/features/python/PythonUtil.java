@@ -335,7 +335,7 @@ public class PythonUtil {
   public static Path getBasePath(BuildTarget target, Optional<String> override) {
     return override.isPresent()
         ? Paths.get(override.get().replace('.', '/'))
-        : target.getBasePath();
+        : target.getCellRelativeBasePath().getPath().toPathDefaultFileSystem();
   }
 
   static ImmutableSet<String> getPreloadNames(

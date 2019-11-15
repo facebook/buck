@@ -35,7 +35,9 @@ public abstract class FileBundler {
   private final Path basePath;
 
   public FileBundler(ProjectFilesystem filesystem, BuildTarget target) {
-    this(filesystem.resolve(target.getBasePath()));
+    this(
+        filesystem.resolve(
+            target.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem())));
   }
 
   public FileBundler(Path basePath) {

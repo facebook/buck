@@ -75,7 +75,12 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
     ImmutableMap<Path, Path> entryPathToAbsolutePathMap =
         sourcePathResolverAdapter.createRelativeMap(
-            filesystem.resolve(getBuildTarget().getBasePath()), sources);
+            filesystem.resolve(
+                getBuildTarget()
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(filesystem.getFileSystem())),
+            sources);
     return ImmutableList.of(
         new CopyToZipStep(
             filesystem,

@@ -26,6 +26,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -70,7 +71,7 @@ public class GoDescriptorsTest {
                 GoDescriptors.getPackageImportMap(
                         ImmutableList.copyOf(
                             FluentIterable.from(globalVendorPath).transform(Paths::get)),
-                        Paths.get(basePackage),
+                        ForwardRelativePath.of(basePackage),
                         FluentIterable.from(packages).transform(Paths::get))
                     .entrySet())
             .transform(

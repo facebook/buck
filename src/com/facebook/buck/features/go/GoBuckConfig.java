@@ -59,7 +59,7 @@ public class GoBuckConfig {
    */
   Path getDefaultPackageName(BuildTarget target) {
     Path prefix = Paths.get(delegate.getValue(SECTION, PREFIX).orElse(""));
-    return prefix.resolve(target.getBasePath());
+    return prefix.resolve(target.getCellRelativeBasePath().getPath().toPathDefaultFileSystem());
   }
 
   /**

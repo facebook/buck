@@ -329,7 +329,11 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
       // Tack on the target's base path and the source path name of the resource
       return mapped.resolve(
-          target.getBasePath().resolve(resolver.getSourcePathName(target, sourcePath)));
+          target
+              .getCellRelativeBasePath()
+              .getPath()
+              .toPathDefaultFileSystem()
+              .resolve(resolver.getSourcePathName(target, sourcePath)));
     }
     return Paths.get(ROOT_CELL_LINK_NAME).resolve(resolver.getRelativePath(sourcePath));
   }

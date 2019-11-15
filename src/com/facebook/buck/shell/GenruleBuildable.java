@@ -330,7 +330,8 @@ public class GenruleBuildable implements Buildable {
     // To preserve legacy behavior, we allow duplicate targets and just ignore all but the
     // last.
     Set<Path> seenTargets = new HashSet<>();
-    Path basePath = buildTarget.getBasePath();
+    Path basePath =
+        buildTarget.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem());
     ImmutableList.copyOf(srcs)
         .reverse()
         .forEach(
