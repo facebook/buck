@@ -142,6 +142,18 @@ public class BuildTargetParserTest {
   }
 
   @Test
+  public void testSlashBeforeColon() {
+    try {
+      parser.parse(createCellRoots(null), "//facebook/:orca", "", false);
+      fail("parse() should throw an exception");
+    } catch (BuildTargetParseException e) {
+      assertEquals(
+          "When parsing //facebook/:orca: Non-empty target path must not end with slash.",
+          e.getMessage());
+    }
+  }
+
+  @Test
   public void testParseFullyQualified() {
     UnconfiguredBuildTargetView buildTarget =
         parser.parse(createCellRoots(null), "//facebook/orca:assets", "", false);
