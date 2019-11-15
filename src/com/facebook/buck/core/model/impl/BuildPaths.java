@@ -17,6 +17,7 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
 /**
@@ -72,8 +73,8 @@ public class BuildPaths {
    * @param target The {@link BuildTarget} to scope this path to.
    * @return A {@link java.nio.file.Path} scoped to the base path to {@code target}.
    */
-  public static Path getBaseDir(BuildTarget target) {
-    return BuildTargetPaths.getBasePath(target, getFormat(target));
+  public static Path getBaseDir(BuildTarget target, FileSystem fileSystem) {
+    return BuildTargetPaths.getBasePath(target, getFormat(target), fileSystem);
   }
 
   private static String getFormat(BuildTarget target) {

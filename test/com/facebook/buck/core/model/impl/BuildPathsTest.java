@@ -70,6 +70,6 @@ public class BuildPathsTest {
   @Test
   @Parameters(method = "getTargetsForTest")
   public void basePathFormat(BuildTarget target, Path path) {
-    assertEquals(path, BuildPaths.getBaseDir(target));
+    assertEquals(path, BuildPaths.getBaseDir(target, path.getFileSystem()));
   }
 }

@@ -98,14 +98,18 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
         if (path.startsWith(rule.getProjectFilesystem().getBuckPaths().getGenDir())) {
           path = rule.getProjectFilesystem().getBuckPaths().getGenDir().relativize(path);
         }
-        if (path.startsWith(rule.getBuildTarget().getBasePath())) {
-          return rule.getBuildTarget().getBasePath().relativize(path).toString();
+        Path basePath =
+            rule.getBuildTarget().getCellRelativeBasePath().getPath().toPath(path.getFileSystem());
+        if (path.startsWith(basePath)) {
+          return basePath.relativize(path).toString();
         }
       }
       return rule.getBuildTarget().getShortName();
     }
     Preconditions.checkArgument(sourcePath instanceof PathSourcePath);
     Path path = ((PathSourcePath) sourcePath).getRelativePath();
-    return MorePaths.relativize(target.getBasePath(), path).toString();
+    return MorePaths.relativize(
+            target.getCellRelativeBasePath().getPath().toPath(path.getFileSystem()), path)
+        .toString();
   }
 }

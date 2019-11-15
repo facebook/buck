@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
 /**
@@ -50,7 +51,10 @@ public class BuildTargetPaths {
       ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
-    return filesystem.getBuckPaths().getScratchDir().resolve(getBasePath(target, format));
+    return filesystem
+        .getBuckPaths()
+        .getScratchDir()
+        .resolve(getBasePath(target, format, filesystem.getFileSystem()));
   }
 
   /**
@@ -68,7 +72,10 @@ public class BuildTargetPaths {
       ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
-    return filesystem.getBuckPaths().getAnnotationDir().resolve(getBasePath(target, format));
+    return filesystem
+        .getBuckPaths()
+        .getAnnotationDir()
+        .resolve(getBasePath(target, format, filesystem.getFileSystem()));
   }
 
   /**
@@ -85,7 +92,10 @@ public class BuildTargetPaths {
   public static Path getGenPath(ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
-    return filesystem.getBuckPaths().getGenDir().resolve(getBasePath(target, format));
+    return filesystem
+        .getBuckPaths()
+        .getGenDir()
+        .resolve(getBasePath(target, format, filesystem.getFileSystem()));
   }
 
   /**
@@ -100,11 +110,13 @@ public class BuildTargetPaths {
    *     will be filled in with the rule's short name. It should not start with a slash.
    * @return A {@link java.nio.file.Path} scoped to the base path of {@code target}.
    */
-  public static Path getBasePath(BuildTarget target, String format) {
+  public static Path getBasePath(BuildTarget target, String format, FileSystem fileSystem) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
     return target
-        .getBasePath()
+        .getCellRelativeBasePath()
+        .getPath()
+        .toPath(fileSystem)
         .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
   }
 }

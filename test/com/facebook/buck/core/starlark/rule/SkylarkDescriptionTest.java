@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.AbstractFakeClock;
@@ -85,7 +86,9 @@ public class SkylarkDescriptionTest {
     args.setPostCoercionValue("baz", "");
     args.build();
     ProviderInfoCollection infos = description.ruleImpl(context, target, args);
-    Path expectedShortPath = BuildPaths.getBaseDir(target).resolve("baz.sh");
+    Path expectedShortPath =
+        BuildPaths.getBaseDir(target, new FakeProjectFilesystem().getFileSystem())
+            .resolve("baz.sh");
 
     DefaultInfo info = infos.get(DefaultInfo.PROVIDER).get();
     Artifact artifact = Iterables.getOnlyElement(info.defaultOutputs());
@@ -120,7 +123,9 @@ public class SkylarkDescriptionTest {
     args.setPostCoercionValue("baz", "");
     args.build();
     ProviderInfoCollection infos = description.ruleImpl(context, target, args);
-    Path expectedShortPath = BuildPaths.getBaseDir(target).resolve("baz1.sh");
+    Path expectedShortPath =
+        BuildPaths.getBaseDir(target, new FakeProjectFilesystem().getFileSystem())
+            .resolve("baz1.sh");
 
     DefaultInfo info = infos.get(DefaultInfo.PROVIDER).get();
     Artifact artifact = Iterables.getOnlyElement(info.defaultOutputs());
