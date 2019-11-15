@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import io.grpc.Status;
 import java.util.Map;
 import java.util.Optional;
 
@@ -88,7 +89,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       Optional<Digest> actionDigest,
       Optional<ExecutedActionMetadata> executedActionMetadata,
       Optional<Map<State, Long>> stateMetadata,
-      Optional<Map<State, Long>> stateWaitingMetadata) {
+      Optional<Map<State, Long>> stateWaitingMetadata,
+      Status grpcStatus) {
     final Terminal event =
         new Terminal(
             state,
@@ -96,7 +98,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
             actionDigest,
             executedActionMetadata,
             stateMetadata,
-            stateWaitingMetadata);
+            stateWaitingMetadata,
+            grpcStatus);
     eventBus.post(event);
   }
 
@@ -118,6 +121,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     private final Optional<ExecutedActionMetadata> executedActionMetadata;
     private final Optional<Map<State, Long>> stateMetadata;
     private final Optional<Map<State, Long>> stateWaitingMetadata;
+    private final Status grpcStatus;
 
     @VisibleForTesting
     Terminal(
@@ -126,7 +130,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
         Optional<Digest> actionDigest,
         Optional<ExecutedActionMetadata> executedActionMetadata,
         Optional<Map<State, Long>> stateMetadata,
-        Optional<Map<State, Long>> stateWaitingMetadata) {
+        Optional<Map<State, Long>> stateWaitingMetadata,
+        Status grpcStatus) {
       super(EventKey.unique());
       Preconditions.checkArgument(
           RemoteExecutionActionEvent.isTerminalState(state),
@@ -138,6 +143,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       this.executedActionMetadata = executedActionMetadata;
       this.stateMetadata = stateMetadata;
       this.stateWaitingMetadata = stateWaitingMetadata;
+      this.grpcStatus = grpcStatus;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -173,6 +179,10 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     @JsonIgnore
     public Optional<Map<State, Long>> getStateWaitingMetadata() {
       return stateWaitingMetadata;
+    }
+
+    public Status getGrpcStatus() {
+      return grpcStatus;
     }
 
     @JsonIgnore

@@ -68,6 +68,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import io.grpc.Status;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -245,7 +246,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                       .map(RemoteExecutionActionInfo::getActionDigest),
                   Optional.empty(),
                   Optional.of(ruleContext.timeMsInState),
-                  Optional.of(ruleContext.timeMsAfterState));
+                  Optional.of(ruleContext.timeMsAfterState),
+                  Status.UNKNOWN);
             } else {
               // actionInfo and executionInfo must be set at this point
               Preconditions.checkState(actionInfo.get() != null);
@@ -259,7 +261,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                       .map(RemoteExecutionActionInfo::getActionDigest),
                   Optional.ofNullable(executionInfo.get()).map(ExecutionResult::getActionMetadata),
                   Optional.of(ruleContext.timeMsInState),
-                  Optional.of(ruleContext.timeMsAfterState));
+                  Optional.of(ruleContext.timeMsAfterState),
+                  Status.OK);
             }
           }
 
@@ -273,7 +276,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                     .map(RemoteExecutionActionInfo::getActionDigest),
                 Optional.empty(),
                 Optional.of(ruleContext.timeMsInState),
-                Optional.of(ruleContext.timeMsAfterState));
+                Optional.of(ruleContext.timeMsAfterState),
+                Status.fromThrowable(t));
           }
         },
         MoreExecutors.directExecutor());

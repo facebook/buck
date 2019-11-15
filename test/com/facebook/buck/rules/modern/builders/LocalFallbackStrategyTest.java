@@ -32,6 +32,7 @@ import com.facebook.buck.rules.modern.builders.LocalFallbackStrategy.FallbackStr
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import io.grpc.Status;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -99,6 +100,38 @@ public class LocalFallbackStrategyTest {
         fallbackStrategyBuildResult.getBuildResult().get().get().getStatus());
 
     EasyMock.verify(strategyBuildResult, buildStrategyContext);
+  }
+
+  @Test
+  public void testRemoteGrpcException() throws ExecutionException, InterruptedException {
+    Capture<LocalFallbackEvent> eventCapture = Capture.newInstance(CaptureType.ALL);
+    eventBus.post(EasyMock.capture(eventCapture));
+    EasyMock.expectLastCall().times(2);
+    EasyMock.replay(eventBus);
+
+    EasyMock.expect(strategyBuildResult.getBuildResult())
+        .andReturn(Futures.immediateFailedFuture(Status.DEADLINE_EXCEEDED.asRuntimeException()))
+        .times(2);
+    BuildResult localResult = successBuildResult("//local/did:though");
+    EasyMock.expect(buildStrategyContext.runWithDefaultBehavior())
+        .andReturn(Futures.immediateFuture(Optional.of(localResult)))
+        .once();
+    EasyMock.expect(buildStrategyContext.getExecutorService()).andReturn(directExecutor).once();
+
+    EasyMock.replay(strategyBuildResult, buildStrategyContext);
+    FallbackStrategyBuildResult fallbackStrategyBuildResult =
+        new FallbackStrategyBuildResult(
+            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, true, false);
+    Assert.assertEquals(
+        localResult.getStatus(),
+        fallbackStrategyBuildResult.getBuildResult().get().get().getStatus());
+    EasyMock.verify(strategyBuildResult, buildStrategyContext);
+
+    List<LocalFallbackEvent> events = eventCapture.getValues();
+    Assert.assertTrue(events.get(0) instanceof LocalFallbackEvent.Started);
+    Assert.assertTrue(events.get(1) instanceof LocalFallbackEvent.Finished);
+    LocalFallbackEvent.Finished finishedEvent = (LocalFallbackEvent.Finished) events.get(1);
+    Assert.assertEquals(finishedEvent.getRemoteGrpcStatus(), Status.DEADLINE_EXCEEDED);
   }
 
   @Test
@@ -246,6 +279,8 @@ public class LocalFallbackStrategyTest {
     List<LocalFallbackEvent> events = eventCapture.getValues();
     Assert.assertTrue(events.get(0) instanceof LocalFallbackEvent.Started);
     Assert.assertTrue(events.get(1) instanceof LocalFallbackEvent.Finished);
+    LocalFallbackEvent.Finished finishedEvent = (LocalFallbackEvent.Finished) events.get(1);
+    Assert.assertEquals(finishedEvent.getRemoteGrpcStatus(), Status.OK);
   }
 
   @Test

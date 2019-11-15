@@ -44,6 +44,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.longrunning.Operation;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.ClientCallStreamObserver;
 import io.grpc.stub.ClientResponseObserver;
 import java.io.IOException;
@@ -96,10 +98,13 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
       try {
         Operation operation = Objects.requireNonNull(currentOp);
         if (operation.hasError()) {
-          throw new RuntimeException(
+          String extraDescription =
               String.format(
                   "Execution failed due to an infra error with Status=[%s].",
-                  operation.getError().toString()));
+                  operation.getError().toString());
+          throw Status.fromCodeValue(operation.getError().getCode())
+              .augmentDescription(extraDescription)
+              .asRuntimeException();
         }
 
         if (!operation.hasResponse()) {
@@ -112,6 +117,8 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
 
         resultFuture.set(
             getExecutionResult(operation.getResponse().unpack(ExecuteResponse.class).getResult()));
+      } catch (StatusRuntimeException e) {
+        resultFuture.setException(e);
       } catch (Exception e) {
         resultFuture.setException(
             new BuckUncheckedExecutionException(

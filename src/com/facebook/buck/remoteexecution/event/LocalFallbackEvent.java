@@ -18,6 +18,7 @@ package com.facebook.buck.remoteexecution.event;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import io.grpc.Status;
 import java.util.Optional;
 
 /** Event containing info about single BuildRule executions inside LocalFallbackStrategy. */
@@ -53,9 +54,15 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
         Result remoteResult,
         Result localResult,
         long remoteDurationMillis,
-        Optional<String> remoteErrorMessage) {
+        Optional<String> remoteErrorMessage,
+        Status remoteGrpcStatus) {
       return new Finished(
-          this, remoteResult, localResult, remoteDurationMillis, remoteErrorMessage);
+          this,
+          remoteResult,
+          localResult,
+          remoteDurationMillis,
+          remoteErrorMessage,
+          remoteGrpcStatus);
     }
 
     public String getBuildTarget() {
@@ -75,18 +82,21 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
     private final long remoteDurationMillis;
     private final Result remoteResult;
     private final Optional<String> remoteErrorMessage;
+    private final Status remoteGrpcStatus;
 
     private Finished(
         Started startedEvent,
         Result remoteResult,
         Result localResult,
         long remoteDurationMillis,
-        Optional<String> remoteErrorMessage) {
+        Optional<String> remoteErrorMessage,
+        Status remoteGrpcStatus) {
       this.startedEvent = startedEvent;
       this.remoteResult = remoteResult;
       this.localResult = localResult;
       this.remoteDurationMillis = remoteDurationMillis;
       this.remoteErrorMessage = remoteErrorMessage;
+      this.remoteGrpcStatus = remoteGrpcStatus;
     }
 
     public Started getStartedEvent() {
@@ -107,6 +117,10 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
 
     public long getRemoteDurationMillis() {
       return remoteDurationMillis;
+    }
+
+    public Status getRemoteGrpcStatus() {
+      return remoteGrpcStatus;
     }
 
     @Override
