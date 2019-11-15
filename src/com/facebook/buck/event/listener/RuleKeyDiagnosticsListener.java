@@ -59,6 +59,9 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   private static final int DEFAULT_MIN_KEYS_FOR_AUTO_FLUSH = 1000;
   private static final int DEFAULT_MIN_SIZE_FOR_AUTO_FLUSH = 10 * 1024 * 1024; // 10 MB
 
+  private static final String TRACE_KIND_RULE_DIAG_GRAPH = "rule_diag_graph";
+  private static final String TRACE_KIND_RULE_DIAG_KEYS = "rule_diag_keys";
+
   private final ProjectFilesystem projectFilesystem;
   private final InvocationInfo info;
   private final ExecutorService outputExecutor;
@@ -234,7 +237,9 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   @Override
   public void close() { // todo same issue w/passed function
     submitFlushDiagKeys();
-    outputExecutor.execute(this::writeDiagGraph);
+    if (!rulesInfo.isEmpty()) {
+      outputExecutor.execute(this::writeDiagGraph);
+    }
 
     Path logDir = info.getLogDirectoryPath();
     RuleKeyDiagnosticsListenerCloseArgs args =
@@ -268,8 +273,20 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
       args.getBuildReportFileUploader()
           .ifPresent(
               uploader -> {
-                uploader.uploadFile(args.getRuleDiagGraphFilePath(), "rule_diag_graph");
-                uploader.uploadFile(args.getRuleDiagKeyFilePath(), "rule_diag_keys");
+                if (args.getRuleDiagGraphFilePath().toFile().exists()) {
+                  uploader.uploadFile(args.getRuleDiagGraphFilePath(), TRACE_KIND_RULE_DIAG_GRAPH);
+                } else {
+                  LOG.debug(
+                      "Not uploading %. %s doesn't exist.",
+                      TRACE_KIND_RULE_DIAG_GRAPH, args.getRuleDiagGraphFilePath().toString());
+                }
+                if (args.getRuleDiagKeyFilePath().toFile().exists()) {
+                  uploader.uploadFile(args.getRuleDiagKeyFilePath(), TRACE_KIND_RULE_DIAG_KEYS);
+                } else {
+                  LOG.debug(
+                      "Not uploading %s. %s doesn't exist.",
+                      TRACE_KIND_RULE_DIAG_KEYS, args.getRuleDiagKeyFilePath().toString());
+                }
               });
     }
   }
