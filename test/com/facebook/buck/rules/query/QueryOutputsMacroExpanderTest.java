@@ -184,7 +184,7 @@ public class QueryOutputsMacroExpanderTest {
                 .coerce(
                     cellNames,
                     filesystem,
-                    rule.getBuildTarget().getBasePath(),
+                    rule.getBuildTarget().getCellRelativeBasePath().getPath(),
                     UnconfiguredTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros);

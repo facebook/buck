@@ -25,10 +25,9 @@ import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
@@ -43,7 +42,8 @@ import org.junit.runners.Parameterized;
 public class TargetWithOutputsTypeCoercerTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private static final Path BASE_PATH = Paths.get("java/com/facebook/buck/example");
+  private static final ForwardRelativePath BASE_PATH =
+      ForwardRelativePath.of("java/com/facebook/buck/example");
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
   private static final BiFunction<
           String, Optional<String>, ImmutableUnconfiguredBuildTargetWithOutputs>

@@ -19,8 +19,8 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
@@ -67,7 +67,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
   public NeededCoverageSpec coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
@@ -115,7 +115,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
   private int coerceNeededRatio(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object originalObject,
       Object object)

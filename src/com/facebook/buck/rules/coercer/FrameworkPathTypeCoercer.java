@@ -21,6 +21,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Joiner;
@@ -72,7 +73,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
   public FrameworkPath coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

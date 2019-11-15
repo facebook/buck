@@ -23,10 +23,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +44,7 @@ public class FrameworkPathTypeCoercerTest {
       new FrameworkPathTypeCoercer(sourcePathTypeCoercer);
 
   private FakeProjectFilesystem projectFilesystem;
-  private final Path pathRelativeToProjectRoot = Paths.get("");
+  private final ForwardRelativePath pathRelativeToProjectRoot = ForwardRelativePath.of("");
 
   @Before
   public void setUp() {

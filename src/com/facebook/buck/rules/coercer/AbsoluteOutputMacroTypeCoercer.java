@@ -18,11 +18,11 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacro;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 
 /**
  * Handles '$(output ...)' macro.
@@ -55,7 +55,7 @@ public class AbsoluteOutputMacroTypeCoercer implements MacroTypeCoercer<Absolute
   public AbsoluteOutputMacro coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {

@@ -20,8 +20,8 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 
 public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
 
@@ -41,7 +41,7 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
   public BuildTarget coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem alsoUnused,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

@@ -25,17 +25,17 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
 
 public class CxxLinkGroupMappingTargetCoercerTest {
   private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final Path basePath = Paths.get("java/com/facebook/buck/example");
+  private final ForwardRelativePath basePath =
+      ForwardRelativePath.of("java/com/facebook/buck/example");
   private CxxLinkGroupMappingTargetCoercer coercer;
 
   public static CxxLinkGroupMappingTargetCoercer buildTypeCoercer(

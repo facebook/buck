@@ -18,9 +18,9 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.versions.Version;
-import java.nio.file.Path;
 
 public class VersionTypeCoercer extends LeafTypeCoercer<Version> {
 
@@ -33,7 +33,7 @@ public class VersionTypeCoercer extends LeafTypeCoercer<Version> {
   public Version coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

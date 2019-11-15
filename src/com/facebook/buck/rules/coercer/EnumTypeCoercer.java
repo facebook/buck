@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -40,7 +40,7 @@ public class EnumTypeCoercer<E extends Enum<E>> extends LeafTypeCoercer<E> {
   public E coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

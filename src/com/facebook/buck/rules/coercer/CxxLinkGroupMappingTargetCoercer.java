@@ -20,8 +20,8 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -69,7 +69,7 @@ public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGrou
   public CxxLinkGroupMappingTarget coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

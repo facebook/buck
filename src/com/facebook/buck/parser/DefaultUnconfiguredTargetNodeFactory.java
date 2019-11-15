@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectorList;
@@ -66,7 +67,9 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   }
 
   private ImmutableMap<String, Object> convertSelects(
-      Map<String, Object> attrs, Path pathRelativeToProjectRoot, DependencyStack dependencyStack) {
+      Map<String, Object> attrs,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      DependencyStack dependencyStack) {
     ImmutableMap.Builder<String, Object> result = ImmutableMap.builder();
     for (Map.Entry<String, Object> attr : attrs.entrySet()) {
       result.put(
@@ -83,7 +86,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   private Object convertSelectorListInAttrValue(
       String attrName,
       Object attrValue,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       DependencyStack dependencyStack) {
     if (attrValue instanceof ListWithSelects) {
       try {
@@ -136,7 +139,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             target.getData());
 
     ImmutableMap<String, Object> withSelects =
-        convertSelects(rawAttributes, target.getBasePath(), dependencyStack);
+        convertSelects(rawAttributes, target.getCellRelativeBasePath().getPath(), dependencyStack);
 
     return ImmutableUnconfiguredTargetNode.of(
         target.getData(), ruleType, withSelects, visibilityPatterns, withinViewPatterns);

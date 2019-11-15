@@ -17,12 +17,12 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.EnvMacro;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 
 /** Coercer for <code>env</code> macros. */
 public class EnvMacroTypeCoercer implements MacroTypeCoercer<EnvMacro> {
@@ -51,7 +51,7 @@ public class EnvMacroTypeCoercer implements MacroTypeCoercer<EnvMacro> {
   public EnvMacro coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       ImmutableList<String> args) {
     Preconditions.checkState(

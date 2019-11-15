@@ -24,11 +24,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import java.lang.reflect.Proxy;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +37,7 @@ public class BuildTargetTypeCoercerTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private Path basePath = Paths.get("java/com/facebook/buck/example");
+  private ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
 
   private UnconfiguredBuildTargetTypeCoercer unconfiguredBuildTargetTypeCoercer;
 
@@ -131,39 +129,6 @@ public class BuildTargetTypeCoercerTest {
 
     BuildTarget expected =
         BuildTargetFactory.newInstance("//java/com/facebook/buck/example:bar#baz");
-    assertEquals(expected, seen);
-  }
-
-  @Test
-  public void shouldCoerceAWindowsStylePathCorrectly() throws CoerceFailedException {
-    // EasyMock doesn't stub out toString, equals, hashCode or finalize. An attempt to hack round
-    // this using the MockBuilder failed with an InvocationTargetException. Turns out that easymock
-    // just can't mock toString. So we're going to do this Old Skool using a dynamic proxy. *sigh*
-    // And we can't build a partial mock from an interface. *sigh*
-    Path concreteType = Paths.get("notused");
-
-    Path stubPath =
-        (Path)
-            Proxy.newProxyInstance(
-                getClass().getClassLoader(),
-                new Class[] {Path.class},
-                (proxy, method, args) -> {
-                  if ("toString".equals(method.getName())) {
-                    return "foo\\bar";
-                  }
-                  return method.invoke(concreteType, args);
-                });
-
-    BuildTarget seen =
-        new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
-            .coerce(
-                createCellRoots(filesystem),
-                filesystem,
-                stubPath,
-                UnconfiguredTargetConfiguration.INSTANCE,
-                ":baz");
-
-    BuildTarget expected = BuildTargetFactory.newInstance("//foo/bar:baz");
     assertEquals(expected, seen);
   }
 }

@@ -25,6 +25,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -34,7 +35,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -99,7 +99,7 @@ public class AbsoluteOutputMacroExpanderTest {
         .coerce(
             cellPathResolver,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             "$(abs_output )");
   }
@@ -112,7 +112,7 @@ public class AbsoluteOutputMacroExpanderTest {
                 .coerce(
                     cellPathResolver,
                     filesystem,
-                    rule.getBuildTarget().getBasePath(),
+                    rule.getBuildTarget().getCellRelativeBasePath().getPath(),
                     UnconfiguredTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros);

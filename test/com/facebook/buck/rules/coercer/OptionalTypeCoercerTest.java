@@ -23,13 +23,12 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -40,7 +39,8 @@ import org.junit.rules.ExpectedException;
 public class OptionalTypeCoercerTest {
 
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
-  private static final Path PATH_RELATIVE_TO_PROJECT_ROOT = Paths.get("");
+  private static final ForwardRelativePath PATH_RELATIVE_TO_PROJECT_ROOT =
+      ForwardRelativePath.of("");
 
   @Rule public ExpectedException exception = ExpectedException.none();
 

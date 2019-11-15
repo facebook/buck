@@ -18,8 +18,7 @@ package com.facebook.buck.core.parser.buildtargetparser;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
-import com.facebook.buck.io.pathformat.PathFormatter;
-import java.nio.file.Path;
+import com.facebook.buck.core.path.ForwardRelativePath;
 
 /** A factory that parses a given build target name using the provided {@link BuildTargetParser}. */
 public class ParsingUnconfiguredBuildTargetViewFactory
@@ -41,10 +40,11 @@ public class ParsingUnconfiguredBuildTargetViewFactory
 
   @Override
   public UnconfiguredBuildTargetView createForPathRelativeToProjectRoot(
-      CellPathResolver cellPathResolver, Path pathRelativeToProjectRoot, String buildTargetName) {
+      CellPathResolver cellPathResolver,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      String buildTargetName) {
     String baseName =
-        UnflavoredBuildTargetView.BUILD_TARGET_PREFIX
-            + PathFormatter.pathWithUnixSeparators(pathRelativeToProjectRoot);
+        UnflavoredBuildTargetView.BUILD_TARGET_PREFIX + pathRelativeToProjectRoot.toString();
 
     return createForBaseName(cellPathResolver, baseName, buildTargetName);
   }

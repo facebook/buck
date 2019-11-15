@@ -18,11 +18,11 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.facebook.buck.rules.coercer.concat.ImmutableListConcatable;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 
 public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, T>
     implements Concatable<ImmutableList<T>> {
@@ -43,7 +43,7 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
   public ImmutableList<T> coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

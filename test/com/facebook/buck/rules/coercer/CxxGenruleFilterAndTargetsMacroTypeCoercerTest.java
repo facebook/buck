@@ -22,13 +22,12 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.CppFlagsMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticMacro;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
@@ -38,7 +37,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
 
   @Test
   public void testNoPattern() throws CoerceFailedException {
-    Path basePath = Paths.get("java/com/facebook/buck/example");
+    ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxGenruleFilterAndTargetsMacroTypeCoercer<CppFlagsMacro> coercer =
         new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
@@ -65,7 +64,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
 
   @Test
   public void testPattern() throws CoerceFailedException {
-    Path basePath = Paths.get("java/com/facebook/buck/example");
+    ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxGenruleFilterAndTargetsMacroTypeCoercer<LdflagsStaticMacro> coercer =
         new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(

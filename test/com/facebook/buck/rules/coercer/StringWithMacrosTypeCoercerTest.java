@@ -25,6 +25,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
@@ -35,8 +36,6 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import org.hamcrest.Matchers;
@@ -50,7 +49,7 @@ public class StringWithMacrosTypeCoercerTest {
 
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
   private static final CellPathResolver CELL_PATH_RESOLVER = TestCellPathResolver.get(FILESYSTEM);
-  private static final Path BASE_PATH = Paths.get("");
+  private static final ForwardRelativePath BASE_PATH = ForwardRelativePath.of("");
 
   @Test
   public void plainString() throws CoerceFailedException {
@@ -431,7 +430,7 @@ public class StringWithMacrosTypeCoercerTest {
     public TestMacro coerce(
         CellPathResolver cellRoots,
         ProjectFilesystem filesystem,
-        Path pathRelativeToProjectRoot,
+        ForwardRelativePath pathRelativeToProjectRoot,
         TargetConfiguration targetConfiguration,
         ImmutableList<String> args) {
       return new TestMacro(args);
@@ -457,7 +456,7 @@ public class StringWithMacrosTypeCoercerTest {
     public TestMacro coerce(
         CellPathResolver cellRoots,
         ProjectFilesystem filesystem,
-        Path pathRelativeToProjectRoot,
+        ForwardRelativePath pathRelativeToProjectRoot,
         TargetConfiguration targetConfiguration,
         ImmutableList<String> args)
         throws CoerceFailedException {

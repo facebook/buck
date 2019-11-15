@@ -19,11 +19,11 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -65,7 +65,7 @@ public class VersionMatchedCollectionTypeCoercer<T>
   public VersionMatchedCollection<T> coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

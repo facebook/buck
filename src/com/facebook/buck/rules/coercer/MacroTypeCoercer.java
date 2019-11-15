@@ -18,11 +18,11 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.Macro;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 
 /** Base class for coercing a macro name and arguments into a typed {@link Macro}. */
 interface MacroTypeCoercer<T extends Macro> {
@@ -36,7 +36,7 @@ interface MacroTypeCoercer<T extends Macro> {
   T coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException;

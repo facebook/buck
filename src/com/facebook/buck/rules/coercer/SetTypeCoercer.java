@@ -18,9 +18,9 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 
 public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T> {
   SetTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
@@ -37,7 +37,7 @@ public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T>
   public ImmutableSet<T> coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

@@ -22,17 +22,17 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
 
 public class CxxLinkGroupMappingCoercerTest {
   private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final Path basePath = Paths.get("java/com/facebook/buck/example");
+  private final ForwardRelativePath basePath =
+      ForwardRelativePath.of("java/com/facebook/buck/example");
   private CxxLinkGroupMappingCoercer coercer;
 
   public static CxxLinkGroupMappingCoercer buildTypeCoercer(

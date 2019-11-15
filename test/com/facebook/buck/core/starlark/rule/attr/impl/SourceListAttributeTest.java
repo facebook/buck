@@ -26,6 +26,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
@@ -73,7 +74,7 @@ public class SourceListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("foo/bar.cpp", "//foo/bar:baz"));
 
@@ -85,7 +86,11 @@ public class SourceListAttributeTest {
     thrown.expect(CoerceFailedException.class);
 
     attr.getValue(
-        cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, "foo");
+        cellRoots,
+        filesystem,
+        ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
+        "foo");
   }
 
   @Test
@@ -95,7 +100,7 @@ public class SourceListAttributeTest {
     attr.getValue(
         cellRoots,
         filesystem,
-        Paths.get(""),
+        ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of(1));
   }
@@ -111,7 +116,7 @@ public class SourceListAttributeTest {
     attr.getValue(
         cellRoots,
         filesystem,
-        Paths.get(""),
+        ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of());
   }
@@ -122,7 +127,7 @@ public class SourceListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of());
     assertTrue(value.isEmpty());
@@ -138,7 +143,7 @@ public class SourceListAttributeTest {
     attr.getValue(
         cellRoots,
         filesystem,
-        Paths.get(""),
+        ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of(absolutePathString));
   }
@@ -166,7 +171,7 @@ public class SourceListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//foo:bar", "src/main.cpp"));
 
@@ -181,7 +186,7 @@ public class SourceListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//foo:bar", "src/main.cpp"));
 
@@ -214,7 +219,7 @@ public class SourceListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//foo:bar", "src/main.cpp"));
 

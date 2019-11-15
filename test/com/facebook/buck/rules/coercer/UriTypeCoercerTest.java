@@ -22,18 +22,17 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Test;
 
 public class UriTypeCoercerTest {
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private Path pathFromRoot = Paths.get("third-party/java");
+  private ForwardRelativePath pathFromRoot = ForwardRelativePath.of("third-party/java");
   private CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
 
   @Test

@@ -26,6 +26,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
@@ -59,7 +60,7 @@ public class OutputAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             "foo/bar.cpp");
 
@@ -71,7 +72,11 @@ public class OutputAttributeTest {
     thrown.expect(CoerceFailedException.class);
 
     attr.getValue(
-        cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, 1);
+        cellRoots,
+        filesystem,
+        ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
+        1);
   }
 
   @Test
@@ -81,7 +86,7 @@ public class OutputAttributeTest {
     attr.getValue(
         cellRoots,
         filesystem,
-        Paths.get(""),
+        ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         Runtime.NONE);
   }
@@ -102,7 +107,7 @@ public class OutputAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             "foo/bar\0");
     attr.getPostCoercionTransform()
@@ -117,7 +122,7 @@ public class OutputAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             Paths.get("").toAbsolutePath().toString());
     attr.getPostCoercionTransform()
@@ -132,7 +137,7 @@ public class OutputAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             "../foo.txt");
     attr.getPostCoercionTransform()
@@ -148,7 +153,7 @@ public class OutputAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             "subdir/main.cpp");
     Object coerced =

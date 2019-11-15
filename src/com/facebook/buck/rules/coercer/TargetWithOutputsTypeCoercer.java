@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetOutputLabelParser;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import org.immutables.value.Value;
@@ -71,7 +71,7 @@ abstract class TargetWithOutputsTypeCoercer<T, U> extends LeafTypeCoercer<U> {
     abstract ProjectFilesystem getFilesystem();
 
     @Value.Parameter
-    abstract Path getPathRelativeToProjectRoot();
+    abstract ForwardRelativePath getPathRelativeToProjectRoot();
 
     @Value.Parameter
     abstract TargetConfiguration getTargetConfiguration();

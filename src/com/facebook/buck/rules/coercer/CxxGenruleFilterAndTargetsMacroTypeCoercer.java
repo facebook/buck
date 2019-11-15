@@ -19,10 +19,10 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.CxxGenruleFilterAndTargetsMacro;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Optional;
 import java.util.Queue;
@@ -71,7 +71,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
   public M coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {

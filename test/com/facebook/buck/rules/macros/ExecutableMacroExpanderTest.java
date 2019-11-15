@@ -153,7 +153,7 @@ public class ExecutableMacroExpanderTest {
                 .coerce(
                     cellPathResolver,
                     filesystem,
-                    rule.getBuildTarget().getBasePath(),
+                    rule.getBuildTarget().getCellRelativeBasePath().getPath(),
                     UnconfiguredTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros);

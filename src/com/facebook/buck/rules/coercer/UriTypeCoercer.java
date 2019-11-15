@@ -18,10 +18,10 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 
 public class UriTypeCoercer extends LeafTypeCoercer<URI> {
 
@@ -34,7 +34,7 @@ public class UriTypeCoercer extends LeafTypeCoercer<URI> {
   public URI coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

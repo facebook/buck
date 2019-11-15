@@ -257,7 +257,11 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       coercer = argumentInfo.getTypeCoercer();
     }
     return coercer.coerce(
-        cellRoots, filesystem, buildTarget.getBasePath(), targetConfiguration, rawValue);
+        cellRoots,
+        filesystem,
+        buildTarget.getCellRelativeBasePath().getPath(),
+        targetConfiguration,
+        rawValue);
   }
 
   @SuppressWarnings("unchecked")

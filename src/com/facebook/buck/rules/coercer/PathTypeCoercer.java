@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -48,7 +49,7 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
   public Path coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
@@ -58,7 +59,8 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
         throw new CoerceFailedException("invalid path");
       }
       try {
-        return pathCache.getUnchecked(pathRelativeToProjectRoot).getUnchecked(pathString);
+        Path fsPath = pathRelativeToProjectRoot.toPath(filesystem.getFileSystem());
+        return pathCache.getUnchecked(fsPath).getUnchecked(pathString);
       } catch (UncheckedExecutionException e) {
         throw new CoerceFailedException(
             String.format("Could not convert '%s' to a Path", pathString), e.getCause());

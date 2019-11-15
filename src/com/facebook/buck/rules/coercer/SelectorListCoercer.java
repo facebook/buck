@@ -19,13 +19,13 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -85,7 +85,7 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
   public SelectorList<T> coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
@@ -104,7 +104,7 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
       Selector<?> input,
       CellPathResolver cellPathResolver,
       ProjectFilesystem projectFilesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration)
       throws CoerceFailedException {
     ImmutableMap.Builder<SelectorKey, T> conditions = ImmutableMap.builder();

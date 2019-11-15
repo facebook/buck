@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -42,7 +43,7 @@ import org.junit.rules.ExpectedException;
 public class SourcePathTypeCoercerTest {
   private FakeProjectFilesystem projectFilesystem;
   private CellPathResolver cellRoots;
-  private final Path pathRelativeToProjectRoot = Paths.get("");
+  private final ForwardRelativePath pathRelativeToProjectRoot = ForwardRelativePath.of("");
   private final SourcePathTypeCoercer sourcePathTypeCoercer =
       new SourcePathTypeCoercer(
           new BuildTargetWithOutputsTypeCoercer(

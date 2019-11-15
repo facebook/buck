@@ -18,9 +18,9 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
-import java.nio.file.Path;
 import java.util.Collection;
 
 public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
@@ -48,7 +48,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
   protected void fill(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       ImmutableCollection.Builder<T> builder,
       Object object)
@@ -66,7 +66,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
   private void fill(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       ImmutableCollection.Builder<T> builder,
       Iterable<?> iterable)

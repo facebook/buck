@@ -19,11 +19,10 @@ package com.facebook.buck.rules.coercer;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,7 +32,7 @@ import org.junit.rules.ExpectedException;
 public class PathTypeCoercerTest {
 
   private ProjectFilesystem filesystem;
-  private final Path pathRelativeToProjectRoot = Paths.get("");
+  private final ForwardRelativePath pathRelativeToProjectRoot = ForwardRelativePath.of("");
   private final PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
 
   @Rule public ExpectedException expectedException = ExpectedException.none();

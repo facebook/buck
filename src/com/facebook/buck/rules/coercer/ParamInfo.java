@@ -19,6 +19,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
@@ -111,7 +112,7 @@ public interface ParamInfo extends Comparable<ParamInfo> {
   void set(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object dto,
       @Nullable Object value)

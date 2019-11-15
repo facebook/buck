@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.test.rule.ImmutableTestRunnerSpec;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -27,8 +28,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -47,7 +46,7 @@ public class TestRunnerSpecCoercerTest {
 
   private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
-  private final Path basePath = Paths.get("");
+  private final ForwardRelativePath basePath = ForwardRelativePath.of("");
 
   @Test
   public void coerceMapWithMacros() throws CoerceFailedException {

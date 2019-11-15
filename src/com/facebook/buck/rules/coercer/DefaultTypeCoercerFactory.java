@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -79,7 +80,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -109,7 +109,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           public BuildTargetMatcher coerce(
               CellPathResolver cellRoots,
               ProjectFilesystem filesystem,
-              Path pathRelativeToProjectRoot,
+              ForwardRelativePath pathRelativeToProjectRoot,
               TargetConfiguration targetConfiguration,
               Object object) {
             // This is only actually used directly by ConstructorArgMarshaller, for parsing the

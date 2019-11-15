@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -57,7 +58,7 @@ public class SelectorListFactoryTest {
     try {
       selectorListFactory.create(
           TestCellPathResolver.get(projectFilesystem),
-          projectFilesystem.getRootPath(),
+          ForwardRelativePath.of(""),
           ImmutableListWithSelects.of(ImmutableList.of(new Object(), new Object()), Method.class));
       fail("SelectorListFactory.create should throw an exception");
     } catch (HumanReadableException e) {
@@ -74,7 +75,7 @@ public class SelectorListFactoryTest {
     SelectorList<Object> selectors =
         selectorListFactory.create(
             TestCellPathResolver.get(projectFilesystem),
-            projectFilesystem.getRootPath(),
+            ForwardRelativePath.of(""),
             ImmutableListWithSelects.of(ImmutableList.of(flavorName), List.class));
 
     assertEquals(flavorName, selectors.getSelectors().get(0).getDefaultConditionValue());
@@ -85,7 +86,7 @@ public class SelectorListFactoryTest {
     SelectorList<Object> selectors =
         selectorListFactory.create(
             TestCellPathResolver.get(projectFilesystem),
-            projectFilesystem.getRootPath(),
+            ForwardRelativePath.of(""),
             ImmutableListWithSelects.of(ImmutableList.of(), List.class));
 
     assertTrue(selectors.getSelectors().isEmpty());
@@ -98,7 +99,7 @@ public class SelectorListFactoryTest {
     SelectorList<Object> selectors =
         selectorListFactory.create(
             TestCellPathResolver.get(projectFilesystem),
-            projectFilesystem.getRootPath(),
+            ForwardRelativePath.of(""),
             ImmutableListWithSelects.of(
                 ImmutableList.of(ImmutableList.of(flavorName1), ImmutableList.of(flavorName2)),
                 List.class));
@@ -124,7 +125,7 @@ public class SelectorListFactoryTest {
     SelectorList<Object> selectors =
         selectorListFactory.create(
             TestCellPathResolver.get(projectFilesystem),
-            projectFilesystem.getRootPath(),
+            ForwardRelativePath.of(""),
             ImmutableListWithSelects.of(
                 ImmutableList.of(selectorValue, Lists.newArrayList(flavorName2)), List.class));
 

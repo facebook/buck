@@ -19,9 +19,9 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.util.Map;
 
 /** A coercer for Immutables using the same flow as Description's args */
@@ -65,7 +65,7 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
   public T coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

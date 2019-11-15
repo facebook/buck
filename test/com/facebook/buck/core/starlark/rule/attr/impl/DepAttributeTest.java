@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
@@ -70,7 +71,7 @@ public class DepAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo/bar:baz");
 
@@ -82,7 +83,11 @@ public class DepAttributeTest {
     thrown.expect(CoerceFailedException.class);
 
     attr.getValue(
-        cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, 1);
+        cellRoots,
+        filesystem,
+        ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
+        1);
   }
 
   @Test
@@ -92,7 +97,7 @@ public class DepAttributeTest {
     attr.getValue(
         cellRoots,
         filesystem,
-        Paths.get(""),
+        ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         Runtime.NONE);
   }
@@ -122,7 +127,7 @@ public class DepAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar");
 
@@ -144,7 +149,7 @@ public class DepAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar");
 
@@ -173,7 +178,7 @@ public class DepAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar");
 

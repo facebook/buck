@@ -18,10 +18,10 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.devtools.build.lib.events.Location;
-import java.nio.file.Path;
 
 /**
  * Simple container class for shared logic between {@link OutputAttribute} and {@link
@@ -34,8 +34,8 @@ class OutputAttributeValidator {
    * Validates that a coerced value is a string, and registers it with {@code registry}
    *
    * @param coercedValue the value that came from {@link OutputAttribute#getValue(CellPathResolver,
-   *     ProjectFilesystem, Path, TargetConfiguration, Object)} or {@link
-   *     OutputListAttribute#getValue(CellPathResolver, ProjectFilesystem, Path,
+   *     ProjectFilesystem, ForwardRelativePath, TargetConfiguration, Object)} or {@link
+   *     OutputListAttribute#getValue(CellPathResolver, ProjectFilesystem, ForwardRelativePath,
    *     TargetConfiguration, Object)}
    * @param registry the registry to declare artifacts against
    * @return the declared artifact

@@ -21,8 +21,8 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 
 /** {@link TypeCoercer} for {@link UnconfiguredBuildTargetView} */
 public class UnconfiguredBuildTargetTypeCoercer
@@ -44,7 +44,7 @@ public class UnconfiguredBuildTargetTypeCoercer
   public UnconfiguredBuildTargetView coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem alsoUnused,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

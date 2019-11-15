@@ -20,8 +20,8 @@ import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 
 /**
  * Coercer for {@link UnconfiguredBuildTargetView} instances that can optionally have output labels.
@@ -44,7 +44,7 @@ public class UnconfiguredBuildTargetWithOutputsTypeCoercer
   public UnconfiguredBuildTargetWithOutputs coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

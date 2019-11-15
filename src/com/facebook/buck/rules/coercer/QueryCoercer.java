@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
@@ -28,7 +29,6 @@ import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -94,7 +94,7 @@ public class QueryCoercer implements TypeCoercer<Query> {
   public Query coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

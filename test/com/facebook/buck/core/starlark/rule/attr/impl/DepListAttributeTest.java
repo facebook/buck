@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
@@ -71,7 +72,7 @@ public class DepListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//foo/bar:baz"));
 
@@ -83,7 +84,11 @@ public class DepListAttributeTest {
     thrown.expect(CoerceFailedException.class);
 
     attr.getValue(
-        cellRoots, filesystem, Paths.get(""), UnconfiguredTargetConfiguration.INSTANCE, "foo");
+        cellRoots,
+        filesystem,
+        ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
+        "foo");
   }
 
   @Test
@@ -93,7 +98,7 @@ public class DepListAttributeTest {
     attr.getValue(
         cellRoots,
         filesystem,
-        Paths.get(""),
+        ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of(1));
   }
@@ -109,7 +114,7 @@ public class DepListAttributeTest {
     attr.getValue(
         cellRoots,
         filesystem,
-        Paths.get(""),
+        ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of());
   }
@@ -121,7 +126,7 @@ public class DepListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of());
     assertTrue(value.isEmpty());
@@ -153,7 +158,7 @@ public class DepListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//foo:bar"));
 
@@ -176,7 +181,7 @@ public class DepListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//foo:bar"));
 
@@ -221,7 +226,7 @@ public class DepListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            Paths.get(""),
+            ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//foo:bar", "//foo:baz"));
 

@@ -19,10 +19,10 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -60,7 +60,7 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   public ImmutableMap<K, V> coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

@@ -18,6 +18,7 @@ package com.facebook.buck.core.select.impl;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.parser.syntax.ListWithSelects;
@@ -28,7 +29,6 @@ import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
 import com.facebook.buck.rules.coercer.SingleElementJsonTypeConcatenatingCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 
 /** A factory to create {@link SelectorList} from raw (non-coerced) data. */
 public class SelectorListFactory {
@@ -47,7 +47,7 @@ public class SelectorListFactory {
    */
   public SelectorList<Object> create(
       CellPathResolver cellPathResolver,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       ListWithSelects listWithSelects)
       throws CoerceFailedException {
     ImmutableList.Builder<Selector<Object>> builder =

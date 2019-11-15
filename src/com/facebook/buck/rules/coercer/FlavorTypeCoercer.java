@@ -20,8 +20,8 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 
 public class FlavorTypeCoercer extends LeafTypeCoercer<Flavor> {
   @Override
@@ -33,7 +33,7 @@ public class FlavorTypeCoercer extends LeafTypeCoercer<Flavor> {
   public Flavor coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

@@ -19,10 +19,10 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
-import java.nio.file.Path;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -136,7 +136,7 @@ public abstract class AbstractParamInfo implements ParamInfo {
     set(
         cellRoots,
         filesystem,
-        buildTarget.getBasePath(),
+        buildTarget.getCellRelativeBasePath().getPath(),
         targetConfiguration,
         arg,
         instance.get(name));
@@ -146,7 +146,7 @@ public abstract class AbstractParamInfo implements ParamInfo {
   public void set(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object dto,
       @Nullable Object value)

@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroFinderAutomaton;
 import com.facebook.buck.core.macros.MacroMatchResult;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
@@ -31,7 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -91,7 +91,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
   private StringWithMacros parse(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       String blob)
       throws CoerceFailedException {
@@ -173,7 +173,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
   public StringWithMacros coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

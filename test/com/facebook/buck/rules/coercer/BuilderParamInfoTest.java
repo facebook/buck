@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.ErrorLogger;
@@ -33,7 +34,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -91,7 +91,7 @@ public class BuilderParamInfoTest {
         .set(
             TestCellPathResolver.get(filesystem),
             filesystem,
-            Paths.get("/doesnotexist"),
+            ForwardRelativePath.of("doesnotexist"),
             UnconfiguredTargetConfiguration.INSTANCE,
             builder,
             "foo");

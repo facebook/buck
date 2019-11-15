@@ -225,7 +225,9 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
     SelectorList<Object> selectorList =
         selectorListFactory.create(
-            cellPathResolver, buildTarget.getBasePath(), (ListWithSelects) jsonObject);
+            cellPathResolver,
+            buildTarget.getCellRelativeBasePath().getPath(),
+            (ListWithSelects) jsonObject);
 
     return selectorListResolver.resolveList(
         configurationContext, buildTarget, attributeName, selectorList, dependencyStack);

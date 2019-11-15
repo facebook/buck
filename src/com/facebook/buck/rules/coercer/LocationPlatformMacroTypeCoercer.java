@@ -20,12 +20,12 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.LocationPlatformMacro;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /** Coerces `$(location-platform ...)` macros into {@link LocationPlatformMacro}. */
@@ -45,7 +45,7 @@ class LocationPlatformMacroTypeCoercer
   public LocationPlatformMacro coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {

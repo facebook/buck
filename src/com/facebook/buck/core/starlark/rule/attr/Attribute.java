@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule.attr;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
@@ -30,7 +31,6 @@ import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.nio.file.Path;
 import java.util.List;
 import org.immutables.value.Value;
 
@@ -137,7 +137,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
   public CoercedType getValue(
       CellPathResolver cellRoots,
       ProjectFilesystem projectFilesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object value)
       throws CoerceFailedException {

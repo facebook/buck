@@ -20,8 +20,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 
 /** Coercer for {@link BuildTarget} instances that can optionally have output labels. */
 public class BuildTargetWithOutputsTypeCoercer
@@ -40,7 +40,7 @@ public class BuildTargetWithOutputsTypeCoercer
   public BuildTargetWithOutputs coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

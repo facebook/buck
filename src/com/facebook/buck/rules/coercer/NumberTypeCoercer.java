@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 
 /** Coerces numbers with rounding/truncation/extension. */
 public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
@@ -38,7 +38,7 @@ public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
   public T coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {

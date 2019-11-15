@@ -19,8 +19,8 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 
 /**
  * {@link TypeCoercer} for {@link CxxLinkGroupMappingTarget.Traversal}.
@@ -40,7 +40,7 @@ public class CxxLinkGroupMappingTargetTraversalCoercer
   public CxxLinkGroupMappingTarget.Traversal coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem alsoUnused,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
