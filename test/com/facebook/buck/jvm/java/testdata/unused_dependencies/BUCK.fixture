@@ -156,6 +156,29 @@ java_library(
     deps = [":res"],
 )
 
+java_library(
+    name = "barmeh_with_unused_dep",
+    srcs = ["BarMeh.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dep_with_exported_dep",
+        ":meh",
+    ],
+)
+
+java_library(
+    name = "dep_with_exported_dep",
+    srcs = [],
+    exported_deps = [
+        ":meh",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
 android_resource(
     name = "res",
     visibility = [

@@ -137,21 +137,25 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   private void findUnusedDependenciesAndProcessMessages(
       MessageHandler messageHandler,
       ImmutableSet<Path> usedJars,
-      Iterable<DependencyAndExportedDeps> targets,
+      ImmutableList<DependencyAndExportedDeps> targets,
       String dependencyType) {
     ImmutableSet<String> unusedDependencies = findUnusedDependencies(usedJars, targets);
+
     if (!unusedDependencies.isEmpty()) {
       processUnusedDependencies(messageHandler, dependencyType, unusedDependencies);
     }
   }
 
   private ImmutableSet<String> findUnusedDependencies(
-      ImmutableSet<Path> usedJars, Iterable<DependencyAndExportedDeps> targets) {
+      ImmutableSet<Path> usedJars, ImmutableList<DependencyAndExportedDeps> targets) {
     SourcePathResolverAdapter sourcePathResolverAdapter = getSourcePathResolver();
     ImmutableSet.Builder<String> unusedDependencies = ImmutableSet.builder();
 
+    ImmutableSet<String> firstOrderDeps =
+        targets.stream().map(x -> x.dependency.buildTarget).collect(ImmutableSet.toImmutableSet());
     for (DependencyAndExportedDeps target : targets) {
-      if (isUnusedDependencyIncludingExportedDeps(target, usedJars, sourcePathResolverAdapter)) {
+      if (isUnusedDependencyIncludingExportedDeps(
+          target, usedJars, sourcePathResolverAdapter, firstOrderDeps)) {
         unusedDependencies.add(target.dependency.buildTarget);
       }
     }
@@ -162,14 +166,15 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   private boolean isUnusedDependencyIncludingExportedDeps(
       DependencyAndExportedDeps dependency,
       ImmutableSet<Path> usedJars,
-      SourcePathResolverAdapter sourcePathResolverAdapter) {
+      SourcePathResolverAdapter sourcePathResolverAdapter,
+      ImmutableSet<String> firstOrderDepTargets) {
     if (isUsedDependency(dependency.dependency, usedJars, sourcePathResolverAdapter)) {
       return false;
     }
 
     for (DependencyAndExportedDeps exportedDependency : dependency.exportedDeps) {
       if (isUsedDependencyIncludingExportedDeps(
-          exportedDependency, usedJars, sourcePathResolverAdapter)) {
+          exportedDependency, usedJars, sourcePathResolverAdapter, firstOrderDepTargets)) {
         return false;
       }
     }
@@ -180,14 +185,16 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   private boolean isUsedDependencyIncludingExportedDeps(
       DependencyAndExportedDeps exportedDep,
       ImmutableSet<Path> usedJars,
-      SourcePathResolverAdapter sourcePathResolverAdapter) {
-    if (isUsedDependency(exportedDep.dependency, usedJars, sourcePathResolverAdapter)) {
+      SourcePathResolverAdapter sourcePathResolverAdapter,
+      ImmutableSet<String> firstOrderDepTargets) {
+    if (!firstOrderDepTargets.contains(exportedDep.dependency.buildTarget)
+        && isUsedDependency(exportedDep.dependency, usedJars, sourcePathResolverAdapter)) {
       return true;
     }
 
     for (DependencyAndExportedDeps exportedDependency : exportedDep.exportedDeps) {
       if (isUsedDependencyIncludingExportedDeps(
-          exportedDependency, usedJars, sourcePathResolverAdapter)) {
+          exportedDependency, usedJars, sourcePathResolverAdapter, firstOrderDepTargets)) {
         return true;
       }
     }
