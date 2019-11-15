@@ -526,7 +526,7 @@ public class BuildCommand extends AbstractCommand {
       BuildRule rule)
       throws IOException {
     Optional<Path> outputPath =
-        TargetsCommand.getUserFacingOutputPath(
+        PathUtils.getUserFacingOutputPath(
             pathResolver, rule, buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink());
     if (outputPath.isPresent()) {
       Path absolutePath = outputPath.get();
@@ -600,7 +600,7 @@ public class BuildCommand extends AbstractCommand {
     for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
       BuildRule rule = graphBuilder.requireRule(buildTarget);
       Optional<Path> outputPath =
-          TargetsCommand.getUserFacingOutputPath(
+          PathUtils.getUserFacingOutputPath(
                   graphBuilder.getSourcePathResolver(),
                   rule,
                   params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink())

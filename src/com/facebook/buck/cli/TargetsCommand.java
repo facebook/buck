@@ -60,7 +60,6 @@ import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
@@ -1168,7 +1167,7 @@ public class TargetsCommand extends AbstractCommand {
           if (isShowOutput || isShowFullOutput) {
             SourcePathResolverAdapter sourcePathResolverAdapter =
                 graphBuilder.getSourcePathResolver();
-            getUserFacingOutputPath(
+            PathUtils.getUserFacingOutputPath(
                     sourcePathResolverAdapter,
                     rule,
                     params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink())
@@ -1191,33 +1190,6 @@ public class TargetsCommand extends AbstractCommand {
     Path formattedPath =
         isShowFullOutput ? path : params.getCell().getFilesystem().relativize(path);
     return formattedPath.toString();
-  }
-
-  /** Returns absolute path to the output rule, if the rule has an output. */
-  static Optional<Path> getUserFacingOutputPath(
-      SourcePathResolverAdapter pathResolver, BuildRule rule, boolean buckOutCompatLink) {
-    Optional<Path> outputPathOptional =
-        Optional.ofNullable(rule.getSourcePathToOutput()).map(pathResolver::getRelativePath);
-
-    // When using buck out compat mode, we favor using the default buck output path in the UI, so
-    // amend the output paths when this is set.
-    if (outputPathOptional.isPresent() && buckOutCompatLink) {
-      BuckPaths paths = rule.getProjectFilesystem().getBuckPaths();
-      if (outputPathOptional.get().startsWith(paths.getConfiguredBuckOut())) {
-        outputPathOptional =
-            Optional.of(
-                paths
-                    .getBuckOut()
-                    .resolve(
-                        outputPathOptional
-                            .get()
-                            .subpath(
-                                paths.getConfiguredBuckOut().getNameCount(),
-                                outputPathOptional.get().getNameCount())));
-      }
-    }
-
-    return outputPathOptional.map(rule.getProjectFilesystem()::resolve);
   }
 
   private Pair<TargetGraph, Iterable<TargetNode<?>>> computeTargetsAndGraphToShowTargetHash(
