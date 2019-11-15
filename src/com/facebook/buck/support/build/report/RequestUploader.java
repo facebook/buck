@@ -104,7 +104,8 @@ public class RequestUploader {
 
     Request request = new Request.Builder().url(urlBuilder.build()).post(requestBody).build();
 
-    Response httpResponse = httpClient.newCall(request).execute();
-    return handleResponse(httpResponse);
+    try (Response httpResponse = httpClient.newCall(request).execute()) {
+      return handleResponse(httpResponse);
+    }
   }
 }
