@@ -64,11 +64,12 @@ public class BuildReportUploader {
             diffSupplier -> {
               try {
                 InputStream inputStream = diffSupplier.get();
-                buildReportFileUploader.uploadDiffFile(inputStream);
-              } catch (VersionControlCommandFailedException | InterruptedException e) {
-                LOG.error(e);
-              } catch (IOException e) {
-                LOG.warn(e, "Error when executing http call for diff file");
+                UploadResponse uploadResponse = buildReportFileUploader.uploadDiffFile(inputStream);
+                LOG.debug("Successfully uploaded diff file: " + uploadResponse.toString());
+              } catch (VersionControlCommandFailedException
+                  | InterruptedException
+                  | IOException e) {
+                LOG.warn(e, "Error when uploading diff file");
               }
             });
 

@@ -54,10 +54,14 @@ public class BuildReportFileUploader {
                   RequestBody.create(MediaType.parse("text/plain"), buildReportFilePath.toFile()))
               .build();
 
-      requestUploader.uploadRequest(requestBody, ImmutableMap.of("trace_file_kind", traceFileKind));
-
+      UploadResponse uploadResponse =
+          requestUploader.uploadRequest(
+              requestBody, ImmutableMap.of("trace_file_kind", traceFileKind));
+      LOG.debug(
+          "Successfully uploaded file: %s, response: %s",
+          buildReportFilePath.getFileName().toString(), uploadResponse.toString());
     } catch (IOException e) {
-      LOG.warn(e, "Error while submitting file: " + buildReportFilePath.getFileName().toString());
+      LOG.warn(e, "Error while uploading file: " + buildReportFilePath.getFileName().toString());
     }
   }
 
