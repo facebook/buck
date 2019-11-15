@@ -259,17 +259,18 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     @Override
     public void run(RuleKeyDiagnosticsListenerCloseArgs args) {
       args.getOutputExecutor().shutdown();
+      try {
+        args.getOutputExecutor().awaitTermination(1, TimeUnit.HOURS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+
       args.getBuildReportFileUploader()
           .ifPresent(
               uploader -> {
                 uploader.uploadFile(args.getRuleDiagGraphFilePath(), "rule_diag_graph");
                 uploader.uploadFile(args.getRuleDiagKeyFilePath(), "rule_diag_keys");
               });
-      try {
-        args.getOutputExecutor().awaitTermination(1, TimeUnit.HOURS);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
     }
   }
 
