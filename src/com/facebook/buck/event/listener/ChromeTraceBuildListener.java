@@ -328,6 +328,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
               ImmutableMap.of(
                   "rule",
                   node.getBuildTarget().getFullyQualifiedName(),
+                  "type",
+                  node.getType(),
                   "elapsed_time_ms",
                   node.getElapsedTimeMs()));
       submitTraceEvent(endTraceEvent);
