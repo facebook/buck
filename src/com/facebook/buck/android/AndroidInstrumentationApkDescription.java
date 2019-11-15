@@ -227,6 +227,7 @@ public class AndroidInstrumentationApkDescription
             /* noAutoVersionResources */ false,
             /* noVersionTransitionsResources */ false,
             /* noAutoAddOverlayResources */ false,
+            androidBuckConfig.getAaptNoResourceRemoval(),
             javaBuckConfig,
             javacFactory,
             toolchainProvider

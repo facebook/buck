@@ -96,6 +96,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final boolean noAutoVersionResources;
   private final boolean noVersionTransitionsResources;
   private final boolean noAutoAddOverlayResources;
+  private final boolean noResourceRemoval;
   private final APKModuleGraph apkModuleGraph;
   private final boolean useProtoFormat;
   private final boolean failOnLegacyAapt2Errors;
@@ -127,6 +128,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean noAutoVersionResources,
       boolean noVersionTransitionsResources,
       boolean noAutoAddOverlayResources,
+      boolean noResourceRemoval,
       APKModuleGraph apkModuleGraph,
       boolean useProtoFormat,
       boolean failOnLegacyAapt2Errors) {
@@ -159,6 +161,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.apkModuleGraph = apkModuleGraph;
     this.useProtoFormat = useProtoFormat;
     this.failOnLegacyAapt2Errors = failOnLegacyAapt2Errors;
+    this.noResourceRemoval = noResourceRemoval;
   }
 
   @Value.Immutable
@@ -566,6 +569,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         noVersionTransitionsResources,
         noAutoAddOverlayResources,
         isProtoFormat,
+        noResourceRemoval,
         aapt2ToolProvider.resolve(graphBuilder, aaptLinkBuildTarget.getTargetConfiguration()),
         additionalAaptParams,
         androidPlatformTarget.getAndroidJar());

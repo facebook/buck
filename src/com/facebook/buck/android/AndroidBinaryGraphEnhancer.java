@@ -182,6 +182,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean noAutoVersionResources,
       boolean noVersionTransitionsResources,
       boolean noAutoAddOverlayResources,
+      boolean noResourceRemoval,
       JavaBuckConfig javaBuckConfig,
       JavacFactory javacFactory,
       JavacOptions javacOptions,
@@ -284,6 +285,7 @@ public class AndroidBinaryGraphEnhancer {
             noAutoVersionResources,
             noVersionTransitionsResources,
             noAutoAddOverlayResources,
+            noResourceRemoval,
             apkModuleGraph,
             useProtoFormat,
             failOnLegacyAapt2Errors);

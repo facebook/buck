@@ -182,6 +182,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.isNoAutoVersionResources(),
         args.isNoVersionTransitionsResources(),
         args.isNoAutoAddOverlayResources(),
+        androidBuckConfig.getAaptNoResourceRemoval(),
         javaBuckConfig,
         javacFactory,
         toolchainProvider

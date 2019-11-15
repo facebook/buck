@@ -79,7 +79,7 @@ final class AndroidSdkResolver {
     return getAapt2().exists();
   }
 
-  private File getAapt2() {
+  public File getAapt2() {
     // AndroidPlatformTarget ensures that aapt2 exists when getting the Tool.
     return sdkLocation.getSdkRootPath().resolve(buildToolsLocation.getAapt2Path()).toFile();
   }

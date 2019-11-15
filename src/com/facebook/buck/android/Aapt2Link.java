@@ -55,6 +55,7 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final boolean noVersionTransitions;
   @AddToRuleKey private final boolean noAutoAddOverlay;
   @AddToRuleKey private final boolean useProtoFormat;
+  @AddToRuleKey private final boolean noResourceRemoval;
   @AddToRuleKey private final ImmutableList<Aapt2Compile> compileRules;
   @AddToRuleKey private final SourcePath manifest;
   @AddToRuleKey private final ManifestEntries manifestEntries;
@@ -81,6 +82,7 @@ public class Aapt2Link extends AbstractBuildRule {
       boolean noVersionTransitions,
       boolean noAutoAddOverlay,
       boolean useProtoFormat,
+      boolean noResourceRemoval,
       Tool aapt2Tool,
       ImmutableList<String> additionalAaptParams,
       Path androidJar) {
@@ -94,6 +96,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.noAutoVersion = noAutoVersion;
     this.noVersionTransitions = noVersionTransitions;
     this.noAutoAddOverlay = noAutoAddOverlay;
+    this.noResourceRemoval = noResourceRemoval;
     this.useProtoFormat = useProtoFormat;
     this.androidJar = androidJar;
     this.aapt2Tool = aapt2Tool;
@@ -266,6 +269,10 @@ public class Aapt2Link extends AbstractBuildRule {
 
       if (useProtoFormat) {
         builder.add("--proto-format");
+      }
+
+      if (noResourceRemoval) {
+        builder.add("--no-resource-removal");
       }
 
       if (packageIdOffset != 0) {

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -29,6 +30,8 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -290,9 +293,7 @@ public class AndroidBinaryRDotJavaIntegrationTest {
   }
 
   private long buildAndGetOutputEntryLength(String target, String zipEntry) throws IOException {
-    ImmutableMap<String, Path> outputs = workspace.buildMultipleAndReturnOutputs(target);
-    ZipInspector zipInspector = new ZipInspector(outputs.get(target));
-    return zipInspector.getSize(zipEntry);
+    return new ZipInspector(buildApk(target)).getSize(zipEntry);
   }
 
   @Test
@@ -313,5 +314,61 @@ public class AndroidBinaryRDotJavaIntegrationTest {
     // Without --legacy, 'positional_args' causes a aapt2 compile to fail.
     workspace.addBuckConfigLocalOption("android", "aapt_fail_on_legacy_errors", "true");
     workspace.runBuckBuild("//apps/sample:app_with_aapt2").assertFailure();
+  }
+
+  private Path buildApk(String target) throws IOException {
+    ImmutableMap<String, Path> outputs =
+        workspace.buildMultipleAndReturnOutputs("//apps/sample:app_with_aapt2");
+    return outputs.get(target);
+  }
+
+  @Test
+  public void testNoResourceRemoval() throws Exception {
+    // Resource removal was added in 28.0.2, and the --no-resource-removal flag was
+    // added in 29.0.0.
+    AssumeAndroidPlatform.get(workspace).assumeBuildToolsVersionIsAtLeast("29");
+
+    // Without the flag (default), the missing_in_default resource is removed from the apk
+    Path apk = buildApk("//apps/sample:app_with_aapt2");
+    assertDoesNotHaveResource(apk, "string/missing_in_default");
+
+    // With the flag, the missing_in_default resource is present
+    workspace.addBuckConfigLocalOption("android", "aapt_no_resource_removal", "true");
+    apk = buildApk("//apps/sample:app_with_aapt2");
+    assertHasResource(apk, "string/missing_in_default");
+  }
+
+  private String dumpResources(Path apk) throws Exception {
+    AndroidSdkResolver sdkResolver = AndroidSdkResolver.get(workspace).get();
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            ImmutableList.of(
+                sdkResolver.getAapt2().getPath(), "dump", "resources", apk.toString()));
+
+    return result.getStdout().get();
+  }
+
+  private void assertHasResource(Path apk, String resourceName) throws Exception {
+    String output = dumpResources(apk);
+    assertTrue(
+        "Apk "
+            + apk
+            + " expected to have resource `"
+            + resourceName
+            + "`. But not found. Output: "
+            + output,
+        output.contains(resourceName));
+  }
+
+  private void assertDoesNotHaveResource(Path apk, String resourceName) throws Exception {
+    String output = dumpResources(apk);
+    assertFalse(
+        "Apk "
+            + apk
+            + " expected not to have resource `"
+            + resourceName
+            + "`. But found. Output: "
+            + output,
+        output.contains(resourceName));
   }
 }

@@ -753,6 +753,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* noAutoVersionResources */ false,
         /* noVersionTransitionsResources */ false,
         /* noAutoAddOverlayResources */ false,
+        /* noResourceRemoval */ false,
         DEFAULT_JAVA_CONFIG,
         JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
         ANDROID_JAVAC_OPTIONS,

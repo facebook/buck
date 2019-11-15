@@ -93,6 +93,11 @@ public class AndroidBuckConfig {
     return delegate.getBoolean("android", "aapt_fail_on_legacy_errors").orElse(false);
   }
 
+  /** Whether to disable resource removal in aapt2. */
+  public boolean getAaptNoResourceRemoval() {
+    return delegate.getBoolean("android", "aapt_no_resource_removal").orElse(false);
+  }
+
   public Optional<String> getAndroidCompileSdkVersion() {
     Optional<String> compileSdkVersion = delegate.getValue("android", "compile_sdk_version");
     return compileSdkVersion.isPresent() ? compileSdkVersion : getAndroidTarget();
