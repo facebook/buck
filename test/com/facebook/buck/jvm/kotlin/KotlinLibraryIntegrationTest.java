@@ -44,7 +44,7 @@ import org.junit.rules.Timeout;
 public class KotlinLibraryIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Rule public Timeout timeout = Timeout.seconds(180);
+  @Rule public Timeout timeout = Timeout.seconds(240);
 
   private ProjectWorkspace workspace;
 
@@ -129,7 +129,6 @@ public class KotlinLibraryIntegrationTest {
     workspace.writeContentsToPath(amendedBuckconfig, ".buckconfig");
   }
 
-  @Test(timeout = 200000)
   public void shouldAnnotationProcessClassesUsingKapt() {
     ProcessResult buildResult =
         workspace.runBuckCommand(
