@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -30,7 +31,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,13 +45,12 @@ public class TargetWithOutputsTypeCoercerTest {
   private static final ForwardRelativePath BASE_PATH =
       ForwardRelativePath.of("java/com/facebook/buck/example");
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
-  private static final BiFunction<
-          String, Optional<String>, ImmutableUnconfiguredBuildTargetWithOutputs>
+  private static final BiFunction<String, OutputLabel, ImmutableUnconfiguredBuildTargetWithOutputs>
       EXPECTED_UNCONFIGURED_BUILD_TARGET_WITH_OUTPUTS_BI_FUNCTION =
           (bt, ol) ->
               ImmutableUnconfiguredBuildTargetWithOutputs.of(
                   UnconfiguredBuildTargetFactoryForTests.newInstance(FILESYSTEM, bt), ol);
-  private static final BiFunction<String, Optional<String>, ImmutableBuildTargetWithOutputs>
+  private static final BiFunction<String, OutputLabel, ImmutableBuildTargetWithOutputs>
       EXPECTED_BUILD_TARGET_WITH_OUTPUTS_BI_FUNCTION =
           (bt, ol) -> ImmutableBuildTargetWithOutputs.of(BuildTargetFactory.newInstance(bt), ol);
 
@@ -78,7 +77,7 @@ public class TargetWithOutputsTypeCoercerTest {
   @Parameterized.Parameter() public TypeCoercer testCoercer;
 
   @Parameterized.Parameter(value = 1)
-  public BiFunction expected;
+  public BiFunction<String, OutputLabel, ?> expected;
 
   @Test
   public void canCoerceBuildTargetWithoutAlias() throws CoerceFailedException {
@@ -90,7 +89,7 @@ public class TargetWithOutputsTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar");
 
-    assertEquals(expected.apply("//foo:bar", Optional.empty()), seen);
+    assertEquals(expected.apply("//foo:bar", OutputLabel.DEFAULT), seen);
   }
 
   @Test
@@ -103,7 +102,7 @@ public class TargetWithOutputsTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar[whee]");
 
-    assertEquals(expected.apply("//foo:bar", Optional.of("whee")), seen);
+    assertEquals(expected.apply("//foo:bar", new OutputLabel("whee")), seen);
   }
 
   @Test
@@ -129,7 +128,7 @@ public class TargetWithOutputsTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar#src[whee]");
 
-    assertEquals(expected.apply("//foo:bar#src", Optional.of("whee")), seen);
+    assertEquals(expected.apply("//foo:bar#src", new OutputLabel("whee")), seen);
   }
 
   @Test
@@ -142,7 +141,7 @@ public class TargetWithOutputsTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar#flavor1,flavor2[whee]");
 
-    assertEquals(expected.apply("//foo:bar#flavor1,flavor2", Optional.of("whee")), seen);
+    assertEquals(expected.apply("//foo:bar#flavor1,flavor2", new OutputLabel("whee")), seen);
   }
 
   @Test
@@ -168,7 +167,7 @@ public class TargetWithOutputsTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar#flavor1,flavor2");
 
-    assertEquals(expected.apply("//foo:bar#flavor1,flavor2", Optional.empty()), seen);
+    assertEquals(expected.apply("//foo:bar#flavor1,flavor2", OutputLabel.DEFAULT), seen);
   }
 
   @Test
@@ -181,7 +180,8 @@ public class TargetWithOutputsTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             ":hangry");
 
-    assertEquals(expected.apply("//java/com/facebook/buck/example:hangry", Optional.empty()), seen);
+    assertEquals(
+        expected.apply("//java/com/facebook/buck/example:hangry", OutputLabel.DEFAULT), seen);
   }
 
   @Test
@@ -194,7 +194,8 @@ public class TargetWithOutputsTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             ":bar[whee]");
 
-    assertEquals(expected.apply("//java/com/facebook/buck/example:bar", Optional.of("whee")), seen);
+    assertEquals(
+        expected.apply("//java/com/facebook/buck/example:bar", new OutputLabel("whee")), seen);
   }
 
   @Test
@@ -208,6 +209,6 @@ public class TargetWithOutputsTypeCoercerTest {
             ":bar#yum[whee]");
 
     assertEquals(
-        expected.apply("//java/com/facebook/buck/example:bar#yum", Optional.of("whee")), seen);
+        expected.apply("//java/com/facebook/buck/example:bar#yum", new OutputLabel("whee")), seen);
   }
 }

@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -34,7 +35,6 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -109,7 +109,7 @@ public class SourcePathTypeCoercerTest {
         DefaultBuildTargetSourcePath.of(
             ImmutableBuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance(projectFilesystem, "//:hello"),
-                Optional.of("label"))),
+                new OutputLabel("label"))),
         sourcePath);
   }
 
@@ -143,7 +143,7 @@ public class SourcePathTypeCoercerTest {
         DefaultBuildTargetSourcePath.of(
             ImmutableBuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance(projectFilesystem, "//:hello"),
-                Optional.of("label"))),
+                new OutputLabel("label"))),
         sourcePath);
   }
 

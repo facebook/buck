@@ -15,11 +15,11 @@
  */
 package com.facebook.buck.core.rules.attr;
 
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
 
 /**
  * {@link com.facebook.buck.core.rules.BuildRule} instances that support multiple outputs via output
@@ -31,8 +31,8 @@ public interface HasMultipleOutputs extends BuildRule {
    * an empty list if it does not exist. If an empty output label is given, returns the default
    * outputs associated with the rule.
    */
-  ImmutableSortedSet<SourcePath> getSourcePathToOutput(Optional<String> outputLabel);
+  ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel);
 
   /** Returns a map of {@link SourcePath} instances keyed by associated output labels. */
-  ImmutableMap<String, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels();
+  ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels();
 }

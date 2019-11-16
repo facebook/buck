@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -56,7 +57,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.SortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -100,10 +100,13 @@ public class SourcePathResolverTest {
     Path expectedPath = Paths.get("foo").resolve("bar");
     BuildRule rule =
         new PathReferenceRuleWithMultipleOutputs(
-            buildTarget, new FakeProjectFilesystem(), null, ImmutableMap.of("bar", expectedPath));
+            buildTarget,
+            new FakeProjectFilesystem(),
+            null,
+            ImmutableMap.of(new OutputLabel("bar"), expectedPath));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
-        ImmutableBuildTargetWithOutputs.of(buildTarget, Optional.of("bar"));
+        ImmutableBuildTargetWithOutputs.of(buildTarget, new OutputLabel("bar"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
     assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
@@ -122,15 +125,15 @@ public class SourcePathResolverTest {
             new FakeProjectFilesystem(),
             null,
             ImmutableMap.of(
-                "baz",
+                new OutputLabel("baz"),
                 Paths.get("foo").resolve("baz"),
-                "bar",
+                new OutputLabel("bar"),
                 expectedPath,
-                "qux",
+                new OutputLabel("qux"),
                 Paths.get("foo").resolve("qux")));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
-        ImmutableBuildTargetWithOutputs.of(buildTarget, Optional.of("bar"));
+        ImmutableBuildTargetWithOutputs.of(buildTarget, new OutputLabel("bar"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
     assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
@@ -148,10 +151,13 @@ public class SourcePathResolverTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
     BuildRule rule =
         new PathReferenceRuleWithMultipleOutputs(
-            buildTarget, new FakeProjectFilesystem(), path, ImmutableMap.of("bar", path));
+            buildTarget,
+            new FakeProjectFilesystem(),
+            path,
+            ImmutableMap.of(new OutputLabel("bar"), path));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
-        ImmutableBuildTargetWithOutputs.of(buildTarget, Optional.of("baz"));
+        ImmutableBuildTargetWithOutputs.of(buildTarget, new OutputLabel("baz"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
     pathResolver.getRelativePath(sourcePath);
@@ -172,7 +178,7 @@ public class SourcePathResolverTest {
         new PathReferenceRule(buildTarget, new FakeProjectFilesystem(), Paths.get("foo"));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
-        ImmutableBuildTargetWithOutputs.of(buildTarget, Optional.of("bar"));
+        ImmutableBuildTargetWithOutputs.of(buildTarget, new OutputLabel("bar"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
     pathResolver.getRelativePath(sourcePath);
@@ -509,23 +515,23 @@ public class SourcePathResolverTest {
 
   private static class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
       implements HasMultipleOutputs {
-    private final ImmutableMap<String, Path> outputLabelToSource;
+    private final ImmutableMap<OutputLabel, Path> outputLabelToSource;
 
     protected PathReferenceRuleWithMultipleOutputs(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         Path source,
-        ImmutableMap<String, Path> outputLabelToSource) {
+        ImmutableMap<OutputLabel, Path> outputLabelToSource) {
       super(buildTarget, projectFilesystem, source);
       this.outputLabelToSource = outputLabelToSource;
     }
 
     @Override
-    public ImmutableSortedSet<SourcePath> getSourcePathToOutput(Optional<String> outputLabel) {
-      if (!outputLabel.isPresent()) {
+    public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
+      if (!outputLabel.getLabel().isPresent()) {
         return ImmutableSortedSet.of(getSourcePathToOutput());
       }
-      Path path = outputLabelToSource.get(outputLabel.get());
+      Path path = outputLabelToSource.get(outputLabel);
       if (path == null) {
         return ImmutableSortedSet.of();
       }
@@ -533,7 +539,8 @@ public class SourcePathResolverTest {
     }
 
     @Override
-    public ImmutableMap<String, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels() {
+    public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>>
+        getSourcePathsByOutputsLabels() {
       return null;
     }
   }

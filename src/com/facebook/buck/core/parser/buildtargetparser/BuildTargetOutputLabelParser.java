@@ -16,7 +16,7 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
-import java.util.Optional;
+import com.facebook.buck.core.model.OutputLabel;
 import org.immutables.value.Value;
 
 /** Utility class for parsing output labels from build targets. */
@@ -33,14 +33,14 @@ public class BuildTargetOutputLabelParser {
   public static TargetWithOutputLabel getBuildTargetNameWithOutputLabel(String targetName) {
     if (!targetName.contains(OUTPUT_LABEL_START_INDICATOR)
         && !targetName.contains(OUTPUT_LABEL_END_INDICATOR)) {
-      return ImmutableTargetWithOutputLabel.of(targetName, Optional.empty());
+      return ImmutableTargetWithOutputLabel.of(targetName, OutputLabel.DEFAULT);
     }
     int outputLabelStartIndex = targetName.indexOf(OUTPUT_LABEL_START_INDICATOR);
     int outputLabelEndIndex = targetName.indexOf(OUTPUT_LABEL_END_INDICATOR);
     checkValid(outputLabelStartIndex, outputLabelEndIndex, targetName);
     return ImmutableTargetWithOutputLabel.of(
         targetName.substring(0, outputLabelStartIndex),
-        Optional.of(targetName.substring(outputLabelStartIndex + 1, targetName.length() - 1)));
+        new OutputLabel(targetName.substring(outputLabelStartIndex + 1, targetName.length() - 1)));
   }
 
   private static void checkValid(
@@ -69,6 +69,6 @@ public class BuildTargetOutputLabelParser {
     public abstract String getTargetName();
 
     @Value.Parameter
-    public abstract Optional<String> getOutputLabel();
+    public abstract OutputLabel getOutputLabel();
   }
 }

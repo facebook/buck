@@ -66,7 +66,7 @@ public abstract class BuildTargetMatcherParser<T> {
 
     String wildcardSuffix = WILDCARD_SEPARATOR + WILDCARD_BUILD_RULE_SUFFIX;
     if (buildTargetPattern.contains(wildcardSuffix)) {
-      if (targetWithOutputLabel.getOutputLabel().isPresent()) {
+      if (targetWithOutputLabel.getOutputLabel().getLabel().isPresent()) {
         throw createOutputLabelParseException(targetWithOutputLabel);
       }
       if (!buildTargetPattern.endsWith(wildcardSuffix)) {
@@ -80,7 +80,7 @@ public abstract class BuildTargetMatcherParser<T> {
         unconfiguredBuildTargetFactory.createWithWildcard(
             cellNames, targetWithOutputLabel.getTargetName());
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
-      if (targetWithOutputLabel.getOutputLabel().isPresent()) {
+      if (targetWithOutputLabel.getOutputLabel().getLabel().isPresent()) {
         throw createOutputLabelParseException(targetWithOutputLabel);
       }
       return createForChildren(target.getCell(), target.getBasePath());
@@ -156,7 +156,7 @@ public abstract class BuildTargetMatcherParser<T> {
     return new BuildTargetParseException(
         String.format(
             "%s should not have output label %s",
-            targetWithOutputs.getTargetName(), targetWithOutputs.getOutputLabel().get()));
+            targetWithOutputs.getTargetName(), targetWithOutputs.getOutputLabel()));
   }
 
   private static class VisibilityContext extends BuildTargetMatcherParser<BuildTargetMatcher> {

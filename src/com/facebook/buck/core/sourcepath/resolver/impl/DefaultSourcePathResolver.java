@@ -58,7 +58,7 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
       DefaultBuildTargetSourcePath targetSourcePath) {
     BuildTargetWithOutputs buildTargetWithOutputs = targetSourcePath.getTargetWithOutputs();
     BuildRule rule = ruleFinder.getRule(targetSourcePath);
-    if (buildTargetWithOutputs.getOutputLabel().isPresent()) {
+    if (buildTargetWithOutputs.getOutputLabel().getLabel().isPresent()) {
       Preconditions.checkState(
           rule instanceof HasMultipleOutputs,
           "Multiple outputs not supported for %s target %s",

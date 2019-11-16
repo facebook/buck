@@ -19,6 +19,7 @@ package com.facebook.buck.core.sourcepath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.hash.HashCode;
 import java.util.Optional;
@@ -45,7 +46,7 @@ public abstract class AbstractDefaultBuildTargetSourcePath implements BuildTarge
    */
   public static DefaultBuildTargetSourcePath of(BuildTarget target) {
     return DefaultBuildTargetSourcePath.of(
-        ImmutableBuildTargetWithOutputs.of(target, Optional.empty()));
+        ImmutableBuildTargetWithOutputs.of(target, OutputLabel.DEFAULT));
   }
 
   @Override

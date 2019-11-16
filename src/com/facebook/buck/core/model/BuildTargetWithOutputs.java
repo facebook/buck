@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.core.model;
 
-import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
@@ -41,7 +40,7 @@ public abstract class BuildTargetWithOutputs implements Comparable<BuildTargetWi
 
   @Value.Parameter
   /** Returns the output label associated with the build target, if any. */
-  public abstract Optional<String> getOutputLabel();
+  public abstract OutputLabel getOutputLabel();
 
   @Override
   public int compareTo(BuildTargetWithOutputs other) {
@@ -54,19 +53,7 @@ public abstract class BuildTargetWithOutputs implements Comparable<BuildTargetWi
       return targetComparison;
     }
 
-    if (getOutputLabel().isPresent() && other.getOutputLabel().isPresent()) {
-      return getOutputLabel().get().compareTo(other.getOutputLabel().get());
-    }
-
-    if (getOutputLabel().isPresent()) {
-      return 1;
-    }
-
-    if (other.getOutputLabel().isPresent()) {
-      return -1;
-    }
-
-    return 0;
+    return getOutputLabel().compareTo(other.getOutputLabel());
   }
 
   /**
@@ -77,6 +64,7 @@ public abstract class BuildTargetWithOutputs implements Comparable<BuildTargetWi
   @Override
   public String toString() {
     return getOutputLabel()
+        .getLabel()
         .map(ol -> String.format("%s[%s]", getBuildTarget(), ol))
         .orElse(getBuildTarget().getFullyQualifiedName());
   }

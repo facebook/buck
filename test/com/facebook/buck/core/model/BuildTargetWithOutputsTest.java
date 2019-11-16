@@ -23,7 +23,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -33,13 +32,12 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class BuildTargetWithOutputsTest {
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
-  private static final BiFunction<
-          String, Optional<String>, ImmutableUnconfiguredBuildTargetWithOutputs>
+  private static final BiFunction<String, OutputLabel, ImmutableUnconfiguredBuildTargetWithOutputs>
       UNCONFIGURED_BUILD_TARGET_WITH_OUTPUTS_GENERATOR =
           (bt, ol) ->
               ImmutableUnconfiguredBuildTargetWithOutputs.of(
                   UnconfiguredBuildTargetFactoryForTests.newInstance(FILESYSTEM, bt), ol);
-  private static final BiFunction<String, Optional<String>, ImmutableBuildTargetWithOutputs>
+  private static final BiFunction<String, OutputLabel, ImmutableBuildTargetWithOutputs>
       BUILD_TARGET_WITH_OUTPUTS_GENERATOR =
           (bt, ol) -> ImmutableBuildTargetWithOutputs.of(BuildTargetFactory.newInstance(bt), ol);
 
@@ -51,35 +49,34 @@ public class BuildTargetWithOutputsTest {
         });
   }
 
-  @Parameterized.Parameter()
-  public BiFunction<String, Optional<String>, Comparable> targetGenerator;
+  @Parameterized.Parameter() public BiFunction<String, OutputLabel, Comparable> targetGenerator;
 
   @Test
   public void sameTargetsWithoutOutputLabelsAreEqual() {
     assertEquals(
-        targetGenerator.apply("//:sometarget", Optional.empty()),
-        targetGenerator.apply("//:sometarget", Optional.empty()));
+        targetGenerator.apply("//:sometarget", OutputLabel.DEFAULT),
+        targetGenerator.apply("//:sometarget", OutputLabel.DEFAULT));
   }
 
   @Test
   public void sameTargetsWithSameOutputLabelsAreEqual() {
     assertEquals(
-        targetGenerator.apply("//:sometarget", Optional.of("label")),
-        targetGenerator.apply("//:sometarget", Optional.of("label")));
+        targetGenerator.apply("//:sometarget", new OutputLabel("label")),
+        targetGenerator.apply("//:sometarget", new OutputLabel("label")));
   }
 
   @Test
   public void differentTargetsAreWithoutOutputLabelAreNotEqual() {
     assertNotEquals(
-        targetGenerator.apply("//:sometarget", Optional.empty()),
-        targetGenerator.apply("//:other", Optional.empty()));
+        targetGenerator.apply("//:sometarget", OutputLabel.DEFAULT),
+        targetGenerator.apply("//:other", OutputLabel.DEFAULT));
   }
 
   @Test
   public void targetWithOutputLabelIsGreaterThanNoOutputLabel() {
     assertThat(
-        targetGenerator.apply("//:sometarget", Optional.of("label")),
-        Matchers.greaterThan(targetGenerator.apply("//:sometarget", Optional.empty())));
+        targetGenerator.apply("//:sometarget", new OutputLabel("label")),
+        Matchers.greaterThan(targetGenerator.apply("//:sometarget", OutputLabel.DEFAULT)));
   }
 
   @Test
@@ -87,20 +84,20 @@ public class BuildTargetWithOutputsTest {
     assertEquals(
         "label".compareTo("other"),
         targetGenerator
-            .apply("//:sometarget", Optional.of("label"))
-            .compareTo(targetGenerator.apply("//:sometarget", Optional.of("other"))));
+            .apply("//:sometarget", new OutputLabel("label"))
+            .compareTo(targetGenerator.apply("//:sometarget", new OutputLabel("other"))));
   }
 
   @Test
   public void toStringPrintsBracketsIfNonEmptyOutputLabel() {
     assertEquals(
         "//:sometarget[label]",
-        targetGenerator.apply("//:sometarget", Optional.of("label")).toString());
+        targetGenerator.apply("//:sometarget", new OutputLabel("label")).toString());
   }
 
   @Test
   public void toStringOmitsBracketsIfEmptyOutputLabel() {
     assertEquals(
-        "//:sometarget", targetGenerator.apply("//:sometarget", Optional.empty()).toString());
+        "//:sometarget", targetGenerator.apply("//:sometarget", OutputLabel.DEFAULT).toString());
   }
 }

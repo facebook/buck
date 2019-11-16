@@ -28,6 +28,7 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -234,14 +235,14 @@ public class BuildTargetMatcherParserTest {
     assertEquals(
         BuildTargetSpec.from(
             ImmutableUnconfiguredBuildTargetWithOutputs.of(
-                unconfiguredBuildTargetView, Optional.of("label"))),
+                unconfiguredBuildTargetView, new OutputLabel("label"))),
         buildTargetPatternParser.parse(
             createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser[label]"));
 
     assertEquals(
         BuildTargetSpec.from(
             ImmutableUnconfiguredBuildTargetWithOutputs.of(
-                unconfiguredBuildTargetView, Optional.empty())),
+                unconfiguredBuildTargetView, OutputLabel.DEFAULT)),
         buildTargetPatternParser.parse(
             createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser"));
   }

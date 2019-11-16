@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.AbstractDefaultBuildTargetSourcePath;
@@ -177,7 +178,7 @@ public class ThriftRuleKeyHasherTest {
             return ImmutableBuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance(
                     new File("cell_path_2").toPath(), "//base_name_2", "rule_name_2"),
-                Optional.empty());
+                OutputLabel.DEFAULT);
           }
 
           @Override
@@ -272,7 +273,7 @@ public class ThriftRuleKeyHasherTest {
                     new TargetPath(
                         ImmutableBuildTargetWithOutputs.of(
                                 BuildTargetFactory.newInstance("//base_name_2:rule_name_2"),
-                                Optional.empty())
+                                OutputLabel.DEFAULT)
                             .toString())))
             .put(
                 ".list_value",

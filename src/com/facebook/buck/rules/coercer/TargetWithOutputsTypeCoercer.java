@@ -16,11 +16,11 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetOutputLabelParser;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import org.immutables.value.Value;
 
@@ -37,9 +37,7 @@ abstract class TargetWithOutputsTypeCoercer<T, U> extends LeafTypeCoercer<U> {
 
   /** Returns the coerced build target and its associated output label, if present. */
   protected U getTargetWithOutputLabel(
-      BiFunction<T, Optional<String>, U> returnTypeConstructor,
-      Object object,
-      CoerceParameters params)
+      BiFunction<T, OutputLabel, U> returnTypeConstructor, Object object, CoerceParameters params)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
       throw CoerceFailedException.simple(object, getOutputClass());

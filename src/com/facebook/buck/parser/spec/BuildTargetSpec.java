@@ -19,6 +19,7 @@ package com.facebook.buck.parser.spec;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -27,7 +28,6 @@ import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPatt
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.stream.StreamSupport;
 import org.immutables.value.Value;
 
@@ -48,7 +48,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
       UnconfiguredBuildTargetView unconfiguredBuildTargetView, BuildFileSpec buildFileSpec) {
     return ImmutableBuildTargetSpec.of(
         ImmutableUnconfiguredBuildTargetWithOutputs.of(
-            unconfiguredBuildTargetView, Optional.empty()),
+            unconfiguredBuildTargetView, OutputLabel.DEFAULT),
         buildFileSpec);
   }
 
