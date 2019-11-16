@@ -148,7 +148,7 @@ public class BuildTargetParserTest {
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
       assertEquals(
-          "When parsing //facebook/:orca: Non-empty target path must not end with slash.",
+          "When parsing //facebook/:orca: Non-empty target path //facebook/:orca must not end with slash.",
           e.getMessage());
     }
   }

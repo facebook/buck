@@ -34,7 +34,9 @@ public class BaseNameParser {
               buildTargetNameForDiagnostics, BuildTargetParser.BUILD_RULE_PREFIX));
     }
     if (baseName.endsWith("/")) {
-      throw new BuildTargetParseException("Non-empty target path must not end with slash");
+      throw new BuildTargetParseException(
+          String.format(
+              "Non-empty target path %s must not end with slash", buildTargetNameForDiagnostics));
     }
     int baseNamePathStart = BuildTargetParser.BUILD_RULE_PREFIX.length();
     if (baseName.charAt(baseNamePathStart) == '/') {
