@@ -16,6 +16,7 @@
 
 package com.facebook.buck.multitenant.query
 
+import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildTargets
@@ -349,5 +350,5 @@ private fun loadIndex(resource: String, commitIndex: Int): MultitenantQueryEnvir
     val generation = indexAppender.getGeneration(commits[commitIndex])
     requireNotNull(generation)
     val cellToBuildFileName = mapOf("" to "BUCK")
-    return MultitenantQueryEnvironment(index, generation, cellToBuildFileName)
+    return MultitenantQueryEnvironment(index, generation, cellToBuildFileName, TestCellNameResolver.forRoot())
 }

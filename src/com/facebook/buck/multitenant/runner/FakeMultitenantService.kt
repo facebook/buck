@@ -16,6 +16,8 @@
 
 package com.facebook.buck.multitenant.runner
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver
+import com.facebook.buck.core.model.CanonicalCellName
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.query.MultitenantQueryEnvironment
 import com.facebook.buck.multitenant.service.DefaultFsToBuildPackageChangeTranslator
@@ -24,6 +26,7 @@ import com.facebook.buck.multitenant.service.Index
 import com.facebook.buck.multitenant.service.IndexAppender
 import com.facebook.buck.query.QueryNormalizer
 import java.nio.file.Path
+import java.util.Optional
 
 /**
  * Note that a real implementation of the service would subscribe to new commits to the repo and use
@@ -52,7 +55,22 @@ class FakeMultitenantService(
         val localizedIndex =
             index.createIndexForGenerationWithLocalChanges(generation, buildPackageChanges)
         val cellToBuildFileName = mapOf("" to "BUCK")
-        val env = MultitenantQueryEnvironment(localizedIndex, generation, cellToBuildFileName)
+        val env = MultitenantQueryEnvironment(localizedIndex, generation, cellToBuildFileName, object :
+            CellNameResolver {
+            override fun getName(localName: Optional<String>?): CanonicalCellName {
+                TODO("not implemented")
+            }
+
+            override fun getNameIfResolvable(
+                localName: Optional<String>?
+            ): Optional<CanonicalCellName> {
+                TODO("not implemented")
+            }
+
+            override fun getKnownCells(): MutableMap<Optional<String>, CanonicalCellName> {
+                TODO("not implemented")
+            }
+        })
         val queryTargets = env.evaluateQuery(QueryNormalizer.normalize(query))
         return queryTargets.map { it.toString() }
     }

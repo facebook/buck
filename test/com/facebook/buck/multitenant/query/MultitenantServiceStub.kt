@@ -16,6 +16,7 @@
 
 package com.facebook.buck.multitenant.query
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver
 import com.facebook.buck.multitenant.service.FsChanges
 import com.facebook.buck.multitenant.service.FsToBuildPackageChangeTranslator
 import com.facebook.buck.multitenant.service.Index
@@ -27,7 +28,8 @@ import com.facebook.buck.multitenant.service.IndexAppender
 class MultitenantServiceStub(
     private val index: Index,
     private val indexAppender: IndexAppender,
-    private val fsToBuildPackageChangeTranslator: FsToBuildPackageChangeTranslator
+    private val fsToBuildPackageChangeTranslator: FsToBuildPackageChangeTranslator,
+    private val cellNameResolver: CellNameResolver
 ) {
     fun handleBuckQueryRequest(query: String, changes: FsChanges): List<String> {
         val generation =
@@ -37,7 +39,7 @@ class MultitenantServiceStub(
         val localizedIndex =
             index.createIndexForGenerationWithLocalChanges(generation, buildPackageChanges)
         val cellToBuildFileName = mapOf("" to "BUCK")
-        val env = MultitenantQueryEnvironment(localizedIndex, generation, cellToBuildFileName)
+        val env = MultitenantQueryEnvironment(localizedIndex, generation, cellToBuildFileName, cellNameResolver)
         val queryTargets = env.evaluateQuery(query)
         return queryTargets.map { it.toString() }
     }

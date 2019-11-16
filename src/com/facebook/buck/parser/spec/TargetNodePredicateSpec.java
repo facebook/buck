@@ -18,6 +18,7 @@ package com.facebook.buck.parser.spec;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
@@ -66,7 +67,7 @@ public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
               toString(), cell.getRoot(), buildFileSpec.getCellName()));
     }
 
-    String cellName = cell.getCanonicalName().getName();
+    CanonicalCellName cellName = cell.getCanonicalName();
 
     // sometimes spec comes with absolute path as base path, sometimes it is relative to
     // cell path

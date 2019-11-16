@@ -138,7 +138,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
     }
 
     return ImmutableBuildTargetPattern.of(
-        cell.getCanonicalName().getName(),
+        cell.getCanonicalName(),
         BuildTargetPattern.Kind.SINGLE,
         basePath,
         getUnconfiguredBuildTargetView().getShortNameAndFlavorPostfix());

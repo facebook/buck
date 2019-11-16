@@ -18,6 +18,7 @@ package com.facebook.buck.core.parser;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
@@ -104,7 +105,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     ImmutableSet<Path> watchedProjects = ImmutableSet.of(filesystem.resolve("project"));
     BuildPackagePaths paths =
         transform(
-            key("", BuildTargetPattern.Kind.PACKAGE, "dir", ""),
+            key(CanonicalCellName.rootCell(), BuildTargetPattern.Kind.PACKAGE, "dir", ""),
             getComputationStages("BUCK", projectFilesystemView, watchedProjects));
 
     assertEquals(ImmutableSortedSet.of(Paths.get("dir")), paths.getPackageRoots());
@@ -138,7 +139,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     thrown.expect(ExecutionException.class);
     thrown.expectCause(IsInstanceOf.instanceOf(WatchmanQueryTimedOutException.class));
     transform(
-        key("", BuildTargetPattern.Kind.PACKAGE, "", ""),
+        key(CanonicalCellName.rootCell(), BuildTargetPattern.Kind.PACKAGE, "", ""),
         getComputationStages("BUCK", filesystem.asView(), stubWatchmanFactory));
   }
 
@@ -166,7 +167,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     thrown.expect(ExecutionException.class);
     thrown.expectCause(IsInstanceOf.instanceOf(WatchmanQueryFailedException.class));
     transform(
-        key("", BuildTargetPattern.Kind.PACKAGE, "", ""),
+        key(CanonicalCellName.rootCell(), BuildTargetPattern.Kind.PACKAGE, "", ""),
         getComputationStages("BUCK", filesystem.asView(), stubWatchmanFactory));
   }
 

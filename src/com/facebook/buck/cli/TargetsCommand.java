@@ -31,6 +31,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -382,12 +383,15 @@ public class TargetsCommand extends AbstractCommand {
     // Parse target patterns
     ImmutableSet<BuildTargetPattern> buildTargetPatterns =
         targetPatterns.stream()
-            .map(BuildTargetPatternParser::parse)
+            .map(
+                (String pattern1) ->
+                    BuildTargetPatternParser.parse(
+                        pattern1, params.getCell().getCellNameResolver()))
             .collect(ImmutableSet.toImmutableSet());
 
     // Group all specs by cell
     // TODO: figure out how to group by with ImmutableMap
-    Map<String, List<BuildTargetPattern>> patternsPerCell =
+    Map<CanonicalCellName, List<BuildTargetPattern>> patternsPerCell =
         buildTargetPatterns.stream().collect(Collectors.groupingBy(pattern -> pattern.getCell()));
 
     // Build graph engines for each cell in provided specs and evaluate
@@ -397,13 +401,13 @@ public class TargetsCommand extends AbstractCommand {
       // For each cell, build a Graph Engine which will parse that cell's targets
       // In the returned result, the key is a cell name and the value is Graph Engine instance
       // configured for this cell
-      ImmutableMap<String, GraphTransformationEngine> enginesPerCell =
+      ImmutableMap<CanonicalCellName, GraphTransformationEngine> enginesPerCell =
           buildGraphEngineForEachCell(
               ImmutableSet.copyOf(patternsPerCell.keySet()), closer, params);
 
       // Execute graph engine for each cell sequentially
       // TODO(buck_team): parallelize it with Graph Engine
-      for (Map.Entry<String, List<BuildTargetPattern>> cellAndPatterns :
+      for (Entry<CanonicalCellName, List<BuildTargetPattern>> cellAndPatterns :
           patternsPerCell.entrySet()) {
         GraphTransformationEngine engine = enginesPerCell.get(cellAndPatterns.getKey());
 
@@ -444,18 +448,18 @@ public class TargetsCommand extends AbstractCommand {
     }
   }
 
-  private ImmutableMap<String, GraphTransformationEngine> buildGraphEngineForEachCell(
-      ImmutableSet<String> cellNames, Closer closer, CommandRunnerParams params) {
-    ImmutableMap.Builder<String, GraphTransformationEngine> builder =
+  private ImmutableMap<CanonicalCellName, GraphTransformationEngine> buildGraphEngineForEachCell(
+      ImmutableSet<CanonicalCellName> cellNames, Closer closer, CommandRunnerParams params) {
+    ImmutableMap.Builder<CanonicalCellName, GraphTransformationEngine> builder =
         ImmutableMap.builderWithExpectedSize(cellNames.size());
-    for (String cellName : cellNames) {
+    for (CanonicalCellName cellName : cellNames) {
 
       // Linear scan to find a cell that corresponds to the name. It is not supposed to have a lot
       // of cells so this is probably fine for now.
       // TODO(buck_team): add a method to resolve cell by name from the context
       Cell cell =
           params.getCell().getAllCells().stream()
-              .filter(name -> name.getCanonicalName().getName().equals(cellName))
+              .filter(name -> name.getCanonicalName().equals(cellName))
               .findFirst()
               .orElseThrow(() -> new BuckUncheckedExecutionException("Unknown cell " + cellName));
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.spec;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
@@ -50,7 +51,8 @@ public interface TargetNodeSpec {
    * Convert from a legacy {@link TargetNodeSpec} to a new-hotness {@link BuildTargetPattern}.
    *
    * <p>This conversion is imperfect and best-effort. If possible, use {@link
-   * BuildTargetPatternParser#parse(String)} to create a {@link BuildTargetPattern} instead.
+   * BuildTargetPatternParser#parse(String, CellNameResolver)} to create a {@link
+   * BuildTargetPattern} instead.
    *
    * <p>This conversion is lossy. Some attributes, such as whether test targets should be included,
    * are not reflected in the result.

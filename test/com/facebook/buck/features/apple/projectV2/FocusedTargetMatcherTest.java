@@ -18,6 +18,9 @@ package com.facebook.buck.features.apple.projectV2;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
+import com.facebook.buck.core.model.CanonicalCellName;
+import java.util.Optional;
 import org.junit.Test;
 
 public class FocusedTargetMatcherTest {
@@ -32,7 +35,9 @@ public class FocusedTargetMatcherTest {
 
   @Test
   public void testFocusSingleTarget() {
-    FocusedTargetMatcher focusTargetMatcher = new FocusedTargetMatcher("//foo:bar");
+    FocusedTargetMatcher focusTargetMatcher =
+        new FocusedTargetMatcher(
+            "//foo:bar", CanonicalCellName.rootCell(), TestCellNameResolver.forRoot());
 
     assertTrue(focusTargetMatcher.matches("//foo:bar"));
     assertFalse(focusTargetMatcher.matches(":bar"));
@@ -41,7 +46,9 @@ public class FocusedTargetMatcherTest {
 
   @Test
   public void testFocusPackageTarget() {
-    FocusedTargetMatcher focusTargetMatcher = new FocusedTargetMatcher("//foo:");
+    FocusedTargetMatcher focusTargetMatcher =
+        new FocusedTargetMatcher(
+            "//foo:", CanonicalCellName.rootCell(), TestCellNameResolver.forRoot());
 
     assertTrue(focusTargetMatcher.matches("//foo:bar"));
     assertTrue(focusTargetMatcher.matches("//foo:baz"));
@@ -51,7 +58,9 @@ public class FocusedTargetMatcherTest {
 
   @Test
   public void testFocusRecursiveTarget() {
-    FocusedTargetMatcher focusTargetMatcher = new FocusedTargetMatcher("//foo/...");
+    FocusedTargetMatcher focusTargetMatcher =
+        new FocusedTargetMatcher(
+            "//foo/...", CanonicalCellName.rootCell(), TestCellNameResolver.forRoot());
 
     assertTrue(focusTargetMatcher.matches("//foo:bar"));
     assertTrue(focusTargetMatcher.matches("//foo:baz"));
@@ -61,7 +70,11 @@ public class FocusedTargetMatcherTest {
 
   @Test
   public void testFocusRegex() {
-    FocusedTargetMatcher focusTargetMatcher = new FocusedTargetMatcher("oo");
+    FocusedTargetMatcher focusTargetMatcher =
+        new FocusedTargetMatcher(
+            "oo",
+            CanonicalCellName.unsafeOf(Optional.of("oo")),
+            TestCellNameResolver.forRoot("oo"));
 
     assertTrue(focusTargetMatcher.matches("//foo:bar"));
     assertTrue(focusTargetMatcher.matches("//foo:baz"));
@@ -71,7 +84,11 @@ public class FocusedTargetMatcherTest {
 
   @Test
   public void testCell() {
-    FocusedTargetMatcher focusTargetMatcher = new FocusedTargetMatcher("foo//bar/...", "foo");
+    FocusedTargetMatcher focusTargetMatcher =
+        new FocusedTargetMatcher(
+            "foo//bar/...",
+            CanonicalCellName.unsafeOf(Optional.of("foo")),
+            TestCellNameResolver.forRoot("foo"));
 
     assertTrue(focusTargetMatcher.matches("foo//bar:baz"));
     assertTrue(focusTargetMatcher.matches("//bar:baz"));
@@ -81,7 +98,10 @@ public class FocusedTargetMatcherTest {
   @Test
   public void testCombination() {
     FocusedTargetMatcher focusTargetMatcher =
-        new FocusedTargetMatcher("//foo:bar //foo/alpha: //foo/baz/... beta");
+        new FocusedTargetMatcher(
+            "//foo:bar //foo/alpha: //foo/baz/... beta",
+            CanonicalCellName.rootCell(),
+            TestCellNameResolver.forRoot());
 
     assertTrue(focusTargetMatcher.matches("//foo:bar"));
     assertFalse(focusTargetMatcher.matches("//foo:barbaz"));

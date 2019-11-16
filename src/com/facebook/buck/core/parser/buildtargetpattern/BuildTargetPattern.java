@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.parser.buildtargetpattern;
 
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
@@ -61,7 +62,7 @@ public abstract class BuildTargetPattern {
 
   /** Name of the cell that current pattern specifies targets in */
   @Value.Parameter
-  public abstract String getCell();
+  public abstract CanonicalCellName getCell();
 
   /** Type of the parsed pattern */
   @Value.Parameter

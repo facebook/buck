@@ -96,7 +96,7 @@ public class TargetNodeSpecTest {
 
     TargetNodeSpec spec = parseTargetNodeSpec(defaultCell, pattern);
     Assert.assertEquals(
-        BuildTargetPatternParser.parse(pattern),
+        BuildTargetPatternParser.parse(pattern, defaultCell.getCellNameResolver()),
         spec.getBuildTargetPattern(getCellOfTargetNodeSpec(defaultCell, spec)));
   }
 

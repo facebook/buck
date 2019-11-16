@@ -16,6 +16,8 @@
 
 package com.facebook.buck.multitenant.query
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver
+import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildPackage
 import com.facebook.buck.multitenant.service.BuildPackageChanges
@@ -50,7 +52,7 @@ java_binary(
 class EndToEndServiceTest {
     @Test fun doQueryWithNoLocalChanges() {
         val translator = FakeFsToBuildPackageChangeTranslator()
-        val service = createService("diamond_dependency_graph.json", translator)
+        val service = createService("diamond_dependency_graph.json", translator, TestCellNameResolver.forRoot())
 
         val fsChanges = FsChanges("608fd7bdf9")
         val depsWithNoFileChanges =
@@ -60,7 +62,7 @@ class EndToEndServiceTest {
 
     @Test fun doQueryWithLocallyAddedBuildFile() {
         val translator = FakeFsToBuildPackageChangeTranslator()
-        val service = createService("diamond_dependency_graph.json", translator)
+        val service = createService("diamond_dependency_graph.json", translator, TestCellNameResolver.forRoot())
 
         val fsChangesWithAddedBuildFile = FsChanges("608fd7bdf9", added = listOf(
             FsChange.Added(FsAgnosticPath.of("java/com/newpkg/BUCK"),
@@ -76,7 +78,7 @@ class EndToEndServiceTest {
 
     @Test fun doQueryWithLocallyModifiedBuildFile() {
         val translator = FakeFsToBuildPackageChangeTranslator()
-        val service = createService("diamond_dependency_graph.json", translator)
+        val service = createService("diamond_dependency_graph.json", translator, TestCellNameResolver.forRoot())
 
         val fsChangesWithModifiedBuildFile = FsChanges("608fd7bdf9", modified = listOf(
             FsChange.Modified(FsAgnosticPath.of("java/com/facebook/buck/BUCK"),
@@ -136,11 +138,12 @@ private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTrans
 
 private fun createService(
     resource: String,
-    changeTranslator: FsToBuildPackageChangeTranslator
+    changeTranslator: FsToBuildPackageChangeTranslator,
+    cellNameResolver: CellNameResolver
 ): MultitenantServiceStub {
     val (index, indexAppender) = IndexFactory.createIndex()
     populateIndexFromStream(indexAppender,
         EndToEndServiceTest::class.java.getResourceAsStream("data/$resource"),
         ::buckJsonToBuildPackageParser)
-    return MultitenantServiceStub(index, indexAppender, changeTranslator)
+    return MultitenantServiceStub(index, indexAppender, changeTranslator, cellNameResolver)
 }

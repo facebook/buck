@@ -4,6 +4,9 @@ kotlin_library(
         ["*.kt"],
         exclude = ["*Test.kt"],
     ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell:cell",
+    ],
     deps = [
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/sourcepath:types",
@@ -31,6 +34,8 @@ kotlin_test(
         "//src/com/facebook/buck/multitenant/service:RuleTypeFactory",
         "//src/com/facebook/buck/multitenant/service:service",
         "//src/com/facebook/buck/query:query",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/cell/nameresolver:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],

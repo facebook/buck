@@ -5127,7 +5127,8 @@ public class ProjectGeneratorTest {
         PBXTestUtils.assertHasSubgroupAndReturnIt(project.getMainGroup(), "buck-out");
     PBXGroup genGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(buckOutGroup, "gen");
 
-    BuildTargetPattern buildTargetPattern = BuildTargetPatternParser.parse(target.getName());
+    BuildTargetPattern buildTargetPattern =
+        BuildTargetPatternParser.parse(target.getName(), projectCell.getCellNameResolver());
     PBXGroup configsGroup = genGroup;
     // File should be located in the buck-out/gen/{target-path}, so iterate through the path
     // components

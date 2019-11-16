@@ -17,9 +17,13 @@ package com.facebook.buck.core.parser.buildtargetpattern;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind;
 import java.nio.file.Paths;
+import java.util.Optional;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import junitparams.naming.TestCaseName;
@@ -31,6 +35,8 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class BuildTargetPatternParserTest {
 
+  private CellNameResolver cellNameResolver = TestCellNameResolver.forRoot("a", "cell");
+
   @Rule public ExpectedException exception = ExpectedException.none();
 
   @SuppressWarnings("unused")
@@ -38,50 +44,93 @@ public class BuildTargetPatternParserTest {
     return new Object[] {
       new Object[] {
         "cell//path/to:target",
-        ImmutableBuildTargetPattern.of("cell", Kind.SINGLE, Paths.get("path/to"), "target")
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.unsafeOf(Optional.of("cell")),
+            Kind.SINGLE,
+            Paths.get("path/to"),
+            "target")
       },
       new Object[] {
         "//path/to:target",
-        ImmutableBuildTargetPattern.of("", Kind.SINGLE, Paths.get("path/to"), "target")
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.rootCell(), Kind.SINGLE, Paths.get("path/to"), "target")
       },
       new Object[] {
-        "//path/to", ImmutableBuildTargetPattern.of("", Kind.SINGLE, Paths.get("path/to"), "to")
+        "//path/to",
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.rootCell(), Kind.SINGLE, Paths.get("path/to"), "to")
       },
       new Object[] {
         "cell//path/to",
-        ImmutableBuildTargetPattern.of("cell", Kind.SINGLE, Paths.get("path/to"), "to")
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.unsafeOf(Optional.of("cell")),
+            Kind.SINGLE,
+            Paths.get("path/to"),
+            "to")
       },
       new Object[] {
-        "//root", ImmutableBuildTargetPattern.of("", Kind.SINGLE, Paths.get("root"), "root")
+        "//root",
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.rootCell(), Kind.SINGLE, Paths.get("root"), "root")
       },
       new Object[] {
-        "//:target", ImmutableBuildTargetPattern.of("", Kind.SINGLE, Paths.get(""), "target")
+        "//:target",
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.rootCell(), Kind.SINGLE, Paths.get(""), "target")
       },
       new Object[] {
         "cell//path/to/...",
-        ImmutableBuildTargetPattern.of("cell", Kind.RECURSIVE, Paths.get("path/to"), "")
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.unsafeOf(Optional.of("cell")),
+            Kind.RECURSIVE,
+            Paths.get("path/to"),
+            "")
       },
       new Object[] {
         "//path/to/...",
-        ImmutableBuildTargetPattern.of("", Kind.RECURSIVE, Paths.get("path/to"), "")
-      },
-      new Object[] {"//...", ImmutableBuildTargetPattern.of("", Kind.RECURSIVE, Paths.get(""), "")},
-      new Object[] {
-        "cell//...", ImmutableBuildTargetPattern.of("cell", Kind.RECURSIVE, Paths.get(""), "")
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.rootCell(), Kind.RECURSIVE, Paths.get("path/to"), "")
       },
       new Object[] {
-        "//path/to:", ImmutableBuildTargetPattern.of("", Kind.PACKAGE, Paths.get("path/to"), "")
+        "//...",
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.rootCell(), Kind.RECURSIVE, Paths.get(""), "")
+      },
+      new Object[] {
+        "cell//...",
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.unsafeOf(Optional.of("cell")), Kind.RECURSIVE, Paths.get(""), "")
+      },
+      new Object[] {
+        "//path/to:",
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.rootCell(), Kind.PACKAGE, Paths.get("path/to"), "")
       },
       new Object[] {
         "cell//path/to:",
-        ImmutableBuildTargetPattern.of("cell", Kind.PACKAGE, Paths.get("path/to"), "")
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.unsafeOf(Optional.of("cell")), Kind.PACKAGE, Paths.get("path/to"), "")
       },
-      new Object[] {"//:", ImmutableBuildTargetPattern.of("", Kind.PACKAGE, Paths.get(""), "")},
       new Object[] {
-        "a//b:c", ImmutableBuildTargetPattern.of("a", Kind.SINGLE, Paths.get("b"), "c")
+        "//:",
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.rootCell(), Kind.PACKAGE, Paths.get(""), "")
       },
-      new Object[] {"a//b", ImmutableBuildTargetPattern.of("a", Kind.SINGLE, Paths.get("b"), "b")},
-      new Object[] {"//a", ImmutableBuildTargetPattern.of("", Kind.SINGLE, Paths.get("a"), "a")},
+      new Object[] {
+        "a//b:c",
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.unsafeOf(Optional.of("a")), Kind.SINGLE, Paths.get("b"), "c")
+      },
+      new Object[] {
+        "a//b",
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.unsafeOf(Optional.of("a")), Kind.SINGLE, Paths.get("b"), "b")
+      },
+      new Object[] {
+        "//a",
+        ImmutableBuildTargetPattern.of(
+            CanonicalCellName.rootCell(), Kind.SINGLE, Paths.get("a"), "a")
+      },
     };
   }
 
@@ -90,7 +139,7 @@ public class BuildTargetPatternParserTest {
   @TestCaseName("parsingSucceeds({0})")
   public void parsingSucceeds(String pattern, BuildTargetPattern expected)
       throws BuildTargetParseException {
-    assertEquals(expected, BuildTargetPatternParser.parse(pattern));
+    assertEquals(expected, BuildTargetPatternParser.parse(pattern, cellNameResolver));
   }
 
   @Test
@@ -113,6 +162,6 @@ public class BuildTargetPatternParserTest {
   @TestCaseName("parsingFails({0})")
   public void parsingFails(String pattern) throws BuildTargetParseException {
     exception.expect(BuildTargetParseException.class);
-    BuildTargetPatternParser.parse(pattern);
+    BuildTargetPatternParser.parse(pattern, cellNameResolver);
   }
 }

@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.multitenant.query
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver
 import com.facebook.buck.core.exceptions.BuildTargetParseException
 import com.facebook.buck.core.model.QueryTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
@@ -61,11 +62,12 @@ class MultitenantQueryEnvironment(
     private val index: Index,
     private val generation: Generation,
     // TODO(cjhopman, sergeyb): I think this should be Map<CanonicalCellName, String>.
-    private val cellToBuildFileName: Map<String, String>
+    private val cellToBuildFileName: Map<String, String>,
+    private var cellNameResolver: CellNameResolver
 ) :
     QueryEnvironment<UnconfiguredBuildTarget> {
     private val targetEvaluator: Supplier<TargetEvaluator> = Suppliers.memoize {
-        TargetEvaluator(index, generation)
+        TargetEvaluator(index, generation, cellNameResolver)
     }
 
     /**
@@ -194,7 +196,11 @@ class MultitenantQueryEnvironment(
     }
 }
 
-private class TargetEvaluator(private val index: Index, private val generation: Generation) :
+private class TargetEvaluator(
+    private val index: Index,
+    private val generation: Generation,
+    private val cellNameResolver: CellNameResolver
+) :
     QueryEnvironment.TargetEvaluator {
     override fun getType(): QueryEnvironment.TargetEvaluator.Type =
         QueryEnvironment.TargetEvaluator.Type.IMMEDIATE
@@ -202,7 +208,7 @@ private class TargetEvaluator(private val index: Index, private val generation: 
     override fun evaluateTarget(target: String): Set<QueryTarget> {
         // TODO: We should probably also support aliases specified via .buckconfig here?
         val buildTargetPattern = try {
-            BuildTargetPatternParser.parse(target)
+            BuildTargetPatternParser.parse(target, cellNameResolver)
         } catch (e: BuildTargetParseException) {
             throw QueryException(e, "Error trying to parse '$target'")
         }

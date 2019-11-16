@@ -16,10 +16,13 @@
 
 package com.facebook.buck.core.parser.buildtargetpattern;
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /**
  * Factory that parses a string into {@link BuildTargetPattern}
@@ -50,7 +53,8 @@ public class BuildTargetPatternParser {
    *     hope to make it checked one day; this type of exception would be properly handled as user
    *     error
    */
-  public static BuildTargetPattern parse(String pattern) throws BuildTargetParseException {
+  public static BuildTargetPattern parse(String pattern, CellNameResolver cellNameResolver)
+      throws BuildTargetParseException {
 
     check(
         pattern.length() >= BuildTargetLanguageConstants.ROOT_SYMBOL.length() + 1,
@@ -141,7 +145,10 @@ public class BuildTargetPatternParser {
     // This will work on both posix and Windows and always evaluates to relative path
     Path basePath = Paths.get(path);
 
-    return ImmutableBuildTargetPattern.of(cellName, kind, basePath, targetName);
+    CanonicalCellName canonicalCellName =
+        cellNameResolver.getName(cellName.isEmpty() ? Optional.empty() : Optional.of(cellName));
+
+    return ImmutableBuildTargetPattern.of(canonicalCellName, kind, basePath, targetName);
   }
 
   private static void check(boolean condition, String pattern, String message, Object... args)
