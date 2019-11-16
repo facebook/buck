@@ -35,7 +35,7 @@ import java.util.Arrays;
  *   <li>Does not contain slash-slash
  * </ul>
  */
-public class ForwardRelativePath {
+public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
   public static final ForwardRelativePath EMPTY = new ForwardRelativePath(new String[0]);
 
   private final String[] segments;
@@ -261,5 +261,18 @@ public class ForwardRelativePath {
       hashCode = Arrays.hashCode(segments);
     }
     return hashCode;
+  }
+
+  @Override
+  public int compareTo(ForwardRelativePath that) {
+    for (int i = 0; ; ++i) {
+      if (this.segments.length == i || that.segments.length == i) {
+        return Boolean.compare(this.segments.length != i, that.segments.length != i);
+      }
+      int compare = this.segments[i].compareTo(that.segments[i]);
+      if (compare != 0) {
+        return compare;
+      }
+    }
   }
 }

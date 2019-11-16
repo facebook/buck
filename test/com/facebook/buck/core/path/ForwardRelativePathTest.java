@@ -18,6 +18,7 @@ package com.facebook.buck.core.path;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.filesystems.BuckFileSystem;
@@ -151,6 +152,27 @@ public class ForwardRelativePathTest {
             p1 + " -> " + p2,
             bfs.getPath(p1).relativize(bfs.getPath(p2)).toString(),
             ForwardRelativePath.of(p1).relativize(ForwardRelativePath.of(p2)));
+      }
+    }
+  }
+
+  @Test
+  public void compareToIsConsistentWithPaths() {
+    assertEquals(0, ForwardRelativePath.of("").compareTo(ForwardRelativePath.of("")));
+    assertTrue(ForwardRelativePath.of("a").compareTo(ForwardRelativePath.of("")) > 0);
+    assertTrue(ForwardRelativePath.of("a/b").compareTo(ForwardRelativePath.of("")) > 0);
+    assertTrue(ForwardRelativePath.of("").compareTo(ForwardRelativePath.of("a")) < 0);
+    assertTrue(ForwardRelativePath.of("").compareTo(ForwardRelativePath.of("a/b")) < 0);
+    assertTrue(ForwardRelativePath.of("a/b").compareTo(ForwardRelativePath.of("aa")) < 0);
+
+    String[] paths = new String[] {"", "ab", "ab/cd", "xy", "xy/ab"};
+
+    for (String p1 : paths) {
+      for (String p2 : paths) {
+        assertEquals(
+            p1 + " <=> " + p2,
+            Integer.signum(Paths.get(p1).compareTo(Paths.get(p2))),
+            Integer.signum(ForwardRelativePath.of(p1).compareTo(ForwardRelativePath.of(p2))));
       }
     }
   }
