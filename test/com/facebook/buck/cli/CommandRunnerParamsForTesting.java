@@ -153,7 +153,7 @@ public class CommandRunnerParamsForTesting {
         new SingletonArtifactCacheFactory(artifactCache),
         typeCoercerFactory,
         new ParsingUnconfiguredBuildTargetViewFactory(),
-        () -> UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         TargetConfigurationSerializerForTests.create(cell.getCellPathResolver()),
         TestParserFactory.create(executor, cell, knownRuleTypesProvider),
         eventBus,

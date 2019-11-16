@@ -67,7 +67,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 import org.pf4j.PluginManager;
 
@@ -99,7 +98,7 @@ public abstract class AbstractCommandRunnerParams {
   public abstract UnconfiguredBuildTargetViewFactory getUnconfiguredBuildTargetFactory();
 
   @Value.Parameter
-  protected abstract Supplier<TargetConfiguration> getTargetConfigurationSupplier();
+  public abstract TargetConfiguration getTargetConfiguration();
 
   @Value.Parameter
   public abstract TargetConfigurationSerializer getTargetConfigurationSerializer();
@@ -232,9 +231,5 @@ public abstract class AbstractCommandRunnerParams {
         .setRuleKeyConfiguration(getRuleKeyConfiguration())
         .setManifestService(manifestService)
         .build();
-  }
-
-  public TargetConfiguration getTargetConfiguration() {
-    return getTargetConfigurationSupplier().get();
   }
 }

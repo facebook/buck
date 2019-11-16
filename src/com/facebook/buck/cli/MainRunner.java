@@ -829,8 +829,8 @@ public final class MainRunner {
       DefaultCellPathResolver rootCellCellPathResolver =
           DefaultCellPathResolver.create(filesystem.getRootPath(), buckConfig.getConfig());
 
-      Supplier<TargetConfiguration> targetConfigurationSupplier =
-          createTargetConfigurationSupplier(
+      TargetConfiguration targetConfiguration =
+          createTargetConfiguration(
               command, buckConfig, buildTargetFactory, rootCellCellPathResolver);
 
       // NOTE: This new KnownUserDefinedRuleTypes is only used if BuckGlobals need to be invalidated
@@ -1439,7 +1439,7 @@ public final class MainRunner {
                         artifactCacheFactory,
                         parserAndCaches.getTypeCoercerFactory(),
                         buildTargetFactory,
-                        targetConfigurationSupplier,
+                        targetConfiguration,
                         targetConfigurationSerializer,
                         parserAndCaches.getParser(),
                         buildEventBus,
@@ -1597,7 +1597,7 @@ public final class MainRunner {
     return builder.build();
   }
 
-  private Supplier<TargetConfiguration> createTargetConfigurationSupplier(
+  private TargetConfiguration createTargetConfiguration(
       Command command,
       BuckConfig buckConfig,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
@@ -1610,7 +1610,7 @@ public final class MainRunner {
               .map(ConfigurationBuildTargets::convert)
               .<TargetConfiguration>map(ImmutableRuleBasedTargetConfiguration::of)
               .orElse(UnconfiguredTargetConfiguration.INSTANCE);
-      return () -> targetConfigurationFromBuckconfig;
+      return targetConfigurationFromBuckconfig;
     }
     // TODO(nga): provide a better message if more than one platform specified on command line
     BuildTarget targetPlatform =
@@ -1619,7 +1619,7 @@ public final class MainRunner {
                 cellPathResolver,
                 Iterators.getOnlyElement(
                     command.getTargetPlatforms().stream().distinct().iterator())));
-    return () -> ImmutableRuleBasedTargetConfiguration.of(targetPlatform);
+    return ImmutableRuleBasedTargetConfiguration.of(targetPlatform);
   }
 
   private boolean isReuseCurrentConfigPropertySet(AbstractContainerCommand command) {
