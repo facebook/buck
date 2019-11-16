@@ -90,6 +90,8 @@ public abstract class BuildTargetPattern {
    */
   @Value.Check
   protected void check() {
+    Preconditions.checkArgument(!getBasePath().isAbsolute());
+
     switch (getKind()) {
       case SINGLE:
         Preconditions.checkArgument(!getTargetName().equals(""));

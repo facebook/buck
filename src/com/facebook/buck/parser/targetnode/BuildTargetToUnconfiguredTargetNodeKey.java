@@ -21,6 +21,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -43,6 +44,11 @@ public abstract class BuildTargetToUnconfiguredTargetNodeKey
    */
   @Value.Parameter
   public abstract Path getPackagePath();
+
+  @Value.Check
+  protected void check() {
+    Preconditions.checkArgument(!getPackagePath().isAbsolute());
+  }
 
   @Override
   public ComputationIdentifier<UnconfiguredTargetNode> getIdentifier() {

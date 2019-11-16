@@ -20,6 +20,7 @@ import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationId
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -32,12 +33,17 @@ public abstract class BuildPackagePathToBuildFileManifestKey
       ClassBasedComputationIdentifier.of(
           BuildPackagePathToBuildFileManifestKey.class, BuildFileManifest.class);
 
-  @Value.Parameter
   /**
    * Path of the root of the package to parse, relative to some root (usually cell root). The
    * physical folder should contain build file.
    */
+  @Value.Parameter
   public abstract Path getPath();
+
+  @Value.Check
+  protected void check() {
+    Preconditions.checkArgument(!getPath().isAbsolute());
+  }
 
   @Override
   public ComputationIdentifier<BuildFileManifest> getIdentifier() {
