@@ -34,6 +34,7 @@ public class GlobalCliOptions {
   public static final String SKYLARK_PROFILE_LONG_ARG = "--skylark-profile-output";
   public static final String VERBOSE_LONG_ARG = "--verbose";
   public static final String VERBOSE_SHORT_ARG = "-v";
+  public static final String HOST_PLATFORM_LONG_ARG = "--host-platform";
   public static final String TARGET_PLATFORMS_LONG_ARG = "--target-platforms";
   public static final String EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG =
       "--exclude-incompatible-targets";

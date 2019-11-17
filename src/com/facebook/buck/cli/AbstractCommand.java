@@ -137,6 +137,10 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   @Option(name = GlobalCliOptions.TARGET_PLATFORMS_LONG_ARG, usage = "Target platforms.")
   private List<String> targetPlatforms = new ArrayList<>();
 
+  @Nullable
+  @Option(name = GlobalCliOptions.HOST_PLATFORM_LONG_ARG, usage = "Host platform.")
+  private String hostPlatform = null;
+
   @Override
   public LogConfigSetup getLogConfig() {
     return LogConfigSetup.DEFAULT_SETUP;
@@ -428,6 +432,13 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   @Override
   public ImmutableList<String> getTargetPlatforms() {
     return ImmutableList.copyOf(targetPlatforms);
+  }
+
+  @Override
+  public Optional<String> getHostPlatform() {
+    return hostPlatform != null && !hostPlatform.isEmpty()
+        ? Optional.of(hostPlatform)
+        : Optional.empty();
   }
 
   public boolean getExcludeIncompatibleTargets() {

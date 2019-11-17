@@ -101,6 +101,9 @@ public abstract class AbstractCommandRunnerParams {
   public abstract TargetConfiguration getTargetConfiguration();
 
   @Value.Parameter
+  public abstract TargetConfiguration getHostConfiguration();
+
+  @Value.Parameter
   public abstract TargetConfigurationSerializer getTargetConfigurationSerializer();
 
   @Value.Parameter

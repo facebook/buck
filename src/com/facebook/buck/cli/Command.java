@@ -79,6 +79,8 @@ public interface Command {
 
   ImmutableList<String> getTargetPlatforms();
 
+  Optional<String> getHostPlatform();
+
   /**
    * Creates a basic {@link ParsingContext} with some options populated from command's arguments.
    */

@@ -185,6 +185,11 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
   }
 
   @Override
+  public Optional<String> getHostPlatform() {
+    return getSubcommand().flatMap(Command::getHostPlatform);
+  }
+
+  @Override
   public ParsingContext createParsingContext(Cell cell, ListeningExecutorService executor) {
     return getSubcommand()
         .orElseThrow(() -> new IllegalArgumentException("Cannot create parsing context."))

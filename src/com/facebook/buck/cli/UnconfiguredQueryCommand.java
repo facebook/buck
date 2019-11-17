@@ -25,6 +25,7 @@ import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 
 /**
  * Buck subcommand which relies on the unconfigured target graph, whose nodes contain all the
@@ -39,6 +40,11 @@ public class UnconfiguredQueryCommand extends AbstractQueryCommand {
   @Override
   public ImmutableList<String> getTargetPlatforms() {
     return ImmutableList.of();
+  }
+
+  @Override
+  public Optional<String> getHostPlatform() {
+    return Optional.empty();
   }
 
   @Override

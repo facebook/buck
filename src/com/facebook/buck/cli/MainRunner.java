@@ -832,6 +832,9 @@ public final class MainRunner {
       TargetConfiguration targetConfiguration =
           createTargetConfiguration(
               command, buckConfig, buildTargetFactory, rootCellCellPathResolver);
+      TargetConfiguration hostConfiguration =
+          createHostConfiguration(
+              command, buckConfig, buildTargetFactory, rootCellCellPathResolver);
 
       // NOTE: This new KnownUserDefinedRuleTypes is only used if BuckGlobals need to be invalidated
       // Otherwise, everything should use the KnownUserDefinedRuleTypes object from BuckGlobals
@@ -1440,6 +1443,7 @@ public final class MainRunner {
                         parserAndCaches.getTypeCoercerFactory(),
                         buildTargetFactory,
                         targetConfiguration,
+                        hostConfiguration,
                         targetConfigurationSerializer,
                         parserAndCaches.getParser(),
                         buildEventBus,
@@ -1620,6 +1624,28 @@ public final class MainRunner {
                 Iterators.getOnlyElement(
                     command.getTargetPlatforms().stream().distinct().iterator())));
     return ImmutableRuleBasedTargetConfiguration.of(targetPlatform);
+  }
+
+  private TargetConfiguration createHostConfiguration(
+      Command command,
+      BuckConfig buckConfig,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
+      CellPathResolver cellPathResolver) {
+    if (command.getHostPlatform().isPresent()) {
+      return ImmutableRuleBasedTargetConfiguration.of(
+          ConfigurationBuildTargets.convert(
+              unconfiguredBuildTargetFactory.create(
+                  cellPathResolver, command.getHostPlatform().get())));
+    }
+
+    Optional<UnconfiguredBuildTargetView> hostPlatformFromBuckConfig =
+        buckConfig.getView(ParserConfig.class).getHostPlatform();
+    if (hostPlatformFromBuckConfig.isPresent()) {
+      return ImmutableRuleBasedTargetConfiguration.of(
+          ConfigurationBuildTargets.convert(hostPlatformFromBuckConfig.get()));
+    }
+
+    return UnconfiguredTargetConfiguration.INSTANCE;
   }
 
   private boolean isReuseCurrentConfigPropertySet(AbstractContainerCommand command) {
