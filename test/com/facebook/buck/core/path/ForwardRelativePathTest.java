@@ -16,6 +16,7 @@
 package com.facebook.buck.core.path;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -175,5 +176,20 @@ public class ForwardRelativePathTest {
             Integer.signum(ForwardRelativePath.of(p1).compareTo(ForwardRelativePath.of(p2))));
       }
     }
+  }
+
+  @Test
+  public void startsWith() {
+    assertTrue(ForwardRelativePath.of("").startsWith(ForwardRelativePath.of("")));
+    assertTrue(ForwardRelativePath.of("ab").startsWith(ForwardRelativePath.of("")));
+    assertTrue(ForwardRelativePath.of("ab/cd").startsWith(ForwardRelativePath.of("")));
+    assertTrue(ForwardRelativePath.of("ab/cd").startsWith(ForwardRelativePath.of("ab")));
+    assertTrue(ForwardRelativePath.of("ab/cd").startsWith(ForwardRelativePath.of("ab/cd")));
+
+    assertFalse(ForwardRelativePath.of("").startsWith(ForwardRelativePath.of("ab")));
+    assertFalse(ForwardRelativePath.of("").startsWith(ForwardRelativePath.of("ab/cd")));
+    assertFalse(ForwardRelativePath.of("ab").startsWith(ForwardRelativePath.of("ab/cd")));
+
+    assertFalse(ForwardRelativePath.of("ab").startsWith(ForwardRelativePath.of("a")));
   }
 }

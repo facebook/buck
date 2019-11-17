@@ -205,7 +205,7 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
       return false;
     }
 
-    for (int i = 0; i != this.segments.length; ++i) {
+    for (int i = 0; i != path.segments.length; ++i) {
       if (!this.segments[i].equals(path.segments[i])) {
         return false;
       }
