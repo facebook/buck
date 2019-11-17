@@ -159,7 +159,12 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             clients,
             metadataProvider,
             new ModernBuildRuleRemoteExecutionHelper(
-                eventBus, clients.getProtocol(), ruleFinder, rootCell, fileHasher),
+                eventBus,
+                clients.getProtocol(),
+                ruleFinder,
+                rootCell,
+                fileHasher,
+                strategyConfig.getIgnorePaths()),
             workerRequirementsProvider,
             MoreExecutors.listeningDecorator(
                 MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads())),

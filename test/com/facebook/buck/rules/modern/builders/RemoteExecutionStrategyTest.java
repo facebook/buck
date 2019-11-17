@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy.StrategyBuildResult;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
@@ -51,6 +52,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -295,6 +297,11 @@ public class RemoteExecutionStrategyTest {
     @Override
     public boolean tryLargerWorkerOnOom() {
       return false;
+    }
+
+    @Override
+    public ImmutableSet<PathMatcher> getIgnorePaths() {
+      return ImmutableSet.of();
     }
   }
 

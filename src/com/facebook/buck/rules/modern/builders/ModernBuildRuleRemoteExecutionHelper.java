@@ -30,6 +30,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
@@ -113,6 +114,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   private static final String FILE_HASH_VERIFICATION = "hash.verify";
 
   private final InputsMapBuilder inputsMapBuilder;
+  private ImmutableSet<PathMatcher> ignorePaths;
 
   /** Gets the shared path prefix of all the cells. */
   private static Path getCellPathPrefix(
@@ -192,7 +194,9 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       Protocol protocol,
       SourcePathRuleFinder ruleFinder,
       Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher) {
+      ThrowingFunction<Path, HashCode, IOException> fileHasher,
+      ImmutableSet<PathMatcher> ignorePaths) {
+    this.ignorePaths = ignorePaths;
     ImmutableSet<CanonicalCellName> cellNames = getCellNames(rootCell);
     this.cellResolver = rootCell.getCellPathResolver();
     this.cellPathPrefix = getCellPathPrefix(cellResolver, cellNames);
@@ -543,6 +547,12 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                     new FileInputsAdder.AbstractDelegate() {
                       @Override
                       public void addFile(Path path) throws IOException {
+                        for (PathMatcher matcher : ignorePaths) {
+                          if (matcher.matches(path)) {
+                            LOG.info("Ignoring input: " + path);
+                            return;
+                          }
+                        }
                         files.put(
                             cellPathPrefix.relativize(path),
                             protocol.newFileNode(

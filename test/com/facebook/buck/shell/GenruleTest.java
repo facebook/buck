@@ -79,6 +79,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
@@ -967,7 +968,12 @@ public class GenruleTest {
     Cell root = new TestCellBuilder().setFilesystem(new FakeProjectFilesystem()).build();
     ModernBuildRuleRemoteExecutionHelper mbrHelper =
         new ModernBuildRuleRemoteExecutionHelper(
-            eventBus, new GrpcProtocol(), ruleFinder, root, path -> HashCode.fromInt(0));
+            eventBus,
+            new GrpcProtocol(),
+            ruleFinder,
+            root,
+            path -> HashCode.fromInt(0),
+            ImmutableSet.of());
 
     assertFalse(mbrHelper.supportsRemoteExecution(genrule));
   }

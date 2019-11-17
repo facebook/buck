@@ -106,13 +106,6 @@ public class PerfMbrPrepareRemoteExecutionCommand
   void runPerfTest(CommandRunnerParams params, PreparedState state) throws Exception {
     Cell rootCell = params.getCell();
     Protocol protocol = new GrpcProtocol();
-    RemoteExecutionHelper helper =
-        new ModernBuildRuleRemoteExecutionHelper(
-            params.getBuckEventBus(),
-            protocol,
-            state.graphBuilder,
-            rootCell,
-            path -> HashCode.fromInt(path.hashCode()));
 
     // Use a service similar to a build. This helps with contention issues and really helps detect
     // GC issues (when using just 1 thread, the gc has a ton of resources to keep up with our
@@ -124,6 +117,14 @@ public class PerfMbrPrepareRemoteExecutionCommand
 
     RemoteExecutionConfig config = params.getBuckConfig().getView(RemoteExecutionConfig.class);
 
+    RemoteExecutionHelper helper =
+        new ModernBuildRuleRemoteExecutionHelper(
+            params.getBuckEventBus(),
+            protocol,
+            state.graphBuilder,
+            rootCell,
+            path -> HashCode.fromInt(path.hashCode()),
+            config.getStrategyConfig().getIgnorePaths());
     int maxPendingUploads = config.getStrategyConfig().getMaxConcurrentPendingUploads();
     JobLimiter uploadsLimiter = new JobLimiter(maxPendingUploads);
 

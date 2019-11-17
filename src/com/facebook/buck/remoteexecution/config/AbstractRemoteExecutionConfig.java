@@ -24,6 +24,8 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.GlobPatternMatcher;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.util.RemoteExecutionUtil;
@@ -39,6 +41,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
@@ -129,6 +132,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       "auto_re_build_projects_whitelist";
   public static final String AUTO_RE_BUILD_USERS_BLACKLIST_KEY = "auto_re_build_users_blacklist";
 
+  /** Input paths to ignore for actions */
+  public static final String INPUT_IGNORE_KEY = "inputs_ignore";
+
   /**
    * Strategy used to determine whether to enable Remote Execution automatically for the current
    * build
@@ -149,6 +155,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public static final String USE_REMOTE_EXECUTION_IF_BUCK_DISTCC_SET_PROPERTY =
       "use_remote_execution_if_buck_distcc_set";
+
+  // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
+  private static final Pattern GLOB_CHARS = Pattern.compile("[*?{\\[]");
 
   private String getAutoReExperimentPropertyKey() {
     return getValue(AUTO_RE_EXPERIMENT_PROPERTY_KEY).orElse(DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY);
@@ -344,6 +353,17 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
             .getValue(SECTION, WORKER_REQUIREMENTS_FILENAME)
             .orElse("re_worker_requirements");
 
+    ImmutableSet.Builder<PathMatcher> builder = ImmutableSet.builder();
+    getDelegate()
+        .getListWithoutComments(SECTION, INPUT_IGNORE_KEY)
+        .forEach(
+            input -> {
+              if (GLOB_CHARS.matcher(input).find()) {
+                builder.add(GlobPatternMatcher.of(input));
+              }
+            });
+    ImmutableSet<PathMatcher> ignorePaths = builder.build();
+
     boolean tryLargerWorkerOnOom =
         getDelegate().getBoolean(SECTION, TRY_LARGER_WORKER_ON_OOM).orElse(false);
 
@@ -426,6 +446,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       @Override
       public boolean tryLargerWorkerOnOom() {
         return tryLargerWorkerOnOom;
+      }
+
+      @Override
+      public ImmutableSet<PathMatcher> getIgnorePaths() {
+        return ignorePaths;
       }
     };
   }

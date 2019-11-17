@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.remoteexecution.config;
 
+import com.facebook.buck.io.filesystem.PathMatcher;
+import com.google.common.collect.ImmutableSet;
 import java.util.OptionalLong;
 
 /** Configuration for the remote execution strategy. */
@@ -40,4 +42,6 @@ public interface RemoteExecutionStrategyConfig {
   String getWorkerRequirementsFilename();
 
   boolean tryLargerWorkerOnOom();
+
+  ImmutableSet<PathMatcher> getIgnorePaths();
 }
