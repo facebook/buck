@@ -53,8 +53,8 @@ import com.facebook.buck.util.Memoizer;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.env.BuckClasspath;
-import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.function.ThrowingSupplier;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Verify;
@@ -178,7 +178,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
   private final SourcePathResolverAdapter pathResolver;
   private final CellPathResolver cellResolver;
-  private final ThrowingFunction<Path, HashCode, IOException> fileHasher;
+  private final FileHashLoader fileHasher;
   private final Serializer serializer;
   private final Map<Class<?>, Map<String, Boolean>> loggedMessagesByClass;
   private final Path cellPathPrefix;
@@ -194,7 +194,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       Protocol protocol,
       SourcePathRuleFinder ruleFinder,
       Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher,
+      FileHashLoader fileHasher,
       ImmutableSet<PathMatcher> ignorePaths) {
     this.ignorePaths = ignorePaths;
     ImmutableSet<CanonicalCellName> cellNames = getCellNames(rootCell);
@@ -487,7 +487,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                               Files.size(cellPathPrefix.resolve(path)),
                               getDigest().getHash(),
                               hash.toString(),
-                              fileHasher.apply(cellPathPrefix.resolve(path)).toString());
+                              fileHasher.get(cellPathPrefix.resolve(path)).toString());
                       if (cellPathPrefix.resolve(path).getParent() != null) {
                         Path metaInfo =
                             cellPathPrefix
@@ -557,7 +557,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                             cellPathPrefix.relativize(path),
                             protocol.newFileNode(
                                 protocol.newDigest(
-                                    fileHasher.apply(path).toString(), (int) Files.size(path)),
+                                    fileHasher.get(path).toString(), (int) Files.size(path)),
                                 path.getFileName().toString(),
                                 Files.isExecutable(path)));
                       }

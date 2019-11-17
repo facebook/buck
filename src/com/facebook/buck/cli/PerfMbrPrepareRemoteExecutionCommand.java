@@ -33,6 +33,7 @@ import com.facebook.buck.rules.modern.builders.ModernBuildRuleRemoteExecutionHel
 import com.facebook.buck.rules.modern.builders.RemoteExecutionActionInfo;
 import com.facebook.buck.rules.modern.builders.RemoteExecutionHelper;
 import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.JobLimiter;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Verify;
@@ -44,6 +45,9 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -123,7 +127,31 @@ public class PerfMbrPrepareRemoteExecutionCommand
             protocol,
             state.graphBuilder,
             rootCell,
-            path -> HashCode.fromInt(path.hashCode()),
+            new FileHashCache() {
+              @Override
+              public HashCode get(Path path) {
+                return HashCode.fromInt(path.hashCode());
+              }
+
+              @Override
+              public long getSize(Path path) throws IOException {
+                return Files.size(path);
+              }
+
+              @Override
+              public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath) {
+                return HashCode.fromInt(0);
+              }
+
+              @Override
+              public void invalidate(Path path) {}
+
+              @Override
+              public void invalidateAll() {}
+
+              @Override
+              public void set(Path path, HashCode hashCode) {}
+            },
             config.getStrategyConfig().getIgnorePaths());
     int maxPendingUploads = config.getStrategyConfig().getMaxConcurrentPendingUploads();
     JobLimiter uploadsLimiter = new JobLimiter(maxPendingUploads);

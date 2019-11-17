@@ -44,11 +44,13 @@ import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
+import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -79,7 +81,31 @@ public class ModernBuildRuleRemoteExecutionHelperTest {
             new GrpcProtocol(),
             ruleFinder,
             root,
-            path -> HashCode.fromInt(0),
+            new FileHashCache() {
+              @Override
+              public HashCode get(Path path) {
+                return HashCode.fromInt(0);
+              }
+
+              @Override
+              public long getSize(Path path) {
+                return 0;
+              }
+
+              @Override
+              public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath) {
+                return HashCode.fromInt(0);
+              }
+
+              @Override
+              public void invalidate(Path path) {}
+
+              @Override
+              public void invalidateAll() {}
+
+              @Override
+              public void set(Path path, HashCode hashCode) {}
+            },
             ImmutableSet.of());
   }
 

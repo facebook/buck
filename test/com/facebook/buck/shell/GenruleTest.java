@@ -73,6 +73,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
@@ -972,7 +973,31 @@ public class GenruleTest {
             new GrpcProtocol(),
             ruleFinder,
             root,
-            path -> HashCode.fromInt(0),
+            new FileHashCache() {
+              @Override
+              public HashCode get(Path path) {
+                return HashCode.fromInt(0);
+              }
+
+              @Override
+              public long getSize(Path path) {
+                return 0;
+              }
+
+              @Override
+              public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath) {
+                return HashCode.fromInt(0);
+              }
+
+              @Override
+              public void invalidate(Path path) {}
+
+              @Override
+              public void invalidateAll() {}
+
+              @Override
+              public void set(Path path, HashCode hashCode) {}
+            },
             ImmutableSet.of());
 
     assertFalse(mbrHelper.supportsRemoteExecution(genrule));

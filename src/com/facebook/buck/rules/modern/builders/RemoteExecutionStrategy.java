@@ -55,14 +55,13 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.JobLimiter;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.facebook.buck.util.function.ThrowingFunction;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
-import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -148,7 +147,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       RemoteExecutionClients clients,
       SourcePathRuleFinder ruleFinder,
       Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher,
+      FileHashLoader fileHasher,
       MetadataProvider metadataProvider,
       WorkerRequirementsProvider workerRequirementsProvider) {
     RemoteExecutionStrategyConfig strategyConfig = remoteExecutionConfig.getStrategyConfig();

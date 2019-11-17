@@ -97,7 +97,7 @@ public class ModernBuildRuleBuilderFactory {
                   remoteExecutionFactory.create(eventBus, metadataProvider),
                   resolver,
                   rootCell,
-                  hashLoader::get,
+                  hashLoader,
                   metadataProvider,
                   workerRequirementsProvider));
       }
