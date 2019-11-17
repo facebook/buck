@@ -454,6 +454,7 @@ public class RustCompileUtils {
 
     Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
         getRootModuleAndSources(
+            projectFilesystem,
             buildTarget,
             graphBuilder,
             cxxPlatform,
@@ -670,6 +671,7 @@ public class RustCompileUtils {
    * happens.
    */
   static Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> getRootModuleAndSources(
+      ProjectFilesystem projectFilesystem,
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
@@ -705,7 +707,14 @@ public class RustCompileUtils {
 
     Optional<String> rootModule =
         crateRoot
-            .map(name -> target.getBasePath().resolve(name).toString())
+            .map(
+                name ->
+                    target
+                        .getCellRelativeBasePath()
+                        .getPath()
+                        .toPath(projectFilesystem.getFileSystem())
+                        .resolve(name)
+                        .toString())
             .map(Optional::of)
             .orElseGet(() -> getCrateRoot(resolver, crate, defaultRoots, filenames));
 

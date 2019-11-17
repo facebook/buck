@@ -104,6 +104,7 @@ public class RustLibraryDescription
       ImmutableMap<String, BuildTarget> depsAliases) {
     Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
         RustCompileUtils.getRootModuleAndSources(
+            projectFilesystem,
             buildTarget,
             graphBuilder,
             rustPlatform.getCxxPlatform(),

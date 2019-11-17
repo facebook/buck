@@ -189,7 +189,13 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     valuesBuilder.put("cell_paths", cellsPathsStringsBuilder.build());
 
     Path defaultRuntimeResourcesPath =
-        runtimeResourcesDir.resolve(ROOT_CELL_LINK_NAME).resolve(getBuildTarget().getBasePath());
+        runtimeResourcesDir
+            .resolve(ROOT_CELL_LINK_NAME)
+            .resolve(
+                getBuildTarget()
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(runtimeResourcesDir.getFileSystem()));
 
     String defaultRuntimeResources = Escaper.escapeAsBashString(defaultRuntimeResourcesPath);
 
