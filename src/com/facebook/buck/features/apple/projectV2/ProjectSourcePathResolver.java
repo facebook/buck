@@ -100,7 +100,11 @@ public class ProjectSourcePathResolver {
     if (!src.isPresent()) {
       Path output =
           getCellPathForTarget(buildTarget)
-              .resolve(buildTarget.getBasePath())
+              .resolve(
+                  buildTarget
+                      .getCellRelativeBasePath()
+                      .getPath()
+                      .toPath(projectFilesystem.getFileSystem()))
               .resolve(buildTarget.getShortNameAndFlavorPostfix());
       return projectFilesystem.relativize(output);
     }

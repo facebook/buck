@@ -754,7 +754,7 @@ public class ProjectGenerator {
         .getBuckPaths()
         .getConfiguredBuckOut()
         .resolve("halide")
-        .resolve(target.getBasePath())
+        .resolve(target.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem()))
         .resolve(target.getShortName());
   }
 
@@ -1363,7 +1363,12 @@ public class ProjectGenerator {
     }
 
     // Assume the BUCK file path is at the the base path of this target
-    Path buckFilePath = buildTarget.getBasePath().resolve(buildFileName);
+    Path buckFilePath =
+        buildTarget
+            .getCellRelativeBasePath()
+            .getPath()
+            .toPath(projectFilesystem.getFileSystem())
+            .resolve(buildFileName);
     xcodeNativeTargetAttributesBuilder.setBuckFilePath(Optional.of(buckFilePath));
 
     Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
@@ -2053,7 +2058,8 @@ public class ProjectGenerator {
     if (infoPlistSubstitutions.containsKey(AppleBundle.CODE_SIGN_ENTITLEMENTS)) {
       // Expand SOURCE_ROOT to the target base path so we can get the full proper path to the
       // entitlements file instead of a path relative to the project.
-      String targetPath = targetNode.getBuildTarget().getBasePath().toString();
+      String targetPath =
+          targetNode.getBuildTarget().getCellRelativeBasePath().getPath().toString();
       String entitlementsPlistPath =
           InfoPlistSubstitution.replaceVariablesInString(
               "$(" + AppleBundle.CODE_SIGN_ENTITLEMENTS + ")",

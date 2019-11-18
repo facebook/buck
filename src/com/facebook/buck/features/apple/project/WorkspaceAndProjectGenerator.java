@@ -219,7 +219,11 @@ public class WorkspaceAndProjectGenerator {
               .getParent()
               .resolve(workspaceName + ".xcodeproj");
     } else {
-      outputDirectory = workspaceBuildTarget.getBasePath();
+      outputDirectory =
+          workspaceBuildTarget
+              .getCellRelativeBasePath()
+              .getPath()
+              .toPath(rootCell.getFilesystem().getFileSystem());
     }
 
     WorkspaceGenerator workspaceGenerator =
@@ -461,7 +465,12 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet<BuildTarget> cellRules =
           ImmutableSet.copyOf(projectCellToBuildTargets.get(projectCell));
       for (BuildTarget buildTarget : cellRules) {
-        projectDirectoryToBuildTargetsBuilder.put(buildTarget.getBasePath(), buildTarget);
+        projectDirectoryToBuildTargetsBuilder.put(
+            buildTarget
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPath(rootCell.getFilesystem().getFileSystem()),
+            buildTarget);
       }
       ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
           projectDirectoryToBuildTargetsBuilder.build();
@@ -926,11 +935,13 @@ public class WorkspaceAndProjectGenerator {
                         new HumanReadableException(
                             "apple_bundle rules without binary attribute are not supported."));
         Preconditions.checkState(
-            binaryTarget.getBasePath().equals(projectTargetNode.getBuildTarget().getBasePath()),
+            binaryTarget
+                .getCellRelativeBasePath()
+                .equals(projectTargetNode.getBuildTarget().getCellRelativeBasePath()),
             "apple_bundle target %s contains reference to binary %s outside base path %s",
             projectTargetNode.getBuildTarget(),
             appleBundleDescriptionArg.getBinary(),
-            projectTargetNode.getBuildTarget().getBasePath());
+            projectTargetNode.getBuildTarget().getCellRelativeBasePath());
         binaryTargetsInsideBundlesBuilder.add(binaryTarget);
       }
     }
@@ -1148,7 +1159,11 @@ public class WorkspaceAndProjectGenerator {
           pbxTargetToBuildTarget.get(project.getTargets().get(0));
       BuildTarget buildTarget = buildTargets.iterator().next();
       Path projectOutputDirectory =
-          buildTarget.getBasePath().resolve(project.getName() + ".xcodeproj");
+          buildTarget
+              .getCellRelativeBasePath()
+              .getPath()
+              .toPath(rootCell.getFilesystem().getFileSystem())
+              .resolve(project.getName() + ".xcodeproj");
 
       SchemeGenerator schemeGenerator =
           buildSchemeGenerator(

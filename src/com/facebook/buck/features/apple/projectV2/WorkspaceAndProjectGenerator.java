@@ -209,7 +209,11 @@ public class WorkspaceAndProjectGenerator {
 
     String workspaceName =
         XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(workspaceArguments);
-    Path outputDirectory = workspaceBuildTarget.getBasePath();
+    Path outputDirectory =
+        workspaceBuildTarget
+            .getCellRelativeBasePath()
+            .getPath()
+            .toPath(rootCell.getFilesystem().getFileSystem());
 
     WorkspaceGenerator workspaceGenerator =
         new WorkspaceGenerator(rootCell.getFilesystem(), workspaceName, outputDirectory);

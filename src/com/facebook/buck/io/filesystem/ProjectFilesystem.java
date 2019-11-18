@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -71,6 +72,13 @@ public interface ProjectFilesystem {
   Path resolve(Path path);
 
   Path resolve(String path);
+
+  /**
+   * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
+   */
+  default Path resolve(ForwardRelativePath path) {
+    return resolve(path.toPath(getFileSystem()));
+  }
 
   /** Construct a relative path between the project root and a given path. */
   Path relativize(Path path);

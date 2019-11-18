@@ -521,7 +521,9 @@ class XcodeNativeTargetProjectWriter {
 
     // Form relative paths to the cell root and build script
     Path targetCellPath = newCellPathResolver.getCellPath(target.getCell());
-    Path targetPath = targetCellPath.resolve(target.getBasePath());
+    Path targetPath =
+        targetCellPath.resolve(
+            target.getCellRelativeBasePath().getPath().toPath(targetCellPath.getFileSystem()));
     Path targetRelativeCellRoot = targetPath.relativize(targetCellPath);
     Path cellRootRelativeBuildScript = targetCellPath.relativize(buildScriptPath);
 

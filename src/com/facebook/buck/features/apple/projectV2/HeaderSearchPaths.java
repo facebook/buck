@@ -303,6 +303,7 @@ class HeaderSearchPaths {
               parseAllPlatformHeaders(
                   targetNode.getBuildTarget(),
                   graphBuilder.getSourcePathResolver(),
+                  projectFilesystem,
                   platformHeaders,
                   true,
                   arg))
@@ -368,6 +369,7 @@ class HeaderSearchPaths {
               parseAllPlatformHeaders(
                   targetNode.getBuildTarget(),
                   graphBuilder.getSourcePathResolver(),
+                  projectFilesystem,
                   platformHeaders,
                   false,
                   arg))
@@ -619,7 +621,7 @@ class HeaderSearchPaths {
   private Set<Path> extractIncludeDirectories(TargetNode<?> targetNode) {
     Path basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
-            .resolve(targetNode.getBuildTarget().getBasePath());
+            .resolve(targetNode.getBuildTarget().getCellRelativeBasePath().getPath());
     ImmutableSortedSet<String> includeDirectories =
         TargetNodes.castArg(targetNode, CxxLibraryDescription.CommonArg.class)
             .map(input -> input.getConstructorArg().getIncludeDirectories())
@@ -844,7 +846,7 @@ class HeaderSearchPaths {
   private Set<Path> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
     Path basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
-            .resolve(targetNode.getBuildTarget().getBasePath());
+            .resolve(targetNode.getBuildTarget().getCellRelativeBasePath().getPath());
     ImmutableSortedSet<String> includeDirectories =
         TargetNodes.castArg(targetNode, CxxLibraryDescription.CommonArg.class)
             .map(input -> input.getConstructorArg().getPublicIncludeDirectories())
@@ -857,7 +859,7 @@ class HeaderSearchPaths {
   private Set<Path> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
     Path basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
-            .resolve(targetNode.getBuildTarget().getBasePath());
+            .resolve(targetNode.getBuildTarget().getCellRelativeBasePath().getPath());
     ImmutableSortedSet<String> includeDirectories =
         TargetNodes.castArg(targetNode, CxxLibraryDescription.CommonArg.class)
             .map(input -> input.getConstructorArg().getPublicSystemIncludeDirectories())
@@ -955,6 +957,7 @@ class HeaderSearchPaths {
   private static ImmutableMap<Path, SourcePath> parseAllPlatformHeaders(
       BuildTarget buildTarget,
       SourcePathResolverAdapter sourcePathResolverAdapter,
+      ProjectFilesystem filesystem,
       ImmutableList<SourceSortedSet> platformHeaders,
       boolean export,
       CxxLibraryDescription.CommonArg args) {
@@ -969,7 +972,10 @@ class HeaderSearchPaths {
               buildTarget, sourcePathResolverAdapter, parameterName, path -> true, path -> path));
     }
     return CxxPreprocessables.resolveHeaderMap(
-        args.getHeaderNamespace().map(Paths::get).orElse(buildTarget.getBasePath()),
+        args.getHeaderNamespace()
+            .map(Paths::get)
+            .orElse(
+                buildTarget.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem())),
         parsed.build());
   }
 }

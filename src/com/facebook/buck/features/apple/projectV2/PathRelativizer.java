@@ -45,7 +45,8 @@ final class PathRelativizer {
 
   /** Path from output directory to a build target's buck file directory. */
   public Path outputPathToBuildTargetPath(BuildTarget target) {
-    return outputDirToRootRelative(target.getBasePath());
+    return outputDirToRootRelative(
+        target.getCellRelativeBasePath().getPath().toPath(outputDirectory.getFileSystem()));
   }
 
   /** Path from output directory to given path that's relative to the root directory. */
