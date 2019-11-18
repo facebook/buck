@@ -244,7 +244,11 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setDebugEnabled(executionContext.isDebugEnabled())
             .setPathToJavaAgent(options.getPathToJavaAgent())
             .setBuildId(buildId)
-            .setBuckModuleBaseSourceCodePath(getBuildTarget().getBasePath())
+            .setBuckModuleBaseSourceCodePath(
+                getBuildTarget()
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(getProjectFilesystem().getFileSystem()))
             .setStdOutLogLevel(stdOutLogLevel)
             .setStdErrLogLevel(stdErrLogLevel)
             .setRobolectricLogPath(robolectricLogPath)

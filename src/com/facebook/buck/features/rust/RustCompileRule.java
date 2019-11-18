@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
@@ -231,7 +232,12 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                           ent -> {
                             Path path;
                             if (ent.getValue().isPresent()) {
-                              path = buildTarget.getBasePath().resolve(ent.getValue().get());
+                              path =
+                                  buildTarget
+                                      .getCellRelativeBasePath()
+                                      .getPath()
+                                      .toPath(filesystem.getFileSystem())
+                                      .resolve(ent.getValue().get());
                             } else {
                               path = resolver.getRelativePath(ent.getKey());
                             }
@@ -315,7 +321,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                       environment, v -> Arg.stringify(v, buildContext.getSourcePathResolver())));
 
               Path root = filesystem.getRootPath();
-              Path basePath = buildTarget.getBasePath();
+              ForwardRelativePath basePath = buildTarget.getCellRelativeBasePath().getPath();
 
               // These need to be set as absolute paths - the intended use
               // is within an `include!(concat!(env!("..."), "...")`
@@ -325,7 +331,8 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
               env.put("RUSTC_BUILD_CONTAINER", root.resolve(scratchDir) + "/");
               env.put(
                   "RUSTC_BUILD_CONTAINER_BASE_PATH",
-                  root.resolve(scratchDir.resolve(basePath)) + "/");
+                  root.resolve(scratchDir.resolve(basePath.toPath(scratchDir.getFileSystem())))
+                      + "/");
               Impl.this.xcrunSdkpath.ifPresent((path) -> env.put("SDKROOT", path.toString()));
               return env.build();
             }

@@ -703,7 +703,14 @@ public class RustCompileUtils {
             srcs.stream()
                 .map(src -> CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, src))
                 .map(sp -> resolver.getRelativePath(sp)),
-            mappedSrcs.values().stream().map(path -> target.getBasePath().resolve(path)));
+            mappedSrcs.values().stream()
+                .map(
+                    path ->
+                        target
+                            .getCellRelativeBasePath()
+                            .getPath()
+                            .toPath(projectFilesystem.getFileSystem())
+                            .resolve(path)));
 
     Optional<String> rootModule =
         crateRoot

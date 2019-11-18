@@ -94,7 +94,9 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
           resource =
               PathFormatter.pathWithUnixSeparators(
                   underlyingTarget
-                      .getBasePath()
+                      .getCellRelativeBasePath()
+                      .getPath()
+                      .toPath(filesystem.getFileSystem())
                       .resolve(((HasOutputName) underlyingRule.get()).getOutputName()));
         } else {
           Path genOutputParent =
@@ -111,7 +113,11 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
               underlyingTarget.getFullyQualifiedName());
           resource =
               PathFormatter.pathWithUnixSeparators(
-                  underlyingTarget.getBasePath().resolve(outputPath.get()));
+                  underlyingTarget
+                      .getCellRelativeBasePath()
+                      .getPath()
+                      .toPath(filesystem.getFileSystem())
+                      .resolve(outputPath.get()));
         }
       } else {
         resource = PathFormatter.pathWithUnixSeparators(relativePathToResource);
