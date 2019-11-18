@@ -19,11 +19,10 @@ import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.ImmutableCanonicalCellName;
 import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
 
 public class TestCellNameResolver extends DefaultCellNameResolver {
-  private final Map<Optional<String>, CanonicalCellName> mapping;
+  private final ImmutableMap<Optional<String>, CanonicalCellName> mapping;
 
   public TestCellNameResolver(ImmutableMap<Optional<String>, CanonicalCellName> mapping) {
     this.mapping = mapping;
@@ -68,7 +67,7 @@ public class TestCellNameResolver extends DefaultCellNameResolver {
   }
 
   @Override
-  public Map<Optional<String>, CanonicalCellName> getKnownCells() {
+  public ImmutableMap<Optional<String>, CanonicalCellName> getKnownCells() {
     return mapping;
   }
 }

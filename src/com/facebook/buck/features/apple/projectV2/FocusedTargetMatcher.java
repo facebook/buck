@@ -26,9 +26,9 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -59,7 +59,7 @@ public class FocusedTargetMatcher {
             }
 
             @Override
-            public Map<Optional<String>, CanonicalCellName> getKnownCells() {
+            public ImmutableMap<Optional<String>, CanonicalCellName> getKnownCells() {
               throw new AssertionError("unreachable");
             }
           });

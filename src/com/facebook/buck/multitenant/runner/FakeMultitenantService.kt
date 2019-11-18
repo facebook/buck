@@ -25,6 +25,7 @@ import com.facebook.buck.multitenant.service.FsChanges
 import com.facebook.buck.multitenant.service.Index
 import com.facebook.buck.multitenant.service.IndexAppender
 import com.facebook.buck.query.QueryNormalizer
+import com.google.common.collect.ImmutableMap
 import java.nio.file.Path
 import java.util.Optional
 
@@ -67,7 +68,7 @@ class FakeMultitenantService(
                 TODO("not implemented")
             }
 
-            override fun getKnownCells(): MutableMap<Optional<String>, CanonicalCellName> {
+            override fun getKnownCells(): ImmutableMap<Optional<String>, CanonicalCellName>? {
                 TODO("not implemented")
             }
         })
