@@ -19,6 +19,7 @@ package com.facebook.buck.remoteexecution;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize;
@@ -65,12 +66,17 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
 
   private static final String NO_AUXILIARY_BUILD_TAG = "";
 
+  private final ProjectFilesystem projectFilesystem;
   private final String workerRequirementsFilename;
   private final boolean tryLargerWorkerOnOom;
   private final Cache<Path, Map<ImmutableActionTags, WorkerRequirements>> cache;
 
   public FileBasedWorkerRequirementsProvider(
-      String workerRequirementsFilename, boolean tryLargerWorkerOnOom, int cacheSize) {
+      ProjectFilesystem projectFilesystem,
+      String workerRequirementsFilename,
+      boolean tryLargerWorkerOnOom,
+      int cacheSize) {
+    this.projectFilesystem = projectFilesystem;
     this.workerRequirementsFilename = workerRequirementsFilename;
     this.tryLargerWorkerOnOom = tryLargerWorkerOnOom;
     cache =
@@ -101,7 +107,9 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
    */
   @Override
   public WorkerRequirements resolveRequirements(BuildTarget target, String auxiliaryBuildTag) {
-    Path filepath = target.getBasePath().resolve(workerRequirementsFilename);
+    // TODO(nga): must not ignore cell path
+    Path filepath =
+        projectFilesystem.resolve(target.getBasePath()).resolve(workerRequirementsFilename);
     if (!Files.exists(filepath)) {
       return resolveDefault();
     }

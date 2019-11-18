@@ -16,6 +16,7 @@ java_test(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/json:json",
         "//test/com/facebook/buck/core/config:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//third-party/java/easymock:easymock",
         "//third-party/java/junit:junit",
     ],

@@ -16,6 +16,8 @@
 package com.facebook.buck.remoteexecution;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize;
 import com.google.common.base.Charsets;
@@ -35,7 +37,8 @@ import org.junit.Test;
 public class FileBasedWorkerRequirementsProviderTest {
   private static final String FILENAME = "file.txt";
   private static final String SHORT_NAME = "name";
-  private static final String FULL_NAME = "//fullName:" + SHORT_NAME;
+  private static final String BASE_DIR = "fullName";
+  private static final String FULL_NAME = "//" + BASE_DIR + ":" + SHORT_NAME;
   private static final String OTHER_SHORT_NAME = "other_rule";
 
   private static final String ACTION_TAGS =
@@ -52,18 +55,23 @@ public class FileBasedWorkerRequirementsProviderTest {
   private static final String SIZE_LARGE = "{\"workerSize\": \"LARGE\"}";
   private static final String SIZE_UNKNOWN = "{\"workerSize\": \"UNKNOWN\"}";
 
+  private ProjectFilesystem projectFilesystem;
   private BuildTarget buildTarget;
   private File tmp;
 
   @Before
   public void setUp() {
-    tmp = Files.createTempDir();
+    projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
+    tmp = projectFilesystem.resolve(BASE_DIR).toFile();
+    Assert.assertTrue(tmp.mkdir());
 
     buildTarget = EasyMock.createMock(BuildTarget.class);
 
     EasyMock.expect(buildTarget.getFullyQualifiedName()).andReturn(FULL_NAME).anyTimes();
     EasyMock.expect(buildTarget.getShortNameAndFlavorPostfix()).andReturn(SHORT_NAME).anyTimes();
-    EasyMock.expect(buildTarget.getBasePath()).andReturn(tmp.toPath()).anyTimes();
+    EasyMock.expect(buildTarget.getBasePath())
+        .andReturn(projectFilesystem.getPath(BASE_DIR))
+        .anyTimes();
 
     EasyMock.replay(buildTarget);
   }
@@ -71,14 +79,14 @@ public class FileBasedWorkerRequirementsProviderTest {
   @Test
   public void testNoFileExistShouldReturnDefault() {
     WorkerRequirementsProvider provider =
-        new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
+        new FileBasedWorkerRequirementsProvider(projectFilesystem, FILENAME, true, 1000);
     WorkerRequirements workerRequirements =
         provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(
         FileBasedWorkerRequirementsProvider.RETRY_ON_OOM_DEFAULT, workerRequirements);
 
-    provider = new FileBasedWorkerRequirementsProvider(FILENAME, false, 1000);
+    provider = new FileBasedWorkerRequirementsProvider(projectFilesystem, FILENAME, false, 1000);
     workerRequirements = provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(
@@ -91,7 +99,7 @@ public class FileBasedWorkerRequirementsProviderTest {
     Assert.assertTrue(file.createNewFile());
 
     WorkerRequirementsProvider provider =
-        new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
+        new FileBasedWorkerRequirementsProvider(projectFilesystem, FILENAME, true, 1000);
     WorkerRequirements workerRequirements =
         provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
@@ -106,7 +114,7 @@ public class FileBasedWorkerRequirementsProviderTest {
     Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND).write("invalid json");
 
     WorkerRequirementsProvider provider =
-        new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
+        new FileBasedWorkerRequirementsProvider(projectFilesystem, FILENAME, true, 1000);
     WorkerRequirements workerRequirements =
         provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
@@ -122,7 +130,7 @@ public class FileBasedWorkerRequirementsProviderTest {
         .write(String.format("{%s: %s}", OTHER_RULE_ACTION_TAGS, SIZE_SMALL));
 
     WorkerRequirementsProvider provider =
-        new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
+        new FileBasedWorkerRequirementsProvider(projectFilesystem, FILENAME, true, 1000);
     WorkerRequirements workerRequirements =
         provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
@@ -140,7 +148,7 @@ public class FileBasedWorkerRequirementsProviderTest {
                 "{%s: %s, %s: %s}", OTHER_RULE_ACTION_TAGS, SIZE_SMALL, ACTION_TAGS, SIZE_LARGE));
 
     WorkerRequirementsProvider provider =
-        new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
+        new FileBasedWorkerRequirementsProvider(projectFilesystem, FILENAME, true, 1000);
     WorkerRequirements workerRequirements =
         provider.resolveRequirements(buildTarget, AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
@@ -158,7 +166,7 @@ public class FileBasedWorkerRequirementsProviderTest {
                 OTHER_RULE_ACTION_TAGS, SIZE_SMALL, ACTION_TAGS_NO_AUX_TAG, SIZE_LARGE));
 
     WorkerRequirementsProvider provider =
-        new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
+        new FileBasedWorkerRequirementsProvider(projectFilesystem, FILENAME, true, 1000);
     WorkerRequirements workerRequirements =
         provider.resolveRequirements(buildTarget, AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
@@ -175,7 +183,7 @@ public class FileBasedWorkerRequirementsProviderTest {
                 "{%s: %s, %s: %s}", OTHER_RULE_ACTION_TAGS, SIZE_SMALL, ACTION_TAGS, SIZE_UNKNOWN));
 
     WorkerRequirementsProvider provider =
-        new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
+        new FileBasedWorkerRequirementsProvider(projectFilesystem, FILENAME, true, 1000);
     WorkerRequirements workerRequirements =
         provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
@@ -194,7 +202,7 @@ public class FileBasedWorkerRequirementsProviderTest {
                 "{\"%s\": %s, \"%s\": %s}", OTHER_SHORT_NAME, SIZE_SMALL, SHORT_NAME, SIZE_LARGE));
 
     WorkerRequirementsProvider provider =
-        new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
+        new FileBasedWorkerRequirementsProvider(projectFilesystem, FILENAME, true, 1000);
     WorkerRequirements workerRequirements =
         provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
@@ -212,7 +220,7 @@ public class FileBasedWorkerRequirementsProviderTest {
                 OTHER_SHORT_NAME, SIZE_SMALL, SHORT_NAME, SIZE_UNKNOWN));
 
     WorkerRequirementsProvider provider =
-        new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
+        new FileBasedWorkerRequirementsProvider(projectFilesystem, FILENAME, true, 1000);
     WorkerRequirements workerRequirements =
         provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);

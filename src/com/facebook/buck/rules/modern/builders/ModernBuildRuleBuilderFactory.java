@@ -65,6 +65,7 @@ public class ModernBuildRuleBuilderFactory {
       strategy = config.getBuildStrategy(remoteExecutionAutoEnabled, forceDisableRemoteExecution);
       WorkerRequirementsProvider workerRequirementsProvider =
           new FileBasedWorkerRequirementsProvider(
+              rootCell.getFilesystem(),
               remoteExecutionConfig.getStrategyConfig().getWorkerRequirementsFilename(),
               remoteExecutionConfig.getStrategyConfig().tryLargerWorkerOnOom(),
               WORKER_REQUIREMENTS_PROVIDER_DEFAULT_MAX_CACHE_SIZE);
