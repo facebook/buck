@@ -190,6 +190,8 @@ public class AndroidInstrumentationApkDescription
             buildTarget.getTargetConfiguration(),
             AndroidPlatformTarget.class);
 
+    String dexTool =
+        AndroidBinaryGraphEnhancerFactory.chooseDexTool(args.getDexTool(), javaBuckConfig);
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             toolchainProvider,
@@ -214,7 +216,7 @@ public class AndroidInstrumentationApkDescription
             PackageType.INSTRUMENTED,
             apkUnderTest.getCpuFilters(),
             /* shouldBuildStringSourceMap */ false,
-            /* shouldPreDex */ false,
+            /* shouldPreDex */ dexTool == DxStep.D8,
             DexSplitMode.NO_SPLIT,
             buildTargetsToExclude.build(),
             resourcesToExclude,
@@ -255,7 +257,7 @@ public class AndroidInstrumentationApkDescription
             cxxBuckConfig,
             new APKModuleGraph(context.getTargetGraph(), buildTarget),
             dxConfig,
-            AndroidBinaryGraphEnhancerFactory.chooseDexTool(args.getDexTool(), javaBuckConfig),
+            dexTool,
             /* postFilterResourcesCommands */ Optional.empty(),
             nonPreDexedDexBuildableArgs,
             createRulesToExcludeFromDexSupplier(
