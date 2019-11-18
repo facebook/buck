@@ -228,7 +228,10 @@ public class WorkspaceAndProjectGenerator {
 
     WorkspaceGenerator workspaceGenerator =
         new WorkspaceGenerator(
-            rootCell.getFilesystem(), combinedProject ? "project" : workspaceName, outputDirectory);
+            rootCell.getFilesystem(),
+            combinedProject ? "project" : workspaceName,
+            outputDirectory,
+            appleConfig);
 
     ImmutableMap.Builder<String, XcodeWorkspaceConfigDescriptionArg> schemeConfigsBuilder =
         ImmutableMap.builder();
