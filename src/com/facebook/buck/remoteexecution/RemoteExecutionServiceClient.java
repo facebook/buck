@@ -22,6 +22,7 @@ import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.List;
@@ -33,6 +34,8 @@ import java.util.Optional;
 public interface RemoteExecutionServiceClient {
   /** Represents the result of remote execution. */
   interface ExecutionResult {
+    RemoteExecutionMetadata getRemoteExecutionMetadata();
+
     List<OutputDirectory> getOutputDirectories();
 
     List<OutputFile> getOutputFiles();

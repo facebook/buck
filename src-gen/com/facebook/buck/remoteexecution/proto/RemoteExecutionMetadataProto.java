@@ -67,6 +67,11 @@ public final class RemoteExecutionMetadataProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_facebook_remote_execution_ClientActionInfo_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_facebook_remote_execution_ExecutedActionInfo_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
     internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -105,24 +110,29 @@ public final class RemoteExecutionMetadataProto {
       "XLARGE\020\003\022\013\n\007XXLARGE\020\004\"j\n\020ClientActionInf" +
       "o\022\022\n\nrepository\030\001 \001(\t\022\025\n\rschedule_type\030\002" +
       " \001(\t\022\030\n\020re_session_label\030\003 \001(\t\022\021\n\ttenant" +
-      "_id\030\004 \001(\t\"\341\004\n\027RemoteExecutionMetadata\022=\n" +
-      "\rre_session_id\030\001 \001(\0132&.facebook.remote_e" +
-      "xecution.RESessionID\0226\n\tbuck_info\030\002 \001(\0132" +
-      "#.facebook.remote_execution.BuckInfo\0228\n\n" +
-      "trace_info\030\003 \001(\0132$.facebook.remote_execu" +
-      "tion.TraceInfo\022<\n\014creator_info\030\004 \001(\0132&.f" +
-      "acebook.remote_execution.CreatorInfo\022C\n\013" +
-      "engine_info\030\005 \001(\0132..facebook.remote_exec" +
-      "ution.ExecutionEngineInfo\022:\n\013worker_info" +
-      "\030\006 \001(\0132%.facebook.remote_execution.Worke" +
-      "rInfo\022A\n\017cas_client_info\030\007 \001(\0132(.faceboo" +
-      "k.remote_execution.CasClientInfo\022J\n\023work" +
-      "er_requirements\030\010 \001(\0132-.facebook.remote_" +
-      "execution.WorkerRequirements\022G\n\022client_a" +
-      "ction_info\030\n \001(\0132+.facebook.remote_execu" +
-      "tion.ClientActionInfoBI\n\'com.facebook.bu" +
-      "ck.remoteexecution.protoB\034RemoteExecutio" +
-      "nMetadataProtoP\001b\006proto3"
+      "_id\030\004 \001(\t\"k\n\022ExecutedActionInfo\022\033\n\023cpu_s" +
+      "tat_usage_usec\030\001 \001(\003\022\032\n\022cpu_stat_user_us" +
+      "ec\030\002 \001(\003\022\034\n\024cpu_stat_system_usec\030\003 \001(\003\"\256" +
+      "\005\n\027RemoteExecutionMetadata\022=\n\rre_session" +
+      "_id\030\001 \001(\0132&.facebook.remote_execution.RE" +
+      "SessionID\0226\n\tbuck_info\030\002 \001(\0132#.facebook." +
+      "remote_execution.BuckInfo\0228\n\ntrace_info\030" +
+      "\003 \001(\0132$.facebook.remote_execution.TraceI" +
+      "nfo\022<\n\014creator_info\030\004 \001(\0132&.facebook.rem" +
+      "ote_execution.CreatorInfo\022C\n\013engine_info" +
+      "\030\005 \001(\0132..facebook.remote_execution.Execu" +
+      "tionEngineInfo\022:\n\013worker_info\030\006 \001(\0132%.fa" +
+      "cebook.remote_execution.WorkerInfo\022A\n\017ca" +
+      "s_client_info\030\007 \001(\0132(.facebook.remote_ex" +
+      "ecution.CasClientInfo\022J\n\023worker_requirem" +
+      "ents\030\010 \001(\0132-.facebook.remote_execution.W" +
+      "orkerRequirements\022G\n\022client_action_info\030" +
+      "\n \001(\0132+.facebook.remote_execution.Client" +
+      "ActionInfo\022K\n\024executed_action_info\030\013 \001(\013" +
+      "2-.facebook.remote_execution.ExecutedAct" +
+      "ionInfoBI\n\'com.facebook.buck.remoteexecu" +
+      "tion.protoB\034RemoteExecutionMetadataProto" +
+      "P\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -196,12 +206,18 @@ public final class RemoteExecutionMetadataProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_ClientActionInfo_descriptor,
         new java.lang.String[] { "Repository", "ScheduleType", "ReSessionLabel", "TenantId", });
-    internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor =
+    internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor =
       getDescriptor().getMessageTypes().get(10);
+    internal_static_facebook_remote_execution_ExecutedActionInfo_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor,
+        new java.lang.String[] { "CpuStatUsageUsec", "CpuStatUserUsec", "CpuStatSystemUsec", });
+    internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor =
+      getDescriptor().getMessageTypes().get(11);
     internal_static_facebook_remote_execution_RemoteExecutionMetadata_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor,
-        new java.lang.String[] { "ReSessionId", "BuckInfo", "TraceInfo", "CreatorInfo", "EngineInfo", "WorkerInfo", "CasClientInfo", "WorkerRequirements", "ClientActionInfo", });
+        new java.lang.String[] { "ReSessionId", "BuckInfo", "TraceInfo", "CreatorInfo", "EngineInfo", "WorkerInfo", "CasClientInfo", "WorkerRequirements", "ClientActionInfo", "ExecutedActionInfo", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -137,4 +137,17 @@ public interface RemoteExecutionMetadataOrBuilder extends
    * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
    */
   com.facebook.buck.remoteexecution.proto.ClientActionInfoOrBuilder getClientActionInfoOrBuilder();
+
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+   */
+  boolean hasExecutedActionInfo();
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ExecutedActionInfo getExecutedActionInfo();
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ExecutedActionInfoOrBuilder getExecutedActionInfoOrBuilder();
 }

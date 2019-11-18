@@ -121,6 +121,13 @@ message ClientActionInfo {
   string tenant_id = 4;
 }
 
+// Executed action information
+message ExecutedActionInfo {
+  int64 cpu_stat_usage_usec = 1;
+  int64 cpu_stat_user_usec = 2;
+  int64 cpu_stat_system_usec = 3;
+}
+
 // This is propagated in GRPC header "re-metadata-bin".
 message RemoteExecutionMetadata {
   RESessionID re_session_id = 1;
@@ -133,4 +140,5 @@ message RemoteExecutionMetadata {
   WorkerRequirements worker_requirements = 8;
   // Do not use index 9 - reserved for server side.
   ClientActionInfo client_action_info = 10;
+  ExecutedActionInfo executed_action_info = 11;
 }

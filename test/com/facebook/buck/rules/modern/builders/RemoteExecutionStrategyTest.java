@@ -45,6 +45,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.NoOpModernBuildRule;
@@ -312,6 +313,11 @@ public class RemoteExecutionStrategyTest {
         public ListenableFuture<ExecutionResult> getResult() {
           return Futures.immediateFuture(
               new ExecutionResult() {
+                @Override
+                public RemoteExecutionMetadata getRemoteExecutionMetadata() {
+                  return RemoteExecutionMetadata.newBuilder().build();
+                }
+
                 @Override
                 public List<OutputDirectory> getOutputDirectories() {
                   return ImmutableList.of();

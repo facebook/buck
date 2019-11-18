@@ -249,6 +249,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   Optional.ofNullable(actionInfo.get())
                       .map(RemoteExecutionActionInfo::getActionDigest),
                   Optional.empty(),
+                  Optional.empty(),
                   Optional.of(ruleContext.timeMsInState),
                   Optional.of(ruleContext.timeMsAfterState),
                   Status.UNKNOWN);
@@ -264,6 +265,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   Optional.ofNullable(actionInfo.get())
                       .map(RemoteExecutionActionInfo::getActionDigest),
                   Optional.ofNullable(executionInfo.get()).map(ExecutionResult::getActionMetadata),
+                  Optional.ofNullable(executionInfo.get())
+                      .map(ExecutionResult::getRemoteExecutionMetadata),
                   Optional.of(ruleContext.timeMsInState),
                   Optional.of(ruleContext.timeMsAfterState),
                   Status.OK);
@@ -278,6 +281,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 rule,
                 Optional.ofNullable(actionInfo.get())
                     .map(RemoteExecutionActionInfo::getActionDigest),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.of(ruleContext.timeMsInState),
                 Optional.of(ruleContext.timeMsAfterState),

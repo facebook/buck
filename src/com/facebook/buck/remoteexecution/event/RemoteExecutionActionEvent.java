@@ -26,6 +26,7 @@ import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.Scope;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -88,6 +89,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       BuildRule buildRule,
       Optional<Digest> actionDigest,
       Optional<ExecutedActionMetadata> executedActionMetadata,
+      Optional<RemoteExecutionMetadata> remoteExecutionMetadata,
       Optional<Map<State, Long>> stateMetadata,
       Optional<Map<State, Long>> stateWaitingMetadata,
       Status grpcStatus) {
@@ -97,6 +99,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
             buildRule,
             actionDigest,
             executedActionMetadata,
+            remoteExecutionMetadata,
             stateMetadata,
             stateWaitingMetadata,
             grpcStatus);
@@ -119,6 +122,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     private final BuildRule buildRule;
     private final Optional<Digest> actionDigest;
     private final Optional<ExecutedActionMetadata> executedActionMetadata;
+    private final Optional<RemoteExecutionMetadata> remoteExecutionMetadata;
     private final Optional<Map<State, Long>> stateMetadata;
     private final Optional<Map<State, Long>> stateWaitingMetadata;
     private final Status grpcStatus;
@@ -129,6 +133,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
         BuildRule buildRule,
         Optional<Digest> actionDigest,
         Optional<ExecutedActionMetadata> executedActionMetadata,
+        Optional<RemoteExecutionMetadata> remoteExecutionMetadata,
         Optional<Map<State, Long>> stateMetadata,
         Optional<Map<State, Long>> stateWaitingMetadata,
         Status grpcStatus) {
@@ -141,6 +146,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       this.buildRule = buildRule;
       this.actionDigest = actionDigest;
       this.executedActionMetadata = executedActionMetadata;
+      this.remoteExecutionMetadata = remoteExecutionMetadata;
       this.stateMetadata = stateMetadata;
       this.stateWaitingMetadata = stateWaitingMetadata;
       this.grpcStatus = grpcStatus;
@@ -169,6 +175,11 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     @JsonIgnore
     public Optional<ExecutedActionMetadata> getExecutedActionMetadata() {
       return executedActionMetadata;
+    }
+
+    @JsonIgnore
+    public Optional<RemoteExecutionMetadata> getRemoteExecutionMetadata() {
+      return remoteExecutionMetadata;
     }
 
     @JsonIgnore

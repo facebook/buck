@@ -71,14 +71,26 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
               statsProvider.getCasDownloads(),
               prettyPrintSize(statsProvider.getCasDownloadSizeBytes()));
       lines.add(casLine);
-    } else if (statsProvider.getRemoteCpuTimeMs() > 0) {
-      long remoteMs = statsProvider.getRemoteCpuTimeMs();
-      long minutes = TimeUnit.MILLISECONDS.toMinutes(remoteMs);
+
+      long remoteCpuMs = statsProvider.getRemoteCpuTimeMs();
+      long minutesCpu = TimeUnit.MILLISECONDS.toMinutes(remoteCpuMs);
+      String metricsLine =
+          String.format(
+              "[RE] Metrics: CPU %d:%02d minutes",
+              minutesCpu,
+              TimeUnit.MILLISECONDS.toSeconds(remoteCpuMs)
+                  - TimeUnit.MINUTES.toSeconds(minutesCpu));
+      lines.add(metricsLine);
+    }
+    if (statsProvider.getTotalRemoteTimeMs() > 0) {
+      long remoteTotalMs = statsProvider.getTotalRemoteTimeMs();
+      long minutesTotal = TimeUnit.MILLISECONDS.toMinutes(remoteTotalMs);
       lines.add(
           String.format(
-              "Building with Remote Execution [RE]. Used %d:%02d minutes of distributed CPU time.",
-              minutes,
-              TimeUnit.MILLISECONDS.toSeconds(remoteMs) - TimeUnit.MINUTES.toSeconds(minutes)));
+              "Building with Remote Execution [RE]. Used %d:%02d minutes of total time.",
+              minutesTotal,
+              TimeUnit.MILLISECONDS.toSeconds(remoteTotalMs)
+                  - TimeUnit.MINUTES.toSeconds(minutesTotal)));
       int waitingActions = 0;
       for (State state : RemoteExecutionActionEvent.State.values()) {
         if (!RemoteExecutionActionEvent.isTerminalState(state)) {

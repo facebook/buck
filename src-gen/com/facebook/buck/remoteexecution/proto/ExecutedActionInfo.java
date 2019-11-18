@@ -5,20 +5,26 @@
 package com.facebook.buck.remoteexecution.proto;
 
 /**
- * Protobuf type {@code facebook.remote_execution.CasClientInfo}
+ * <pre>
+ * Executed action information
+ * </pre>
+ *
+ * Protobuf type {@code facebook.remote_execution.ExecutedActionInfo}
  */
-@javax.annotation.Generated(value="protoc", comments="annotations:CasClientInfo.java.pb.meta")
-public  final class CasClientInfo extends
+@javax.annotation.Generated(value="protoc", comments="annotations:ExecutedActionInfo.java.pb.meta")
+public  final class ExecutedActionInfo extends
     com.google.protobuf.GeneratedMessageV3 implements
-    // @@protoc_insertion_point(message_implements:facebook.remote_execution.CasClientInfo)
-    CasClientInfoOrBuilder {
+    // @@protoc_insertion_point(message_implements:facebook.remote_execution.ExecutedActionInfo)
+    ExecutedActionInfoOrBuilder {
 private static final long serialVersionUID = 0L;
-  // Use CasClientInfo.newBuilder() to construct.
-  private CasClientInfo(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+  // Use ExecutedActionInfo.newBuilder() to construct.
+  private ExecutedActionInfo(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private CasClientInfo() {
-    name_ = "";
+  private ExecutedActionInfo() {
+    cpuStatUsageUsec_ = 0L;
+    cpuStatUserUsec_ = 0L;
+    cpuStatSystemUsec_ = 0L;
   }
 
   @java.lang.Override
@@ -26,7 +32,7 @@ private static final long serialVersionUID = 0L;
   getUnknownFields() {
     return this.unknownFields;
   }
-  private CasClientInfo(
+  private ExecutedActionInfo(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -45,10 +51,19 @@ private static final long serialVersionUID = 0L;
           case 0:
             done = true;
             break;
-          case 10: {
-            java.lang.String s = input.readStringRequireUtf8();
+          case 8: {
 
-            name_ = s;
+            cpuStatUsageUsec_ = input.readInt64();
+            break;
+          }
+          case 16: {
+
+            cpuStatUserUsec_ = input.readInt64();
+            break;
+          }
+          case 24: {
+
+            cpuStatSystemUsec_ = input.readInt64();
             break;
           }
           default: {
@@ -72,57 +87,42 @@ private static final long serialVersionUID = 0L;
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CasClientInfo_descriptor;
+    return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor;
   }
 
   @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CasClientInfo_fieldAccessorTable
+    return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_ExecutedActionInfo_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            com.facebook.buck.remoteexecution.proto.CasClientInfo.class, com.facebook.buck.remoteexecution.proto.CasClientInfo.Builder.class);
+            com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.class, com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.Builder.class);
   }
 
-  public static final int NAME_FIELD_NUMBER = 1;
-  private volatile java.lang.Object name_;
+  public static final int CPU_STAT_USAGE_USEC_FIELD_NUMBER = 1;
+  private long cpuStatUsageUsec_;
   /**
-   * <pre>
-   * Name of the tool reaching the CAS, eg, buck, worker, engine, ...
-   * </pre>
-   *
-   * <code>string name = 1;</code>
+   * <code>int64 cpu_stat_usage_usec = 1;</code>
    */
-  public java.lang.String getName() {
-    java.lang.Object ref = name_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = 
-          (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      name_ = s;
-      return s;
-    }
+  public long getCpuStatUsageUsec() {
+    return cpuStatUsageUsec_;
   }
+
+  public static final int CPU_STAT_USER_USEC_FIELD_NUMBER = 2;
+  private long cpuStatUserUsec_;
   /**
-   * <pre>
-   * Name of the tool reaching the CAS, eg, buck, worker, engine, ...
-   * </pre>
-   *
-   * <code>string name = 1;</code>
+   * <code>int64 cpu_stat_user_usec = 2;</code>
    */
-  public com.google.protobuf.ByteString
-      getNameBytes() {
-    java.lang.Object ref = name_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = 
-          com.google.protobuf.ByteString.copyFromUtf8(
-              (java.lang.String) ref);
-      name_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
+  public long getCpuStatUserUsec() {
+    return cpuStatUserUsec_;
+  }
+
+  public static final int CPU_STAT_SYSTEM_USEC_FIELD_NUMBER = 3;
+  private long cpuStatSystemUsec_;
+  /**
+   * <code>int64 cpu_stat_system_usec = 3;</code>
+   */
+  public long getCpuStatSystemUsec() {
+    return cpuStatSystemUsec_;
   }
 
   private byte memoizedIsInitialized = -1;
@@ -139,8 +139,14 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (!getNameBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
+    if (cpuStatUsageUsec_ != 0L) {
+      output.writeInt64(1, cpuStatUsageUsec_);
+    }
+    if (cpuStatUserUsec_ != 0L) {
+      output.writeInt64(2, cpuStatUserUsec_);
+    }
+    if (cpuStatSystemUsec_ != 0L) {
+      output.writeInt64(3, cpuStatSystemUsec_);
     }
     unknownFields.writeTo(output);
   }
@@ -151,8 +157,17 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (!getNameBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
+    if (cpuStatUsageUsec_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(1, cpuStatUsageUsec_);
+    }
+    if (cpuStatUserUsec_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(2, cpuStatUserUsec_);
+    }
+    if (cpuStatSystemUsec_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(3, cpuStatSystemUsec_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -164,14 +179,18 @@ private static final long serialVersionUID = 0L;
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof com.facebook.buck.remoteexecution.proto.CasClientInfo)) {
+    if (!(obj instanceof com.facebook.buck.remoteexecution.proto.ExecutedActionInfo)) {
       return super.equals(obj);
     }
-    com.facebook.buck.remoteexecution.proto.CasClientInfo other = (com.facebook.buck.remoteexecution.proto.CasClientInfo) obj;
+    com.facebook.buck.remoteexecution.proto.ExecutedActionInfo other = (com.facebook.buck.remoteexecution.proto.ExecutedActionInfo) obj;
 
     boolean result = true;
-    result = result && getName()
-        .equals(other.getName());
+    result = result && (getCpuStatUsageUsec()
+        == other.getCpuStatUsageUsec());
+    result = result && (getCpuStatUserUsec()
+        == other.getCpuStatUserUsec());
+    result = result && (getCpuStatSystemUsec()
+        == other.getCpuStatSystemUsec());
     result = result && unknownFields.equals(other.unknownFields);
     return result;
   }
@@ -183,76 +202,83 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + NAME_FIELD_NUMBER;
-    hash = (53 * hash) + getName().hashCode();
+    hash = (37 * hash) + CPU_STAT_USAGE_USEC_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getCpuStatUsageUsec());
+    hash = (37 * hash) + CPU_STAT_USER_USEC_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getCpuStatUserUsec());
+    hash = (37 * hash) + CPU_STAT_SYSTEM_USEC_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getCpuStatSystemUsec());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
   }
 
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parseFrom(
       java.nio.ByteBuffer data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo parseFrom(byte[] data)
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo parseFrom(java.io.InputStream input)
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo parseDelimitedFrom(java.io.InputStream input)
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo parseDelimitedFrom(
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -265,7 +291,7 @@ private static final long serialVersionUID = 0L;
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(com.facebook.buck.remoteexecution.proto.CasClientInfo prototype) {
+  public static Builder newBuilder(com.facebook.buck.remoteexecution.proto.ExecutedActionInfo prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @java.lang.Override
@@ -281,26 +307,30 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
-   * Protobuf type {@code facebook.remote_execution.CasClientInfo}
+   * <pre>
+   * Executed action information
+   * </pre>
+   *
+   * Protobuf type {@code facebook.remote_execution.ExecutedActionInfo}
    */
   public static final class Builder extends
       com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:facebook.remote_execution.CasClientInfo)
-      com.facebook.buck.remoteexecution.proto.CasClientInfoOrBuilder {
+      // @@protoc_insertion_point(builder_implements:facebook.remote_execution.ExecutedActionInfo)
+      com.facebook.buck.remoteexecution.proto.ExecutedActionInfoOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CasClientInfo_descriptor;
+      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CasClientInfo_fieldAccessorTable
+      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_ExecutedActionInfo_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.facebook.buck.remoteexecution.proto.CasClientInfo.class, com.facebook.buck.remoteexecution.proto.CasClientInfo.Builder.class);
+              com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.class, com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.Builder.class);
     }
 
-    // Construct using com.facebook.buck.remoteexecution.proto.CasClientInfo.newBuilder()
+    // Construct using com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -318,7 +348,11 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      name_ = "";
+      cpuStatUsageUsec_ = 0L;
+
+      cpuStatUserUsec_ = 0L;
+
+      cpuStatSystemUsec_ = 0L;
 
       return this;
     }
@@ -326,17 +360,17 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CasClientInfo_descriptor;
+      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor;
     }
 
     @java.lang.Override
-    public com.facebook.buck.remoteexecution.proto.CasClientInfo getDefaultInstanceForType() {
-      return com.facebook.buck.remoteexecution.proto.CasClientInfo.getDefaultInstance();
+    public com.facebook.buck.remoteexecution.proto.ExecutedActionInfo getDefaultInstanceForType() {
+      return com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.getDefaultInstance();
     }
 
     @java.lang.Override
-    public com.facebook.buck.remoteexecution.proto.CasClientInfo build() {
-      com.facebook.buck.remoteexecution.proto.CasClientInfo result = buildPartial();
+    public com.facebook.buck.remoteexecution.proto.ExecutedActionInfo build() {
+      com.facebook.buck.remoteexecution.proto.ExecutedActionInfo result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -344,9 +378,11 @@ private static final long serialVersionUID = 0L;
     }
 
     @java.lang.Override
-    public com.facebook.buck.remoteexecution.proto.CasClientInfo buildPartial() {
-      com.facebook.buck.remoteexecution.proto.CasClientInfo result = new com.facebook.buck.remoteexecution.proto.CasClientInfo(this);
-      result.name_ = name_;
+    public com.facebook.buck.remoteexecution.proto.ExecutedActionInfo buildPartial() {
+      com.facebook.buck.remoteexecution.proto.ExecutedActionInfo result = new com.facebook.buck.remoteexecution.proto.ExecutedActionInfo(this);
+      result.cpuStatUsageUsec_ = cpuStatUsageUsec_;
+      result.cpuStatUserUsec_ = cpuStatUserUsec_;
+      result.cpuStatSystemUsec_ = cpuStatSystemUsec_;
       onBuilt();
       return result;
     }
@@ -385,19 +421,24 @@ private static final long serialVersionUID = 0L;
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof com.facebook.buck.remoteexecution.proto.CasClientInfo) {
-        return mergeFrom((com.facebook.buck.remoteexecution.proto.CasClientInfo)other);
+      if (other instanceof com.facebook.buck.remoteexecution.proto.ExecutedActionInfo) {
+        return mergeFrom((com.facebook.buck.remoteexecution.proto.ExecutedActionInfo)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(com.facebook.buck.remoteexecution.proto.CasClientInfo other) {
-      if (other == com.facebook.buck.remoteexecution.proto.CasClientInfo.getDefaultInstance()) return this;
-      if (!other.getName().isEmpty()) {
-        name_ = other.name_;
-        onChanged();
+    public Builder mergeFrom(com.facebook.buck.remoteexecution.proto.ExecutedActionInfo other) {
+      if (other == com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.getDefaultInstance()) return this;
+      if (other.getCpuStatUsageUsec() != 0L) {
+        setCpuStatUsageUsec(other.getCpuStatUsageUsec());
+      }
+      if (other.getCpuStatUserUsec() != 0L) {
+        setCpuStatUserUsec(other.getCpuStatUserUsec());
+      }
+      if (other.getCpuStatSystemUsec() != 0L) {
+        setCpuStatSystemUsec(other.getCpuStatSystemUsec());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -414,11 +455,11 @@ private static final long serialVersionUID = 0L;
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      com.facebook.buck.remoteexecution.proto.CasClientInfo parsedMessage = null;
+      com.facebook.buck.remoteexecution.proto.ExecutedActionInfo parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (com.facebook.buck.remoteexecution.proto.CasClientInfo) e.getUnfinishedMessage();
+        parsedMessage = (com.facebook.buck.remoteexecution.proto.ExecutedActionInfo) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -428,91 +469,80 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private java.lang.Object name_ = "";
+    private long cpuStatUsageUsec_ ;
     /**
-     * <pre>
-     * Name of the tool reaching the CAS, eg, buck, worker, engine, ...
-     * </pre>
-     *
-     * <code>string name = 1;</code>
+     * <code>int64 cpu_stat_usage_usec = 1;</code>
      */
-    public java.lang.String getName() {
-      java.lang.Object ref = name_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs =
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        name_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
+    public long getCpuStatUsageUsec() {
+      return cpuStatUsageUsec_;
     }
     /**
-     * <pre>
-     * Name of the tool reaching the CAS, eg, buck, worker, engine, ...
-     * </pre>
-     *
-     * <code>string name = 1;</code>
+     * <code>int64 cpu_stat_usage_usec = 1;</code>
      */
-    public com.google.protobuf.ByteString
-        getNameBytes() {
-      java.lang.Object ref = name_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        name_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <pre>
-     * Name of the tool reaching the CAS, eg, buck, worker, engine, ...
-     * </pre>
-     *
-     * <code>string name = 1;</code>
-     */
-    public Builder setName(
-        java.lang.String value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  
-      name_ = value;
+    public Builder setCpuStatUsageUsec(long value) {
+      
+      cpuStatUsageUsec_ = value;
       onChanged();
       return this;
     }
     /**
-     * <pre>
-     * Name of the tool reaching the CAS, eg, buck, worker, engine, ...
-     * </pre>
-     *
-     * <code>string name = 1;</code>
+     * <code>int64 cpu_stat_usage_usec = 1;</code>
      */
-    public Builder clearName() {
+    public Builder clearCpuStatUsageUsec() {
       
-      name_ = getDefaultInstance().getName();
+      cpuStatUsageUsec_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private long cpuStatUserUsec_ ;
+    /**
+     * <code>int64 cpu_stat_user_usec = 2;</code>
+     */
+    public long getCpuStatUserUsec() {
+      return cpuStatUserUsec_;
+    }
+    /**
+     * <code>int64 cpu_stat_user_usec = 2;</code>
+     */
+    public Builder setCpuStatUserUsec(long value) {
+      
+      cpuStatUserUsec_ = value;
       onChanged();
       return this;
     }
     /**
-     * <pre>
-     * Name of the tool reaching the CAS, eg, buck, worker, engine, ...
-     * </pre>
-     *
-     * <code>string name = 1;</code>
+     * <code>int64 cpu_stat_user_usec = 2;</code>
      */
-    public Builder setNameBytes(
-        com.google.protobuf.ByteString value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
+    public Builder clearCpuStatUserUsec() {
       
-      name_ = value;
+      cpuStatUserUsec_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private long cpuStatSystemUsec_ ;
+    /**
+     * <code>int64 cpu_stat_system_usec = 3;</code>
+     */
+    public long getCpuStatSystemUsec() {
+      return cpuStatSystemUsec_;
+    }
+    /**
+     * <code>int64 cpu_stat_system_usec = 3;</code>
+     */
+    public Builder setCpuStatSystemUsec(long value) {
+      
+      cpuStatSystemUsec_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>int64 cpu_stat_system_usec = 3;</code>
+     */
+    public Builder clearCpuStatSystemUsec() {
+      
+      cpuStatSystemUsec_ = 0L;
       onChanged();
       return this;
     }
@@ -529,41 +559,41 @@ private static final long serialVersionUID = 0L;
     }
 
 
-    // @@protoc_insertion_point(builder_scope:facebook.remote_execution.CasClientInfo)
+    // @@protoc_insertion_point(builder_scope:facebook.remote_execution.ExecutedActionInfo)
   }
 
-  // @@protoc_insertion_point(class_scope:facebook.remote_execution.CasClientInfo)
-  private static final com.facebook.buck.remoteexecution.proto.CasClientInfo DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:facebook.remote_execution.ExecutedActionInfo)
+  private static final com.facebook.buck.remoteexecution.proto.ExecutedActionInfo DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new com.facebook.buck.remoteexecution.proto.CasClientInfo();
+    DEFAULT_INSTANCE = new com.facebook.buck.remoteexecution.proto.ExecutedActionInfo();
   }
 
-  public static com.facebook.buck.remoteexecution.proto.CasClientInfo getDefaultInstance() {
+  public static com.facebook.buck.remoteexecution.proto.ExecutedActionInfo getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<CasClientInfo>
-      PARSER = new com.google.protobuf.AbstractParser<CasClientInfo>() {
+  private static final com.google.protobuf.Parser<ExecutedActionInfo>
+      PARSER = new com.google.protobuf.AbstractParser<ExecutedActionInfo>() {
     @java.lang.Override
-    public CasClientInfo parsePartialFrom(
+    public ExecutedActionInfo parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return new CasClientInfo(input, extensionRegistry);
+      return new ExecutedActionInfo(input, extensionRegistry);
     }
   };
 
-  public static com.google.protobuf.Parser<CasClientInfo> parser() {
+  public static com.google.protobuf.Parser<ExecutedActionInfo> parser() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.google.protobuf.Parser<CasClientInfo> getParserForType() {
+  public com.google.protobuf.Parser<ExecutedActionInfo> getParserForType() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.facebook.buck.remoteexecution.proto.CasClientInfo getDefaultInstanceForType() {
+  public com.facebook.buck.remoteexecution.proto.ExecutedActionInfo getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

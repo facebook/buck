@@ -32,6 +32,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Command;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.NamedTemporaryDirectory;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
@@ -100,6 +101,11 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
             ListenableFuture<ExecutionResult> executionResult =
                 Futures.immediateFuture(
                     new ExecutionResult() {
+                      @Override
+                      public RemoteExecutionMetadata getRemoteExecutionMetadata() {
+                        return RemoteExecutionMetadata.newBuilder().build();
+                      }
+
                       @Override
                       public ImmutableList<OutputDirectory> getOutputDirectories() {
                         return actionResult.outputDirectories;

@@ -117,6 +117,6 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
 
   @Override
   public long getTotalRemoteTimeMs() {
-    return 0;
+    return TimeUnit.SECONDS.toMillis(200);
   }
 }

@@ -82,6 +82,8 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
   private class ExecutionState {
     private final RemoteExecutionMetadata metadata;
 
+    RemoteExecutionMetadata executedMetadata = RemoteExecutionMetadata.newBuilder().build();
+
     @Nullable Operation currentOp;
 
     SettableFuture<ClientCallStreamObserver<?>> clientObserver = SettableFuture.create();
@@ -92,6 +94,10 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
 
     public ExecutionState(RemoteExecutionMetadata metadata) {
       this.metadata = metadata;
+    }
+
+    public void setExecutedMetadata(RemoteExecutionMetadata metadata) {
+      this.executedMetadata = metadata;
     }
 
     public void onCompleted() {
@@ -116,7 +122,9 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
         }
 
         resultFuture.set(
-            getExecutionResult(operation.getResponse().unpack(ExecuteResponse.class).getResult()));
+            getExecutionResult(
+                operation.getResponse().unpack(ExecuteResponse.class).getResult(),
+                executedMetadata));
       } catch (StatusRuntimeException e) {
         resultFuture.setException(e);
       } catch (Exception e) {
@@ -204,6 +212,7 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
 
               @Override
               public void onCompleted() {
+                state.setExecutedMetadata(stubAndMetadata.getMetadata());
                 state.onCompleted();
               }
             });
@@ -226,12 +235,18 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
     };
   }
 
-  private ExecutionResult getExecutionResult(ActionResult actionResult) {
+  private ExecutionResult getExecutionResult(
+      ActionResult actionResult, RemoteExecutionMetadata remoteExecutionMetadata) {
     if (actionResult.getExitCode() != 0) {
       LOG.debug(
           "Got failed action from worker %s", actionResult.getExecutionMetadata().getWorker());
     }
     return new ExecutionResult() {
+      @Override
+      public RemoteExecutionMetadata getRemoteExecutionMetadata() {
+        return remoteExecutionMetadata;
+      }
+
       @Override
       public List<OutputDirectory> getOutputDirectories() {
         return actionResult.getOutputDirectoriesList().stream()
