@@ -52,6 +52,7 @@ abstract class TargetWithOutputsTypeCoercer<T, U> extends LeafTypeCoercer<U> {
               params.getFilesystem(),
               params.getPathRelativeToProjectRoot(),
               params.getTargetConfiguration(),
+              params.getHostConfiguration(),
               targetWithOutputLabel.getTargetName());
       return returnTypeConstructor.apply(coerced, targetWithOutputLabel.getOutputLabel());
     } catch (Throwable t) {
@@ -73,5 +74,8 @@ abstract class TargetWithOutputsTypeCoercer<T, U> extends LeafTypeCoercer<U> {
 
     @Value.Parameter
     abstract TargetConfiguration getTargetConfiguration();
+
+    @Value.Parameter
+    abstract TargetConfiguration getHostConfiguration();
   }
 }

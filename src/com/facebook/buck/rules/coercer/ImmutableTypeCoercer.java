@@ -67,6 +67,7 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
 
@@ -93,6 +94,7 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
             filesystem,
             pathRelativeToProjectRoot,
             targetConfiguration,
+            hostConfiguration,
             builder,
             entry.getValue());
       } catch (ParamInfoException e) {

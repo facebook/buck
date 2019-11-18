@@ -87,6 +87,7 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     SelectorList<?> list = (SelectorList<?>) object;
@@ -95,7 +96,12 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
     for (Selector<?> selector : list.getSelectors()) {
       selectors.add(
           coerceSelector(
-              selector, cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration));
+              selector,
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration));
     }
     return new SelectorList<>(elementTypeCoercer, selectors.build());
   }
@@ -105,7 +111,8 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
       CellPathResolver cellPathResolver,
       ProjectFilesystem projectFilesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration)
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration)
       throws CoerceFailedException {
     ImmutableMap.Builder<SelectorKey, T> conditions = ImmutableMap.builder();
     for (Map.Entry<SelectorKey, ?> entry : input.getConditions().entrySet()) {
@@ -116,6 +123,7 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
               projectFilesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
+              hostConfiguration,
               entry.getValue()));
     }
     return new Selector<>(conditions.build(), input.getNullConditions(), input.getNoMatchMessage());

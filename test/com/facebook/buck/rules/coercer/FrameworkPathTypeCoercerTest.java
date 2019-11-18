@@ -58,6 +58,7 @@ public class FrameworkPathTypeCoercerTest {
         projectFilesystem,
         pathRelativeToProjectRoot,
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         "$FOOBAR/libfoo.a");
   }
 }

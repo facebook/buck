@@ -54,6 +54,7 @@ public class ZeroArgMacroTypeCoercer<M extends Macro> implements MacroTypeCoerce
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     if (!args.isEmpty()) {

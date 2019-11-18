@@ -131,7 +131,8 @@ public class TargetSpecResolverTest {
             eventBus,
             getManifestSupplier(),
             new FakeFileHashCache(ImmutableMap.of()),
-            new ParsingUnconfiguredBuildTargetViewFactory());
+            new ParsingUnconfiguredBuildTargetViewFactory(),
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     targetNodeTargetSpecResolver =
         TestTargetSpecResolverFactory.create(executor.get(), cell.getCellProvider(), eventBus);

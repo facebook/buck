@@ -69,16 +69,27 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof List) {
       return SourceWithFlagsList.ofUnnamedSources(
           unnamedSourcesTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object));
     } else {
       return SourceWithFlagsList.ofNamedSources(
           namedSourcesTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object));
     }
   }
 }

@@ -54,6 +54,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//:a"));
     assertThat(
         result,
@@ -80,6 +81,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
             createCellRoots(filesystem),
             filesystem,
             basePath,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("hello", "//:a"));
     assertThat(result.getFilter().map(Pattern::pattern), Matchers.equalTo(Optional.of("hello")));

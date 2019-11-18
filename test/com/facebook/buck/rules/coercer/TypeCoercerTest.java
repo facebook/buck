@@ -84,6 +84,7 @@ public class TypeCoercerTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             input);
     assertEquals(input, result);
   }
@@ -101,6 +102,7 @@ public class TypeCoercerTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             input);
     ImmutableList<ImmutableSet<Integer>> expectedResult =
@@ -121,6 +123,7 @@ public class TypeCoercerTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             input);
     ImmutableSortedSet<String> expectedResult = ImmutableSortedSet.copyOf(input);
     assertEquals(expectedResult, result);
@@ -139,6 +142,7 @@ public class TypeCoercerTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             input);
     assertEquals(ImmutableList.of("a", "b", "c"), result);
   }
@@ -155,6 +159,7 @@ public class TypeCoercerTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             input);
     assertEquals(input, result);
@@ -248,6 +253,7 @@ public class TypeCoercerTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             inputSet));
     assertEquals(
         Either.ofRight(inputMap),
@@ -255,6 +261,7 @@ public class TypeCoercerTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             inputMap));
   }
@@ -276,6 +283,7 @@ public class TypeCoercerTest {
                 filesystem,
                 ForwardRelativePath.of(""),
                 UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 inputMap);
     assertEquals(inputMap, either.getRight());
     exception.expect(RuntimeException.class);
@@ -295,6 +303,7 @@ public class TypeCoercerTest {
                 cellRoots,
                 filesystem,
                 ForwardRelativePath.of(""),
+                UnconfiguredTargetConfiguration.INSTANCE,
                 UnconfiguredTargetConfiguration.INSTANCE,
                 inputSet);
     assertEquals(inputSet, either.getLeft());
@@ -318,6 +327,7 @@ public class TypeCoercerTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             inputString));
     assertEquals(
         Either.ofRight(inputList),
@@ -325,6 +335,7 @@ public class TypeCoercerTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             inputList));
   }
@@ -380,6 +391,7 @@ public class TypeCoercerTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             input));
   }
 
@@ -423,6 +435,7 @@ public class TypeCoercerTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             input);
     ImmutableList<SourceWithFlags> expectedResult =
         ImmutableList.of(
@@ -446,6 +459,7 @@ public class TypeCoercerTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             input);
     ImmutableList<SourceWithFlags> expectedResult =
@@ -472,6 +486,7 @@ public class TypeCoercerTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             input);
     ImmutableList<SourceWithFlags> expectedResult =
@@ -501,6 +516,7 @@ public class TypeCoercerTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             input);
     ImmutableList<NeededCoverageSpec> expectedResult =
         ImmutableList.of(
@@ -524,6 +540,7 @@ public class TypeCoercerTest {
           filesystem,
           ForwardRelativePath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
+          UnconfiguredTargetConfiguration.INSTANCE,
           ImmutableList.of(ImmutableList.of(-5, "//some:build-target")));
       fail(String.format("%d should not be convertable to a spec", -5));
     } catch (CoerceFailedException e) {
@@ -537,6 +554,7 @@ public class TypeCoercerTest {
           cellRoots,
           filesystem,
           ForwardRelativePath.of(""),
+          UnconfiguredTargetConfiguration.INSTANCE,
           UnconfiguredTargetConfiguration.INSTANCE,
           ImmutableList.of(ImmutableList.of(101, "//some:build-target")));
       fail(String.format("%d should not be convertable to a spec", 101));
@@ -552,6 +570,7 @@ public class TypeCoercerTest {
           filesystem,
           ForwardRelativePath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
+          UnconfiguredTargetConfiguration.INSTANCE,
           ImmutableList.of(ImmutableList.of(50.5f, "//some:build-target")));
       fail(String.format("%f should not be convertable to a spec", 50.5f));
     } catch (CoerceFailedException e) {
@@ -565,6 +584,7 @@ public class TypeCoercerTest {
           cellRoots,
           filesystem,
           ForwardRelativePath.of(""),
+          UnconfiguredTargetConfiguration.INSTANCE,
           UnconfiguredTargetConfiguration.INSTANCE,
           ImmutableList.of(ImmutableList.of(0.3f, "//some:build-target")));
       fail(String.format("%f should not be convertable to a spec", 0.3f));
@@ -587,6 +607,7 @@ public class TypeCoercerTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             input);
     ImmutableList<TestEnum> expected =
         ImmutableList.of(TestEnum.PURPLE, TestEnum.RED, TestEnum.RED, TestEnum.PURPLE);
@@ -606,6 +627,7 @@ public class TypeCoercerTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             input);
     ImmutableSet<TestEnum> expected = ImmutableSet.of(TestEnum.PURPLE, TestEnum.PINK, TestEnum.RED);
 
@@ -624,6 +646,7 @@ public class TypeCoercerTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             input);
     ImmutableList<TestEnum> expected =
@@ -655,6 +678,7 @@ public class TypeCoercerTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             input);
     assertEquals(expected, result);
   }
@@ -676,6 +700,7 @@ public class TypeCoercerTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             input);
     assertEquals(expected, result);
@@ -706,6 +731,7 @@ public class TypeCoercerTest {
           filesystem,
           ForwardRelativePath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
+          UnconfiguredTargetConfiguration.INSTANCE,
           input);
     } catch (CoerceFailedException e) {
       String result = e.getMessage();
@@ -727,6 +753,7 @@ public class TypeCoercerTest {
           cellRoots,
           filesystem,
           ForwardRelativePath.of(""),
+          UnconfiguredTargetConfiguration.INSTANCE,
           UnconfiguredTargetConfiguration.INSTANCE,
           object);
       fail("should throw");
@@ -820,6 +847,7 @@ public class TypeCoercerTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             map);
 
     SomeImmutable expected =
@@ -845,6 +873,7 @@ public class TypeCoercerTest {
         cellRoots,
         filesystem,
         ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         map);
   }

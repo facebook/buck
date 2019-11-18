@@ -70,6 +70,7 @@ public class CxxLinkGroupMappingCoercer implements TypeCoercer<CxxLinkGroupMappi
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
 
@@ -80,7 +81,12 @@ public class CxxLinkGroupMappingCoercer implements TypeCoercer<CxxLinkGroupMappi
     if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
       Pair<String, ImmutableList<CxxLinkGroupMappingTarget>> linkGroupWithMappingTargets =
           buildTargetWithTraversalTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object);
       return CxxLinkGroupMapping.of(
           linkGroupWithMappingTargets.getFirst(), linkGroupWithMappingTargets.getSecond());
     }

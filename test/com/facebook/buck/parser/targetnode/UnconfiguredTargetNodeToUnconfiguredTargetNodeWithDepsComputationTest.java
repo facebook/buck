@@ -23,6 +23,7 @@ import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironme
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
@@ -64,7 +65,8 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(new TestSelectableResolver()),
             targetPlatformResolver,
-            new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver));
+            new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     ImmutableMap<String, Object> rawAttributes1 =
         ImmutableMap.of(

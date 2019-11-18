@@ -33,6 +33,7 @@ public class LogLevelTypeCoercer extends LeafTypeCoercer<Level> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {

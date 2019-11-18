@@ -111,6 +111,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
               ProjectFilesystem filesystem,
               ForwardRelativePath pathRelativeToProjectRoot,
               TargetConfiguration targetConfiguration,
+              TargetConfiguration hostConfiguration,
               Object object) {
             // This is only actually used directly by ConstructorArgMarshaller, for parsing the
             // groups list. It's also queried (but not actually used) when Descriptions declare

@@ -61,6 +61,7 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "test string"),
         Matchers.equalTo(StringWithMacrosUtils.format("test string")));
   }
@@ -76,6 +77,7 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "string with $(test arg) macro"),
         Matchers.equalTo(
             StringWithMacrosUtils.format(
@@ -85,6 +87,7 @@ public class StringWithMacrosTypeCoercerTest {
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string with $(test arg)"),
         Matchers.equalTo(
@@ -96,6 +99,7 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg) macro"),
         Matchers.equalTo(
             StringWithMacrosUtils.format("%s macro", new TestMacro(ImmutableList.of("arg")))));
@@ -104,6 +108,7 @@ public class StringWithMacrosTypeCoercerTest {
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg)"),
         Matchers.equalTo(
@@ -123,6 +128,7 @@ public class StringWithMacrosTypeCoercerTest {
         FILESYSTEM,
         BASE_PATH,
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         "string with $(testnotfound arg) macro");
   }
 
@@ -138,6 +144,7 @@ public class StringWithMacrosTypeCoercerTest {
         CELL_PATH_RESOLVER,
         FILESYSTEM,
         BASE_PATH,
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         "string with $(test arg) macro");
   }
@@ -155,6 +162,7 @@ public class StringWithMacrosTypeCoercerTest {
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "first $(test1 arg1) second $(test2 arg2)"),
         Matchers.equalTo(
@@ -174,6 +182,7 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "string with $(@test arg) macro"),
         Matchers.equalTo(
             StringWithMacrosUtils.format(
@@ -191,6 +200,7 @@ public class StringWithMacrosTypeCoercerTest {
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string with \\$(test arg) macro"),
         Matchers.equalTo(
@@ -213,12 +223,14 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "string with $(test arg) macro");
     StringWithMacros string2 =
         coercer.coerce(
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             " + another string with $(test arg) macro");
     StringWithMacros string3 =
@@ -227,12 +239,14 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             " + string");
     StringWithMacros string4 =
         coercer.coerce(
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             " + string + $(test arg)");
     StringWithMacros string5 =
@@ -241,12 +255,14 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg)");
     StringWithMacros string6 =
         coercer.coerce(
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "+ string");
     StringWithMacros string7 =
@@ -255,6 +271,7 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg)");
     StringWithMacros string8 =
         coercer.coerce(
@@ -262,12 +279,14 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "+ another string");
     StringWithMacros result =
         coercer.coerce(
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string with $(test arg) macro + another string with $(test arg) macro"
                 + " + string + string + $(test arg)$(test arg)+ string$(test arg)+ another string");
@@ -290,6 +309,7 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "string1");
     StringWithMacros string2 =
         coercer.coerce(
@@ -297,12 +317,14 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "string2");
     StringWithMacros result =
         coercer.coerce(
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string1string2");
 
@@ -321,12 +343,14 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "string1");
     StringWithMacros result =
         coercer.coerce(
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string1");
 
@@ -357,12 +381,14 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg) string1");
     StringWithMacros string2 =
         coercer.coerce(
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string2");
     StringWithMacros string3 =
@@ -371,12 +397,14 @@ public class StringWithMacrosTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg)");
     StringWithMacros result =
         coercer.coerce(
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg) string1string2$(test arg)");
 
@@ -432,6 +460,7 @@ public class StringWithMacrosTypeCoercerTest {
         ProjectFilesystem filesystem,
         ForwardRelativePath pathRelativeToProjectRoot,
         TargetConfiguration targetConfiguration,
+        TargetConfiguration hostConfiguration,
         ImmutableList<String> args) {
       return new TestMacro(args);
     }
@@ -458,6 +487,7 @@ public class StringWithMacrosTypeCoercerTest {
         ProjectFilesystem filesystem,
         ForwardRelativePath pathRelativeToProjectRoot,
         TargetConfiguration targetConfiguration,
+        TargetConfiguration hostConfiguration,
         ImmutableList<String> args)
         throws CoerceFailedException {
       throw new CoerceFailedException("failed");

@@ -131,6 +131,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * @param projectFilesystem The project file system
    * @param pathRelativeToProjectRoot The path relative to the project root
    * @param targetConfiguration The configuration for this target
+   * @param hostConfiguration
    * @param value The object that is to be coerced. This generally comes directly from the parser.
    * @throws CoerceFailedException if the value could not be coerced
    */
@@ -139,6 +140,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
       ProjectFilesystem projectFilesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object value)
       throws CoerceFailedException {
     CoercedType coercedValue =
@@ -148,6 +150,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
                 projectFilesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,
+                hostConfiguration,
                 value);
     validateCoercedValue(coercedValue);
     return coercedValue;

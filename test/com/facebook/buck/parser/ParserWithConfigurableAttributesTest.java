@@ -231,7 +231,8 @@ public class ParserWithConfigurableAttributesTest {
                 getManifestSupplier(),
                 new FakeFileHashCache(
                     ImmutableMap.of(buildFile, HashCode.fromBytes(new byte[] {1}))),
-                new ParsingUnconfiguredBuildTargetViewFactory())
+                new ParsingUnconfiguredBuildTargetViewFactory(),
+                UnconfiguredTargetConfiguration.INSTANCE)
             .create(
                 ParsingContext.builder(cell, executor).setProfilingEnabled(enableProfiling).build(),
                 parser.getPermState())) {
@@ -2705,7 +2706,8 @@ public class ParserWithConfigurableAttributesTest {
                 eventBus,
                 getManifestSupplier(),
                 new FakeFileHashCache(hashes),
-                new ParsingUnconfiguredBuildTargetViewFactory())
+                new ParsingUnconfiguredBuildTargetViewFactory(),
+                UnconfiguredTargetConfiguration.INSTANCE)
             .create(ParsingContext.builder(cell, executor).build(), parser.getPermState())) {
       for (BuildTarget buildTarget : buildTargets) {
         attributesByTarget.put(

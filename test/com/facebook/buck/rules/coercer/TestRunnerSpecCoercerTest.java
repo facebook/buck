@@ -56,6 +56,7 @@ public class TestRunnerSpecCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("$(test arg)", "foo"));
 
     assertEquals(
@@ -74,6 +75,7 @@ public class TestRunnerSpecCoercerTest {
             cellPathResolver,
             filesystem,
             basePath,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("$(test arg)", "foo"));
 
@@ -95,6 +97,7 @@ public class TestRunnerSpecCoercerTest {
             cellPathResolver,
             filesystem,
             basePath,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("a", ImmutableList.of("foo", "some $(test arg2)")));
 
@@ -121,6 +124,7 @@ public class TestRunnerSpecCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("a", 1.0, "b", 2));
 
     assertEquals(
@@ -140,6 +144,7 @@ public class TestRunnerSpecCoercerTest {
             cellPathResolver,
             filesystem,
             basePath,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableMap.of("bb", true, "bby", false));
 
@@ -162,6 +167,7 @@ public class TestRunnerSpecCoercerTest {
         filesystem,
         basePath,
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableMap.of(ImmutableList.of(), "foo"));
   }
 
@@ -173,6 +179,7 @@ public class TestRunnerSpecCoercerTest {
         cellPathResolver,
         filesystem,
         basePath,
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableMap.of(1, "foo"));
   }

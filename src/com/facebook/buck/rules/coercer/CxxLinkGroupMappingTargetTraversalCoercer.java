@@ -42,6 +42,7 @@ public class CxxLinkGroupMappingTargetTraversalCoercer
       ProjectFilesystem alsoUnused,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {

@@ -70,6 +70,7 @@ public class PatternMatchedCollectionTypeCoercer<T>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof List)) {
@@ -86,10 +87,20 @@ public class PatternMatchedCollectionTypeCoercer<T>
       Iterator<?> pair = ((Collection<?>) element).iterator();
       Pattern platformSelector =
           patternTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, pair.next());
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              pair.next());
       T value =
           valueTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, pair.next());
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              pair.next());
       builder.add(platformSelector, value);
     }
     return builder.build();

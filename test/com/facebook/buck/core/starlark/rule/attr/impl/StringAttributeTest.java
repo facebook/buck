@@ -44,6 +44,7 @@ public class StringAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "bar");
 
     assertEquals("bar", coerced);
@@ -60,6 +61,7 @@ public class StringAttributeTest {
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         1);
   }
 
@@ -74,6 +76,7 @@ public class StringAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "bar");
     assertEquals("bar", value);
   }
@@ -86,6 +89,7 @@ public class StringAttributeTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "bar");
 
@@ -104,6 +108,7 @@ public class StringAttributeTest {
         cellRoots,
         filesystem,
         ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         "bar");
   }

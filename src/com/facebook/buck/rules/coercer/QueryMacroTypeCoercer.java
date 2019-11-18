@@ -61,6 +61,7 @@ class QueryMacroTypeCoercer<M extends QueryMacro> implements MacroTypeCoercer<M>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     if (args.size() != 1) {
@@ -69,6 +70,11 @@ class QueryMacroTypeCoercer<M extends QueryMacro> implements MacroTypeCoercer<M>
     }
     return factory.apply(
         queryCoercer.coerce(
-            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, args.get(0)));
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            args.get(0)));
   }
 }

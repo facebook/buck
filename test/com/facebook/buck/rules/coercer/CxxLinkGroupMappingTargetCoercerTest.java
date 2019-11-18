@@ -64,6 +64,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             input);
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
     assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.TREE);
@@ -78,6 +79,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
             createCellRoots(filesystem),
             filesystem,
             basePath,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             input);
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
@@ -95,6 +97,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
             createCellRoots(filesystem),
             filesystem,
             basePath,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             input);
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);

@@ -36,6 +36,7 @@ public class UriTypeCoercer extends LeafTypeCoercer<URI> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
 

@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
@@ -134,7 +135,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
                 new TestSelectableResolver(
                     ImmutableList.of(new TestSelectable(selectableTarget, true)))),
             targetPlatformResolver,
-            new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver));
+            new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     TargetNode<?> targetNode =
         factory.createTargetNode(

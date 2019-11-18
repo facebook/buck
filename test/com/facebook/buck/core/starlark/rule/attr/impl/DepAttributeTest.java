@@ -73,6 +73,7 @@ public class DepAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "//foo/bar:baz");
 
     assertEquals(target, coercedTarget);
@@ -87,6 +88,7 @@ public class DepAttributeTest {
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         1);
   }
 
@@ -98,6 +100,7 @@ public class DepAttributeTest {
         cellRoots,
         filesystem,
         ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         Runtime.NONE);
   }
@@ -129,6 +132,7 @@ public class DepAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar");
 
     thrown.expect(NullPointerException.class);
@@ -150,6 +154,7 @@ public class DepAttributeTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar");
 
@@ -179,6 +184,7 @@ public class DepAttributeTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar");
 

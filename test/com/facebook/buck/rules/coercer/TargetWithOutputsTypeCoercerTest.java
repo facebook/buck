@@ -87,6 +87,7 @@ public class TargetWithOutputsTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar");
 
     assertEquals(expected.apply("//foo:bar", OutputLabel.DEFAULT), seen);
@@ -99,6 +100,7 @@ public class TargetWithOutputsTypeCoercerTest {
             createCellRoots(FILESYSTEM),
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar[whee]");
 
@@ -115,6 +117,7 @@ public class TargetWithOutputsTypeCoercerTest {
         FILESYSTEM,
         BASE_PATH,
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         "//foo:bar[whee");
   }
 
@@ -125,6 +128,7 @@ public class TargetWithOutputsTypeCoercerTest {
             createCellRoots(FILESYSTEM),
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar#src[whee]");
 
@@ -138,6 +142,7 @@ public class TargetWithOutputsTypeCoercerTest {
             createCellRoots(FILESYSTEM),
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar#flavor1,flavor2[whee]");
 
@@ -154,6 +159,7 @@ public class TargetWithOutputsTypeCoercerTest {
         FILESYSTEM,
         BASE_PATH,
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         "//foo:bar[whee]#src");
   }
 
@@ -164,6 +170,7 @@ public class TargetWithOutputsTypeCoercerTest {
             createCellRoots(FILESYSTEM),
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar#flavor1,flavor2");
 
@@ -177,6 +184,7 @@ public class TargetWithOutputsTypeCoercerTest {
             createCellRoots(FILESYSTEM),
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ":hangry");
 
@@ -192,6 +200,7 @@ public class TargetWithOutputsTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ":bar[whee]");
 
     assertEquals(
@@ -205,6 +214,7 @@ public class TargetWithOutputsTypeCoercerTest {
             createCellRoots(FILESYSTEM),
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ":bar#yum[whee]");
 

@@ -93,6 +93,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       String blob)
       throws CoerceFailedException {
 
@@ -145,7 +146,12 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
         try {
           macro =
               coercer.coerce(
-                  cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, args);
+                  cellRoots,
+                  filesystem,
+                  pathRelativeToProjectRoot,
+                  targetConfiguration,
+                  hostConfiguration,
+                  args);
         } catch (CoerceFailedException e) {
           throw new CoerceFailedException(
               String.format(
@@ -175,13 +181,19 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
     return parse(
-        cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, (String) object);
+        cellRoots,
+        filesystem,
+        pathRelativeToProjectRoot,
+        targetConfiguration,
+        hostConfiguration,
+        (String) object);
   }
 
   @Override

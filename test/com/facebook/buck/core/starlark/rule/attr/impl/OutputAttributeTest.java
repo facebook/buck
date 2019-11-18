@@ -62,6 +62,7 @@ public class OutputAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "foo/bar.cpp");
 
     assertEquals("foo/bar.cpp", coercedPath);
@@ -76,6 +77,7 @@ public class OutputAttributeTest {
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         1);
   }
 
@@ -87,6 +89,7 @@ public class OutputAttributeTest {
         cellRoots,
         filesystem,
         ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         Runtime.NONE);
   }
@@ -109,6 +112,7 @@ public class OutputAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "foo/bar\0");
     attr.getPostCoercionTransform()
         .postCoercionTransform(value, runner.getRegistry(), ImmutableMap.of());
@@ -123,6 +127,7 @@ public class OutputAttributeTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             Paths.get("").toAbsolutePath().toString());
     attr.getPostCoercionTransform()
@@ -139,6 +144,7 @@ public class OutputAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "../foo.txt");
     attr.getPostCoercionTransform()
         .postCoercionTransform(value, runner.getRegistry(), ImmutableMap.of());
@@ -154,6 +160,7 @@ public class OutputAttributeTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "subdir/main.cpp");
     Object coerced =

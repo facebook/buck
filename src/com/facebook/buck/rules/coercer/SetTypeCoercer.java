@@ -39,10 +39,18 @@ public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     ImmutableSet.Builder<T> builder = ImmutableSet.builder();
-    fill(cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, builder, object);
+    fill(
+        cellRoots,
+        filesystem,
+        pathRelativeToProjectRoot,
+        targetConfiguration,
+        hostConfiguration,
+        builder,
+        object);
     return builder.build();
   }
 }

@@ -42,12 +42,17 @@ public class BuildTargetWithOutputsTypeCoercer
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     return getTargetWithOutputLabel(
         ImmutableBuildTargetWithOutputs::of,
         object,
         ImmutableCoerceParameters.of(
-            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration));
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration));
   }
 }

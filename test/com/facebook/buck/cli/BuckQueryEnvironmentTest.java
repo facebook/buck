@@ -135,7 +135,8 @@ public class BuckQueryEnvironmentTest {
             eventBus,
             getManifestSupplier(),
             new FakeFileHashCache(ImmutableMap.of()),
-            new ParsingUnconfiguredBuildTargetViewFactory());
+            new ParsingUnconfiguredBuildTargetViewFactory(),
+            UnconfiguredTargetConfiguration.INSTANCE);
     Parser parser =
         TestParserFactory.create(depsAwareExecutor.get(), cell, perBuildStateFactory, eventBus);
     parserState =

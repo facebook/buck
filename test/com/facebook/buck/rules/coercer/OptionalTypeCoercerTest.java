@@ -54,6 +54,7 @@ public class OptionalTypeCoercerTest {
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             null);
     assertThat(result, Matchers.equalTo(Optional.empty()));
   }
@@ -68,6 +69,7 @@ public class OptionalTypeCoercerTest {
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             Optional.empty());
     assertThat(result, Matchers.equalTo(Optional.empty()));
   }
@@ -80,6 +82,7 @@ public class OptionalTypeCoercerTest {
             TestCellBuilder.createCellRoots(FILESYSTEM),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "something");
     assertThat(result, Matchers.equalTo(Optional.of("something")));

@@ -473,7 +473,8 @@ public class ParsePipelineTest {
               nodeListener,
               new ThrowingSelectorListResolver(),
               new ThrowingPlatformResolver(),
-              new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()));
+              new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()),
+              UnconfiguredTargetConfiguration.INSTANCE);
       this.targetNodeParsePipeline =
           new UnconfiguredTargetNodeToTargetNodeParsePipeline(
               this.targetNodeParsePipelineCache,

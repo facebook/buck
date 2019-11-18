@@ -34,9 +34,9 @@ class OutputAttributeValidator {
    * Validates that a coerced value is a string, and registers it with {@code registry}
    *
    * @param coercedValue the value that came from {@link OutputAttribute#getValue(CellPathResolver,
-   *     ProjectFilesystem, ForwardRelativePath, TargetConfiguration, Object)} or {@link
-   *     OutputListAttribute#getValue(CellPathResolver, ProjectFilesystem, ForwardRelativePath,
-   *     TargetConfiguration, Object)}
+   *     ProjectFilesystem, ForwardRelativePath, TargetConfiguration, TargetConfiguration, Object)}
+   *     or {@link OutputListAttribute#getValue(CellPathResolver, ProjectFilesystem,
+   *     ForwardRelativePath, TargetConfiguration, TargetConfiguration, Object)}
    * @param registry the registry to declare artifacts against
    * @return the declared artifact
    * @throws IllegalArgumentException if {@code coercedValue} is not a {@link String}

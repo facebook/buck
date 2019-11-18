@@ -43,6 +43,7 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
       ProjectFilesystem alsoUnused,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
@@ -50,7 +51,13 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
     }
 
     return unconfiguredBuildTargetTypeCoercer
-        .coerce(cellRoots, alsoUnused, pathRelativeToProjectRoot, targetConfiguration, object)
+        .coerce(
+            cellRoots,
+            alsoUnused,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            object)
         .configure(targetConfiguration);
   }
 }

@@ -63,6 +63,7 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof SourceWithFlags) {
@@ -73,14 +74,24 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
     if (object instanceof String) {
       return SourceWithFlags.of(
           sourcePathTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object));
     }
 
     // If we get this far, we're dealing with a Pair of a SourcePath and a String.
     if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
       Pair<SourcePath, ImmutableList<String>> sourcePathWithFlags =
           sourcePathWithFlagsTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object);
       return SourceWithFlags.of(sourcePathWithFlags.getFirst(), sourcePathWithFlags.getSecond());
     }
 

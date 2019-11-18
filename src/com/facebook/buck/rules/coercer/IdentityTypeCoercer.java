@@ -39,6 +39,7 @@ public class IdentityTypeCoercer<T> extends LeafTypeCoercer<T> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (type.isAssignableFrom(object.getClass())) {

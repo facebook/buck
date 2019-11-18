@@ -56,6 +56,7 @@ public interface TypeCoercer<T> extends Concatable<T> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException;
 

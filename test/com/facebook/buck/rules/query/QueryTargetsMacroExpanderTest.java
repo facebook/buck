@@ -152,6 +152,7 @@ public class QueryTargetsMacroExpanderTest {
                     filesystem,
                     rule.getBuildTarget().getCellRelativeBasePath().getPath(),
                     UnconfiguredTargetConfiguration.INSTANCE,
+                    UnconfiguredTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());

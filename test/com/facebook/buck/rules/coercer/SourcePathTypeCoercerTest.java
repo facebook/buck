@@ -74,6 +74,7 @@ public class SourcePathTypeCoercerTest {
             projectFilesystem,
             pathRelativeToProjectRoot,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             path);
 
     assertEquals(PathSourcePath.of(projectFilesystem, Paths.get(path)), sourcePath);
@@ -86,6 +87,7 @@ public class SourcePathTypeCoercerTest {
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "//:hello");
 
@@ -102,6 +104,7 @@ public class SourcePathTypeCoercerTest {
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "//:hello[label]");
 
@@ -121,6 +124,7 @@ public class SourcePathTypeCoercerTest {
             projectFilesystem,
             pathRelativeToProjectRoot,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ":hello");
 
     assertEquals(
@@ -136,6 +140,7 @@ public class SourcePathTypeCoercerTest {
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ":hello[label]");
 
@@ -159,6 +164,7 @@ public class SourcePathTypeCoercerTest {
             projectFilesystem,
             pathRelativeToProjectRoot,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "hello//:hello");
 
     // Note that the important thing is that the root of the target has been set to `helloRoot` so
@@ -181,6 +187,7 @@ public class SourcePathTypeCoercerTest {
         cellRoots,
         projectFilesystem,
         pathRelativeToProjectRoot,
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         path.toString());
   }

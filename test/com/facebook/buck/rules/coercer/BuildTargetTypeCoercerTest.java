@@ -56,6 +56,7 @@ public class BuildTargetTypeCoercerTest {
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 "//foo:bar");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar"), seen);
@@ -71,6 +72,7 @@ public class BuildTargetTypeCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "//foo::bar");
   }
 
@@ -82,6 +84,7 @@ public class BuildTargetTypeCoercerTest {
                 createCellRoots(filesystem),
                 filesystem,
                 basePath,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 UnconfiguredTargetConfiguration.INSTANCE,
                 ":bar");
 
@@ -97,6 +100,7 @@ public class BuildTargetTypeCoercerTest {
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 "//foo:bar#baz");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar#baz"), seen);
@@ -111,6 +115,7 @@ public class BuildTargetTypeCoercerTest {
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 "//foo:bar#baz,qux");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar#baz,qux"), seen);
@@ -124,6 +129,7 @@ public class BuildTargetTypeCoercerTest {
                 createCellRoots(filesystem),
                 filesystem,
                 basePath,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 UnconfiguredTargetConfiguration.INSTANCE,
                 ":bar#baz");
 

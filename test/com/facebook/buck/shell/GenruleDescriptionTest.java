@@ -24,6 +24,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -100,6 +101,7 @@ public class GenruleDescriptionTest {
             new ThrowingTargetConfigurationTransformer(),
             new ThrowingSelectableConfigurationContext(),
             buildTarget,
+            UnconfiguredTargetConfiguration.INSTANCE,
             DependencyStack.root(),
             builder,
             declaredDeps,

@@ -93,6 +93,7 @@ public class BuilderParamInfoTest {
             filesystem,
             ForwardRelativePath.of("doesnotexist"),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             builder,
             "foo");
     assertEquals("foo", builder.build().getSomeString());

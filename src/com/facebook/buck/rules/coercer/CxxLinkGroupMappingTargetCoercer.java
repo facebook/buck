@@ -71,6 +71,7 @@ public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGrou
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
 
@@ -84,10 +85,20 @@ public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGrou
         Object[] objects = collection.toArray();
         BuildTarget buildTarget =
             buildTargetTypeCoercer.coerce(
-                cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, objects[0]);
+                cellRoots,
+                filesystem,
+                pathRelativeToProjectRoot,
+                targetConfiguration,
+                hostConfiguration,
+                objects[0]);
         CxxLinkGroupMappingTarget.Traversal traversal =
             traversalCoercer.coerce(
-                cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, objects[1]);
+                cellRoots,
+                filesystem,
+                pathRelativeToProjectRoot,
+                targetConfiguration,
+                hostConfiguration,
+                objects[1]);
         Optional<Pattern> labelPattern = Optional.empty();
         if (collection.size() >= 3) {
           String regexString = extractLabelRegexString(objects[2]);
@@ -98,6 +109,7 @@ public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGrou
                       filesystem,
                       pathRelativeToProjectRoot,
                       targetConfiguration,
+                      hostConfiguration,
                       regexString));
         }
 

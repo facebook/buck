@@ -132,7 +132,8 @@ public class QueryCommandTest {
                 eventBus,
                 getManifestSupplier(),
                 new FakeFileHashCache(ImmutableMap.of()),
-                new ParsingUnconfiguredBuildTargetViewFactory())
+                new ParsingUnconfiguredBuildTargetViewFactory(),
+                params.getHostConfiguration())
             .create(
                 ParsingContext.builder(cell, executorService)
                     .setSpeculativeParsing(SpeculativeParsing.ENABLED)

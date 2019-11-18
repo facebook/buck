@@ -53,6 +53,7 @@ public class PathTypeCoercerTest {
         filesystem,
         pathRelativeToProjectRoot,
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         invalidPath);
   }
 
@@ -69,6 +70,7 @@ public class PathTypeCoercerTest {
         filesystem,
         pathRelativeToProjectRoot,
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         invalidPath);
   }
 
@@ -80,6 +82,7 @@ public class PathTypeCoercerTest {
             createCellRoots(filesystem),
             filesystem,
             pathRelativeToProjectRoot,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             missingPath);
   }

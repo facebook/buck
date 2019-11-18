@@ -137,6 +137,7 @@ public class LocationMacroExpanderTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "$(location )");
   }
 
@@ -149,6 +150,7 @@ public class LocationMacroExpanderTest {
                     cellPathResolver,
                     filesystem,
                     rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                    UnconfiguredTargetConfiguration.INSTANCE,
                     UnconfiguredTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros);

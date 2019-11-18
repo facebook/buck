@@ -73,6 +73,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
 
@@ -95,13 +96,19 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
                       filesystem,
                       pathRelativeToProjectRoot,
                       targetConfiguration,
+                      hostConfiguration,
                       mArgs.remove()));
     }
 
     // Parse build target args.
     ImmutableList<BuildTarget> targets =
         buildTargetsTypeCoercer.coerce(
-            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, mArgs);
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            mArgs);
 
     return factory.apply(filter, targets);
   }

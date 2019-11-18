@@ -46,6 +46,7 @@ public class EitherTypeCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             Arrays.asList("abc", "de"));
 
     assertEquals(Either.ofLeft(new Pair<>("abc", "de")), seen);

@@ -38,6 +38,7 @@ interface MacroTypeCoercer<T extends Macro> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException;
 }

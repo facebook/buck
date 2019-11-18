@@ -45,6 +45,7 @@ public class IntAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             5);
 
     assertEquals(5, coerced.intValue());
@@ -61,6 +62,7 @@ public class IntAttributeTest {
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         "foo");
   }
 
@@ -73,6 +75,7 @@ public class IntAttributeTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             3);
 
@@ -87,6 +90,7 @@ public class IntAttributeTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             3);
 
@@ -104,6 +108,7 @@ public class IntAttributeTest {
         cellRoots,
         filesystem,
         ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         3);
   }

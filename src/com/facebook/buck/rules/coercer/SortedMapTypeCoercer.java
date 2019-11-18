@@ -60,6 +60,7 @@ public class SortedMapTypeCoercer<K extends Comparable<K>, V>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Map) {
@@ -72,6 +73,7 @@ public class SortedMapTypeCoercer<K extends Comparable<K>, V>
                 filesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,
+                hostConfiguration,
                 entry.getKey());
         V value =
             valueTypeCoercer.coerce(
@@ -79,6 +81,7 @@ public class SortedMapTypeCoercer<K extends Comparable<K>, V>
                 filesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,
+                hostConfiguration,
                 entry.getValue());
         builder.put(key, value);
       }

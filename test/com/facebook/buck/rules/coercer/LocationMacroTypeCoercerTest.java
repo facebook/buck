@@ -57,6 +57,7 @@ public class LocationMacroTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//:test")),
         Matchers.equalTo(
             LocationMacro.of(BuildTargetFactory.newInstance("//:test"), Optional.empty())));
@@ -66,6 +67,7 @@ public class LocationMacroTypeCoercerTest {
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//:test[foo]")),
         Matchers.equalTo(
@@ -81,6 +83,7 @@ public class LocationMacroTypeCoercerTest {
         FILESYSTEM,
         BASE_PATH,
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of("not a target"));
   }
 
@@ -93,6 +96,7 @@ public class LocationMacroTypeCoercerTest {
         FILESYSTEM,
         BASE_PATH,
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of("not", "a", "target"));
   }
 
@@ -104,6 +108,7 @@ public class LocationMacroTypeCoercerTest {
         CELL_PATH_RESOLVER,
         FILESYSTEM,
         BASE_PATH,
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of());
   }

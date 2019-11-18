@@ -43,6 +43,7 @@ public class ZeroArgMacroTypeCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of());
     assertThat(result, Matchers.is(macro));
   }
@@ -57,6 +58,7 @@ public class ZeroArgMacroTypeCoercerTest {
         createCellRoots(filesystem),
         filesystem,
         basePath,
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of("arg"));
   }

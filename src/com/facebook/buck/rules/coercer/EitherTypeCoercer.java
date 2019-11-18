@@ -91,6 +91,7 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
 
@@ -107,12 +108,22 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
       try {
         return Either.ofLeft(
             leftTypeCoercer.coerce(
-                cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+                cellRoots,
+                filesystem,
+                pathRelativeToProjectRoot,
+                targetConfiguration,
+                hostConfiguration,
+                object));
       } catch (CoerceFailedException eLeft) {
         try {
           return Either.ofRight(
               rightTypeCoercer.coerce(
-                  cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+                  cellRoots,
+                  filesystem,
+                  pathRelativeToProjectRoot,
+                  targetConfiguration,
+                  hostConfiguration,
+                  object));
         } catch (CoerceFailedException eRight) {
           throw new CoerceFailedException(
               String.format("%s, or %s", eLeft.getMessage(), eRight.getMessage()));
@@ -125,7 +136,12 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     if (leftCoercerType == objectType) {
       return Either.ofLeft(
           leftTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object));
     }
 
     // Only the right coercer matches, so use that to parse the input and let any inner
@@ -133,7 +149,12 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     if (rightCoercerType == objectType) {
       return Either.ofRight(
           rightTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object));
     }
 
     // None of our coercers matched the "type" of the object, so throw the generic

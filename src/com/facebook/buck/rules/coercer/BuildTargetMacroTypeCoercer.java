@@ -63,6 +63,7 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     if (args.size() != 1) {
@@ -71,7 +72,12 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
     }
     BuildTarget target =
         buildTargetTypeCoercer.coerce(
-            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, args.get(0));
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            args.get(0));
     return factory.apply(target);
   }
 }

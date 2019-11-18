@@ -75,6 +75,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {
@@ -110,7 +111,12 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
       } else {
         return FrameworkPath.ofSourcePath(
             sourcePathTypeCoercer.coerce(
-                cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+                cellRoots,
+                filesystem,
+                pathRelativeToProjectRoot,
+                targetConfiguration,
+                hostConfiguration,
+                object));
       }
     }
 

@@ -62,6 +62,7 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Map) {
@@ -74,6 +75,7 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
                 filesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,
+                hostConfiguration,
                 entry.getKey());
         V value =
             valueTypeCoercer.coerce(
@@ -81,6 +83,7 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
                 filesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,
+                hostConfiguration,
                 entry.getValue());
         builder.put(key, value);
       }

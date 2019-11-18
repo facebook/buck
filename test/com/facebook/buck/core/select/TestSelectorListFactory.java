@@ -50,6 +50,7 @@ public class TestSelectorListFactory {
                 projectFilesystem,
                 ForwardRelativePath.of(""),
                 UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 condition.getValue()));
       }
 

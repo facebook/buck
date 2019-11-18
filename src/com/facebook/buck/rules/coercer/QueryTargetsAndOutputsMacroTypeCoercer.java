@@ -57,6 +57,7 @@ class QueryTargetsAndOutputsMacroTypeCoercer
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     String separator = " ";
@@ -73,6 +74,11 @@ class QueryTargetsAndOutputsMacroTypeCoercer
     return QueryTargetsAndOutputsMacro.of(
         separator,
         queryCoercer.coerce(
-            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, query));
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            query));
   }
 }

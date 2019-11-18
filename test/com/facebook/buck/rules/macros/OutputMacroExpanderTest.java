@@ -101,6 +101,7 @@ public class OutputMacroExpanderTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "$(output )");
   }
 
@@ -113,6 +114,7 @@ public class OutputMacroExpanderTest {
                     cellPathResolver,
                     filesystem,
                     rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                    UnconfiguredTargetConfiguration.INSTANCE,
                     UnconfiguredTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros);

@@ -77,6 +77,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       TargetConfigurationTransformer targetConfigurationTransformer,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
+      TargetConfiguration hostConfiguration,
       DependencyStack dependencyStack,
       DataTransferObjectDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
@@ -122,6 +123,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 targetConfigurationTransformer,
                 configurationContext,
                 buildTarget,
+                hostConfiguration,
                 dependencyStack,
                 buildTarget.getTargetConfiguration(),
                 configurationDeps,
@@ -138,6 +140,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 buildTarget,
                 dependencyStack,
                 buildTarget.getTargetConfiguration(),
+                hostConfiguration,
                 configurationDeps,
                 info,
                 isConfigurationRule,
@@ -161,6 +164,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       TargetConfigurationTransformer targetConfigurationTransformer,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
+      TargetConfiguration hostConfiguration,
       DependencyStack dependencyStack,
       TargetConfiguration targetConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
@@ -180,6 +184,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
               buildTarget.getUnconfiguredBuildTargetView().configure(nestedTargetConfiguration),
               dependencyStack,
               nestedTargetConfiguration,
+              hostConfiguration,
               configurationDeps,
               info,
               isConfigurationRule,
@@ -201,6 +206,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       ParamInfo info,
       boolean isConfigurationRule,
@@ -212,6 +218,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
             filesystem,
             buildTarget,
             targetConfiguration,
+            hostConfiguration,
             info,
             isConfigurationRule,
             attribute);
@@ -230,6 +237,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       ParamInfo argumentInfo,
       boolean isConfigurationRule,
       Object rawValue)
@@ -264,6 +272,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
         filesystem,
         buildTarget.getCellRelativeBasePath().getPath(),
         targetConfiguration,
+        hostConfiguration,
         rawValue);
   }
 

@@ -46,6 +46,7 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       SortedSet<T> builder,
       Object object)
       throws CoerceFailedException {
@@ -55,7 +56,12 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
         // if any element failed, the entire collection fails
         T coercedElement =
             elementTypeCoercer.coerce(
-                cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, element);
+                cellRoots,
+                filesystem,
+                pathRelativeToProjectRoot,
+                targetConfiguration,
+                hostConfiguration,
+                element);
         boolean alreadyExists = !builder.add(coercedElement);
         if (alreadyExists) {
           throw new CoerceFailedException(
@@ -73,10 +79,18 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     ImmutableSortedSet.Builder<T> builder = ImmutableSortedSet.naturalOrder();
-    fill(cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, builder, object);
+    fill(
+        cellRoots,
+        filesystem,
+        pathRelativeToProjectRoot,
+        targetConfiguration,
+        hostConfiguration,
+        builder,
+        object);
     return builder.build();
   }
 

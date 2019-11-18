@@ -50,13 +50,20 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       ImmutableCollection.Builder<T> builder,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Collection) {
       Iterable<?> iterable = (Iterable<?>) object;
       fill(
-          cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, builder, iterable);
+          cellRoots,
+          filesystem,
+          pathRelativeToProjectRoot,
+          targetConfiguration,
+          hostConfiguration,
+          builder,
+          iterable);
     } else {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
@@ -68,6 +75,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       ImmutableCollection.Builder<T> builder,
       Iterable<?> iterable)
       throws CoerceFailedException {
@@ -75,7 +83,12 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
       // if any element failed, the entire collection fails
       T coercedElement =
           elementTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, element);
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              element);
       builder.add(coercedElement);
     }
   }

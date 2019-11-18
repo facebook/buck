@@ -932,7 +932,8 @@ public class TargetsCommand extends AbstractCommand {
                 params.getBuckEventBus(),
                 params.getManifestServiceSupplier(),
                 params.getFileHashCache(),
-                params.getUnconfiguredBuildTargetFactory())
+                params.getUnconfiguredBuildTargetFactory(),
+                params.getHostConfiguration())
             .create(
                 createParsingContext(params.getCell(), executor)
                     .withExcludeUnsupportedTargets(false),
@@ -1312,7 +1313,8 @@ public class TargetsCommand extends AbstractCommand {
                 params.getBuckEventBus(),
                 params.getManifestServiceSupplier(),
                 params.getFileHashCache(),
-                params.getUnconfiguredBuildTargetFactory())
+                params.getUnconfiguredBuildTargetFactory(),
+                params.getHostConfiguration())
             .create(
                 createParsingContext(params.getCell(), executor)
                     .withExcludeUnsupportedTargets(false),

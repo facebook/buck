@@ -71,7 +71,8 @@ public class AuditOwnerCommand extends AbstractCommand {
                     params.getBuckEventBus(),
                     params.getManifestServiceSupplier(),
                     params.getFileHashCache(),
-                    params.getUnconfiguredBuildTargetFactory())
+                    params.getUnconfiguredBuildTargetFactory(),
+                    params.getHostConfiguration())
                 .create(
                     createParsingContext(params.getCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)

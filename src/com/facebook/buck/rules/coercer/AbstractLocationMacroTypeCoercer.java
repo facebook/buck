@@ -51,12 +51,18 @@ abstract class AbstractLocationMacroTypeCoercer<T extends BaseLocationMacro>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       String arg)
       throws CoerceFailedException {
     LocationMacro.SplitResult parts = LocationMacro.splitSupplementaryOutputPart(arg);
     BuildTarget target =
         buildTargetTypeCoercer.coerce(
-            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, parts.target);
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            parts.target);
     return new Pair<>(target, parts.supplementaryOutput);
   }
 }

@@ -44,6 +44,7 @@ class LocationMacroTypeCoercer extends AbstractLocationMacroTypeCoercer<Location
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     if (args.size() != 1 || args.get(0).isEmpty()) {
@@ -52,7 +53,12 @@ class LocationMacroTypeCoercer extends AbstractLocationMacroTypeCoercer<Location
     }
     Pair<BuildTarget, Optional<String>> target =
         coerceTarget(
-            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, args.get(0));
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            args.get(0));
     return LocationMacro.of(target.getFirst(), target.getSecond());
   }
 }

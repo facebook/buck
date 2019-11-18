@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
@@ -41,7 +42,8 @@ public class ParserFactory {
       BuckEventBus eventBus,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashLoader fileHashLoader,
-      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
+      TargetConfiguration hostConfiguration) {
     return new ParserWithConfigurableAttributes(
         daemonicParserState,
         new PerBuildStateFactory(
@@ -53,7 +55,8 @@ public class ParserFactory {
             eventBus,
             manifestServiceSupplier,
             fileHashLoader,
-            unconfiguredBuildTargetFactory),
+            unconfiguredBuildTargetFactory,
+            hostConfiguration),
         targetSpecResolver,
         eventBus);
   }

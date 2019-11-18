@@ -1396,6 +1396,7 @@ public final class MainRunner {
                   manifestServiceSupplier,
                   fileHashCache,
                   buildTargetFactory,
+                  hostConfiguration,
                   targetSpecResolver);
 
           // Because the Parser is potentially constructed before the CounterRegistry,
@@ -1832,6 +1833,7 @@ public final class MainRunner {
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
+      TargetConfiguration hostConfiguration,
       TargetSpecResolver targetSpecResolver)
       throws IOException, InterruptedException {
     Optional<WatchmanWatcher> watchmanWatcher = Optional.empty();
@@ -1888,7 +1890,8 @@ public final class MainRunner {
             buildEventBus,
             manifestServiceSupplier,
             fileHashLoader,
-            unconfiguredBuildTargetFactory),
+            unconfiguredBuildTargetFactory,
+            hostConfiguration),
         buckGlobalState.getTypeCoercerFactory(),
         new InstrumentedVersionedTargetGraphCache(
             buckGlobalState.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),

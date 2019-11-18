@@ -50,6 +50,7 @@ public class CxxLinkGroupMappingTargetTraversalCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "tree");
     assertEquals(traversal, CxxLinkGroupMappingTarget.Traversal.TREE);
   }
@@ -61,6 +62,7 @@ public class CxxLinkGroupMappingTargetTraversalCoercerTest {
             createCellRoots(filesystem),
             filesystem,
             basePath,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "node");
     assertEquals(traversal, CxxLinkGroupMappingTarget.Traversal.NODE);

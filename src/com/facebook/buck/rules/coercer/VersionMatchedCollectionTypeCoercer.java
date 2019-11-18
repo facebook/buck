@@ -67,6 +67,7 @@ public class VersionMatchedCollectionTypeCoercer<T>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof List)) {
@@ -83,10 +84,20 @@ public class VersionMatchedCollectionTypeCoercer<T>
       Iterator<?> pair = ((Collection<?>) element).iterator();
       ImmutableMap<BuildTarget, Version> versionsSelector =
           versionsTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, pair.next());
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              pair.next());
       T value =
           valueTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, pair.next());
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              pair.next());
       builder.add(versionsSelector, value);
     }
     return builder.build();

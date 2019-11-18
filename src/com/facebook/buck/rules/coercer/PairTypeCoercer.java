@@ -59,6 +59,7 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Collection) {
@@ -74,6 +75,7 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
+              hostConfiguration,
               iterator.next());
       SECOND second =
           secondTypeCoercer.coerce(
@@ -81,6 +83,7 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
+              hostConfiguration,
               iterator.next());
       return new Pair<>(first, second);
     } else {

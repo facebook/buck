@@ -61,6 +61,7 @@ public class ManifestEntriesTypeCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             inputMap);
 
     assertTrue(result.getDebugMode().get());
@@ -80,6 +81,7 @@ public class ManifestEntriesTypeCoercerTest {
         filesystem,
         basePath,
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         inputMap);
   }
 
@@ -97,6 +99,7 @@ public class ManifestEntriesTypeCoercerTest {
             createCellRoots(filesystem),
             filesystem,
             basePath,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             inputMap);
 

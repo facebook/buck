@@ -37,6 +37,7 @@ public class ConstraintTypeCoercer extends LeafTypeCoercer<Constraint> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {

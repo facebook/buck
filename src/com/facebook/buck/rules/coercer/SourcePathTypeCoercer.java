@@ -48,18 +48,29 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if ((object instanceof String)
         && (((String) object).contains("//") || ((String) object).startsWith(":"))) {
       BuildTargetWithOutputs buildTargetWithOutputs =
           buildTargetWithOutputsTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object);
       return DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
     } else {
       Path path =
           pathTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object);
       if (path.isAbsolute()) {
         throw CoerceFailedException.simple(
             object, getOutputClass(), "SourcePath cannot contain an absolute path");

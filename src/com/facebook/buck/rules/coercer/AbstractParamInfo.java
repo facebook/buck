@@ -130,6 +130,7 @@ public abstract class AbstractParamInfo implements ParamInfo {
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object arg,
       Map<String, ?> instance)
       throws ParamInfoException {
@@ -138,6 +139,7 @@ public abstract class AbstractParamInfo implements ParamInfo {
         filesystem,
         buildTarget.getCellRelativeBasePath().getPath(),
         targetConfiguration,
+        hostConfiguration,
         arg,
         instance.get(name));
   }
@@ -148,6 +150,7 @@ public abstract class AbstractParamInfo implements ParamInfo {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object dto,
       @Nullable Object value)
       throws ParamInfoException {
@@ -158,7 +161,12 @@ public abstract class AbstractParamInfo implements ParamInfo {
       setCoercedValue(
           dto,
           typeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, value));
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              value));
     } catch (CoerceFailedException e) {
       throw new ParamInfoException(name, e.getMessage(), e);
     }

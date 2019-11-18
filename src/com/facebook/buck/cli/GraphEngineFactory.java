@@ -179,7 +179,8 @@ public class GraphEngineFactory {
             },
             // TODO: replace with RuleBasedConstraintResolver
             targetPlatformResolver,
-            new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver));
+            new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
+            params.getHostConfiguration());
 
     UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
         unconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation =

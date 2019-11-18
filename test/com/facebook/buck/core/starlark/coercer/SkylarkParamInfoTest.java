@@ -226,6 +226,7 @@ public class SkylarkParamInfoTest {
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         arg,
         "foo");
 
@@ -249,6 +250,7 @@ public class SkylarkParamInfoTest {
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         arg,
         7);
   }
@@ -265,6 +267,7 @@ public class SkylarkParamInfoTest {
         TestCellPathResolver.get(filesystem),
         filesystem,
         BuildTargetFactory.newInstance("//foo:bar"),
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         arg,
         ImmutableMap.of("baz", "foo"));

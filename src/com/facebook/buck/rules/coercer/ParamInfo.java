@@ -96,6 +96,7 @@ public interface ParamInfo extends Comparable<ParamInfo> {
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object arg,
       Map<String, ?> instance)
       throws ParamInfoException;
@@ -106,6 +107,7 @@ public interface ParamInfo extends Comparable<ParamInfo> {
    * @param cellRoots
    * @param filesystem {@link ProjectFilesystem} used to ensure {@link Path}s exist.
    * @param pathRelativeToProjectRoot The path relative to the project root that this DTO is for.
+   * @param hostConfiguration
    * @param dto The constructor DTO on which the value should be set.
    * @param value The value, which may be coerced depending on the type on {@code dto}.
    */
@@ -114,6 +116,7 @@ public interface ParamInfo extends Comparable<ParamInfo> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object dto,
       @Nullable Object value)
       throws ParamInfoException;

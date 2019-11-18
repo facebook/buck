@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.impl.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -71,6 +72,7 @@ public class PerBuildStateFactory {
   private final Watchman watchman;
   private final BuckEventBus eventBus;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
+  private final TargetConfiguration hostConfiguration;
 
   public PerBuildStateFactory(
       TypeCoercerFactory typeCoercerFactory,
@@ -81,7 +83,8 @@ public class PerBuildStateFactory {
       BuckEventBus eventBus,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashLoader fileHashLoader,
-      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
+      TargetConfiguration hostConfiguration) {
     this.manifestServiceSupplier = manifestServiceSupplier;
     this.fileHashLoader = fileHashLoader;
     this.typeCoercerFactory = typeCoercerFactory;
@@ -91,6 +94,7 @@ public class PerBuildStateFactory {
     this.watchman = watchman;
     this.eventBus = eventBus;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
+    this.hostConfiguration = hostConfiguration;
   }
 
   private PerBuildState create(
@@ -179,7 +183,8 @@ public class PerBuildStateFactory {
             symlinkCheckers,
             new ThrowingSelectorListResolver(),
             new ThrowingPlatformResolver(),
-            new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()));
+            new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()),
+            hostConfiguration);
 
     // This pipeline uses a direct executor instead of pipelineExecutorService to avoid
     // deadlocks happening when too many node are requested from targetNodeParsePipeline.
@@ -226,7 +231,8 @@ public class PerBuildStateFactory {
             selectorListResolver,
             configurationRuleRegistry.getTargetPlatformResolver(),
             new MultiPlatformTargetConfigurationTransformer(
-                configurationRuleRegistry.getTargetPlatformResolver()));
+                configurationRuleRegistry.getTargetPlatformResolver()),
+            hostConfiguration);
 
     ListeningExecutorService configuredPipelineExecutor =
         MoreExecutors.listeningDecorator(

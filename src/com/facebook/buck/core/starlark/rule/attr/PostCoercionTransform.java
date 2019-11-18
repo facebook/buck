@@ -28,11 +28,12 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
  * information only known at analysis time.
  *
  * <p>This is not done by the type coercer and {@link Attribute#getValue(CellPathResolver,
- * ProjectFilesystem, ForwardRelativePath, TargetConfiguration, Object)} for two reasons. The first
- * is that some information (like {@link ProviderInfoCollection} for dependencies) is not available
- * until the analysis phase, rather than the parsing / coercion / configuration phases. Secondly is
- * for speed. If we do not need to do a transformation on a given attribute, it's better to skip the
- * function call.
+ * ProjectFilesystem, ForwardRelativePath, TargetConfiguration, TargetConfiguration, Object)} for
+ * two reasons. The ProjectFilesystem, ForwardRelativePath, TargetConfiguration, Object)} for two
+ * reasons. The first is that some information (like {@link ProviderInfoCollection} for
+ * dependencies) is not available until the analysis phase, rather than the parsing / coercion /
+ * configuration phases. Secondly is for speed. If we do not need to do a transformation on a given
+ * attribute, it's better to skip the function call.
  */
 @FunctionalInterface
 public interface PostCoercionTransform<AdditionalDataType, PostTransformType> {

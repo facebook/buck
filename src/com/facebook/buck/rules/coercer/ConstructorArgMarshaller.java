@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
@@ -63,10 +64,11 @@ public interface ConstructorArgMarshaller {
    * if none is set. This is typically {@link Optional#empty()}, but in the case of collections is
    * an empty collection.
    *
+   * @param hostConfiguration
    * @param declaredDeps A builder to be populated with the declared dependencies.
-   * @return The fully populated DTO.
    * @param attributes configured attributes that cannot contain selectable values (instances of
    *     {@link SelectorList})
+   * @return The fully populated DTO.
    */
   <T extends ConstructorArg> T populate(
       CellPathResolver cellPathResolver,
@@ -75,6 +77,7 @@ public interface ConstructorArgMarshaller {
       TargetConfigurationTransformer targetConfigurationTransformer,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
+      TargetConfiguration hostConfiguration,
       DependencyStack dependencyStack,
       DataTransferObjectDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,

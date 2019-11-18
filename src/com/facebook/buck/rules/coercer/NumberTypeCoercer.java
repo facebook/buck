@@ -40,6 +40,7 @@ public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Number) {

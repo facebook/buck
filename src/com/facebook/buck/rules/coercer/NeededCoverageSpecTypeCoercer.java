@@ -69,6 +69,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof NeededCoverageSpec) {
@@ -85,11 +86,17 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
                 filesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,
+                hostConfiguration,
                 object,
                 iter.next());
         BuildTarget buildTarget =
             buildTargetTypeCoercer.coerce(
-                cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, iter.next());
+                cellRoots,
+                filesystem,
+                pathRelativeToProjectRoot,
+                targetConfiguration,
+                hostConfiguration,
+                iter.next());
         Optional<String> pathName = Optional.empty();
         if (iter.hasNext()) {
           pathName =
@@ -99,6 +106,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
                       filesystem,
                       pathRelativeToProjectRoot,
                       targetConfiguration,
+                      hostConfiguration,
                       iter.next()));
         }
         return NeededCoverageSpec.of(neededRatioPercentage, buildTarget, pathName);
@@ -117,6 +125,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object originalObject,
       Object object)
       throws CoerceFailedException {
@@ -133,7 +142,12 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
 
     int intValue =
         intTypeCoercer.coerce(
-            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            object);
 
     if (intValue < 0 || intValue > 100) {
       throw CoerceFailedException.simple(

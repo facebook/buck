@@ -44,6 +44,7 @@ public class BoolAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             true);
 
     assertTrue(coerced);
@@ -59,6 +60,7 @@ public class BoolAttributeTest {
         cellRoots,
         filesystem,
         ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         "foo");
   }

@@ -49,6 +49,7 @@ public class IntListAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of(1, 2));
 
     assertEquals(expected, coerced);
@@ -63,6 +64,7 @@ public class IntListAttributeTest {
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         "foo");
   }
 
@@ -74,6 +76,7 @@ public class IntListAttributeTest {
         cellRoots,
         filesystem,
         ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of("foo"));
   }
@@ -90,6 +93,7 @@ public class IntListAttributeTest {
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of());
   }
 
@@ -101,6 +105,7 @@ public class IntListAttributeTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of());
     assertTrue(value.isEmpty());

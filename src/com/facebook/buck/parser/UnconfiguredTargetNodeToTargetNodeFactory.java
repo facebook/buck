@@ -23,6 +23,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -58,6 +59,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
   private final SelectorListResolver selectorListResolver;
   private final TargetPlatformResolver targetPlatformResolver;
   private final TargetConfigurationTransformer targetConfigurationTransformer;
+  private final TargetConfiguration hostConfiguration;
 
   public UnconfiguredTargetNodeToTargetNodeFactory(
       TypeCoercerFactory typeCoercerFactory,
@@ -68,7 +70,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
       TargetNodeListener<TargetNode<?>> nodeListener,
       SelectorListResolver selectorListResolver,
       TargetPlatformResolver targetPlatformResolver,
-      TargetConfigurationTransformer targetConfigurationTransformer) {
+      TargetConfigurationTransformer targetConfigurationTransformer,
+      TargetConfiguration hostConfiguration) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
@@ -78,6 +81,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     this.selectorListResolver = selectorListResolver;
     this.targetPlatformResolver = targetPlatformResolver;
     this.targetConfigurationTransformer = targetConfigurationTransformer;
+    this.hostConfiguration = hostConfiguration;
   }
 
   @Override
@@ -113,6 +117,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
               targetConfigurationTransformer,
               configurationContext,
               target,
+              hostConfiguration,
               dependencyStack,
               builder,
               declaredDeps,

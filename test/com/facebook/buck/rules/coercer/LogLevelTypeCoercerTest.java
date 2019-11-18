@@ -46,6 +46,7 @@ public class LogLevelTypeCoercerTest {
             filesystem,
             pathFromRoot,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "WARNING");
 
     assertEquals(expected, actual);
@@ -57,6 +58,7 @@ public class LogLevelTypeCoercerTest {
         createCellRoots(filesystem),
         filesystem,
         pathFromRoot,
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         "not a log level");
   }

@@ -60,6 +60,7 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object == null || (object instanceof Optional<?> && !((Optional<?>) object).isPresent())) {
@@ -67,7 +68,12 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
     }
     return Optional.of(
         coercer.coerce(
-            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            object));
   }
 
   @Nullable

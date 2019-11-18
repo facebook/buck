@@ -49,6 +49,7 @@ public class QueryMacroTypeCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("some query"));
     assertThat(
         queryMacro.getQuery(),

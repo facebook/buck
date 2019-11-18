@@ -67,6 +67,7 @@ public class CxxLinkGroupMappingCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             linkGroupMap);
 
     assertEquals(mapping.getLinkGroup(), linkGroup);

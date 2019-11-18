@@ -45,10 +45,18 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     ImmutableList.Builder<T> builder = ImmutableList.builder();
-    fill(cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, builder, object);
+    fill(
+        cellRoots,
+        filesystem,
+        pathRelativeToProjectRoot,
+        targetConfiguration,
+        hostConfiguration,
+        builder,
+        object);
     return builder.build();
   }
 

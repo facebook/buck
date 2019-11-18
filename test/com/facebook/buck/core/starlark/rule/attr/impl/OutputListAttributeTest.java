@@ -65,6 +65,7 @@ public class OutputListAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("foo/bar.cpp", "foo/baz.cpp"));
 
     assertEquals(ImmutableList.of("foo/bar.cpp", "foo/baz.cpp"), coercedPaths);
@@ -79,6 +80,7 @@ public class OutputListAttributeTest {
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         1);
   }
 
@@ -90,6 +92,7 @@ public class OutputListAttributeTest {
         cellRoots,
         filesystem,
         ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         Runtime.NONE);
   }
@@ -112,6 +115,7 @@ public class OutputListAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("foo/baz.cpp", "foo/bar\0"));
     attr.getPostCoercionTransform()
         .postCoercionTransform(value, runner.getRegistry(), ImmutableMap.of());
@@ -126,6 +130,7 @@ public class OutputListAttributeTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("foo/baz.cpp", Paths.get("").toAbsolutePath().toString()));
     attr.getPostCoercionTransform()
@@ -142,6 +147,7 @@ public class OutputListAttributeTest {
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("foo/baz.cpp", "../foo.txt"));
     attr.getPostCoercionTransform()
         .postCoercionTransform(value, runner.getRegistry(), ImmutableMap.of());
@@ -157,6 +163,7 @@ public class OutputListAttributeTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("subdir/other.cpp", "main.cpp"));
     Object coerced =
@@ -191,6 +198,7 @@ public class OutputListAttributeTest {
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of());
   }
 
@@ -201,6 +209,7 @@ public class OutputListAttributeTest {
             cellRoots,
             filesystem,
             ForwardRelativePath.of(""),
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of());
     assertTrue(value.isEmpty());

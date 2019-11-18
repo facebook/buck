@@ -45,6 +45,7 @@ public class UriTypeCoercerTest {
                 filesystem,
                 pathFromRoot,
                 UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 expected.toString());
 
     assertEquals(expected, uri);
@@ -59,6 +60,7 @@ public class UriTypeCoercerTest {
                 cellRoots,
                 filesystem,
                 pathFromRoot,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 UnconfiguredTargetConfiguration.INSTANCE,
                 expected.toString());
 
@@ -75,6 +77,7 @@ public class UriTypeCoercerTest {
                 filesystem,
                 pathFromRoot,
                 UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 expected.toString());
 
     assertEquals(expected, uri);
@@ -87,6 +90,7 @@ public class UriTypeCoercerTest {
             cellRoots,
             filesystem,
             pathFromRoot,
+            UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "not a valid URI");
     fail("Expected coercion failure");

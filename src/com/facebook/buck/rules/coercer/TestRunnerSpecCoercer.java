@@ -60,12 +60,18 @@ public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
 
     return ImmutableTestRunnerSpec.of(
         coerceRecursively(
-            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            object));
   }
 
   private Object coerceRecursively(
@@ -73,20 +79,36 @@ public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Map) {
       return mapTypeCoercer.coerce(
-          cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
+          cellRoots,
+          filesystem,
+          pathRelativeToProjectRoot,
+          targetConfiguration,
+          hostConfiguration,
+          object);
     }
     if (object instanceof Iterable) {
       return listTypeCoercer.coerce(
-          cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
+          cellRoots,
+          filesystem,
+          pathRelativeToProjectRoot,
+          targetConfiguration,
+          hostConfiguration,
+          object);
     }
     if (object instanceof Number || object instanceof Boolean) {
       return object;
     }
     return macrosTypeCoercer.coerce(
-        cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
+        cellRoots,
+        filesystem,
+        pathRelativeToProjectRoot,
+        targetConfiguration,
+        hostConfiguration,
+        object);
   }
 }

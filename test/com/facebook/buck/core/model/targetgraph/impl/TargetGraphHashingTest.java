@@ -31,6 +31,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -121,7 +122,8 @@ public class TargetGraphHashingTest {
                 eventBus,
                 ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close),
                 new FakeFileHashCache(ImmutableMap.of()),
-                new ParsingUnconfiguredBuildTargetViewFactory())
+                new ParsingUnconfiguredBuildTargetViewFactory(),
+                UnconfiguredTargetConfiguration.INSTANCE)
             .create(
                 ParsingContext.builder(cell, MoreExecutors.newDirectExecutorService()).build(),
                 parser.getPermState());
