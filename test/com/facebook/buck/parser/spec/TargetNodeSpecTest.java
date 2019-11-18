@@ -161,7 +161,8 @@ public class TargetNodeSpecTest {
   private Cell getCellOfTargetNodeSpec(Cell currentCell, TargetNodeSpec spec) {
     return currentCell
         .getCellProvider()
-        .getCellByCanonicalCellName(spec.getBuildFileSpec().getCellName());
+        .getCellByCanonicalCellName(
+            spec.getBuildFileSpec().getCellRelativeBaseName().getCellName());
   }
 
   private TargetNodeSpec parseTargetNodeSpec(Cell cell, String targetPattern) {

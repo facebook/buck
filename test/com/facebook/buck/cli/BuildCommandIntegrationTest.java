@@ -391,11 +391,8 @@ public class BuildCommandIntegrationTest {
     workspace.setUp();
 
     String expectedWhenExists =
-        "%s references a non-existent directory "
-            + Paths.get("subdir1", "subdir3")
-            + " when run from subdir1";
-    String expectedWhenNotExists =
-        "%s references non-existent directory " + Paths.get("subdir1", "subdir4");
+        "%s references a non-existent directory subdir1/subdir3 when run from subdir1";
+    String expectedWhenNotExists = "%s references non-existent directory subdir1/subdir4";
 
     workspace.setRelativeWorkingDirectory(Paths.get("subdir1"));
     Files.createDirectories(tmp.getRoot().resolve("subdir3").resolve("something"));

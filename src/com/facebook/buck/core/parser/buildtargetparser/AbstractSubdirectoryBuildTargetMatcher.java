@@ -16,10 +16,8 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
-import com.facebook.buck.io.pathformat.PathFormatter;
-import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** A pattern matches build targets that have the specified ancestor directory. */
@@ -27,13 +25,11 @@ import org.immutables.value.Value;
 @BuckStylePackageVisibleTuple
 abstract class AbstractSubdirectoryBuildTargetMatcher implements BuildTargetMatcher {
 
-  protected abstract CanonicalCellName getCellName();
-
   /**
    * Base path of the build target in the ancestor directory. It is expected to match the value
    * returned from a {@link BuildTarget#getBasePath()} call.
    */
-  protected abstract Path getPathWithinCell();
+  protected abstract CellRelativePath getPathWithinCell();
 
   /**
    * @return true if target not null and is under the directory basePathWithSlash, otherwise return
@@ -41,11 +37,11 @@ abstract class AbstractSubdirectoryBuildTargetMatcher implements BuildTargetMatc
    */
   @Override
   public boolean matches(BuildTarget target) {
-    if (!getCellName().equals(target.getCell())) {
+    if (!getPathWithinCell().getCellName().equals(target.getCell())) {
       return false;
     }
 
-    if (target.getBasePath().startsWith(getPathWithinCell())) {
+    if (target.getCellRelativeBasePath().getPath().startsWith(getPathWithinCell().getPath())) {
       return true;
     }
 
@@ -56,11 +52,11 @@ abstract class AbstractSubdirectoryBuildTargetMatcher implements BuildTargetMatc
 
   @Override
   public String getCellFreeRepresentation() {
-    return "//" + PathFormatter.pathWithUnixSeparators(getPathWithinCell()) + "/...";
+    return "//" + getPathWithinCell().getPath() + "/...";
   }
 
   @Override
   public String toString() {
-    return getCellName() + "//" + getPathWithinCell() + "/...";
+    return getPathWithinCell() + "/...";
   }
 }

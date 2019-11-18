@@ -16,11 +16,8 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
-import com.facebook.buck.io.pathformat.PathFormatter;
-import com.google.common.base.Objects;
-import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** A pattern matches build targets that are all in the same directory. */
@@ -28,13 +25,7 @@ import org.immutables.value.Value;
 @BuckStylePackageVisibleTuple
 abstract class AbstractImmediateDirectoryBuildTargetMatcher implements BuildTargetMatcher {
 
-  protected abstract CanonicalCellName getCellName();
-
-  /**
-   * The base path of all valid build targets. It is expected to match the value returned from a
-   * {@link BuildTarget#getBasePath()} call.
-   */
-  protected abstract Path getPathWithinCell();
+  protected abstract CellRelativePath getCellRelativeBasePath();
 
   /**
    * @return true if the given target not null and has the same basePathWithSlash, otherwise return
@@ -42,17 +33,16 @@ abstract class AbstractImmediateDirectoryBuildTargetMatcher implements BuildTarg
    */
   @Override
   public boolean matches(BuildTarget target) {
-    return Objects.equal(getCellName(), target.getCell())
-        && Objects.equal(getPathWithinCell(), target.getBasePath());
+    return getCellRelativeBasePath().equals(target.getCellRelativeBasePath());
   }
 
   @Override
   public String getCellFreeRepresentation() {
-    return "//" + PathFormatter.pathWithUnixSeparators(getPathWithinCell()) + ":";
+    return "//" + getCellRelativeBasePath().getPath() + ":";
   }
 
   @Override
   public String toString() {
-    return getCellName() + "//" + getPathWithinCell() + ":";
+    return getCellRelativeBasePath() + ":";
   }
 }

@@ -30,10 +30,12 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -86,7 +88,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -492,7 +493,9 @@ public class TestCommand extends BuildCommand {
                       ImmutableList.of(
                           ImmutableTargetNodePredicateSpec.of(
                                   BuildFileSpec.fromRecursivePath(
-                                      Paths.get(""), params.getCell().getCanonicalName()))
+                                      new ImmutableCellRelativePath(
+                                          params.getCell().getCanonicalName(),
+                                          ForwardRelativePath.of(""))))
                               .withOnlyTests(true)),
                       params.getTargetConfiguration());
           targetGraphCreationResult = targetGraphCreationResult.withBuildTargets(ImmutableSet.of());

@@ -60,25 +60,20 @@ public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
   @Override
   public BuildTargetPattern getBuildTargetPattern(Cell cell) {
     BuildFileSpec buildFileSpec = getBuildFileSpec();
-    if (!cell.getCanonicalName().equals(buildFileSpec.getCellName())) {
+    if (!cell.getCanonicalName().equals(buildFileSpec.getCellRelativeBaseName().getCellName())) {
       throw new IllegalArgumentException(
           String.format(
               "%s: Root of cell should agree with build file spec: %s vs %s",
-              toString(), cell.getRoot(), buildFileSpec.getCellName()));
+              toString(), cell.getRoot(), buildFileSpec.getCellRelativeBaseName().getCellName()));
     }
 
     CanonicalCellName cellName = cell.getCanonicalName();
 
-    // sometimes spec comes with absolute path as base path, sometimes it is relative to
-    // cell path
-    // TODO(sergeyb): find out why
-    Path basePath = buildFileSpec.getBasePath();
-    if (basePath.isAbsolute()) {
-      basePath =
-          cell.getNewCellPathResolver()
-              .getCellPath(buildFileSpec.getCellName())
-              .relativize(basePath);
-    }
+    Path basePath =
+        buildFileSpec
+            .getCellRelativeBaseName()
+            .getPath()
+            .toPath(cell.getFilesystem().getFileSystem());
     return ImmutableBuildTargetPattern.of(
         cellName,
         buildFileSpec.isRecursive()

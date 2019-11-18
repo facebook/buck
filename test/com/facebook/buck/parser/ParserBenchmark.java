@@ -23,7 +23,9 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.parser.spec.BuildFileSpec;
@@ -40,7 +42,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.Executors;
 import org.junit.After;
 import org.junit.Before;
@@ -135,7 +136,9 @@ public class ParserBenchmark {
             .build(),
         ImmutableList.of(
             ImmutableTargetNodePredicateSpec.of(
-                BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getCanonicalName()))),
+                BuildFileSpec.fromRecursivePath(
+                    new ImmutableCellRelativePath(
+                        cell.getCanonicalName(), ForwardRelativePath.of(""))))),
         UnconfiguredTargetConfiguration.INSTANCE);
   }
 }

@@ -52,6 +52,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -61,6 +62,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -2632,7 +2634,9 @@ public class ParserWithConfigurableAttributesTest {
                     ImmutableList.of(
                         ImmutableTargetNodePredicateSpec.of(
                             BuildFileSpec.fromRecursivePath(
-                                Paths.get(""), parsingContext.getCell().getCanonicalName()))),
+                                new ImmutableCellRelativePath(
+                                    parsingContext.getCell().getCanonicalName(),
+                                    ForwardRelativePath.of(""))))),
                     UnconfiguredTargetConfiguration.INSTANCE)
                 .getTargetGraph()
                 .getNodes())

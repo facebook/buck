@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.parser.spec.BuildTargetMatcherTargetNodeParser;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.support.cli.args.BuckCellArg;
@@ -154,18 +155,21 @@ public class CommandLineTargetNodeSpecParser {
    * for every single build target.
    */
   private void validateTargetSpec(TargetNodeSpec spec, String arg, Cell owningCell) {
-    CanonicalCellName cellName = spec.getBuildFileSpec().getCellName();
-    Path basePath = spec.getBuildFileSpec().getBasePath();
+    CanonicalCellName cellName = spec.getBuildFileSpec().getCellRelativeBaseName().getCellName();
+    ForwardRelativePath basePath = spec.getBuildFileSpec().getCellRelativeBaseName().getPath();
+    Path basePathPath = basePath.toPath(owningCell.getFilesystem().getFileSystem());
     Cell realCell = owningCell.getCellProvider().getCellByCanonicalCellName(cellName);
-    if (!realCell.getFilesystem().exists(basePath)) {
+    if (!realCell.getFilesystem().exists(basePathPath)) {
       // If someone passes in bar:baz while in subdir foo, and foo/bar does not exist, BUT <root
       // cell>/bar does, tell the user to fix their usage. We do not want to support too many
       // extraneous build target patterns, so hard error, but at least try to help users along.
       if (!rootRelativePackage.isEmpty() && owningCell.equals(realCell) && !arg.contains("//")) {
         Path rootRelativePackagePath = Paths.get(rootRelativePackage);
-        if (basePath.startsWith(rootRelativePackagePath)
-            && owningCell.getFilesystem().exists(rootRelativePackagePath.relativize(basePath))) {
-          Path rootBasePath = rootRelativePackagePath.relativize(basePath);
+        if (basePathPath.startsWith(rootRelativePackagePath)
+            && owningCell
+                .getFilesystem()
+                .exists(rootRelativePackagePath.relativize(basePathPath))) {
+          Path rootBasePath = rootRelativePackagePath.relativize(basePathPath);
           String str =
               "%s references a non-existent directory %s when run from %s\n"
                   + "However, %s exists in your repository root (%s).\n"

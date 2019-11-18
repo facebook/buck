@@ -20,6 +20,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
@@ -32,7 +34,8 @@ public class ImmediateDirectoryBuildTargetMatcherTest {
   public void testApply() {
     ImmediateDirectoryBuildTargetMatcher pattern =
         ImmediateDirectoryBuildTargetMatcher.of(
-            CanonicalCellName.rootCell(), Paths.get("src/com/facebook/buck/"));
+            new ImmutableCellRelativePath(
+                CanonicalCellName.rootCell(), ForwardRelativePath.of("src/com/facebook/buck")));
 
     assertTrue(
         pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "buck")));

@@ -20,8 +20,11 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.exception.UnknownCellException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -83,7 +86,7 @@ public abstract class BuildTargetMatcherParser<T> {
       if (targetWithOutputLabel.getOutputLabel().getLabel().isPresent()) {
         throw createOutputLabelParseException(targetWithOutputLabel);
       }
-      return createForChildren(target.getCell(), target.getBasePath());
+      return createForChildren(target.getCellRelativeBasePath());
     } else {
       return createForSingleton(
           ImmutableUnconfiguredBuildTargetWithOutputs.of(
@@ -124,14 +127,16 @@ public abstract class BuildTargetMatcherParser<T> {
       BaseNameParser.checkBaseName(basePathWithPrefix, buildTargetPattern);
     }
 
-    String basePathWithSlash =
+    String basePath =
         buildTargetPattern.substring(
             BUILD_RULE_PREFIX.length(),
             buildTargetPattern.length() - WILDCARD_BUILD_RULE_SUFFIX.length());
-    // Make sure the basePath comes from the same underlying filesystem.
-    Path basePath = cellPath.getFileSystem().getPath(basePathWithSlash);
+    if (basePath.endsWith("/")) {
+      basePath = basePath.substring(0, basePath.length() - "/".length());
+    }
+    ForwardRelativePath forwardRelativePath = ForwardRelativePath.of(basePath);
     CanonicalCellName cellName = cellNames.getNewCellPathResolver().getCanonicalCellName(cellPath);
-    return createForDescendants(cellName, basePath);
+    return createForDescendants(new ImmutableCellRelativePath(cellName, forwardRelativePath));
   }
 
   /** Used when parsing target names in the {@code visibility} argument to a build rule. */
@@ -144,9 +149,9 @@ public abstract class BuildTargetMatcherParser<T> {
    *     Examples are ":azzetz in build file //first-party/orca/orcaapp/BUCK" and
    *     "//first-party/orca/orcaapp:mezzenger in context FULLY_QUALIFIED"
    */
-  protected abstract T createForDescendants(CanonicalCellName cellName, Path basePath);
+  protected abstract T createForDescendants(CellRelativePath cellRelativePath);
 
-  protected abstract T createForChildren(CanonicalCellName cellName, Path basePath);
+  protected abstract T createForChildren(CellRelativePath cellRelativePath);
 
   protected abstract T createForSingleton(
       ImmutableUnconfiguredBuildTargetWithOutputs targetWithOutputs);
@@ -162,13 +167,13 @@ public abstract class BuildTargetMatcherParser<T> {
   private static class VisibilityContext extends BuildTargetMatcherParser<BuildTargetMatcher> {
 
     @Override
-    public BuildTargetMatcher createForDescendants(CanonicalCellName cellName, Path basePath) {
-      return SubdirectoryBuildTargetMatcher.of(cellName, basePath);
+    public BuildTargetMatcher createForDescendants(CellRelativePath cellRelativePath) {
+      return SubdirectoryBuildTargetMatcher.of(cellRelativePath);
     }
 
     @Override
-    public BuildTargetMatcher createForChildren(CanonicalCellName cellName, Path basePath) {
-      return ImmediateDirectoryBuildTargetMatcher.of(cellName, basePath);
+    public BuildTargetMatcher createForChildren(CellRelativePath cellRelativePath) {
+      return ImmediateDirectoryBuildTargetMatcher.of(cellRelativePath);
     }
 
     @Override

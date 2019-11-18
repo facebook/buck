@@ -176,7 +176,8 @@ public class TargetSpecResolver implements AutoCloseable {
       Cell cell =
           rootCell
               .getCellProvider()
-              .getCellByCanonicalCellName(firstSpec.getBuildFileSpec().getCellName());
+              .getCellByCanonicalCellName(
+                  firstSpec.getBuildFileSpec().getCellRelativeBaseName().getCellName());
 
       // Format a proper error message for non-existent build files.
       if (!cell.getFilesystem().isFile(buildFile)) {
@@ -210,7 +211,7 @@ public class TargetSpecResolver implements AutoCloseable {
     Multimap<Path, Integer> perBuildFileSpecs = LinkedHashMultimap.create();
     for (int index = 0; index < orderedSpecs.size(); index++) {
       TargetNodeSpec spec = orderedSpecs.get(index);
-      CanonicalCellName cellName = spec.getBuildFileSpec().getCellName();
+      CanonicalCellName cellName = spec.getBuildFileSpec().getCellRelativeBaseName().getCellName();
       Cell cell = rootCell.getCellProvider().getCellByCanonicalCellName(cellName);
       try (SimplePerfEvent.Scope perfEventScope =
           SimplePerfEvent.scope(
@@ -224,7 +225,8 @@ public class TargetSpecResolver implements AutoCloseable {
           Path buildFile =
               projectFilesystemView.resolve(
                   buildFileSpec
-                      .getBasePath()
+                      .getCellRelativeBaseName()
+                      .getPath()
                       .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()));
           perBuildFileSpecs.put(buildFile, index);
         } else {

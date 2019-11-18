@@ -32,6 +32,7 @@ import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -47,6 +48,7 @@ import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
 import com.facebook.buck.core.parser.ImmutableBuildTargetPatternToBuildPackagePathKey;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -605,7 +607,9 @@ public class TargetsCommand extends AbstractCommand {
                   ImmutableList.of(
                       ImmutableTargetNodePredicateSpec.of(
                           BuildFileSpec.fromRecursivePath(
-                              Paths.get(""), params.getCell().getCanonicalName()))),
+                              new ImmutableCellRelativePath(
+                                  params.getCell().getCanonicalName(),
+                                  ForwardRelativePath.of(""))))),
                   params.getTargetConfiguration());
       SortedMap<String, TargetNode<?>> matchingNodes =
           getMatchingNodes(params, completeTargetGraphAndBuildTargets, descriptionClasses);
@@ -730,7 +734,9 @@ public class TargetsCommand extends AbstractCommand {
                       ImmutableList.of(
                           ImmutableTargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
-                                  Paths.get(""), params.getCell().getCanonicalName()))),
+                                  new ImmutableCellRelativePath(
+                                      params.getCell().getCanonicalName(),
+                                      ForwardRelativePath.of(""))))),
                       params.getTargetConfiguration())
                   .getTargetGraph(),
               ImmutableSet.of());
