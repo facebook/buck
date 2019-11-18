@@ -170,7 +170,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    * @return the annotations jar path
    */
   Path getPathToAnnotationsJar() {
-    return getPathToJar("annotations");
+    return getPathToJar("annotations-13.0");
   }
 
   /**
