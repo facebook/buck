@@ -834,7 +834,9 @@ public class TargetsCommand extends AbstractCommand {
               projectFilesystem);
       directOwners =
           graph.getNodes().stream()
-              .filter(new DirectOwnerPredicate(buildFileTree, referencedFiles.get(), buildFileName))
+              .filter(
+                  new DirectOwnerPredicate(
+                      buildFileTree, projectFilesystem, referencedFiles.get(), buildFileName))
               .collect(ImmutableSet.toImmutableSet());
     } else {
       directOwners = graph.getNodes();
@@ -1422,6 +1424,7 @@ public class TargetsCommand extends AbstractCommand {
 
   private static class DirectOwnerPredicate implements Predicate<TargetNode<?>> {
 
+    private final ProjectFilesystem projectFilesystem;
     private final ImmutableSet<Path> referencedInputs;
     private final ImmutableSet<Path> basePathOfTargets;
     private final String buildFileName;
@@ -1429,10 +1432,13 @@ public class TargetsCommand extends AbstractCommand {
     /**
      * @param referencedInputs A {@link TargetNode} must reference at least one of these paths as
      *     input to match the predicate. All the paths must be relative to the project root. Ignored
-     *     if empty.
      */
     public DirectOwnerPredicate(
-        BuildFileTree buildFileTree, ImmutableSet<Path> referencedInputs, String buildFileName) {
+        BuildFileTree buildFileTree,
+        ProjectFilesystem projectFilesystem,
+        ImmutableSet<Path> referencedInputs,
+        String buildFileName) {
+      this.projectFilesystem = projectFilesystem;
       this.referencedInputs = referencedInputs;
 
       ImmutableSet.Builder<Path> basePathOfTargetsBuilder = ImmutableSet.builder();
@@ -1447,7 +1453,11 @@ public class TargetsCommand extends AbstractCommand {
     public boolean test(TargetNode<?> node) {
       // For any referenced file, only those with the nearest target base path can
       // directly depend on that file.
-      if (!basePathOfTargets.contains(node.getBuildTarget().getBasePath())) {
+      if (!basePathOfTargets.contains(
+          node.getBuildTarget()
+              .getCellRelativeBasePath()
+              .getPath()
+              .toPath(projectFilesystem.getFileSystem()))) {
         return false;
       }
 
@@ -1459,7 +1469,12 @@ public class TargetsCommand extends AbstractCommand {
         }
       }
 
-      return referencedInputs.contains(node.getBuildTarget().getBasePath().resolve(buildFileName));
+      return referencedInputs.contains(
+          node.getBuildTarget()
+              .getCellRelativeBasePath()
+              .getPath()
+              .toPath(projectFilesystem.getFileSystem())
+              .resolve(buildFileName));
     }
   }
 
