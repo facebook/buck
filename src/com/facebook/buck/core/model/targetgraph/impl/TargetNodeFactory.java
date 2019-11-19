@@ -182,10 +182,11 @@ public class TargetNodeFactory implements NodeCopier {
     }
 
     if (description instanceof ImplicitInputsInferringDescription) {
-      pathsBuilder.addAll(
-          ((ImplicitInputsInferringDescription<T>) description)
-              .inferInputsFromConstructorArgs(
-                  buildTarget.getUnflavoredBuildTarget(), constructorArg));
+      ((ImplicitInputsInferringDescription<T>) description)
+          .inferInputsFromConstructorArgs(buildTarget.getUnflavoredBuildTarget(), constructorArg)
+              .stream()
+              .map(p -> p.toPath(filesystem.getFileSystem()))
+              .forEach(pathsBuilder::add);
     }
 
     ImmutableSet<BuildTarget> configurationDepsFromArg =

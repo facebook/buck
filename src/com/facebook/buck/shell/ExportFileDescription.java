@@ -22,6 +22,7 @@ import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescriptio
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
@@ -30,7 +31,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -111,11 +111,12 @@ public class ExportFileDescription
 
   /** If the src field is absent, add the name field to the list of inputs. */
   @Override
-  public Iterable<Path> inferInputsFromConstructorArgs(
+  public ImmutableList<ForwardRelativePath> inferInputsFromConstructorArgs(
       UnflavoredBuildTargetView buildTarget, ExportFileDescriptionArg constructorArg) {
-    ImmutableList.Builder<Path> inputs = ImmutableList.builder();
+    ImmutableList.Builder<ForwardRelativePath> inputs = ImmutableList.builder();
     if (!constructorArg.getSrc().isPresent()) {
-      inputs.add(buildTarget.getBasePath().resolve(buildTarget.getShortName()));
+      inputs.add(
+          buildTarget.getCellRelativeBasePath().getPath().resolve(buildTarget.getShortName()));
     }
     return inputs.build();
   }

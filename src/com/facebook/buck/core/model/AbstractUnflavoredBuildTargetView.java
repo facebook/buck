@@ -16,19 +16,12 @@
 
 package com.facebook.buck.core.model;
 
-import java.nio.file.Path;
-
 /** Base for implementation of {@link com.facebook.buck.core.model.UnflavoredBuildTargetView}. */
 public abstract class AbstractUnflavoredBuildTargetView implements UnflavoredBuildTargetView {
 
   @Override
   public String getFullyQualifiedName() {
     return getCell().getName() + getBaseName() + ":" + getShortName();
-  }
-
-  @Override
-  public Path getBasePath() {
-    return getCellRelativeBasePath().getPath().toPath(getCellFileSystem());
   }
 
   @Override

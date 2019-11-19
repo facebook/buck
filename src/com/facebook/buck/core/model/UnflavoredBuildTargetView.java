@@ -17,7 +17,6 @@
 package com.facebook.buck.core.model;
 
 import java.nio.file.FileSystem;
-import java.nio.file.Path;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -34,12 +33,7 @@ public interface UnflavoredBuildTargetView extends Comparable<UnflavoredBuildTar
 
   String BUILD_TARGET_PREFIX = "//";
 
-  /**
-   * Cell filesystem exists only to create {@link #getBasePath()} from {@link #getBaseName()}. It
-   * must not be used for anything else, and eventually either {@link Path} should be replaced with
-   * some other type or at least {@link Path} should be created with some special relative-path
-   * filesystem.
-   */
+  /** To be deleted soon. */
   FileSystem getCellFileSystem();
 
   CanonicalCellName getCell();
@@ -59,12 +53,9 @@ public interface UnflavoredBuildTargetView extends Comparable<UnflavoredBuildTar
   String getFullyQualifiedName();
 
   /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return the
-   * {@link Path} "third_party/java/guava". This does not contain the "//" prefix so that it can be
-   * appended to a file path.
+   * If this build target were {@code cell//third_party/java/guava:guava-latest}, then this would
+   * return the {@code cell//third_party/java/guava}.
    */
-  Path getBasePath();
-
   CellRelativePath getCellRelativeBasePath();
 
   /** Data object that backs current instance */
