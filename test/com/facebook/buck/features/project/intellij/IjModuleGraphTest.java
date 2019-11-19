@@ -701,7 +701,8 @@ public class IjModuleGraphTest {
             .build();
     JavaPackageFinder packageFinder =
         (buckConfig == null)
-            ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(Collections.emptyList())
+            ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+                filesystem, Collections.emptyList())
             : buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(

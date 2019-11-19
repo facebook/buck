@@ -682,7 +682,8 @@ public class DefaultIjModuleFactoryTest {
             .build();
     JavaPackageFinder packageFinder =
         (buckConfig == null)
-            ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(Collections.emptyList())
+            ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+                projectFilesystem, Collections.emptyList())
             : buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(

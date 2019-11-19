@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
@@ -31,7 +32,8 @@ public class DefaultJavaPackageFinderTest {
   @Test
   public void testNoPathsSpecified() {
     DefaultJavaPackageFinder javaPackageFinder =
-        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableList.of());
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+            new FakeProjectFilesystem(), ImmutableList.of());
     assertEquals(Paths.get(""), javaPackageFinder.findJavaPackageFolder(Paths.get("Base.java")));
     assertEquals(
         Paths.get("java/com/example/base/"),
@@ -41,7 +43,8 @@ public class DefaultJavaPackageFinderTest {
   @Test
   public void testSinglePathFromRoot() {
     DefaultJavaPackageFinder javaPackageFinder =
-        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableList.of("/java/"));
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+            new FakeProjectFilesystem(), ImmutableList.of("/java/"));
     assertEquals(
         Paths.get("com/example/base/"),
         javaPackageFinder.findJavaPackageFolder(Paths.get("java/com/example/base/Base.java")));
@@ -65,6 +68,7 @@ public class DefaultJavaPackageFinderTest {
   public void testOverlappingPathsFromRoot() {
     DefaultJavaPackageFinder javaPackageFinder =
         DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+            new FakeProjectFilesystem(),
             ImmutableList.of("/java", "/java/more/specific", "/javatests"));
     assertEquals(
         Paths.get("com/example/base/"),
@@ -81,7 +85,8 @@ public class DefaultJavaPackageFinderTest {
   @Test
   public void testSinglePathElement() {
     DefaultJavaPackageFinder javaPackageFinder =
-        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableList.of("src"));
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+            new FakeProjectFilesystem(), ImmutableList.of("src"));
     assertEquals(
         Paths.get("com/example/base/"),
         javaPackageFinder.findJavaPackageFolder(
@@ -102,7 +107,8 @@ public class DefaultJavaPackageFinderTest {
   @Test
   public void testMultiplePathElements() {
     DefaultJavaPackageFinder javaPackageFinder =
-        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableList.of("src", "src-gen"));
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+            new FakeProjectFilesystem(), ImmutableList.of("src", "src-gen"));
     assertEquals(
         Paths.get("com/example/base/"),
         javaPackageFinder.findJavaPackageFolder(
@@ -112,7 +118,8 @@ public class DefaultJavaPackageFinderTest {
   @Test
   public void testMixOfPrefixesAndPathElements() {
     DefaultJavaPackageFinder javaPackageFinder =
-        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableList.of("/java", "src"));
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+            new FakeProjectFilesystem(), ImmutableList.of("/java", "src"));
     assertEquals(
         "Prefixes take precedence over path elements",
         Paths.get("com/example/base/"),
@@ -123,7 +130,8 @@ public class DefaultJavaPackageFinderTest {
   @Test
   public void testInvalidPath() {
     try {
-      DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableList.of("src/"));
+      DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+          new FakeProjectFilesystem(), ImmutableList.of("src/"));
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals(

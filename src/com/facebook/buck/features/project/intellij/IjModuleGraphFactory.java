@@ -87,14 +87,19 @@ public final class IjModuleGraphFactory {
                 ? nodes
                 : nodes.filter(
                     targetNode ->
-                        shouldConvertToIjModule(projectConfig.getProjectRoot(), targetNode)))
+                        shouldConvertToIjModule(
+                            projectFilesystem, projectConfig.getProjectRoot(), targetNode)))
             .collect(
                 ImmutableListMultimap.toImmutableListMultimap(
                     targetNode ->
                         projectFilesystem.relativize(
                             targetNode
                                 .getFilesystem()
-                                .resolve(targetNode.getBuildTarget().getBasePath())),
+                                .resolve(
+                                    targetNode
+                                        .getBuildTarget()
+                                        .getCellRelativeBasePath()
+                                        .getPath())),
                     targetNode -> targetNode));
 
     AggregationTree aggregationTree =
@@ -125,8 +130,14 @@ public final class IjModuleGraphFactory {
     return moduleByBuildTarget.build();
   }
 
-  private static boolean shouldConvertToIjModule(String projectRoot, TargetNode<?> targetNode) {
-    return targetNode.getBuildTarget().getBasePath().startsWith(projectRoot);
+  private static boolean shouldConvertToIjModule(
+      ProjectFilesystem projectFilesystem, String projectRoot, TargetNode<?> targetNode) {
+    return targetNode
+        .getBuildTarget()
+        .getCellRelativeBasePath()
+        .getPath()
+        .toPath(projectFilesystem.getFileSystem())
+        .startsWith(projectRoot);
   }
 
   private static AggregationTree createAggregationTree(

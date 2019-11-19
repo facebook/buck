@@ -50,7 +50,7 @@ public class CopyResourcesStepTest {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//android/java:resources");
-    JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
+    JavaPackageFinder javaPackageFinder = createJavaPackageFinder(filesystem);
 
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver())
@@ -119,8 +119,8 @@ public class CopyResourcesStepTest {
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//android/java/src:resources");
-    JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    JavaPackageFinder javaPackageFinder = createJavaPackageFinder(filesystem);
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     BuildContext buildContext =
@@ -190,8 +190,8 @@ public class CopyResourcesStepTest {
     // android/java/src/com/facebook/common/util/data.json
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance("//android/java/src/com/facebook:resources");
-    JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    JavaPackageFinder javaPackageFinder = createJavaPackageFinder(filesystem);
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     BuildContext buildContext =
@@ -258,8 +258,8 @@ public class CopyResourcesStepTest {
     assertEquals(expected, step.buildSteps());
   }
 
-  private JavaPackageFinder createJavaPackageFinder() {
+  private JavaPackageFinder createJavaPackageFinder(ProjectFilesystem projectFilesystem) {
     return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
-        ImmutableSet.of("/android/java/src"));
+        projectFilesystem, ImmutableSet.of("/android/java/src"));
   }
 }

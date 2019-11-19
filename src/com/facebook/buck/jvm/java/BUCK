@@ -269,6 +269,9 @@ java_library(
         "DefaultJavaPackageFinder.java",
         "ResourcesRootPackageFinder.java",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+    ],
     visibility = [
         "PUBLIC",
     ],

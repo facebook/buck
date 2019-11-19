@@ -71,7 +71,7 @@ public abstract class ParsingJavaPackageFinder {
         .collect(Collectors.toList())
         .forEach(pair -> packagePathCache.insert(pair.getFirst(), pair.getSecond().get()));
 
-    return new CacheBasedPackageFinder(fallbackPackageFinder, packagePathCache);
+    return new CacheBasedPackageFinder(projectFilesystem, fallbackPackageFinder, packagePathCache);
   }
 
   /**
@@ -171,11 +171,16 @@ public abstract class ParsingJavaPackageFinder {
   }
 
   private static class CacheBasedPackageFinder implements JavaPackageFinder {
-    private JavaPackageFinder fallbackPackageFinder;
-    private JavaPackagePathCache packagePathCache;
+
+    private final ProjectFilesystem projectFilesystem;
+    private final JavaPackageFinder fallbackPackageFinder;
+    private final JavaPackagePathCache packagePathCache;
 
     public CacheBasedPackageFinder(
-        JavaPackageFinder fallbackPackageFinder, JavaPackagePathCache packagePathCache) {
+        ProjectFilesystem projectFilesystem,
+        JavaPackageFinder fallbackPackageFinder,
+        JavaPackagePathCache packagePathCache) {
+      this.projectFilesystem = projectFilesystem;
       this.fallbackPackageFinder = fallbackPackageFinder;
       this.packagePathCache = packagePathCache;
     }
@@ -198,7 +203,12 @@ public abstract class ParsingJavaPackageFinder {
 
     @Override
     public String findJavaPackage(BuildTarget buildTarget) {
-      return findJavaPackage(buildTarget.getBasePath().resolve("removed"));
+      return findJavaPackage(
+          buildTarget
+              .getCellRelativeBasePath()
+              .getPath()
+              .toPath(projectFilesystem.getFileSystem())
+              .resolve("removed"));
     }
   }
 

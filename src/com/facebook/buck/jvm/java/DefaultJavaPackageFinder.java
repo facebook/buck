@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -30,6 +31,7 @@ import java.util.LinkedList;
 
 public class DefaultJavaPackageFinder implements JavaPackageFinder {
 
+  private final ProjectFilesystem projectFilesystem;
   /**
    * Each element in this set is a path prefix from the root of the repository.
    *
@@ -45,7 +47,10 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
   private final ImmutableSet<String> pathElements;
 
   public DefaultJavaPackageFinder(
-      ImmutableSortedSet<String> pathsFromRoot, ImmutableSet<String> pathElements) {
+      ProjectFilesystem projectFilesystem,
+      ImmutableSortedSet<String> pathsFromRoot,
+      ImmutableSet<String> pathElements) {
+    this.projectFilesystem = projectFilesystem;
     this.pathsFromRoot = pathsFromRoot;
     this.pathElements = pathElements;
   }
@@ -90,7 +95,7 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
    *     elements indicate individual directory names (and therefore cannot contain slashes).
    */
   public static DefaultJavaPackageFinder createDefaultJavaPackageFinder(
-      Iterable<String> pathPatterns) {
+      ProjectFilesystem projectFilesystem, Iterable<String> pathPatterns) {
     ImmutableSortedSet.Builder<String> pathsFromRoot = ImmutableSortedSet.reverseOrder();
     ImmutableSet.Builder<String> pathElements = ImmutableSet.builder();
     for (String pattern : pathPatterns) {
@@ -111,7 +116,8 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
         pathElements.add(pattern);
       }
     }
-    return new DefaultJavaPackageFinder(pathsFromRoot.build(), pathElements.build());
+    return new DefaultJavaPackageFinder(
+        projectFilesystem, pathsFromRoot.build(), pathElements.build());
   }
 
   @Override
@@ -122,7 +128,12 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
 
   @Override
   public String findJavaPackage(BuildTarget buildTarget) {
-    return findJavaPackage(buildTarget.getBasePath().resolve("removed"));
+    return findJavaPackage(
+        buildTarget
+            .getCellRelativeBasePath()
+            .getPath()
+            .toPath(projectFilesystem.getFileSystem())
+            .resolve("removed"));
   }
 
   public static String findJavaPackageWithPackageFolder(Path packageFolder) {

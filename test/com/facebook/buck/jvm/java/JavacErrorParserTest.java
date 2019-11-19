@@ -38,7 +38,8 @@ public class JavacErrorParserTest {
     projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     JavaPackageFinder javaPackageFinder =
-        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableSet.of("/src/"));
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+            projectFilesystem, ImmutableSet.of("/src/"));
     javacErrorParser = new JavacErrorParser(projectFilesystem, javaPackageFinder);
   }
 

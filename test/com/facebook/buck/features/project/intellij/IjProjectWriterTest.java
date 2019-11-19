@@ -384,7 +384,7 @@ public class IjProjectWriterTest {
   private IjProjectTemplateDataPreparer dataPreparer(
       ProjectFilesystem filesystem, IjModuleGraph moduleGraph) {
     JavaPackageFinder javaPackageFinder =
-        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableSet.of());
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(filesystem, ImmutableSet.of());
     AndroidManifestParser androidManifestParser = new AndroidManifestParser(filesystem);
     return new IjProjectTemplateDataPreparer(
         javaPackageFinder, moduleGraph, filesystem, projectConfig(), androidManifestParser);

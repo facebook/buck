@@ -154,7 +154,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public DefaultJavaPackageFinder createDefaultJavaPackageFinder() {
-    return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(getSrcRoots());
+    return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+        delegate.getFilesystem(), getSrcRoots());
   }
 
   public boolean trackClassUsage(TargetConfiguration targetConfiguration) {

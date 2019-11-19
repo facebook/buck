@@ -77,7 +77,7 @@ public class IjProjectDataPreparerTest {
     filesystem = new FakeProjectFilesystem();
     javaPackageFinder =
         DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
-            ImmutableSet.of("/java/", "/javatests/"));
+            filesystem, ImmutableSet.of("/java/", "/javatests/"));
     androidManifestParser = new AndroidManifestParser(new FakeProjectFilesystem());
   }
 

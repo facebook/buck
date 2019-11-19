@@ -109,7 +109,9 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
   public WorkerRequirements resolveRequirements(BuildTarget target, String auxiliaryBuildTag) {
     // TODO(nga): must not ignore cell path
     Path filepath =
-        projectFilesystem.resolve(target.getBasePath()).resolve(workerRequirementsFilename);
+        projectFilesystem
+            .resolve(target.getCellRelativeBasePath().getPath())
+            .resolve(workerRequirementsFilename);
     if (!Files.exists(filepath)) {
       return resolveDefault();
     }

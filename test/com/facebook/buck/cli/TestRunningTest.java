@@ -151,7 +151,7 @@ public class TestRunningTest {
     JavaLibrary javaLibrary = (JavaLibrary) graphBuilder.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
-        new DefaultJavaPackageFinder(pathsFromRoot, pathElements);
+        new DefaultJavaPackageFinder(javaLibraryNode.getFilesystem(), pathsFromRoot, pathElements);
 
     ImmutableSet<String> result =
         TestRunning.getPathToSourceFolders(javaLibrary, graphBuilder, defaultJavaPackageFinder);
@@ -177,7 +177,8 @@ public class TestRunningTest {
     JavaLibrary javaLibrary = (JavaLibrary) graphBuilder.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
-        new DefaultJavaPackageFinder(pathsFromRoot, ImmutableSet.of("/"));
+        new DefaultJavaPackageFinder(
+            javaLibraryNode.getFilesystem(), pathsFromRoot, ImmutableSet.of("/"));
 
     TestRunning.getPathToSourceFolders(javaLibrary, graphBuilder, defaultJavaPackageFinder);
   }
@@ -199,7 +200,7 @@ public class TestRunningTest {
     JavaLibrary javaLibrary = (JavaLibrary) graphBuilder.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
-        new DefaultJavaPackageFinder(pathsFromRoot, pathElements);
+        new DefaultJavaPackageFinder(javaLibraryNode.getFilesystem(), pathsFromRoot, pathElements);
 
     ImmutableSet<String> result =
         TestRunning.getPathToSourceFolders(javaLibrary, graphBuilder, defaultJavaPackageFinder);
@@ -241,7 +242,7 @@ public class TestRunningTest {
     JavaLibrary javaLibrary = (JavaLibrary) graphBuilder.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
-        new DefaultJavaPackageFinder(pathsFromRoot, pathElements);
+        new DefaultJavaPackageFinder(javaLibraryNode.getFilesystem(), pathsFromRoot, pathElements);
 
     ImmutableSet<String> result =
         TestRunning.getPathToSourceFolders(javaLibrary, graphBuilder, defaultJavaPackageFinder);
