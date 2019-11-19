@@ -93,7 +93,7 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
           new Aapt2CompileStep(
               filesystem.getRootPath(),
               aapt2ExecutableTool.getCommandPrefix(sourcePathResolverAdapter),
-              sourcePathResolverAdapter.getAbsolutePath(resDir),
+              sourcePathResolverAdapter.getRelativePath(resDir),
               outputPath,
               skipCrunchPngs,
               failOnLegacyErrors);
