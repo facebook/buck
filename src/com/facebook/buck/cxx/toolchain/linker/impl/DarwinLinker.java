@@ -108,6 +108,7 @@ public class DarwinLinker extends DelegatingTool
 
   @Override
   public Iterable<Arg> fatLTO(Path output) {
+    // For fat LTO, the object path should be a file.
     return StringArg.from(
         "-flto", "-Xlinker", "-object_path_lto", "-Xlinker", ltoPath(output).toString());
   }
