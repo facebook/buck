@@ -316,7 +316,8 @@ public final class CxxInferEnhancer {
     InferFlavors.checkNoInferFlavors(target.getFlavors());
 
     ImmutableMap<Path, SourcePath> headers =
-        CxxDescriptionEnhancer.parseHeaders(target, graphBuilder, Optional.of(cxxPlatform), args);
+        CxxDescriptionEnhancer.parseHeaders(
+            target, graphBuilder, filesystem, Optional.of(cxxPlatform), args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.

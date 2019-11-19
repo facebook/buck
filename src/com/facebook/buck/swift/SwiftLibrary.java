@@ -200,7 +200,10 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     BuildRule sharedLibraryBuildRule = requireSwiftLinkRule(cxxPlatform.getFlavor());
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
-            Optional.empty(), sharedLibraryBuildRule.getBuildTarget(), cxxPlatform);
+            Optional.empty(),
+            sharedLibraryBuildRule.getBuildTarget(),
+            cxxPlatform,
+            getProjectFilesystem());
     libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
     return libs.build();
   }

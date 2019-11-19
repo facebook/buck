@@ -176,7 +176,8 @@ public class CxxPythonExtensionDescription
     ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(target, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
-        CxxDescriptionEnhancer.parseHeaders(target, graphBuilder, Optional.of(cxxPlatform), args);
+        CxxDescriptionEnhancer.parseHeaders(
+            target, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.

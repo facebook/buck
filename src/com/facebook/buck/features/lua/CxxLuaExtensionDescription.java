@@ -128,7 +128,7 @@ public class CxxLuaExtensionDescription
         CxxDescriptionEnhancer.parseCxxSources(buildTarget, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget, graphBuilder, Optional.of(cxxPlatform), args);
+            buildTarget, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.

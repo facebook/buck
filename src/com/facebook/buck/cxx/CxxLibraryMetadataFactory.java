@@ -143,7 +143,12 @@ public class CxxLibraryMetadataFactory {
                       IncludeType.LOCAL,
                       PathSourcePath.of(
                           projectFilesystem,
-                          buildTarget.getBasePath().resolve(privateInclude).normalize())));
+                          buildTarget
+                              .getCellRelativeBasePath()
+                              .getPath()
+                              .toPath(projectFilesystem.getFileSystem())
+                              .resolve(privateInclude)
+                              .normalize())));
             }
           }
 
@@ -187,7 +192,12 @@ public class CxxLibraryMetadataFactory {
                       IncludeType.LOCAL,
                       PathSourcePath.of(
                           projectFilesystem,
-                          buildTarget.getBasePath().resolve(publicInclude).normalize())));
+                          buildTarget
+                              .getCellRelativeBasePath()
+                              .getPath()
+                              .toPath(projectFilesystem.getFileSystem())
+                              .resolve(publicInclude)
+                              .normalize())));
             }
 
             for (String publicSystemInclude : args.getPublicSystemIncludeDirectories()) {
@@ -196,7 +206,12 @@ public class CxxLibraryMetadataFactory {
                       IncludeType.SYSTEM,
                       PathSourcePath.of(
                           projectFilesystem,
-                          buildTarget.getBasePath().resolve(publicSystemInclude).normalize())));
+                          buildTarget
+                              .getCellRelativeBasePath()
+                              .getPath()
+                              .toPath(projectFilesystem.getFileSystem())
+                              .resolve(publicSystemInclude)
+                              .normalize())));
             }
           }
 

@@ -219,7 +219,7 @@ public class CxxBinaryFactory {
         graphBuilder,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget, graphBuilder, Optional.of(cxxPlatform), args),
+            buildTarget, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args),
         HeaderVisibility.PRIVATE,
         true);
   }

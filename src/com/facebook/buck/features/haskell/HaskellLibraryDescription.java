@@ -492,7 +492,7 @@ public class HaskellLibraryDescription
 
     String name =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
-            Optional.empty(), target.withFlavors(), platform.getCxxPlatform());
+            Optional.empty(), target.withFlavors(), platform.getCxxPlatform(), projectFilesystem);
     Path outputPath = BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve(name);
 
     return HaskellDescriptionUtils.createLinkRule(
@@ -848,7 +848,7 @@ public class HaskellLibraryDescription
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
             CxxDescriptionEnhancer.getSharedLibrarySoname(
-                Optional.empty(), getBuildTarget(), cxxPlatform);
+                Optional.empty(), getBuildTarget(), cxxPlatform, projectFilesystem);
         BuildRule sharedLibraryBuildRule =
             requireSharedLibrary(
                 getBaseBuildTarget(haskellPlatformsProvider, getBuildTarget()),

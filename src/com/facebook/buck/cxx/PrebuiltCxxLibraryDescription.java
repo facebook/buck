@@ -171,7 +171,7 @@ public class PrebuiltCxxLibraryDescription
         projectFilesystem,
         graphBuilder,
         cxxPlatform,
-        parseExportedHeaders(buildTarget, graphBuilder, cxxPlatform, args),
+        parseExportedHeaders(buildTarget, graphBuilder, projectFilesystem, cxxPlatform, args),
         HeaderVisibility.PUBLIC,
         true);
   }
@@ -179,6 +179,7 @@ public class PrebuiltCxxLibraryDescription
   private static ImmutableMap<Path, SourcePath> parseExportedHeaders(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
       CxxPlatform cxxPlatform,
       PrebuiltCxxLibraryDescriptionArg args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
@@ -195,7 +196,13 @@ public class PrebuiltCxxLibraryDescription
             "exported_platform, headers",
             args.getExportedPlatformHeaders()));
     return CxxPreprocessables.resolveHeaderMap(
-        args.getHeaderNamespace().map(Paths::get).orElse(buildTarget.getBasePath()),
+        args.getHeaderNamespace()
+            .map(Paths::get)
+            .orElse(
+                buildTarget
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(projectFilesystem.getFileSystem())),
         headers.build());
   }
 

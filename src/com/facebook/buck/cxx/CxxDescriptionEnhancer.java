@@ -315,6 +315,7 @@ public class CxxDescriptionEnhancer {
   public static ImmutableMap<Path, SourcePath> parseHeaders(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
       Optional<CxxPlatform> cxxPlatform,
       CxxConstructorArg args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
@@ -336,7 +337,13 @@ public class CxxDescriptionEnhancer {
                     args.getPlatformHeaders())));
 
     return CxxPreprocessables.resolveHeaderMap(
-        args.getHeaderNamespace().map(Paths::get).orElse(buildTarget.getBasePath()),
+        args.getHeaderNamespace()
+            .map(Paths::get)
+            .orElse(
+                buildTarget
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(projectFilesystem.getFileSystem())),
         headers.build());
   }
 
@@ -347,6 +354,7 @@ public class CxxDescriptionEnhancer {
   public static ImmutableMap<Path, SourcePath> parseExportedHeaders(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
       Optional<CxxPlatform> cxxPlatform,
       CxxLibraryDescription.CommonArg args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
@@ -369,7 +377,13 @@ public class CxxDescriptionEnhancer {
                     args.getExportedPlatformHeaders())));
 
     return CxxPreprocessables.resolveHeaderMap(
-        args.getHeaderNamespace().map(Paths::get).orElse(buildTarget.getBasePath()),
+        args.getHeaderNamespace()
+            .map(Paths::get)
+            .orElse(
+                buildTarget
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(projectFilesystem.getFileSystem())),
         headers.build());
   }
 
@@ -380,10 +394,17 @@ public class CxxDescriptionEnhancer {
   public static ImmutableMap<Path, SourcePath> parseExportedPlatformHeaders(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
       CxxPlatform cxxPlatform,
       CxxLibraryDescription.CommonArg args) {
     return CxxPreprocessables.resolveHeaderMap(
-        args.getHeaderNamespace().map(Paths::get).orElse(buildTarget.getBasePath()),
+        args.getHeaderNamespace()
+            .map(Paths::get)
+            .orElse(
+                buildTarget
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(projectFilesystem.getFileSystem())),
         parseOnlyPlatformHeaders(
             buildTarget,
             graphBuilder,
@@ -507,7 +528,13 @@ public class CxxDescriptionEnhancer {
           CxxIncludes.of(
               CxxPreprocessables.IncludeType.LOCAL,
               PathSourcePath.of(
-                  projectFilesystem, target.getBasePath().resolve(privateInclude).normalize())));
+                  projectFilesystem,
+                  target
+                      .getCellRelativeBasePath()
+                      .getPath()
+                      .toPath(projectFilesystem.getFileSystem())
+                      .resolve(privateInclude)
+                      .normalize())));
     }
 
     builder.addAllIncludes(allIncludes.build()).addAllFrameworks(frameworks);
@@ -586,9 +613,12 @@ public class CxxDescriptionEnhancer {
   }
 
   public static String getSharedLibrarySoname(
-      Optional<String> declaredSoname, BuildTarget target, CxxPlatform platform) {
+      Optional<String> declaredSoname,
+      BuildTarget target,
+      CxxPlatform platform,
+      ProjectFilesystem projectFilesystem) {
     if (!declaredSoname.isPresent()) {
-      return getDefaultSharedLibrarySoname(target, platform);
+      return getDefaultSharedLibrarySoname(target, platform, projectFilesystem);
     }
     return getNonDefaultSharedLibrarySoname(
         declaredSoname.get(),
@@ -612,13 +642,21 @@ public class CxxDescriptionEnhancer {
     return match.replaceFirst(String.format(sharedLibraryVersionedExtensionFormat, version));
   }
 
-  public static String getDefaultSharedLibrarySoname(BuildTarget target, CxxPlatform platform) {
+  /** Default shared library soname for a target */
+  public static String getDefaultSharedLibrarySoname(
+      BuildTarget target, CxxPlatform platform, ProjectFilesystem projectFilesystem) {
     String libName =
         Joiner.on('_')
             .join(
                 ImmutableList.builder()
                     .addAll(
-                        StreamSupport.stream(target.getBasePath().spliterator(), false)
+                        StreamSupport.stream(
+                                target
+                                    .getCellRelativeBasePath()
+                                    .getPath()
+                                    .toPath(projectFilesystem.getFileSystem())
+                                    .spliterator(),
+                                false)
                             .map(Object::toString)
                             .filter(x -> !x.isEmpty())
                             .iterator())
@@ -708,7 +746,7 @@ public class CxxDescriptionEnhancer {
       Optional<LinkerMapMode> flavoredLinkerMapMode) {
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(target, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
-        parseHeaders(target, graphBuilder, Optional.of(cxxPlatform), args);
+        parseHeaders(target, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args);
 
     // Build the binary deps.
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
@@ -979,7 +1017,7 @@ public class CxxDescriptionEnhancer {
 
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(target, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
-        parseHeaders(target, graphBuilder, Optional.of(cxxPlatform), args);
+        parseHeaders(target, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args);
 
     // Build the binary deps.
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();

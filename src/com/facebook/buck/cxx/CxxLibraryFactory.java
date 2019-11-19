@@ -439,7 +439,7 @@ public class CxxLibraryFactory {
             graphBuilder,
             cxxPlatform,
             CxxDescriptionEnhancer.parseHeaders(
-                buildTarget, graphBuilder, Optional.of(cxxPlatform), args),
+                buildTarget, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args),
             HeaderVisibility.PRIVATE,
             shouldCreatePrivateHeadersSymlinks);
 
@@ -601,7 +601,7 @@ public class CxxLibraryFactory {
 
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
-            soname, buildTargetMaybeWithLinkerMapMode, cxxPlatform);
+            soname, buildTargetMaybeWithLinkerMapMode, cxxPlatform, projectFilesystem);
     Path sharedLibraryPath =
         CxxDescriptionEnhancer.getSharedLibraryPath(
             projectFilesystem, sharedTarget, sharedLibrarySoname);
@@ -668,7 +668,7 @@ public class CxxLibraryFactory {
         graphBuilder,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget, graphBuilder, Optional.of(cxxPlatform), args),
+            buildTarget, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args),
         HeaderVisibility.PRIVATE,
         shouldCreatePrivateHeaderSymlinks);
   }
@@ -685,7 +685,7 @@ public class CxxLibraryFactory {
         projectFilesystem,
         mode,
         CxxDescriptionEnhancer.parseExportedHeaders(
-            buildTarget, graphBuilder, Optional.empty(), args),
+            buildTarget, graphBuilder, projectFilesystem, Optional.empty(), args),
         HeaderVisibility.PUBLIC);
   }
 
@@ -704,7 +704,7 @@ public class CxxLibraryFactory {
         graphBuilder,
         cxxPlatform,
         CxxDescriptionEnhancer.parseExportedPlatformHeaders(
-            buildTarget, graphBuilder, cxxPlatform, args),
+            buildTarget, graphBuilder, projectFilesystem, cxxPlatform, args),
         HeaderVisibility.PUBLIC,
         shouldCreatePublicHeaderSymlinks);
   }
@@ -892,7 +892,9 @@ public class CxxLibraryFactory {
         linkTarget
             .getNativeLinkTargetMode()
             .getLibraryName()
-            .orElse(CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(baseTarget, cxxPlatform));
+            .orElse(
+                CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
+                    baseTarget, cxxPlatform, projectFilesystem));
     argsBuilder.addAll(StringArg.from(linker.soname(soname)));
 
     // Add the args for the root link target first.

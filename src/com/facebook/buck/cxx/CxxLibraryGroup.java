@@ -451,7 +451,8 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
     }
     ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
     String sharedLibrarySoname =
-        CxxDescriptionEnhancer.getSharedLibrarySoname(soname, getBuildTarget(), cxxPlatform);
+        CxxDescriptionEnhancer.getSharedLibrarySoname(
+            soname, getBuildTarget(), cxxPlatform, getProjectFilesystem());
     BuildRule sharedLibraryBuildRule =
         requireBuildRule(
             graphBuilder, cxxPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR);
@@ -467,7 +468,8 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
     return NativeLinkTargetMode.library(
-        CxxDescriptionEnhancer.getSharedLibrarySoname(soname, getBuildTarget(), cxxPlatform));
+        CxxDescriptionEnhancer.getSharedLibrarySoname(
+            soname, getBuildTarget(), cxxPlatform, getProjectFilesystem()));
   }
 
   @Override

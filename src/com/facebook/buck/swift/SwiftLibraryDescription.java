@@ -359,7 +359,7 @@ public class SwiftLibraryDescription
 
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
-            soname, buildTarget.withoutFlavors(SUPPORTED_FLAVORS), cxxPlatform);
+            soname, buildTarget.withoutFlavors(SUPPORTED_FLAVORS), cxxPlatform, projectFilesystem);
     Path sharedLibOutput =
         CxxDescriptionEnhancer.getSharedLibraryPath(
             projectFilesystem, buildTarget, sharedLibrarySoname);
