@@ -103,7 +103,7 @@ def getOwningRulesData(repo_root, test_files):
             cwd=repo_root,
         )
         # Drop anything that appears before the JSON output.
-        cmd_output = cmd_output[cmd_output.index("[") :]
+        cmd_output = cmd_output[cmd_output.index(b"[") :]
         return json.loads(cmd_output)
     except ValueError as e:
         print("Problem parsing result to json", cmd_output)

@@ -41,7 +41,7 @@ def main(log_file):
     """Exit with a non-zero return code if line is not in the warning whitelist."""
     errors = []
     with open(log_file) as f:
-        for line in f.xreadlines():
+        for line in f:
             line = line.rstrip()
             # If there is a warning from `javadoc`, check whether it is in the whitelist.
             if "warning" in line.lower() and line not in WARNING_WHITELIST:
