@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -55,8 +56,8 @@ public class InMemoryBuildFileTree implements BuildFileTree {
    *
    * @param targets BuildTargetPaths to get base paths from.
    */
-  public InMemoryBuildFileTree(Iterable<BuildTarget> targets) {
-    this(collectBasePaths(targets));
+  public InMemoryBuildFileTree(Iterable<BuildTarget> targets, ProjectFilesystem filesystem) {
+    this(collectBasePaths(targets, filesystem));
   }
 
   /**
@@ -65,9 +66,10 @@ public class InMemoryBuildFileTree implements BuildFileTree {
    * @param targets targets to return base paths for
    * @return base paths for targets
    */
-  private static Collection<Path> collectBasePaths(Iterable<? extends BuildTarget> targets) {
+  private static Collection<Path> collectBasePaths(
+      Iterable<? extends BuildTarget> targets, ProjectFilesystem filesystem) {
     return StreamSupport.stream(targets.spliterator(), false)
-        .map(BuildTarget::getBasePath)
+        .map(t -> t.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem()))
         .collect(ImmutableSet.toImmutableSet());
   }
 

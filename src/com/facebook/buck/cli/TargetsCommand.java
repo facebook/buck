@@ -63,6 +63,7 @@ import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
@@ -707,7 +708,8 @@ public class TargetsCommand extends AbstractCommand {
               matchingBuildTargets.isEmpty() ? Optional.empty() : Optional.of(matchingBuildTargets),
               descriptionClasses.get().isEmpty() ? Optional.empty() : descriptionClasses,
               isDetectTestChanges,
-              parserConfig.getBuildFileName());
+              parserConfig.getBuildFileName(),
+              params.getCell().getFilesystem());
     }
     return matchingNodes;
   }
@@ -820,14 +822,16 @@ public class TargetsCommand extends AbstractCommand {
       Optional<ImmutableSet<BuildTarget>> matchingBuildTargets,
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses,
       boolean detectTestChanges,
-      String buildFileName) {
+      String buildFileName,
+      ProjectFilesystem projectFilesystem) {
     ImmutableSet<TargetNode<?>> directOwners;
     if (referencedFiles.isPresent()) {
       BuildFileTree buildFileTree =
           new InMemoryBuildFileTree(
               graph.getNodes().stream()
                   .map(TargetNode::getBuildTarget)
-                  .collect(ImmutableSet.toImmutableSet()));
+                  .collect(ImmutableSet.toImmutableSet()),
+              projectFilesystem);
       directOwners =
           graph.getNodes().stream()
               .filter(new DirectOwnerPredicate(buildFileTree, referencedFiles.get(), buildFileName))
