@@ -409,7 +409,9 @@ public class ParserWithConfigurableAttributesTest {
 
     thrown.expectMessage(
         "The rule //java/com/facebook:raz could not be found.\nPlease check the spelling and whether it exists in "
-            + filesystem.resolve(razTarget.getBasePath()).resolve(DEFAULT_BUILD_FILE_NAME));
+            + filesystem
+                .resolve(razTarget.getCellRelativeBasePath().getPath())
+                .resolve(DEFAULT_BUILD_FILE_NAME));
 
     parser.buildTargetGraph(parsingContext, buildTargets);
   }
@@ -2675,7 +2677,7 @@ public class ParserWithConfigurableAttributesTest {
     return toReturn.build();
   }
 
-  private static ImmutableMap<BuildTarget, Map<String, Object>> getRawTargetNodes(
+  private ImmutableMap<BuildTarget, Map<String, Object>> getRawTargetNodes(
       Parser parser,
       TypeCoercerFactory typeCoercerFactory,
       BuckEventBus eventBus,
@@ -2693,7 +2695,11 @@ public class ParserWithConfigurableAttributesTest {
     buildTargetList.forEach(
         buildTarget ->
             hashes.put(
-                buildTarget.getBasePath().resolve("BUCK"),
+                buildTarget
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(filesystem.getFileSystem())
+                    .resolve("BUCK"),
                 HashCode.fromBytes(buildTarget.getBaseName().getBytes(StandardCharsets.UTF_8))));
 
     try (PerBuildState state =

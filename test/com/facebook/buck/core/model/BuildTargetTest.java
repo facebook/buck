@@ -41,7 +41,8 @@ public class BuildTargetTest {
     BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT, "//", "fb4a");
     assertEquals("fb4a", rootTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", rootTarget.getBaseName());
-    assertEquals(Paths.get(""), rootTarget.getBasePath());
+    assertEquals(
+        Paths.get(""), rootTarget.getCellRelativeBasePath().getPath().toPath(ROOT.getFileSystem()));
     assertEquals("//:fb4a", rootTarget.getFullyQualifiedName());
     assertEquals("//:fb4a", rootTarget.toString());
   }
@@ -51,7 +52,9 @@ public class BuildTargetTest {
     BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT, "//java/com/facebook", "fb4a");
     assertEquals("fb4a", rootTarget.getShortNameAndFlavorPostfix());
     assertEquals("//java/com/facebook", rootTarget.getBaseName());
-    assertEquals(Paths.get("java/com/facebook"), rootTarget.getBasePath());
+    assertEquals(
+        Paths.get("java/com/facebook"),
+        rootTarget.getCellRelativeBasePath().getPath().toPath(ROOT.getFileSystem()));
     assertEquals("//java/com/facebook:fb4a", rootTarget.getFullyQualifiedName());
     assertEquals("//java/com/facebook:fb4a", rootTarget.toString());
   }

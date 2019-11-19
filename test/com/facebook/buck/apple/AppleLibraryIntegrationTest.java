@@ -333,7 +333,11 @@ public class AppleLibraryIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path inputPath = workspace.getPath(buildTarget.getBasePath()).toRealPath();
+    Path inputPath =
+        workspace
+            .getPath(
+                buildTarget.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem()))
+            .toRealPath();
     Path outputPath =
         workspace.getPath(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")).toRealPath();
 
@@ -674,7 +678,11 @@ public class AppleLibraryIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path inputPath = workspace.getPath(buildTarget.getBasePath()).toRealPath();
+    Path inputPath =
+        workspace
+            .getPath(
+                buildTarget.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem()))
+            .toRealPath();
     Path outputPath =
         workspace.getPath(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")).toRealPath();
 

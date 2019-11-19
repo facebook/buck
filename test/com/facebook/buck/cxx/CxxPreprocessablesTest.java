@@ -123,10 +123,21 @@ public class CxxPreprocessablesTest {
     // Verify that the resolveHeaderMap returns sane results.
     ImmutableMap<Path, SourcePath> expected =
         ImmutableMap.of(
-            target.getBasePath().resolve("foo/bar.h"), FakeSourcePath.of("header1.h"),
-            target.getBasePath().resolve("foo/hello.h"), FakeSourcePath.of("header2.h"));
+            target
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPathDefaultFileSystem()
+                    .resolve("foo/bar.h"),
+                FakeSourcePath.of("header1.h"),
+            target
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPathDefaultFileSystem()
+                    .resolve("foo/hello.h"),
+                FakeSourcePath.of("header2.h"));
     ImmutableMap<Path, SourcePath> actual =
-        CxxPreprocessables.resolveHeaderMap(target.getBasePath(), headerMap);
+        CxxPreprocessables.resolveHeaderMap(
+            target.getCellRelativeBasePath().getPath().toPathDefaultFileSystem(), headerMap);
     assertEquals(expected, actual);
   }
 

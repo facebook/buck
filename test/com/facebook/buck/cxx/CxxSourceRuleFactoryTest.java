@@ -122,7 +122,14 @@ public class CxxSourceRuleFactoryTest {
               .build();
 
       String name = "foo/bar.cpp";
-      SourcePath input = FakeSourcePath.of(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
+      SourcePath input =
+          FakeSourcePath.of(
+              PROJECT_FILESYSTEM,
+              target
+                  .getCellRelativeBasePath()
+                  .getPath()
+                  .toPath(PROJECT_FILESYSTEM.getFileSystem())
+                  .resolve(name));
       CxxSource cxxSource = CxxSource.of(CxxSource.Type.CXX, input, ImmutableList.of());
 
       BuildRule cxxPreprocess =
@@ -420,7 +427,14 @@ public class CxxSourceRuleFactoryTest {
               .build();
 
       String name = "foo/bar.cpp";
-      SourcePath input = FakeSourcePath.of(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
+      SourcePath input =
+          FakeSourcePath.of(
+              PROJECT_FILESYSTEM,
+              target
+                  .getCellRelativeBasePath()
+                  .getPath()
+                  .toPath(PROJECT_FILESYSTEM.getFileSystem())
+                  .resolve(name));
       CxxSource cxxSource = CxxSource.of(CxxSource.Type.CXX, input, ImmutableList.of());
 
       BuildRule cxxPreprocess =
@@ -720,7 +734,14 @@ public class CxxSourceRuleFactoryTest {
               .setPicType(PicType.PDC)
               .build();
 
-      SourcePath input = FakeSourcePath.of(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
+      SourcePath input =
+          FakeSourcePath.of(
+              PROJECT_FILESYSTEM,
+              target
+                  .getCellRelativeBasePath()
+                  .getPath()
+                  .toPath(PROJECT_FILESYSTEM.getFileSystem())
+                  .resolve(name));
       CxxSource cxxSource =
           CxxSource.of(
               CxxSource.Type.fromExtension(MorePaths.getFileExtension(Paths.get(name))).get(),

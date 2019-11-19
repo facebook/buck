@@ -148,7 +148,12 @@ public final class ProjectGeneratorTestUtils {
     assertEquals(configuration.getBuildSettings().count(), 0);
 
     PBXFileReference xcconfigReference = configuration.getBaseConfigurationReference();
-    Path xcconfigPath = buildTarget.getBasePath().resolve(xcconfigReference.getPath());
+    Path xcconfigPath =
+        buildTarget
+            .getCellRelativeBasePath()
+            .getPath()
+            .toPath(projectFilesystem.getFileSystem())
+            .resolve(xcconfigReference.getPath());
     String contents = projectFilesystem.readFileIfItExists(xcconfigPath).get();
 
     // Use a HashMap to allow for duplicate keys.

@@ -138,7 +138,9 @@ public class CxxPythonExtensionDescriptionTest {
     assertEquals(
         ImmutableSet.of(
             target
-                .getBasePath()
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPath(filesystem.getFileSystem())
                 .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName()))),
         normalComps.getModules().keySet());
 
@@ -241,7 +243,9 @@ public class CxxPythonExtensionDescriptionTest {
         PythonPackageComponents.of(
             ImmutableMap.of(
                 target
-                    .getBasePath()
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(filesystem.getFileSystem())
                     .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName())),
                 rule.getSourcePathToOutput()),
             ImmutableMap.of(),

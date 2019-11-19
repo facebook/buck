@@ -40,13 +40,18 @@ public class PythonUtilTest {
             target,
             new TestActionGraphBuilder().getSourcePathResolver(),
             "srcs",
-            target.getBasePath(),
+            target.getCellRelativeBasePath().getPath().toPathDefaultFileSystem(),
             ImmutableList.of(
                 SourceSortedSet.ofNamedSources(
                     ImmutableSortedMap.of("hello.py", FakeSourcePath.of("goodbye.py")))));
     assertEquals(
         ImmutableMap.<Path, SourcePath>of(
-            target.getBasePath().resolve("hello.py"), FakeSourcePath.of("goodbye.py")),
+            target
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPathDefaultFileSystem()
+                .resolve("hello.py"),
+            FakeSourcePath.of("goodbye.py")),
         srcs);
   }
 }

@@ -48,7 +48,8 @@ public class IjModuleTest {
   }
 
   private static <T> IjModule createModule(TargetNode<?> targetNode) {
-    Path moduleBasePath = targetNode.getBuildTarget().getBasePath();
+    Path moduleBasePath =
+        targetNode.getBuildTarget().getCellRelativeBasePath().getPath().toPathDefaultFileSystem();
     return IjModule.builder()
         .setTargets(ImmutableSet.of(targetNode.getBuildTarget()))
         .setModuleBasePath(moduleBasePath)

@@ -87,7 +87,13 @@ public class PythonLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(normalTargetGraph);
     PythonLibrary normal = normalBuilder.build(graphBuilder, filesystem, normalTargetGraph);
     assertEquals(
-        ImmutableMap.of(target.getBasePath().resolve(sourceName), source),
+        ImmutableMap.of(
+            target
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPath(filesystem.getFileSystem())
+                .resolve(sourceName),
+            source),
         normal
             .getPythonPackageComponents(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)

@@ -333,7 +333,12 @@ public class SourcePathResolverTest {
     ExplicitBuildTargetSourcePath buildTargetSourcePath2 =
         ExplicitBuildTargetSourcePath.of(
             fakeBuildRule.getBuildTarget(),
-            fakeBuildRule.getBuildTarget().getBasePath().resolve("foo/bar"));
+            fakeBuildRule
+                .getBuildTarget()
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPathDefaultFileSystem()
+                .resolve("foo/bar"));
     String actual2 =
         pathResolver.getSourcePathName(
             BuildTargetFactory.newInstance("//:test"), buildTargetSourcePath2);

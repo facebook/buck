@@ -88,7 +88,12 @@ public class IjSourceRootSimplifierTest {
 
       @Override
       public String findJavaPackage(BuildTarget buildTarget) {
-        return findJavaPackage(buildTarget.getBasePath().resolve("removed"));
+        return findJavaPackage(
+            buildTarget
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPathDefaultFileSystem()
+                .resolve("removed"));
       }
     };
   }

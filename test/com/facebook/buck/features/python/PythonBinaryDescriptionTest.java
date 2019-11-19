@@ -161,7 +161,12 @@ public class PythonBinaryDescriptionTest {
         PythonBinaryBuilder.create(target).setMain(source).build(new TestActionGraphBuilder());
     assertThat(
         normal.getComponents().getModules().keySet(),
-        Matchers.hasItem(target.getBasePath().resolve(sourceName)));
+        Matchers.hasItem(
+            target
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPathDefaultFileSystem()
+                .resolve(sourceName)));
 
     // Run *with* a base module set and verify it gets used to build the main module path.
     String baseModule = "blah";

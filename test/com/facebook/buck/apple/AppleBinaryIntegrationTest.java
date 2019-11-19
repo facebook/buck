@@ -814,7 +814,9 @@ public class AppleBinaryIntegrationTest {
 
     Path projectRoot = tmp.getRoot().toRealPath();
 
-    Path inputPath = projectRoot.resolve(buildTarget.getBasePath());
+    Path inputPath =
+        projectRoot.resolve(
+            buildTarget.getCellRelativeBasePath().getPath().toPath(projectRoot.getFileSystem()));
     Path outputPath =
         projectRoot.resolve(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s"));
 

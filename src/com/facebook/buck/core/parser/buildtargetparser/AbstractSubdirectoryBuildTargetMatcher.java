@@ -27,7 +27,7 @@ abstract class AbstractSubdirectoryBuildTargetMatcher implements BuildTargetMatc
 
   /**
    * Base path of the build target in the ancestor directory. It is expected to match the value
-   * returned from a {@link BuildTarget#getBasePath()} call.
+   * returned from a {@link BuildTarget#getCellRelativeBasePath()} call.
    */
   protected abstract CellRelativePath getPathWithinCell();
 

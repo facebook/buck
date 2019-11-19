@@ -32,7 +32,6 @@ import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.parser.DaemonicCellState.Cache;
 import com.facebook.buck.parser.api.BuildFileManifestFactory;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -63,13 +62,20 @@ public class DaemonicCellStateTest {
       throw new AssertionError();
     }
     state.putBuildFileManifestIfNotPresent(
-        targetCell.getRoot().resolve(target.getBasePath().resolve("BUCK")),
+        targetCell
+            .getRoot()
+            .resolve(
+                target
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(filesystem.getFileSystem())
+                    .resolve("BUCK")),
         BuildFileManifestFactory.create(
             ImmutableMap.of(
                 target.getShortName(),
                 ImmutableMap.of(
                     "name", target.getShortName(),
-                    "buck.base_path", PathFormatter.pathWithUnixSeparators(target.getBasePath())))),
+                    "buck.base_path", target.getCellRelativeBasePath().getPath().toString()))),
         ImmutableSet.of(),
         ImmutableMap.of());
   }

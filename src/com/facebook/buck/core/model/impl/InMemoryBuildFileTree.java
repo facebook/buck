@@ -133,7 +133,7 @@ public class InMemoryBuildFileTree implements BuildFileTree {
   /** Represents a build file in the project directory. */
   private static class Node {
 
-    /** Result of {@link BuildTarget#getBasePath()}. */
+    /** Build target base path. */
     private final Path basePath;
 
     /** List of child nodes: created lazily to save memory. */

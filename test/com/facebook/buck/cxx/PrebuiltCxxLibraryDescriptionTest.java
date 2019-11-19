@@ -127,7 +127,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
             ImmutableList.of(
                 FileListableLinkerInputArg.withSourcePathArg(
                     SourcePathArg.of(
-                        PathSourcePath.of(filesystem, TARGET.getBasePath().resolve("libfoo.a"))))),
+                        PathSourcePath.of(
+                            filesystem,
+                            TARGET
+                                .getCellRelativeBasePath()
+                                .getPath()
+                                .toPathDefaultFileSystem()
+                                .resolve("libfoo.a"))))),
             ImmutableSet.of(),
             ImmutableSet.of());
     assertEquals(
@@ -143,7 +149,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
         NativeLinkableInput.of(
             ImmutableList.of(
                 SourcePathArg.of(
-                    PathSourcePath.of(filesystem, TARGET.getBasePath().resolve("libfoo.so")))),
+                    PathSourcePath.of(
+                        filesystem,
+                        TARGET
+                            .getCellRelativeBasePath()
+                            .getPath()
+                            .toPathDefaultFileSystem()
+                            .resolve("libfoo.so")))),
             ImmutableSet.of(),
             ImmutableSet.of());
     assertEquals(
@@ -205,7 +217,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
         NativeLinkableInput.of(
             ImmutableList.of(
                 SourcePathArg.of(
-                    PathSourcePath.of(filesystem, TARGET.getBasePath().resolve("libfoo.so")))),
+                    PathSourcePath.of(
+                        filesystem,
+                        TARGET
+                            .getCellRelativeBasePath()
+                            .getPath()
+                            .toPathDefaultFileSystem()
+                            .resolve("libfoo.so")))),
             ImmutableSet.of(),
             ImmutableSet.of());
     assertEquals(
@@ -275,7 +293,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             getSharedLibrarySoname(arg),
-            PathSourcePath.of(filesystem, TARGET.getBasePath().resolve("libfoo.so"))),
+            PathSourcePath.of(
+                filesystem,
+                TARGET
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPathDefaultFileSystem()
+                    .resolve("libfoo.so"))),
         lib.getNativeLinkable(CXX_PLATFORM, graphBuilder).getSharedLibraries(graphBuilder));
   }
 
@@ -419,10 +443,20 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) libraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         pathResolver.getRelativePath(library.getStaticLibrary(platform1, graphBuilder).get()),
-        Matchers.equalTo(TARGET.getBasePath().resolve("libs/PLATFORM1/libtest-PLATFORM1.a")));
+        Matchers.equalTo(
+            TARGET
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPathDefaultFileSystem()
+                .resolve("libs/PLATFORM1/libtest-PLATFORM1.a")));
     assertThat(
         pathResolver.getRelativePath(library.getStaticLibrary(platform2, graphBuilder).get()),
-        Matchers.equalTo(TARGET.getBasePath().resolve("libs/PLATFORM2/libtest-PLATFORM2.a")));
+        Matchers.equalTo(
+            TARGET
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPathDefaultFileSystem()
+                .resolve("libs/PLATFORM2/libtest-PLATFORM2.a")));
   }
 
   @Test
@@ -745,9 +779,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         contains(
             CxxHeadersDir.of(
                 CxxPreprocessables.IncludeType.SYSTEM,
-                PathSourcePath.of(
-                    filesystem,
-                    rule.getBuildTarget().getBasePath().getFileSystem().getPath("include")))));
+                PathSourcePath.of(filesystem, filesystem.getPath("include")))));
   }
 
   @Test
@@ -786,7 +818,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         Arg.stringify(input.getArgs(), graphBuilder.getSourcePathResolver()),
         contains(
-            "-L" + filesystem.resolve(rule.getBuildTarget().getBasePath()).resolve("lib"),
+            "-L"
+                + filesystem
+                    .resolve(rule.getBuildTarget().getCellRelativeBasePath().getPath())
+                    .resolve("lib"),
             "-lrule"));
   }
 
@@ -1028,7 +1063,14 @@ public class PrebuiltCxxLibraryDescriptionTest {
                 UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         Arg.stringify(nativeLinkableInput.getArgs(), graphBuilder.getSourcePathResolver()).get(0),
-        Matchers.endsWith(TARGET.getBasePath().resolve("sub-dir").resolve("libfoo.a").toString()));
+        Matchers.endsWith(
+            TARGET
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPathDefaultFileSystem()
+                .resolve("sub-dir")
+                .resolve("libfoo.a")
+                .toString()));
   }
 
   @Test

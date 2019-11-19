@@ -120,7 +120,12 @@ public class PythonTestDescriptionTest {
             new TestActionGraphBuilder(normalTargetGraph), filesystem, normalTargetGraph);
     assertThat(
         normal.getBinary().getComponents().getModules().keySet(),
-        Matchers.hasItem(target.getBasePath().resolve(sourceName)));
+        Matchers.hasItem(
+            target
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPath(filesystem.getFileSystem())
+                .resolve(sourceName)));
 
     // Run *with* a base module set and verify it gets used to build the main module path.
     String baseModule = "blah";
