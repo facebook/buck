@@ -94,7 +94,13 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
 
     return unconfiguredTargetNodeFactory.create(
         cell,
-        cell.getRoot().resolve(unconfiguredBuildTargetView.getBasePath()).resolve(buildFileName),
+        cell.getRoot()
+            .resolve(
+                unconfiguredBuildTargetView
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(cell.getFilesystem().getFileSystem()))
+            .resolve(buildFileName),
         unconfiguredBuildTargetView,
         DependencyStack.root(),
         rawAttributes);
@@ -123,6 +129,9 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
         ImmutableUnconfiguredBuildTargetView.of(cell.getRoot().getFileSystem(), buildTarget);
 
     return ImmutableBuildPackagePathToBuildFileManifestKey.of(
-        unconfiguredBuildTargetView.getBasePath());
+        unconfiguredBuildTargetView
+            .getCellRelativeBasePath()
+            .getPath()
+            .toPath(cell.getFilesystem().getFileSystem()));
   }
 }

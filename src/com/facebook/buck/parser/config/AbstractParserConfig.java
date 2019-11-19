@@ -360,7 +360,7 @@ public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     Cell targetCell = cell.getCell(target);
     ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
     return targetFilesystem
-        .resolve(target.getBasePath())
+        .resolve(target.getCellRelativeBasePath().getPath())
         .resolve(targetCell.getBuckConfigView(ParserConfig.class).getBuildFileName());
   }
 
@@ -377,7 +377,9 @@ public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
       throw new MissingBuildFileException(
           target.getFullyQualifiedName(),
           target
-              .getBasePath()
+              .getCellRelativeBasePath()
+              .getPath()
+              .toPath(cell.getFilesystem().getFileSystem())
               .resolve(targetCell.getBuckConfig().getView(ParserConfig.class).getBuildFileName()));
     }
     return buildFile;

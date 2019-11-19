@@ -49,7 +49,8 @@ public class BuildTargetParserTest {
         parser.parse(createCellRoots(null), "//:fb4a", "", false);
     assertEquals("fb4a", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName());
-    assertEquals(Paths.get(""), buildTarget.getBasePath());
+    assertEquals(
+        Paths.get(""), buildTarget.getCellRelativeBasePath().getPath().toPathDefaultFileSystem());
     assertEquals("//:fb4a", buildTarget.getFullyQualifiedName());
   }
 
@@ -60,7 +61,8 @@ public class BuildTargetParserTest {
     // Note the sort order.
     assertEquals("lib#bar,foo", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName());
-    assertEquals(Paths.get(""), buildTarget.getBasePath());
+    assertEquals(
+        Paths.get(""), buildTarget.getCellRelativeBasePath().getPath().toPathDefaultFileSystem());
     // Note the sort order.
     assertEquals("//:lib#bar,foo", buildTarget.getFullyQualifiedName());
     assertThat(
@@ -73,7 +75,9 @@ public class BuildTargetParserTest {
         parser.parse(createCellRoots(null), "//..a/b../a...b:assets", "", false);
     assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//..a/b../a...b", buildTarget.getBaseName());
-    assertEquals(Paths.get("..a", "b..", "a...b"), buildTarget.getBasePath());
+    assertEquals(
+        Paths.get("..a", "b..", "a...b"),
+        buildTarget.getCellRelativeBasePath().getPath().toPathDefaultFileSystem());
     assertEquals("//..a/b../a...b:assets", buildTarget.getFullyQualifiedName());
   }
 

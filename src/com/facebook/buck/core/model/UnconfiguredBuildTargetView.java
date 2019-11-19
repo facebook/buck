@@ -18,7 +18,6 @@ package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -60,11 +59,9 @@ public interface UnconfiguredBuildTargetView
   /**
    * The path of the directory where this target is located.
    *
-   * <p>For example, for {@code cell//third_party/java/guava:guava} this returns {@link Path} {@code
-   * third_party/java/guava}.
+   * <p>For example, for {@code cell//third_party/java/guava:guava} this returns {@code
+   * cell//third_party/java/guava}.
    */
-  Path getBasePath();
-
   CellRelativePath getCellRelativeBasePath();
 
   /**

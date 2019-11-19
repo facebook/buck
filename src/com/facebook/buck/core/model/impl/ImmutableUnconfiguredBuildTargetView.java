@@ -36,7 +36,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.FileSystem;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -176,12 +175,6 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   @Override
   public String getBaseName() {
     return data.getBaseName();
-  }
-
-  @JsonIgnore
-  @Override
-  public Path getBasePath() {
-    return unflavoredBuildTargetView.getBasePath();
   }
 
   @JsonIgnore
