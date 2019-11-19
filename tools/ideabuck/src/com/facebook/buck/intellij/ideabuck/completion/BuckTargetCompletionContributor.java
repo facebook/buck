@@ -31,6 +31,8 @@ import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.codeInsight.completion.CompletionContributor;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionResultSet;
+import com.intellij.codeInsight.completion.InsertionContext;
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -50,6 +52,7 @@ import org.jetbrains.annotations.NotNull;
  * of the form {@code @cellname//path/to:file.bzl}.
  */
 public class BuckTargetCompletionContributor extends CompletionContributor {
+  private static final char[] TRAILING_CHARACTERS = {'/', ':'};
 
   @Override
   public void fillCompletionVariants(
@@ -108,11 +111,34 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
   }
 
   private void addResultForTarget(CompletionResultSet result, String name) {
-    result.addElement(LookupElementBuilder.create(name).withIcon(BuckIcons.FILE_TYPE));
+    result.addElement(
+        LookupElementBuilder.create(name)
+            .withIcon(BuckIcons.FILE_TYPE)
+            .withInsertHandler(
+                BuckTargetCompletionContributor::removeTrailingCharactersIfNecessary));
   }
 
   private void addResultForFile(CompletionResultSet result, VirtualFile file, String name) {
-    result.addElement(LookupElementBuilder.create(name).withIcon(file.getFileType().getIcon()));
+    result.addElement(
+        LookupElementBuilder.create(name)
+            .withIcon(file.getFileType().getIcon())
+            .withInsertHandler(
+                BuckTargetCompletionContributor::removeTrailingCharactersIfNecessary));
+  }
+
+  private static void removeTrailingCharactersIfNecessary(
+      @NotNull InsertionContext insertionContext, @NotNull LookupElement lookupElement) {
+    final String doc = insertionContext.getDocument().getText();
+    final int offset = insertionContext.getTailOffset();
+    for (char c : TRAILING_CHARACTERS) {
+      if (offset > 0
+          && doc.length() > offset
+          && doc.charAt(offset) == c
+          && lookupElement.getLookupString().endsWith(String.valueOf(c))) {
+        insertionContext.getDocument().deleteString(offset - 1, offset);
+        insertionContext.getEditor().getCaretModel().moveToOffset(offset);
+      }
+    }
   }
 
   private void doCellNames(PsiElement position, String prefix, CompletionResultSet result) {
