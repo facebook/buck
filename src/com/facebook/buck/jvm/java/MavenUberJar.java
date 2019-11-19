@@ -33,7 +33,7 @@ import com.facebook.buck.jvm.core.HasSources;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;

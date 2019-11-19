@@ -24,6 +24,7 @@ java_library(
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",

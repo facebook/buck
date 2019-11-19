@@ -36,6 +36,7 @@ java_library(
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:types",

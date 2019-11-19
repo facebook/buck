@@ -18,7 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.string.StringMatcher;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.TargetNodeTranslator;

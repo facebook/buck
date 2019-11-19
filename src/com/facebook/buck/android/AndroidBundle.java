@@ -50,7 +50,7 @@ import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

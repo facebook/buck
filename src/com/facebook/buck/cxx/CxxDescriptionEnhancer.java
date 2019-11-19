@@ -79,7 +79,7 @@ import com.facebook.buck.rules.modern.SourcePathResolverSerialization;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription.Mode;
 import com.facebook.buck.shell.ExportFileDirectoryAction;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Functions;

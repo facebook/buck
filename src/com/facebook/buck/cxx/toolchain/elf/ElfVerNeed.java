@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx.toolchain.elf;
 
 import com.facebook.buck.util.MoreIterables;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import java.nio.ByteBuffer;

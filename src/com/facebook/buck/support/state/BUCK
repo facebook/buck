@@ -40,6 +40,7 @@ java_library(
         "//test/...",
     ],
     deps = [
+        "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],

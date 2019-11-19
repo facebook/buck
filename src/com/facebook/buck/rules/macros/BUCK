@@ -21,6 +21,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/stream:stream",
     ],
 )
 
@@ -59,6 +60,7 @@ java_immutables_library(
         "//src/com/facebook/buck/shell:worker_tool",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/versions:translator",
     ],
 )

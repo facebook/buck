@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.stream;
 
 import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.common.collect.ImmutableList;

@@ -54,8 +54,8 @@ import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWor
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;

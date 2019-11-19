@@ -49,7 +49,7 @@ import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.CloseableResource;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.FixedVersionSelector;
 import com.facebook.buck.versions.Version;

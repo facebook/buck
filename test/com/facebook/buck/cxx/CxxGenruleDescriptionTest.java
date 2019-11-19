@@ -58,7 +58,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.OptionalMatchers;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.NaiveVersionSelector;
 import com.facebook.buck.versions.VersionPropagatorBuilder;

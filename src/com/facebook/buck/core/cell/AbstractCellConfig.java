@@ -16,9 +16,9 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.RawConfig;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;

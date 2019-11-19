@@ -18,7 +18,7 @@ package com.facebook.buck.android.resources;
 
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

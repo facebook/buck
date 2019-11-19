@@ -49,8 +49,8 @@ import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescriptionAr
 import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;

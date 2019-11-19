@@ -114,6 +114,7 @@ DEPS = [
     "//third-party/java/stringtemplate:stringtemplate",
     "//third-party/java/thrift:libthrift",
     "//third-party/java/junitparams:junitparams",
+    "//src/com/facebook/buck/util/stream:stream",
 ]
 
 java_library(

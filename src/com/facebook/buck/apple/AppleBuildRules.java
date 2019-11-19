@@ -30,7 +30,7 @@ import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -459,7 +459,8 @@ public final class AppleBuildRules {
         descriptionClasses,
         targetNodes,
         mode,
-        input -> (T) input.getConstructorArg(), filter);
+        input -> (T) input.getConstructorArg(),
+        filter);
   }
 
   /** Collects transitive target nodes of type included in descriptionClasses */
@@ -483,7 +484,8 @@ public final class AppleBuildRules {
               @SuppressWarnings("unchecked")
               V castedT = (V) t;
               return castedT;
-            }, Predicates.alwaysTrue());
+            },
+            Predicates.alwaysTrue());
     return collectedTargets;
   }
 

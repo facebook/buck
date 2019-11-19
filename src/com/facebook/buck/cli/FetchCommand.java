@@ -46,7 +46,7 @@ import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;

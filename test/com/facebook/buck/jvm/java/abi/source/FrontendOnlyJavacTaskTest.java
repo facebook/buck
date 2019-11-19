@@ -28,7 +28,7 @@ import com.facebook.buck.jvm.java.plugin.adapter.TestTaskListener;
 import com.facebook.buck.jvm.java.plugin.adapter.TestTaskListenerAdapter;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.facebook.buck.jvm.java.version.JavaVersion;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

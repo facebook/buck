@@ -19,8 +19,8 @@ package com.facebook.buck.util.env;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.function.ThrowingFunction;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import java.net.URL;
 import java.net.URLClassLoader;

@@ -451,6 +451,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/util/zip:zip",

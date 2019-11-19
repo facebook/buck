@@ -18,6 +18,7 @@ java_library(
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/filesystem:filesystem",
         "//src/com/facebook/buck/util/function:function",
+        "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/remote-apis:remote-apis",

@@ -26,7 +26,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.MoreIterables;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;

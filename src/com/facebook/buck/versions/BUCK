@@ -81,6 +81,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/rules/query:utils",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/cache:cache",
+        "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/infer-annotations:infer-annotations",
     ],
 )
