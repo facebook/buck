@@ -58,4 +58,9 @@ public class RemoteBuildRuleExecutionEvent extends AbstractBuckEvent {
     buckEventBus.post(
         new RemoteBuildRuleExecutionEvent(EventKey.unique(), buildRule, executionDurationMs));
   }
+
+  public static RemoteBuildRuleExecutionEvent createEvent(
+      BuildRule buildRule, long executionDurationMs) {
+    return new RemoteBuildRuleExecutionEvent(EventKey.unique(), buildRule, executionDurationMs);
+  }
 }
