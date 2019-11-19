@@ -43,7 +43,11 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
   public void enforceBuckPackageBoundaries(
       Cell targetCell, BuildTarget target, ImmutableSet<Path> paths) {
 
-    Path basePath = target.getBasePath();
+    Path basePath =
+        target
+            .getCellRelativeBasePath()
+            .getPath()
+            .toPath(targetCell.getFilesystem().getFileSystem());
 
     if (!targetCell
         .getBuckConfigView(ParserConfig.class)
