@@ -197,7 +197,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   @Subscribe
   public void buildRuleEventFinishedRuleCalc(BuildRuleEvent.FinishedRuleKeyCalc event) {
-    writeToLog("BuildRuleEvent.StartedRuleKeyCalc", event);
+    writeToLog("BuildRuleEvent.FinishedRuleKeyCalc", event);
   }
 
   @Subscribe
