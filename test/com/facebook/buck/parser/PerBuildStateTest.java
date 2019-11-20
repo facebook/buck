@@ -30,7 +30,6 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -48,6 +47,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -145,8 +145,7 @@ public class PerBuildStateTest {
 
     // Now, try to load the entire build file and get all TargetNodes.
     ImmutableList<TargetNode<?>> targetNodes =
-        perBuildState.getAllTargetNodes(
-            cell, testFooBuckFile, UnconfiguredTargetConfiguration.INSTANCE);
+        perBuildState.getAllTargetNodes(cell, testFooBuckFile, Optional.empty());
     assertThat(targetNodes.size(), equalTo(2));
     assertThat(
         targetNodes.stream()

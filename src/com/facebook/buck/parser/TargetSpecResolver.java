@@ -69,6 +69,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /** Responsible for discovering all the build targets that match a set of {@link TargetNodeSpec}. */
@@ -155,7 +156,7 @@ public class TargetSpecResolver implements AutoCloseable {
   public <T extends HasBuildTarget> ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
       Cell rootCell,
       Iterable<? extends TargetNodeSpec> specs,
-      TargetConfiguration targetConfiguration,
+      Optional<TargetConfiguration> targetConfiguration,
       FlavorEnhancer flavorEnhancer,
       PerBuildState perBuildState,
       TargetNodeFilterForSpecResolver targetNodeFilter)
@@ -255,7 +256,7 @@ public class TargetSpecResolver implements AutoCloseable {
       List<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures,
       Cell cell,
       Path buildFile,
-      TargetConfiguration targetConfiguration,
+      Optional<TargetConfiguration> targetConfiguration,
       int index,
       TargetNodeSpec spec) {
     if (spec instanceof BuildTargetSpec) {

@@ -76,7 +76,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   private final BuckEventBus eventBus;
   private final PipelineNodeCache<BuildTarget, TargetNode<?>> cache;
   private final ConcurrentHashMap<
-          Pair<Path, TargetConfiguration>, ListenableFuture<ImmutableList<TargetNode<?>>>>
+          Pair<Path, Optional<TargetConfiguration>>, ListenableFuture<ImmutableList<TargetNode<?>>>>
       allNodeCache = new ConcurrentHashMap<>();
   private final Scope perfEventScope;
   private final PerfEventId perfEventId;
@@ -203,7 +203,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   ListenableFuture<TargetNode<?>> getRequestedTargetNodeJob(
       Cell cell,
       UnconfiguredBuildTargetView unconfiguredTarget,
-      TargetConfiguration globalTargetConfiguration) {
+      Optional<TargetConfiguration> globalTargetConfiguration) {
     ListenableFuture<UnconfiguredTargetNode> rawTargetNodeFuture =
         unconfiguredTargetNodePipeline.getNodeJob(
             cell, unconfiguredTarget, DependencyStack.top(unconfiguredTarget));
@@ -220,9 +220,10 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    * configuration or {@code default_target_platform} rule arg
    */
   ListenableFuture<ImmutableList<TargetNode<?>>> getAllRequestedTargetNodesJob(
-      Cell cell, Path buildFile, TargetConfiguration globalTargetConfiguration) {
+      Cell cell, Path buildFile, Optional<TargetConfiguration> globalTargetConfiguration) {
     SettableFuture<ImmutableList<TargetNode<?>>> future = SettableFuture.create();
-    Pair<Path, TargetConfiguration> pathCacheKey = new Pair<>(buildFile, globalTargetConfiguration);
+    Pair<Path, Optional<TargetConfiguration>> pathCacheKey =
+        new Pair<>(buildFile, globalTargetConfiguration);
     ListenableFuture<ImmutableList<TargetNode<?>>> cachedFuture =
         allNodeCache.putIfAbsent(pathCacheKey, future);
 
@@ -271,7 +272,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    * @throws BuildFileParseException for syntax errors.
    */
   ImmutableList<TargetNode<?>> getAllRequestedTargetNodes(
-      Cell cell, Path buildFile, TargetConfiguration globalTargetConfiguration) {
+      Cell cell, Path buildFile, Optional<TargetConfiguration> globalTargetConfiguration) {
     Preconditions.checkState(!shuttingDown.get());
 
     try {
@@ -289,7 +290,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   private ListenableFuture<TargetNode<?>> configureRequestedTarget(
       Cell cell,
       UnconfiguredBuildTargetView unconfiguredTarget,
-      TargetConfiguration globalTargetConfiguration,
+      Optional<TargetConfiguration> globalTargetConfiguration,
       UnconfiguredTargetNode unconfiguredTargetNode) {
     TargetConfiguration targetConfiguration;
     if (unconfiguredTargetNode.getRuleType().getKind() == AbstractRuleType.Kind.CONFIGURATION) {
@@ -310,10 +311,10 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   private TargetConfiguration targetConfigurationForBuildTarget(
       Cell cell,
       UnconfiguredBuildTargetView unconfiguredTarget,
-      TargetConfiguration globalTargetConfiguration,
+      Optional<TargetConfiguration> globalTargetConfiguration,
       UnconfiguredTargetNode unconfiguredTargetNode) {
-    if (globalTargetConfiguration.getConfigurationTarget().isPresent()) {
-      return globalTargetConfiguration;
+    if (globalTargetConfiguration.isPresent()) {
+      return globalTargetConfiguration.get();
     }
 
     // We use `default_target_platform` only when global platform is not specified

@@ -97,7 +97,7 @@ abstract class AbstractParser implements Parser {
       PerBuildState perBuildState,
       Cell cell,
       Path buildFile,
-      TargetConfiguration targetConfiguration)
+      Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException {
     return perBuildState.getAllTargetNodes(cell, buildFile, targetConfiguration);
   }
@@ -260,7 +260,7 @@ abstract class AbstractParser implements Parser {
   public synchronized TargetGraphCreationResult buildTargetGraphWithoutTopLevelConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      TargetConfiguration targetConfiguration)
+      Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException, IOException, InterruptedException {
     return buildTargetGraphForTargetNodeSpecs(
         parsingContext, targetNodeSpecs, targetConfiguration, true);
@@ -270,7 +270,7 @@ abstract class AbstractParser implements Parser {
   public synchronized TargetGraphCreationResult buildTargetGraphWithTopLevelConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      TargetConfiguration targetConfiguration)
+      Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException, IOException, InterruptedException {
     return buildTargetGraphForTargetNodeSpecs(
         parsingContext, targetNodeSpecs, targetConfiguration, false);
@@ -279,7 +279,7 @@ abstract class AbstractParser implements Parser {
   private synchronized TargetGraphCreationResult buildTargetGraphForTargetNodeSpecs(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      TargetConfiguration targetConfiguration,
+      Optional<TargetConfiguration> targetConfiguration,
       boolean excludeConfigurationTargets)
       throws BuildFileParseException, IOException, InterruptedException {
 
@@ -302,7 +302,7 @@ abstract class AbstractParser implements Parser {
       ParsingContext parsingContext,
       PerBuildState state,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      TargetConfiguration targetConfiguration,
+      Optional<TargetConfiguration> targetConfiguration,
       boolean excludeConfigurationTargets)
       throws InterruptedException;
 

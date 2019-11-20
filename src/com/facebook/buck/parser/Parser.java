@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.SortedMap;
 import javax.annotation.Nullable;
 
@@ -53,11 +54,14 @@ public interface Parser {
       PerBuildState perBuildState,
       Cell cell,
       Path buildFile,
-      TargetConfiguration targetConfiguration)
+      Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException;
 
   ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
-      PerBuildState state, Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
+      PerBuildState state,
+      Cell cell,
+      Path buildFile,
+      Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException;
 
   TargetNode<?> getTargetNode(
@@ -93,27 +97,29 @@ public interface Parser {
 
   /**
    * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
+   * @param targetConfiguration
    * @return the target graph containing the build targets and their related targets.
    */
   TargetGraphCreationResult buildTargetGraphWithoutTopLevelConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      TargetConfiguration targetConfiguration)
+      Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException, IOException, InterruptedException;
 
   /**
    * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
+   * @param targetConfiguration
    * @return the target graph containing the build targets and their related targets.
    */
   TargetGraphCreationResult buildTargetGraphWithTopLevelConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      TargetConfiguration targetConfiguration)
+      Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException, IOException, InterruptedException;
 
   ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> specs,
-      TargetConfiguration targetConfiguration)
+      Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException, InterruptedException;
 }

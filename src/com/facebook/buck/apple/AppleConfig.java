@@ -24,6 +24,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
@@ -278,8 +279,14 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return getOptionalPath(APPLE_SECTION, "device_helper_path");
   }
 
-  public Optional<BuildTarget> getAppleDeviceHelperTarget(TargetConfiguration targetConfiguration) {
-    return delegate.getBuildTarget(APPLE_SECTION, "device_helper_target", targetConfiguration);
+  /** Query buckconfig for device helper target. */
+  public Optional<BuildTarget> getAppleDeviceHelperTarget(
+      Optional<TargetConfiguration> targetConfiguration) {
+    // TODO(nga): ignores default_target_platform and configuration detectors
+    return delegate.getBuildTarget(
+        APPLE_SECTION,
+        "device_helper_target",
+        targetConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   public Path getProvisioningProfileSearchPath() {

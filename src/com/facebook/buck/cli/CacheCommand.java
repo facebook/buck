@@ -25,6 +25,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -323,7 +324,9 @@ public class CacheCommand extends AbstractCommand {
         params
             .getUnconfiguredBuildTargetFactory()
             .create(params.getCell().getCellPathResolver(), targetName)
-            .configure(params.getTargetConfiguration());
+            // TODO(nga): ignores default_target_platform and platform detector
+            .configure(
+                params.getTargetConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE));
     return new Pair<>(buildTarget, new RuleKey(ruleKey));
   }
 

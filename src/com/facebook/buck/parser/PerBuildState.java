@@ -32,6 +32,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class PerBuildState implements AutoCloseable {
 
@@ -75,7 +76,7 @@ public class PerBuildState implements AutoCloseable {
   }
 
   ImmutableList<TargetNode<?>> getAllTargetNodes(
-      Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
+      Cell cell, Path buildFile, Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
@@ -83,7 +84,7 @@ public class PerBuildState implements AutoCloseable {
   }
 
   ListenableFuture<TargetNode<?>> getRequestedTargetNodeJob(
-      UnconfiguredBuildTargetView target, TargetConfiguration targetConfiguration) {
+      UnconfiguredBuildTargetView target, Optional<TargetConfiguration> targetConfiguration) {
     Cell owningCell = cellManager.getCell(target);
 
     return targetNodeParsePipeline.getRequestedTargetNodeJob(
@@ -91,7 +92,7 @@ public class PerBuildState implements AutoCloseable {
   }
 
   ListenableFuture<ImmutableList<TargetNode<?>>> getRequestedTargetNodesJob(
-      Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
+      Cell cell, Path buildFile, Optional<TargetConfiguration> targetConfiguration)
       throws BuildTargetException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 

@@ -28,6 +28,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -679,7 +680,7 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params,
       ActionGraphAndBuilder actionGraphAndBuilder,
       TargetGraphCreationResult targetGraph,
-      TargetConfiguration targetConfiguration,
+      Optional<TargetConfiguration> targetConfiguration,
       @Nullable String justBuildTarget)
       throws ActionGraphCreationException {
     ImmutableSet<BuildTarget> buildTargets = targetGraph.getBuildTargets();
@@ -692,7 +693,8 @@ public class BuildCommand extends AbstractCommand {
         params
             .getUnconfiguredBuildTargetFactory()
             .create(params.getCell().getCellPathResolver(), justBuildTarget)
-            .configure(targetConfiguration);
+            // TODO(nga): ignores default_target_platform and configuration detector
+            .configure(targetConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE));
     Iterable<BuildRule> actionGraphRules =
         Objects.requireNonNull(actionGraphAndBuilder.getActionGraph().getNodes());
     ImmutableSet<BuildTarget> actionGraphTargets =

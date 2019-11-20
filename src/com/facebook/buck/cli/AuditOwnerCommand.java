@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
@@ -72,7 +73,7 @@ public class AuditOwnerCommand extends AbstractCommand {
                     params.getManifestServiceSupplier(),
                     params.getFileHashCache(),
                     params.getUnconfiguredBuildTargetFactory(),
-                    params.getHostConfiguration())
+                    params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(
                     createParsingContext(params.getCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)

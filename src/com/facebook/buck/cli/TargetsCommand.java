@@ -34,6 +34,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.impl.InMemoryBuildFileTree;
@@ -939,7 +940,7 @@ public class TargetsCommand extends AbstractCommand {
                 params.getManifestServiceSupplier(),
                 params.getFileHashCache(),
                 params.getUnconfiguredBuildTargetFactory(),
-                params.getHostConfiguration())
+                params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
                 createParsingContext(params.getCell(), executor)
                     .withExcludeUnsupportedTargets(false),
@@ -1320,7 +1321,7 @@ public class TargetsCommand extends AbstractCommand {
                 params.getManifestServiceSupplier(),
                 params.getFileHashCache(),
                 params.getUnconfiguredBuildTargetFactory(),
-                params.getHostConfiguration())
+                params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
                 createParsingContext(params.getCell(), executor)
                     .withExcludeUnsupportedTargets(false),

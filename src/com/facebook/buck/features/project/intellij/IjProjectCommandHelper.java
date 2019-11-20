@@ -74,6 +74,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -88,7 +89,7 @@ public class IjProjectCommandHelper {
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
   private final Cell cell;
   private final IjProjectConfig projectConfig;
-  private final TargetConfiguration targetConfiguration;
+  private final Optional<TargetConfiguration> targetConfiguration;
   private final boolean processAnnotations;
   private final boolean updateOnly;
   private final @Nullable String outputDir;
@@ -106,7 +107,7 @@ public class IjProjectCommandHelper {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       Cell cell,
-      TargetConfiguration targetConfiguration,
+      Optional<TargetConfiguration> targetConfiguration,
       IjProjectConfig projectConfig,
       boolean enableParserProfiling,
       boolean processAnnotations,

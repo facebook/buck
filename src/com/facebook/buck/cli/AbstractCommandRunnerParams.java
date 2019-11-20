@@ -98,10 +98,10 @@ public abstract class AbstractCommandRunnerParams {
   public abstract UnconfiguredBuildTargetViewFactory getUnconfiguredBuildTargetFactory();
 
   @Value.Parameter
-  public abstract TargetConfiguration getTargetConfiguration();
+  public abstract Optional<TargetConfiguration> getTargetConfiguration();
 
   @Value.Parameter
-  public abstract TargetConfiguration getHostConfiguration();
+  public abstract Optional<TargetConfiguration> getHostConfiguration();
 
   @Value.Parameter
   public abstract TargetConfigurationSerializer getTargetConfigurationSerializer();

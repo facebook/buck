@@ -2186,7 +2186,7 @@ public class ParserWithConfigurableAttributesTest {
                 ImmutableList.of(
                     ImmutableBuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "lib"))),
-                UnconfiguredTargetConfiguration.INSTANCE)
+                Optional.empty())
             .getBuildTargets();
 
     assertThat(
@@ -2231,7 +2231,7 @@ public class ParserWithConfigurableAttributesTest {
                 ImmutableList.of(
                     BuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "lib"))),
-                UnconfiguredTargetConfiguration.INSTANCE)
+                Optional.empty())
             .getBuildTargets();
 
     assertThat(
@@ -2277,7 +2277,7 @@ public class ParserWithConfigurableAttributesTest {
                 ImmutableList.of(
                     BuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "lib"))),
-                UnconfiguredTargetConfiguration.INSTANCE)
+                Optional.empty())
             .getBuildTargets();
 
     assertThat(
@@ -2314,7 +2314,7 @@ public class ParserWithConfigurableAttributesTest {
         ImmutableList.of(
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "gen"))),
-        UnconfiguredTargetConfiguration.INSTANCE);
+        Optional.empty());
 
     // The read bytes are dependent on the serialization format of the parser, and the absolute path
     // of the temporary BUCK file we wrote, so let's just assert that there are a reasonable
@@ -2330,7 +2330,7 @@ public class ParserWithConfigurableAttributesTest {
         ImmutableList.of(
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "gen"))),
-        UnconfiguredTargetConfiguration.INSTANCE);
+        Optional.empty());
     assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
   }
 
@@ -2621,7 +2621,7 @@ public class ParserWithConfigurableAttributesTest {
                                 new ImmutableCellRelativePath(
                                     parsingContext.getCell().getCanonicalName(),
                                     ForwardRelativePath.of(""))))),
-                    UnconfiguredTargetConfiguration.INSTANCE)
+                    Optional.empty())
                 .getTargetGraph()
                 .getNodes())
         .transform(TargetNode::getBuildTarget)

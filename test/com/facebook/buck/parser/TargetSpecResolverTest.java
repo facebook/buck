@@ -67,6 +67,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import org.junit.After;
 import org.junit.Before;
@@ -254,11 +255,6 @@ public class TargetSpecResolverTest {
         perBuildStateFactory.create(
             ParsingContext.builder(cell, executorService).build(), parser.getPermState());
     return targetNodeTargetSpecResolver.resolveTargetSpecs(
-        cell,
-        specs,
-        UnconfiguredTargetConfiguration.INSTANCE,
-        flavorEnhancer,
-        state,
-        (spec, nodes) -> spec.filter(nodes));
+        cell, specs, Optional.empty(), flavorEnhancer, state, (spec, nodes) -> spec.filter(nodes));
   }
 }

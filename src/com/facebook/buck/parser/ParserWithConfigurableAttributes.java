@@ -50,6 +50,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Stream;
@@ -235,7 +236,10 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
   @Override
   public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
-      PerBuildState state, Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
+      PerBuildState state,
+      Cell cell,
+      Path buildFile,
+      Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException {
     ImmutableList<TargetNode<?>> allTargetNodes =
         getAllTargetNodes(state, cell, buildFile, targetConfiguration);
@@ -270,7 +274,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> specs,
-      TargetConfiguration targetConfiguration)
+      Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException, InterruptedException {
 
     try (PerBuildState state = perBuildStateFactory.create(parsingContext, permState)) {
@@ -313,7 +317,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       ParsingContext parsingContext,
       PerBuildState state,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      TargetConfiguration targetConfiguration,
+      Optional<TargetConfiguration> targetConfiguration,
       boolean excludeConfigurationTargets)
       throws InterruptedException {
 

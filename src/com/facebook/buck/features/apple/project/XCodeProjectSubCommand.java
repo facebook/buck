@@ -23,6 +23,7 @@ import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectSubCommand;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.features.apple.common.Mode;
 import com.facebook.buck.features.apple.common.PrintStreamPathOutputPresenter;
 import com.facebook.buck.util.ExitCode;
@@ -106,7 +107,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
             .getToolchainProvider()
             .getByName(
                 AppleCxxPlatformsProvider.DEFAULT_NAME,
-                params.getTargetConfiguration(),
+                params.getTargetConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE),
                 AppleCxxPlatformsProvider.class);
     if (!experimental) {
       XCodeProjectCommandHelper xcodeProjectCommandHelper =

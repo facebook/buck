@@ -156,7 +156,7 @@ final class OwnersReport {
       Cell rootCell,
       Parser parser,
       PerBuildState parserState,
-      TargetConfiguration targetConfiguration) {
+      Optional<TargetConfiguration> targetConfiguration) {
     return new Builder(rootCell, parser, parserState, targetConfiguration);
   }
 
@@ -164,13 +164,13 @@ final class OwnersReport {
     private final Cell rootCell;
     private final Parser parser;
     private final PerBuildState parserState;
-    private final TargetConfiguration targetConfiguration;
+    private final Optional<TargetConfiguration> targetConfiguration;
 
     private Builder(
         Cell rootCell,
         Parser parser,
         PerBuildState parserState,
-        TargetConfiguration targetConfiguration) {
+        Optional<TargetConfiguration> targetConfiguration) {
       this.rootCell = rootCell;
       this.parser = parser;
       this.parserState = parserState;

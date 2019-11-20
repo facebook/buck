@@ -829,10 +829,10 @@ public final class MainRunner {
       DefaultCellPathResolver rootCellCellPathResolver =
           DefaultCellPathResolver.create(filesystem.getRootPath(), buckConfig.getConfig());
 
-      TargetConfiguration targetConfiguration =
+      Optional<TargetConfiguration> targetConfiguration =
           createTargetConfiguration(
               command, buckConfig, buildTargetFactory, rootCellCellPathResolver);
-      TargetConfiguration hostConfiguration =
+      Optional<TargetConfiguration> hostConfiguration =
           createHostConfiguration(
               command, buckConfig, buildTargetFactory, rootCellCellPathResolver);
 
@@ -1402,7 +1402,7 @@ public final class MainRunner {
                   manifestServiceSupplier,
                   fileHashCache,
                   buildTargetFactory,
-                  hostConfiguration,
+                  hostConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE),
                   targetSpecResolver);
 
           // Because the Parser is potentially constructed before the CounterRegistry,
@@ -1608,7 +1608,7 @@ public final class MainRunner {
     return builder.build();
   }
 
-  private TargetConfiguration createTargetConfiguration(
+  private Optional<TargetConfiguration> createTargetConfiguration(
       Command command,
       BuckConfig buckConfig,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
@@ -1616,11 +1616,10 @@ public final class MainRunner {
     if (command.getTargetPlatforms().isEmpty()) {
       Optional<UnconfiguredBuildTargetView> targetPlatformFromBuckconfig =
           buckConfig.getView(ParserConfig.class).getTargetPlatforms();
-      TargetConfiguration targetConfigurationFromBuckconfig =
+      Optional<TargetConfiguration> targetConfigurationFromBuckconfig =
           targetPlatformFromBuckconfig
               .map(ConfigurationBuildTargets::convert)
-              .<TargetConfiguration>map(ImmutableRuleBasedTargetConfiguration::of)
-              .orElse(UnconfiguredTargetConfiguration.INSTANCE);
+              .<TargetConfiguration>map(ImmutableRuleBasedTargetConfiguration::of);
       return targetConfigurationFromBuckconfig;
     }
     // TODO(nga): provide a better message if more than one platform specified on command line
@@ -1630,29 +1629,31 @@ public final class MainRunner {
                 cellPathResolver,
                 Iterators.getOnlyElement(
                     command.getTargetPlatforms().stream().distinct().iterator())));
-    return ImmutableRuleBasedTargetConfiguration.of(targetPlatform);
+    return Optional.of(ImmutableRuleBasedTargetConfiguration.of(targetPlatform));
   }
 
-  private TargetConfiguration createHostConfiguration(
+  private Optional<TargetConfiguration> createHostConfiguration(
       Command command,
       BuckConfig buckConfig,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       CellPathResolver cellPathResolver) {
     if (command.getHostPlatform().isPresent()) {
-      return ImmutableRuleBasedTargetConfiguration.of(
-          ConfigurationBuildTargets.convert(
-              unconfiguredBuildTargetFactory.create(
-                  cellPathResolver, command.getHostPlatform().get())));
+      return Optional.of(
+          ImmutableRuleBasedTargetConfiguration.of(
+              ConfigurationBuildTargets.convert(
+                  unconfiguredBuildTargetFactory.create(
+                      cellPathResolver, command.getHostPlatform().get()))));
     }
 
     Optional<UnconfiguredBuildTargetView> hostPlatformFromBuckConfig =
         buckConfig.getView(ParserConfig.class).getHostPlatform();
     if (hostPlatformFromBuckConfig.isPresent()) {
-      return ImmutableRuleBasedTargetConfiguration.of(
-          ConfigurationBuildTargets.convert(hostPlatformFromBuckConfig.get()));
+      return Optional.of(
+          ImmutableRuleBasedTargetConfiguration.of(
+              ConfigurationBuildTargets.convert(hostPlatformFromBuckConfig.get())));
     }
 
-    return UnconfiguredTargetConfiguration.INSTANCE;
+    return Optional.empty();
   }
 
   private boolean isReuseCurrentConfigPropertySet(AbstractContainerCommand command) {

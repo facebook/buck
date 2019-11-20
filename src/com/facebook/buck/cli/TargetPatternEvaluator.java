@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 class TargetPatternEvaluator {
   private static final Logger LOG = Logger.get(TargetPatternEvaluator.class);
@@ -54,7 +55,7 @@ class TargetPatternEvaluator {
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
   private final BuckConfig buckConfig;
   private final Cell rootCell;
-  private final TargetConfiguration targetConfiguration;
+  private final Optional<TargetConfiguration> targetConfiguration;
 
   private Map<String, ImmutableSet<QueryTarget>> resolvedTargets = new HashMap<>();
 
@@ -64,7 +65,7 @@ class TargetPatternEvaluator {
       BuckConfig buckConfig,
       Parser parser,
       ParsingContext parsingContext,
-      TargetConfiguration targetConfiguration) {
+      Optional<TargetConfiguration> targetConfiguration) {
     this.rootCell = rootCell;
     this.parser = parser;
     this.parsingContext = parsingContext;

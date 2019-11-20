@@ -27,6 +27,7 @@ import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformati
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
@@ -180,7 +181,7 @@ public class GraphEngineFactory {
             // TODO: replace with RuleBasedConstraintResolver
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
-            params.getHostConfiguration());
+            params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE));
 
     UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
         unconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation =

@@ -30,7 +30,6 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -57,6 +56,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.function.Function;
 import org.immutables.value.Value;
 import org.junit.Before;
@@ -275,7 +275,7 @@ public class OwnersReportTest {
                 cell,
                 TestParserFactory.create(executor.get(), cell),
                 TestPerBuildStateFactory.create(parser, cell),
-                UnconfiguredTargetConfiguration.INSTANCE)
+                Optional.empty())
             .build(getBuildFileTrees(cell), ImmutableSet.of(input));
 
     assertEquals(1, report.nonExistentInputs.size());

@@ -69,6 +69,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import org.hamcrest.CoreMatchers;
@@ -153,9 +154,9 @@ public class BuckQueryEnvironmentTest {
             FakeBuckConfig.builder().build(),
             parser,
             ParsingContext.builder(cell, executor).build(),
-            UnconfiguredTargetConfiguration.INSTANCE);
+            Optional.empty());
     OwnersReport.Builder ownersReportBuilder =
-        OwnersReport.builder(cell, parser, parserState, UnconfiguredTargetConfiguration.INSTANCE);
+        OwnersReport.builder(cell, parser, parserState, Optional.empty());
     buckQueryEnvironment =
         BuckQueryEnvironment.from(
             cell,

@@ -16,6 +16,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
@@ -73,7 +74,7 @@ public class UnconfiguredQueryCommand extends AbstractQueryCommand {
                     params.getManifestServiceSupplier(),
                     params.getFileHashCache(),
                     params.getUnconfiguredBuildTargetFactory(),
-                    params.getHostConfiguration())
+                    params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(
                     createParsingContext(params.getCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)

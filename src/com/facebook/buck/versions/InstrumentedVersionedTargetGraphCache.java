@@ -27,6 +27,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -74,7 +75,7 @@ public class InstrumentedVersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphCreationResult targetGraphCreationResult,
-      TargetConfiguration targetConfiguration,
+      Optional<TargetConfiguration> targetConfiguration,
       BuckEventBus eventBus)
       throws VersionException, InterruptedException {
     return cache

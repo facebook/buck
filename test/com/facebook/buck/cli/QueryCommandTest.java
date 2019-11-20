@@ -133,7 +133,7 @@ public class QueryCommandTest {
                 getManifestSupplier(),
                 new FakeFileHashCache(ImmutableMap.of()),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                params.getHostConfiguration())
+                params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
                 ParsingContext.builder(cell, executorService)
                     .setSpeculativeParsing(SpeculativeParsing.ENABLED)
@@ -143,10 +143,7 @@ public class QueryCommandTest {
         new FakeBuckQueryEnvironment(
             cell,
             OwnersReport.builder(
-                params.getCell(),
-                params.getParser(),
-                perBuildState,
-                UnconfiguredTargetConfiguration.INSTANCE),
+                params.getCell(), params.getParser(), perBuildState, Optional.empty()),
             params.getParser(),
             perBuildState,
             new TargetPatternEvaluator(
@@ -155,7 +152,7 @@ public class QueryCommandTest {
                 params.getBuckConfig(),
                 params.getParser(),
                 ParsingContext.builder(params.getCell(), executorService).build(),
-                UnconfiguredTargetConfiguration.INSTANCE),
+                Optional.empty()),
             eventBus,
             typeCoercerFactory);
   }

@@ -81,7 +81,7 @@ public class GoProjectCommandHelper {
   private final GoBuckConfig goBuckConfig;
   private final BuckConfig buckConfig;
   private final Cell cell;
-  private final TargetConfiguration targetConfiguration;
+  private final Optional<TargetConfiguration> targetConfiguration;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
   private final ParsingContext parsingContext;
 
@@ -93,7 +93,7 @@ public class GoProjectCommandHelper {
       boolean enableParserProfiling,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
       ProjectGeneratorParameters projectGeneratorParameters,
-      TargetConfiguration targetConfiguration) {
+      Optional<TargetConfiguration> targetConfiguration) {
     this.params = params;
     this.buckEventBus = params.getBuckEventBus();
     this.console = projectGeneratorParameters.getConsole();

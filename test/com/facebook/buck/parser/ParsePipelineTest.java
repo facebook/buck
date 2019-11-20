@@ -154,9 +154,7 @@ public class ParsePipelineTest {
         fixture
             .getTargetNodeParsePipeline()
             .getAllRequestedTargetNodes(
-                cell,
-                fixture.getCell().getFilesystem().resolve("BUCK"),
-                UnconfiguredTargetConfiguration.INSTANCE);
+                cell, fixture.getCell().getFilesystem().resolve("BUCK"), Optional.empty());
     FluentIterable<BuildTarget> allDeps =
         FluentIterable.from(libTargetNodes).transformAndConcat(input -> input.getBuildDeps());
     waitForAll(
@@ -190,9 +188,7 @@ public class ParsePipelineTest {
       fixture
           .getTargetNodeParsePipeline()
           .getAllRequestedTargetNodes(
-              cell,
-              cell.getFilesystem().resolve("no/such/file/BUCK"),
-              UnconfiguredTargetConfiguration.INSTANCE);
+              cell, cell.getFilesystem().resolve("no/such/file/BUCK"), Optional.empty());
     }
   }
 
@@ -236,8 +232,7 @@ public class ParsePipelineTest {
       expectedException.expectMessage("malformed raw data");
       fixture
           .getTargetNodeParsePipeline()
-          .getAllRequestedTargetNodes(
-              cell, rootBuildFilePath, UnconfiguredTargetConfiguration.INSTANCE);
+          .getAllRequestedTargetNodes(cell, rootBuildFilePath, Optional.empty());
     }
   }
 
@@ -249,8 +244,7 @@ public class ParsePipelineTest {
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
       fixture
           .getTargetNodeParsePipeline()
-          .getAllRequestedTargetNodes(
-              cell, rootBuildFilePath, UnconfiguredTargetConfiguration.INSTANCE);
+          .getAllRequestedTargetNodes(cell, rootBuildFilePath, Optional.empty());
       Optional<BuildFileManifest> rootRawNodes =
           fixture
               .getRawNodeParsePipelineCache()
@@ -262,8 +256,7 @@ public class ParsePipelineTest {
           "Raw data claims to come from [], but we tried rooting it at [a].");
       fixture
           .getTargetNodeParsePipeline()
-          .getAllRequestedTargetNodes(
-              cell, aBuildFilePath, UnconfiguredTargetConfiguration.INSTANCE);
+          .getAllRequestedTargetNodes(cell, aBuildFilePath, Optional.empty());
     }
   }
 
@@ -278,8 +271,7 @@ public class ParsePipelineTest {
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
       fixture
           .getTargetNodeParsePipeline()
-          .getAllRequestedTargetNodes(
-              cell, rootBuildFilePath, UnconfiguredTargetConfiguration.INSTANCE);
+          .getAllRequestedTargetNodes(cell, rootBuildFilePath, Optional.empty());
       Optional<BuildFileManifest> rootRawNodes =
           fixture
               .getRawNodeParsePipelineCache()

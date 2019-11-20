@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -416,7 +417,11 @@ public class TestRunning {
         ToolProvider javaRuntimeProvider = javaOptions.getJavaRuntimeProvider();
         Preconditions.checkState(
             Iterables.isEmpty(
-                javaRuntimeProvider.getParseTimeDeps(params.getTargetConfiguration())),
+                // TODO(nga): ignores default_target_platform and platform detector
+                javaRuntimeProvider.getParseTimeDeps(
+                    params
+                        .getTargetConfiguration()
+                        .orElse(UnconfiguredTargetConfiguration.INSTANCE))),
             "Using a rule-defined java runtime does not currently support generating code coverage.");
 
         StepRunner.runStep(
@@ -424,14 +429,22 @@ public class TestRunning {
             getReportCommand(
                 rulesUnderTestForCoverage,
                 defaultJavaPackageFinder,
-                javaRuntimeProvider.resolve(ruleResolver, params.getTargetConfiguration()),
+                // TODO(nga): ignores default_target_platform and platform detector
+                javaRuntimeProvider.resolve(
+                    ruleResolver,
+                    params
+                        .getTargetConfiguration()
+                        .orElse(UnconfiguredTargetConfiguration.INSTANCE)),
                 params.getCell().getFilesystem(),
                 ruleFinder,
                 JacocoConstants.getJacocoOutputDir(params.getCell().getFilesystem()),
                 options.getCoverageReportFormats(),
                 options.getCoverageReportTitle(),
                 javaBuckConfig
-                        .getDefaultJavacOptions(params.getTargetConfiguration())
+                        .getDefaultJavacOptions(
+                            params
+                                .getTargetConfiguration()
+                                .orElse(UnconfiguredTargetConfiguration.INSTANCE))
                         .getSpoolMode()
                     == JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK,
                 options.getCoverageIncludes(),
