@@ -30,7 +30,6 @@ import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellName;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.InvalidCellOverrideException;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
@@ -45,16 +44,13 @@ import com.facebook.buck.core.graph.transformation.executor.factory.DepsAwareExe
 import com.facebook.buck.core.graph.transformation.executor.factory.DepsAwareExecutorType;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
-import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
+import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -829,12 +825,13 @@ public final class MainRunner {
       DefaultCellPathResolver rootCellCellPathResolver =
           DefaultCellPathResolver.create(filesystem.getRootPath(), buckConfig.getConfig());
 
+      TargetConfigurationFactory targetConfigurationFactory =
+          new TargetConfigurationFactory(buildTargetFactory, cellPathResolver);
+
       Optional<TargetConfiguration> targetConfiguration =
-          createTargetConfiguration(
-              command, buckConfig, buildTargetFactory, rootCellCellPathResolver);
+          createTargetConfiguration(command, buckConfig, targetConfigurationFactory);
       Optional<TargetConfiguration> hostConfiguration =
-          createHostConfiguration(
-              command, buckConfig, buildTargetFactory, rootCellCellPathResolver);
+          createHostConfiguration(command, buckConfig, targetConfigurationFactory);
 
       // NOTE: This new KnownUserDefinedRuleTypes is only used if BuckGlobals need to be invalidated
       // Otherwise, everything should use the KnownUserDefinedRuleTypes object from BuckGlobals
@@ -1611,46 +1608,30 @@ public final class MainRunner {
   private Optional<TargetConfiguration> createTargetConfiguration(
       Command command,
       BuckConfig buckConfig,
-      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      CellPathResolver cellPathResolver) {
+      TargetConfigurationFactory targetConfigurationFactory) {
     if (command.getTargetPlatforms().isEmpty()) {
-      Optional<UnconfiguredBuildTargetView> targetPlatformFromBuckconfig =
+      Optional<String> targetPlatformFromBuckconfig =
           buckConfig.getView(ParserConfig.class).getTargetPlatforms();
-      Optional<TargetConfiguration> targetConfigurationFromBuckconfig =
-          targetPlatformFromBuckconfig
-              .map(ConfigurationBuildTargets::convert)
-              .<TargetConfiguration>map(ImmutableRuleBasedTargetConfiguration::of);
-      return targetConfigurationFromBuckconfig;
+      return targetPlatformFromBuckconfig.map(targetConfigurationFactory::create);
     }
     // TODO(nga): provide a better message if more than one platform specified on command line
-    BuildTarget targetPlatform =
-        ConfigurationBuildTargets.convert(
-            unconfiguredBuildTargetFactory.create(
-                cellPathResolver,
-                Iterators.getOnlyElement(
-                    command.getTargetPlatforms().stream().distinct().iterator())));
-    return Optional.of(ImmutableRuleBasedTargetConfiguration.of(targetPlatform));
+    return Optional.of(
+        targetConfigurationFactory.create(
+            Iterators.getOnlyElement(command.getTargetPlatforms().stream().distinct().iterator())));
   }
 
   private Optional<TargetConfiguration> createHostConfiguration(
       Command command,
       BuckConfig buckConfig,
-      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      CellPathResolver cellPathResolver) {
+      TargetConfigurationFactory targetConfigurationFactory) {
     if (command.getHostPlatform().isPresent()) {
-      return Optional.of(
-          ImmutableRuleBasedTargetConfiguration.of(
-              ConfigurationBuildTargets.convert(
-                  unconfiguredBuildTargetFactory.create(
-                      cellPathResolver, command.getHostPlatform().get()))));
+      return Optional.of(targetConfigurationFactory.create(command.getHostPlatform().get()));
     }
 
-    Optional<UnconfiguredBuildTargetView> hostPlatformFromBuckConfig =
+    Optional<String> hostPlatformFromBuckConfig =
         buckConfig.getView(ParserConfig.class).getHostPlatform();
     if (hostPlatformFromBuckConfig.isPresent()) {
-      return Optional.of(
-          ImmutableRuleBasedTargetConfiguration.of(
-              ConfigurationBuildTargets.convert(hostPlatformFromBuckConfig.get())));
+      return Optional.of(targetConfigurationFactory.create(hostPlatformFromBuckConfig.get()));
     }
 
     return Optional.empty();

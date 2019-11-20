@@ -18,10 +18,8 @@ package com.facebook.buck.parser.detector;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.util.types.Pair;
@@ -65,11 +63,10 @@ public class TargetConfigurationDetectorFactory {
           "unknown rule type '%s' in detector rule '%s'", ruleType, rule);
     }
 
-    UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-        unconfiguredBuildTargetViewFactory.create(cellPathResolver, target);
-    ImmutableRuleBasedTargetConfiguration targetConfiguration =
-        ImmutableRuleBasedTargetConfiguration.of(
-            ConfigurationBuildTargets.convert(unconfiguredBuildTargetView));
+    TargetConfigurationFactory targetConfigurationFactory =
+        new TargetConfigurationFactory(unconfiguredBuildTargetViewFactory, cellPathResolver);
+
+    TargetConfiguration targetConfiguration = targetConfigurationFactory.create(target);
 
     return new Pair<>(detectorMatcher, targetConfiguration);
   }

@@ -23,16 +23,14 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
@@ -71,7 +69,6 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   private final ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory;
   private final TargetConfigurationDetector targetConfigurationDetector;
   private final boolean requireTargetPlatform;
-  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory;
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
   private final BuckEventBus eventBus;
   private final PipelineNodeCache<BuildTarget, TargetNode<?>> cache;
@@ -80,6 +77,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       allNodeCache = new ConcurrentHashMap<>();
   private final Scope perfEventScope;
   private final PerfEventId perfEventId;
+  private final TargetConfigurationFactory targetConfigurationFactory;
   /**
    * minimum duration time for performance events to be logged (for use with {@link
    * SimplePerfEvent}s). This is on the base class to make it simpler to enable verbose tracing for
@@ -97,14 +95,15 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       String pipelineName,
       boolean speculativeDepsTraversal,
       ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory,
-      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory,
-      boolean requireTargetPlatform) {
+      boolean requireTargetPlatform,
+      TargetConfigurationFactory targetConfigurationFactory) {
     this.executorService = executorService;
     this.unconfiguredTargetNodePipeline = unconfiguredTargetNodePipeline;
     this.targetConfigurationDetector = targetConfigurationDetector;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
     this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
     this.requireTargetPlatform = requireTargetPlatform;
+    this.targetConfigurationFactory = targetConfigurationFactory;
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
     this.perfEventScope = SimplePerfEvent.scope(eventBus, PerfEventId.of(pipelineName));
     this.perfEventId = PerfEventId.of("GetTargetNode");
@@ -112,7 +111,6 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     this.cache =
         new PipelineNodeCache<>(
             cache, UnconfiguredTargetNodeToTargetNodeParsePipeline::targetNodeIsConfiguration);
-    this.unconfiguredBuildTargetViewFactory = unconfiguredBuildTargetViewFactory;
   }
 
   private static boolean targetNodeIsConfiguration(TargetNode<?> targetNode) {
@@ -298,7 +296,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     } else {
       targetConfiguration =
           targetConfigurationForBuildTarget(
-              cell, unconfiguredTarget, globalTargetConfiguration, unconfiguredTargetNode);
+              unconfiguredTarget, globalTargetConfiguration, unconfiguredTargetNode);
     }
     BuildTarget configuredTarget = unconfiguredTarget.configure(targetConfiguration);
     return getNodeJobWithRawNode(
@@ -309,7 +307,6 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   }
 
   private TargetConfiguration targetConfigurationForBuildTarget(
-      Cell cell,
       UnconfiguredBuildTargetView unconfiguredTarget,
       Optional<TargetConfiguration> globalTargetConfiguration,
       UnconfiguredTargetNode unconfiguredTargetNode) {
@@ -324,11 +321,8 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
                 .getAttributes()
                 .get(BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
     if (defaultTargetPlatform != null && !defaultTargetPlatform.isEmpty()) {
-      UnconfiguredBuildTargetView configurationTarget =
-          unconfiguredBuildTargetViewFactory.createForBaseName(
-              cell.getCellPathResolver(), unconfiguredTarget.getBaseName(), defaultTargetPlatform);
-      return ImmutableRuleBasedTargetConfiguration.of(
-          ConfigurationBuildTargets.convert(configurationTarget));
+      return targetConfigurationFactory.createForBaseName(
+          unconfiguredTarget.getBaseName(), defaultTargetPlatform);
     }
 
     // Use detector when neither global configuration is specified

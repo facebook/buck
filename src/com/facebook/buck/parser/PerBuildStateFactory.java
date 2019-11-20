@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransfo
 import com.facebook.buck.core.model.platform.impl.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
@@ -200,8 +201,9 @@ public class PerBuildStateFactory {
             "nonresolving_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
             nonResolvingRawTargetNodeToTargetNodeFactory,
-            unconfiguredBuildTargetFactory,
-            parserConfig.getRequireTargetPlatform());
+            parserConfig.getRequireTargetPlatform(),
+            new TargetConfigurationFactory(
+                unconfiguredBuildTargetFactory, rootCell.getCellPathResolver()));
 
     ConfigurationRuleRegistry configurationRuleRegistry =
         ConfigurationRuleRegistryFactory.createRegistry(
@@ -248,8 +250,9 @@ public class PerBuildStateFactory {
             "configured_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
             unconfiguredTargetNodeToTargetNodeFactory,
-            unconfiguredBuildTargetFactory,
-            parserConfig.getRequireTargetPlatform()) {
+            parserConfig.getRequireTargetPlatform(),
+            new TargetConfigurationFactory(
+                unconfiguredBuildTargetFactory, rootCell.getCellPathResolver())) {
           @Override
           public void close() {
             super.close();

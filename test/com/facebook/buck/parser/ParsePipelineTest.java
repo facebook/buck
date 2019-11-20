@@ -32,6 +32,7 @@ import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransfo
 import com.facebook.buck.core.model.platform.impl.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -460,8 +461,9 @@ public class ParsePipelineTest {
               "raw_target_node_parse_pipeline",
               speculativeParsing == SpeculativeParsing.ENABLED,
               rawTargetNodeToTargetNodeFactory,
-              new ParsingUnconfiguredBuildTargetViewFactory(),
-              false);
+              false,
+              new TargetConfigurationFactory(
+                  new ParsingUnconfiguredBuildTargetViewFactory(), cell.getCellPathResolver()));
     }
 
     public UnconfiguredTargetNodeToTargetNodeParsePipeline getTargetNodeParsePipeline() {

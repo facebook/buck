@@ -326,13 +326,13 @@ public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
    *     This is used when command-line argument is unspecified. Please do not use this option.
    */
   @Value.Lazy
-  public Optional<UnconfiguredBuildTargetView> getTargetPlatforms() {
+  public Optional<String> getTargetPlatforms() {
     // TODO(nga): remove this option, it exists only for migration,
     //            and in the future platform should be only specified via one of:
     //            * `--target-platforms=` command line argument
     //            * `default_target_platform` argument
     //            * platform detector
-    return getDelegate().getMaybeUnconfiguredBuildTarget("parser", "target_platforms");
+    return getDelegate().getValue("parser", "target_platforms");
   }
 
   /**
@@ -340,12 +340,12 @@ public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
    *     is used when command-line argument is unspecified. Please do not use this option.
    */
   @Value.Lazy
-  public Optional<UnconfiguredBuildTargetView> getHostPlatform() {
+  public Optional<String> getHostPlatform() {
     // TODO(nga): remove this option, it exists only for migration,
     //            and in the future platform should be only specified via one of:
     //            * `--host-platform=` command line argument
     //            * host platform detector
-    return getDelegate().getMaybeUnconfiguredBuildTarget("parser", "host_platform");
+    return getDelegate().getValue("parser", "host_platform");
   }
 
   /**
