@@ -29,7 +29,7 @@ public abstract class BuildTargetMacro implements Macro {
   public abstract BuildTarget getTarget();
 
   /** @return a copy of this {@link BuildTargetMacro} with the given {@link BuildTarget}. */
-  abstract BuildTargetMacro withTarget(BuildTarget target);
+  protected abstract BuildTargetMacro withTarget(BuildTarget target);
 
   @Override
   public final Optional<Macro> translateTargets(

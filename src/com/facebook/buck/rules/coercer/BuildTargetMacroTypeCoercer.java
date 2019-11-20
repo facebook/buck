@@ -29,16 +29,25 @@ import java.util.function.Function;
 public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
     implements MacroTypeCoercer<M> {
 
+  /** Should target be resolved for host platform or target */
+  public enum TargetOrHost {
+    TARGET,
+    HOST,
+  }
+
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
   private final Class<M> mClass;
+  private final TargetOrHost targetOrHost;
   private final Function<BuildTarget, M> factory;
 
   public BuildTargetMacroTypeCoercer(
       TypeCoercer<BuildTarget> buildTargetTypeCoercer,
       Class<M> mClass,
+      TargetOrHost targetOrHost,
       Function<BuildTarget, M> factory) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.mClass = mClass;
+    this.targetOrHost = targetOrHost;
     this.factory = factory;
   }
 
@@ -75,7 +84,7 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
             cellRoots,
             filesystem,
             pathRelativeToProjectRoot,
-            targetConfiguration,
+            targetOrHost == TargetOrHost.TARGET ? targetConfiguration : hostConfiguration,
             hostConfiguration,
             args.get(0));
     return factory.apply(target);

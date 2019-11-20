@@ -187,16 +187,29 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 .build(),
             ImmutableList.of(
                 new BuildTargetMacroTypeCoercer<>(
-                    buildTargetTypeCoercer, ClasspathMacro.class, ClasspathMacro::of),
+                    buildTargetTypeCoercer,
+                    ClasspathMacro.class,
+                    BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
+                    ClasspathMacro::of),
                 new BuildTargetMacroTypeCoercer<>(
-                    buildTargetTypeCoercer, ClasspathAbiMacro.class, ClasspathAbiMacro::of),
+                    buildTargetTypeCoercer,
+                    ClasspathAbiMacro.class,
+                    BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
+                    ClasspathAbiMacro::of),
                 new BuildTargetMacroTypeCoercer<>(
-                    buildTargetTypeCoercer, ExecutableMacro.class, ExecutableMacro::of),
+                    buildTargetTypeCoercer,
+                    ExecutableMacro.class,
+                    // TODO(nga): switch to host
+                    BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
+                    ExecutableMacro::of),
                 new EnvMacroTypeCoercer(),
                 new LocationMacroTypeCoercer(buildTargetTypeCoercer),
                 new LocationPlatformMacroTypeCoercer(buildTargetTypeCoercer),
                 new BuildTargetMacroTypeCoercer<>(
-                    buildTargetTypeCoercer, MavenCoordinatesMacro.class, MavenCoordinatesMacro::of),
+                    buildTargetTypeCoercer,
+                    MavenCoordinatesMacro.class,
+                    BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
+                    MavenCoordinatesMacro::of),
                 new OutputMacroTypeCoercer(),
                 new AbsoluteOutputMacroTypeCoercer(),
                 new QueryMacroTypeCoercer<>(
@@ -207,7 +220,10 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                     queryTypeCoercer, QueryPathsMacro.class, QueryPathsMacro::of),
                 new QueryTargetsAndOutputsMacroTypeCoercer(queryTypeCoercer),
                 new BuildTargetMacroTypeCoercer<>(
-                    buildTargetTypeCoercer, WorkerMacro.class, WorkerMacro::of),
+                    buildTargetTypeCoercer,
+                    WorkerMacro.class,
+                    BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
+                    WorkerMacro::of),
                 new ZeroArgMacroTypeCoercer<>(CcMacro.class, CcMacro.of()),
                 new ZeroArgMacroTypeCoercer<>(CcFlagsMacro.class, CcFlagsMacro.of()),
                 new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
