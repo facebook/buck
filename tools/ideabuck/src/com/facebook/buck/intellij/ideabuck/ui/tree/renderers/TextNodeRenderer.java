@@ -32,11 +32,11 @@ public class TextNodeRenderer implements TreeNodeRenderer {
       return new JLabel("");
     }
 
-    Icon icon = AllIcons.Ide.Info_notifications;
+    Icon icon = AllIcons.General.Information;
     if (node.getTextType() == BuckTextNode.TextType.ERROR) {
-      icon = AllIcons.Ide.Error;
+      icon = AllIcons.Ide.FatalError;
     } else if (node.getTextType() == BuckTextNode.TextType.WARNING) {
-      icon = AllIcons.Ide.Warning_notifications;
+      icon = AllIcons.General.Warning;
     }
 
     String message =
