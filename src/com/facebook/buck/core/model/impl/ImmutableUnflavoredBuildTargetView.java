@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.util.string.MoreStrings;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import java.util.Objects;
@@ -33,6 +34,7 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
   private final int hash;
 
   private ImmutableUnflavoredBuildTargetView(UnconfiguredBuildTarget data) {
+    Preconditions.checkArgument(data.getFlavors().isEmpty());
     this.data = data;
     this.hash = Objects.hash(data);
   }
