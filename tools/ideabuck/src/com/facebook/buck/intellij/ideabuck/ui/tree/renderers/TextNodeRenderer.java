@@ -44,7 +44,7 @@ public class TextNodeRenderer implements TreeNodeRenderer {
             + HtmlEscapers.htmlEscaper().escape(node.getText())
             + "</pre></html>";
 
-    JBLabel result = new JBLabel(message, icon, SwingConstants.HORIZONTAL);
+    JBLabel result = new JBLabel(message, icon, SwingConstants.LEFT);
 
     result.setToolTipText("<pre>" + node.getText() + "</pre>");
 
