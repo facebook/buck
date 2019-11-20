@@ -20,6 +20,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.types.Unit;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +47,7 @@ import javax.annotation.Nullable;
 public class ProgressEstimator implements AutoCloseable {
 
   private static final Duration PROCESS_ESTIMATE_IO_TIMEOUT = Duration.ofMillis(5000);
-  private final Path storageFile;
+  private final Optional<Path> storageFile;
 
   private static final Logger LOG = Logger.get(ProgressEstimator.class);
 
@@ -89,7 +90,7 @@ public class ProgressEstimator implements AutoCloseable {
   // printing.
   private volatile boolean isClosed = false;
 
-  public ProgressEstimator(Path storageFile, BuckEventBus buckEventBus) {
+  public ProgressEstimator(Optional<Path> storageFile, BuckEventBus buckEventBus) {
     this.storageFile = storageFile;
     this.command = null;
     this.buckEventBus = buckEventBus;
@@ -210,9 +211,13 @@ public class ProgressEstimator implements AutoCloseable {
   }
 
   private Future<?> fillEstimationsForCommand(String aCommand) {
+    if (!storageFile.isPresent()) {
+      return CompletableFuture.completedFuture(Unit.UNIT);
+    }
+    Path storageFile = this.storageFile.get();
     return runAsync(
         () -> {
-          preloadEstimationsFromStorageFile();
+          preloadEstimationsFromStorageFile(storageFile);
           Map<String, Number> commandEstimations = getEstimationsForCommand(aCommand);
           if (commandEstimations != null) {
             if (commandEstimations.containsKey(EXPECTED_NUMBER_OF_PARSED_RULES)
@@ -232,7 +237,7 @@ public class ProgressEstimator implements AutoCloseable {
   }
 
   /** This should be run from within the {@code executorService} */
-  private void preloadEstimationsFromStorageFile() {
+  private void preloadEstimationsFromStorageFile(Path storageFile) {
     expectationsStorage =
         runWithTimeout(
                 () -> {
@@ -290,6 +295,10 @@ public class ProgressEstimator implements AutoCloseable {
 
   /** This should be run from within the {@code executorService} */
   private void saveEstimatedValues() {
+    if (!storageFile.isPresent()) {
+      return;
+    }
+    Path storageFile = this.storageFile.get();
     runWithTimeout(
         () -> {
           if (expectationsStorage == null) {
@@ -312,12 +321,17 @@ public class ProgressEstimator implements AutoCloseable {
         });
   }
 
-  /**
-   * @return Estimated progress of parsing files stage. If return value is absent, it's impossible
-   *     to compute the estimated progress.
-   */
-  public Optional<Double> getEstimatedProgressOfParsingBuckFiles() {
-    return wrapValueIntoOptional(parsingFilesProgress.get());
+  /** @return Estimated progress of parsing files stage. */
+  public ProgressEstimation getEstimatedProgressOfParsingBuckFiles() {
+    return new ProgressEstimation(
+        wrapValueIntoOptional(parsingFilesProgress.get()),
+        Optional.of(numberOfParsedBUCKFiles.intValue()));
+  }
+
+  /** @return Estimated progress of parsing files in action graph stage. */
+  public ProgressEstimation getEstimatedProgressOfCreatingActionGraph() {
+    return new ProgressEstimation(
+        wrapValueIntoOptional(parsingFilesProgress.get()), Optional.empty());
   }
 
   private Optional<Double> wrapValueIntoOptional(double value) {

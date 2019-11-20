@@ -306,7 +306,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             /* suffix */ Optional.empty(),
             currentTimeMillis,
             actionGraphEvents.values(),
-            getEstimatedProgressOfParsingBuckFiles(),
+            getEstimatedProgressOfCreatingActionGraph(),
             Optional.of(this.minimumDurationMillisecondsToShowActionGraph),
             lines);
 

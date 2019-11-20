@@ -37,6 +37,7 @@ import com.facebook.buck.event.listener.stats.cache.RemoteArtifactUploadStats;
 import com.facebook.buck.event.listener.stats.cache.RemoteDownloadStats;
 import com.facebook.buck.event.listener.stats.parse.ParseStatsTracker;
 import com.facebook.buck.event.listener.util.EventInterval;
+import com.facebook.buck.event.listener.util.ProgressEstimation;
 import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
@@ -239,11 +240,21 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
   }
 
-  protected Optional<Double> getEstimatedProgressOfParsingBuckFiles() {
+  /** @return Estimated progress of parsing files stage. */
+  protected ProgressEstimation getEstimatedProgressOfParsingBuckFiles() {
     if (progressEstimator.isPresent()) {
       return progressEstimator.get().getEstimatedProgressOfParsingBuckFiles();
     } else {
-      return Optional.empty();
+      return ProgressEstimation.UNKNOWN;
+    }
+  }
+
+  /** @return Estimated progress of parsing files stage. */
+  protected ProgressEstimation getEstimatedProgressOfCreatingActionGraph() {
+    if (progressEstimator.isPresent()) {
+      return progressEstimator.get().getEstimatedProgressOfCreatingActionGraph();
+    } else {
+      return ProgressEstimation.UNKNOWN;
     }
   }
 
@@ -382,7 +393,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       Optional<String> suffix,
       long currentMillis,
       Collection<EventInterval> eventIntervals,
-      Optional<Double> progress,
+      ProgressEstimation progress,
       Optional<Long> minimum,
       ImmutableList.Builder<String> lines) {
     return addLineFromEventInterval(
@@ -404,7 +415,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       Optional<String> suffix,
       long currentMillis,
       EventInterval startAndFinish,
-      Optional<Double> progress,
+      ProgressEstimation progress,
       Optional<Long> minimum,
       ImmutableList.Builder<String> lines) {
     if (!startAndFinish.getStart().isPresent()) {
@@ -429,8 +440,12 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
     result += formatElapsedTime(elapsedTime);
 
-    if (progress.isPresent()) {
-      result += isFinished ? " (100%)" : " (" + Math.round(progress.get() * 100) + "%)";
+    if (!isFinished) {
+      if (progress.getProgress().isPresent()) {
+        result += " (" + Math.round(progress.getProgress().get() * 100) + "%)";
+      } else if (progress.getNumber().isPresent()) {
+        result += " (" + progress.getNumber().get() + "/unknown)";
+      }
     }
 
     if (suffix.isPresent()) {

@@ -61,6 +61,8 @@ import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestCaseSummary;
@@ -791,7 +793,7 @@ public class SuperConsoleEventBusListenerTest {
     FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, ImmutableSortedSet.of());
     FakeBuildRule cachedRule = new FakeBuildRule(cachedTarget, ImmutableSortedSet.of());
 
-    ProgressEstimator e = new ProgressEstimator(getStorageForTest(), eventBus);
+    ProgressEstimator e = new ProgressEstimator(Optional.of(getStorageForTest()), eventBus);
     listener.setProgressEstimator(e);
 
     BuildEvent.RuleCountCalculated ruleCountCalculated =
@@ -805,6 +807,32 @@ public class SuperConsoleEventBusListenerTest {
     ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(parseStarted, 200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(
+        listener,
+        renderingConsole,
+        300L,
+        ImmutableList.of("Parsing buck files... 0.1 sec (0/unknown)"));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            ParseBuckFileEvent.finished(
+                ParseBuckFileEvent.started(
+                    Paths.get(""),
+                    ParseBuckFileEvent.ParserKind.PYTHON_DSL,
+                    ProjectBuildFileParser.class),
+                7,
+                99,
+                Optional.empty()),
+            300L,
+            TimeUnit.MILLISECONDS,
+            1));
+
+    validateConsole(
+        listener,
+        renderingConsole,
+        300L,
+        ImmutableList.of("Parsing buck files... 0.1 sec (1/unknown)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -2196,7 +2224,7 @@ public class SuperConsoleEventBusListenerTest {
     Files.createDirectories(storagePath.getParent());
     Files.write(storagePath, contents.getBytes(StandardCharsets.UTF_8));
 
-    ProgressEstimator e = new ProgressEstimator(storagePath, eventBus);
+    ProgressEstimator e = new ProgressEstimator(Optional.of(storagePath), eventBus);
     listener.setProgressEstimator(e);
 
     eventBus.post(
@@ -2264,7 +2292,7 @@ public class SuperConsoleEventBusListenerTest {
     Files.createDirectories(storagePath.getParent());
     Files.write(storagePath, contents.getBytes(StandardCharsets.UTF_8));
 
-    ProgressEstimator e = new ProgressEstimator(storagePath, eventBus);
+    ProgressEstimator e = new ProgressEstimator(Optional.of(storagePath), eventBus);
     listener.setProgressEstimator(e);
 
     eventBus.post(

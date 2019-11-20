@@ -30,6 +30,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.event.listener.util.EventInterval;
+import com.facebook.buck.event.listener.util.ProgressEstimation;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
 import com.facebook.buck.util.ExitCode;
@@ -131,7 +132,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         /* suffix */ Optional.empty(),
         clock.currentTimeMillis(),
         actionGraphEvents.values(),
-        Optional.empty(),
+        ProgressEstimation.UNKNOWN,
         Optional.empty(),
         lines);
     printLines(lines);

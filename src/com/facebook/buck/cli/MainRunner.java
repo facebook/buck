@@ -1221,12 +1221,18 @@ public final class MainRunner {
           // special support for project so we have to include it
           // there too.
           if (consoleListener.displaysEstimatedProgress()
-              && (command.performsBuild() || command.subcommand instanceof ProjectCommand)) {
+              && (command.performsBuild()
+                  || command.subcommand instanceof ProjectCommand
+                  || command.subcommand instanceof AbstractQueryCommand)) {
+            boolean persistent = !(command.subcommand instanceof AbstractQueryCommand);
             ProgressEstimator progressEstimator =
                 new ProgressEstimator(
-                    filesystem
-                        .resolve(filesystem.getBuckPaths().getBuckOut())
-                        .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON),
+                    persistent
+                        ? Optional.of(
+                            filesystem
+                                .resolve(filesystem.getBuckPaths().getBuckOut())
+                                .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON))
+                        : Optional.empty(),
                     buildEventBus);
             consoleListener.setProgressEstimator(progressEstimator);
           }
