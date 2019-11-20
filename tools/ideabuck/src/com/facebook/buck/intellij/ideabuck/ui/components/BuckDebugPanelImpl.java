@@ -21,6 +21,7 @@ import com.intellij.execution.impl.ConsoleViewImpl;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
 import javax.swing.JComponent;
 
 public class BuckDebugPanelImpl implements BuckDebugPanel {
@@ -30,6 +31,7 @@ public class BuckDebugPanelImpl implements BuckDebugPanel {
 
   public BuckDebugPanelImpl(Project project) {
     outputConsole = new ConsoleViewImpl(project, false);
+    Disposer.register(project, outputConsole);
   }
 
   @Override
