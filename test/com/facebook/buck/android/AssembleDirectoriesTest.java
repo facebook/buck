@@ -66,8 +66,7 @@ public class AssembleDirectoriesTest {
     Files.write(tmp.resolve("folder_b/c.txt"), "".getBytes(UTF_8));
     Files.write(tmp.resolve("folder_b/d.txt"), "".getBytes(UTF_8));
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:output_folder");
+    BuildTarget target = BuildTargetFactory.newInstance("//:output_folder");
     ImmutableList<SourcePath> directories =
         ImmutableList.of(
             FakeSourcePath.of(filesystem, "folder_a"), FakeSourcePath.of(filesystem, "folder_b"));

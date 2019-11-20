@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /** Test utility to build TestResults objects for use in test cases. */
 public class FakeTestResults {
@@ -29,7 +28,7 @@ public class FakeTestResults {
   private FakeTestResults() {}
 
   private static final BuildTarget DUMMY_TARGET_FOR_TESTING =
-      BuildTargetFactory.newInstance(Paths.get("/does/not/exist"), "//foo/bar", "baz");
+      BuildTargetFactory.newInstance("//foo/bar", "baz");
 
   public static TestResults of(Iterable<? extends TestCaseSummary> testCases) {
     return withTestLogs(testCases, ImmutableList.of());

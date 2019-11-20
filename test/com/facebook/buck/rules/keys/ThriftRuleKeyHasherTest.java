@@ -168,16 +168,14 @@ public class ThriftRuleKeyHasherTest {
     hasher.putKey(".rule_key_value");
     hasher.putRuleType(RuleType.of("sample_build_rule", RuleType.Kind.BUILD));
     hasher.putKey(".build_rule_type_value");
-    hasher.putBuildTarget(
-        BuildTargetFactory.newInstance(new File("cell_path").toPath(), "//base_name", "rule_name"));
+    hasher.putBuildTarget(BuildTargetFactory.newInstance("//base_name", "rule_name"));
     hasher.putKey(".build_target_value");
     hasher.putBuildTargetSourcePath(
         new AbstractDefaultBuildTargetSourcePath() {
           @Override
           public BuildTargetWithOutputs getTargetWithOutputs() {
             return ImmutableBuildTargetWithOutputs.of(
-                BuildTargetFactory.newInstance(
-                    new File("cell_path_2").toPath(), "//base_name_2", "rule_name_2"),
+                BuildTargetFactory.newInstance("//base_name_2", "rule_name_2"),
                 OutputLabel.DEFAULT);
           }
 

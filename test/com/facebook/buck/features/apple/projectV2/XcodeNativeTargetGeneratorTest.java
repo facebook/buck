@@ -82,44 +82,42 @@ public class XcodeNativeTargetGeneratorTest {
     //   V     V
     //   BazLib -has-unit-test-> BazTest
 
-    bazTestTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//baz:test");
+    bazTestTarget = BuildTargetFactory.newInstance("//baz:test");
     bazTestNode =
         AppleTestBuilder.createBuilder(bazTestTarget)
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
-    bazLibTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//baz:lib");
+    bazLibTarget = BuildTargetFactory.newInstance("//baz:lib");
     bazLibNode =
         AppleLibraryBuilder.createBuilder(bazLibTarget)
             .setTests(ImmutableSortedSet.of(bazTestTarget))
             .build();
 
-    quxTestTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//qux:test");
+    quxTestTarget = BuildTargetFactory.newInstance("//qux:test");
     quxTestNode =
         AppleTestBuilder.createBuilder(quxTestTarget)
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .isUiTest(true)
             .build();
 
-    quxLibTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//qux:lib");
+    quxLibTarget = BuildTargetFactory.newInstance("//qux:lib");
     quxLibNode =
         AppleLibraryBuilder.createBuilder(quxLibTarget)
             .setDeps(ImmutableSortedSet.of(bazLibTarget))
             .setTests(ImmutableSortedSet.of(quxTestTarget))
             .build();
 
-    fooAppBinaryTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo:appBinary");
+    fooAppBinaryTarget = BuildTargetFactory.newInstance("//foo:appBinary");
     fooAppBinaryNode =
         AppleBinaryBuilder.createBuilder(fooAppBinaryTarget)
             .setDeps(ImmutableSortedSet.of(quxLibTarget, bazLibTarget))
             .build();
 
-    barBinaryTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//bar:binary");
+    barBinaryTarget = BuildTargetFactory.newInstance("//bar:binary");
     barBinaryNode = AppleBinaryBuilder.createBuilder(barBinaryTarget).build();
 
-    barExtTarget =
-        BuildTargetFactory.newInstance(
-            rootCell.getRoot(), "//bar", "ext", DefaultCxxPlatforms.FLAVOR);
+    barExtTarget = BuildTargetFactory.newInstance("//bar", "ext", DefaultCxxPlatforms.FLAVOR);
     barExtNode =
         AppleBundleBuilder.createBuilder(barExtTarget)
             .setBinary(barBinaryTarget)
@@ -128,7 +126,7 @@ public class XcodeNativeTargetGeneratorTest {
             .setXcodeProductType(Optional.of(ProductTypes.APP_EXTENSION.getIdentifier()))
             .build();
 
-    fooAppBundleTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo:appBundle");
+    fooAppBundleTarget = BuildTargetFactory.newInstance("//foo:appBundle");
     fooAppBundleNode =
         AppleBundleBuilder.createBuilder(fooAppBundleTarget)
             .setBinary(fooAppBinaryTarget)

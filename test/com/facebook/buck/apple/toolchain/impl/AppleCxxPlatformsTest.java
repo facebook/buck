@@ -836,8 +836,7 @@ public class AppleCxxPlatformsTest {
                     .put(projectFilesystem.resolve("source.cpp"), HashCode.fromInt(0))
                     .build()),
             graphBuilder);
-    BuildTarget target =
-        BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:target");
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<Flavor, RuleKey> ruleKeys = ImmutableMap.builder();
     for (Map.Entry<Flavor, AppleCxxPlatform> entry : cxxPlatforms.entrySet()) {
       CxxSourceRuleFactory cxxSourceRuleFactory =

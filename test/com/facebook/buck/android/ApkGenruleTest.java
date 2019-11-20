@@ -73,23 +73,20 @@ public class ApkGenruleTest {
       throws NoSuchBuildTargetException {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
-    BuildTarget libAndroidTarget =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:lib-android");
+    BuildTarget libAndroidTarget = BuildTargetFactory.newInstance("//:lib-android");
     BuildRule androidLibRule =
         JavaLibraryBuilder.createBuilder(libAndroidTarget)
             .addSrc(Paths.get("java/com/facebook/util/Facebook.java"))
             .build(graphBuilder, filesystem);
 
-    BuildTarget keystoreTarget =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//keystore:debug");
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     Keystore keystore =
         KeystoreBuilder.createBuilder(keystoreTarget)
             .setStore(FakeSourcePath.of(filesystem, "keystore/debug.keystore"))
             .setProperties(FakeSourcePath.of(filesystem, "keystore/debug.keystore.properties"))
             .build(graphBuilder, filesystem);
 
-    AndroidBinaryBuilder.createBuilder(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:fb4a"))
+    AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
         .setOriginalDeps(ImmutableSortedSet.of(androidLibRule.getBuildTarget()))
         .setKeystore(keystore.getBuildTarget())
@@ -106,12 +103,9 @@ public class ApkGenruleTest {
 
     // From the Python object, create a ApkGenruleBuildRuleFactory to create a ApkGenrule.Builder
     // that builds a ApkGenrule from the Python object.
-    BuildTarget apkTarget =
-        BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:fb4a");
+    BuildTarget apkTarget = BuildTargetFactory.newInstance("//:fb4a");
 
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(
-            projectFilesystem.getRootPath(), "//src/com/facebook:sign_fb4a");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//src/com/facebook:sign_fb4a");
 
     ApkGenruleDescription description =
         new ApkGenruleDescription(

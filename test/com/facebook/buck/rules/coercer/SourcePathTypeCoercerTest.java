@@ -92,9 +92,7 @@ public class SourcePathTypeCoercerTest {
             "//:hello");
 
     assertEquals(
-        DefaultBuildTargetSourcePath.of(
-            BuildTargetFactory.newInstance(projectFilesystem, "//:hello")),
-        sourcePath);
+        DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//:hello")), sourcePath);
   }
 
   @Test
@@ -111,8 +109,7 @@ public class SourcePathTypeCoercerTest {
     assertEquals(
         DefaultBuildTargetSourcePath.of(
             ImmutableBuildTargetWithOutputs.of(
-                BuildTargetFactory.newInstance(projectFilesystem, "//:hello"),
-                new OutputLabel("label"))),
+                BuildTargetFactory.newInstance("//:hello"), new OutputLabel("label"))),
         sourcePath);
   }
 
@@ -128,9 +125,7 @@ public class SourcePathTypeCoercerTest {
             ":hello");
 
     assertEquals(
-        DefaultBuildTargetSourcePath.of(
-            BuildTargetFactory.newInstance(projectFilesystem, "//:hello")),
-        sourcePath);
+        DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//:hello")), sourcePath);
   }
 
   @Test
@@ -147,8 +142,7 @@ public class SourcePathTypeCoercerTest {
     assertEquals(
         DefaultBuildTargetSourcePath.of(
             ImmutableBuildTargetWithOutputs.of(
-                BuildTargetFactory.newInstance(projectFilesystem, "//:hello"),
-                new OutputLabel("label"))),
+                BuildTargetFactory.newInstance("//:hello"), new OutputLabel("label"))),
         sourcePath);
   }
 
@@ -171,7 +165,7 @@ public class SourcePathTypeCoercerTest {
     // the cell name should be absent (otherwise, we'd look for a cell named `@hello` from the
     // `@hello` cell. Yeah. My head hurts a little too.
     assertEquals(
-        DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance(helloRoot, "hello//:hello")),
+        DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("hello//:hello")),
         sourcePath);
   }
 

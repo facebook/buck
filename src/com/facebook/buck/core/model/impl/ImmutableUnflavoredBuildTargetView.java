@@ -24,25 +24,17 @@ import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
-import java.nio.file.FileSystem;
 import java.util.Objects;
 
 /** Immutable implementation of {@link UnflavoredBuildTargetView} */
 public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildTargetView {
 
-  private final FileSystem cellFileSystem;
   private final UnconfiguredBuildTarget data;
   private final int hash;
 
-  private ImmutableUnflavoredBuildTargetView(
-      FileSystem cellFileSystem, UnconfiguredBuildTarget data) {
-    this.cellFileSystem = cellFileSystem;
+  private ImmutableUnflavoredBuildTargetView(UnconfiguredBuildTarget data) {
     this.data = data;
-
-    // Note we ignore filesystem hash here, but do not ignore it in `equals`
-    // so that cache will be stable across restarts,
-    // but different filesystems will result in inequality for tests
-    hash = Objects.hash(data);
+    this.hash = Objects.hash(data);
   }
 
   /** Interner for instances of UnflavoredBuildTargetView. */
@@ -52,11 +44,6 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
   @Override
   public UnconfiguredBuildTarget getData() {
     return data;
-  }
-
-  @Override
-  public FileSystem getCellFileSystem() {
-    return cellFileSystem;
   }
 
   @Override
@@ -87,9 +74,8 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
    * @param shortName Last part of build target name after colon
    */
   public static ImmutableUnflavoredBuildTargetView of(
-      FileSystem cellFileSystem, CanonicalCellName cellName, String baseName, String shortName) {
+      CanonicalCellName cellName, String baseName, String shortName) {
     return of(
-        cellFileSystem,
         ImmutableUnconfiguredBuildTarget.of(
             cellName, baseName, shortName, UnconfiguredBuildTarget.NO_FLAVORS));
   }
@@ -99,9 +85,8 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
    *
    * @param data {@link UnconfiguredBuildTarget} which encapsulates build target data
    */
-  public static ImmutableUnflavoredBuildTargetView of(
-      FileSystem cellFileSystem, UnconfiguredBuildTarget data) {
-    return interner.intern(new ImmutableUnflavoredBuildTargetView(cellFileSystem, data));
+  public static ImmutableUnflavoredBuildTargetView of(UnconfiguredBuildTarget data) {
+    return interner.intern(new ImmutableUnflavoredBuildTargetView(data));
   }
 
   @Override
@@ -131,11 +116,7 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
   }
 
   private boolean equalTo(ImmutableUnflavoredBuildTargetView another) {
-    if (hash != another.hash) {
-      return false;
-    }
-
-    return cellFileSystem.equals(another.cellFileSystem) && data.equals(another.data);
+    return hash == another.hash && data.equals(another.data);
   }
 
   @Override

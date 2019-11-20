@@ -36,7 +36,6 @@ import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 
 /** Pseudo linkable for representing Swift runtime library's linker arguments. */
@@ -45,8 +44,7 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
   private static final String SWIFT_RUNTIME = "_swift_runtime";
 
   private static final UnconfiguredBuildTargetView PSEUDO_BUILD_TARGET =
-      ImmutableUnconfiguredBuildTargetView.of(
-          FileSystems.getDefault(), BUILD_TARGET_PREFIX + SWIFT_RUNTIME, SWIFT_RUNTIME);
+      ImmutableUnconfiguredBuildTargetView.of(BUILD_TARGET_PREFIX + SWIFT_RUNTIME, SWIFT_RUNTIME);
 
   private final SwiftPlatform swiftPlatform;
   private final BuildTarget buildTarget;

@@ -15,20 +15,11 @@
  */
 package com.facebook.buck.core.model;
 
-import java.nio.file.Path;
-import javax.annotation.Nullable;
-
 /** Creates {@link BuildTarget} for configuration targets. */
 public class ConfigurationBuildTargetFactoryForTests {
 
   public static BuildTarget newInstance(String fullyQualifiedName) {
     return BuildTargetFactory.newInstance(fullyQualifiedName)
-        .getUnconfiguredBuildTargetView()
-        .configure(ConfigurationForConfigurationTargets.INSTANCE);
-  }
-
-  public static BuildTarget newInstance(@Nullable Path root, String fullyQualifiedName) {
-    return BuildTargetFactory.newInstance(root, fullyQualifiedName)
         .getUnconfiguredBuildTargetView()
         .configure(ConfigurationForConfigurationTargets.INSTANCE);
   }

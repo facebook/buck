@@ -135,8 +135,8 @@ public class PerBuildStateTest {
     Files.write(
         testFooBuckFile,
         "java_library(name = 'lib1')\njava_library(name = 'lib2')\n".getBytes(UTF_8));
-    BuildTarget fooLib1Target = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib1");
-    BuildTarget fooLib2Target = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib2");
+    BuildTarget fooLib1Target = BuildTargetFactory.newInstance("//foo", "lib1");
+    BuildTarget fooLib2Target = BuildTargetFactory.newInstance("//foo", "lib2");
 
     // First, only load one target from the build file so the file is parsed, but only one of the
     // TargetNodes will be cached.

@@ -97,14 +97,14 @@ public class DuplicateResourcesTest {
   public void makeRules() {
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
 
-    mainResTarget = BuildTargetFactory.newInstance(filesystem, "//main_app:res");
-    directDepResTarget = BuildTargetFactory.newInstance(filesystem, "//direct_dep:res");
-    transitiveDepResTarget = BuildTargetFactory.newInstance(filesystem, "//transitive_dep:res");
-    transitiveDepLibTarget = BuildTargetFactory.newInstance(filesystem, "//transitive_dep:library");
-    bottomDepResTarget = BuildTargetFactory.newInstance(filesystem, "//bottom_dep:res");
-    androidLibraryTarget = BuildTargetFactory.newInstance(filesystem, "//direct_dep:library");
-    androidBinaryTarget = BuildTargetFactory.newInstance(filesystem, "//main_app:binary");
-    keystoreTarget = BuildTargetFactory.newInstance(filesystem, "//main_app:keystore");
+    mainResTarget = BuildTargetFactory.newInstance("//main_app:res");
+    directDepResTarget = BuildTargetFactory.newInstance("//direct_dep:res");
+    transitiveDepResTarget = BuildTargetFactory.newInstance("//transitive_dep:res");
+    transitiveDepLibTarget = BuildTargetFactory.newInstance("//transitive_dep:library");
+    bottomDepResTarget = BuildTargetFactory.newInstance("//bottom_dep:res");
+    androidLibraryTarget = BuildTargetFactory.newInstance("//direct_dep:library");
+    androidBinaryTarget = BuildTargetFactory.newInstance("//main_app:binary");
+    keystoreTarget = BuildTargetFactory.newInstance("//main_app:keystore");
 
     mainRes =
         AndroidResourceBuilder.createBuilder(mainResTarget)

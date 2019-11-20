@@ -100,16 +100,14 @@ public class ClasspathMacroExpanderTest {
   }
 
   public JavaLibraryBuilder getLibraryBuilder(String target) {
-    return JavaLibraryBuilder.createBuilder(
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), target), filesystem);
+    return JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(target), filesystem);
   }
 
   @Test(expected = MacroException.class)
   public void shouldThrowAnExceptionWhenRuleToExpandDoesNotHaveAClasspath() throws Exception {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule rule =
-        new ExportFileBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//cheese:peas"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//cheese:peas"))
             .setSrc(FakeSourcePath.of("some-file.jar"))
             .build(graphBuilder);
 

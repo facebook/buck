@@ -107,7 +107,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     ProjectFilesystem filesystem = createFakeFilesystem("/Users/user/src");
 
     BuildTarget testBuildTarget =
-        BuildTargetFactory.newInstance(filesystem, "//target:short")
+        BuildTargetFactory.newInstance("//target:short")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
@@ -138,7 +138,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     ProjectFilesystem filesystem = createFakeFilesystem("/Users/user/src");
 
     BuildTarget testBuildTarget =
-        BuildTargetFactory.newInstance(filesystem, "cellname//target:short")
+        BuildTargetFactory.newInstance("cellname//target:short")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
@@ -169,13 +169,13 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     // filesystem, buildTarget and buildRuleParams for first cell (analysis)
     ProjectFilesystem filesystem1 = createFakeFilesystem("/Users/user/cell_one");
     BuildTarget buildTarget1 =
-        BuildTargetFactory.newInstance(filesystem1, "cell1//target/in_cell_one:short")
+        BuildTargetFactory.newInstance("cell1//target/in_cell_one:short")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     // filesystem, buildTarget and buildRuleParams for second cell (capture)
     ProjectFilesystem filesystem2 = createFakeFilesystem("/Users/user/cell_two");
     BuildTarget buildTarget2 =
-        BuildTargetFactory.newInstance(filesystem2, "cell2//target/in_cell_two:short2")
+        BuildTargetFactory.newInstance("cell2//target/in_cell_two:short2")
             .withFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR);
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
@@ -213,13 +213,13 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     // filesystem, buildTarget and buildRuleParams for first, unnamed cell (analysis)
     ProjectFilesystem filesystem1 = createFakeFilesystem("/Users/user/default_cell");
     BuildTarget buildTarget1 =
-        BuildTargetFactory.newInstance(filesystem1, "//target/in_default_cell:short")
+        BuildTargetFactory.newInstance("//target/in_default_cell:short")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     // filesystem, buildTarget and buildRuleParams for second cell (capture)
     ProjectFilesystem filesystem2 = createFakeFilesystem("/Users/user/cell_two");
     BuildTarget buildTarget2 =
-        BuildTargetFactory.newInstance(filesystem2, "cell2//target/in_cell_two:short2")
+        BuildTargetFactory.newInstance("cell2//target/in_cell_two:short2")
             .withFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR);
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());

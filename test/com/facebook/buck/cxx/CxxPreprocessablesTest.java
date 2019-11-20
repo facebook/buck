@@ -149,18 +149,18 @@ public class CxxPreprocessablesTest {
             new CxxBuckConfig(FakeBuckConfig.builder().setFilesystem(filesystem).build()));
 
     // Setup a simple CxxPreprocessorDep which contributes components to preprocessing.
-    BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:cpp1");
+    BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance("//:cpp1");
     CxxPreprocessorInput input1 =
         CxxPreprocessorInput.builder()
             .addRules(cppDepTarget1)
             .putPreprocessorFlags(CxxSource.Type.C, StringArg.of("-Dtest=yes"))
             .putPreprocessorFlags(CxxSource.Type.CXX, StringArg.of("-Dtest=yes"))
             .build();
-    BuildTarget depTarget1 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dep1");
+    BuildTarget depTarget1 = BuildTargetFactory.newInstance("//:dep1");
     FakeCxxPreprocessorDep dep1 = createFakeCxxPreprocessorDep(depTarget1, input1);
 
     // Setup another simple CxxPreprocessorDep which contributes components to preprocessing.
-    BuildTarget cppDepTarget2 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:cpp2");
+    BuildTarget cppDepTarget2 = BuildTargetFactory.newInstance("//:cpp2");
     CxxPreprocessorInput input2 =
         CxxPreprocessorInput.builder()
             .addRules(cppDepTarget2)
@@ -171,7 +171,7 @@ public class CxxPreprocessablesTest {
     FakeCxxPreprocessorDep dep2 = createFakeCxxPreprocessorDep(depTarget2, input2);
 
     // Create a normal dep which depends on the two CxxPreprocessorDep rules above.
-    BuildTarget depTarget3 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dep3");
+    BuildTarget depTarget3 = BuildTargetFactory.newInstance("//:dep3");
     CxxPreprocessorInput nothing = CxxPreprocessorInput.of();
     FakeCxxPreprocessorDep dep3 = createFakeCxxPreprocessorDep(depTarget3, nothing, dep1, dep2);
 
@@ -192,14 +192,13 @@ public class CxxPreprocessablesTest {
 
     // Setup up the main build target and build params, which some random dep.  We'll make
     // sure the dep doesn't get propagated to the symlink rule below.
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     Path root = Paths.get("root");
 
     // Setup a simple genrule we can wrap in a ExplicitBuildTargetSourcePath to model a input source
     // that is built by another rule.
     Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:genrule"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
             .setOut("foo/bar.o")
             .build(graphBuilder);
 

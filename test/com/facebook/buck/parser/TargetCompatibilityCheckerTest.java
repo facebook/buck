@@ -260,7 +260,7 @@ public class TargetCompatibilityCheckerTest {
     KnownNativeRuleTypes knownRuleTypes =
         KnownNativeRuleTypes.of(ImmutableList.of(new TestRuleDescription()), ImmutableList.of());
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(projectFilesystem, "//:target");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
 
     DataTransferObjectDescriptor<TestDescriptionArg> builder =
         knownRuleTypes.getConstructorArgDescriptor(

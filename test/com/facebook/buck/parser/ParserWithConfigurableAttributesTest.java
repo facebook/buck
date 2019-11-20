@@ -272,7 +272,7 @@ public class ParserWithConfigurableAttributesTest {
         TestProjectFilesystems.createProjectFilesystem(
             root, ConfigBuilder.createFromText("[project]", "ignore = **/*.swp"));
     cellRoot = filesystem.getRootPath();
-    buildTarget = BuildTargetFactory.newInstance(cellRoot, "//:cake");
+    buildTarget = BuildTargetFactory.newInstance("//:cake");
     eventBus = BuckEventBusForTests.newInstance();
 
     ImmutableMap.Builder<String, String> projectSectionBuilder = ImmutableMap.builder();
@@ -373,8 +373,8 @@ public class ParserWithConfigurableAttributesTest {
   public void testParseBuildFilesForTargetsWithOverlappingTargets() throws Exception {
     // Execute buildTargetGraphForBuildTargets() with multiple targets that require parsing the same
     // build file.
-    BuildTarget fooTarget = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
-    BuildTarget barTarget = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "bar");
+    BuildTarget fooTarget = BuildTargetFactory.newInstance("//java/com/facebook", "foo");
+    BuildTarget barTarget = BuildTargetFactory.newInstance("//java/com/facebook", "bar");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fooTarget, barTarget);
 
     // The EventBus should be updated with events indicating how parsing ran.
@@ -403,8 +403,8 @@ public class ParserWithConfigurableAttributesTest {
   public void testMissingBuildRuleInValidFile()
       throws BuildFileParseException, IOException, InterruptedException {
     // Execute buildTargetGraphForBuildTargets() with a target in a valid file but a bad rule name.
-    BuildTarget fooTarget = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
-    BuildTarget razTarget = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "raz");
+    BuildTarget fooTarget = BuildTargetFactory.newInstance("//java/com/facebook", "foo");
+    BuildTarget razTarget = BuildTargetFactory.newInstance("//java/com/facebook", "raz");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fooTarget, razTarget);
 
     thrown.expectMessage(
@@ -419,7 +419,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void testMissingBuildFile()
       throws InterruptedException, BuildFileParseException, IOException {
-    BuildTarget target = BuildTargetFactory.newInstance(cellRoot, "//path/to/nowhere", "nowhere");
+    BuildTarget target = BuildTargetFactory.newInstance("//path/to/nowhere", "nowhere");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(target);
 
     thrown.expect(MissingBuildFileException.class);
@@ -462,9 +462,7 @@ public class ParserWithConfigurableAttributesTest {
     Files.write(buckFile, "I do not parse as python".getBytes(UTF_8));
 
     parser.buildTargetGraph(
-        parsingContext,
-        ImmutableSet.of(
-            BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:cake")));
+        parsingContext, ImmutableSet.of(BuildTargetFactory.newInstance("//:cake")));
   }
 
   @Test
@@ -492,7 +490,7 @@ public class ParserWithConfigurableAttributesTest {
     Files.write(testBuildFile, "foo(name='BUCK')\n".getBytes(UTF_8), StandardOpenOption.APPEND);
     parser.getTargetNode(
         parsingContext,
-        BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook:foo"),
+        BuildTargetFactory.newInstance("//java/com/facebook:foo"),
         DependencyStack.root());
   }
 
@@ -513,7 +511,7 @@ public class ParserWithConfigurableAttributesTest {
       throws BuildFileParseException, InterruptedException, IOException {
     BuildTarget flavored =
         BuildTargetFactory.newInstance(
-            cellRoot, "//java/com/facebook", "foo", InternalFlavor.of("doesNotExist"));
+            "//java/com/facebook", "foo", InternalFlavor.of("doesNotExist"));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -528,7 +526,7 @@ public class ParserWithConfigurableAttributesTest {
       throws BuildFileParseException, InterruptedException, IOException {
     BuildTarget flavored =
         BuildTargetFactory.newInstance(
-            cellRoot, "//java/com/facebook", "foo", InternalFlavor.of("android-unknown"));
+            "//java/com/facebook", "foo", InternalFlavor.of("android-unknown"));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -547,7 +545,7 @@ public class ParserWithConfigurableAttributesTest {
   public void shouldThrowAnExceptionWhenAFlavorIsAskedOfATargetThatDoesntSupportFlavors()
       throws BuildFileParseException, InterruptedException, IOException {
     BuildTarget flavored =
-        BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "baz", JavaLibrary.SRC_JAR);
+        BuildTargetFactory.newInstance("//java/com/facebook", "baz", JavaLibrary.SRC_JAR);
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -576,8 +574,7 @@ public class ParserWithConfigurableAttributesTest {
     tempDir.newFolder("java", "com", "facebook", "invalid", "lib");
     tempDir.newFile("java/com/facebook/invalid/lib/BUCK");
 
-    BuildTarget fooTarget =
-        BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook/invalid", "foo");
+    BuildTarget fooTarget = BuildTargetFactory.newInstance("//java/com/facebook/invalid", "foo");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fooTarget);
 
     parser.buildTargetGraph(parsingContext, buildTargets);
@@ -1680,7 +1677,7 @@ public class ParserWithConfigurableAttributesTest {
   public void whenAllRulesThenSingleTargetRequestedThenRulesAreParsedOnce()
       throws BuildFileParseException, IOException, InterruptedException {
     filterAllTargetsInProject(parser, parsingContext);
-    BuildTarget foo = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
+    BuildTarget foo = BuildTargetFactory.newInstance("//java/com/facebook", "foo");
     parser.buildTargetGraph(parsingContext, ImmutableSet.of(foo));
 
     assertEquals("Should have cached build rules.", 1, counter.calls);
@@ -1689,7 +1686,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void whenSingleTargetThenAllRulesRequestedThenRulesAreParsedOnce()
       throws BuildFileParseException, IOException, InterruptedException {
-    BuildTarget foo = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
+    BuildTarget foo = BuildTargetFactory.newInstance("//java/com/facebook", "foo");
     parser.buildTargetGraph(parsingContext, ImmutableSet.of(foo));
     filterAllTargetsInProject(parser, parsingContext);
 
@@ -1712,7 +1709,7 @@ public class ParserWithConfigurableAttributesTest {
 
     // Fetch //bar:bar#src to put it in cache.
     BuildTarget barTarget =
-        BuildTargetFactory.newInstance(cellRoot, "//bar", "bar", InternalFlavor.of("src"));
+        BuildTargetFactory.newInstance("//bar", "bar", InternalFlavor.of("src"));
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(barTarget);
 
     parser.buildTargetGraph(parsingContext, buildTargets);
@@ -1750,7 +1747,7 @@ public class ParserWithConfigurableAttributesTest {
 
     // Fetch //bar:bar#src to put it in cache.
     BuildTarget barTarget =
-        BuildTargetFactory.newInstance(cellRoot, "//bar", "bar", InternalFlavor.of("src"));
+        BuildTargetFactory.newInstance("//bar", "bar", InternalFlavor.of("src"));
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(barTarget);
 
     parser.buildTargetGraph(parsingContext, buildTargets);
@@ -1765,7 +1762,7 @@ public class ParserWithConfigurableAttributesTest {
         testFooBuckFile,
         "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n"
             .getBytes(UTF_8));
-    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
     parser = TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider);
@@ -1792,7 +1789,7 @@ public class ParserWithConfigurableAttributesTest {
     Path testBarJavaFile = tempDir.newFile("foo/Bar.java");
     Files.write(testBarJavaFile, "// Seriously, no Java here\n".getBytes(UTF_8));
 
-    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
     HashCode originalHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
     Files.delete(testBarJavaFile);
@@ -1819,7 +1816,7 @@ public class ParserWithConfigurableAttributesTest {
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
 
-    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     HashCode originalHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
@@ -1849,8 +1846,8 @@ public class ParserWithConfigurableAttributesTest {
                 + "java_library(name = 'lib2', visibility=['PUBLIC'])\n")
             .getBytes(UTF_8));
 
-    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
-    BuildTarget fooLib2Target = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib2");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget fooLib2Target = BuildTargetFactory.newInstance("//foo", "lib2");
 
     ImmutableMap<BuildTarget, HashCode> hashes =
         buildTargetGraphAndGetHashCodes(parser, fooLibTarget, fooLib2Target);
@@ -1872,8 +1869,8 @@ public class ParserWithConfigurableAttributesTest {
                 + "java_library(name = 'lib2', deps = [], visibility=['PUBLIC'])\n")
             .getBytes(UTF_8));
 
-    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
-    BuildTarget fooLib2Target = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib2");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget fooLib2Target = BuildTargetFactory.newInstance("//foo", "lib2");
     ImmutableMap<BuildTarget, HashCode> hashes =
         buildTargetGraphAndGetHashCodes(parser, fooLibTarget, fooLib2Target);
     HashCode libKey = hashes.get(fooLibTarget);
@@ -1898,7 +1895,7 @@ public class ParserWithConfigurableAttributesTest {
 
     Path testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(testFooBuckFile, "java_library(name = 'lib')\n".getBytes(UTF_8));
-    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> targetNode =
         parser.getTargetNode(parsingContext, fooLibTarget, DependencyStack.root());
@@ -1928,7 +1925,7 @@ public class ParserWithConfigurableAttributesTest {
         testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
     // Fetch //:lib to put it in cache.
-    BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
 
     {
@@ -1980,7 +1977,7 @@ public class ParserWithConfigurableAttributesTest {
         testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
     // Fetch //:lib to put it in cache.
-    BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
 
     {
@@ -2043,7 +2040,7 @@ public class ParserWithConfigurableAttributesTest {
     Files.write(
         testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
-    BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
 
     parser.buildTargetGraph(parsingContext.withCell(cell), buildTargets);
@@ -2072,7 +2069,7 @@ public class ParserWithConfigurableAttributesTest {
     Files.write(
         testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
-    BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
 
     parser.buildTargetGraph(parsingContext.withCell(cell), buildTargets);
@@ -2095,7 +2092,7 @@ public class ParserWithConfigurableAttributesTest {
     Files.write(
         testFooBuckFile, "java_library(name = 'lib', visibility=['PUBLIC'])\n".getBytes(UTF_8));
 
-    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     // We can't precalculate the hash, since it depends on the buck version. Check for the presence
     // of a hash for the right key.
@@ -2107,8 +2104,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void readConfigReadsConfig() throws Exception {
     Path buckFile = cellRoot.resolve("BUCK");
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//", "cake");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//", "cake");
     Files.write(
         buckFile,
         Joiner.on("")
@@ -2189,8 +2185,7 @@ public class ParserWithConfigurableAttributesTest {
                     .build(),
                 ImmutableList.of(
                     ImmutableBuildTargetSpec.from(
-                        UnconfiguredBuildTargetFactoryForTests.newInstance(
-                            cellRoot, "//lib", "lib"))),
+                        UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "lib"))),
                 UnconfiguredTargetConfiguration.INSTANCE)
             .getBuildTargets();
 
@@ -2198,7 +2193,6 @@ public class ParserWithConfigurableAttributesTest {
         result,
         hasItems(
             BuildTargetFactory.newInstance(
-                cellRoot,
                 "//lib",
                 "lib",
                 InternalFlavor.of("iphonesimulator-x86_64"),
@@ -2236,8 +2230,7 @@ public class ParserWithConfigurableAttributesTest {
                     .build(),
                 ImmutableList.of(
                     BuildTargetSpec.from(
-                        UnconfiguredBuildTargetFactoryForTests.newInstance(
-                            cellRoot, "//lib", "lib"))),
+                        UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "lib"))),
                 UnconfiguredTargetConfiguration.INSTANCE)
             .getBuildTargets();
 
@@ -2245,11 +2238,7 @@ public class ParserWithConfigurableAttributesTest {
         result,
         hasItems(
             BuildTargetFactory.newInstance(
-                cellRoot,
-                "//lib",
-                "lib",
-                InternalFlavor.of("iphoneos-arm64"),
-                InternalFlavor.of("shared"))));
+                "//lib", "lib", InternalFlavor.of("iphoneos-arm64"), InternalFlavor.of("shared"))));
   }
 
   @Test
@@ -2287,8 +2276,7 @@ public class ParserWithConfigurableAttributesTest {
                     .build(),
                 ImmutableList.of(
                     BuildTargetSpec.from(
-                        UnconfiguredBuildTargetFactoryForTests.newInstance(
-                            cellRoot, "//lib", "lib"))),
+                        UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "lib"))),
                 UnconfiguredTargetConfiguration.INSTANCE)
             .getBuildTargets();
 
@@ -2296,11 +2284,7 @@ public class ParserWithConfigurableAttributesTest {
         result,
         hasItems(
             BuildTargetFactory.newInstance(
-                cellRoot,
-                "//lib",
-                "lib",
-                InternalFlavor.of("macosx-x86_64"),
-                InternalFlavor.of("shared"))));
+                "//lib", "lib", InternalFlavor.of("macosx-x86_64"), InternalFlavor.of("shared"))));
   }
 
   @Test
@@ -2329,7 +2313,7 @@ public class ParserWithConfigurableAttributesTest {
         parsingContext,
         ImmutableList.of(
             BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))),
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "gen"))),
         UnconfiguredTargetConfiguration.INSTANCE);
 
     // The read bytes are dependent on the serialization format of the parser, and the absolute path
@@ -2345,7 +2329,7 @@ public class ParserWithConfigurableAttributesTest {
         parsingContext,
         ImmutableList.of(
             BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))),
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "gen"))),
         UnconfiguredTargetConfiguration.INSTANCE);
     assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
   }
@@ -2371,15 +2355,12 @@ public class ParserWithConfigurableAttributesTest {
     Files.copy(visibilityData.resolve("sub/BUCK.fixture"), visibilitySubBuckFile);
 
     parser.buildTargetGraph(
-        parsingContext,
-        ImmutableSet.of(BuildTargetFactory.newInstance(cellRoot, "//:should_pass")));
+        parsingContext, ImmutableSet.of(BuildTargetFactory.newInstance("//:should_pass")));
     parser.buildTargetGraph(
-        parsingContext,
-        ImmutableSet.of(BuildTargetFactory.newInstance(cellRoot, "//:should_pass2")));
+        parsingContext, ImmutableSet.of(BuildTargetFactory.newInstance("//:should_pass2")));
     try {
       parser.buildTargetGraph(
-          parsingContext,
-          ImmutableSet.of(BuildTargetFactory.newInstance(cellRoot, "//:should_fail")));
+          parsingContext, ImmutableSet.of(BuildTargetFactory.newInstance("//:should_fail")));
       Assert.fail("did not expect to succeed parsing");
     } catch (Exception e) {
       assertThat(e, instanceOf(HumanReadableException.class));
@@ -2603,7 +2584,7 @@ public class ParserWithConfigurableAttributesTest {
     TargetNode<?> targetNode =
         parser.getTargetNode(
             parsingContext.withCell(cell),
-            BuildTargetFactory.newInstance(cellRoot, "//:string"),
+            BuildTargetFactory.newInstance("//:string"),
             DependencyStack.root());
     // in Skylark the type of str is "string" and in Python DSL it's "<type 'str'>"
     assertEquals(targetNode.getBuildTarget().getShortName(), "string");

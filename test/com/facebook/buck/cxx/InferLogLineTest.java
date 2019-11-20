@@ -21,6 +21,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Paths;
@@ -39,10 +40,7 @@ public class InferLogLineTest {
     expectedException.expectMessage("Path must be absolute");
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance(
-            Paths.get("/User/user/src"),
-            "//target",
-            "short",
-            CxxInferEnhancer.InferFlavors.INFER.getFlavor());
+            "//target", "short", (Flavor) CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     InferLogLine.fromBuildTarget(testBuildTarget, Paths.get("buck-out/a/b/c/"));
   }
@@ -51,7 +49,7 @@ public class InferLogLineTest {
   public void testToStringWithCell() {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     BuildTarget testBuildTarget =
-        BuildTargetFactory.newInstance(Paths.get("/User/user/src"), "cellname//target:short")
+        BuildTargetFactory.newInstance("cellname//target:short")
             .withFlavors(ImmutableSet.of(CxxInferEnhancer.InferFlavors.INFER.getFlavor()));
 
     String expectedOutput = "cellname//target:short#infer\t[infer]\t/User/user/src/buck-out/a/b/c";
@@ -66,10 +64,7 @@ public class InferLogLineTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance(
-            Paths.get("/User/user/src"),
-            "//target",
-            "short",
-            CxxInferEnhancer.InferFlavors.INFER.getFlavor());
+            "//target", "short", (Flavor) CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     String expectedOutput = "//target:short#infer\t[infer]\t/User/user/src/buck-out/a/b/c";
     assertEquals(

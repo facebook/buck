@@ -18,13 +18,9 @@ package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
-import java.nio.file.Path;
-import javax.annotation.Nullable;
 
 /**
  * Exposes some {@link com.facebook.buck.core.model.BuildTarget} logic that is only visible for
@@ -36,18 +32,7 @@ public class BuildTargetFactory {
     // Utility class
   }
 
-  public static BuildTarget newInstance(
-      ProjectFilesystem projectFilesystem, String fullyQualifiedName) {
-    return newInstance(projectFilesystem.getRootPath(), fullyQualifiedName);
-  }
-
   public static BuildTarget newInstance(String fullyQualifiedName) {
-    return newInstance((Path) null, fullyQualifiedName);
-  }
-
-  public static BuildTarget newInstance(@Nullable Path root, String fullyQualifiedName) {
-    root = root == null ? new FakeProjectFilesystem().getRootPath() : root;
-
     BuckCellArg arg = BuckCellArg.of(fullyQualifiedName);
     ImmutableCanonicalCellName cellName = ImmutableCanonicalCellName.of(arg.getCellName());
     String[] parts = arg.getBasePath().split(":");
@@ -55,38 +40,29 @@ public class BuildTargetFactory {
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
       return ImmutableUnconfiguredBuildTargetView.of(
-              ImmutableUnflavoredBuildTargetView.of(
-                  root.getFileSystem(), cellName, parts[0], parts[1]))
+              ImmutableUnflavoredBuildTargetView.of(cellName, parts[0], parts[1]))
           .configure(UnconfiguredTargetConfiguration.INSTANCE);
     }
     String[] flavors = nameAndFlavor[1].split(",");
     return ImmutableUnconfiguredBuildTargetView.of(
-            ImmutableUnflavoredBuildTargetView.of(
-                root.getFileSystem(), cellName, parts[0], nameAndFlavor[0]),
+            ImmutableUnflavoredBuildTargetView.of(cellName, parts[0], nameAndFlavor[0]),
             RichStream.from(flavors).map(InternalFlavor::of))
         .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
 
-  public static BuildTarget newInstance(Path cellPath, String baseName, String shortName) {
+  public static BuildTarget newInstance(String baseName, String shortName) {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return ImmutableUnconfiguredBuildTargetView.of(
             ImmutableUnflavoredBuildTargetView.of(
-                cellPath.getFileSystem(),
-                ImmutableCanonicalCellName.of(arg.getCellName()),
-                arg.getBasePath(),
-                shortName))
+                ImmutableCanonicalCellName.of(arg.getCellName()), arg.getBasePath(), shortName))
         .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
 
-  public static BuildTarget newInstance(
-      Path cellPath, String baseName, String shortName, Flavor... flavors) {
+  public static BuildTarget newInstance(String baseName, String shortName, Flavor... flavors) {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return ImmutableUnconfiguredBuildTargetView.of(
             ImmutableUnflavoredBuildTargetView.of(
-                cellPath.getFileSystem(),
-                ImmutableCanonicalCellName.of(arg.getCellName()),
-                arg.getBasePath(),
-                shortName),
+                ImmutableCanonicalCellName.of(arg.getCellName()), arg.getBasePath(), shortName),
             RichStream.from(flavors))
         .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }

@@ -45,9 +45,9 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.runBuckBuild("//simple/...").assertSuccess();
     ImmutableSet<BuildTarget> targets =
         ImmutableSet.of(
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple:simple"),
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple/foo:foo"),
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple/bar:bar"));
+            BuildTargetFactory.newInstance("//simple:simple"),
+            BuildTargetFactory.newInstance("//simple/foo:foo"),
+            BuildTargetFactory.newInstance("//simple/bar:bar"));
     for (BuildTarget target : targets) {
       workspace.getBuildLog().assertTargetBuiltLocally(target);
     }
@@ -96,7 +96,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.runBuckBuild("//simple:").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//simple:simple");
     assertEquals(
-        ImmutableSet.of(BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple:simple")),
+        ImmutableSet.of(BuildTargetFactory.newInstance("//simple:simple")),
         workspace.getBuildLog().getAllTargets());
   }
 
@@ -141,8 +141,8 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.runBuckBuild("multialias").assertSuccess();
     ImmutableSet<BuildTarget> targets =
         ImmutableSet.of(
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple:simple"),
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple/foo:foo"));
+            BuildTargetFactory.newInstance("//simple:simple"),
+            BuildTargetFactory.newInstance("//simple/foo:foo"));
     for (BuildTarget target : targets) {
       workspace.getBuildLog().assertTargetBuiltLocally(target);
     }

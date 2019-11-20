@@ -156,8 +156,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedSourceDoesNotChange() throws Exception {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    BuildTarget target =
-        BuildTargetFactory.newInstance(workspace.getDestPath(), "//:binary_using_generated_source");
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_source");
     String unusedGenruleInput = "unused.dat";
     BuildTarget genrule = BuildTargetFactory.newInstance("//:gensource");
     String sourceName = "bar.cpp";

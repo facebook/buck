@@ -38,10 +38,9 @@ public class CountingRuleKeyHasherTest {
 
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
   private static final RuleKey RULE_KEY_2 = new RuleKey("b67816b13867c32ac52ca002b39af204cdfaa5fd");
-  private static final BuildTarget TARGET_1 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
+  private static final BuildTarget TARGET_1 = BuildTargetFactory.newInstance("//example/base:one");
   private static final BuildTarget TARGET_2 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one#flavor");
+      BuildTargetFactory.newInstance("//example/base:one#flavor");
 
   @Test
   public void testForwarding() {

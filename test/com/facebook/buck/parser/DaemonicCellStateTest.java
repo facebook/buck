@@ -109,8 +109,7 @@ public class DaemonicCellStateTest {
   public void testPutComputedNodeIfNotPresent() throws BuildTargetException {
     Cache<UnconfiguredBuildTargetView, UnconfiguredTargetNode> cache =
         state.getCache(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
-    BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//path/to:target");
+    BuildTarget target = BuildTargetFactory.newInstance("//path/to:target");
 
     // Make sure the cache has a raw node for this target.
     populateDummyRawNode(state, target);
@@ -138,9 +137,7 @@ public class DaemonicCellStateTest {
         childState.getCache(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
     Path targetPath = childCell.getRoot().resolve("path/to/BUCK");
-    BuildTarget target =
-        BuildTargetFactory.newInstance(
-            childCell.getFilesystem().getRootPath(), "xplat//path/to:target");
+    BuildTarget target = BuildTargetFactory.newInstance("xplat//path/to:target");
 
     // Make sure the cache has a raw node for this target.
     populateDummyRawNode(childState, target);

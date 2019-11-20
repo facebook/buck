@@ -20,8 +20,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -41,8 +39,7 @@ public class XCodeDescriptionsTest {
 
   @Test
   public void testAppleLibraryIsXcodeTargetDescription() {
-    Cell rootCell = (new TestCellBuilder()).build();
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<AppleLibraryDescriptionArg> library =
         AppleLibraryBuilder.createBuilder(libraryTarget).setSrcs(ImmutableSortedSet.of()).build();
 
@@ -54,8 +51,7 @@ public class XCodeDescriptionsTest {
 
   @Test
   public void testIosResourceIsNotXcodeTargetDescription() {
-    Cell rootCell = (new TestCellBuilder()).build();
-    BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "res");
+    BuildTarget resourceTarget = BuildTargetFactory.newInstance("//foo", "res");
     TargetNode<?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setFiles(ImmutableSet.of())

@@ -75,15 +75,13 @@ public class QueryOutputsMacroExpanderTest {
     cellNames = TestCellBuilder.createCellRoots(filesystem);
     TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//exciting:dep"),
-                filesystem)
+                BuildTargetFactory.newInstance("//exciting:dep"), filesystem)
             .addSrc(Paths.get("Dep.java"))
             .build();
 
     TargetNode<?> ruleNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//exciting:target"),
-                filesystem)
+                BuildTargetFactory.newInstance("//exciting:target"), filesystem)
             .addSrc(Paths.get("Other.java"))
             .addDep(depNode.getBuildTarget())
             .build();
@@ -172,8 +170,7 @@ public class QueryOutputsMacroExpanderTest {
 
   private TargetNode<FakeTargetNodeArg> newNoopNode(String buildTarget) {
     return FakeTargetNodeBuilder.build(
-        new NoopBuildRule(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), buildTarget), filesystem));
+        new NoopBuildRule(BuildTargetFactory.newInstance(buildTarget), filesystem));
   }
 
   private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {

@@ -78,8 +78,8 @@ public class CxxRawHeadersIntegrationTest {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
-    target1 = BuildTargetFactory.newInstance(workspace.getDestPath(), "//depfiles1:test");
-    target2 = BuildTargetFactory.newInstance(workspace.getDestPath(), "//depfiles2/test:test");
+    target1 = BuildTargetFactory.newInstance("//depfiles1:test");
+    target2 = BuildTargetFactory.newInstance("//depfiles2/test:test");
 
     CxxSourceRuleFactory cxxSourceRuleFactory1 =
         CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), target1, cxxPlatform);

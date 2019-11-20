@@ -160,9 +160,9 @@ public class TargetSpecResolverTest {
 
     ImmutableSet<BuildTarget> expectedTargets =
         ImmutableSet.of(
-            BuildTargetFactory.newInstance(cellRoot, "//src", "foo"),
-            BuildTargetFactory.newInstance(cellRoot, "//src", "bar"),
-            BuildTargetFactory.newInstance(cellRoot, "//src", "baz"));
+            BuildTargetFactory.newInstance("//src", "foo"),
+            BuildTargetFactory.newInstance("//src", "bar"),
+            BuildTargetFactory.newInstance("//src", "baz"));
     assertEquals("Should have returned all rules.", ImmutableList.of(expectedTargets), targets);
   }
 
@@ -194,12 +194,12 @@ public class TargetSpecResolverTest {
 
   @Test
   public void resolveTargetSpecsPreservesOrder() throws Exception {
-    BuildTarget foo = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:foo");
+    BuildTarget foo = BuildTargetFactory.newInstance("//foo:foo");
     Path buckFile = cellRoot.resolve("foo/BUCK");
     Files.createDirectories(buckFile.getParent());
     Files.write(buckFile, "genrule(name='foo', out='foo', cmd='foo')".getBytes(UTF_8));
 
-    BuildTarget bar = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//bar:bar");
+    BuildTarget bar = BuildTargetFactory.newInstance("//bar:bar");
     buckFile = cellRoot.resolve("bar/BUCK");
     Files.createDirectories(buckFile.getParent());
     Files.write(buckFile, "genrule(name='bar', out='bar', cmd='bar')".getBytes(UTF_8));

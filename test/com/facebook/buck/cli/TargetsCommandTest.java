@@ -106,10 +106,9 @@ public class TargetsCommandTest {
   public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor =
       CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
-  private SortedSet<TargetNode<?>> buildTargetNodes(
-      ProjectFilesystem filesystem, String buildTarget) {
+  private SortedSet<TargetNode<?>> buildTargetNodes(String buildTarget) {
     SortedSet<TargetNode<?>> buildRules = new TreeSet<>();
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), buildTarget);
+    BuildTarget target = BuildTargetFactory.newInstance(buildTarget);
     TargetNode<?> node = JavaLibraryBuilder.createBuilder(target).build();
     buildRules.add(node);
     return buildRules;
@@ -156,7 +155,7 @@ public class TargetsCommandTest {
   @Test
   public void testJsonOutputForBuildTarget() throws IOException, BuildFileParseException {
     // run `buck targets` on the build file and parse the observed JSON.
-    SortedSet<TargetNode<?>> nodes = buildTargetNodes(filesystem, "//:test-library");
+    SortedSet<TargetNode<?>> nodes = buildTargetNodes("//:test-library");
 
     targetsCommand.printJsonForTargets(
         params, executor, nodes, ImmutableMap.of(), ImmutableSet.of());
@@ -226,7 +225,7 @@ public class TargetsCommandTest {
   @Test
   public void testJsonOutputForMissingBuildTarget() throws BuildFileParseException {
     // nonexistent target should not exist.
-    SortedSet<TargetNode<?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
+    SortedSet<TargetNode<?>> buildRules = buildTargetNodes("//:nonexistent");
     targetsCommand.printJsonForTargets(
         params, executor, buildRules, ImmutableMap.of(), ImmutableSet.of());
 

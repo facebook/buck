@@ -47,7 +47,7 @@ import org.junit.Test;
 public class BuildableSupportTest {
   @Test
   public void testDeriveDepsFromAddsToRuleKeys() {
-    BuildTarget target = BuildTargetFactory.newInstance(Paths.get("some"), "//some", "name");
+    BuildTarget target = BuildTargetFactory.newInstance("//some", "name");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule rule1 = makeRule(target, filesystem, "rule1");

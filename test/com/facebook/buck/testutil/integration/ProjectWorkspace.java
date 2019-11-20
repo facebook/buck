@@ -743,8 +743,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public BuildTarget newBuildTarget(String fullyQualifiedName) throws IOException {
-    return BuildTargetFactory.newInstance(
-        asCell().getFilesystem().getRootPath(), fullyQualifiedName);
+    return BuildTargetFactory.newInstance(fullyQualifiedName);
   }
 
   public void assertFilesEqual(Path expected, Path actual) throws IOException {

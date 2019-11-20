@@ -119,9 +119,7 @@ public class RuleKeyLoggerListenerTest {
   }
 
   private BuildRuleEvent.Finished createBuildEvent() {
-    BuildRule rule =
-        new FakeBuildRule(
-            BuildTargetFactory.newInstance(projectFilesystem, "//topspin:downtheline"));
+    BuildRule rule = new FakeBuildRule(BuildTargetFactory.newInstance("//topspin:downtheline"));
     BuildRuleKeys keys = BuildRuleKeys.of(new RuleKey("1a1a1a"));
     BuildRuleEvent.Started started =
         TestEventConfigurator.configureTestEvent(BuildRuleEvent.started(rule, durationTracker));

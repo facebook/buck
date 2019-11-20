@@ -29,7 +29,6 @@ import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
-import java.nio.file.FileSystems;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -73,8 +72,6 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
     Stream<Flavor> flavors =
         Holder.flavorsTypeInfo.createNotNull(creator).stream().map(InternalFlavor::of);
     return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(
-            FileSystems.getDefault(), cellName, baseName, shortName),
-        flavors);
+        ImmutableUnflavoredBuildTargetView.of(cellName, baseName, shortName), flavors);
   }
 }

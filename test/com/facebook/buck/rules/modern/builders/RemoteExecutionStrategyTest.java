@@ -146,7 +146,7 @@ public class RemoteExecutionStrategyTest {
 
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem, "//some:target");
+    BuildTarget target = BuildTargetFactory.newInstance("//some:target");
     ModernBuildRule rule = new NoOpModernBuildRule(target, filesystem, ruleFinder);
 
     BuildStrategyContext strategyContext = new SimpleBuildStrategyContext(rule, service);

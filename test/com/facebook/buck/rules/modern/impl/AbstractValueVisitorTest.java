@@ -81,8 +81,8 @@ public abstract class AbstractValueVisitorTest {
       new FakeProjectFilesystem(absoluteRoot.resolve(Paths.get("project/other")));
   private static final TargetConfiguration TARGET_CONFIGURATION =
       ImmutableRuleBasedTargetConfiguration.of(
-          ConfigurationBuildTargetFactoryForTests.newInstance(
-              otherFilesystem.getRootPath(), "//platform:platform"));
+          ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform"));
+
   protected static final BuildTarget someBuildTarget =
       UnconfiguredBuildTargetFactoryForTests.newInstance(
               otherFilesystem.getRootPath(), "other//some:target#flavor1,flavor2")
@@ -390,16 +390,18 @@ public abstract class AbstractValueVisitorTest {
   }
 
   public static class Complex implements FakeBuildable {
-    @AddToRuleKey
-    final Optional<ImmutableList<ImmutableSortedSet<SourcePath>>> value =
-        Optional.of(
-            ImmutableList.of(
-                ImmutableSortedSet.of(),
-                ImmutableSortedSet.of(
-                    FakeSourcePath.of(rootFilesystem, "some/path"),
-                    DefaultBuildTargetSourcePath.of(
-                        BuildTargetFactory.newInstance(
-                            rootFilesystem.getRootPath(), "//some/build:target")))));
+    @AddToRuleKey final Optional<ImmutableList<ImmutableSortedSet<SourcePath>>> value;
+
+    {
+      value =
+          Optional.of(
+              ImmutableList.of(
+                  ImmutableSortedSet.of(),
+                  ImmutableSortedSet.of(
+                      FakeSourcePath.of(rootFilesystem, "some/path"),
+                      DefaultBuildTargetSourcePath.of(
+                          BuildTargetFactory.newInstance("//some/build:target")))));
+    }
 
     @AddToRuleKey private final String string = "hello";
     @AddToRuleKey private final int number = 0;

@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Configuration;
@@ -52,8 +51,7 @@ public class CellTest {
   public void shouldReturnItselfIfRequestedToGetACellWithAnAbsentOptionalName() {
     Cell cell = new TestCellBuilder().build();
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//does/not:matter");
+    BuildTarget target = BuildTargetFactory.newInstance("//does/not:matter");
     Cell owner = cell.getCell(target);
 
     assertSame(cell, owner);
@@ -63,10 +61,7 @@ public class CellTest {
   public void shouldThrowAnExceptionIfTheNamedCellIsNotPresent() {
     Cell cell = new TestCellBuilder().build();
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance(
-            FakeProjectFilesystem.createJavaOnlyFilesystem().getRootPath(),
-            "unknown//does/not:matter");
+    BuildTarget target = BuildTargetFactory.newInstance("unknown//does/not:matter");
 
     // Unregistered cell
     expectedException.expect(Exception.class);
@@ -94,8 +89,7 @@ public class CellTest {
             .build();
 
     Cell cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
-    BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem2.getRootPath(), "example//does/not:matter");
+    BuildTarget target = BuildTargetFactory.newInstance("example//does/not:matter");
     Cell other = cell1.getCell(target);
 
     assertEquals(cell2Root, other.getFilesystem().getRootPath());
@@ -141,10 +135,6 @@ public class CellTest {
 
     ProjectFilesystem filesystem1 =
         TestProjectFilesystems.createProjectFilesystem(cell1Root.toAbsolutePath());
-    ProjectFilesystem filesystem2 =
-        TestProjectFilesystems.createProjectFilesystem(cell2Root.toAbsolutePath());
-    ProjectFilesystem filesystem3 =
-        TestProjectFilesystems.createProjectFilesystem(cell3Root.toAbsolutePath());
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem1)
@@ -166,15 +156,13 @@ public class CellTest {
                     .put(CellName.ALL_CELLS_SPECIAL_NAME, "test", "common_value", "all")
                     .build())
             .build();
-    BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem2.getRootPath(), "second//does/not:matter");
+    BuildTarget target = BuildTargetFactory.newInstance("second//does/not:matter");
 
     Cell cell2 = cell1.getCell(target);
     assertThat(
         cell2.getBuckConfig().getValue("test", "value"), Matchers.equalTo(Optional.of("cell2")));
 
-    BuildTarget target3 =
-        BuildTargetFactory.newInstance(filesystem3.getRootPath(), "third//does/not:matter");
+    BuildTarget target3 = BuildTargetFactory.newInstance("third//does/not:matter");
     Cell cell3 = cell1.getCell(target3);
     assertThat(
         cell3.getBuckConfig().getValue("test", "common_value"),

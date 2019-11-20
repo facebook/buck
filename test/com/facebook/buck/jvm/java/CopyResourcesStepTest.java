@@ -48,8 +48,7 @@ public class CopyResourcesStepTest {
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//android/java:resources");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//android/java:resources");
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder(filesystem);
 
     BuildContext buildContext =

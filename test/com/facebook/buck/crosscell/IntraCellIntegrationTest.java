@@ -81,14 +81,9 @@ public class IntraCellIntegrationTest {
         ParsingContext.builder(
                 cell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
             .build(),
-        ImmutableSet.of(
-            BuildTargetFactory.newInstance(
-                cell.getFilesystem().getRootPath(), "//just-a-directory:rule")));
+        ImmutableSet.of(BuildTargetFactory.newInstance("//just-a-directory:rule")));
 
-    Cell childCell =
-        cell.getCell(
-            BuildTargetFactory.newInstance(
-                workspace.getDestPath().resolve("child-repo"), "child//:child-target"));
+    Cell childCell = cell.getCell(BuildTargetFactory.newInstance("child//:child-target"));
 
     try {
       // Whereas, because visibility is limited to the same cell, this won't.
@@ -96,9 +91,7 @@ public class IntraCellIntegrationTest {
           ParsingContext.builder(
                   childCell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
               .build(),
-          ImmutableSet.of(
-              BuildTargetFactory.newInstance(
-                  childCell.getFilesystem().getRootPath(), "child//:child-target")));
+          ImmutableSet.of(BuildTargetFactory.newInstance("child//:child-target")));
       fail("Didn't expect parsing to work because of visibility");
     } catch (HumanReadableException e) {
       // This is expected
@@ -118,10 +111,7 @@ public class IntraCellIntegrationTest {
     assertEquals(
         cell.getFilesystem().getBuckPaths().getGenDir().toString(),
         MorePaths.pathWithPlatformSeparators("buck-out/gen"));
-    Cell childCell =
-        cell.getCell(
-            BuildTargetFactory.newInstance(
-                workspace.getDestPath().resolve("child-repo"), "child//:child-target"));
+    Cell childCell = cell.getCell(BuildTargetFactory.newInstance("child//:child-target"));
     assertEquals(
         childCell.getFilesystem().getBuckPaths().getGenDir().toString(),
         MorePaths.pathWithPlatformSeparators("../buck-out/cells/child/gen"));

@@ -106,9 +106,7 @@ public class AndroidResourceTest {
   @Test
   public void testGetRDotJavaPackageWhenPackageIsSpecified() throws IOException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(
-            projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
@@ -137,9 +135,7 @@ public class AndroidResourceTest {
   @Test
   public void testGetRDotJavaPackageWhenPackageIsNotSpecified() throws IOException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(
-            projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();

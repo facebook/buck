@@ -66,7 +66,7 @@ public class ExternallyBuiltApplePackageTest {
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     bundleLocation = "Fake/Bundle/Location";
-    buildTarget = BuildTargetFactory.newInstance(Paths.get("."), "//foo", "package");
+    buildTarget = BuildTargetFactory.newInstance("//foo", "package");
     projectFilesystem = new FakeProjectFilesystem();
     params = TestBuildRuleParams.create();
     graphBuilder = new TestActionGraphBuilder();

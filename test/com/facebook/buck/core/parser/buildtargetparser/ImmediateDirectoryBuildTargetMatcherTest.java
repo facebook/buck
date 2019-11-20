@@ -37,12 +37,9 @@ public class ImmediateDirectoryBuildTargetMatcherTest {
             new ImmutableCellRelativePath(
                 CanonicalCellName.rootCell(), ForwardRelativePath.of("src/com/facebook/buck")));
 
-    assertTrue(
-        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "buck")));
+    assertTrue(pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/buck", "buck")));
+    assertFalse(pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/foo", "foo")));
     assertFalse(
-        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/foo", "foo")));
-    assertFalse(
-        pattern.matches(
-            BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck/bar", "bar")));
+        pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/buck/bar", "bar")));
   }
 }

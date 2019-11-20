@@ -155,8 +155,8 @@ import org.junit.rules.ExpectedException;
 
 public class ProjectGeneratorTest {
 
-  private static final BuildTarget TARGET_1 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
+  private static final BuildTarget TARGET_1 = BuildTargetFactory.newInstance("//example/base:one");
+
   private static final BuildRule RULE_1 = new EmptyFakeBuildRule(TARGET_1);
   private static final Path OUTPUT_DIRECTORY = Paths.get("_gen");
   private static final String PROJECT_NAME = "GeneratedProject";
@@ -231,8 +231,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testProjectStructureWithInfoPlist() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -260,7 +260,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testProjectStructureWithBuildFileName() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo/myLib", "lib");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo/myLib", "lib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
@@ -278,9 +278,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testProjectWithSharedBundleDep() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "sharedFramework");
-    BuildTarget sharedLibTarget = BuildTargetFactory.newInstance(rootPath, "//foo:shared#shared");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "sharedFramework");
+    BuildTarget sharedLibTarget = BuildTargetFactory.newInstance("//foo:shared#shared");
 
     TargetNode<?> bundleNode =
         AppleBundleBuilder.createBuilder(bundleTarget)
@@ -320,8 +320,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testSwapWithSharedBundes() {
-    BuildTarget sharedLibrary = BuildTargetFactory.newInstance(rootPath, "//foo:shared#shared");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "sharedFramework");
+    BuildTarget sharedLibrary = BuildTargetFactory.newInstance("//foo:shared#shared");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "sharedFramework");
 
     TargetNode<?> bundleNode =
         AppleBundleBuilder.createBuilder(bundleTarget)
@@ -346,12 +346,12 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testProjectStructureWithDuplicateBundle() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo:lib");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo:bundle");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
     BuildTarget libraryWithFlavorTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo:lib#iphonesimulator-x86_64");
+        BuildTargetFactory.newInstance("//foo:lib#iphonesimulator-x86_64");
     BuildTarget bundleWithFlavorTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo:bundle#iphonesimulator-x86_64");
+        BuildTargetFactory.newInstance("//foo:bundle#iphonesimulator-x86_64");
 
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -564,9 +564,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testProjectStructureWithGenruleSources() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
-    BuildTarget genruleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "genrule");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
+    BuildTarget genruleTarget = BuildTargetFactory.newInstance("//foo", "genrule");
 
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -608,8 +608,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testProjectStructureWithExtraXcodeFiles() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -647,8 +647,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testProjectStructureWithExtraXcodeSources() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -690,11 +690,10 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testModularLibraryInterfaceMapInclusionAsDependency() throws IOException {
-    BuildTarget frameworkBundleTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "framework");
-    BuildTarget frameworkLibTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget appBundleTarget = BuildTargetFactory.newInstance(rootPath, "//product", "app");
-    BuildTarget appBinaryTarget = BuildTargetFactory.newInstance(rootPath, "//product", "binary");
+    BuildTarget frameworkBundleTarget = BuildTargetFactory.newInstance("//foo", "framework");
+    BuildTarget frameworkLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget appBundleTarget = BuildTargetFactory.newInstance("//product", "app");
+    BuildTarget appBinaryTarget = BuildTargetFactory.newInstance("//product", "binary");
 
     String configName = "Default";
 
@@ -756,7 +755,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testModularLibraryInterfaceInclusionInTargetItself() throws IOException {
-    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> libNode =
         AppleLibraryBuilder.createBuilder(libTarget)
@@ -791,7 +790,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testModularLibraryMixedSourcesFlags() throws IOException {
-    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> libNode =
         AppleLibraryBuilder.createBuilder(libTarget)
@@ -828,7 +827,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testModularLibraryGeneratesUmbrella() throws IOException {
-    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> libNode =
         AppleLibraryBuilder.createBuilder(libTarget)
@@ -864,7 +863,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testModularLibraryDoesNotOverwriteExistingUmbrella() throws IOException {
-    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> libNode =
         AppleLibraryBuilder.createBuilder(libTarget)
@@ -898,7 +897,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testNonModularLibraryMixedSourcesFlags() throws IOException {
-    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> libNode =
         AppleLibraryBuilder.createBuilder(libTarget)
@@ -937,8 +936,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testModularFrameworkBuildSettings() throws IOException {
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "framework");
-    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "framework");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     String configName = "Default";
 
@@ -996,8 +995,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testModularFrameworkHeadersInHeadersBuildPhase() throws IOException {
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "framework");
-    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "framework");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     String exportedHeaderName = "bar.h";
 
@@ -1044,7 +1043,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryHeaderGroupsWithHeaderSymlinkTrees() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setSrcs(ImmutableSortedSet.of())
@@ -1159,15 +1158,13 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryHeaderGroupsWithMappedHeaders() throws IOException {
-    BuildTarget privateGeneratedTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "generated1.h");
-    BuildTarget publicGeneratedTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "generated2.h");
+    BuildTarget privateGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated1.h");
+    BuildTarget publicGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated2.h");
 
     TargetNode<?> privateGeneratedNode = new ExportFileBuilder(privateGeneratedTarget).build();
     TargetNode<?> publicGeneratedNode = new ExportFileBuilder(publicGeneratedTarget).build();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setSrcs(ImmutableSortedSet.of())
@@ -1276,7 +1273,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCxxLibraryWithListsOfHeaders() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo/dir1/bar.h")))
@@ -1333,7 +1330,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCxxLibraryWithoutHeadersSymLinks() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo/dir1/bar.h")))
@@ -1379,7 +1376,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCxxLibraryWithListsOfHeadersAndCustomNamespace() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo/dir1/bar.h")))
@@ -1431,15 +1428,13 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCxxLibraryHeaderGroupsWithMapsOfHeaders() throws IOException {
-    BuildTarget privateGeneratedTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "generated1.h");
-    BuildTarget publicGeneratedTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "generated2.h");
+    BuildTarget privateGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated1.h");
+    BuildTarget publicGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated2.h");
 
     TargetNode<?> privateGeneratedNode = new ExportFileBuilder(privateGeneratedTarget).build();
     TargetNode<?> publicGeneratedNode = new ExportFileBuilder(publicGeneratedTarget).build();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setExportedHeaders(
@@ -1503,15 +1498,13 @@ public class ProjectGeneratorTest {
   @Test
   public void testCxxLibraryHeaderGroupsWithMapsOfHeadersAndNotMatchingPlatform()
       throws IOException {
-    BuildTarget privateGeneratedTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "generated1.h");
-    BuildTarget publicGeneratedTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "generated2.h");
+    BuildTarget privateGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated1.h");
+    BuildTarget publicGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated2.h");
 
     TargetNode<?> privateGeneratedNode = new ExportFileBuilder(privateGeneratedTarget).build();
     TargetNode<?> publicGeneratedNode = new ExportFileBuilder(publicGeneratedTarget).build();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setExportedHeaders(
@@ -1580,15 +1573,13 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCxxLibraryHeaderGroupsWithMapsOfHeadersAndCustomNamespace() throws IOException {
-    BuildTarget privateGeneratedTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "generated1.h");
-    BuildTarget publicGeneratedTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "generated2.h");
+    BuildTarget privateGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated1.h");
+    BuildTarget publicGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated2.h");
 
     TargetNode<?> privateGeneratedNode = new ExportFileBuilder(privateGeneratedTarget).build();
     TargetNode<?> publicGeneratedNode = new ExportFileBuilder(publicGeneratedTarget).build();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setExportedHeaders(
@@ -1652,7 +1643,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testHeaderSymlinkTreesAreRegeneratedWhenKeyChanges() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setSrcs(ImmutableSortedSet.of())
@@ -1701,7 +1692,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testHeaderSymlinkTreesAreRegeneratedWhenValueChanges() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setSrcs(ImmutableSortedSet.of())
@@ -1739,8 +1730,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testHeaderSymlinkTreesWithHeadersVisibleForTesting() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
 
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -1786,8 +1777,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAbsoluteHeaderMapPaths() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
 
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -1850,8 +1841,8 @@ public class ProjectGeneratorTest {
   @Test
   public void testHeaderSymlinkTreesWithHeadersVisibleForTestingWithModuleOverrides()
       throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
 
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -1908,9 +1899,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testHeaderSymlinkTreesWithTestsAndLibraryBundles() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
 
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -1962,9 +1953,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testHeaderSymlinkTreesWithTestsAndBinaryBundles() throws IOException {
-    BuildTarget binaryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//foo", "bin");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
 
     TargetNode<?> binaryNode =
         AppleBinaryBuilder.createBuilder(binaryTarget)
@@ -2071,7 +2062,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryRule() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("RandomConfig", ImmutableMap.of()))
@@ -2112,7 +2103,7 @@ public class ProjectGeneratorTest {
   public void testHalideLibraryRule() throws IOException {
     BuildTarget compilerTarget =
         BuildTargetFactory.newInstance(
-            rootPath, "//foo", "lib", HalideLibraryDescription.HALIDE_COMPILER_FLAVOR);
+            "//foo", "lib", HalideLibraryDescription.HALIDE_COMPILER_FLAVOR);
     TargetNode<?> compiler =
         new HalideLibraryBuilder(compilerTarget)
             .setSrcs(
@@ -2121,7 +2112,7 @@ public class ProjectGeneratorTest {
                     SourceWithFlags.of(FakeSourcePath.of("filter.cpp"))))
             .build();
 
-    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> lib = new HalideLibraryBuilder(libTarget).build();
 
     ProjectGenerator projectGenerator =
@@ -2154,7 +2145,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCxxLibraryRule() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> cxxNode =
         new CxxLibraryBuilder(buildTarget)
@@ -2186,7 +2177,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryConfiguresOutputPaths() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2212,13 +2203,13 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryConfiguresPrecompiledHeader() throws IOException {
-    BuildTarget pchTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "pch");
+    BuildTarget pchTarget = BuildTargetFactory.newInstance("//foo", "pch");
     TargetNode<?> pchNode =
         CxxPrecompiledHeaderBuilder.createBuilder(pchTarget)
             .setSrc(FakeSourcePath.of("Foo/Foo-Prefix.pch"))
             .build();
 
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2242,8 +2233,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleLibraryConfiguresSharedLibraryOutputPaths() throws IOException {
     BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//hi", "lib", CxxDescriptionEnhancer.SHARED_FLAVOR);
+        BuildTargetFactory.newInstance("//hi", "lib", CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2268,7 +2258,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryDoesntOverrideHeaderOutputPath() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(
@@ -2294,7 +2284,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryCxxCFlags() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2317,7 +2307,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryPlatformSpecificCxxFlags() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2348,7 +2338,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryCompilerAndPreprocessorFlags() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2374,7 +2364,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryCompilerAndPreprocessorFlagsDontPropagate() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2382,7 +2372,7 @@ public class ProjectGeneratorTest {
             .setPreprocessorFlags(ImmutableList.of("-fworld"))
             .build();
 
-    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance("//foo", "bin");
     TargetNode<?> dependentNode =
         AppleBinaryBuilder.createBuilder(dependentBuildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2404,7 +2394,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryExportedPreprocessorFlags() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2426,14 +2416,14 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryExportedPreprocessorFlagsPropagate() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setExportedPreprocessorFlags(ImmutableList.of("-DHELLO"))
             .build();
 
-    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance("//foo", "bin");
     TargetNode<?> dependentNode =
         AppleBinaryBuilder.createBuilder(dependentBuildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2456,7 +2446,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryLinkerFlags() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2480,26 +2470,25 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryLinkerFlagsWithLocationMacrosAreExpanded() throws IOException {
-    BuildTarget exportFileTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "libExported.a");
+    BuildTarget exportFileTarget = BuildTargetFactory.newInstance("//foo", "libExported.a");
     TargetNode<?> exportFileNode =
         new ExportFileBuilder(exportFileTarget).setSrc(FakeSourcePath.of("libExported.a")).build();
 
     BuildTarget transitiveDepOfGenruleTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "libExported2.a");
+        BuildTargetFactory.newInstance("//foo", "libExported2.a");
     TargetNode<?> transitiveDepOfGenruleNode =
         new ExportFileBuilder(transitiveDepOfGenruleTarget)
             .setSrc(FakeSourcePath.of("libExported2.a"))
             .build();
 
-    BuildTarget genruleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "genrulelib");
+    BuildTarget genruleTarget = BuildTargetFactory.newInstance("//foo", "genrulelib");
     TargetNode<?> genruleNode =
         GenruleBuilder.newGenruleBuilder(genruleTarget)
             .setCmd("cp $(location //foo:libExported2.a) $OUT")
             .setOut("libGenruleLib.a")
             .build();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2538,14 +2527,14 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryLinkerFlagsDontPropagate() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello")))
             .build();
 
-    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance("//foo", "bin");
     TargetNode<?> dependentNode =
         AppleBinaryBuilder.createBuilder(dependentBuildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2566,7 +2555,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryExportedLinkerFlags() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2590,7 +2579,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryExportedLinkerFlagsPropagate() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2600,7 +2589,7 @@ public class ProjectGeneratorTest {
                     StringWithMacrosUtils.format("-lhello")))
             .build();
 
-    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance("//foo", "bin");
     TargetNode<?> dependentNode =
         AppleBinaryBuilder.createBuilder(dependentBuildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2622,7 +2611,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCxxLibraryCompilerAndPreprocessorFlags() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setCompilerFlags(ImmutableList.of("-ffoo"))
@@ -2652,7 +2641,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCxxLibraryPlatformFlags() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setPlatformCompilerFlags(
@@ -2720,7 +2709,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCxxLibraryExportedPreprocessorFlags() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setExportedPreprocessorFlags(ImmutableList.of("-DHELLO"))
@@ -2743,13 +2732,13 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCxxLibraryExportedPreprocessorFlagsPropagate() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setExportedPreprocessorFlags(ImmutableList.of("-DHELLO"))
             .build();
 
-    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance("//foo", "bin");
     TargetNode<?> dependentNode =
         AppleBinaryBuilder.createBuilder(dependentBuildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -2773,7 +2762,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCxxLibraryExportedPlatformFlags() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
             .setExportedPlatformPreprocessorFlags(
@@ -2788,7 +2777,7 @@ public class ProjectGeneratorTest {
                     .build())
             .build();
 
-    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance("//foo", "bin");
     TargetNode<?> dependentNode =
         AppleBinaryBuilder.createBuilder(dependentBuildTarget)
             .setPlatformCompilerFlags(
@@ -2844,7 +2833,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testConfigurationSerializationWithoutExistingXcconfig() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of("CUSTOM_SETTING", "VALUE")))
@@ -2880,7 +2869,7 @@ public class ProjectGeneratorTest {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
         ImmutableSortedMap.of("Debug", ImmutableMap.of());
 
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setConfigs(configs)
@@ -2894,7 +2883,7 @@ public class ProjectGeneratorTest {
                             Optional.empty()))))
             .build();
 
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "xctest");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "xctest");
     TargetNode<?> testNode =
         AppleTestBuilder.createBuilder(testTarget)
             .setConfigs(configs)
@@ -2940,7 +2929,7 @@ public class ProjectGeneratorTest {
                 "LIBRARY_SEARCH_PATHS", "libraries",
                 "FRAMEWORK_SEARCH_PATHS", "frameworks"));
 
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setConfigs(configs)
@@ -2954,7 +2943,7 @@ public class ProjectGeneratorTest {
                             Optional.empty()))))
             .build();
 
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "xctest");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "xctest");
     TargetNode<?> testNode =
         AppleTestBuilder.createBuilder(testTarget)
             .setConfigs(configs)
@@ -2994,7 +2983,7 @@ public class ProjectGeneratorTest {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
         ImmutableSortedMap.of("Debug", ImmutableMap.of());
 
-    BuildTarget libraryDepTarget = BuildTargetFactory.newInstance(rootPath, "//bar", "lib");
+    BuildTarget libraryDepTarget = BuildTargetFactory.newInstance("//bar", "lib");
     TargetNode<?> libraryDepNode =
         AppleLibraryBuilder.createBuilder(libraryDepTarget)
             .setConfigs(configs)
@@ -3008,7 +2997,7 @@ public class ProjectGeneratorTest {
                             Optional.empty()))))
             .build();
 
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setConfigs(configs)
@@ -3023,7 +3012,7 @@ public class ProjectGeneratorTest {
             .setDeps(ImmutableSortedSet.of(libraryDepTarget))
             .build();
 
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "xctest");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "xctest");
     TargetNode<?> testNode =
         AppleTestBuilder.createBuilder(testTarget)
             .setConfigs(configs)
@@ -3061,7 +3050,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryWithoutSources() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setFrameworks(
@@ -3073,7 +3062,7 @@ public class ProjectGeneratorTest {
                             Optional.empty()))))
             .build();
 
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "xctest");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "xctest");
     TargetNode<?> testNode =
         AppleTestBuilder.createBuilder(testTarget)
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
@@ -3104,7 +3093,7 @@ public class ProjectGeneratorTest {
                 "HEADER_SEARCH_PATHS", "headers",
                 "LIBRARY_SEARCH_PATHS", "libraries"));
 
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setConfigs(configs)
@@ -3118,7 +3107,7 @@ public class ProjectGeneratorTest {
                             Optional.empty()))))
             .build();
 
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "xctest");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "xctest");
     TargetNode<?> testNode =
         AppleTestBuilder.createBuilder(testTarget)
             .setConfigs(configs)
@@ -3148,7 +3137,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleTestRule() throws IOException {
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "xctest");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "xctest");
     TargetNode<?> testNode =
         AppleTestBuilder.createBuilder(testTarget)
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
@@ -3168,13 +3157,13 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBinaryRule() throws IOException {
-    BuildTarget depTarget = BuildTargetFactory.newInstance(rootPath, "//dep", "dep");
+    BuildTarget depTarget = BuildTargetFactory.newInstance("//dep", "dep");
     TargetNode<?> depNode =
         AppleLibraryBuilder.createBuilder(depTarget)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("e.m"))))
             .build();
 
-    BuildTarget binaryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "binary");
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//foo", "binary");
     TargetNode<?> binaryNode =
         AppleBinaryBuilder.createBuilder(binaryTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -3221,14 +3210,13 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleBundleRuleForSharedLibraryFramework() throws IOException {
     BuildTarget sharedLibraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
+        BuildTargetFactory.newInstance("//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> sharedLibraryNode =
         AppleLibraryBuilder.createBuilder(sharedLibraryTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .build();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "bundle");
     TargetNode<?> node =
         AppleBundleBuilder.createBuilder(buildTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
@@ -3255,19 +3243,19 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleResourceWithVariantGroupSetsFileTypeBasedOnPath() throws IOException {
     BuildTarget resourceTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "resource", DEFAULT_FLAVOR);
+        BuildTargetFactory.newInstance("//foo", "resource", DEFAULT_FLAVOR);
     TargetNode<?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setFiles(ImmutableSet.of())
             .setDirs(ImmutableSet.of())
             .setVariants(ImmutableSet.of(FakeSourcePath.of("Base.lproj/Bar.storyboard")))
             .build();
-    BuildTarget fooLibraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget fooLibraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> fooLibraryNode =
         AppleLibraryBuilder.createBuilder(fooLibraryTarget)
             .setDeps(ImmutableSortedSet.of(resourceTarget))
             .build();
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
     TargetNode<?> bundleNode =
         AppleBundleBuilder.createBuilder(bundleTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
@@ -3294,14 +3282,13 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleBundleRuleWithCustomXcodeProductType() throws IOException {
     BuildTarget sharedLibraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
+        BuildTargetFactory.newInstance("//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> sharedLibraryNode =
         AppleLibraryBuilder.createBuilder(sharedLibraryTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .build();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "custombundle");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "custombundle");
     TargetNode<?> node =
         AppleBundleBuilder.createBuilder(buildTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
@@ -3329,15 +3316,14 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleBundleRuleWithCustomXcodeProductNameFromConfigs() throws IOException {
     BuildTarget sharedLibraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
+        BuildTargetFactory.newInstance("//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> sharedLibraryNode =
         AppleLibraryBuilder.createBuilder(sharedLibraryTarget)
             .setConfigs(
                 ImmutableSortedMap.of("Debug", ImmutableMap.of("PRODUCT_NAME", "FancyFramework")))
             .build();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "custombundle");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "custombundle");
     TargetNode<?> node =
         AppleBundleBuilder.createBuilder(buildTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
@@ -3358,7 +3344,7 @@ public class ProjectGeneratorTest {
 
   private void testRuleAddsReference(BuildTarget ruleTarget, TargetNode<?> ruleNode, String path)
       throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setDeps(ImmutableSortedSet.of(ruleTarget))
@@ -3381,17 +3367,17 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testUnversionedCoreDataModelCreatesFileReference() throws IOException {
-    BuildTarget modelTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "model");
+    BuildTarget modelTarget = BuildTargetFactory.newInstance("//foo", "model");
     TargetNode<?> modelNode =
         CoreDataModelBuilder.createBuilder(modelTarget)
             .setPath(FakeSourcePath.of("foo/models/foo.xcdatamodel").getRelativePath())
             .build();
-    BuildTarget fooLibraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget fooLibraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> fooLibraryNode =
         AppleLibraryBuilder.createBuilder(fooLibraryTarget)
             .setDeps(ImmutableSortedSet.of(modelTarget))
             .build();
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
     TargetNode<?> bundleNode =
         AppleBundleBuilder.createBuilder(bundleTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
@@ -3414,18 +3400,18 @@ public class ProjectGeneratorTest {
   @Test
   public void testVersionedCoreDataModelCreatesGroupWithCurrentVersionSpecified()
       throws IOException {
-    BuildTarget modelTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "model");
+    BuildTarget modelTarget = BuildTargetFactory.newInstance("//foo", "model");
     Path dataModelRootPath = Paths.get("foo/models/foo.xcdatamodeld");
     TargetNode<?> modelNode =
         CoreDataModelBuilder.createBuilder(modelTarget)
             .setPath(FakeSourcePath.of(dataModelRootPath).getRelativePath())
             .build();
-    BuildTarget fooLibraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget fooLibraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> fooLibraryNode =
         AppleLibraryBuilder.createBuilder(fooLibraryTarget)
             .setDeps(ImmutableSortedSet.of(modelTarget))
             .build();
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
     TargetNode<?> bundleNode =
         AppleBundleBuilder.createBuilder(bundleTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
@@ -3477,17 +3463,17 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testSceneKitAssetsRuleAddsReference() throws IOException {
-    BuildTarget sceneKitTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "scenekitasset");
+    BuildTarget sceneKitTarget = BuildTargetFactory.newInstance("//foo", "scenekitasset");
     TargetNode<?> sceneKitNode =
         SceneKitAssetsBuilder.createBuilder(sceneKitTarget)
             .setPath(FakeSourcePath.of("foo.scnassets").getRelativePath())
             .build();
-    BuildTarget fooLibraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget fooLibraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> fooLibraryNode =
         AppleLibraryBuilder.createBuilder(fooLibraryTarget)
             .setDeps(ImmutableSortedSet.of(sceneKitTarget))
             .build();
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
     TargetNode<?> bundleNode =
         AppleBundleBuilder.createBuilder(bundleTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
@@ -3506,8 +3492,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCodeSignEntitlementsAddsReference() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -3537,12 +3523,12 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleWatchTarget() throws IOException {
     BuildTarget watchExtensionBinaryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "WatchExtensionBinary");
+        BuildTargetFactory.newInstance("//foo", "WatchExtensionBinary");
     TargetNode<?> watchExtensionBinaryNode =
         AppleBinaryBuilder.createBuilder(watchExtensionBinaryTarget).build();
 
     BuildTarget watchExtensionTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "WatchExtension", WATCH_OS_FLAVOR);
+        BuildTargetFactory.newInstance("//foo", "WatchExtension", WATCH_OS_FLAVOR);
     TargetNode<?> watchExtensionNode =
         AppleBundleBuilder.createBuilder(watchExtensionTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APPEX))
@@ -3551,13 +3537,12 @@ public class ProjectGeneratorTest {
             .setBinary(watchExtensionBinaryTarget)
             .build();
 
-    BuildTarget watchAppBinaryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "WatchAppBinary");
+    BuildTarget watchAppBinaryTarget = BuildTargetFactory.newInstance("//foo", "WatchAppBinary");
     TargetNode<?> watchAppBinaryNode =
         AppleBinaryBuilder.createBuilder(watchAppBinaryTarget).build();
 
     BuildTarget watchAppTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "WatchApp", WATCH_OS_FLAVOR);
+        BuildTargetFactory.newInstance("//foo", "WatchApp", WATCH_OS_FLAVOR);
     TargetNode<?> watchAppNode =
         AppleBundleBuilder.createBuilder(watchAppTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
@@ -3567,11 +3552,10 @@ public class ProjectGeneratorTest {
             .setDeps(ImmutableSortedSet.of(watchExtensionTarget))
             .build();
 
-    BuildTarget hostAppBinaryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
+    BuildTarget hostAppBinaryTarget = BuildTargetFactory.newInstance("//foo", "HostAppBinary");
     TargetNode<?> hostAppBinaryNode = AppleBinaryBuilder.createBuilder(hostAppBinaryTarget).build();
 
-    BuildTarget hostAppTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "HostApp");
+    BuildTarget hostAppTarget = BuildTargetFactory.newInstance("//foo", "HostApp");
     TargetNode<?> hostAppNode =
         AppleBundleBuilder.createBuilder(hostAppTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
@@ -3615,7 +3599,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void ruleToTargetMapContainsPBXTarget() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setSrcs(
@@ -3649,8 +3633,7 @@ public class ProjectGeneratorTest {
   @Test
   public void ruleToTargetMapFiltersDuplicatePBXTarget() throws IOException {
     BuildTarget explicitStaticBuildTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//foo", "lib", CxxDescriptionEnhancer.STATIC_FLAVOR);
+        BuildTargetFactory.newInstance("//foo", "lib", CxxDescriptionEnhancer.STATIC_FLAVOR);
     TargetNode<?> explicitStaticNode =
         AppleLibraryBuilder.createBuilder(explicitStaticBuildTarget)
             .setSrcs(
@@ -3660,8 +3643,7 @@ public class ProjectGeneratorTest {
             .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
             .build();
 
-    BuildTarget implicitStaticBuildTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget implicitStaticBuildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> implicitStaticNode =
         AppleLibraryBuilder.createBuilder(implicitStaticBuildTarget)
             .setSrcs(
@@ -3693,7 +3675,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void generatedGidsForTargetsAreStable() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "foo");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "foo");
     TargetNode<?> node = AppleLibraryBuilder.createBuilder(buildTarget).build();
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
@@ -3712,7 +3694,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void generatedTargetConfigurationHasRepoRootSet() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "rule");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "rule");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -3737,7 +3719,7 @@ public class ProjectGeneratorTest {
   @Test
   public void generatedProjectConfigurationListIsUnionOfAllTargetConfigurations()
       throws IOException {
-    BuildTarget buildTarget1 = BuildTargetFactory.newInstance(rootPath, "//foo", "rule1");
+    BuildTarget buildTarget1 = BuildTargetFactory.newInstance("//foo", "rule1");
     TargetNode<?> node1 =
         AppleLibraryBuilder.createBuilder(buildTarget1)
             .setConfigs(
@@ -3746,7 +3728,7 @@ public class ProjectGeneratorTest {
                     "Conf2", ImmutableMap.of()))
             .build();
 
-    BuildTarget buildTarget2 = BuildTargetFactory.newInstance(rootPath, "//foo", "rule2");
+    BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//foo", "rule2");
     TargetNode<?> node2 =
         AppleLibraryBuilder.createBuilder(buildTarget2)
             .setConfigs(
@@ -3850,13 +3832,12 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testResolvingExportFile() throws IOException {
-    BuildTarget source1Target = BuildTargetFactory.newInstance(rootPath, "//Vendor", "source1");
-    BuildTarget source2Target = BuildTargetFactory.newInstance(rootPath, "//Vendor", "source2");
-    BuildTarget source2RefTarget =
-        BuildTargetFactory.newInstance(rootPath, "//Vendor", "source2ref");
-    BuildTarget source3Target = BuildTargetFactory.newInstance(rootPath, "//Vendor", "source3");
-    BuildTarget headerTarget = BuildTargetFactory.newInstance(rootPath, "//Vendor", "header");
-    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//Libraries", "foo");
+    BuildTarget source1Target = BuildTargetFactory.newInstance("//Vendor", "source1");
+    BuildTarget source2Target = BuildTargetFactory.newInstance("//Vendor", "source2");
+    BuildTarget source2RefTarget = BuildTargetFactory.newInstance("//Vendor", "source2ref");
+    BuildTarget source3Target = BuildTargetFactory.newInstance("//Vendor", "source3");
+    BuildTarget headerTarget = BuildTargetFactory.newInstance("//Vendor", "header");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//Libraries", "foo");
 
     TargetNode<ExportFileDescriptionArg> source1 =
         new ExportFileBuilder(source1Target)
@@ -3911,11 +3892,10 @@ public class ProjectGeneratorTest {
 
   @Test
   public void applicationTestUsesHostAppAsTestHostAndBundleLoader() throws IOException {
-    BuildTarget hostAppBinaryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
+    BuildTarget hostAppBinaryTarget = BuildTargetFactory.newInstance("//foo", "HostAppBinary");
     TargetNode<?> hostAppBinaryNode = AppleBinaryBuilder.createBuilder(hostAppBinaryTarget).build();
 
-    BuildTarget hostAppTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "HostApp");
+    BuildTarget hostAppTarget = BuildTargetFactory.newInstance("//foo", "HostApp");
     TargetNode<?> hostAppNode =
         AppleBundleBuilder.createBuilder(hostAppTarget)
             .setProductName(Optional.of("TestHostApp"))
@@ -3924,7 +3904,7 @@ public class ProjectGeneratorTest {
             .setBinary(hostAppBinaryTarget)
             .build();
 
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "AppTest");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "AppTest");
     TargetNode<?> testNode =
         AppleTestBuilder.createBuilder(testTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -3958,11 +3938,10 @@ public class ProjectGeneratorTest {
 
   @Test
   public void uiTestUsesHostAppAsTarget() throws IOException {
-    BuildTarget hostAppBinaryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
+    BuildTarget hostAppBinaryTarget = BuildTargetFactory.newInstance("//foo", "HostAppBinary");
     TargetNode<?> hostAppBinaryNode = AppleBinaryBuilder.createBuilder(hostAppBinaryTarget).build();
 
-    BuildTarget hostAppTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "HostApp");
+    BuildTarget hostAppTarget = BuildTargetFactory.newInstance("//foo", "HostApp");
     TargetNode<?> hostAppNode =
         AppleBundleBuilder.createBuilder(hostAppTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
@@ -3970,7 +3949,7 @@ public class ProjectGeneratorTest {
             .setBinary(hostAppBinaryTarget)
             .build();
 
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "AppTest");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "AppTest");
     TargetNode<?> testNode =
         AppleTestBuilder.createBuilder(testTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -3999,11 +3978,10 @@ public class ProjectGeneratorTest {
   @Test
   public void uiTestUsesUiTestTargetAsTargetWithBothUiTestTargetAndTestHostPresent()
       throws IOException {
-    BuildTarget hostAppBinaryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
+    BuildTarget hostAppBinaryTarget = BuildTargetFactory.newInstance("//foo", "HostAppBinary");
     TargetNode<?> hostAppBinaryNode = AppleBinaryBuilder.createBuilder(hostAppBinaryTarget).build();
 
-    BuildTarget hostAppTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "HostApp");
+    BuildTarget hostAppTarget = BuildTargetFactory.newInstance("//foo", "HostApp");
     TargetNode<?> hostAppNode =
         AppleBundleBuilder.createBuilder(hostAppTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
@@ -4011,7 +3989,7 @@ public class ProjectGeneratorTest {
             .setBinary(hostAppBinaryTarget)
             .build();
 
-    BuildTarget uiTestTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "uiTestTarget");
+    BuildTarget uiTestTarget = BuildTargetFactory.newInstance("//foo", "uiTestTarget");
     TargetNode<?> uiTargetAppNode =
         AppleBundleBuilder.createBuilder(uiTestTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
@@ -4019,7 +3997,7 @@ public class ProjectGeneratorTest {
             .setBinary(hostAppBinaryTarget)
             .build();
 
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "AppTest");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "AppTest");
     TargetNode<?> testNode =
         AppleTestBuilder.createBuilder(testTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -4047,11 +4025,10 @@ public class ProjectGeneratorTest {
 
   @Test
   public void uiTestUsesUiTestTargetAsTargetWithOnlyUiTestTarget() throws IOException {
-    BuildTarget hostAppBinaryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
+    BuildTarget hostAppBinaryTarget = BuildTargetFactory.newInstance("//foo", "HostAppBinary");
     TargetNode<?> hostAppBinaryNode = AppleBinaryBuilder.createBuilder(hostAppBinaryTarget).build();
 
-    BuildTarget uiTestTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "uiTestTarget");
+    BuildTarget uiTestTarget = BuildTargetFactory.newInstance("//foo", "uiTestTarget");
     TargetNode<?> uiTargetAppNode =
         AppleBundleBuilder.createBuilder(uiTestTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
@@ -4059,7 +4036,7 @@ public class ProjectGeneratorTest {
             .setBinary(hostAppBinaryTarget)
             .build();
 
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "AppTest");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "AppTest");
     TargetNode<?> testNode =
         AppleTestBuilder.createBuilder(testTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -4086,7 +4063,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void cxxFlagsPropagatedToConfig() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setLangPreprocessorFlags(
@@ -4136,7 +4113,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testConfiglessAppleTargetGetsDefaultBuildConfigurations() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.mm"))))
@@ -4167,10 +4144,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAssetCatalogsUnderLibrary() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
-    BuildTarget assetCatalogTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "asset_catalog");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
+    BuildTarget assetCatalogTarget = BuildTargetFactory.newInstance("//foo", "asset_catalog");
 
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -4208,9 +4184,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testResourcesUnderLibrary() throws IOException {
-    BuildTarget fileTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "file");
-    BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "res");
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget fileTarget = BuildTargetFactory.newInstance("//foo", "file");
+    BuildTarget resourceTarget = BuildTargetFactory.newInstance("//foo", "res");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> fileNode = new ExportFileBuilder(fileTarget).build();
     TargetNode<?> resourceNode =
@@ -4237,9 +4213,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void resourceDirectoriesHaveFolderType() throws IOException {
-    BuildTarget directoryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "dir");
-    BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "res");
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget directoryTarget = BuildTargetFactory.newInstance("//foo", "dir");
+    BuildTarget resourceTarget = BuildTargetFactory.newInstance("//foo", "res");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> directoryNode = new ExportFileBuilder(directoryTarget).build();
     TargetNode<?> resourceNode =
@@ -4270,9 +4246,9 @@ public class ProjectGeneratorTest {
   @Test
   public void resourceDirectoriesDontHaveFolderTypeIfTheyCanHaveAMoreSpecificType()
       throws IOException {
-    BuildTarget directoryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "dir.iconset");
-    BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "res");
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget directoryTarget = BuildTargetFactory.newInstance("//foo", "dir.iconset");
+    BuildTarget resourceTarget = BuildTargetFactory.newInstance("//foo", "res");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> directoryNode = new ExportFileBuilder(directoryTarget).build();
     TargetNode<?> resourceNode =
@@ -4302,7 +4278,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testGeneratedProjectStructureAndSettingsWithBridgingHeader() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -4331,7 +4307,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testGeneratedProjectSettingForSwiftVersion() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -4349,7 +4325,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testGeneratedProjectSettingForSwiftVersionForAppleLibrary() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -4368,7 +4344,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testGeneratedProjectSettingForSwiftBuildSettingsForAppleLibrary() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//Foo", "Bar");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//Foo", "Bar");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -4394,7 +4370,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testGeneratedProjectSettingForSwiftBuildSettingsForAppleLibraryWithModuleName()
       throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//Foo", "BarWithSuffix");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//Foo", "BarWithSuffix");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -4427,7 +4403,7 @@ public class ProjectGeneratorTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     swiftBuckConfig = new SwiftBuckConfig(buckConfig);
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//Foo", "Bar");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//Foo", "Bar");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -4448,7 +4424,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testGeneratedProjectForAppleBinaryWithSwiftSources() throws IOException {
-    BuildTarget binBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    BuildTarget binBuildTarget = BuildTargetFactory.newInstance("//foo", "bin");
     TargetNode<?> appBinaryNode =
         AppleBinaryBuilder.createBuilder(binBuildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -4477,7 +4453,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testGeneratedProjectForAppleBinaryUsingAppleLibraryWithSwiftSources()
       throws IOException {
-    BuildTarget libBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget libBuildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> libNode =
         AppleLibraryBuilder.createBuilder(libBuildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -4485,7 +4461,7 @@ public class ProjectGeneratorTest {
             .setSwiftVersion(Optional.of("3.0"))
             .build();
 
-    BuildTarget binBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    BuildTarget binBuildTarget = BuildTargetFactory.newInstance("//foo", "bin");
     TargetNode<?> binNode =
         AppleBinaryBuilder.createBuilder(binBuildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -4516,7 +4492,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testSwiftObjCGenerateHeaderInHeaderMap() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -4558,11 +4534,11 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testSwiftRuntimeIsEmbeddedInBinary() throws IOException {
-    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget binaryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
-    BuildTarget testLibTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "testlib");
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//foo", "bin");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
+    BuildTarget testLibTarget = BuildTargetFactory.newInstance("//foo", "testlib");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
 
     TargetNode<?> libNode =
         AppleLibraryBuilder.createBuilder(libTarget)
@@ -4635,9 +4611,9 @@ public class ProjectGeneratorTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     swiftBuckConfig = new SwiftBuckConfig(buckConfig);
 
-    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    BuildTarget binaryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//foo", "bin");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
     TargetNode<?> libNode =
         AppleLibraryBuilder.createBuilder(libTarget)
@@ -4682,11 +4658,11 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testMergedHeaderMap() throws IOException {
-    BuildTarget lib1Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib1");
-    BuildTarget lib2Target = BuildTargetFactory.newInstance(rootPath, "//bar", "lib2");
-    BuildTarget lib3Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib3");
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
-    BuildTarget lib4Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib4");
+    BuildTarget lib1Target = BuildTargetFactory.newInstance("//foo", "lib1");
+    BuildTarget lib2Target = BuildTargetFactory.newInstance("//bar", "lib2");
+    BuildTarget lib3Target = BuildTargetFactory.newInstance("//foo", "lib3");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
+    BuildTarget lib4Target = BuildTargetFactory.newInstance("//foo", "lib4");
 
     TargetNode<?> lib1Node =
         AppleLibraryBuilder.createBuilder(lib1Target)
@@ -4807,11 +4783,11 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testMergedHeaderMapAbsoluteHeaderMap() throws IOException {
-    BuildTarget lib1Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib1");
-    BuildTarget lib2Target = BuildTargetFactory.newInstance(rootPath, "//bar", "lib2");
-    BuildTarget lib3Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib3");
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
-    BuildTarget lib4Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib4");
+    BuildTarget lib1Target = BuildTargetFactory.newInstance("//foo", "lib1");
+    BuildTarget lib2Target = BuildTargetFactory.newInstance("//bar", "lib2");
+    BuildTarget lib3Target = BuildTargetFactory.newInstance("//foo", "lib3");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
+    BuildTarget lib4Target = BuildTargetFactory.newInstance("//foo", "lib4");
 
     TargetNode<?> lib1Node =
         AppleLibraryBuilder.createBuilder(lib1Target)
@@ -4946,8 +4922,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testEntitlementsPlistAddedToPath() throws IOException {
-    BuildTarget binaryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//foo", "bin");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
     TargetNode<?> binaryNode = AppleBinaryBuilder.createBuilder(binaryTarget).build();
     TargetNode<?> bundleNode =
@@ -5064,14 +5040,14 @@ public class ProjectGeneratorTest {
 
   private Pair<BuildTarget, ImmutableSet<TargetNode<?>>> setupSimpleLibraryWithResources(
       ImmutableSet<SourcePath> resourceFiles, ImmutableSet<SourcePath> resourceDirectories) {
-    BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "res");
+    BuildTarget resourceTarget = BuildTargetFactory.newInstance("//foo", "res");
     TargetNode<?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setFiles(resourceFiles)
             .setDirs(resourceDirectories)
             .build();
 
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "foo");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "foo");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setDeps(ImmutableSortedSet.of(resourceTarget))

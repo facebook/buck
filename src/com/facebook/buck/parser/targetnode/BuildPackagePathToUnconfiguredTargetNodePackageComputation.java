@@ -181,8 +181,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
     // Create short living UnconfiguredBuildTargetView
     // TODO: configure data object directly
     UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-        ImmutableUnconfiguredBuildTargetView.of(
-            cell.getRoot().getFileSystem(), unconfiguredTargetNode.getBuildTarget());
+        ImmutableUnconfiguredBuildTargetView.of(unconfiguredTargetNode.getBuildTarget());
 
     BuildTarget buildTarget =
         unconfiguredBuildTargetView.configure(UnconfiguredTargetConfiguration.INSTANCE);

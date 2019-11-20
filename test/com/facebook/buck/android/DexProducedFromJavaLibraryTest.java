@@ -51,9 +51,7 @@ public class DexProducedFromJavaLibraryTest {
 
     FakeJavaLibrary javaLibRule =
         new FakeJavaLibrary(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:lib"),
-            filesystem,
-            ImmutableSortedSet.of());
+            BuildTargetFactory.newInstance("//foo:lib"), filesystem, ImmutableSortedSet.of());
     graphBuilder.addToIndex(javaLibRule);
     Path jarLibOutput =
         BuildTargetPaths.getGenPath(filesystem, javaLibRule.getBuildTarget(), "%s.jar");
@@ -61,7 +59,7 @@ public class DexProducedFromJavaLibraryTest {
 
     FakeJavaLibrary javaBarRule =
         new FakeJavaLibrary(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar"),
+            BuildTargetFactory.newInstance("//foo:bar"),
             filesystem,
             ImmutableSortedSet.of(javaLibRule)) {
           @Override
@@ -88,7 +86,7 @@ public class DexProducedFromJavaLibraryTest {
 
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#d8"),
+            BuildTargetFactory.newInstance("//foo:bar#d8"),
             filesystem,
             graphBuilder,
             TestAndroidPlatformTargetFactory.create(),

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.model;
 
-import java.nio.file.FileSystem;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -32,9 +31,6 @@ import javax.annotation.concurrent.ThreadSafe;
 public interface UnflavoredBuildTargetView extends Comparable<UnflavoredBuildTargetView> {
 
   String BUILD_TARGET_PREFIX = "//";
-
-  /** To be deleted soon. */
-  FileSystem getCellFileSystem();
 
   CanonicalCellName getCell();
 

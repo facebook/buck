@@ -53,9 +53,6 @@ public class UnflavoredBuildTargetFactory {
               basePath, otherBasePath));
     }
     return ImmutableUnflavoredBuildTargetView.of(
-        cellRoot.getFileSystem(),
-        cellName,
-        UnflavoredBuildTargetView.BUILD_TARGET_PREFIX + basePath,
-        name);
+        cellName, UnflavoredBuildTargetView.BUILD_TARGET_PREFIX + basePath, name);
   }
 }

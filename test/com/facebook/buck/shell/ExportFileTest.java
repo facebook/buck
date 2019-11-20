@@ -75,7 +75,7 @@ public class ExportFileTest {
   @Before
   public void createFixtures() {
     projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    target = BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:example.html");
+    target = BuildTargetFactory.newInstance("//:example.html");
   }
 
   @Test
@@ -303,8 +303,7 @@ public class ExportFileTest {
 
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(
-                BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:genrule"),
-                projectFilesystem)
+                BuildTargetFactory.newInstance("//:genrule"), projectFilesystem)
             .setOut("out")
             .setCmd("")
             .build(graphBuilder, projectFilesystem);

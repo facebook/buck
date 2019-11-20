@@ -96,7 +96,7 @@ public class BuckQueryEnvironmentTest {
   private CapturingConsoleEventListener capturingConsoleEventListener;
 
   private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
-    return QueryBuildTarget.of(BuildTargetFactory.newInstance(cellRoot, baseName, shortName));
+    return QueryBuildTarget.of(BuildTargetFactory.newInstance(baseName, shortName));
   }
 
   private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>

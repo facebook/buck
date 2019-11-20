@@ -62,7 +62,7 @@ public class GraphEnhancementQueryEnvironmentTest {
 
   @Test
   public void getTargetsMatchingPatternThrowsInformativeException() {
-    BuildTarget target = BuildTargetFactory.newInstance(ROOT, "//foo/bar:bar");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:bar");
     GraphEnhancementQueryEnvironment envWithoutDeps =
         new GraphEnhancementQueryEnvironment(
             Optional.of(new TestActionGraphBuilder()),
@@ -83,7 +83,7 @@ public class GraphEnhancementQueryEnvironmentTest {
 
   @Test
   public void getTargetsMatchingPatternWithoutDeps() throws Exception {
-    BuildTarget target = BuildTargetFactory.newInstance(ROOT, "//foo/bar:bar");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:bar");
     GraphEnhancementQueryEnvironment envWithoutDeps =
         new GraphEnhancementQueryEnvironment(
             Optional.of(new TestActionGraphBuilder()),
@@ -101,19 +101,19 @@ public class GraphEnhancementQueryEnvironmentTest {
     assertThat(
         envWithoutDeps.getTargetsMatchingPattern("//another/target:target"),
         Matchers.contains(
-            QueryBuildTarget.of(BuildTargetFactory.newInstance(ROOT, "//another/target:target"))));
+            QueryBuildTarget.of(BuildTargetFactory.newInstance("//another/target:target"))));
     // Check that the returned path is relative to the contextual path
     assertThat(
         envWithoutDeps.getTargetsMatchingPattern(":relative_name"),
         Matchers.contains(
-            QueryBuildTarget.of(BuildTargetFactory.newInstance(ROOT, "//foo/bar:relative_name"))));
+            QueryBuildTarget.of(BuildTargetFactory.newInstance("//foo/bar:relative_name"))));
   }
 
   @Test
   public void getTargetsMatchingPatternWithDeps() throws Exception {
-    BuildTarget target = BuildTargetFactory.newInstance(ROOT, "//foo/bar:bar");
-    BuildTarget dep1 = BuildTargetFactory.newInstance(ROOT, "//deps:dep1");
-    BuildTarget dep2 = BuildTargetFactory.newInstance(ROOT, "//deps:dep2");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:bar");
+    BuildTarget dep1 = BuildTargetFactory.newInstance("//deps:dep1");
+    BuildTarget dep2 = BuildTargetFactory.newInstance("//deps:dep2");
 
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(

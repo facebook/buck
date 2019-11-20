@@ -17,7 +17,6 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
@@ -33,7 +32,6 @@ import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -81,7 +79,6 @@ class BuildTargetParser {
       String buildTargetBaseName,
       boolean allowWildCards) {
     CellNameResolver cellNameResolver = legacyCellPathResolver.getCellNameResolver();
-    NewCellPathResolver cellPathResolver = legacyCellPathResolver.getNewCellPathResolver();
 
     if (buildTargetName.endsWith(BUILD_RULE_SEPARATOR) && !allowWildCards) {
       throw new BuildTargetParseException(
@@ -128,14 +125,11 @@ class BuildTargetParser {
       baseName = baseName.replace('\\', '/');
       BaseNameParser.checkBaseName(baseName, buildTargetName);
 
-      Path cellPath = cellPathResolver.getCellPath(canonicalCellName);
-
       // Set the cell path correctly. Because the cellNames comes from the owning cell we can
       // be sure that if this doesn't throw an exception the target cell is visible to the
       // owning cell.
       UnflavoredBuildTargetView unflavoredBuildTargetView =
-          ImmutableUnflavoredBuildTargetView.of(
-              cellPath.getFileSystem(), canonicalCellName, baseName, shortName);
+          ImmutableUnflavoredBuildTargetView.of(canonicalCellName, baseName, shortName);
       return flavoredTargetCache.intern(
           ImmutableUnconfiguredBuildTargetView.of(
               unflavoredBuildTargetView, RichStream.from(flavorNames).map(InternalFlavor::of)));

@@ -99,9 +99,7 @@ public class GenAidlTest {
             Paths.get(""),
             Paths.get(""));
 
-    target =
-        BuildTargetFactory.newInstance(
-            stubFilesystem.getRootPath(), "//java/com/example/base:IWhateverService");
+    target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
     pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
   }
 

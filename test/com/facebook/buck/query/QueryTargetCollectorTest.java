@@ -105,6 +105,6 @@ public class QueryTargetCollectorTest {
   }
 
   private static QueryTarget target(String shortName) {
-    return QueryBuildTarget.of(BuildTargetFactory.newInstance(ROOT, baseName, shortName));
+    return QueryBuildTarget.of(BuildTargetFactory.newInstance(baseName, shortName));
   }
 }

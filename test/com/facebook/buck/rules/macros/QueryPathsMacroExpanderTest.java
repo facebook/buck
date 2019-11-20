@@ -61,15 +61,13 @@ public class QueryPathsMacroExpanderTest {
   @Test
   public void sourcePathsToOutputsGivenByDefault() throws Exception {
     TargetNode<?> depNode =
-        JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//some:dep"), filesystem)
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//some:dep"), filesystem)
             .addSrc(Paths.get("Dep.java"))
             .build();
 
     TargetNode<?> targetNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//some:target"),
-                filesystem)
+                BuildTargetFactory.newInstance("//some:target"), filesystem)
             .addSrc(Paths.get("Target.java"))
             .addDep(depNode.getBuildTarget())
             .build();
@@ -110,15 +108,13 @@ public class QueryPathsMacroExpanderTest {
   @Test
   public void shouldDeclareDeps() {
     TargetNode<?> dep =
-        JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//some:dep"), filesystem)
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//some:dep"), filesystem)
             .addSrc(Paths.get("Dep.java"))
             .build();
 
     TargetNode<?> target =
         GenruleBuilder.newGenruleBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//some:target"),
-                filesystem)
+                BuildTargetFactory.newInstance("//some:target"), filesystem)
             .setOut("foo.txt")
             .setCmd(
                 StringWithMacrosUtils.format(

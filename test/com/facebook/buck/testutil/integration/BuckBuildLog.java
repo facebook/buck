@@ -74,7 +74,7 @@ public class BuckBuildLog {
   }
 
   public void assertTargetIsAbsent(String buildTargetRaw) {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(buildTargetRaw);
     if (buildLogEntries.containsKey(buildTarget)) {
       fail(
           String.format(
@@ -145,7 +145,7 @@ public class BuckBuildLog {
       }
 
       String buildTargetRaw = matcher.group("BuildTarget");
-      BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+      BuildTarget buildTarget = BuildTargetFactory.newInstance(buildTargetRaw);
 
       String statusRaw = matcher.group("Status");
       BuildRuleStatus status = BuildRuleStatus.valueOf(statusRaw);
@@ -186,7 +186,7 @@ public class BuckBuildLog {
   }
 
   public void assertNoLogEntry(String buildTargetRaw) {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(buildTargetRaw);
     if (buildLogEntries.containsKey(buildTarget)) {
       fail(
           String.format(
@@ -196,7 +196,7 @@ public class BuckBuildLog {
   }
 
   public BuildLogEntry getLogEntry(String buildTargetRaw) {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(buildTargetRaw);
     if (!buildLogEntries.containsKey(buildTarget)) {
       fail(String.format("There was no build log entry for target %s", buildTargetRaw));
     }

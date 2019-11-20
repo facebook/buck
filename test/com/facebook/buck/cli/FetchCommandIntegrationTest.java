@@ -74,8 +74,7 @@ public class FetchCommandIntegrationTest {
     BuckBuildLog log = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allTargets = log.getAllTargets();
 
-    assertFalse(
-        allTargets.contains(BuildTargetFactory.newInstance(workspace.getDestPath(), "//:example")));
+    assertFalse(allTargets.contains(BuildTargetFactory.newInstance("//:example")));
   }
 
   @Test
@@ -95,8 +94,7 @@ public class FetchCommandIntegrationTest {
     BuckBuildLog log = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allTargets = log.getAllTargets();
 
-    assertTrue(
-        allTargets.contains(BuildTargetFactory.newInstance(workspace.getDestPath(), "//:remote")));
+    assertTrue(allTargets.contains(BuildTargetFactory.newInstance("//:remote")));
   }
 
   @Test
@@ -116,8 +114,7 @@ public class FetchCommandIntegrationTest {
     BuckBuildLog log = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allTargets = log.getAllTargets();
 
-    assertFalse(
-        allTargets.contains(BuildTargetFactory.newInstance(workspace.getDestPath(), "//:remote")));
+    assertFalse(allTargets.contains(BuildTargetFactory.newInstance("//:remote")));
   }
 
   @Test
@@ -136,11 +133,8 @@ public class FetchCommandIntegrationTest {
     BuckBuildLog log = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allTargets = log.getAllTargets();
 
-    assertTrue(
-        allTargets.contains(BuildTargetFactory.newInstance(workspace.getDestPath(), "//:remote")));
-    assertFalse(
-        allTargets.contains(
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//:needs-download")));
+    assertTrue(allTargets.contains(BuildTargetFactory.newInstance("//:remote")));
+    assertFalse(allTargets.contains(BuildTargetFactory.newInstance("//:needs-download")));
   }
 
   private void addRemoteFileTarget(ProjectWorkspace workspace)

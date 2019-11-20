@@ -90,7 +90,7 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
 
     /** TODO: do it directly not using {@link UnconfiguredBuildTargetView} */
     UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-        ImmutableUnconfiguredBuildTargetView.of(cell.getRoot().getFileSystem(), buildTarget);
+        ImmutableUnconfiguredBuildTargetView.of(buildTarget);
 
     return unconfiguredTargetNodeFactory.create(
         cell,
@@ -126,7 +126,7 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
 
     /** TODO: do it directly not using {@link UnconfiguredBuildTargetView} */
     UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-        ImmutableUnconfiguredBuildTargetView.of(cell.getRoot().getFileSystem(), buildTarget);
+        ImmutableUnconfiguredBuildTargetView.of(buildTarget);
 
     return ImmutableBuildPackagePathToBuildFileManifestKey.of(
         unconfiguredBuildTargetView

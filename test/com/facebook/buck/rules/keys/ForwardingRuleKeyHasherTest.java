@@ -39,8 +39,8 @@ import org.junit.Test;
 public class ForwardingRuleKeyHasherTest {
 
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
-  private static final BuildTarget TARGET_1 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
+  private static final BuildTarget TARGET_1 = BuildTargetFactory.newInstance("//example/base:one");
+
   private static final byte[] BYTE_ARRAY = new byte[] {42, 42};
   private static final Pattern PATTERN = Pattern.compile("42");
 

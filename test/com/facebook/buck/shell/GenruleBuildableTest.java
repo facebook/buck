@@ -77,7 +77,7 @@ public class GenruleBuildableTest {
     BuildContext context =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
             .withBuildCellRootPath(filesystem.getRootPath());
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:example");
+    BuildTarget target = BuildTargetFactory.newInstance("//:example");
     Path srcPath = filesystem.getBuckPaths().getGenDir().resolve("example__srcs");
     GenruleBuildable buildable =
         GenruleBuildableBuilder.builder()
@@ -113,7 +113,7 @@ public class GenruleBuildableTest {
   public void testGenruleUsesSpacesForSrcsVariableDelimiterByDefault() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:genrule");
+    BuildTarget target = BuildTargetFactory.newInstance("//:genrule");
     OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
 
     SourcePath path1 = PathSourcePath.of(filesystem, filesystem.getPath("path 1.txt"));
@@ -146,7 +146,7 @@ public class GenruleBuildableTest {
   public void testGenruleUsesProvidedDelimiterForSrcsVariable() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:genrule");
+    BuildTarget target = BuildTargetFactory.newInstance("//:genrule");
     OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
 
     SourcePath path1 = PathSourcePath.of(filesystem, filesystem.getPath("path 1.txt"));
@@ -197,8 +197,7 @@ public class GenruleBuildableTest {
     Path sdkDir = filesystem.getPath("opt", "users", "android_sdk");
     Path ndkDir = filesystem.getPath("opt", "users", "android_ndk");
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example:genrule");
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
@@ -248,8 +247,7 @@ public class GenruleBuildableTest {
   @Test
   public void shouldPreventTheParentBuckdBeingUsedIfARecursiveBuckCallIsMade() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example:genrule");
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
     GenruleBuildable buildable =
@@ -283,8 +281,7 @@ public class GenruleBuildableTest {
     humanReadableExceptionRule.expect(HumanReadableException.class);
     humanReadableExceptionRule.expectMessage(
         "The 'out' parameter of genrule //example:genrule is '', which is not a valid file name.");
-    BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example:genrule");
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     GenruleBuildableBuilder.builder()
         .setBuildTarget(target)
         .setFilesystem(filesystem)
@@ -303,8 +300,7 @@ public class GenruleBuildableTest {
       humanReadableExceptionRule.expectMessage(
           "The 'out' parameter of genrule //example:genrule is '/opt/src/buck/opt/stuff', which is not a valid file name.");
     }
-    BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example:genrule");
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     GenruleBuildableBuilder.builder()
         .setBuildTarget(target)
         .setFilesystem(filesystem)
@@ -320,8 +316,7 @@ public class GenruleBuildableTest {
   @Test
   public void shouldUseAnAbsolutePathForZipScrubberStep() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example:genrule");
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
 
     GenruleBuildable buildable =
         GenruleBuildableBuilder.builder()
@@ -358,8 +353,7 @@ public class GenruleBuildableTest {
   @Test
   public void shouldOnlyCreateOutputBaseDirectoryForNestedOutput() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example:genrule");
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
 
     GenruleBuildable buildable =
         GenruleBuildableBuilder.builder()
@@ -400,8 +394,7 @@ public class GenruleBuildableTest {
         ImmutableList.<String>builder().add("foo/./bar/./.").add(".").add("./foo").build();
 
     for (String out : unnormalizedPaths) {
-      BuildTarget target =
-          BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example:genrule");
+      BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
       GenruleBuildable buildable =
           GenruleBuildableBuilder.builder()
               .setBuildTarget(target)

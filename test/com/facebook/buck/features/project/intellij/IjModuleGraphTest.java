@@ -633,15 +633,13 @@ public class IjModuleGraphTest {
 
     TargetNode<?> depTargetNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(depFileSystem, "dep//java/com/example:dep"),
-                depFileSystem)
+                BuildTargetFactory.newInstance("dep//java/com/example:dep"), depFileSystem)
             .addSrc(Paths.get("java/com/example/Dep.java"))
             .build();
 
     TargetNode<?> mainTargetNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(mainFileSystem, "main//java/com/example:main"),
-                mainFileSystem)
+                BuildTargetFactory.newInstance("main//java/com/example:main"), mainFileSystem)
             .addSrc(Paths.get("java/com/example/Main.java"))
             .addDep(depTargetNode.getBuildTarget())
             .build();

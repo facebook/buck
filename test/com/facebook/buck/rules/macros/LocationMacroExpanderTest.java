@@ -108,7 +108,7 @@ public class LocationMacroExpanderTest {
   @Test
   public void replaceSupplementalOutputLocation() throws Exception {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/some_root");
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     graphBuilder = setup(filesystem, buildTarget);
     BuildRule rule = new RuleWithSupplementaryOutput(buildTarget, filesystem);
     graphBuilder.addToIndex(rule);

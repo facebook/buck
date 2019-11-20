@@ -51,16 +51,13 @@ public class TargetNodeVisibilityTest {
   private static final ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   private static final BuildTarget orcaTarget =
-      BuildTargetFactory.newInstance(filesystem.getRootPath(), "//src/com/facebook/orca", "orca");
+      BuildTargetFactory.newInstance("//src/com/facebook/orca", "orca");
   private static final BuildTarget publicTarget =
-      BuildTargetFactory.newInstance(
-          filesystem.getRootPath(), "//src/com/facebook/for", "everyone");
+      BuildTargetFactory.newInstance("//src/com/facebook/for", "everyone");
   private static final BuildTarget nonPublicTarget1 =
-      BuildTargetFactory.newInstance(
-          filesystem.getRootPath(), "//src/com/facebook/something1", "nonPublic");
+      BuildTargetFactory.newInstance("//src/com/facebook/something1", "nonPublic");
   private static final BuildTarget nonPublicTarget2 =
-      BuildTargetFactory.newInstance(
-          filesystem.getRootPath(), "//src/com/facebook/something2", "nonPublic");
+      BuildTargetFactory.newInstance("//src/com/facebook/something2", "nonPublic");
 
   private static final ImmutableList<String> DEFAULT = ImmutableList.of();
   private static final ImmutableList<String> PUBLIC = ImmutableList.of("PUBLIC");
@@ -157,24 +154,16 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityForDirectory() throws NoSuchBuildTargetException {
-    BuildTarget libTarget =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//lib", "lib");
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//lib", "lib");
     TargetNode<?> targetInSpecifiedDirectory =
-        createTargetNode(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//src/com/facebook", "test"),
-            DEFAULT);
+        createTargetNode(BuildTargetFactory.newInstance("//src/com/facebook", "test"), DEFAULT);
     TargetNode<?> targetUnderSpecifiedDirectory =
         createTargetNode(
-            BuildTargetFactory.newInstance(
-                filesystem.getRootPath(), "//src/com/facebook/buck", "test"),
-            DEFAULT);
+            BuildTargetFactory.newInstance("//src/com/facebook/buck", "test"), DEFAULT);
     TargetNode<?> targetInOtherDirectory =
-        createTargetNode(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//src/com/instagram", "test"),
-            DEFAULT);
+        createTargetNode(BuildTargetFactory.newInstance("//src/com/instagram", "test"), DEFAULT);
     TargetNode<?> targetInParentDirectory =
-        createTargetNode(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//", "test"), DEFAULT);
+        createTargetNode(BuildTargetFactory.newInstance("//", "test"), DEFAULT);
 
     // Build rule that visible to targets in or under directory src/com/facebook
     TargetNode<?> directoryTargetNode =

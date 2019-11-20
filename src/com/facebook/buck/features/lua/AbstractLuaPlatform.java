@@ -28,7 +28,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.AbstractCxxLibraryGroup;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
-import java.nio.file.FileSystems;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -80,7 +79,7 @@ abstract class AbstractLuaPlatform implements FlavorConvertible {
                                 "Cannot find C/C++ library rule %s", target)))
         .orElse(
             new SystemLuaCxxLibrary(
-                ImmutableUnconfiguredBuildTargetView.of(FileSystems.getDefault(), "//system", "lua")
+                ImmutableUnconfiguredBuildTargetView.of("//system", "lua")
                     .configure(targetConfiguration)));
   }
 

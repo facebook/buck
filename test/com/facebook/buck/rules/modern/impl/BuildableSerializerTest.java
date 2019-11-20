@@ -253,8 +253,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   @Override
   public void complex() throws IOException {
     BuildRule mockRule = createStrictMock(BuildRule.class);
-    BuildTarget target =
-        BuildTargetFactory.newInstance(rootFilesystem.getRootPath(), "//some/build:target");
+    BuildTarget target = BuildTargetFactory.newInstance("//some/build:target");
     expect(ruleFinder.getRule((SourcePath) anyObject())).andReturn(Optional.of(mockRule));
     mockRule.getSourcePathToOutput();
     expectLastCall().andReturn(ExplicitBuildTargetSourcePath.of(target, Paths.get("and.path")));

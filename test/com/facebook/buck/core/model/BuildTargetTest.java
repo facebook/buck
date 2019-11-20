@@ -38,7 +38,7 @@ public class BuildTargetTest {
 
   @Test
   public void testRootBuildTarget() {
-    BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT, "//", "fb4a");
+    BuildTarget rootTarget = BuildTargetFactory.newInstance("//", "fb4a");
     assertEquals("fb4a", rootTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", rootTarget.getBaseName());
     assertEquals(
@@ -49,7 +49,7 @@ public class BuildTargetTest {
 
   @Test
   public void testBuildTargetTwoLevelsDeep() {
-    BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT, "//java/com/facebook", "fb4a");
+    BuildTarget rootTarget = BuildTargetFactory.newInstance("//java/com/facebook", "fb4a");
     assertEquals("fb4a", rootTarget.getShortNameAndFlavorPostfix());
     assertEquals("//java/com/facebook", rootTarget.getBaseName());
     assertEquals(
@@ -61,35 +61,32 @@ public class BuildTargetTest {
 
   @Test
   public void testEqualsNullReturnsFalse() {
-    BuildTarget utilTarget =
-        BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck/util", "util");
+    BuildTarget utilTarget = BuildTargetFactory.newInstance("//src/com/facebook/buck/util", "util");
     assertNotNull(utilTarget);
   }
 
   @Test
   public void testEqualsOtherBuildTarget() {
     BuildTarget utilTarget1 =
-        BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck/util", "util");
+        BuildTargetFactory.newInstance("//src/com/facebook/buck/util", "util");
     assertEquals(utilTarget1, utilTarget1);
 
     BuildTarget utilTarget2 =
-        BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck/util", "util");
+        BuildTargetFactory.newInstance("//src/com/facebook/buck/util", "util");
     assertEquals(utilTarget1, utilTarget2);
   }
 
   @Test
   public void testNotEquals() {
-    BuildTarget utilTarget =
-        BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck/util", "util");
-    BuildTarget ioTarget =
-        BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck/util", "io");
+    BuildTarget utilTarget = BuildTargetFactory.newInstance("//src/com/facebook/buck/util", "util");
+    BuildTarget ioTarget = BuildTargetFactory.newInstance("//src/com/facebook/buck/util", "io");
     assertFalse(utilTarget.equals(ioTarget));
   }
 
   @Test
   public void testBuildTargetWithFlavor() {
     BuildTarget target =
-        BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz", InternalFlavor.of("dex"));
+        BuildTargetFactory.newInstance("//foo/bar", "baz", InternalFlavor.of("dex"));
     assertEquals("baz#dex", target.getShortNameAndFlavorPostfix());
     assertEquals(ImmutableSortedSet.of(InternalFlavor.of("dex")), target.getFlavors());
     assertTrue(target.isFlavored());
@@ -97,7 +94,7 @@ public class BuildTargetTest {
 
   @Test
   public void testBuildTargetWithoutFlavor() {
-    BuildTarget target = BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo/bar", "baz");
     assertEquals(target.getShortNameAndFlavorPostfix(), "baz");
     assertEquals(ImmutableSortedSet.<Flavor>of(), target.getFlavors());
     assertFalse(target.isFlavored());
@@ -106,7 +103,7 @@ public class BuildTargetTest {
   @Test
   public void testFlavorIsValid() {
     try {
-      BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz", InternalFlavor.of("d!x"));
+      BuildTargetFactory.newInstance("//foo/bar", "baz", InternalFlavor.of("d!x"));
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
       assertEquals("Invalid characters in flavor name: d!x", e.getMessage());
@@ -116,7 +113,7 @@ public class BuildTargetTest {
   @Test
   public void testShortNameCannotContainHashWhenFlavorSet() {
     try {
-      BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz#dex", InternalFlavor.of("src-jar"));
+      BuildTargetFactory.newInstance("//foo/bar", "baz#dex", InternalFlavor.of("src-jar"));
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
       assertEquals("Build target name cannot contain '#' but was: baz#dex.", e.getMessage());
@@ -126,32 +123,29 @@ public class BuildTargetTest {
   @Test(expected = IllegalArgumentException.class)
   public void testShortNamesMustNotContainTheFlavorSeparator() {
     @SuppressWarnings("unused")
-    BuildTarget unused = BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz#dex");
+    BuildTarget unused = BuildTargetFactory.newInstance("//foo/bar", "baz#dex");
   }
 
   @Test
   public void testFlavorDefaultsToNoneIfNotSet() {
     assertEquals(
-        ImmutableSet.<Flavor>of(),
-        BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz").getFlavors());
+        ImmutableSet.<Flavor>of(), BuildTargetFactory.newInstance("//foo/bar", "baz").getFlavors());
   }
 
   @Test
   public void testGetUnflavoredTarget() {
     UnflavoredBuildTargetView unflavoredTarget =
-        ImmutableUnflavoredBuildTargetView.of(
-            ROOT.getFileSystem(), CanonicalCellName.rootCell(), "//foo/bar", "baz");
+        ImmutableUnflavoredBuildTargetView.of(CanonicalCellName.rootCell(), "//foo/bar", "baz");
 
     BuildTarget flavoredTarget =
-        BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz", InternalFlavor.of("biz"));
+        BuildTargetFactory.newInstance("//foo/bar", "baz", InternalFlavor.of("biz"));
     assertEquals(unflavoredTarget, flavoredTarget.getUnflavoredBuildTarget());
   }
 
   @Test
   public void testNumbersAreValidFlavors() {
     @SuppressWarnings("unused")
-    BuildTarget unused =
-        BuildTargetFactory.newInstance(ROOT, "//foo", "bar", InternalFlavor.of("1234"));
+    BuildTarget unused = BuildTargetFactory.newInstance("//foo", "bar", InternalFlavor.of("1234"));
   }
 
   @Test
@@ -159,7 +153,7 @@ public class BuildTargetTest {
     Flavor aaa = InternalFlavor.of("aaa");
     Flavor biz = InternalFlavor.of("biz");
 
-    BuildTarget flavoredTarget = BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz", biz);
+    BuildTarget flavoredTarget = BuildTargetFactory.newInstance("//foo/bar", "baz", biz);
     BuildTarget appendedFlavor = flavoredTarget.withAppendedFlavors(aaa);
     assertThat(appendedFlavor, Matchers.not(Matchers.equalTo(flavoredTarget)));
     ImmutableSortedSet<Flavor> expectedFlavors = ImmutableSortedSet.of(biz, aaa);
@@ -169,12 +163,10 @@ public class BuildTargetTest {
   @Test
   public void unflavoredBuildTargetsAreInterned() {
     UnflavoredBuildTargetView target1 =
-        ImmutableUnflavoredBuildTargetView.of(
-            ROOT.getFileSystem(), CanonicalCellName.rootCell(), "//foo", "bar");
+        ImmutableUnflavoredBuildTargetView.of(CanonicalCellName.rootCell(), "//foo", "bar");
 
     UnflavoredBuildTargetView target2 =
-        ImmutableUnflavoredBuildTargetView.of(
-            ROOT.getFileSystem(), CanonicalCellName.rootCell(), "//foo", "bar");
+        ImmutableUnflavoredBuildTargetView.of(CanonicalCellName.rootCell(), "//foo", "bar");
 
     assertSame(target1, target2);
   }

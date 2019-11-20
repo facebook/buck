@@ -74,12 +74,12 @@ import org.junit.Test;
 
 public class RuleKeyBuilderTest {
 
-  private static final BuildTarget TARGET_1 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
+  private static final BuildTarget TARGET_1 = BuildTargetFactory.newInstance("//example/base:one");
   private static final BuildTarget TARGET_2 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one#flavor");
+      BuildTargetFactory.newInstance("//example/base:one#flavor");
   private static final BuildTarget TARGET_3 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:three");
+      BuildTargetFactory.newInstance("//example/base:three");
+
   private static final BuildRule IGNORED_RULE = new EmptyFakeBuildRule(TARGET_1);
   private static final BuildRule RULE_1 = new EmptyFakeBuildRule(TARGET_1);
   private static final BuildRule RULE_2 = new EmptyFakeBuildRule(TARGET_2);

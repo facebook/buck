@@ -145,8 +145,7 @@ public class GenruleTest {
     createSampleJavaBinaryRule(graphBuilder);
 
     BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(
-            filesystem.getRootPath(), "//src/com/facebook/katana:katana_manifest");
+        BuildTargetFactory.newInstance("//src/com/facebook/katana:katana_manifest");
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(buildTarget)
             .setBash("python convert_to_katana.py AndroidManifest.xml > $OUT")
@@ -344,8 +343,7 @@ public class GenruleTest {
   public void testGenruleType() throws NoSuchBuildTargetException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(
-            filesystem.getRootPath(), "//src/com/facebook/katana:katana_manifest");
+        BuildTargetFactory.newInstance("//src/com/facebook/katana:katana_manifest");
     BuildRule genrule =
         GenruleBuilder.newGenruleBuilder(buildTarget)
             .setOut("output.xml")
@@ -437,8 +435,7 @@ public class GenruleTest {
   public void testIsWorkerGenruleReturnsFalse() throws NoSuchBuildTargetException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:genrule_no_worker"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule_no_worker"))
             .setCmd("echo hello >> $OUT")
             .setOut("output.txt")
             .build(graphBuilder, filesystem);
@@ -896,12 +893,9 @@ public class GenruleTest {
   @Test
   public void isCacheableIsRespected() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    BuildTarget buildTarget1 =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//katana:katana_manifest1");
-    BuildTarget buildTarget2 =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//katana:katana_manifest2");
-    BuildTarget buildTarget3 =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//katana:katana_manifest3");
+    BuildTarget buildTarget1 = BuildTargetFactory.newInstance("//katana:katana_manifest1");
+    BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//katana:katana_manifest2");
+    BuildTarget buildTarget3 = BuildTargetFactory.newInstance("//katana:katana_manifest3");
 
     Genrule genrule1 =
         GenruleBuilder.newGenruleBuilder(buildTarget1)

@@ -98,8 +98,7 @@ public class ClasspathAbiMacroExpanderTest {
   }
 
   private JavaLibraryBuilder getLibraryBuilder(String target) {
-    return JavaLibraryBuilder.createBuilder(
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), target), filesystem);
+    return JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(target), filesystem);
   }
 
   @Test(expected = MacroException.class)
@@ -107,8 +106,7 @@ public class ClasspathAbiMacroExpanderTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildRule rule =
-        new ExportFileBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//cheese:peas"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//cheese:peas"))
             .setSrc(FakeSourcePath.of("some-file.jar"))
             .build(graphBuilder);
 

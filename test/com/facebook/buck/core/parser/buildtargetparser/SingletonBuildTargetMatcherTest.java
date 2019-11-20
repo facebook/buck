@@ -35,15 +35,11 @@ public class SingletonBuildTargetMatcherTest {
                 .getUnconfiguredBuildTargetView()
                 .getData());
 
-    assertTrue(
-        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "buck")));
+    assertTrue(pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/buck", "buck")));
     assertFalse(
-        pattern.matches(
-            BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "otherTarget")));
+        pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/buck", "otherTarget")));
+    assertFalse(pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/foo", "foo")));
     assertFalse(
-        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/foo", "foo")));
-    assertFalse(
-        pattern.matches(
-            BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck/bar", "bar")));
+        pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/buck/bar", "bar")));
   }
 }

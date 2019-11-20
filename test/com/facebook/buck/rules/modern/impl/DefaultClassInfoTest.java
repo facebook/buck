@@ -109,9 +109,9 @@ public class DefaultClassInfoTest {
 
   @Test
   public void testDerivedClass() {
-    BuildTarget target1 = BuildTargetFactory.newInstance(Paths.get("some1"), "//some1", "name");
-    BuildTarget target2 = BuildTargetFactory.newInstance(Paths.get("some2"), "//some2", "name");
-    BuildTarget target3 = BuildTargetFactory.newInstance(Paths.get("some3"), "//some3", "name");
+    BuildTarget target1 = BuildTargetFactory.newInstance("//some1", "name");
+    BuildTarget target2 = BuildTargetFactory.newInstance("//some2", "name");
+    BuildTarget target3 = BuildTargetFactory.newInstance("//some3", "name");
 
     BuildRule rule1 = new FakeBuildRule(target1, ImmutableSortedSet.of());
     BuildRule rule2 = new FakeBuildRule(target2, ImmutableSortedSet.of());

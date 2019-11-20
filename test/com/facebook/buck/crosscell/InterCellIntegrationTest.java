@@ -380,8 +380,7 @@ public class InterCellIntegrationTest {
     Parser parser = TestParserFactory.create(executor.get(), primary.asCell());
 
     Cell primaryCell = primary.asCell();
-    BuildTarget namedTarget =
-        BuildTargetFactory.newInstance(primaryCell.getFilesystem().getRootPath(), targetName);
+    BuildTarget namedTarget = BuildTargetFactory.newInstance(targetName);
 
     // It's enough that this parses cleanly.
     parser.buildTargetGraph(

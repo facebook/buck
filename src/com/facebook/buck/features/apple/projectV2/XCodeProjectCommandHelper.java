@@ -398,13 +398,7 @@ public class XCodeProjectCommandHelper {
 
                       return target.withUnflavoredBuildTarget(
                           ImmutableUnflavoredBuildTargetView.of(
-                              target
-                                  .getUnconfiguredBuildTargetView()
-                                  .getUnflavoredBuildTargetView()
-                                  .getCellFileSystem(),
-                              cellName,
-                              target.getBaseName(),
-                              target.getShortName()));
+                              cellName, target.getBaseName(), target.getShortName()));
                     } else {
                       return target;
                     }

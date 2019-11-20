@@ -155,7 +155,7 @@ public class TargetGraphHashingTest {
   public void hashChangesWhenSrcContentChanges() throws Exception {
     TargetNode<?> node =
         createJavaLibraryTargetNodeWithSrcs(
-            BuildTargetFactory.newInstance(projectFilesystem, "//foo:lib"),
+            BuildTargetFactory.newInstance("//foo:lib"),
             ImmutableSet.of(Paths.get("foo/FooLib.java")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
@@ -206,11 +206,11 @@ public class TargetGraphHashingTest {
   public void twoNodeIndependentRootsTargetGraphHasExpectedHashes() throws InterruptedException {
     TargetNode<?> nodeA =
         createJavaLibraryTargetNodeWithSrcs(
-            BuildTargetFactory.newInstance(projectFilesystem, "//foo:lib"),
+            BuildTargetFactory.newInstance("//foo:lib"),
             ImmutableSet.of(Paths.get("foo/FooLib.java")));
     TargetNode<?> nodeB =
         createJavaLibraryTargetNodeWithSrcs(
-            BuildTargetFactory.newInstance(projectFilesystem, "//bar:lib"),
+            BuildTargetFactory.newInstance("//bar:lib"),
             ImmutableSet.of(Paths.get("bar/BarLib.java")));
     TargetGraph targetGraphA = TargetGraphFactory.newInstance(nodeA);
     TargetGraph targetGraphB = TargetGraphFactory.newInstance(nodeB);
@@ -282,8 +282,8 @@ public class TargetGraphHashingTest {
 
   @Test
   public void hashChangesForDependentNodeWhenDepsChange() throws InterruptedException {
-    BuildTarget nodeTarget = BuildTargetFactory.newInstance(projectFilesystem, "//foo:lib");
-    BuildTarget depTarget = BuildTargetFactory.newInstance(projectFilesystem, "//dep:lib");
+    BuildTarget nodeTarget = BuildTargetFactory.newInstance("//foo:lib");
+    BuildTarget depTarget = BuildTargetFactory.newInstance("//dep:lib");
 
     TargetGraph targetGraphA =
         createGraphWithANodeAndADep(nodeTarget, depTarget, Paths.get("dep/DepLib1.java"));
@@ -336,7 +336,7 @@ public class TargetGraphHashingTest {
   public void hashingSourceThrowsError() throws Exception {
     TargetNode<?> node =
         createJavaLibraryTargetNodeWithSrcs(
-            BuildTargetFactory.newInstance(projectFilesystem, "//foo:lib"),
+            BuildTargetFactory.newInstance("//foo:lib"),
             ImmutableSet.of(Paths.get("foo/FooLib.java")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 

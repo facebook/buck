@@ -31,25 +31,24 @@ public class BuildTargetFactoryTest {
 
   @Test
   public void testTargetWithoutFlavor() {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(ROOT, "//example/base:one");
-    assertEquals(BuildTargetFactory.newInstance(ROOT, "//example/base", "one"), buildTarget);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//example/base:one");
+    assertEquals(BuildTargetFactory.newInstance("//example/base", "one"), buildTarget);
   }
 
   @Test
   public void testTargetWithFlavor() {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(ROOT, "//example/base:one#two");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//example/base:one#two");
     assertEquals(
-        BuildTargetFactory.newInstance(ROOT, "//example/base", "one", InternalFlavor.of("two")),
+        BuildTargetFactory.newInstance("//example/base", "one", InternalFlavor.of("two")),
         buildTarget);
   }
 
   @Test
   public void testTargetWithMultipleFlavors() {
     BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(ROOT, "//example/base:shortName#one,two,three");
+        BuildTargetFactory.newInstance("//example/base:shortName#one,two,three");
     assertEquals(
         BuildTargetFactory.newInstance(
-            ROOT,
             "//example/base",
             "shortName",
             InternalFlavor.of("one"),
@@ -60,14 +59,11 @@ public class BuildTargetFactoryTest {
 
   @Test
   public void testTargetWithCell() {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(ROOT, "xplat//example/base:one");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("xplat//example/base:one");
     assertEquals(
         ImmutableUnconfiguredBuildTargetView.of(
                 ImmutableUnflavoredBuildTargetView.of(
-                    ROOT.getFileSystem(),
-                    ImmutableCanonicalCellName.of(Optional.of("xplat")),
-                    "//example/base",
-                    "one"))
+                    ImmutableCanonicalCellName.of(Optional.of("xplat")), "//example/base", "one"))
             .configure(UnconfiguredTargetConfiguration.INSTANCE),
         buildTarget);
   }

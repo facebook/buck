@@ -178,11 +178,8 @@ public class ConstructorArgMarshallerImmutableTest {
                 "target", "//cake:walk",
                 "local", ":fish"));
 
-    assertEquals(
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//cake:walk"), built.getTarget());
-    assertEquals(
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example/path:fish"),
-        built.getLocal());
+    assertEquals(BuildTargetFactory.newInstance("//cake:walk"), built.getTarget());
+    assertEquals(BuildTargetFactory.newInstance("//example/path:fish"), built.getLocal());
   }
 
   @Test

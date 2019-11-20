@@ -99,8 +99,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
     // Create short living UnconfiguredBuildTargetView
     // TODO: configure data object directly
     UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-        ImmutableUnconfiguredBuildTargetView.of(
-            cell.getRoot().getFileSystem(), unconfiguredBuildTarget);
+        ImmutableUnconfiguredBuildTargetView.of(unconfiguredBuildTarget);
 
     BuildTarget buildTarget =
         unconfiguredBuildTargetView.configure(UnconfiguredTargetConfiguration.INSTANCE);

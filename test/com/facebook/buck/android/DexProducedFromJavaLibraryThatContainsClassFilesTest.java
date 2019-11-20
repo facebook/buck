@@ -70,9 +70,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeJavaLibrary javaLibraryRule =
         new FakeJavaLibrary(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar"),
-            filesystem,
-            ImmutableSortedSet.of()) {
+            BuildTargetFactory.newInstance("//foo:bar"), filesystem, ImmutableSortedSet.of()) {
           @Override
           public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
             return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
@@ -111,8 +109,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             Paths.get(""),
             Paths.get(""));
 
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#dex");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
             buildTarget, filesystem, graphBuilder, androidPlatformTarget, javaLibraryRule);

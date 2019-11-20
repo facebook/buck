@@ -58,7 +58,7 @@ public class BuildConfigurationTest {
     projectFilesystem = new FakeProjectFilesystem(new DefaultClock());
     cell = (new TestCellBuilder()).setFilesystem(projectFilesystem).build();
 
-    fooBuildTarget = BuildTargetFactory.newInstance(cell.getRoot(), "//bar:foo");
+    fooBuildTarget = BuildTargetFactory.newInstance("//bar:foo");
   }
 
   @Test

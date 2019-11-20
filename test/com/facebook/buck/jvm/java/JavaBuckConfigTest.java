@@ -190,7 +190,7 @@ public class JavaBuckConfigTest {
 
   @Test
   public void whenJavacIsABuildTargetThenCorrectPathIsReturned() throws IOException {
-    BuildTarget javacTarget = BuildTargetFactory.newInstance(defaultFilesystem, "//:javac");
+    BuildTarget javacTarget = BuildTargetFactory.newInstance("//:javac");
     Reader reader =
         new StringReader(
             Joiner.on('\n').join("[tools]", "    javac = " + javacTarget.getFullyQualifiedName()));

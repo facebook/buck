@@ -72,7 +72,7 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
-    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavacStep step =
         new JavacStep(
             fakeJavac,
@@ -119,7 +119,7 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
-    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavacStep step =
         new JavacStep(
             fakeJavac,
@@ -174,7 +174,7 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
 
-    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavacStep step =
         new JavacStep(
             fakeJavac,
@@ -221,7 +221,7 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
 
-    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavacStep step =
         new JavacStep(
             fakeJavac,
@@ -274,7 +274,7 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
-    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavacStep step =
         new JavacStep(
             fakeJavac,
