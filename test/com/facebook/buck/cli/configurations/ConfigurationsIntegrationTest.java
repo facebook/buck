@@ -539,4 +539,23 @@ public class ConfigurationsIntegrationTest {
 
     workspace.runBuckCommand("build", "//...").assertSuccess();
   }
+
+  @Test
+  public void unconfiguredTargetConfiguration() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "unconfigured_target_configuration", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:j").assertSuccess();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build", "--target-platforms=builtin//platform:unconfigured", "//:j");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "Cannot use select() expression when target platform is not specified"));
+  }
 }

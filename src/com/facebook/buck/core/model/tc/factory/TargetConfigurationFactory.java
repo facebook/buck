@@ -19,11 +19,17 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
+import java.util.Optional;
 
 /** Parse a string into {@link TargetConfiguration}. */
 public class TargetConfigurationFactory {
+
+  private static final String UNCONFIGURED_TARGET_CONFIGURATION_NAME =
+      "builtin//platform:unconfigured";
+
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory;
   private final CellPathResolver cellPathResolver;
 
@@ -34,8 +40,20 @@ public class TargetConfigurationFactory {
     this.cellPathResolver = cellPathResolver;
   }
 
+  private Optional<TargetConfiguration> tryNonBuildTarget(String targetConfiguration) {
+    if (targetConfiguration.equals(UNCONFIGURED_TARGET_CONFIGURATION_NAME)) {
+      return Optional.of(UnconfiguredTargetConfiguration.INSTANCE);
+    }
+    return Optional.empty();
+  }
+
   /** Create a target configuration by absolute buck target name */
   public TargetConfiguration create(String targetConfiguration) {
+    Optional<TargetConfiguration> builtin = tryNonBuildTarget(targetConfiguration);
+    if (builtin.isPresent()) {
+      return builtin.get();
+    }
+
     UnconfiguredBuildTargetView buildTarget =
         unconfiguredBuildTargetViewFactory.create(cellPathResolver, targetConfiguration);
     return ImmutableRuleBasedTargetConfiguration.of(ConfigurationBuildTargets.convert(buildTarget));
@@ -43,6 +61,11 @@ public class TargetConfigurationFactory {
 
   /** Create a target configuration by absolute or relative buck target name */
   public TargetConfiguration createForBaseName(String baseName, String targetConfiguration) {
+    Optional<TargetConfiguration> builtin = tryNonBuildTarget(targetConfiguration);
+    if (builtin.isPresent()) {
+      return builtin.get();
+    }
+
     UnconfiguredBuildTargetView buildTarget =
         unconfiguredBuildTargetViewFactory.createForBaseName(
             cellPathResolver, baseName, targetConfiguration);
