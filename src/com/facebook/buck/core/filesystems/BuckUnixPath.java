@@ -49,7 +49,7 @@ public class BuckUnixPath implements Path {
   // to have either 1 or three 4-byte fields.
   private final String[] segments;
   private final BuckFileSystem fs;
-  private volatile int hashCode = 0;
+  private int hashCode = 0;
 
   // segments should already be interned.
   private BuckUnixPath(BuckFileSystem fs, String[] segments) {
