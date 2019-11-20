@@ -231,6 +231,11 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Subscribe
+  public void buildRuleRemoteExecutionTerminalEvent(RemoteExecutionActionEvent.Terminal event) {
+    writeToLog("RemoteExecutionTerminal", event);
+  }
+
+  @Subscribe
   public void buildRuleEventFinished(BuildRuleEvent.Finished event) {
     writeToLog(PREFIX_BUILD_RULE_FINISHED, event);
 
