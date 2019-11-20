@@ -35,6 +35,7 @@ public @interface Hint {
   boolean DEFAULT_IS_TARGET_GRAPH_ONLY_DEP = false;
   boolean DEFAULT_IS_CONFIGURABLE = true;
   boolean DEFAULT_SPLIT_CONFIGURATION = false;
+  boolean DEFAULT_EXEC_CONFIGURATION = false;
 
   /** @return Whether to search the field's value for dependencies */
   boolean isDep() default DEFAULT_IS_DEP;
@@ -66,4 +67,14 @@ public @interface Hint {
    * multiple configurations and the attribute type supports concatenation.
    */
   boolean splitConfiguration() default DEFAULT_SPLIT_CONFIGURATION;
+
+  /**
+   * Indicates that execution configuration (as opposed to target configuration) should be used when
+   * resolving targets.
+   *
+   * <p>This is used for example in {@code cxx_toolchain} rule: toolchain itself need to be created
+   * with target configuration, but if it specifies c compiler as a build target, that target need
+   * to be built for execution configuration.
+   */
+  boolean execConfiguration() default DEFAULT_EXEC_CONFIGURATION;
 }

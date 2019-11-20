@@ -109,9 +109,13 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
         }
       }
       Object attributeValue;
+
+      TargetConfiguration paramTargetConfiguration =
+          info.execConfiguration() ? hostConfiguration : buildTarget.getTargetConfiguration();
+
       if (info.splitConfiguration()
           && targetConfigurationTransformer.needsTransformation(
-              buildTarget.getTargetConfiguration(), dependencyStack)) {
+              paramTargetConfiguration, dependencyStack)) {
         Preconditions.checkState(
             info.getTypeCoercer().supportsConcatenation(),
             "coercer must support concatenation to do split configuration: " + info.getName());
@@ -125,7 +129,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 buildTarget,
                 hostConfiguration,
                 dependencyStack,
-                buildTarget.getTargetConfiguration(),
+                paramTargetConfiguration,
                 configurationDeps,
                 info,
                 isConfigurationRule,
@@ -139,7 +143,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 configurationContext,
                 buildTarget,
                 dependencyStack,
-                buildTarget.getTargetConfiguration(),
+                paramTargetConfiguration,
                 hostConfiguration,
                 configurationDeps,
                 info,

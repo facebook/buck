@@ -60,6 +60,9 @@ public interface ParamInfo extends Comparable<ParamInfo> {
   /** @see Hint#splitConfiguration() */
   boolean splitConfiguration();
 
+  /** @see Hint#execConfiguration() */
+  boolean execConfiguration();
+
   /**
    * @return the type that input values will be coerced to. Return the type parameter of Optional if
    *     wrapped in Optional.

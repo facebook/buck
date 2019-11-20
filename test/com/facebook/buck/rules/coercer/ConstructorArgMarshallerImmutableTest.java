@@ -56,6 +56,7 @@ import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -706,6 +707,34 @@ public class ConstructorArgMarshallerImmutableTest {
             .collect(ImmutableSet.toImmutableSet()));
   }
 
+  @Test
+  public void populateWithExecSwitch() throws Exception {
+    SelectorListResolver selectorListResolver =
+        new DefaultSelectorListResolver(new TestSelectableResolver());
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(
+            (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
+    ImmutableRuleBasedTargetConfiguration execConfiguration =
+        ImmutableRuleBasedTargetConfiguration.of(
+            ConfigurationBuildTargetFactoryForTests.newInstance("//:p"));
+    DtoWithExec d =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            selectorListResolver,
+            targetConfigurationTransformer,
+            NonCopyingSelectableConfigurationContext.INSTANCE,
+            TARGET,
+            execConfiguration,
+            DependencyStack.root(),
+            builder(DtoWithExec.class),
+            ImmutableSet.builder(),
+            ImmutableSet.builder(),
+            ImmutableMap.of("name", TARGET.getShortName(), "compiler", "//tools:compiler"));
+    BuildTargetSourcePath compiler = (BuildTargetSourcePath) d.getCompiler();
+    assertEquals(execConfiguration, compiler.getTarget().getTargetConfiguration());
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractDtoWithString implements BuildRuleArg {
@@ -948,5 +977,12 @@ public class ConstructorArgMarshallerImmutableTest {
   abstract static class AbstractDtoWithSplit implements BuildRuleArg {
     @Hint(splitConfiguration = true)
     abstract ImmutableSortedSet<BuildTarget> getDeps();
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractDtoWithExec implements BuildRuleArg {
+    @Hint(execConfiguration = true)
+    abstract SourcePath getCompiler();
   }
 }

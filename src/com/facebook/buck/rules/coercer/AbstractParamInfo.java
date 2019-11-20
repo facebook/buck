@@ -103,6 +103,15 @@ public abstract class AbstractParamInfo implements ParamInfo {
   }
 
   @Override
+  public boolean execConfiguration() {
+    Hint hint = getHint();
+    if (hint != null) {
+      return hint.execConfiguration();
+    }
+    return Hint.DEFAULT_EXEC_CONFIGURATION;
+  }
+
+  @Override
   public Class<?> getResultClass() {
     return typeCoercer.getOutputClass();
   }
