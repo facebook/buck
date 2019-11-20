@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -170,34 +169,33 @@ public class Aapt2Link extends AbstractBuildRule {
     return null;
   }
 
+  private Path getGenDir() {
+    return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget());
+  }
+
   private Path getArgsPath() {
-    return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget())
-        .resolve("aapt2-R-args.txt");
+    return getGenDir().resolve("aapt2-R-args.txt");
   }
 
   private Path getFinalManifestPath() {
-    return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/AndroidManifest.xml");
+    return getGenDir().resolve("AndroidManifest.xml");
   }
 
   private Path getResourceApkPath() {
-    return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/resource-apk.ap_");
+    return getGenDir().resolve("resource-apk.ap_");
   }
 
   private Path getProguardConfigPath() {
-    return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/proguard-for-resources.pro");
+    return getGenDir().resolve("proguard-for-resources.pro");
   }
 
   private Path getRDotTxtPath() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/R.txt");
+    return getGenDir().resolve("R.txt");
   }
 
   /** Directory containing R.java files produced by aapt2 link. */
   private Path getInitialRDotJavaDir() {
-    return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/initial-rdotjava");
+    return getGenDir().resolve("initial-rdotjava");
   }
 
   public AaptOutputInfo getAaptOutputInfo() {
