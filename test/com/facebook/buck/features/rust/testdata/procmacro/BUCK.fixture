@@ -1,7 +1,13 @@
 rust_library(
     name = "helloworld_derive",
     srcs = ["helloworld_derive.rs"],
+    deps = [":hellodep"],
     proc_macro = True,
+)
+
+rust_library(
+    name = "hellodep",
+    srcs = ["hellodep.rs"],
 )
 
 rust_binary(

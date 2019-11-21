@@ -131,6 +131,7 @@ public class RustCompileUtils {
 
     String filename = crateType.filenameFor(target, crateName, cxxPlatform);
 
+    // Use the C linker configuration for CDYLIB
     if (crateType == CrateType.CDYLIB) {
       Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
       linkerArgs.addAll(StringArg.from(linker.soname(filename)));
@@ -192,12 +193,31 @@ public class RustCompileUtils {
     }
 
     LinkableDepType rustDepType;
-    // If we're building a CDYLIB then our Rust dependencies need to be static
-    // Alternatively, if we're using forceRlib then anything else needs rlib deps.
-    if (depType == LinkableDepType.SHARED && (forceRlib || crateType == CrateType.CDYLIB)) {
-      rustDepType = LinkableDepType.STATIC_PIC;
-    } else {
-      rustDepType = depType;
+    // Work out the linkage for our dependencies
+    switch (depType) {
+      case SHARED:
+        // If we're building a CDYLIB then our Rust dependencies need to be static
+        // Alternatively, if we're using forceRlib then anything else needs rlib deps.
+        if (forceRlib || crateType == CrateType.CDYLIB) {
+          rustDepType = LinkableDepType.STATIC_PIC;
+        } else {
+          rustDepType = LinkableDepType.SHARED;
+        }
+        break;
+
+      case STATIC:
+        // If we're PIC, all our dependencies need to be as well
+        if (crateType.isPic()) {
+          rustDepType = LinkableDepType.STATIC_PIC;
+        } else {
+          rustDepType = LinkableDepType.STATIC;
+        }
+        break;
+
+      case STATIC_PIC:
+      default: // Unnecessary?
+        rustDepType = depType;
+        break;
     }
 
     // Build reverse mapping from build targets to aliases. This might be a 1:many relationship
