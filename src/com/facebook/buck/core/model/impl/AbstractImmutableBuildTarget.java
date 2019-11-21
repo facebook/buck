@@ -30,9 +30,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.util.Set;
 import org.immutables.value.Value;
@@ -50,13 +48,6 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
 
   @Override
   public abstract TargetConfiguration getTargetConfiguration();
-
-  @Value.Check
-  protected void check() {
-    Preconditions.checkArgument(
-        getFlavors().comparator() == Ordering.natural(),
-        "Flavors must be ordered using natural ordering.");
-  }
 
   @JsonProperty("cell")
   @Override
