@@ -56,10 +56,8 @@ import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.JobLimiter;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.hashing.FileHashLoader;
-import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.FutureCallback;
@@ -73,15 +71,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 /**
@@ -185,12 +178,17 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     eventBus.post(RemoteExecutionSessionEvent.finished(remoteExecutionSessionStartedEvent));
   }
 
+  /** StrategyBuildResult for Remote Execution Strategy which includes RuleContext */
+  public interface RemoteExecutionStrategyBuildResult extends StrategyBuildResult {
+    RemoteRuleContext getRuleContext();
+  }
+
   @Override
   public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
     Preconditions.checkState(rule instanceof ModernBuildRule);
 
     RemoteExecutionActionEvent.sendScheduledEvent(eventBus, rule);
-    RuleContext ruleContext = new RuleContext(eventBus, rule);
+    RemoteRuleContext ruleContext = new RemoteRuleContext(eventBus, rule);
 
     ListenableFuture<RemoteExecutionActionInfo> actionInfoFuture =
         pendingUploadsLimiter.schedule(
@@ -252,7 +250,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   Optional.empty(),
                   Optional.of(ruleContext.timeMsInState),
                   Optional.of(ruleContext.timeMsAfterState),
-                  Status.UNKNOWN);
+                  Status.UNKNOWN,
+                  ruleContext.lastNonTerminalState);
             } else {
               // actionInfo and executionInfo must be set at this point
               Preconditions.checkState(actionInfo.get() != null);
@@ -269,7 +268,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                       .map(ExecutionResult::getRemoteExecutionMetadata),
                   Optional.of(ruleContext.timeMsInState),
                   Optional.of(ruleContext.timeMsAfterState),
-                  Status.OK);
+                  Status.OK,
+                  ruleContext.lastNonTerminalState);
             }
           }
 
@@ -285,12 +285,19 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 Optional.empty(),
                 Optional.of(ruleContext.timeMsInState),
                 Optional.of(ruleContext.timeMsAfterState),
-                Status.fromThrowable(t));
+                Status.fromThrowable(t),
+                ruleContext.lastNonTerminalState);
           }
         },
         MoreExecutors.directExecutor());
 
-    return new StrategyBuildResult() {
+    return new RemoteExecutionStrategyBuildResult() {
+
+      @Override
+      public RemoteRuleContext getRuleContext() {
+        return ruleContext;
+      }
+
       @Override
       public void cancel(Throwable cause) {
         ruleContext.cancel(cause);
@@ -317,7 +324,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   }
 
   private ListenableFuture<RemoteExecutionActionInfo> computeActionAndUpload(
-      BuildRule rule, BuildStrategyContext strategyContext, RuleContext guardContext) {
+      BuildRule rule, BuildStrategyContext strategyContext, RemoteRuleContext guardContext) {
     ListenableFuture<RemoteExecutionActionInfo> actionInfoFuture =
         computeActionLimiter.schedule(
             service,
@@ -331,7 +338,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   }
 
   private ListenableFuture<RemoteExecutionActionInfo> uploadInputs(
-      BuildRule rule, RemoteExecutionActionInfo actionInfo, RuleContext guardContext)
+      BuildRule rule, RemoteExecutionActionInfo actionInfo, RemoteRuleContext guardContext)
       throws Exception {
     Objects.requireNonNull(actionInfo);
     if (rule.shouldRespectInputSizeLimitForRemoteExecution()
@@ -364,7 +371,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       BuildRule rule,
       BuildStrategyContext strategyContext,
       RemoteExecutionActionInfo actionInfo,
-      RuleContext guardContext)
+      RemoteRuleContext guardContext)
       throws IOException {
     Objects.requireNonNull(actionInfo);
     // The actionInfo may be very large, so explicitly capture just the parts that we need and clear
@@ -392,7 +399,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   }
 
   private RemoteExecutionActionInfo getRemoteExecutionActionInfo(
-      BuildRule rule, BuildStrategyContext strategyContext, RuleContext guardContext)
+      BuildRule rule, BuildStrategyContext strategyContext, RemoteRuleContext guardContext)
       throws IOException {
     try (Scope ignored = strategyContext.buildRuleScope()) {
       RemoteExecutionActionInfo actionInfo;
@@ -411,7 +418,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private ListenableFuture<Optional<ExecutionResult>> executeNowThatInputsAreReady(
       BuildStrategyContext strategyContext,
       BuildRule buildRule,
-      RuleContext guardContext,
+      RemoteRuleContext guardContext,
       Digest actionDigest,
       Iterable<? extends Path> actionOutputs,
       String ruleName) {
@@ -496,7 +503,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       Digest actionDigest,
       Iterable<? extends Path> actionOutputs,
       MetadataProvider metadataProvider,
-      RuleContext guardContext)
+      RemoteRuleContext guardContext)
       throws IOException, StepFailedException {
     BuildTarget buildTarget = buildRule.getBuildTarget();
     int exitCode = result.getExitCode();
@@ -578,94 +585,5 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     }
 
     return Futures.immediateFuture(null);
-  }
-
-  private static class RuleContext {
-    // guard should only be set once. The left value indicates that it has been cancelled and holds
-    // the reason, a right value indicates that it has passed the point of no return and can no
-    // longer be cancelled.
-    AtomicReference<Either<Throwable, Object>> guard = new AtomicReference<>();
-    ConcurrentLinkedQueue<Consumer<Throwable>> callbackQueue = new ConcurrentLinkedQueue<>();
-    State actionState;
-    State prevState;
-    final BuildRule buildRule;
-    final BuckEventBus eventBus;
-    Map<State, Long> timeMsInState;
-    Map<State, Long> timeMsAfterState;
-    long prevStateTime;
-
-    public RuleContext(BuckEventBus eventBus, BuildRule rule) {
-      this.buildRule = rule;
-      this.eventBus = eventBus;
-      this.actionState = State.WAITING;
-      this.prevState = State.WAITING;
-      this.timeMsInState = new ConcurrentHashMap<>();
-      this.timeMsAfterState = new ConcurrentHashMap<>();
-      this.prevStateTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
-    }
-
-    public boolean isCancelled() {
-      return guard.get() != null && guard.get().isLeft();
-    }
-
-    public Throwable getCancelReason() {
-      Verify.verify(isCancelled());
-      return guard.get().getLeft();
-    }
-
-    public void cancel(Throwable reason) {
-      guard.compareAndSet(null, Either.ofLeft(reason));
-      if (isCancelled()) {
-        processCallbackQueue();
-      }
-    }
-
-    public boolean tryStart() {
-      return guard.compareAndSet(null, Either.ofRight(new Object()));
-    }
-
-    public void onCancellation(Consumer<Throwable> cancelCallback) {
-      callbackQueue.add(cancelCallback);
-      if (isCancelled()) {
-        processCallbackQueue();
-      }
-    }
-
-    private void processCallbackQueue() {
-      Throwable cancelReason = getCancelReason();
-      while (!callbackQueue.isEmpty()) {
-        Consumer<Throwable> callback = callbackQueue.poll();
-        if (callback == null) {
-          break;
-        }
-        try {
-          callback.accept(cancelReason);
-        } catch (Exception e) {
-          LOG.warn(e, "Unexpected exception while processing cancellation callbacks.");
-        }
-      }
-    }
-
-    public Scope enterState(State state, Optional<Digest> actionDigest) {
-      Preconditions.checkState(
-          state.ordinal() > prevState.ordinal(),
-          "Cannot Enter State: " + state + " from: " + actionState);
-      timeMsAfterState.put(
-          prevState, TimeUnit.NANOSECONDS.toMillis(System.nanoTime()) - prevStateTime);
-      actionState = state;
-      long startMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
-      Scope inner = RemoteExecutionActionEvent.sendEvent(eventBus, state, buildRule, actionDigest);
-
-      return () -> {
-        if (actionState != State.WAITING) {
-          timeMsInState.put(
-              actionState, TimeUnit.NANOSECONDS.toMillis(System.nanoTime()) - startMs);
-          prevState = actionState;
-          prevStateTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
-          actionState = State.WAITING;
-        }
-        inner.close();
-      };
-    }
   }
 }

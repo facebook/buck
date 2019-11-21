@@ -26,6 +26,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent.Result;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -114,6 +115,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     private Optional<LocalFallbackEvent.Result> remoteBuildResult;
     private Optional<String> remoteBuildErrorMessage;
     private Status remoteGrpcStatus;
+    private State lastNonTerminalState;
 
     public FallbackStrategyBuildResult(
         String buildTarget,
@@ -137,6 +139,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       this.localFallbackEnabled = localFallbackEnabled;
       this.localFallbackDisabledOnCorruptedArtifacts = localFallbackDisabledOnCorruptedArtifacts;
       this.remoteGrpcStatus = Status.fromCode(Status.Code.OK);
+      this.lastNonTerminalState = State.WAITING;
 
       this.eventBus.post(this.startedEvent);
       this.remoteStrategyBuildResult
@@ -229,6 +232,15 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       remoteBuildResult =
           Optional.of(t instanceof InterruptedException ? Result.INTERRUPTED : Result.EXCEPTION);
       remoteGrpcStatus = Status.fromThrowable(t);
+
+      if (remoteStrategyBuildResult
+          instanceof RemoteExecutionStrategy.RemoteExecutionStrategyBuildResult) {
+        lastNonTerminalState =
+            ((RemoteExecutionStrategy.RemoteExecutionStrategyBuildResult) remoteStrategyBuildResult)
+                .getRuleContext()
+                .lastNonTerminalState;
+      }
+
       remoteBuildErrorMessage = Optional.of(t.toString());
       if (localFallbackEnabled
           && (!localFallbackDisabledOnCorruptedArtifacts
@@ -304,7 +316,8 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
               local,
               remoteExecutionTimer.elapsed(TimeUnit.MILLISECONDS),
               remoteBuildErrorMessage,
-              remoteGrpcStatus));
+              remoteGrpcStatus,
+              lastNonTerminalState));
     }
 
     private void completeCombinedFutureWithException(
@@ -316,7 +329,8 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
               local,
               remoteExecutionTimer.elapsed(TimeUnit.MILLISECONDS),
               remoteBuildErrorMessage,
-              remoteGrpcStatus));
+              remoteGrpcStatus,
+              lastNonTerminalState));
     }
   }
 }

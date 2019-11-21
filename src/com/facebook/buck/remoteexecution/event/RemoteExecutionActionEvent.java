@@ -92,7 +92,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       Optional<RemoteExecutionMetadata> remoteExecutionMetadata,
       Optional<Map<State, Long>> stateMetadata,
       Optional<Map<State, Long>> stateWaitingMetadata,
-      Status grpcStatus) {
+      Status grpcStatus,
+      State lastNonTerminalState) {
     final Terminal event =
         new Terminal(
             state,
@@ -102,7 +103,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
             remoteExecutionMetadata,
             stateMetadata,
             stateWaitingMetadata,
-            grpcStatus);
+            grpcStatus,
+            lastNonTerminalState);
     eventBus.post(event);
   }
 
@@ -126,6 +128,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     private final Optional<Map<State, Long>> stateMetadata;
     private final Optional<Map<State, Long>> stateWaitingMetadata;
     private final Status grpcStatus;
+    private final State lastNonTerminalState;
 
     @VisibleForTesting
     Terminal(
@@ -136,7 +139,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
         Optional<RemoteExecutionMetadata> remoteExecutionMetadata,
         Optional<Map<State, Long>> stateMetadata,
         Optional<Map<State, Long>> stateWaitingMetadata,
-        Status grpcStatus) {
+        Status grpcStatus,
+        State lastNonTerminalState) {
       super(EventKey.unique());
       Preconditions.checkArgument(
           RemoteExecutionActionEvent.isTerminalState(state),
@@ -150,6 +154,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       this.stateMetadata = stateMetadata;
       this.stateWaitingMetadata = stateWaitingMetadata;
       this.grpcStatus = grpcStatus;
+      this.lastNonTerminalState = lastNonTerminalState;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -194,6 +199,10 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
     public Status getGrpcStatus() {
       return grpcStatus;
+    }
+
+    public State getLastNonTerminalState() {
+      return lastNonTerminalState;
     }
 
     @JsonIgnore

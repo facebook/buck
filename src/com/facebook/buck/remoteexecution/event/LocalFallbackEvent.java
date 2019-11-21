@@ -18,6 +18,7 @@ package com.facebook.buck.remoteexecution.event;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import io.grpc.Status;
 import java.util.Optional;
 
@@ -55,14 +56,16 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
         Result localResult,
         long remoteDurationMillis,
         Optional<String> remoteErrorMessage,
-        Status remoteGrpcStatus) {
+        Status remoteGrpcStatus,
+        State lastNonTerminalState) {
       return new Finished(
           this,
           remoteResult,
           localResult,
           remoteDurationMillis,
           remoteErrorMessage,
-          remoteGrpcStatus);
+          remoteGrpcStatus,
+          lastNonTerminalState);
     }
 
     public String getBuildTarget() {
@@ -83,6 +86,7 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
     private final Result remoteResult;
     private final Optional<String> remoteErrorMessage;
     private final Status remoteGrpcStatus;
+    private final State lastNonTerminalState;
 
     private Finished(
         Started startedEvent,
@@ -90,13 +94,15 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
         Result localResult,
         long remoteDurationMillis,
         Optional<String> remoteErrorMessage,
-        Status remoteGrpcStatus) {
+        Status remoteGrpcStatus,
+        State lastNonTerminalState) {
       this.startedEvent = startedEvent;
       this.remoteResult = remoteResult;
       this.localResult = localResult;
       this.remoteDurationMillis = remoteDurationMillis;
       this.remoteErrorMessage = remoteErrorMessage;
       this.remoteGrpcStatus = remoteGrpcStatus;
+      this.lastNonTerminalState = lastNonTerminalState;
     }
 
     public Started getStartedEvent() {
@@ -121,6 +127,10 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
 
     public Status getRemoteGrpcStatus() {
       return remoteGrpcStatus;
+    }
+
+    public State getLastNonTerminalState() {
+      return lastNonTerminalState;
     }
 
     @Override
