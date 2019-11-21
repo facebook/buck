@@ -25,10 +25,10 @@ def main():
 
     # write the output path into the output file.
     with open(ns.output, "wb") as f:
-        f.write(ns.output.encode())
+        f.write(ns.output.encode("utf-8"))
 
     with open(ns.extra_output, "wb") as f:
-        f.write(ns.extra_output.encode())
+        f.write(ns.extra_output.encode("utf-8"))
 
 
 if __name__ == "__main__":
