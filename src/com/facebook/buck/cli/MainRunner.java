@@ -2182,9 +2182,10 @@ public final class MainRunner {
 
     Path logDirectoryPath = invocationInfo.getLogDirectoryPath();
     Path criticalPathDir = projectFilesystem.resolve(logDirectoryPath);
+    Path criticalPathLog = criticalPathDir.resolve(CRITICAL_PATH_FILE_NAME);
     projectFilesystem.mkdirs(criticalPathDir);
     CriticalPathEventListener criticalPathEventListener =
-        new CriticalPathEventListener(criticalPathDir.resolve(CRITICAL_PATH_FILE_NAME));
+        new CriticalPathEventListener(criticalPathLog);
     buckEventBus.register(criticalPathEventListener);
 
     ChromeTraceBuckConfig chromeTraceConfig = buckConfig.getView(ChromeTraceBuckConfig.class);
@@ -2230,6 +2231,14 @@ public final class MainRunner {
             invocationInfo.getBuildId(),
             managerScope,
             "simple_console_output"));
+    eventListenersBuilder.add(
+        new LogUploaderListener(
+            chromeTraceConfig,
+            criticalPathLog,
+            invocationInfo.getLogDirectoryPath(),
+            invocationInfo.getBuildId(),
+            managerScope,
+            "critical_path_log"));
 
     if (logBuckConfig.isRuleKeyLoggerEnabled()) {
 
