@@ -52,6 +52,13 @@ public class ForwardRelativePathTest {
   @Test
   public void ofSubstring() {
     assertEquals(ForwardRelativePath.of("ab/cd"), ForwardRelativePath.ofSubstring("xy/ab/cd", 3));
+    assertEquals(ForwardRelativePath.of(""), ForwardRelativePath.ofSubstring("//", 2));
+  }
+
+  @Test
+  public void ofSubstringError() {
+    thrown.expectMessage("path must not end with slash: foo/");
+    ForwardRelativePath.ofSubstring("//foo/", 2);
   }
 
   @Test

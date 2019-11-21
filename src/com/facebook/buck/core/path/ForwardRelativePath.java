@@ -70,28 +70,50 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
     return new ForwardRelativePath(splitAndIntern(path, offset));
   }
 
+  private static class Substring {
+    private final String string;
+    private final int offset;
+
+    public Substring(String string, int offset) {
+      Preconditions.checkArgument(offset <= string.length());
+      this.string = string;
+      this.offset = offset;
+    }
+
+    @Override
+    public String toString() {
+      return string.substring(offset);
+    }
+  }
+
   private static String[] splitAndIntern(String path, int offset) {
     Preconditions.checkState(path.length() > offset);
 
-    Preconditions.checkArgument(!path.startsWith("/", offset));
-    Preconditions.checkArgument(!path.endsWith("/"));
+    Substring pathSubstring = new Substring(path, offset);
+
+    Preconditions.checkArgument(
+        !path.startsWith("/", offset), "path must not start with slash: %s", pathSubstring);
+    Preconditions.checkArgument(
+        !path.endsWith("/"), "path must not end with slash: %s", pathSubstring);
 
     ArrayList<String> segments = new ArrayList<>();
 
     int offsetAfterLastSlash = offset;
     for (int i = offset; i != path.length() + 1; ++i) {
       char c = i != path.length() ? path.charAt(i) : '/';
-      Preconditions.checkArgument(c != '\\', "backslash in path: %s", path);
+      Preconditions.checkArgument(c != '\\', "backslash in path: %s", pathSubstring);
       if (c == '/') {
         if (i - offsetAfterLastSlash == 0) {
-          throw new IllegalArgumentException("two slashes in path: " + path);
+          throw new IllegalArgumentException("two slashes in path: " + pathSubstring);
         }
         if (i - offsetAfterLastSlash == 1) {
-          Preconditions.checkArgument(path.charAt(i - 1) != '.', "dot in path: %s", path);
+          Preconditions.checkArgument(path.charAt(i - 1) != '.', "dot in path: %s", pathSubstring);
         }
         if (i - offsetAfterLastSlash == 2) {
           Preconditions.checkArgument(
-              path.charAt(i - 1) != '.' || path.charAt(i - 2) != '.', "dot-dot in path: %s", path);
+              path.charAt(i - 1) != '.' || path.charAt(i - 2) != '.',
+              "dot-dot in path: %s",
+              pathSubstring);
         }
         String segment = path.substring(offsetAfterLastSlash, i);
         segments.add(segment.intern());
