@@ -301,6 +301,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   private void addCriticalPathEvents(CommandEvent.Finished finished) {
     for (CriticalPathReportableNode node : criticalPathEventListener.getCriticalPathReportNodes()) {
+      if (node.getEventNanoTime() == 0L) {
+        // Don't create events for place holder critical path nodes that fetched from cache
+        continue;
+      }
       long startMicros =
           TimeUnit.NANOSECONDS.toMicros(
               node.getEventNanoTime() - TimeUnit.MILLISECONDS.toNanos(node.getElapsedTimeMs()));
