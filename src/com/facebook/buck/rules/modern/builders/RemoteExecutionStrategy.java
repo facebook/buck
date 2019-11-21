@@ -73,6 +73,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.OptionalLong;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
@@ -251,7 +252,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   Optional.of(ruleContext.timeMsInState),
                   Optional.of(ruleContext.timeMsAfterState),
                   Status.UNKNOWN,
-                  ruleContext.lastNonTerminalState);
+                  ruleContext.lastNonTerminalState,
+                  OptionalInt.empty());
             } else {
               // actionInfo and executionInfo must be set at this point
               Preconditions.checkState(actionInfo.get() != null);
@@ -269,12 +271,17 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   Optional.of(ruleContext.timeMsInState),
                   Optional.of(ruleContext.timeMsAfterState),
                   Status.OK,
-                  ruleContext.lastNonTerminalState);
+                  ruleContext.lastNonTerminalState,
+                  OptionalInt.of(0));
             }
           }
 
           @Override
           public void onFailure(Throwable t) {
+            OptionalInt exitCode =
+                t instanceof StepFailedException
+                    ? ((StepFailedException) t).getExitCode()
+                    : OptionalInt.empty();
             RemoteExecutionActionEvent.sendTerminalEvent(
                 eventBus,
                 t instanceof InterruptedException ? State.ACTION_CANCELLED : State.ACTION_FAILED,
@@ -285,8 +292,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 Optional.empty(),
                 Optional.of(ruleContext.timeMsInState),
                 Optional.of(ruleContext.timeMsAfterState),
-                Status.fromThrowable(t),
-                ruleContext.lastNonTerminalState);
+                exitCode.isPresent() ? Status.OK : Status.fromThrowable(t),
+                ruleContext.lastNonTerminalState,
+                exitCode);
           }
         },
         MoreExecutors.directExecutor());

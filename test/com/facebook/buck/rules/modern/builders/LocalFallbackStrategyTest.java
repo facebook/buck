@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
@@ -29,12 +30,18 @@ import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.facebook.buck.rules.modern.builders.LocalFallbackStrategy.FallbackStrategyBuildResult;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.grpc.Status;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.ExecutionException;
 import org.easymock.Capture;
 import org.easymock.CaptureType;
@@ -52,6 +59,7 @@ public class LocalFallbackStrategyTest {
   private ListeningExecutorService directExecutor;
   private BuckEventBus eventBus;
   private RemoteRuleContext ruleContext;
+  private ExecutionContext executionContext;
 
   @Before
   public void setUp() {
@@ -61,6 +69,7 @@ public class LocalFallbackStrategyTest {
     directExecutor = MoreExecutors.newDirectExecutorService();
     eventBus = EasyMock.createNiceMock(BuckEventBus.class);
     ruleContext = new RemoteRuleContext(eventBus, buildRule(RULE_NAME));
+    executionContext = TestExecutionContext.newInstance();
   }
 
   @After
@@ -140,6 +149,51 @@ public class LocalFallbackStrategyTest {
     LocalFallbackEvent.Finished finishedEvent = (LocalFallbackEvent.Finished) events.get(5);
     Assert.assertEquals(finishedEvent.getRemoteGrpcStatus(), Status.DEADLINE_EXCEEDED);
     Assert.assertEquals(finishedEvent.getLastNonTerminalState(), State.EXECUTING);
+    Assert.assertEquals(finishedEvent.getExitCode(), OptionalInt.empty());
+  }
+
+  @Test
+  public void testExitCode() throws ExecutionException, InterruptedException {
+    Capture<LocalFallbackEvent> eventCapture = Capture.newInstance(CaptureType.ALL);
+    eventBus.post(EasyMock.capture(eventCapture));
+    EasyMock.expectLastCall().times(2);
+    EasyMock.replay(eventBus);
+
+    EasyMock.expect(strategyBuildResult.getBuildResult())
+        .andReturn(
+            Futures.immediateFailedFuture(
+                StepFailedException.createForFailingStepWithExitCode(
+                    new AbstractExecutionStep("remote_execution") {
+                      @Override
+                      public StepExecutionResult execute(ExecutionContext context) {
+                        throw new RuntimeException();
+                      }
+                    },
+                    executionContext,
+                    ImmutableStepExecutionResult.builder().setExitCode(1).setStderr("").build())))
+        .times(2);
+    BuildResult localResult = successBuildResult("//local/did:though");
+    EasyMock.expect(buildStrategyContext.runWithDefaultBehavior())
+        .andReturn(Futures.immediateFuture(Optional.of(localResult)))
+        .once();
+    EasyMock.expect(buildStrategyContext.getExecutorService()).andReturn(directExecutor).once();
+    EasyMock.expect(strategyBuildResult.getRuleContext()).andReturn(ruleContext);
+
+    EasyMock.replay(strategyBuildResult, buildStrategyContext);
+    FallbackStrategyBuildResult fallbackStrategyBuildResult =
+        new FallbackStrategyBuildResult(
+            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, true, false);
+    Assert.assertEquals(
+        localResult.getStatus(),
+        fallbackStrategyBuildResult.getBuildResult().get().get().getStatus());
+    EasyMock.verify(strategyBuildResult, buildStrategyContext);
+
+    List<LocalFallbackEvent> events = eventCapture.getValues();
+    Assert.assertTrue(events.get(0) instanceof LocalFallbackEvent.Started);
+    Assert.assertTrue(events.get(1) instanceof LocalFallbackEvent.Finished);
+    LocalFallbackEvent.Finished finishedEvent = (LocalFallbackEvent.Finished) events.get(1);
+    Assert.assertEquals(finishedEvent.getRemoteGrpcStatus(), Status.OK);
+    Assert.assertEquals(finishedEvent.getExitCode(), OptionalInt.of(1));
   }
 
   @Test

@@ -28,6 +28,7 @@ import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent.Result;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
+import com.facebook.buck.step.StepFailedException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Futures;
@@ -38,6 +39,7 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -116,6 +118,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     private Optional<String> remoteBuildErrorMessage;
     private Status remoteGrpcStatus;
     private State lastNonTerminalState;
+    private OptionalInt exitCode;
 
     public FallbackStrategyBuildResult(
         String buildTarget,
@@ -140,6 +143,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       this.localFallbackDisabledOnCorruptedArtifacts = localFallbackDisabledOnCorruptedArtifacts;
       this.remoteGrpcStatus = Status.fromCode(Status.Code.OK);
       this.lastNonTerminalState = State.WAITING;
+      this.exitCode = OptionalInt.empty();
 
       this.eventBus.post(this.startedEvent);
       this.remoteStrategyBuildResult
@@ -231,7 +235,11 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
           t, "Remote build failed for a build rule so trying locally now for [%s].", buildTarget);
       remoteBuildResult =
           Optional.of(t instanceof InterruptedException ? Result.INTERRUPTED : Result.EXCEPTION);
-      remoteGrpcStatus = Status.fromThrowable(t);
+      exitCode =
+          t instanceof StepFailedException
+              ? ((StepFailedException) t).getExitCode()
+              : OptionalInt.empty();
+      remoteGrpcStatus = exitCode.isPresent() ? Status.OK : Status.fromThrowable(t);
 
       if (remoteStrategyBuildResult
           instanceof RemoteExecutionStrategy.RemoteExecutionStrategyBuildResult) {
@@ -317,7 +325,8 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
               remoteExecutionTimer.elapsed(TimeUnit.MILLISECONDS),
               remoteBuildErrorMessage,
               remoteGrpcStatus,
-              lastNonTerminalState));
+              lastNonTerminalState,
+              exitCode));
     }
 
     private void completeCombinedFutureWithException(
@@ -330,7 +339,8 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
               remoteExecutionTimer.elapsed(TimeUnit.MILLISECONDS),
               remoteBuildErrorMessage,
               remoteGrpcStatus,
-              lastNonTerminalState));
+              lastNonTerminalState,
+              exitCode));
     }
   }
 }

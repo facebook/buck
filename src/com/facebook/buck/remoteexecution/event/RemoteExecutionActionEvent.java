@@ -35,6 +35,7 @@ import com.google.common.base.Preconditions;
 import io.grpc.Status;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 /** Tracks events related to Remote Execution Actions. */
 public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
@@ -93,7 +94,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       Optional<Map<State, Long>> stateMetadata,
       Optional<Map<State, Long>> stateWaitingMetadata,
       Status grpcStatus,
-      State lastNonTerminalState) {
+      State lastNonTerminalState,
+      OptionalInt exitCode) {
     final Terminal event =
         new Terminal(
             state,
@@ -104,7 +106,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
             stateMetadata,
             stateWaitingMetadata,
             grpcStatus,
-            lastNonTerminalState);
+            lastNonTerminalState,
+            exitCode);
     eventBus.post(event);
   }
 
@@ -129,6 +132,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     private final Optional<Map<State, Long>> stateWaitingMetadata;
     private final Status grpcStatus;
     private final State lastNonTerminalState;
+    private final OptionalInt exitCode;
 
     @VisibleForTesting
     Terminal(
@@ -140,7 +144,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
         Optional<Map<State, Long>> stateMetadata,
         Optional<Map<State, Long>> stateWaitingMetadata,
         Status grpcStatus,
-        State lastNonTerminalState) {
+        State lastNonTerminalState,
+        OptionalInt exitCode) {
       super(EventKey.unique());
       Preconditions.checkArgument(
           RemoteExecutionActionEvent.isTerminalState(state),
@@ -155,6 +160,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       this.stateWaitingMetadata = stateWaitingMetadata;
       this.grpcStatus = grpcStatus;
       this.lastNonTerminalState = lastNonTerminalState;
+      this.exitCode = exitCode;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -203,6 +209,10 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
     public State getLastNonTerminalState() {
       return lastNonTerminalState;
+    }
+
+    public OptionalInt getExitCode() {
+      return exitCode;
     }
 
     @JsonIgnore

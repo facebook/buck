@@ -23,6 +23,7 @@ import com.facebook.buck.core.exceptions.WrapsException;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 public class StepFailedException extends Exception implements WrapsException, ExceptionWithContext {
 
@@ -30,12 +31,15 @@ public class StepFailedException extends Exception implements WrapsException, Ex
 
   private final Step step;
   private final String description;
+  private final OptionalInt exitCode;
 
   /** Callers should use {@link #createForFailingStepWithExitCode} unless in a unit test. */
-  private StepFailedException(Throwable cause, Step step, String description) {
+  private StepFailedException(
+      Throwable cause, Step step, String description, OptionalInt exitCode) {
     super(cause);
     this.step = step;
     this.description = description;
+    this.exitCode = exitCode;
   }
 
   @Override
@@ -57,8 +61,13 @@ public class StepFailedException extends Exception implements WrapsException, Ex
         .getStderr()
         .ifPresent(stderr -> appendToErrorMessage(messageBuilder, "stderr", stderr, false));
 
-    return createForFailingStepWithException(
-        step, context, new HumanReadableException(messageBuilder.toString()));
+    StepFailedException ret =
+        new StepFailedException(
+            new HumanReadableException(messageBuilder.toString()),
+            step,
+            descriptionForStep(step, context),
+            OptionalInt.of(exitCode));
+    return ret;
   }
 
   private static StringBuilder appendToErrorMessage(
@@ -73,7 +82,8 @@ public class StepFailedException extends Exception implements WrapsException, Ex
 
   static StepFailedException createForFailingStepWithException(
       Step step, ExecutionContext context, Throwable throwable) {
-    return new StepFailedException(throwable, step, descriptionForStep(step, context));
+    return new StepFailedException(
+        throwable, step, descriptionForStep(step, context), OptionalInt.empty());
   }
 
   private static String descriptionForStep(Step step, ExecutionContext context) {
@@ -84,6 +94,10 @@ public class StepFailedException extends Exception implements WrapsException, Ex
 
   public Step getStep() {
     return step;
+  }
+
+  public OptionalInt getExitCode() {
+    return exitCode;
   }
 
   @Override

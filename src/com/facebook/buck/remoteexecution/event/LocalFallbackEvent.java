@@ -21,6 +21,7 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import io.grpc.Status;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 /** Event containing info about single BuildRule executions inside LocalFallbackStrategy. */
 public abstract class LocalFallbackEvent extends AbstractBuckEvent {
@@ -57,7 +58,8 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
         long remoteDurationMillis,
         Optional<String> remoteErrorMessage,
         Status remoteGrpcStatus,
-        State lastNonTerminalState) {
+        State lastNonTerminalState,
+        OptionalInt exitCode) {
       return new Finished(
           this,
           remoteResult,
@@ -65,7 +67,8 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
           remoteDurationMillis,
           remoteErrorMessage,
           remoteGrpcStatus,
-          lastNonTerminalState);
+          lastNonTerminalState,
+          exitCode);
     }
 
     public String getBuildTarget() {
@@ -87,6 +90,7 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
     private final Optional<String> remoteErrorMessage;
     private final Status remoteGrpcStatus;
     private final State lastNonTerminalState;
+    private final OptionalInt exitCode;
 
     private Finished(
         Started startedEvent,
@@ -95,7 +99,8 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
         long remoteDurationMillis,
         Optional<String> remoteErrorMessage,
         Status remoteGrpcStatus,
-        State lastNonTerminalState) {
+        State lastNonTerminalState,
+        OptionalInt exitCode) {
       this.startedEvent = startedEvent;
       this.remoteResult = remoteResult;
       this.localResult = localResult;
@@ -103,6 +108,7 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
       this.remoteErrorMessage = remoteErrorMessage;
       this.remoteGrpcStatus = remoteGrpcStatus;
       this.lastNonTerminalState = lastNonTerminalState;
+      this.exitCode = exitCode;
     }
 
     public Started getStartedEvent() {
@@ -131,6 +137,10 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
 
     public State getLastNonTerminalState() {
       return lastNonTerminalState;
+    }
+
+    public OptionalInt getExitCode() {
+      return exitCode;
     }
 
     @Override
