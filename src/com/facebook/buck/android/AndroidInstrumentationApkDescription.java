@@ -190,8 +190,7 @@ public class AndroidInstrumentationApkDescription
             buildTarget.getTargetConfiguration(),
             AndroidPlatformTarget.class);
 
-    String dexTool =
-        AndroidBinaryGraphEnhancerFactory.chooseDexTool(args.getDexTool(), javaBuckConfig);
+    String dexTool = args.getDexTool();
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             toolchainProvider,
@@ -332,7 +331,7 @@ public class AndroidInstrumentationApkDescription
 
     @Value.Default
     default String getDexTool() {
-      return DxStep.DEFAULT;
+      return DxStep.D8;
     }
   }
 }

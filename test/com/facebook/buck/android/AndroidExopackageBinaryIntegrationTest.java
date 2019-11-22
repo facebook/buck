@@ -98,7 +98,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
             BuildTargetPaths.getScratchPath(
                 filesystem,
                 BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET)
-                    .withFlavors(InternalFlavor.of("dex"), InternalFlavor.of("split_dex_merge")),
+                    .withFlavors(InternalFlavor.of("d8"), InternalFlavor.of("split_dex_merge")),
                 "%s_output/secondary/jarfiles/assets/secondary-program-dex-jars"));
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(secondaryDir)) {

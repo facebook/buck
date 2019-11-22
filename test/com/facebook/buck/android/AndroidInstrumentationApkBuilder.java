@@ -80,4 +80,9 @@ public class AndroidInstrumentationApkBuilder
     getArgForPopulating().setApk(apk);
     return this;
   }
+
+  public AndroidInstrumentationApkBuilder setDexTool(String dexTool) {
+    getArgForPopulating().setDexTool(dexTool);
+    return this;
+  }
 }

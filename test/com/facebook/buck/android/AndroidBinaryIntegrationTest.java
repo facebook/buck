@@ -326,7 +326,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testDxFindsReferencedResources() {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
-    BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex");
+    BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#d8");
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     Optional<String> resourcesFromMetadata =
@@ -352,20 +352,20 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dex");
+    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#d8");
 
     workspace.replaceFileContents(
         "java/com/sample/lib/Sample.java", "import", "import /* no output change */");
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertNotTargetBuiltLocally("//java/com/sample/lib:lib#dex");
-    buildLog.assertTargetHadMatchingInputRuleKey("//java/com/sample/lib:lib#dex");
+    buildLog.assertNotTargetBuiltLocally("//java/com/sample/lib:lib#d8");
+    buildLog.assertTargetHadMatchingInputRuleKey("//java/com/sample/lib:lib#d8");
 
     workspace.replaceFileContents(
         "java/com/sample/lib/Sample.java", "import", "import /* \n some output change */");
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dex");
+    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#d8");
   }
 
   @Test
@@ -476,24 +476,6 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testSimpleD8App() {
     workspace.runBuckBuild("//apps/sample:app_with_d8").assertSuccess();
-  }
-
-  @Test
-  public void testExplicitDxApp() throws IOException {
-    // Make sure --config java.use_d8=true doesn't override `dex_tool = dx`
-    workspace
-        .runBuckBuild("//apps/sample:app_with_dx", "--config", "java.use_d8=true")
-        .assertSuccess();
-    BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dex");
-  }
-
-  @Test
-  public void testConfigControlsDefaultDexer() throws IOException {
-    // Make sure --config java.use_d8=true does override when `dex_tool` is not specified
-    workspace.runBuckBuild("//apps/sample:app", "--config", "java.use_d8=true").assertSuccess();
-    BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#d8");
   }
 
   @Test

@@ -153,7 +153,7 @@ public interface AndroidGraphEnhancerArgs
 
   @Value.Default
   default String getDexTool() {
-    return DxStep.DEFAULT;
+    return DxStep.D8;
   }
 
   Optional<SourcePath> getDexReorderToolFile();

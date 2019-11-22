@@ -463,19 +463,19 @@ public class AndroidBinaryGraphEnhancerTest {
 
     HasDexFiles preDexMergeRule = graphEnhancer.createPreDexMergeSingleDexRule(preDexedLibraries);
     BuildTarget dexMergeTarget =
-        BuildTargetFactory.newInstance("//java/com/example:apk#dex,single_dex_merge");
+        BuildTargetFactory.newInstance("//java/com/example:apk#d8,single_dex_merge");
     BuildRule dexMergeRule = graphBuilder.getRule(dexMergeTarget);
 
     assertEquals(dexMergeRule, preDexMergeRule);
 
     BuildTarget javaDep1DexBuildTarget =
-        javaDep1BuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR);
+        javaDep1BuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
     BuildTarget javaDep2DexBuildTarget =
-        javaDep2BuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR);
+        javaDep2BuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
     BuildTarget javaLibDexBuildTarget =
-        javaLibBuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR);
+        javaLibBuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
     assertThat(
-        "There should be a #dex rule for dep1 and lib, but not dep2 because it is in the no_dx "
+        "There should be a #d8 rule for dep1 and lib, but not dep2 because it is in the no_dx "
             + "list.  And we should depend on uber_r_dot_java",
         Iterables.transform(dexMergeRule.getBuildDeps(), BuildRule::getBuildTarget),
         allOf(
@@ -711,7 +711,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     @Value.Default
     String getDexTool() {
-      return DxStep.DX;
+      return DxStep.D8;
     }
   }
 

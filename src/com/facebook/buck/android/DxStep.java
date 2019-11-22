@@ -86,9 +86,6 @@ public class DxStep extends ShellStep {
 
   public static final String D8 = "d8";
 
-  /** --config java.use_d8 will decide which dexer default resolves to */
-  public static final String DEFAULT = "default";
-
   /**
    * this is nothing more than a heuristic based on looking around for ARG_MAX values. a proper way
    * might be to determine this value from the OS somehow (like sysconf(_SC_ARG_MAX)), but I haven't
@@ -128,7 +125,7 @@ public class DxStep extends ShellStep {
         outputDexFile,
         filesToDex,
         EnumSet.noneOf(DxStep.Option.class),
-        DX);
+        D8);
   }
 
   /**
@@ -238,6 +235,7 @@ public class DxStep extends ShellStep {
     String dx = androidPlatformTarget.getDxExecutable().toString();
 
     if (dexTool.equals(D8)) {
+      // FIXME: We use the dx description for this rule, even if d8 is in use.
       context.postEvent(
           ConsoleEvent.fine("Using %s instead of D8. D8 can only be used in-process.", dx));
     }

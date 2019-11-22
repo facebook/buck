@@ -41,7 +41,7 @@ public class DexWithClassesTest {
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
     JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget);
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#d8");
     DexProducedFromJavaLibrary dexFromJavaLibrary =
         new DexProducedFromJavaLibrary(
             buildTarget,
@@ -74,7 +74,7 @@ public class DexWithClassesTest {
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
     JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget);
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#d8");
     DexProducedFromJavaLibrary dexFromJavaLibrary =
         new DexProducedFromJavaLibrary(
             buildTarget,

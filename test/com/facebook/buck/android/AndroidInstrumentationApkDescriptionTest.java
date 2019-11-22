@@ -77,6 +77,7 @@ public class AndroidInstrumentationApkDescriptionTest {
         AndroidInstrumentationApkBuilder.createBuilder(target)
             .setManifest(FakeSourcePath.of("manifest.xml"))
             .setApk(androidBinary.getBuildTarget())
+            .setDexTool(DxStep.DX)
             .build();
 
     TargetGraph targetGraph =
