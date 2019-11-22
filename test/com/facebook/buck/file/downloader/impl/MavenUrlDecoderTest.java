@@ -147,6 +147,30 @@ public class MavenUrlDecoderTest {
 
     assertEquals(expected, seen);
   }
+  
+  @Test
+  public void parseMvnUrlWithDefaultDomainAndEggType() throws URISyntaxException {
+    URI seen =
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("http://foo.bar"), new URI("mvn:org.apache.karaf:apache-karaf:egg:3.0.8"));
+
+    URI expected =
+        new URI("http://foo.bar/org/apache/karaf/apache-karaf/3.0.8/apache-karaf-3.0.8.egg");
+
+    assertEquals(expected, seen);
+  }
+  
+  @Test
+  public void parseMvnUrlWithDefaultDomainAndWhlType() throws URISyntaxException {
+    URI seen =
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("http://foo.bar"), new URI("mvn:org.apache.karaf:apache-karaf:whl:3.0.8"));
+
+    URI expected =
+        new URI("http://foo.bar/org/apache/karaf/apache-karaf/3.0.8/apache-karaf-3.0.8.whl");
+
+    assertEquals(expected, seen);
+  }
 
   @Test
   public void parseMvnUrlWithCustomDomain() throws URISyntaxException {
