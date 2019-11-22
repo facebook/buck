@@ -90,11 +90,10 @@ class ProjectBuildFileParserPool implements AutoCloseable {
 
     if (shouldUsePoolForCell(cell)) {
       return getResourcePoolForCell(buckEventBus, cell, watchman)
-          .scheduleOperationWithResource(
-              parser -> parser.getBuildFileManifest(buildFile), executorService);
+          .scheduleOperationWithResource(parser -> parser.getManifest(buildFile), executorService);
     }
     ProjectBuildFileParser parser = getParserForCell(buckEventBus, cell, watchman);
-    return executorService.submit(() -> parser.getBuildFileManifest(buildFile));
+    return executorService.submit(() -> parser.getManifest(buildFile));
   }
 
   private synchronized ResourcePool<ProjectBuildFileParser> getResourcePoolForCell(

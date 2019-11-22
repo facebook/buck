@@ -60,7 +60,7 @@ public class CachingProjectBuildFileParserDecoratorTest {
   class FakeProjectBuildParser implements ProjectBuildFileParser {
 
     @Override
-    public BuildFileManifest getBuildFileManifest(Path buildFile) throws BuildFileParseException {
+    public BuildFileManifest getManifest(Path buildFile) throws BuildFileParseException {
       ImmutableMap<String, Object> targetMap = ImmutableMap.of("foo", "foo", "bar", "bar");
 
       return ImmutableBuildFileManifest.of(
@@ -107,7 +107,7 @@ public class CachingProjectBuildFileParserDecoratorTest {
   public void setUp() throws IOException, InterruptedException {
     filesystem = FakeProjectFilesystem.createRealTempFilesystem();
     fakeParser = new FakeProjectBuildParser();
-    fakeParserManifest = fakeParser.getBuildFileManifest(filesystem.resolve("BUCK"));
+    fakeParserManifest = fakeParser.getManifest(filesystem.resolve("BUCK"));
   }
 
   @Test
@@ -122,8 +122,7 @@ public class CachingProjectBuildFileParserDecoratorTest {
             filesystem,
             new FakeFileHashCache(ImmutableMap.of()));
 
-    BuildFileManifest cachingParserManifest =
-        cachingParser.getBuildFileManifest(filesystem.resolve("BUCK"));
+    BuildFileManifest cachingParserManifest = cachingParser.getManifest(filesystem.resolve("BUCK"));
 
     assertEquals(fakeParserManifest, cachingParserManifest);
   }
@@ -154,8 +153,7 @@ public class CachingProjectBuildFileParserDecoratorTest {
             filesystem,
             new FakeFileHashCache(ImmutableMap.of()));
 
-    BuildFileManifest cachingParserManifest =
-        cachingParser.getBuildFileManifest(filesystem.resolve("BUCK"));
+    BuildFileManifest cachingParserManifest = cachingParser.getManifest(filesystem.resolve("BUCK"));
 
     assertEquals(fakeParserManifest, cachingParserManifest);
   }
@@ -173,8 +171,7 @@ public class CachingProjectBuildFileParserDecoratorTest {
             filesystem,
             new FakeFileHashCache(ImmutableMap.of()));
 
-    BuildFileManifest cachingParserManifest =
-        cachingParser.getBuildFileManifest(filesystem.resolve("BUCK"));
+    BuildFileManifest cachingParserManifest = cachingParser.getManifest(filesystem.resolve("BUCK"));
 
     assertEquals(fakeParserManifest, cachingParserManifest);
   }

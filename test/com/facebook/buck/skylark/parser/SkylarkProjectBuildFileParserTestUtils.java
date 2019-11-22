@@ -113,7 +113,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
   static Map<String, Object> getSingleRule(
       SkylarkProjectBuildFileParser parser, java.nio.file.Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
+    BuildFileManifest buildFileManifest = parser.getManifest(buildFile);
     assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
     return Iterables.getOnlyElement(buildFileManifest.getTargets().values());
   }

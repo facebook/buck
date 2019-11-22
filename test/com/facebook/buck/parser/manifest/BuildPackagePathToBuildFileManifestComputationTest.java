@@ -35,7 +35,7 @@ public class BuildPackagePathToBuildFileManifestComputationTest {
 
     ProjectBuildFileParser parser = createMock(ProjectBuildFileParser.class);
 
-    expect(parser.getBuildFileManifest(eq(Paths.get("/root/package/BUCK"))))
+    expect(parser.getManifest(eq(Paths.get("/root/package/BUCK"))))
         .andReturn(createMock(BuildFileManifest.class))
         .once();
     replay(parser);

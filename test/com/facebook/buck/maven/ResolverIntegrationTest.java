@@ -196,7 +196,7 @@ public class ResolverIntegrationTest {
     assertEquals(expected, seen);
 
     ImmutableMap<String, ImmutableMap<String, Object>> rules =
-        buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
+        buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
 
     assertEquals(1, rules.size());
     Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
@@ -222,7 +222,7 @@ public class ResolverIntegrationTest {
 
     Path groupDir = thirdParty.resolve("example");
     ImmutableMap<String, ImmutableMap<String, Object>> rules =
-        buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
+        buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
 
     Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
     assertEquals("with-sources-1.0-sources.jar", rule.get("sourceJar"));
@@ -236,14 +236,14 @@ public class ResolverIntegrationTest {
     Map<String, Object> withDeps =
         Iterables.getOnlyElement(
             buildFileParser
-                .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
+                .getManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
                 .getTargets()
                 .values());
     Path otherDir = thirdPartyRelative.resolve("othercorp");
     Map<String, Object> noDeps =
         Iterables.getOnlyElement(
             buildFileParser
-                .getBuildFileManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"))
+                .getManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"))
                 .getTargets()
                 .values());
 
@@ -272,9 +272,7 @@ public class ResolverIntegrationTest {
 
     Path exampleDir = thirdPartyRelative.resolve("example");
     ImmutableMap<String, ImmutableMap<String, Object>> allTargets =
-        buildFileParser
-            .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
-            .getTargets();
+        buildFileParser.getManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK")).getTargets();
 
     assertEquals(2, allTargets.size());
 

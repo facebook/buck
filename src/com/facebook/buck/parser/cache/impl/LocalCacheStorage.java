@@ -176,8 +176,7 @@ public class LocalCacheStorage implements ParserCacheStorage {
     } finally {
       if (timer != null) {
         LOG.verbose(
-            "Time to complete getBuildFileManifest: %d ns.",
-            timer.stop().elapsed(TimeUnit.NANOSECONDS));
+            "Time to complete getManifest: %d ns.", timer.stop().elapsed(TimeUnit.NANOSECONDS));
       }
     }
   }

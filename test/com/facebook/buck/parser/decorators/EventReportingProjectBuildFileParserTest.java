@@ -81,7 +81,7 @@ public class EventReportingProjectBuildFileParserTest {
     private boolean isClosed;
 
     @Override
-    public BuildFileManifest getBuildFileManifest(Path buildFile) {
+    public BuildFileManifest getManifest(Path buildFile) {
       return allRulesAndMetadata;
     }
 
@@ -124,8 +124,8 @@ public class EventReportingProjectBuildFileParserTest {
   @Test
   public void startEventIsRecordedOnlyOnce() throws Exception {
     assertFalse(listener.isStarted());
-    parser.getBuildFileManifest(SOME_PATH);
-    parser.getBuildFileManifest(SOME_PATH);
+    parser.getManifest(SOME_PATH);
+    parser.getManifest(SOME_PATH);
     assertTrue(listener.isStarted());
     assertThat(listener.getStartedCount(), Matchers.is(1));
   }
@@ -133,7 +133,7 @@ public class EventReportingProjectBuildFileParserTest {
   @Test
   public void getBuildFileManifestFiresStartEvent() throws Exception {
     assertFalse(listener.isStarted());
-    parser.getBuildFileManifest(SOME_PATH);
+    parser.getManifest(SOME_PATH);
     assertTrue(listener.isStarted());
   }
 
@@ -147,7 +147,7 @@ public class EventReportingProjectBuildFileParserTest {
             Optional.empty(),
             ImmutableList.of(),
             ImmutableList.of());
-    assertSame(allRulesAndMetadata, parser.getBuildFileManifest(SOME_PATH));
+    assertSame(allRulesAndMetadata, parser.getManifest(SOME_PATH));
   }
 
   @Test
@@ -159,7 +159,7 @@ public class EventReportingProjectBuildFileParserTest {
 
   @Test
   public void closeReportsFinishedEvent() throws Exception {
-    parser.getBuildFileManifest(SOME_PATH);
+    parser.getManifest(SOME_PATH);
     assertFalse(listener.isFinished());
     parser.close();
     assertTrue(listener.isFinished());

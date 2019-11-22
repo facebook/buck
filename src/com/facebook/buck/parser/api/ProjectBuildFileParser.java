@@ -16,35 +16,16 @@
 
 package com.facebook.buck.parser.api;
 
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 
 /** Parses buck build files (usually BUCK files) and retrieve rule information from them. */
-public interface ProjectBuildFileParser extends AutoCloseable {
-
-  /**
-   * Collect all rules from a particular build file, along with meta rules about the rules, for
-   * example which build files the rules depend on.
-   *
-   * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
-   */
-  BuildFileManifest getBuildFileManifest(Path buildFile)
-      throws BuildFileParseException, InterruptedException, IOException;
+public interface ProjectBuildFileParser extends FileParser<BuildFileManifest> {
 
   /** Reports profile information captured while parsing build files. */
   void reportProfile() throws IOException;
-
-  /**
-   * Collects the loaded build file and extensions when parsing the {@code buildFile} build spec.
-   *
-   * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
-   */
-  ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
-      throws BuildFileParseException, InterruptedException, IOException;
 
   /**
    * Checks if existing {@code GlobSpec}s with results are the same as current state in the file
@@ -59,7 +40,4 @@ public interface ProjectBuildFileParser extends AutoCloseable {
   boolean globResultsMatchCurrentState(
       Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
       throws IOException, InterruptedException;
-
-  @Override
-  void close() throws BuildFileParseException, InterruptedException, IOException;
 }

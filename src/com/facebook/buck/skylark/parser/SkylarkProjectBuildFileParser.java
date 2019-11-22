@@ -168,7 +168,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     LOG.verbose("Started parsing build file %s", buildFile);
     ParseBuckFileEvent.Started startEvent =

@@ -158,7 +158,7 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
     } finally {
       timer.stop();
       LOG.debug(
-          "Time to complete RemoteManifestServiceCacheStorage.getBuildFileManifest method: %d.",
+          "Time to complete RemoteManifestServiceCacheStorage.getManifest method: %d.",
           timer.elapsed(TimeUnit.NANOSECONDS));
     }
   }

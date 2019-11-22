@@ -379,7 +379,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException {
     LOG.verbose("Started parsing build file %s", buildFile);
     try {
@@ -842,7 +842,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException {
-    return getBuildFileManifest(buildFile).getIncludes();
+    return getManifest(buildFile).getIncludes();
   }
 
   @Override

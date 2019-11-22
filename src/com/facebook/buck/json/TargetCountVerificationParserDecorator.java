@@ -68,9 +68,9 @@ public class TargetCountVerificationParserDecorator
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    BuildFileManifest targetManifest = delegate.getBuildFileManifest(buildFile);
+    BuildFileManifest targetManifest = delegate.getManifest(buildFile);
     maybePostWarningAboutTooManyTargets(buildFile, targetManifest.getTargets().size());
     return targetManifest;
   }

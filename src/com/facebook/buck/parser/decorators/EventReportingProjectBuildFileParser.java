@@ -63,10 +63,10 @@ public class EventReportingProjectBuildFileParser
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     maybePostStartEvent();
-    return delegate.getBuildFileManifest(buildFile);
+    return delegate.getManifest(buildFile);
   }
 
   @Override

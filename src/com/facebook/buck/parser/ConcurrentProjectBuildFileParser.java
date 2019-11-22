@@ -38,10 +38,9 @@ import javax.annotation.Nullable;
  * <p>This {@link PythonDslProjectBuildFileParser} wrapper creates new instances of delegated parser
  * using a provided factory and adds them to worker pool. If free parser is available at the time a
  * request is made, it is reused, if not then it is recreated. Once parsing request (aka {@link
- * ProjectBuildFileParser#getBuildFileManifest(Path)} is complete, parser is returned to the worker
- * pool. Worker pool of parsers can grow unconditionally so it is really up to the user of this
- * class to manage concurrency level by calling this class' methods appropriate number of times in
- * parallel.
+ * ProjectBuildFileParser#getManifest(Path)} is complete, parser is returned to the worker pool.
+ * Worker pool of parsers can grow unconditionally so it is really up to the user of this class to
+ * manage concurrency level by calling this class' methods appropriate number of times in parallel.
  *
  * <p>Note that {@link ConcurrentProjectBuildFileParser#reportProfile()} and {@link
  * ConcurrentProjectBuildFileParser#close()} are not synchronized with the worker pool and just call
@@ -90,10 +89,10 @@ public class ConcurrentProjectBuildFileParser implements ProjectBuildFileParser 
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     try (CloseableWrapper<ProjectBuildFileParser> wrapper = getWrapper()) {
-      return wrapper.get().getBuildFileManifest(buildFile);
+      return wrapper.get().getManifest(buildFile);
     }
   }
 

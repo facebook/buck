@@ -74,30 +74,27 @@ public class HybridProjectBuildFileParserTest {
 
   @Test
   public void getAllRulesCallsPythonDslParserWhenRequestedExplicitly() throws Exception {
-    EasyMock.expect(pythonDslParser.getBuildFileManifest(buildFile))
-        .andReturn(EMPTY_BUILD_FILE_MANIFEST);
+    EasyMock.expect(pythonDslParser.getManifest(buildFile)).andReturn(EMPTY_BUILD_FILE_MANIFEST);
     EasyMock.replay(pythonDslParser);
     Files.write(buildFile, getParserDirectiveFor(Syntax.PYTHON_DSL).getBytes());
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
     EasyMock.verify(pythonDslParser);
   }
 
   @Test
   public void getAllRulesCallsPythonDslParserByDefault() throws Exception {
-    EasyMock.expect(pythonDslParser.getBuildFileManifest(buildFile))
-        .andReturn(EMPTY_BUILD_FILE_MANIFEST);
+    EasyMock.expect(pythonDslParser.getManifest(buildFile)).andReturn(EMPTY_BUILD_FILE_MANIFEST);
     EasyMock.replay(pythonDslParser);
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
     EasyMock.verify(pythonDslParser);
   }
 
   @Test
   public void getAllRulesCallsSkylarkParserByWhenItIsRequestedExplicitly() throws Exception {
-    EasyMock.expect(skylarkParser.getBuildFileManifest(buildFile))
-        .andReturn(EMPTY_BUILD_FILE_MANIFEST);
+    EasyMock.expect(skylarkParser.getManifest(buildFile)).andReturn(EMPTY_BUILD_FILE_MANIFEST);
     EasyMock.replay(skylarkParser);
     Files.write(buildFile, getParserDirectiveFor(Syntax.SKYLARK).getBytes());
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
     EasyMock.verify(skylarkParser);
   }
 
@@ -107,7 +104,7 @@ public class HybridProjectBuildFileParserTest {
     thrown.expectMessage(
         "Unrecognized syntax [SKILARK] requested for build file [" + buildFile + "]");
     Files.write(buildFile, "# BUILD FILE SYNTAX: SKILARK".getBytes());
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -118,7 +115,7 @@ public class HybridProjectBuildFileParserTest {
         HybridProjectBuildFileParser.using(
             ImmutableMap.of(Syntax.SKYLARK, skylarkParser), Syntax.SKYLARK);
     Files.write(buildFile, "# BUILD FILE SYNTAX: PYTHON_DSL".getBytes());
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test

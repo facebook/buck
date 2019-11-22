@@ -102,7 +102,7 @@ public class SkylarkUserDefinedRulesParserTest {
     thrown.expect(BuildFileParseException.class);
 
     try {
-      parser.getBuildFileManifest(buildFile);
+      parser.getManifest(buildFile);
 
     } catch (BuildFileParseException e) {
       Event event = eventCollector.iterator().next();
@@ -129,7 +129,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -138,7 +138,7 @@ public class SkylarkUserDefinedRulesParserTest {
     Path buildFile = projectFilesystem.resolve("int").resolve("well_formed").resolve("BUCK");
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -161,7 +161,7 @@ public class SkylarkUserDefinedRulesParserTest {
     Path buildFile = projectFilesystem.resolve("bool").resolve("well_formed").resolve("BUCK");
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -184,7 +184,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -209,7 +209,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -235,7 +235,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -245,7 +245,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -299,7 +299,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -341,7 +341,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -366,7 +366,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -390,7 +390,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -431,7 +431,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -598,7 +598,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    BuildFileManifest rules = parser.getBuildFileManifest(buildFile);
+    BuildFileManifest rules = parser.getManifest(buildFile);
 
     assertEquals(expected, rules.getTargets());
   }
@@ -642,7 +642,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    BuildFileManifest rules = parser.getBuildFileManifest(buildFile);
+    BuildFileManifest rules = parser.getManifest(buildFile);
 
     assertEquals(expected, rules.getTargets());
   }
@@ -667,7 +667,7 @@ public class SkylarkUserDefinedRulesParserTest {
     assertNull(knownUserDefinedRuleTypes.getRule(rule1Identifier));
     assertNull(knownUserDefinedRuleTypes.getRule(rule2Identifier));
 
-    BuildFileManifest rules = parser.getBuildFileManifest(buildFile);
+    BuildFileManifest rules = parser.getManifest(buildFile);
     assertEquals(2, rules.getTargets().size());
 
     SkylarkUserDefinedRule rule1 = knownUserDefinedRuleTypes.getRule(rule1Identifier);
@@ -683,7 +683,7 @@ public class SkylarkUserDefinedRulesParserTest {
     workspace.writeContentsToPath(
         replacement, projectFilesystem.resolve("subdir").resolve("defs.bzl"));
     parser = createParser(eventCollector);
-    rules = parser.getBuildFileManifest(buildFile);
+    rules = parser.getManifest(buildFile);
     assertEquals(2, rules.getTargets().size());
 
     rule1 = knownUserDefinedRuleTypes.getRule(rule1Identifier);
@@ -710,7 +710,7 @@ public class SkylarkUserDefinedRulesParserTest {
     assertNull(knownUserDefinedRuleTypes.getRule(rule1Identifier));
     assertNull(knownUserDefinedRuleTypes.getRule(rule2Identifier));
 
-    BuildFileManifest rules = parser.getBuildFileManifest(buildFile);
+    BuildFileManifest rules = parser.getManifest(buildFile);
     assertEquals(2, rules.getTargets().size());
 
     SkylarkUserDefinedRule rule1 = knownUserDefinedRuleTypes.getRule(rule1Identifier);
@@ -748,7 +748,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(collector);
 
     thrown.expect(BuildFileParseException.class);
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -761,7 +761,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(collector);
 
     thrown.expect(BuildFileParseException.class);
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -773,7 +773,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(collector);
 
     thrown.expect(BuildFileParseException.class);
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -785,7 +785,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(collector);
 
     thrown.expect(BuildFileParseException.class);
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -797,7 +797,7 @@ public class SkylarkUserDefinedRulesParserTest {
     EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
     parser = createParser(collector);
 
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 
   @Test
@@ -811,6 +811,6 @@ public class SkylarkUserDefinedRulesParserTest {
     // TODO(T48080142): When we wrap up all of these validation errors into something human
     // friendly, this will become a build file error
     thrown.expect(NullPointerException.class);
-    parser.getBuildFileManifest(buildFile);
+    parser.getManifest(buildFile);
   }
 }

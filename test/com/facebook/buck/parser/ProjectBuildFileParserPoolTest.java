@@ -146,7 +146,7 @@ public class ProjectBuildFileParserPoolTest {
 
               ProjectBuildFileParser parser = EasyMock.createMock(ProjectBuildFileParser.class);
               try {
-                EasyMock.expect(parser.getBuildFileManifest(EasyMock.anyObject(Path.class)))
+                EasyMock.expect(parser.getManifest(EasyMock.anyObject(Path.class)))
                     .andAnswer(
                         () -> {
                           createParserLatch.countDown();
@@ -365,7 +365,7 @@ public class ProjectBuildFileParserPoolTest {
   private ProjectBuildFileParser createMockParser(IAnswer<BuildFileManifest> parseFn) {
     ProjectBuildFileParser mock = EasyMock.createMock(ProjectBuildFileParser.class);
     try {
-      EasyMock.expect(mock.getBuildFileManifest(EasyMock.anyObject(Path.class)))
+      EasyMock.expect(mock.getManifest(EasyMock.anyObject(Path.class)))
           .andAnswer(parseFn)
           .anyTimes();
       mock.close();

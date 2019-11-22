@@ -57,9 +57,9 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    return getParserForBuildFile(buildFile).getBuildFileManifest(buildFile);
+    return getParserForBuildFile(buildFile).getManifest(buildFile);
   }
 
   @Override

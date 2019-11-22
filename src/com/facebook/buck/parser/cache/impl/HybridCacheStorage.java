@@ -145,7 +145,7 @@ public class HybridCacheStorage implements ParserCacheStorage {
         // TODO(buck_team): The serializeBuildFileManifestToBytes function returns a byte
         // representation
         // of the BuildFileManifest. It is possible to get this from the previous call to
-        // getBuildFileManifest,
+        // getManifest,
         // instead of recalculating it, but that would break the ParserStorage interface
         // encapsulation.
         // I expect this case to happen very rarely, since in most of the cases the cached results
@@ -167,7 +167,7 @@ public class HybridCacheStorage implements ParserCacheStorage {
     } finally {
       if (timer != null) {
         LOG.debug(
-            "Time to complete HybridCacheStorage.getBuildFileManifest method: %d ns.",
+            "Time to complete HybridCacheStorage.getManifest method: %d ns.",
             timer.stop().elapsed(TimeUnit.NANOSECONDS));
       }
     }

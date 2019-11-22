@@ -127,7 +127,7 @@ public class AuditRulesCommand extends AbstractCommand {
 
           // Parse the rules from the build file.
           ImmutableMap<String, ImmutableMap<String, Object>> rawRules =
-              parser.getBuildFileManifest(path).getTargets();
+              parser.getManifest(path).getTargets();
 
           // Format and print the rules from the raw data, filtered by type.
           ImmutableSet<String> types = getTypes();

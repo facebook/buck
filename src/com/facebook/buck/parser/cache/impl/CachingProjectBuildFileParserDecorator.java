@@ -77,7 +77,7 @@ public class CachingProjectBuildFileParserDecorator
 
   // calculate the globs state is proper for using the returned manifest from storage.
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
 
     @Nullable HashCode weakFingerprint = null;
@@ -104,7 +104,7 @@ public class CachingProjectBuildFileParserDecorator
           e, "Failure getting includes when getting the BuildFileManifest in caching decorator.");
     }
 
-    BuildFileManifest parsedManifest = delegate.getBuildFileManifest(buildFile);
+    BuildFileManifest parsedManifest = delegate.getManifest(buildFile);
 
     if (weakFingerprint != null && strongFingerprint != null) {
       try {

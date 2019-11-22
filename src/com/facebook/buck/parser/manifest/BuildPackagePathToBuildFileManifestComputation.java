@@ -74,7 +74,7 @@ public class BuildPackagePathToBuildFileManifestComputation
   public BuildFileManifest transform(
       BuildPackagePathToBuildFileManifestKey key, ComputationEnvironment env) throws Exception {
     try {
-      return parser.getBuildFileManifest(root.resolve(key.getPath()).resolve(buildFileName));
+      return parser.getManifest(root.resolve(key.getPath()).resolve(buildFileName));
     } catch (BuildFileParseException ex) {
       if (throwOnParseError) {
         throw ex;

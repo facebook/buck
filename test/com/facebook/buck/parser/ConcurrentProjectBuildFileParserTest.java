@@ -74,8 +74,8 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public BuildFileManifest getBuildFileManifest(Path buildFile) {
-      processCall("getBuildFileManifest");
+    public BuildFileManifest getManifest(Path buildFile) {
+      processCall("getManifest");
       return null;
     }
 
@@ -131,7 +131,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public BuildFileManifest getBuildFileManifest(Path buildFile) {
+    public BuildFileManifest getManifest(Path buildFile) {
       waitLatch();
       return null;
     }
@@ -176,8 +176,7 @@ public class ConcurrentProjectBuildFileParserTest {
       List<ListenableFuture<?>> futures = new ArrayList<>(ITERATIONS * 3);
 
       for (int i = 0; i < ITERATIONS; i++) {
-        futures.add(
-            executorService.submit(() -> buildFileParser.getBuildFileManifest(Paths.get(""))));
+        futures.add(executorService.submit(() -> buildFileParser.getManifest(Paths.get(""))));
         futures.add(executorService.submit(() -> buildFileParser.getIncludedFiles(Paths.get(""))));
         futures.add(
             executorService.submit(
@@ -257,8 +256,7 @@ public class ConcurrentProjectBuildFileParserTest {
         ListeningExecutorService executorService =
             MoreExecutors.listeningDecorator(fixedThreadExecutor);
         for (int i = 0; i < threads; i++) {
-          futures.add(
-              executorService.submit(() -> buildFileParser.getBuildFileManifest(Paths.get(""))));
+          futures.add(executorService.submit(() -> buildFileParser.getManifest(Paths.get(""))));
         }
         Futures.allAsList(futures).get();
       }

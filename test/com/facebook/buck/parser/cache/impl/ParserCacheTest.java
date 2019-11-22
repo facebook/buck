@@ -173,7 +173,7 @@ public class ParserCacheTest {
     }
 
     @Override
-    public BuildFileManifest getBuildFileManifest(Path buildFile) throws BuildFileParseException {
+    public BuildFileManifest getManifest(Path buildFile) throws BuildFileParseException {
       return null;
     }
 

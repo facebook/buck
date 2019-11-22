@@ -96,12 +96,11 @@ public class TargetCountVerificationParserDecoratorTest {
   @Test
   public void givenTargetCountExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsEmitted()
       throws Exception {
-    EasyMock.expect(parserMock.getBuildFileManifest(path))
-        .andReturn(toBuildFileManifest(this.rawTargets));
+    EasyMock.expect(parserMock.getManifest(path)).andReturn(toBuildFileManifest(this.rawTargets));
 
     TargetCountVerificationParserDecorator parserDelegate = newParserDelegate(3);
     EasyMock.replay(parserMock);
-    parserDelegate.getBuildFileManifest(path);
+    parserDelegate.getManifest(path);
 
     assertWarningIsEmitted();
   }
@@ -121,12 +120,11 @@ public class TargetCountVerificationParserDecoratorTest {
   public void
       givenTargetCountNotExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsNotEmitted()
           throws Exception {
-    EasyMock.expect(parserMock.getBuildFileManifest(path))
-        .andReturn(toBuildFileManifest(rawTargets));
+    EasyMock.expect(parserMock.getManifest(path)).andReturn(toBuildFileManifest(rawTargets));
 
     TargetCountVerificationParserDecorator parserDelegate = newParserDelegate(6);
     EasyMock.replay(parserMock);
-    parserDelegate.getBuildFileManifest(path);
+    parserDelegate.getManifest(path);
 
     assertWarningIsNotEmitted();
   }

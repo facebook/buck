@@ -245,7 +245,7 @@ public class HostInfoTest {
     Files.write(fs.resolve("file.bzl"), macroFile.getBytes(Charsets.UTF_8));
 
     SkylarkProjectBuildFileParser parser = createParser(cell.getFilesystem(), eventHandler);
-    parser.getBuildFileManifest(fs.resolve("BUCK"));
+    parser.getManifest(fs.resolve("BUCK"));
   }
 
   private SkylarkProjectBuildFileParser createParser(

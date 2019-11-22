@@ -39,9 +39,9 @@ public abstract class ForwardingProjectBuildFileParserDecorator implements Proje
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    return delegate.getBuildFileManifest(buildFile);
+    return delegate.getManifest(buildFile);
   }
 
   @Override
