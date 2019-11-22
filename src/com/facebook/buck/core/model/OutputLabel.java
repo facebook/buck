@@ -19,8 +19,33 @@ import com.google.common.base.Preconditions;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Type-safe wrapper for a target output label */
+/**
+ * Type-safe wrapper for a target output label.
+ *
+ * <p>A build target can return different outputs groups, with each output group potentially
+ * containing zero or more outputs. A target output label is used to refer to a particular output
+ * group in a target.
+ *
+ * <p>With providers, the output label maps to named output groups in {@link
+ * com.facebook.buck.core.rules.providers.lib.DefaultInfo}. With the old action graph, each rule
+ * should maintain an internal mapping of output labels to output groups.
+ *
+ * <p>A {@link #DEFAULT} output label is provided when the user has not specified a named output
+ * label in a build target. For example, "//foo:bar" would be associated with the default output
+ * label, whereas "//foo:bar[baz] would be associated with the named label "baz".
+ */
 public class OutputLabel implements Comparable<OutputLabel> {
+
+  /**
+   * Label denoting the default output group rather than a named output group.
+   *
+   * <p>With providers, this would be the default outputs from {@link
+   * com.facebook.buck.core.rules.providers.lib.DefaultInfo}. The default outputs can be the set of
+   * all possible outputs, a subset of all possible outputs, or an empty output group.
+   *
+   * <p>With the old action graph, this would be rule-dependent depending on how the rule implements
+   * {@link com.facebook.buck.core.rules.attr.HasMultipleOutputs#getSourcePathToOutput()}.
+   */
   public static final OutputLabel DEFAULT = new OutputLabel();
 
   private final String label;
