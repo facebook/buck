@@ -28,6 +28,22 @@ android_binary(
     ],
 )
 
+android_binary(
+    name = "xzs_multiple_dex",
+    dex_compression = "xzs",
+    keystore = "//keystores:debug",
+    linear_alloc_hard_limit = 3600,
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample2:lib",
+        "//java/com/sample3:lib",
+    ],
+)
+
 genrule(
     name = "disassemble_app_with_d8_for_canary",
     out = "disassembled_d8_canary.smali",

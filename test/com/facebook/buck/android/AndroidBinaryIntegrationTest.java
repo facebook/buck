@@ -57,8 +57,10 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -80,6 +82,7 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.tukaani.xz.XZInputStream;
 
 public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
@@ -110,11 +113,12 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   public void testNonExopackageHasSecondary() throws IOException {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
 
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(SIMPLE_TARGET), "%s.apk")));
+    Path apkPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(SIMPLE_TARGET), "%s.apk"));
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
 
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1.dex.jar");
@@ -126,6 +130,11 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     }
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
+
+    List<String> metadata =
+        zipInspector.getFileContentsLines("assets/secondary-program-dex-jars/metadata.txt");
+    assertEquals(metadata.get(0), ".id dex");
+    DexTestUtils.validateMetadata(apkPath);
   }
 
   @Test
@@ -133,7 +142,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     String target = "//apps/multidex:app_with_proguard";
     workspace.runBuckCommand("build", target).assertSuccess();
 
-    ZipInspector zipInspector = new ZipInspector(workspace.buildAndReturnOutput(target));
+    Path apkPath = workspace.buildAndReturnOutput(target);
+    ZipInspector zipInspector = new ZipInspector(apkPath);
 
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1.dex.jar");
@@ -145,6 +155,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     }
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
+    DexTestUtils.validateMetadata(apkPath);
   }
 
   @Test
@@ -152,11 +163,11 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult result = workspace.runBuckCommand("build", RAW_DEX_TARGET);
     result.assertSuccess();
 
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(RAW_DEX_TARGET), "%s.apk")));
+    Path apkPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(RAW_DEX_TARGET), "%s.apk"));
+    ZipInspector zipInspector = new ZipInspector(apkPath);
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
 
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/secondary-1.dex.jar");
@@ -288,6 +299,75 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
     buildLog.assertTargetBuiltLocally(target);
     buildLog.assertTargetIsAbsent("//java/com/sample/lib:lib");
+  }
+
+  @Test
+  public void testXzsMultipleSecondaryDexes() throws IOException {
+    Path apkPath = workspace.buildAndReturnOutput("//apps/multidex:xzs_multiple_dex");
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary.dex.jar.xzs");
+    List<String> metadata =
+        zipInspector.getFileContentsLines("assets/secondary-program-dex-jars/metadata.txt");
+    List<DexTestUtils.DexMetadata> moduleMetadata = DexTestUtils.moduleMetadata(metadata);
+    assertEquals(moduleMetadata.size(), 2);
+
+    // Checks that the metadata is ordered
+    DexTestUtils.validateMetadata(apkPath);
+
+    byte[] xzsBytes =
+        zipInspector.getFileContents("assets/secondary-program-dex-jars/secondary.dex.jar.xzs");
+    Path unpackedXzsPath =
+        workspace.getPath(apkPath.getParent().resolve("unxzs/secondary.dex.jar"));
+    unpackedXzsPath.getParent().toFile().mkdirs();
+    Files.copy(new XZInputStream(new ByteArrayInputStream(xzsBytes)), unpackedXzsPath);
+
+    ImmutableMap.Builder<Path, Integer> dexSizeMapBuilder = ImmutableMap.builder();
+    for (DexTestUtils.DexMetadata dexMetadata : moduleMetadata) {
+      String xzMeta =
+          zipInspector
+              .getFileContentsLines(
+                  "assets/secondary-program-dex-jars/" + dexMetadata.dexFile + ".meta")
+              .get(0);
+      int jarSize = readJarSize(xzMeta);
+      dexSizeMapBuilder.put(dexMetadata.dexFile, jarSize);
+    }
+    ImmutableMap<Path, Integer> dexSizeMap = dexSizeMapBuilder.build();
+
+    int totalDexSize =
+        moduleMetadata.stream()
+            .map(dexMetadata -> dexSizeMap.get(dexMetadata.dexFile))
+            .reduce(0, Integer::sum);
+    assertEquals(totalDexSize, unpackedXzsPath.toFile().length());
+
+    int i = 1;
+    FileInputStream jarConcatStream = new FileInputStream(unpackedXzsPath.toFile());
+    for (DexTestUtils.DexMetadata dexMetadata : moduleMetadata) {
+      int jarSize = dexSizeMap.get(dexMetadata.dexFile);
+      byte[] dexJarContents = new byte[jarSize];
+      assertEquals(jarConcatStream.read(dexJarContents, 0, jarSize), jarSize);
+
+      Path dexJarFile =
+          workspace.getPath(
+              apkPath.getParent().resolve(String.format("unxzs/secondary-%s.dex.jar", i)));
+      Files.write(dexJarFile, dexJarContents);
+
+      ZipInspector dexJarInspector = new ZipInspector(dexJarFile);
+
+      dexJarInspector.assertFileExists("classes.dex");
+
+      DexInspector dexInspector = new DexInspector(dexJarFile);
+      dexInspector.assertTypeExists(dexMetadata.getJvmName());
+      i += 1;
+    }
+  }
+
+  static Pattern META_FILE_PATTERN = Pattern.compile("jar:(\\d*) dex:\\d*");
+
+  public static int readJarSize(String metaContents) {
+    Matcher matcher = META_FILE_PATTERN.matcher(metaContents);
+    matcher.matches();
+    return new Integer(matcher.group(1));
   }
 
   @Test

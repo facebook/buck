@@ -42,7 +42,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -50,8 +49,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -205,7 +204,9 @@ public class PreDexSplitDexMerge extends PreDexMerge {
     }
 
     SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
-    Multimap<Path, SourcePath> aggregatedOutputToInputs = HashMultimap.create();
+    ImmutableMultimap.Builder<Path, SourcePath> aggregatedOutputToInputs =
+        ImmutableMultimap.builder();
+    aggregatedOutputToInputs.orderKeysBy(Ordering.natural());
     ImmutableMap.Builder<Path, Sha1HashCode> dexInputHashesBuilder = ImmutableMap.builder();
     for (PreDexedFilesSorter.Result result : sortResults.values()) {
       if (!result.apkModule.equals(apkModuleGraph.getRootAPKModule())) {
@@ -216,7 +217,8 @@ public class PreDexSplitDexMerge extends PreDexMerge {
                     context.getBuildCellRootPath(), getProjectFilesystem(), dexOutputPath)));
       }
       aggregatedOutputToInputs.putAll(result.secondaryOutputToInputs);
-      addResolvedPathsToBuilder(sourcePathResolverAdapter, dexInputHashesBuilder, result.dexInputHashes);
+      addResolvedPathsToBuilder(
+          sourcePathResolverAdapter, dexInputHashesBuilder, result.dexInputHashes);
     }
     ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesBuilder.build();
 
@@ -229,14 +231,18 @@ public class PreDexSplitDexMerge extends PreDexMerge {
             primaryDexPath,
             Suppliers.ofInstance(
                 rootApkModuleResult.primaryDexInputs.stream()
-                    .map(path -> sourcePathResolverAdapter.getRelativePath(getProjectFilesystem(), path))
+                    .map(
+                        path ->
+                            sourcePathResolverAdapter.getRelativePath(getProjectFilesystem(), path))
                     .collect(ImmutableSet.toImmutableSet())),
             Optional.of(paths.jarfilesSubdir),
             Optional.of(
                 Suppliers.ofInstance(
                     Multimaps.transformValues(
-                        aggregatedOutputToInputs,
-                        path -> sourcePathResolverAdapter.getRelativePath(getProjectFilesystem(), path)))),
+                        aggregatedOutputToInputs.build(),
+                        path ->
+                            sourcePathResolverAdapter.getRelativePath(
+                                getProjectFilesystem(), path)))),
             () -> dexInputHashes,
             paths.successDir,
             DX_MERGE_OPTIONS,

@@ -217,11 +217,11 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   public void testMultidexModularWithManifest() throws IOException {
     String target = "//apps/multidex:app_modular_manifest_debug";
     workspace.runBuckCommand("build", target).assertSuccess();
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    Path apkPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
     zipInspector.assertFileExists("assets/" + module + "/AndroidManifest.xml");
@@ -231,11 +231,11 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   public void testMultidexModularWithResources() throws IOException {
     String target = "//apps/multidex:app_modular_resources_debug";
     workspace.runBuckCommand("build", target).assertSuccess();
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    Path apkPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    ZipInspector zipInspector = new ZipInspector(apkPath);
     zipInspector.assertFileExists("assets/feature1/feature12.dex");
     zipInspector.assertFileExists("assets/feature1/AndroidManifest.xml");
     zipInspector.assertFileExists("assets/feature1/resources.arsc");
@@ -257,11 +257,11 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
 
     String target = "//apps/multidex:app_modular_manifest_aapt2_debug";
     workspace.runBuckCommand("build", target).assertSuccess();
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    Path apkPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
     zipInspector.assertFileExists("assets/" + module + "/AndroidManifest.xml");
@@ -271,11 +271,11 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   public void testMultidexModular() throws IOException {
     String target = "//apps/multidex:app_modular_debug";
     workspace.runBuckCommand("build", target).assertSuccess();
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    Path apkPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
   }
@@ -299,17 +299,13 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   public void testBlacklistingModular() throws IOException {
     String target = "//apps/multidex:app_modular_manifest_debug_blacklist_shared";
     workspace.runBuckCommand("build", target).assertSuccess();
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     String module = "small_with_shared_with_no_resource_deps";
     String modulePath = "assets/" + module + "/" + module + "2.dex";
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
                 filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    ZipInspector zipInspector = new ZipInspector(apkPath);
     DexInspector moduleInspector = new DexInspector(apkPath, modulePath);
     moduleInspector.assertTypeExists("Lcom/facebook/sample/SmallWithShared;");
     moduleInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Shared;");
@@ -333,17 +329,12 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
             BuildTargetPaths.getGenPath(
                 filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
 
+    ZipInspector zipInspector = new ZipInspector(apkPath);
     DexInspector moduleInspector = new DexInspector(apkPath, modulePath);
     moduleInspector.assertTypeExists("Lcom/facebook/sample/SmallWithShared;");
 
     DexInspector apkInspector = new DexInspector(apkPath);
     apkInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Shared;");
-
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     String sharedPath = "assets/shared0/shared02.dex";
     zipInspector.assertFileExists(sharedPath);
     DexInspector sharedInspector = new DexInspector(apkPath, sharedPath);
@@ -408,11 +399,11 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   public void testMultidexProguardModular() throws IOException {
     String target = "//apps/multidex:app_modular_proguard_dontobfuscate";
     workspace.runBuckCommand("build", target).assertSuccess();
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    Path apkPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "java.com.sample.small.small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
   }
@@ -421,11 +412,11 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   public void testMultidexProguardModularWithObfuscation() throws IOException {
     String target = "//apps/multidex:app_modular_proguard_obfuscate";
     workspace.runBuckCommand("build", target).assertSuccess();
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    Path apkPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "java.com.sample.small.small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
   }

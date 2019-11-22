@@ -37,6 +37,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -647,35 +649,21 @@ public class AndroidBinaryInstallIntegrationTest {
     installResult.assertSuccess();
     installLimiter.assertExpectedInstallsAreConsumed();
 
-    // Check that dex file names in metadata.txt match installed files.
-    // To check dex directories for all modules, assumes that all directories that contain a
-    // metadata.txt file that starts with '.' also contain dex files
-    for (Path metadataDevicePath :
-        installLimiter.listDirRecursive(INSTALL_ROOT).stream()
-            .filter(path -> path.getFileName().toString().equals("metadata.txt"))
-            .collect(Collectors.toSet())) {
+    Path installRoot =
+        deviceStateDirectory.getRoot().resolve(INSTALL_ROOT.getRoot().relativize(INSTALL_ROOT));
 
-      Path metadataPath = devicePath(metadataDevicePath);
-      List<Path> dexDirContents =
-          Files.list(metadataPath.getParent())
-              .map(Path::getFileName)
-              .collect(ImmutableList.toImmutableList());
+    List<String> dexDevicePaths = Lists.newArrayList("secondary-dex", "modular-dex");
 
-      List<String> canaryLines = Files.readAllLines(metadataPath, Charsets.UTF_8);
-      if (!canaryLines.isEmpty() && canaryLines.get(0).startsWith(".")) {
-        for (String canaryLine : canaryLines) {
-          if (!canaryLine.startsWith(".")) {
-            Path expectedDexFile = Paths.get(canaryLine.split(" ")[0]);
-            assertThat(dexDirContents, hasItem(expectedDexFile));
-          }
-        }
+    for (String dexDevicePath : dexDevicePaths) {
+      Path metadataPath = installRoot.resolve(dexDevicePath).resolve("metadata.txt");
+      List<String> metadataLines = Files.readAllLines(metadataPath, Charsets.UTF_8);
+      List<DexTestUtils.DexMetadata> dexMetadata = DexTestUtils.moduleMetadata(metadataLines);
+      Set<Path> dexDirContents =
+          Files.list(metadataPath.getParent()).map(Path::getFileName).collect(Collectors.toSet());
+      for (DexTestUtils.DexMetadata metadata : dexMetadata) {
+        assertThat(dexDirContents, hasItem(metadata.dexFile));
       }
     }
-  }
-
-  private Path devicePath(Path path) {
-    Path resolved = INSTALL_ROOT.getRoot().relativize(INSTALL_ROOT).resolve(path);
-    return deviceStateDirectory.getRoot().resolve(resolved);
   }
 
   private class ExoState {

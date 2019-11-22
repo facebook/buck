@@ -38,7 +38,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
@@ -203,9 +205,12 @@ public class PreDexedFilesSorter {
         throwErrorForPrimaryDexExceedsWeightLimit();
       }
 
-      Map<Path, DexWithClasses> metadataTxtEntries = new HashMap<>();
+      ImmutableSortedMap.Builder<Path, DexWithClasses> metadataTxtEntries =
+          ImmutableSortedMap.naturalOrder();
       ImmutableMultimap.Builder<Path, SourcePath> secondaryOutputToInputs =
           ImmutableMultimap.builder();
+      secondaryOutputToInputs.orderValuesBy(Ordering.natural());
+      secondaryOutputToInputs.orderKeysBy(Ordering.natural());
       boolean isRootModule = apkModule.equals(apkModuleGraph.getRootAPKModule());
 
       for (int index = 0; index < secondaryDexesContents.size(); index++) {
@@ -235,7 +240,7 @@ public class PreDexedFilesSorter {
           apkModule,
           primaryDexInputs,
           secondaryOutputToInputs.build(),
-          metadataTxtEntries,
+          metadataTxtEntries.build(),
           dexInputsHashes.build());
     }
 
