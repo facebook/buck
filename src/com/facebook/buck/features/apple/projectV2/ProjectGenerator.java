@@ -167,7 +167,7 @@ public class ProjectGenerator {
   private final ProjectGenerationStateCache projGenerationStateCache;
   private final Cell projectCell;
   private final ProjectFilesystem projectFilesystem;
-  private final ImmutableSet<BuildTarget> initialTargets;
+  private final ImmutableSet<BuildTarget> projectTargets;
   private final PathRelativizer pathRelativizer;
 
   private final String buildFileName;
@@ -207,7 +207,7 @@ public class ProjectGenerator {
       TargetGraph targetGraph,
       AppleDependenciesCache dependenciesCache,
       ProjectGenerationStateCache projGenerationStateCache,
-      Set<BuildTarget> initialTargets,
+      Set<BuildTarget> projectTargets,
       Cell cell,
       String buildFileName,
       XcodeProjectWriteOptions xcodeProjectWriteOptions,
@@ -229,7 +229,7 @@ public class ProjectGenerator {
     this.targetGraph = targetGraph;
     this.dependenciesCache = dependenciesCache;
     this.projGenerationStateCache = projGenerationStateCache;
-    this.initialTargets = ImmutableSet.copyOf(initialTargets);
+    this.projectTargets = ImmutableSet.copyOf(projectTargets);
     this.projectCell = cell;
     this.projectFilesystem = cell.getFilesystem();
     this.buildFileName = buildFileName;
@@ -358,25 +358,13 @@ public class ProjectGenerator {
    * @throws IOException
    */
   public Result createXcodeProjects() throws IOException {
-    LOG.debug("Creating projects for targets %s", initialTargets);
+    LOG.debug("Creating projects for targets %s", projectTargets);
 
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(
             buckEventBus,
             PerfEventId.of("xcode_project_generation"),
             ImmutableMap.of("Path", getXcodeProjPath()))) {
-
-      // Filter out nodes that aren't included in project.
-      ImmutableSet.Builder<TargetNode<?>> projectTargetsBuilder = ImmutableSet.builder();
-      for (TargetNode<?> targetNode : targetGraph.getNodes()) {
-        if (isBuiltByCurrentProject(targetNode.getBuildTarget())) {
-          LOG.debug("Including rule %s in project", targetNode);
-          projectTargetsBuilder.add(targetNode);
-        } else {
-          LOG.verbose("Excluding rule %s (not built by current project)", targetNode);
-        }
-      }
-      final ImmutableSet<TargetNode<?>> projectTargets = projectTargetsBuilder.build();
 
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
       ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
@@ -390,24 +378,23 @@ public class ProjectGenerator {
       // Handle the workspace target if it's in the project. This ensures the
       // workspace target isn't filtered later by loading it first.
       final TargetNode<?> workspaceTargetNode = targetGraph.get(workspaceTarget);
-      if (projectTargets.contains(workspaceTargetNode)) {
-        ProjectTargetGenerationResult result =
-            generateProjectTarget(
-                workspaceTargetNode,
-                requiredBuildTargetsBuilder,
-                xcconfigPathsBuilder,
-                targetConfigNamesBuilder,
-                generatedTargets);
-        generationResultsBuilder.add(result);
-      }
+      ProjectTargetGenerationResult workspaceTargetResult =
+          generateProjectTarget(
+              workspaceTargetNode,
+              requiredBuildTargetsBuilder,
+              xcconfigPathsBuilder,
+              targetConfigNamesBuilder,
+              generatedTargets);
+      generationResultsBuilder.add(workspaceTargetResult);
 
-      for (TargetNode<?> input :
+      for (TargetNode<?> targetNode :
           projectTargets.stream()
-              .filter(input -> !input.equals(workspaceTargetNode))
+              .filter(buildTarget -> buildTarget != workspaceTarget)
+              .map(buildTarget -> targetGraph.get(buildTarget))
               .collect(Collectors.toSet())) {
         ProjectTargetGenerationResult result =
             generateProjectTarget(
-                input,
+                targetNode,
                 requiredBuildTargetsBuilder,
                 xcconfigPathsBuilder,
                 targetConfigNamesBuilder,
@@ -539,9 +526,6 @@ public class ProjectGenerator {
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
       Set<BuildTarget> generatedTargets)
       throws IOException {
-    Preconditions.checkState(
-        isBuiltByCurrentProject(targetNode.getBuildTarget()),
-        "should not generate rule if it shouldn't be built by current project");
 
     XCodeNativeTargetAttributes.Builder nativeTargetBuilder =
         XCodeNativeTargetAttributes.builder().setAppleConfig(appleConfig);
@@ -1865,7 +1849,9 @@ public class ProjectGenerator {
     // Xcode appears to only support target dependencies if both targets are within the same
     // project.
     // If the desired target dependency is not in the same project, then just ignore it.
-    if (!isBuiltByCurrentProject(dependency)) {
+    // Not sure if we still need this if we're only ever considering targets in projectTargets,
+    // but for saftey's sake, let's keep it for now (@cjjones)
+    if (!projectTargets.contains(dependency)) {
       return;
     }
 
@@ -2243,13 +2229,6 @@ public class ProjectGenerator {
     } else {
       throw new RuntimeException("Unexpected type: " + targetNode.getDescription().getClass());
     }
-  }
-
-  /**
-   * Whether a given build target is built by the project being generated, or being build elsewhere.
-   */
-  private boolean isBuiltByCurrentProject(BuildTarget buildTarget) {
-    return initialTargets.contains(buildTarget);
   }
 
   private static String getExtensionString(Either<AppleBundleExtension, String> extension) {
