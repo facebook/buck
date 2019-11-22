@@ -53,7 +53,7 @@ public class QueryCoercer implements TypeCoercer<Query> {
             typeCoercerFactory,
             cellPathResolver,
             unconfiguredBuildTargetFactory,
-            query.getBaseName().orElse(""),
+            query.getBaseName(),
             ImmutableSet.of(),
             query.getTargetConfiguration());
     QueryExpression<QueryBuildTarget> parsedExp;

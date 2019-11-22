@@ -61,7 +61,9 @@ public class HaskellBinaryDescriptionTest {
         new HaskellBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setDepQuery(
                 Query.of(
-                    "filter(transitive, deps(//:dep))", UnconfiguredTargetConfiguration.INSTANCE));
+                    "filter(transitive, deps(//:dep))",
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    "//"));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             transitiveDepBuilder.build(), depBuilder.build(), builder.build());

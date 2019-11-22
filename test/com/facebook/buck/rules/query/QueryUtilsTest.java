@@ -40,7 +40,7 @@ public class QueryUtilsTest {
         QueryUtils.extractParseTimeTargets(
                 TARGET,
                 CELL_NAMES,
-                Query.of("deps(//some:rule)", UnconfiguredTargetConfiguration.INSTANCE))
+                Query.of("deps(//some:rule)", UnconfiguredTargetConfiguration.INSTANCE, "//"))
             .collect(Collectors.toList()),
         Matchers.contains(BuildTargetFactory.newInstance("//some:rule")));
   }

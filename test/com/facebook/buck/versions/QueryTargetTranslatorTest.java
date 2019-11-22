@@ -50,9 +50,9 @@ public class QueryTargetTranslatorTest {
             CELL_PATH_RESOLVER,
             "",
             translator,
-            Query.of("deps(//:a)", UnconfiguredTargetConfiguration.INSTANCE)),
+            Query.of("deps(//:a)", UnconfiguredTargetConfiguration.INSTANCE, "//")),
         Matchers.equalTo(
-            Optional.of(Query.of("deps(//:b)", UnconfiguredTargetConfiguration.INSTANCE))));
+            Optional.of(Query.of("deps(//:b)", UnconfiguredTargetConfiguration.INSTANCE, "//"))));
   }
 
   @Test
@@ -66,7 +66,7 @@ public class QueryTargetTranslatorTest {
             CELL_PATH_RESOLVER,
             "",
             translator,
-            Query.of("$declared_deps", UnconfiguredTargetConfiguration.INSTANCE)),
+            Query.of("$declared_deps", UnconfiguredTargetConfiguration.INSTANCE, "//")),
         Matchers.equalTo(Optional.empty()));
   }
 }

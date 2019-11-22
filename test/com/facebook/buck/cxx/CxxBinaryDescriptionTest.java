@@ -392,7 +392,9 @@ public class CxxBinaryDescriptionTest {
         new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setDepQuery(
                 Query.of(
-                    "filter(transitive, deps(//:dep))", UnconfiguredTargetConfiguration.INSTANCE));
+                    "filter(transitive, deps(//:dep))",
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    "//"));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             transitiveDepBuilder.build(), depBuilder.build(), builder.build());

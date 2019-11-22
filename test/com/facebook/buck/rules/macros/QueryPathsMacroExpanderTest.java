@@ -122,7 +122,8 @@ public class QueryPathsMacroExpanderTest {
                     QueryPathsMacro.of(
                         Query.of(
                             dep.getBuildTarget().getFullyQualifiedName(),
-                            dep.getBuildTarget().getTargetConfiguration()))))
+                            dep.getBuildTarget().getTargetConfiguration(),
+                            "//"))))
             .build();
 
     TargetGraph graph = TargetGraphFactory.newInstance(dep, target);

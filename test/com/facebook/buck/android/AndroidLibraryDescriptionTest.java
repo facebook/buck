@@ -138,7 +138,8 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
             .setDepsQuery(
                 Query.of(
                     "filter('.*lib', deps($declared_deps))",
-                    UnconfiguredTargetConfiguration.INSTANCE));
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    "//"));
     TargetNode<AndroidLibraryDescriptionArg> rule = ruleBuilder.build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode, rule);

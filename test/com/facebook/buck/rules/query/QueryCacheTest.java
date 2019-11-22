@@ -54,15 +54,20 @@ public class QueryCacheTest {
     Query q1 =
         Query.of(
             "deps(:a) union deps(:c) except (deps(:a) intersect classpath(deps(:f)))",
-            UnconfiguredTargetConfiguration.INSTANCE);
-    Query q2 = Query.of("deps(:a) ^ classpath(deps(:f))", UnconfiguredTargetConfiguration.INSTANCE);
-    Query q3 = Query.of("kind(binary, deps(:a))", UnconfiguredTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "//");
+    Query q2 =
+        Query.of("deps(:a) ^ classpath(deps(:f))", UnconfiguredTargetConfiguration.INSTANCE, "//");
+    Query q3 = Query.of("kind(binary, deps(:a))", UnconfiguredTargetConfiguration.INSTANCE, "//");
     Query q4 =
         Query.of(
-            "attrfilter(deps, :e, set(:b :c :f :g))", UnconfiguredTargetConfiguration.INSTANCE);
+            "attrfilter(deps, :e, set(:b :c :f :g))",
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "//");
     Query q5 =
-        Query.of("kind(library, deps(:a) + deps(:c))", UnconfiguredTargetConfiguration.INSTANCE);
-    Query q6 = Query.of("deps(:c)", UnconfiguredTargetConfiguration.INSTANCE);
+        Query.of(
+            "kind(library, deps(:a) + deps(:c))", UnconfiguredTargetConfiguration.INSTANCE, "//");
+    Query q6 = Query.of("deps(:c)", UnconfiguredTargetConfiguration.INSTANCE, "//");
 
     BuildTarget foo = BuildTargetFactory.newInstance("//:foo");
     BuildTarget bar = BuildTargetFactory.newInstance("//:bar");
@@ -147,7 +152,7 @@ public class QueryCacheTest {
 
   @Test
   public void dynamicDeps() throws QueryException {
-    Query declared = Query.of("$declared_deps", UnconfiguredTargetConfiguration.INSTANCE);
+    Query declared = Query.of("$declared_deps", UnconfiguredTargetConfiguration.INSTANCE, "//");
 
     BuildTarget fooTarget = BuildTargetFactory.newInstance("//:foo");
     BuildTarget barTarget = BuildTargetFactory.newInstance("//:bar");

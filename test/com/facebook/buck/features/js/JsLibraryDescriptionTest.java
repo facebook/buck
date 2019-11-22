@@ -367,7 +367,8 @@ public class JsLibraryDescriptionTest {
             .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
             .library(
                 target,
-                Query.of(String.format("deps(%s)", x), UnconfiguredTargetConfiguration.INSTANCE),
+                Query.of(
+                    String.format("deps(%s)", x), UnconfiguredTargetConfiguration.INSTANCE, "//"),
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
@@ -411,7 +412,8 @@ public class JsLibraryDescriptionTest {
             .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
             .library(
                 target,
-                Query.of(String.format("deps(%s)", x), UnconfiguredTargetConfiguration.INSTANCE),
+                Query.of(
+                    String.format("deps(%s)", x), UnconfiguredTargetConfiguration.INSTANCE, "//"),
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
@@ -443,7 +445,8 @@ public class JsLibraryDescriptionTest {
         scenarioBuilder
             .library(a)
             .library(b)
-            .library(target, Query.of(a.toString(), UnconfiguredTargetConfiguration.INSTANCE), b)
+            .library(
+                target, Query.of(a.toString(), UnconfiguredTargetConfiguration.INSTANCE, "//"), b)
             .build();
 
     JsLibrary lib = scenario.graphBuilder.getRuleWithType(target, JsLibrary.class);
