@@ -12,6 +12,9 @@
   <change-notes><![CDATA[
 <h3>3.9.1</h3>
 <ul>
+  <li>Add "copy Buck target" feature</li>
+  <li>Fix memory leak of Buck tool window</li>
+  <li>Change auto-completion to be triggered by : and /</li>
 </ul>
 <h3>3.9.0</h3>
 <ul>
