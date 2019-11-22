@@ -78,6 +78,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/keys/config:config",
+        "//src/com/facebook/buck/skylark/function:function",
         "//src/com/facebook/buck/skylark/io:io",
         "//src/com/facebook/buck/skylark/io/impl:impl",
         "//src/com/facebook/buck/skylark/parser:parser",

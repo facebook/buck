@@ -48,7 +48,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SkylarkNativeModuleTest {
+public class SkylarkBuildModuleTest {
 
   private Path root;
   private PrintingEventHandler eventHandler;
@@ -103,7 +103,7 @@ public class SkylarkNativeModuleTest {
         .setup(env);
     env.setup(
         "package_name",
-        FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, "package_name"));
+        FuncallExpression.getBuiltinCallable(SkylarkBuildModule.BUILD_MODULE, "package_name"));
     boolean exec = buildFileAst.exec(env, eventHandler);
     if (!exec) {
       Assert.fail("Build file evaluation must have succeeded");

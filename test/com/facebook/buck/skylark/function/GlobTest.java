@@ -193,7 +193,7 @@ public class GlobTest {
                 ImmutableMap.of()))
         .setup(env);
     env.setup(
-        "glob", FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, "glob"));
+        "glob", FuncallExpression.getBuiltinCallable(SkylarkBuildModule.BUILD_MODULE, "glob"));
     return new Pair<>(buildFileAst.exec(env, eventHandler), env);
   }
 }

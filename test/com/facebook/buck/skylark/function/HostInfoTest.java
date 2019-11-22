@@ -267,6 +267,7 @@ public class HostInfoTest {
         BuckEventBusForTests.newInstance(),
         SkylarkFilesystem.using(filesystem),
         BuckGlobals.builder()
+            .setSkylarkFunctionModule(SkylarkBuildModule.BUILD_MODULE)
             .setDescriptions(options.getDescriptions())
             .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
             .setRuleFunctionFactory(ruleFunctionFactory)

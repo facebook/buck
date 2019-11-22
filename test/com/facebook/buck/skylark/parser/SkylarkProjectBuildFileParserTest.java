@@ -44,6 +44,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.skylark.function.SkylarkBuildModule;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
@@ -1013,6 +1014,7 @@ public class SkylarkProjectBuildFileParserTest {
             BuckEventBusForTests.newInstance(),
             skylarkFilesystem,
             BuckGlobals.builder()
+                .setSkylarkFunctionModule(SkylarkBuildModule.BUILD_MODULE)
                 .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
                 .setDescriptions(options.getDescriptions())
                 .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))

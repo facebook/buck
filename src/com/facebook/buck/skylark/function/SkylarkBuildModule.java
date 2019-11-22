@@ -50,7 +50,7 @@ import javax.annotation.Nullable;
         "A built-in module providing native rules and other package helper functions. "
             + "All native rules appear as functions in this module, e.g. "
             + "<code>native.cxx_library</code>.")
-public class SkylarkNativeModule {
+public class SkylarkBuildModule implements SkylarkFunctionModule {
 
   // Matches any of "**/", "*/**/" globs
   private static final Pattern TOP_LEVEL_GLOB_PATTERN = Pattern.compile("(\\*/)*\\*\\*/.*");
@@ -302,5 +302,5 @@ public class SkylarkNativeModule {
         .getOrDefault(symbol, defaultValue);
   }
 
-  public static final SkylarkNativeModule NATIVE_MODULE = new SkylarkNativeModule();
+  public static final SkylarkBuildModule BUILD_MODULE = new SkylarkBuildModule();
 }

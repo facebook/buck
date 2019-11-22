@@ -45,6 +45,7 @@ import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.skylark.function.SkylarkBuildModule;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.skylark.io.impl.HybridGlobberFactory;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
@@ -326,6 +327,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     }
     BuckGlobals buckGlobals =
         BuckGlobals.builder()
+            .setSkylarkFunctionModule(SkylarkBuildModule.BUILD_MODULE)
             .setDisableImplicitNativeRules(buildFileParserOptions.getDisableImplicitNativeRules())
             .setEnableUserDefinedRules(buildFileParserOptions.getEnableUserDefinedRules())
             .setDescriptions(buildFileParserOptions.getDescriptions())
