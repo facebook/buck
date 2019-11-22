@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.actiongraph.computation;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -230,8 +231,14 @@ public class IncrementalActionGraphGenerator {
       Optional<TargetNode<?>> previousTargetNode =
           lastTargetGraph.getExactOptional(targetNode.getBuildTarget());
       if (previousTargetNode.isPresent()) {
-        Preconditions.checkState(
-            lastActionGraphBuilder.getRuleOptional(targetNode.getBuildTarget()).isPresent());
+        if (targetNode.getBuildTarget().getTargetConfiguration()
+            != ConfigurationForConfigurationTargets.INSTANCE) {
+          // Config nodes don't appear on action graphs
+          Preconditions.checkState(
+              lastActionGraphBuilder.getRuleOptional(targetNode.getBuildTarget()).isPresent(),
+              "Target not found in previous action graph: %s",
+              targetNode.getBuildTarget());
+        }
         // If the target node has changed, then invalidate parent chains, as ancestors might
         // generate their subgraphs differently given the change.
         if (!targetNode.equals(previousTargetNode.get())) {
