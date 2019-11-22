@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>3.9.1</version>
+  <version>3.9.2-SNAPSHOT</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
@@ -10,6 +10,9 @@
   ]]></description>
 
   <change-notes><![CDATA[
+<h3>3.9.2</h3>
+<ul>
+</ul>
 <h3>3.9.1</h3>
 <ul>
   <li>Add "copy Buck target" feature</li>
