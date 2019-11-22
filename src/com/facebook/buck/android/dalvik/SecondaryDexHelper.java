@@ -64,7 +64,8 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
       currentSecondaryOut = newZipOutput(newSecondaryFile);
       newSecondaryOutOnNextEntry = false;
       // Make sure the first class in the new secondary dex can be safely loaded.
-      FileLike canaryFile = CanaryFactory.create(storeName, currentSecondaryIndex);
+      FileLike canaryFile =
+          CanaryFactory.create(storeName, String.format("%02d", currentSecondaryIndex));
       currentSecondaryOut.putEntry(canaryFile);
       // We've already tested for this. It really shouldn't happen.
       Preconditions.checkState(currentSecondaryOut.canPutEntry(entry));
