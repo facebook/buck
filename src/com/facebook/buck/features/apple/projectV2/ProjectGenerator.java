@@ -387,9 +387,31 @@ public class ProjectGenerator {
               generatedTargets);
       generationResultsBuilder.add(workspaceTargetResult);
 
+      /*
+       * Process flavored nodes before unflavored ones.
+       *
+       * It is possible we have the same bundle node twice (e.g. as a test target and a dep). In
+       * that instance, one may be unflavored, so we need to prioritize the flavored version first
+       * in order to properly get the target out during schema generation.
+       */
       for (TargetNode<?> targetNode :
           projectTargets.stream()
-              .filter(buildTarget -> buildTarget != workspaceTarget)
+              .filter(buildTarget -> buildTarget != workspaceTarget && buildTarget.isFlavored())
+              .map(buildTarget -> targetGraph.get(buildTarget))
+              .collect(Collectors.toSet())) {
+        ProjectTargetGenerationResult result =
+            generateProjectTarget(
+                targetNode,
+                requiredBuildTargetsBuilder,
+                xcconfigPathsBuilder,
+                targetConfigNamesBuilder,
+                generatedTargets);
+        generationResultsBuilder.add(result);
+      }
+
+      for (TargetNode<?> targetNode :
+          projectTargets.stream()
+              .filter(buildTarget -> buildTarget != workspaceTarget && !buildTarget.isFlavored())
               .map(buildTarget -> targetGraph.get(buildTarget))
               .collect(Collectors.toSet())) {
         ProjectTargetGenerationResult result =
