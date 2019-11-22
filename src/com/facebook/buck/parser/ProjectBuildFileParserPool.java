@@ -36,14 +36,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.concurrent.GuardedBy;
 
-/**
- * Allows multiple concurrently executing futures to share a constrained number of parsers.
- *
- * <p>Parser instances are lazily created up till a fixed maximum. If more than max parser are
- * requested the associated 'requests' are queued up. As soon as a parser is returned it will be
- * used to satisfy the first pending request, otherwise it is "parked".
- */
-class ProjectBuildFileParserPool implements AutoCloseable {
+/** Parser pool for {@link BuildFileManifest}s. */
+class ProjectBuildFileParserPool implements FileParserPool<BuildFileManifest> {
   private static final Logger LOG = Logger.get(ProjectBuildFileParserPool.class);
 
   private final int maxParsersPerCell;
@@ -80,7 +74,8 @@ class ProjectBuildFileParserPool implements AutoCloseable {
    * @return a {@link ListenableFuture} containing the result of the parsing. The future will be
    *     cancelled if the {@link ProjectBuildFileParserPool#close()} method is called.
    */
-  public ListenableFuture<BuildFileManifest> getBuildFileManifest(
+  @Override
+  public ListenableFuture<BuildFileManifest> getManifest(
       BuckEventBus buckEventBus,
       Cell cell,
       Watchman watchman,
@@ -108,7 +103,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
                 // recover and subsequent attempts at invoking the parser will fail.
                 ResourcePool.ResourceUsageErrorPolicy.RETIRE,
                 () ->
-                    projectBuildFileParserFactory.createBuildFileParser(
+                    projectBuildFileParserFactory.createFileParser(
                         buckEventBus, c, watchman, false)));
   }
 
@@ -116,7 +111,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
       BuckEventBus buckEventBus, Cell cell, Watchman watchman) {
     return nonPooledCells.computeIfAbsent(
         cell,
-        c -> projectBuildFileParserFactory.createBuildFileParser(buckEventBus, c, watchman, false));
+        c -> projectBuildFileParserFactory.createFileParser(buckEventBus, c, watchman, false));
   }
 
   private void reportProfile() {

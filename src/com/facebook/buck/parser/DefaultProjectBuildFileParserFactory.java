@@ -139,7 +139,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
    * ProjectBuildFileParser}.
    */
   @Override
-  public ProjectBuildFileParser createBuildFileParser(
+  public ProjectBuildFileParser createFileParser(
       BuckEventBus eventBus, Cell cell, Watchman watchman, boolean threadSafe) {
 
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);

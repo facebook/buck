@@ -352,7 +352,7 @@ public class ProjectBuildFileParserPoolTest {
     ImmutableSet.Builder<ListenableFuture<?>> futures = ImmutableSet.builder();
     for (int i = 0; i < count; i++) {
       futures.add(
-          pool.getBuildFileManifest(
+          pool.getManifest(
               BuckEventBusForTests.newInstance(),
               cell,
               WatchmanFactory.NULL_WATCHMAN,

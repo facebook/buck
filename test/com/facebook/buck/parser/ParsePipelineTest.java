@@ -394,7 +394,7 @@ public class ParsePipelineTest {
                                     BuckPluginManagerFactory.createPluginManager()),
                                 getManifestSupplier(),
                                 new FakeFileHashCache(ImmutableMap.of()))
-                            .createBuildFileParser(eventBus, input, watchman, threadSafe));
+                            .createFileParser(eventBus, input, watchman, threadSafe));
                 synchronized (projectBuildFileParsers) {
                   projectBuildFileParsers.add(buildFileParser);
                 }

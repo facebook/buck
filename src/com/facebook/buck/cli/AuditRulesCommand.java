@@ -99,7 +99,7 @@ public class AuditRulesCommand extends AbstractCommand {
                 params.getKnownRuleTypesProvider(),
                 params.getManifestServiceSupplier(),
                 params.getFileHashCache())
-            .createBuildFileParser(
+            .createFileParser(
                 params.getBuckEventBus(), params.getCell(), params.getWatchman(), false)) {
       /*
        * The super console does a bunch of rewriting over the top of the console such that

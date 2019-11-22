@@ -109,7 +109,7 @@ public class GraphEngineFactory {
             params.getFileHashCache());
 
     ProjectBuildFileParser buildFileParser =
-        projectBuildFileParserFactory.createBuildFileParser(
+        projectBuildFileParserFactory.createFileParser(
             params.getBuckEventBus(), params.getCell(), params.getWatchman(), true);
 
     // Once computation is over, we want to close ProjectBuildFileParser to potentially release

@@ -74,7 +74,7 @@ public class BuildFileRawNodeParsePipeline implements BuildFileParsePipeline<Bui
                 pathToCheck);
           }
 
-          return projectBuildFileParserPool.getBuildFileManifest(
+          return projectBuildFileParserPool.getManifest(
               eventBus, cell, watchman, buildFile, executorService);
         },
         eventBus);

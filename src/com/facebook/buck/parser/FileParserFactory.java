@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,19 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
-import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.FileParser;
 
-/** Factory for creating instances of {link ProjectBuildFileParser}. */
-public interface ProjectBuildFileParserFactory extends FileParserFactory<BuildFileManifest> {
-  /** Creates an instance of {@link ProjectBuildFileParser} based on passed in options. */
-  @Override
-  ProjectBuildFileParser createFileParser(
+/** Factory for creating instances of {@link FileParser}. */
+public interface FileParserFactory<T> {
+  /** Creates an instance of {link ProjectBuildFileParser} based on passed in options. */
+  FileParser<T> createFileParser(
       BuckEventBus eventBus, Cell cell, Watchman watchman, boolean threadSafe);
 }
