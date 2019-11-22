@@ -299,6 +299,7 @@
     <completion.contributor
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.completion.BuckTargetCompletionContributor"/>
+    <typedHandler implementation="com.facebook.buck.intellij.ideabuck.completion.BuckTargetAutoPopupHandler"/>
     <codeStyleSettingsProvider
       implementation="com.facebook.buck.intellij.ideabuck.config.BuckCodeStyleSettingsProvider"/>
     <langCodeStyleSettingsProvider

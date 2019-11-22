@@ -31,8 +31,6 @@ import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.codeInsight.completion.CompletionContributor;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionResultSet;
-import com.intellij.codeInsight.completion.InsertionContext;
-import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -52,8 +50,6 @@ import org.jetbrains.annotations.NotNull;
  * of the form {@code @cellname//path/to:file.bzl}.
  */
 public class BuckTargetCompletionContributor extends CompletionContributor {
-  private static final char[] TRAILING_CHARACTERS = {'/', ':'};
-
   @Override
   public void fillCompletionVariants(
       @NotNull CompletionParameters parameters, @NotNull CompletionResultSet result) {
@@ -111,34 +107,11 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
   }
 
   private void addResultForTarget(CompletionResultSet result, String name) {
-    result.addElement(
-        LookupElementBuilder.create(name)
-            .withIcon(BuckIcons.FILE_TYPE)
-            .withInsertHandler(
-                BuckTargetCompletionContributor::removeTrailingCharactersIfNecessary));
+    result.addElement(LookupElementBuilder.create(name).withIcon(BuckIcons.FILE_TYPE));
   }
 
   private void addResultForFile(CompletionResultSet result, VirtualFile file, String name) {
-    result.addElement(
-        LookupElementBuilder.create(name)
-            .withIcon(file.getFileType().getIcon())
-            .withInsertHandler(
-                BuckTargetCompletionContributor::removeTrailingCharactersIfNecessary));
-  }
-
-  private static void removeTrailingCharactersIfNecessary(
-      @NotNull InsertionContext insertionContext, @NotNull LookupElement lookupElement) {
-    final String doc = insertionContext.getDocument().getText();
-    final int offset = insertionContext.getTailOffset();
-    for (char c : TRAILING_CHARACTERS) {
-      if (offset > 0
-          && doc.length() > offset
-          && doc.charAt(offset) == c
-          && lookupElement.getLookupString().endsWith(String.valueOf(c))) {
-        insertionContext.getDocument().deleteString(offset - 1, offset);
-        insertionContext.getEditor().getCaretModel().moveToOffset(offset);
-      }
-    }
+    result.addElement(LookupElementBuilder.create(name).withIcon(file.getFileType().getIcon()));
   }
 
   private void doCellNames(PsiElement position, String prefix, CompletionResultSet result) {
@@ -182,9 +155,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       if (!name.startsWith(partial)) {
         continue;
       }
-      if (child.isDirectory()) {
-        addResultForFile(result, child, path + name + "/");
-      } else if (name.endsWith(".bzl")) {
+      if (child.isDirectory() || name.endsWith(".bzl")) {
         addResultForFile(result, child, path + name);
       }
     }
@@ -231,9 +202,9 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       }
       if (child.isDirectory()) {
         doTargetsForFullyQualifiedExtensionFile(
-            child, project, cellName + "//" + cellPath + name + ":", result);
+            child, project, cellName + "//" + cellPath + name, result);
         if (Stream.of(child.getChildren()).anyMatch(VirtualFile::isDirectory)) {
-          addResultForFile(result, child, partialPrefix + name + "/");
+          addResultForFile(result, child, partialPrefix + name);
         }
       }
     }
@@ -373,11 +344,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
         continue;
       }
       if (child.isDirectory()) {
-        VirtualFile childBuckFile = child.findChild(cell.getBuildfileName());
-        if (childBuckFile != null && childBuckFile.exists()) {
-          addResultForFile(result, childBuckFile, partialPrefix + name + ":");
-        }
-        addResultForFile(result, child, partialPrefix + name + "/");
+        addResultForFile(result, child, partialPrefix + name);
       }
     }
   }
