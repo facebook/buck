@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotNull;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -86,7 +85,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             "deps",
             ImmutableSortedSet.of(":target2"));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
-        ImmutableUnconfiguredBuildTarget.of(
+        UnconfiguredBuildTarget.of(
             cell.getCanonicalName(), "//", "target1", UnconfiguredBuildTarget.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode1 =
         ImmutableUnconfiguredTargetNode.of(
@@ -99,7 +98,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
     ImmutableMap<String, Object> rawAttributes2 =
         ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "");
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
-        ImmutableUnconfiguredBuildTarget.of(
+        UnconfiguredBuildTarget.of(
             cell.getCanonicalName(), "//", "target2", UnconfiguredBuildTarget.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode2 =
         ImmutableUnconfiguredTargetNode.of(

@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -59,8 +58,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
       // unflavored view
       UnconfiguredBuildTarget from = unflavoredBuildTargetView.getData();
       this.data =
-          ImmutableUnconfiguredBuildTarget.of(
-              from.getCell(), from.getBaseName(), from.getName(), flavors);
+          UnconfiguredBuildTarget.of(from.getCell(), from.getBaseName(), from.getName(), flavors);
     }
     this.unflavoredBuildTargetView = unflavoredBuildTargetView;
     this.hash = Objects.hash(this.data, this.unflavoredBuildTargetView);
@@ -74,7 +72,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
       // strip flavors for unflavored view
       this.unflavoredBuildTargetView =
           ImmutableUnflavoredBuildTargetView.of(
-              ImmutableUnconfiguredBuildTarget.of(
+              UnconfiguredBuildTarget.of(
                   data.getCell(),
                   data.getBaseName(),
                   data.getName(),

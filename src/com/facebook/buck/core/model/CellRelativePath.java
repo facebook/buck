@@ -16,6 +16,7 @@
 package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.google.common.collect.ComparisonChain;
 import org.immutables.value.Value;
 
 /**
@@ -26,7 +27,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable(builder = false, copy = false, intern = false)
 @Value.Style(of = "new", allParameters = true)
-public abstract class CellRelativePath {
+public abstract class CellRelativePath implements Comparable<CellRelativePath> {
 
   public abstract CanonicalCellName getCellName();
 
@@ -35,5 +36,13 @@ public abstract class CellRelativePath {
   @Override
   public String toString() {
     return getCellName() + "//" + getPath();
+  }
+
+  @Override
+  public int compareTo(CellRelativePath that) {
+    return ComparisonChain.start()
+        .compare(this.getCellName(), that.getCellName())
+        .compare(this.getPath(), that.getPath())
+        .result();
   }
 }

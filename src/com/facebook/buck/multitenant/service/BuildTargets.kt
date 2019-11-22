@@ -18,7 +18,6 @@ package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException
 import com.facebook.buck.core.model.CanonicalCellName
-import com.facebook.buck.core.model.ImmutableInternedUnconfiguredBuildTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
@@ -33,7 +32,7 @@ object BuildTargets {
         basePath: FsAgnosticPath,
         name: String
     ): UnconfiguredBuildTarget {
-        return ImmutableInternedUnconfiguredBuildTarget.of(
+        return UnconfiguredBuildTarget.of(
             cell,
             "//$basePath", name, UnconfiguredBuildTarget.NO_FLAVORS)
     }

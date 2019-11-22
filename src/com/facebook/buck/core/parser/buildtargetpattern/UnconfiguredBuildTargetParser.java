@@ -19,8 +19,6 @@ package com.facebook.buck.core.parser.buildtargetpattern;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.ImmutableInternedUnconfiguredBuildTarget;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.base.Splitter;
@@ -148,10 +146,9 @@ public class UnconfiguredBuildTargetParser {
             ? CanonicalCellName.rootCell()
             : CanonicalCellName.unsafeOf(Optional.of(cellName));
     if (intern) {
-      return ImmutableInternedUnconfiguredBuildTarget.of(
-          canonicalCellName, baseName.intern(), targetName, flavors);
+      return UnconfiguredBuildTarget.of(canonicalCellName, baseName.intern(), targetName, flavors);
     }
-    return ImmutableUnconfiguredBuildTarget.of(canonicalCellName, baseName, targetName, flavors);
+    return UnconfiguredBuildTarget.of(canonicalCellName, baseName, targetName, flavors);
   }
 
   private static void check(boolean condition, String target, String message, Object... args)

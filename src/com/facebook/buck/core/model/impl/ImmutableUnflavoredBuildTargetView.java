@@ -18,7 +18,6 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.AbstractUnflavoredBuildTargetView;
 import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.util.string.MoreStrings;
@@ -78,7 +77,7 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
   public static ImmutableUnflavoredBuildTargetView of(
       CanonicalCellName cellName, String baseName, String shortName) {
     return of(
-        ImmutableUnconfiguredBuildTarget.of(
+        UnconfiguredBuildTarget.of(
             cellName, baseName, shortName, UnconfiguredBuildTarget.NO_FLAVORS));
   }
 

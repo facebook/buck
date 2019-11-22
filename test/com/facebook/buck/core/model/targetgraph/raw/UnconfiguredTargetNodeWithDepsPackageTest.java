@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
@@ -51,7 +50,7 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
             ImmutableSet.of(":target2"));
 
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
-        ImmutableUnconfiguredBuildTarget.of(
+        UnconfiguredBuildTarget.of(
             CanonicalCellName.rootCell(), "//base", "target1", UnconfiguredBuildTarget.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode1 =
         ImmutableUnconfiguredTargetNode.of(
@@ -65,7 +64,7 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
         ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "base");
 
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
-        ImmutableUnconfiguredBuildTarget.of(
+        UnconfiguredBuildTarget.of(
             CanonicalCellName.rootCell(), "//base", "target2", UnconfiguredBuildTarget.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode2 =
         ImmutableUnconfiguredTargetNode.of(
