@@ -16,7 +16,10 @@
 
 package com.facebook.buck.skylark.parser.context;
 
+import com.facebook.buck.parser.api.ImmutablePackageMetadata;
+import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.skylark.packages.PackageContext;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -32,13 +35,15 @@ import javax.annotation.Nullable;
 /**
  * Tracks parse context.
  *
- * <p>This class provides API to record information retrieved while parsing a build file like parsed
- * rules.
+ * <p>This class provides API to record information retrieved while parsing a build or package file
+ * like parsed rules or a package definition.
  */
 public class ParseContext {
   // internal variable exposed to rules that is used to track parse events. This allows us to
   // remove parse state from rules and as such makes rules reusable across parse invocations
   private static final String PARSE_CONTEXT = "$parse_context";
+
+  private @Nullable ImmutablePackageMetadata pkg;
 
   private final Map<String, ImmutableMap<String, Object>> rawRules;
   // stores every accessed configuration option while parsing the build file.
@@ -52,14 +57,26 @@ public class ParseContext {
     this.packageContext = packageContext;
   }
 
+  /** Records the parsed {@code rawPackage}. */
+  public void recordPackage(ImmutablePackageMetadata pkg, FuncallExpression ast)
+      throws EvalException {
+    Preconditions.checkState(rawRules.isEmpty(), "Package files cannot contain rules.");
+    if (this.pkg != null) {
+      throw new EvalException(
+          ast.getLocation(), String.format("Only one package is allow per package file."));
+    }
+    this.pkg = pkg;
+  }
+
   /** Records the parsed {@code rawRule}. */
   public void recordRule(ImmutableMap<String, Object> rawRule, FuncallExpression ast)
       throws EvalException {
+    Preconditions.checkState(pkg == null, "Build files cannot contain package definitions.");
     Object nameObject =
         Objects.requireNonNull(rawRule.get("name"), "Every target must have a name.");
     if (!(nameObject instanceof String)) {
       throw new IllegalArgumentException(
-          "Targe name must be string, it is "
+          "Target name must be string, it is "
               + nameObject
               + " ("
               + nameObject.getClass().getName()
@@ -84,6 +101,14 @@ public class ParseContext {
     readConfigOptions
         .computeIfAbsent(section, s -> new HashMap<>())
         .putIfAbsent(key, Optional.ofNullable(value));
+  }
+
+  /** @return The package in the parsed package file if defined. */
+  public ImmutablePackageMetadata getPackage() {
+    if (pkg == null) {
+      return PackageMetadata.SINGLETON;
+    }
+    return pkg;
   }
 
   /**
