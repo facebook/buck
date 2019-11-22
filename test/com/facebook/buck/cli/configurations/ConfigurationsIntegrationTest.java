@@ -34,6 +34,7 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.MatcherAssert;
@@ -557,5 +558,17 @@ public class ConfigurationsIntegrationTest {
         result.getStderr(),
         Matchers.containsString(
             "Cannot use select() expression when target platform is not specified"));
+  }
+
+  @Test
+  public void exeTarget() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exe_target", tmp);
+    workspace.setUp();
+
+    Path outTxt =
+        workspace.buildAndReturnOutput("--target-platforms=//:t", "--host-platform=//:h", "//:g");
+    List<String> lines = Files.readAllLines(outTxt);
+    assertEquals(ImmutableList.of("tttarget"), lines);
   }
 }

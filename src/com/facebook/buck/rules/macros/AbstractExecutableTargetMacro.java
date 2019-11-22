@@ -19,6 +19,7 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
+/** Like {@code exe} macro but does not switch to host platform */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractExecutableMacro extends AbstractExecutableTargetOrHostMacro {}
+abstract class AbstractExecutableTargetMacro extends AbstractExecutableTargetOrHostMacro {}

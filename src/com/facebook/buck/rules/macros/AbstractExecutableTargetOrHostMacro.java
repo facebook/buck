@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,12 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
-
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractExecutableMacro extends AbstractExecutableTargetOrHostMacro {}
+/** Marker for macros which expand to executable. */
+public abstract class AbstractExecutableTargetOrHostMacro extends BuildTargetMacro {}

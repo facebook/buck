@@ -25,10 +25,17 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ToolArg;
 
 /** Resolves to the executable command for a build target referencing a {@link BinaryBuildRule}. */
-public class ExecutableMacroExpander extends BuildTargetMacroExpander<ExecutableMacro> {
+public class ExecutableMacroExpander<M extends AbstractExecutableTargetOrHostMacro>
+    extends BuildTargetMacroExpander<M> {
+  private final Class<M> macroClass;
+
+  public ExecutableMacroExpander(Class<M> macroClass) {
+    this.macroClass = macroClass;
+  }
+
   @Override
-  public Class<ExecutableMacro> getInputClass() {
-    return ExecutableMacro.class;
+  public Class<M> getInputClass() {
+    return macroClass;
   }
 
   protected Tool getTool(BuildRule rule) throws MacroException {
@@ -42,7 +49,7 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander<Executable
   }
 
   @Override
-  protected Arg expand(SourcePathResolverAdapter resolver, ExecutableMacro ignored, BuildRule rule)
+  protected Arg expand(SourcePathResolverAdapter resolver, M ignored, BuildRule rule)
       throws MacroException {
     return ToolArg.of(getTool(rule));
   }

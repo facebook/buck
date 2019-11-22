@@ -69,7 +69,9 @@ import com.facebook.buck.rules.macros.CxxFlagsMacro;
 import com.facebook.buck.rules.macros.CxxGenruleFilterAndTargetsMacro;
 import com.facebook.buck.rules.macros.CxxMacro;
 import com.facebook.buck.rules.macros.CxxppFlagsMacro;
+import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LdMacro;
 import com.facebook.buck.rules.macros.LdflagsSharedFilterMacro;
 import com.facebook.buck.rules.macros.LdflagsSharedMacro;
@@ -209,7 +211,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         maybeCxxPlatform.get().resolve(resolver, buildTarget.getTargetConfiguration());
     ImmutableList.Builder<MacroExpander<? extends Macro, ?>> expanders = ImmutableList.builder();
 
-    expanders.add(new ExecutableMacroExpander());
+    expanders.add(new ExecutableMacroExpander<>(ExecutableMacro.class));
+    expanders.add(new ExecutableMacroExpander<>(ExecutableTargetMacro.class));
     expanders.add(new CxxLocationMacroExpander(cxxPlatform));
     expanders.add(new LocationPlatformMacroExpander(cxxPlatform));
     expanders.add(

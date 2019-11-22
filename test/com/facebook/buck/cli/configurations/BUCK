@@ -8,6 +8,10 @@ java_test(
         ["testdata/**"],
     ),
     deps = [
+        # Use python_binary in tests
+        "//src/com/facebook/buck/features/python:python",
+        "//src/com/facebook/buck/features/python/toolchain/impl:impl",
+        # Test util
         "//test/com/facebook/buck/android:testutil",
         "//test/com/facebook/buck/test:testutil",
         "//test/com/facebook/buck/testutil:testutil",

@@ -45,6 +45,7 @@ import com.facebook.buck.rules.macros.CxxMacro;
 import com.facebook.buck.rules.macros.CxxppFlagsMacro;
 import com.facebook.buck.rules.macros.EnvMacro;
 import com.facebook.buck.rules.macros.ExecutableMacro;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LdMacro;
 import com.facebook.buck.rules.macros.LdflagsSharedFilterMacro;
 import com.facebook.buck.rules.macros.LdflagsSharedMacro;
@@ -159,6 +160,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 .put("classpath", ClasspathMacro.class)
                 .put("classpath_abi", ClasspathAbiMacro.class)
                 .put("exe", ExecutableMacro.class)
+                .put("exe_target", ExecutableTargetMacro.class)
                 .put("env", EnvMacro.class)
                 .put("location", LocationMacro.class)
                 .put("location-platform", LocationPlatformMacro.class)
@@ -202,6 +204,11 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                     // TODO(nga): switch to host
                     BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
                     ExecutableMacro::of),
+                new BuildTargetMacroTypeCoercer<>(
+                    buildTargetTypeCoercer,
+                    ExecutableTargetMacro.class,
+                    BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
+                    ExecutableTargetMacro::of),
                 new EnvMacroTypeCoercer(),
                 new LocationMacroTypeCoercer(buildTargetTypeCoercer),
                 new LocationPlatformMacroTypeCoercer(buildTargetTypeCoercer),

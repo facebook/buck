@@ -20,7 +20,9 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
@@ -41,7 +43,10 @@ public class OcamlDescriptionEnhancer {
             target,
             cellPathResolver,
             graphBuilder,
-            ImmutableList.of(new LocationMacroExpander(), new ExecutableMacroExpander()));
+            ImmutableList.of(
+                new LocationMacroExpander(),
+                new ExecutableMacroExpander<>(ExecutableMacro.class),
+                new ExecutableMacroExpander<>(ExecutableTargetMacro.class)));
     for (StringWithMacros flag : flags) {
       args.add(macrosConverter.convert(flag));
     }

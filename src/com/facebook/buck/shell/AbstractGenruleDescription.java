@@ -37,7 +37,9 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.macros.ClasspathAbiMacroExpander;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
@@ -141,7 +143,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         ImmutableList.of(
             new ClasspathMacroExpander(),
             new ClasspathAbiMacroExpander(),
-            new ExecutableMacroExpander(),
+            new ExecutableMacroExpander<>(ExecutableMacro.class),
+            new ExecutableMacroExpander<>(ExecutableTargetMacro.class),
             new WorkerMacroExpander(),
             new LocationMacroExpander(),
             new MavenCoordinatesMacroExpander(),

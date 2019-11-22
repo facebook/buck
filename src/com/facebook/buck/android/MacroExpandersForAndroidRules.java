@@ -16,7 +16,9 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -24,5 +26,8 @@ import com.google.common.collect.ImmutableList;
 
 class MacroExpandersForAndroidRules {
   static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
-      ImmutableList.of(new ExecutableMacroExpander(), new LocationMacroExpander());
+      ImmutableList.of(
+          new ExecutableMacroExpander<>(ExecutableMacro.class),
+          new ExecutableMacroExpander<>(ExecutableTargetMacro.class),
+          new LocationMacroExpander());
 }
