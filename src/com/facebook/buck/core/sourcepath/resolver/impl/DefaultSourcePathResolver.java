@@ -67,7 +67,7 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
       ImmutableSortedSet<SourcePath> resolvedPaths =
           ((HasMultipleOutputs) rule)
               .getSourcePathToOutput(buildTargetWithOutputs.getOutputLabel());
-      if (resolvedPaths.isEmpty()) {
+      if (resolvedPaths == null || resolvedPaths.isEmpty()) {
         throw new HumanReadableException(
             "No known output for: %s", targetSourcePath.getTargetWithOutputs());
       }

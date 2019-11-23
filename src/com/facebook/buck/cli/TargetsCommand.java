@@ -33,6 +33,7 @@ import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
@@ -1188,7 +1189,9 @@ public class TargetsCommand extends AbstractCommand {
             PathUtils.getUserFacingOutputPath(
                     sourcePathResolverAdapter,
                     rule,
-                    params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink())
+                    params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
+                    // TODO(irenewchen): Targets command isn't supported with output labels (yet)
+                    OutputLabel.DEFAULT)
                 .map(path -> pathToString(path, params))
                 .ifPresent(builder::setOutputPath);
             // If the output dir is requested, also calculate the generated src dir

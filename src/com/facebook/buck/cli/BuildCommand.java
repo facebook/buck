@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -526,9 +527,14 @@ public class BuildCommand extends AbstractCommand {
       Path lastOutputDirPath,
       BuildRule rule)
       throws IOException {
+    // TODO(irenewchen): This shouldn't use default output label after GraphsAndBuildTargets knows
+    // about output labels
     Optional<Path> outputPath =
         PathUtils.getUserFacingOutputPath(
-            pathResolver, rule, buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink());
+            pathResolver,
+            rule,
+            buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink(),
+            OutputLabel.DEFAULT);
     if (outputPath.isPresent()) {
       Path absolutePath = outputPath.get();
       Path destPath;
@@ -600,11 +606,14 @@ public class BuildCommand extends AbstractCommand {
     }
     for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
       BuildRule rule = graphBuilder.requireRule(buildTarget);
+      // TODO(irenewchen): This shouldn't use default output label after GraphsAndBuildTargets knows
+      // about output labels
       Optional<Path> outputPath =
           PathUtils.getUserFacingOutputPath(
                   graphBuilder.getSourcePathResolver(),
                   rule,
-                  params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink())
+                  params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
+                  OutputLabel.DEFAULT)
               .map(
                   path ->
                       showFullOutput || showFullJsonOutput

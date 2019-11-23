@@ -15,22 +15,52 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/** Path-related utillity methods for the command-line interface. */
+/** Path-related utility methods for the command-line interface. */
 public class PathUtils {
   private PathUtils() {}
 
-  /** Returns absolute path to the output rule, if the rule has an output. */
+  /**
+   * Returns absolute path to the output rule, if the rule has an output. Cannot currently handle
+   * multiple outputs since it returns either no path or one path only.
+   *
+   * @throws IllegalStateException if the given rule implements {@link HasMultipleOutputs} and
+   *     returns more than one output from {@link
+   *     HasMultipleOutputs#getSourcePathToOutput(OutputLabel)}
+   */
   static Optional<Path> getUserFacingOutputPath(
-      SourcePathResolverAdapter pathResolver, BuildRule rule, boolean buckOutCompatLink) {
-    Optional<Path> outputPathOptional =
-        Optional.ofNullable(rule.getSourcePathToOutput()).map(pathResolver::getRelativePath);
-
+      SourcePathResolverAdapter pathResolver,
+      BuildRule rule,
+      boolean buckOutCompatLink,
+      OutputLabel outputLabel) {
+    Optional<Path> outputPathOptional;
+    if (rule instanceof HasMultipleOutputs) {
+      ImmutableSortedSet<SourcePath> sourcePaths =
+          ((HasMultipleOutputs) rule).getSourcePathToOutput(outputLabel);
+      outputPathOptional =
+          sourcePaths == null || sourcePaths.isEmpty()
+              ? Optional.empty()
+              : Optional.of(pathResolver.getRelativePath(Iterables.getOnlyElement(sourcePaths)));
+    } else {
+      Preconditions.checkState(
+          outputLabel.equals(OutputLabel.DEFAULT),
+          "Multiple outputs not supported for %s target %s",
+          rule.getType(),
+          rule.getFullyQualifiedName());
+      outputPathOptional =
+          Optional.ofNullable(rule.getSourcePathToOutput()).map(pathResolver::getRelativePath);
+    }
     // When using buck out compat mode, we favor using the default buck output path in the UI, so
     // amend the output paths when this is set.
     if (outputPathOptional.isPresent() && buckOutCompatLink) {

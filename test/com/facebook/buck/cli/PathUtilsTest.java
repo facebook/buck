@@ -16,13 +16,17 @@
 package com.facebook.buck.cli;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -33,15 +37,20 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class PathUtilsTest {
+  @Rule public final ExpectedException exception = ExpectedException.none();
+
   private final ProjectFilesystem fileSystem = new FakeProjectFilesystem();
   private ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
   private SourcePathResolverAdapter pathResolver =
@@ -59,7 +68,7 @@ public class PathUtilsTest {
     Path expected = fileSystem.resolve(fileSystem.getBuckPaths().getBuckOut()).resolve("foo");
 
     assertThat(
-        PathUtils.getUserFacingOutputPath(pathResolver, rule, true).get(),
+        PathUtils.getUserFacingOutputPath(pathResolver, rule, true, OutputLabel.DEFAULT).get(),
         Matchers.equalTo(expected));
   }
 
@@ -71,8 +80,56 @@ public class PathUtilsTest {
     Path expected = fileSystem.getRootPath().resolve("foo");
 
     assertThat(
-        PathUtils.getUserFacingOutputPath(pathResolver, rule, false).get(),
+        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.DEFAULT).get(),
         Matchers.equalTo(expected));
+  }
+
+  @Test
+  public void resolvesOutputLabel() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
+    BuildRule rule =
+        new TestRuleWithMultipleOutputs(
+            buildTarget,
+            new FakeProjectFilesystem(),
+            null,
+            ImmutableMap.of(
+                "baz", Paths.get("baz"), "bar", Paths.get("bar"), "qux", Paths.get(("qux"))));
+    graphBuilder.addToIndex(rule);
+    Path expected = fileSystem.getRootPath().resolve("bar");
+
+    assertThat(
+        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, new OutputLabel("bar")).get(),
+        Matchers.equalTo(expected));
+  }
+
+  @Test
+  public void returnsEmptyIfRequestedLabelDoesNotExist() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
+    BuildRule rule =
+        new TestRuleWithMultipleOutputs(
+            buildTarget,
+            new FakeProjectFilesystem(),
+            null,
+            ImmutableMap.of(
+                "baz", Paths.get("baz"), "bar", Paths.get("bar"), "qux", Paths.get(("qux"))));
+    graphBuilder.addToIndex(rule);
+
+    assertFalse(
+        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, new OutputLabel("dne"))
+            .isPresent());
+  }
+
+  @Test
+  public void throwsIfMultipleOutputsNotSupported() {
+    exception.expect(IllegalStateException.class);
+    exception.expectMessage(
+        containsString("Multiple outputs not supported for test_rule target //:foo"));
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
+    BuildRule rule = new TestRule(buildTarget, fileSystem, Paths.get("foo"));
+    graphBuilder.addToIndex(rule);
+
+    PathUtils.getUserFacingOutputPath(pathResolver, rule, false, new OutputLabel("label"));
   }
 
   private static class TestRule extends AbstractBuildRule {
@@ -109,6 +166,37 @@ public class PathUtilsTest {
     @Override
     public final boolean isCacheable() {
       return false;
+    }
+  }
+
+  private static class TestRuleWithMultipleOutputs extends TestRule implements HasMultipleOutputs {
+    private final ImmutableMap<String, Path> outputLabelToSource;
+
+    protected TestRuleWithMultipleOutputs(
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
+        Path source,
+        ImmutableMap<String, Path> outputLabelToSource) {
+      super(buildTarget, projectFilesystem, source);
+      this.outputLabelToSource = outputLabelToSource;
+    }
+
+    @Override
+    @Nullable
+    public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
+      if (!outputLabel.getLabel().isPresent()) {
+        return ImmutableSortedSet.of(getSourcePathToOutput());
+      }
+      Path path = outputLabelToSource.get(outputLabel.getLabel().get());
+      return path == null
+          ? null
+          : ImmutableSortedSet.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), path));
+    }
+
+    @Override
+    public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>>
+        getSourcePathsByOutputsLabels() {
+      return ImmutableMap.of();
     }
   }
 }
