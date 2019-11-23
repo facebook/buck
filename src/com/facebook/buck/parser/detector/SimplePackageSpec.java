@@ -18,9 +18,10 @@ package com.facebook.buck.parser.detector;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.parser.buildtargetparser.BaseNameParser;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -30,33 +31,14 @@ import java.util.Optional;
  * only target label.
  */
 class SimplePackageSpec {
-  private final CanonicalCellName cell;
-  private final String baseNamePrefix;
+  private final CellRelativePath prefix;
 
-  SimplePackageSpec(CanonicalCellName cell, String baseNamePrefix) {
-    this.cell = cell;
-    this.baseNamePrefix = baseNamePrefix;
-
-    // self-check
-    Preconditions.checkState(baseNamePrefix.startsWith("//"));
-    Preconditions.checkState(baseNamePrefix.equals("//") || !baseNamePrefix.endsWith("/"));
+  public SimplePackageSpec(CellRelativePath prefix) {
+    this.prefix = prefix;
   }
 
   boolean matches(UnconfiguredBuildTarget target) {
-    if (target.getCell() != cell) {
-      return false;
-    }
-
-    if (!target.getBaseName().startsWith(baseNamePrefix)) {
-      return false;
-    }
-
-    if (baseNamePrefix.equals("//")) {
-      return true;
-    } else {
-      return target.getBaseName().length() == baseNamePrefix.length()
-          || target.getBaseName().charAt(baseNamePrefix.length()) == '/';
-    }
+    return target.getCellRelativeBasePath().startsWith(prefix);
   }
 
   // TODO(nga): this parser is similar BuildTargetMatcherParser,
@@ -70,24 +52,22 @@ class SimplePackageSpec {
 
     String cellName = split[0];
 
-    String basePath;
+    ForwardRelativePath basePath;
     if (split[1].equals("...")) {
-      basePath = "//";
+      basePath = ForwardRelativePath.EMPTY;
     } else if (split[1].endsWith("/...")) {
-      basePath = "//" + split[1].substring(0, split[1].length() - "/...".length());
+      basePath = ForwardRelativePath.of(split[1].substring(0, split[1].length() - "/...".length()));
     } else {
       throw new HumanReadableException("package spec must end with ...: '%s'", spec);
     }
 
-    BaseNameParser.checkBaseName(basePath, spec);
-
     CanonicalCellName cell =
         cellNameResolver.getName(Optional.of(cellName).filter(s -> !s.isEmpty()));
-    return new SimplePackageSpec(cell, basePath);
+    return new SimplePackageSpec(new ImmutableCellRelativePath(cell, basePath));
   }
 
   @Override
   public String toString() {
-    return cell + baseNamePrefix + (baseNamePrefix.isEmpty() ? "" : "/") + "...";
+    return prefix + (prefix.getPath().isEmpty() ? "" : "/") + "...";
   }
 }

@@ -33,6 +33,11 @@ public abstract class CellRelativePath implements Comparable<CellRelativePath> {
 
   public abstract ForwardRelativePath getPath();
 
+  public boolean startsWith(CellRelativePath other) {
+    return this.getCellName().equals(other.getCellName())
+        && this.getPath().startsWith(other.getPath());
+  }
+
   @Override
   public String toString() {
     return getCellName() + "//" + getPath();

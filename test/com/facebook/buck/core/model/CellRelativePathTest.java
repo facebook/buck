@@ -35,4 +35,30 @@ public class CellRelativePathTest {
                 CanonicalCellName.rootCell(), ForwardRelativePath.of("bar/baz"))
             .toString());
   }
+
+  @Test
+  public void startsWith() {
+    CellRelativePath fooBarBaz =
+        new ImmutableCellRelativePath(
+            CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelativePath.of("bar/baz"));
+    CellRelativePath fooBar =
+        new ImmutableCellRelativePath(
+            CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelativePath.of("bar"));
+    CellRelativePath foo =
+        new ImmutableCellRelativePath(
+            CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelativePath.of(""));
+    CellRelativePath bar =
+        new ImmutableCellRelativePath(
+            CanonicalCellName.unsafeOf(Optional.of("bar")), ForwardRelativePath.of(""));
+
+    CellRelativePath[] paths = {
+      foo, fooBar, fooBarBaz, bar,
+    };
+
+    for (CellRelativePath p1 : paths) {
+      for (CellRelativePath p2 : paths) {
+        assertEquals(p1.startsWith(p2), p1.toString().startsWith(p2.toString()));
+      }
+    }
+  }
 }
