@@ -133,8 +133,8 @@ public class RemoteExecutionEventListener
 
       Duration totalDuration =
           Timestamps.between(
-              event.getExecutedActionMetadata().get().getQueuedTimestamp(),
-              event.getExecutedActionMetadata().get().getOutputUploadCompletedTimestamp());
+              event.getExecutedActionMetadata().get().getWorkerStartTimestamp(),
+              event.getExecutedActionMetadata().get().getWorkerCompletedTimestamp());
       totalRemoteTimeMs.add(
           TimeUnit.SECONDS.toMillis(totalDuration.getSeconds())
               + TimeUnit.NANOSECONDS.toMillis(totalDuration.getNanos()));
