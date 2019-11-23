@@ -27,6 +27,9 @@ import java.nio.file.Path;
 
 public class ZipOutputStreams {
 
+  /** The size of the BufferedOutputStream used to wrap the underlying file. */
+  private static final int FILE_BUFFER_SIZE = 512 * 1024;
+
   private ZipOutputStreams() {
     // factory class
   }
@@ -39,7 +42,8 @@ public class ZipOutputStreams {
    * @param zipFile The file to write to.
    */
   public static CustomZipOutputStream newOutputStream(Path zipFile) throws IOException {
-    return newOutputStream(new BufferedOutputStream(Files.newOutputStream(zipFile)));
+    return newOutputStream(
+        new BufferedOutputStream(Files.newOutputStream(zipFile), FILE_BUFFER_SIZE));
   }
 
   /**
@@ -67,13 +71,15 @@ public class ZipOutputStreams {
   public static CustomZipOutputStream newOutputStream(Path zipFile, HandleDuplicates mode)
       throws IOException {
 
-    return newOutputStream(new BufferedOutputStream(Files.newOutputStream(zipFile)), mode);
+    return newOutputStream(
+        new BufferedOutputStream(Files.newOutputStream(zipFile), FILE_BUFFER_SIZE), mode);
   }
 
   public static CustomJarOutputStream newJarOutputStream(Path jarFile, HandleDuplicates mode)
       throws IOException {
 
-    return newJarOutputStream(new BufferedOutputStream(Files.newOutputStream(jarFile)), mode);
+    return newJarOutputStream(
+        new BufferedOutputStream(Files.newOutputStream(jarFile), FILE_BUFFER_SIZE), mode);
   }
 
   /**
