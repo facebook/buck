@@ -23,7 +23,6 @@ import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.WrapsException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,9 +35,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 
 public class ErrorLogger {
   private boolean suppressStackTraces = false;
@@ -102,14 +99,14 @@ public class ErrorLogger {
    * context.
    */
   public static class DeconstructedException {
+    private final Throwable originalException;
     private final Throwable rootCause;
-    @Nullable private final Throwable parent;
     private final ImmutableList<String> context;
 
     private DeconstructedException(
-        Throwable rootCause, @Nullable Throwable parent, ImmutableList<String> context) {
+        Throwable originalException, Throwable rootCause, ImmutableList<String> context) {
+      this.originalException = originalException;
       this.rootCause = rootCause;
-      this.parent = parent;
       this.context = context;
     }
 
@@ -161,12 +158,7 @@ public class ErrorLogger {
             "%s%s: %s", message, rootCause.getClass().getName(), rootCause.getMessage());
       }
 
-      if (parent == null) {
-        return String.format("%s%s", message, Throwables.getStackTraceAsString(rootCause));
-      }
-
-      Preconditions.checkState(parent.getCause() == rootCause);
-      return String.format("%s%s", message, getStackTraceOfCause(parent));
+      return String.format("%s%s", message, Throwables.getStackTraceAsString(originalException));
     }
 
     /** Indicates whether this exception is a user error or a buck internal error. */
@@ -231,8 +223,8 @@ public class ErrorLogger {
   }
 
   /** Deconstructs an exception to assist in creating user-friendly messages. */
-  public static DeconstructedException deconstruct(Throwable e) {
-    Throwable parent = null;
+  public static DeconstructedException deconstruct(Throwable originalException) {
+    Throwable e = originalException;
 
     // TODO(cjhopman): Think about how to handle multiline context strings.
     List<String> context = new LinkedList<>();
@@ -240,9 +232,7 @@ public class ErrorLogger {
     for (Throwable t : causeStack(e)) {
       if (t instanceof ExceptionWithContext) {
         ((ExceptionWithContext) t).getContext().ifPresent(msg -> context.add(0, msg));
-        Throwable cause = e.getCause();
-        parent = e;
-        e = cause;
+        e = e.getCause();
       }
     }
 
@@ -273,13 +263,11 @@ public class ErrorLogger {
       // TODO(cjhopman): Should parent point to the closest parent with context instead of just the
       // parent? If the parent doesn't include context, we're currently removing parts of the stack
       // trace without any context to replace it.
-      Throwable cause = e.getCause();
-      parent = e;
-      e = cause;
+      e = e.getCause();
     }
 
     return new DeconstructedException(
-        Objects.requireNonNull(e), parent, ImmutableList.copyOf(context));
+        originalException, Objects.requireNonNull(e), ImmutableList.copyOf(context));
   }
 
   private void logUserVisible(DeconstructedException deconstructed) {
@@ -290,14 +278,5 @@ public class ErrorLogger {
     } else {
       logger.logUserVisibleInternalError(augmentedError);
     }
-  }
-
-  private static String getStackTraceOfCause(Throwable parent) {
-    // If there's a parent, print the parent's stack trace and then filter out it and its
-    // suppressed exceptions. This allows us to elide stack frames that are shared between the
-    // root cause and its parent.
-    return Pattern.compile(".*?" + System.lineSeparator() + "Caused by: ", Pattern.DOTALL)
-        .matcher(Throwables.getStackTraceAsString(parent))
-        .replaceFirst("");
   }
 }
