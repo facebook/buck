@@ -24,8 +24,8 @@ import com.facebook.buck.doctor.config.DoctorEndpointResponse;
 import com.facebook.buck.doctor.config.DoctorIssueCategory;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.doctor.config.DoctorSuggestion;
-import com.facebook.buck.doctor.config.ImmutableDoctorEndpointResponse;
 import com.facebook.buck.doctor.config.ImmutableDoctorEndpointRequest;
+import com.facebook.buck.doctor.config.ImmutableDoctorEndpointResponse;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
@@ -201,7 +201,11 @@ public class DoctorReportHelper {
         String body = new String(httpResponse.body().bytes(), Charsets.UTF_8);
         return ObjectMappers.readValue(body, DoctorEndpointResponse.class);
       }
-      return createErrorDoctorEndpointResponse("Request was not successful.");
+      return createErrorDoctorEndpointResponse(
+          "Request was not successful. HTTP Status: "
+              + httpResponse.code()
+              + " Message: "
+              + httpResponse.message());
     } catch (IOException e) {
       return createErrorDoctorEndpointResponse(String.format(DECODE_FAIL_TEMPLATE, e.getMessage()));
     }
