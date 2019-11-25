@@ -151,6 +151,19 @@ def standard_java_test(
             **kwargs
         )
 
+def standard_java_benchmark(
+        name,
+        deps,
+):
+    native.java_library(
+        name = name,
+        srcs = native.glob(["*Benchmark.java"]),
+        plugins = ["//third-party/java/jmh:jmh-generator-annprocess-plugin"],
+        deps = deps + [
+            "//third-party/java/jmh:jmh",
+        ],
+    )
+
 def _add_pf4j_plugin_framework(**kwargs):
     kwargs["provided_deps"] = _append_and_get_uniq_deps(kwargs, "provided_deps",  [
         "//third-party/java/pf4j:pf4j",

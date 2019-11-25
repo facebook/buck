@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_test", "standard_java_benchmark")
 
 java_library(
     name = "testutil",
@@ -59,15 +59,10 @@ java_test(
     ],
 )
 
-java_library(
+standard_java_benchmark(
     name = "benchmark_lib",
-    srcs = glob(
-        ["*Benchmark.java"],
-    ),
-    plugins = ["//third-party/java/jmh:jmh-generator-annprocess-plugin"],
     deps = [
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
-        "//third-party/java/jmh:jmh",
     ],
 )
