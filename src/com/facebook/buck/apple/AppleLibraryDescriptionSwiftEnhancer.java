@@ -38,6 +38,8 @@ import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
+import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -87,9 +89,11 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         AppleLibraryDescription.underlyingModuleCxxPreprocessorInput(
             target, graphBuilder, platform);
 
+    SwiftPlatform swiftPlatform = applePlatform.getSwiftPlatform().get();
+
     return SwiftLibraryDescription.createSwiftCompileRule(
         platform,
-        applePlatform.getSwiftPlatform().get(),
+        swiftPlatform,
         swiftBuckConfig,
         target,
         paramsWithDeps,
@@ -99,7 +103,14 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         swiftArgs,
         preprocessor,
         preprocessorFlags,
-        underlyingModule.isPresent());
+        underlyingModule.isPresent(),
+        args.getTargetSdkVersion()
+            .map(
+                version ->
+                    SwiftTargetTriple.builder()
+                        .from(swiftPlatform.getSwiftTarget())
+                        .setTargetSdkVersion(version)
+                        .build()));
   }
 
   /**

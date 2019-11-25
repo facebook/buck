@@ -66,6 +66,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -457,7 +458,8 @@ public class SwiftLibraryDescription
       SwiftLibraryDescriptionArg args,
       Preprocessor preprocessor,
       PreprocessorFlags preprocessFlags,
-      boolean importUnderlyingModule) {
+      boolean importUnderlyingModule,
+      Optional<SwiftTargetTriple> swiftTarget) {
 
     DepsBuilder srcsDepsBuilder = new DepsBuilder(graphBuilder);
     args.getSrcs().forEach(src -> srcsDepsBuilder.add(src));
@@ -467,7 +469,7 @@ public class SwiftLibraryDescription
         cxxPlatform,
         swiftBuckConfig,
         buildTarget,
-        swiftPlatform.getSwiftTarget(),
+        swiftTarget.orElse(swiftPlatform.getSwiftTarget()),
         projectFilesystem,
         paramsWithSrcDeps,
         swiftPlatform.getSwiftc(),

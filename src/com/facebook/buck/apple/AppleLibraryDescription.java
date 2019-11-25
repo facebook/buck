@@ -622,9 +622,12 @@ public class AppleLibraryDescription
           ImmutableSortedSet<BuildTarget> extraCxxDeps,
           CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxDeps) {
 
+    Optional<AppleCxxPlatform> appleCxxPlatform =
+        getAppleCxxPlatformDomain(buildTarget.getTargetConfiguration()).getValue(buildTarget);
+
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
     AppleDescriptions.populateCxxLibraryDescriptionArg(
-        graphBuilder.getSourcePathResolver(), delegateArg, args, buildTarget);
+        graphBuilder.getSourcePathResolver(), delegateArg, appleCxxPlatform, args, buildTarget);
 
     BuildRuleParams newParams;
     Optional<BuildRule> swiftCompanionBuildRule =
@@ -948,9 +951,12 @@ public class AppleLibraryDescription
       CellPathResolver cellRoots,
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) {
+    Optional<AppleCxxPlatform> appleCxxPlatform =
+        getAppleCxxPlatformDomain(buildTarget.getTargetConfiguration()).getValue(buildTarget);
+
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
     AppleDescriptions.populateCxxLibraryDescriptionArg(
-        graphBuilder.getSourcePathResolver(), delegateArg, args, buildTarget);
+        graphBuilder.getSourcePathResolver(), delegateArg, appleCxxPlatform, args, buildTarget);
     return cxxLibraryMetadataFactory.createMetadata(
         buildTarget, graphBuilder, cellRoots, delegateArg.build(), metadataClass);
   }

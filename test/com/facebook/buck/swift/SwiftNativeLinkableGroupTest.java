@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
@@ -110,7 +111,12 @@ public class SwiftNativeLinkableGroupTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            "x86_64-apple-ios9.3");
+            SwiftTargetTriple.builder()
+                .setArchitecture("x86_64")
+                .setVendor("apple")
+                .setPlatformName("ios")
+                .setTargetSdkVersion("9.3")
+                .build());
 
     ImmutableList.Builder<Arg> staticArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(
@@ -151,7 +157,12 @@ public class SwiftNativeLinkableGroupTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            "x86_64-apple-ios9.3");
+            SwiftTargetTriple.builder()
+                .setArchitecture("x86_64")
+                .setVendor("apple")
+                .setPlatformName("ios")
+                .setTargetSdkVersion("9.3")
+                .build());
 
     ImmutableList.Builder<Arg> sharedArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(

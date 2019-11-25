@@ -29,6 +29,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -85,6 +86,13 @@ public class SwiftPlatformFactoryIntegrationTest {
   @Test
   public void testBuildSwiftPlatformWithEmptyToolchainPaths() throws IOException {
     Path developerDir = tmp.newFolder("Developer");
+    SwiftTargetTriple triple =
+        SwiftTargetTriple.builder()
+            .setArchitecture("x86_64")
+            .setVendor("apple")
+            .setPlatformName("ios")
+            .setTargetSdkVersion("9.3")
+            .build();
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
             createAppleSdk(),
@@ -92,12 +100,12 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            "x86_64-apple-ios9.3");
+            triple);
     assertThat(swiftPlatform.getSwiftStdlibTool().get(), equalTo(swiftStdTool));
     assertThat(swiftPlatform.getSwiftc(), equalTo(swiftcTool));
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
-    assertThat(swiftPlatform.getSwiftTarget(), equalTo("x86_64-apple-ios9.3"));
+    assertThat(swiftPlatform.getSwiftTarget(), equalTo(triple));
   }
 
   @Test
@@ -111,7 +119,12 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            "x86_64-apple-ios9.3");
+            SwiftTargetTriple.builder()
+                .setArchitecture("x86_64")
+                .setVendor("apple")
+                .setPlatformName("ios")
+                .setTargetSdkVersion("9.3")
+                .build());
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
   }
@@ -134,7 +147,12 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            "x86_64-apple-ios9.3");
+            SwiftTargetTriple.builder()
+                .setArchitecture("x86_64")
+                .setVendor("apple")
+                .setPlatformName("ios")
+                .setTargetSdkVersion("9.3")
+                .build());
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), hasSize(1));
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), hasSize(2));
   }

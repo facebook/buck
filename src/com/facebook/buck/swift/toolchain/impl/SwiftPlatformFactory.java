@@ -22,6 +22,7 @@ import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -45,7 +46,7 @@ public class SwiftPlatformFactory {
       Tool swiftc,
       Optional<Tool> swiftStdLibTool,
       boolean shouldLinkSystemSwift,
-      String swiftTarget) {
+      SwiftTargetTriple swiftTarget) {
     String platformName = sdk.getApplePlatform().getName();
     Set<Path> toolchainPaths = sdkPaths.getToolchainPaths();
     SwiftPlatform.Builder builder =

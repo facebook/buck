@@ -48,4 +48,10 @@ public interface AppleNativeTargetDescriptionArg
           "Cannot be modular=True and have a bridging_header in the same rule");
     }
   }
+
+  /**
+   * The minimum OS version for which this target should be built. If set, this will override the
+   * config-level option.
+   */
+  Optional<String> getTargetSdkVersion();
 }

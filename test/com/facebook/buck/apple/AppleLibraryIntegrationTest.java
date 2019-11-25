@@ -982,6 +982,11 @@ public class AppleLibraryIntegrationTest {
     testModularScenario("umbrella_directory_modulemap_per_library", "Test");
   }
 
+  @Test
+  public void testTargetSDKVersion() throws Exception {
+    testModularScenario("target_sdk_version", "Test");
+  }
+
   private ProjectWorkspace testModularScenario(String scenario, String targetName)
       throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);

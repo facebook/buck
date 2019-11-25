@@ -48,6 +48,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -87,7 +88,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path swiftdocPath;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
-  @AddToRuleKey private final String swiftTarget;
+  @AddToRuleKey private final SwiftTargetTriple swiftTarget;
   @AddToRuleKey private final Optional<String> version;
   @AddToRuleKey private final ImmutableList<? extends Arg> compilerFlags;
 
@@ -110,7 +111,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       CxxPlatform cxxPlatform,
       SwiftBuckConfig swiftBuckConfig,
       BuildTarget buildTarget,
-      String swiftTarget,
+      SwiftTargetTriple swiftTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Tool swiftCompiler,
@@ -185,7 +186,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
     compilerCommand.addAll(swiftCompiler.getCommandPrefix(resolver));
 
-    compilerCommand.add("-target", swiftTarget);
+    compilerCommand.add("-target", swiftTarget.getTriple());
 
     if (bridgingHeader.isPresent()) {
       compilerCommand.add(
@@ -293,7 +294,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     // The swift compiler path will be the first element of the command prefix
     compilerCommand.add(commandPrefix.get(0));
     compilerCommand.add("-modulewrap", modulePath.toString(), "-o", moduleObjectPath.toString());
-    compilerCommand.add("-target", swiftTarget);
+    compilerCommand.add("-target", swiftTarget.getTriple());
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(

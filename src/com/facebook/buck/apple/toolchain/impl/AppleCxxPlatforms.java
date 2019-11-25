@@ -57,6 +57,7 @@ import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.stream.RichStream;
@@ -467,10 +468,12 @@ public class AppleCxxPlatforms {
     AppleSdkPaths.Builder swiftSdkPathsBuilder = AppleSdkPaths.builder().from(sdkPaths);
     Optional<SwiftPlatform> swiftPlatform =
         getSwiftPlatform(
-            targetArchitecture
-                + "-apple-"
-                + applePlatform.getSwiftName().orElse(applePlatform.getName())
-                + minVersion,
+            SwiftTargetTriple.builder()
+                .setArchitecture(targetArchitecture)
+                .setVendor("apple")
+                .setPlatformName(applePlatform.getSwiftName().orElse(applePlatform.getName()))
+                .setTargetSdkVersion(minVersion)
+                .build(),
             version,
             targetSdk,
             swiftSdkPathsBuilder.build(),
@@ -507,7 +510,7 @@ public class AppleCxxPlatforms {
   }
 
   private static Optional<SwiftPlatform> getSwiftPlatform(
-      String targetArchitectureName,
+      SwiftTargetTriple swiftTarget,
       String version,
       AppleSdk sdk,
       AppleSdkPaths sdkPaths,
@@ -546,12 +549,7 @@ public class AppleCxxPlatforms {
     return swiftc.map(
         tool ->
             SwiftPlatformFactory.build(
-                sdk,
-                sdkPaths,
-                tool,
-                swiftStdLibTool,
-                shouldLinkSystemSwift,
-                targetArchitectureName));
+                sdk, sdkPaths, tool, swiftStdLibTool, shouldLinkSystemSwift, swiftTarget));
   }
 
   private static void applySourceLibrariesParamIfNeeded(

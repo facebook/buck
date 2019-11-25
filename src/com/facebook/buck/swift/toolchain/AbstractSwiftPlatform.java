@@ -61,8 +61,8 @@ interface AbstractSwiftPlatform {
   ImmutableList<Path> getSwiftSharedLibraryRunPaths();
 
   /**
-   * @return String that represents the architecture target the swift module is built for e.g.
+   * @return Structure that represents the architecture target the swift module is built for e.g.
    *     x86_64-apple-ios9.0
    */
-  String getSwiftTarget();
+  SwiftTargetTriple getSwiftTarget();
 }

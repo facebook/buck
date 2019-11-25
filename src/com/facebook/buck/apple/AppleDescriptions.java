@@ -336,6 +336,7 @@ public class AppleDescriptions {
   public static void populateCxxLibraryDescriptionArg(
       SourcePathResolverAdapter resolver,
       CxxLibraryDescriptionArg.Builder output,
+      Optional<AppleCxxPlatform> appleCxxPlatform,
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget) {
     populateCxxConstructorArg(
@@ -361,6 +362,20 @@ public class AppleDescriptions {
                   Either.ofLeft(
                       "-fmodule-name="
                           + arg.getHeaderPathPrefix().orElse(buildTarget.getShortName())))));
+    }
+
+    if (appleCxxPlatform.isPresent()) {
+      String platformVersion = appleCxxPlatform.get().getMinVersion();
+      Optional<String> targetVersion = arg.getTargetSdkVersion();
+
+      // If the target has a different target SDK version from the overall platform, we add
+      // a compiler flag to override that base version with the per-target version.
+      if (targetVersion.isPresent() && platformVersion != targetVersion.get()) {
+        String versionFlag =
+            appleCxxPlatform.get().getAppleSdk().getApplePlatform().getMinVersionFlagPrefix()
+                + targetVersion.get();
+        output.addCompilerFlags(StringWithMacros.of(ImmutableList.of(Either.ofLeft(versionFlag))));
+      }
     }
   }
 

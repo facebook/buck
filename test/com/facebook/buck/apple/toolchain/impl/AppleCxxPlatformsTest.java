@@ -81,6 +81,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.environment.Platform;
@@ -1153,7 +1154,15 @@ public class AppleCxxPlatformsTest {
     Tool swiftc = swiftPlatform.getSwiftc();
     assertThat(swiftc, notNullValue());
     assertThat(swiftc, instanceOf(VersionedTool.class));
-    assertThat(swiftPlatform.getSwiftTarget(), equalTo("i386-apple-ios7.0"));
+    assertThat(
+        swiftPlatform.getSwiftTarget(),
+        equalTo(
+            SwiftTargetTriple.builder()
+                .setArchitecture("i386")
+                .setVendor("apple")
+                .setPlatformName("ios")
+                .setTargetSdkVersion("7.0")
+                .build()));
   }
 
   @Test

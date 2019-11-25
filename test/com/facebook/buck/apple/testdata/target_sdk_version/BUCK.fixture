@@ -1,0 +1,19 @@
+apple_library(
+    name = "AvailableLibrary",
+    exported_headers = [
+        "AvailableLibrary.h",
+    ],
+    modular = True,
+)
+
+apple_library(
+    name = "Test",
+    srcs = [
+        "Test.m",
+        "Test.swift",
+    ],
+    compiler_flags = ["-Werror=unguarded-availability"],
+    exported_deps = [":AvailableLibrary"],
+    swift_version = "5",
+    target_sdk_version = "12.0",
+)
