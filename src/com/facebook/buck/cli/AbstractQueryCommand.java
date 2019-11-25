@@ -792,10 +792,11 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     }
     SortedMap<String, Object> attributes = new TreeMap<>();
     if (!patternsMatcher.isMatchesNone()) {
-      for (String key : targetNodeAttributes.keySet()) {
-        String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, key);
+      for (Map.Entry<String, Object> entry : targetNodeAttributes.entrySet()) {
+        String snakeCaseKey =
+            CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entry.getKey());
         if (patternsMatcher.matches(snakeCaseKey)) {
-          attributes.put(snakeCaseKey, targetNodeAttributes.get(key));
+          attributes.put(snakeCaseKey, entry.getValue());
         }
       }
 
