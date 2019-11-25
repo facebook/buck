@@ -59,14 +59,6 @@ java_test(
     ],
 )
 
-java_binary(
-    name = "benchmark",
-    main_class = "com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemGetDirectoryContentsBenchmark",
-    deps = [
-        ":benchmark_lib",
-    ],
-)
-
 java_library(
     name = "benchmark_lib",
     srcs = glob(
