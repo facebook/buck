@@ -105,7 +105,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
     this.metadataCache =
         new ActionGraphBuilderMetadataCache(this, this.targetGraph, initialCapacity);
     this.toolchainProviderResolver =
-        target -> cellProvider.getBuildTargetCell(target).getToolchainProvider();
+        target -> cellProvider.getCellByCanonicalCellName(target.getCell()).getToolchainProvider();
     this.parallelizer =
         new Parallelizer() {
           @Override

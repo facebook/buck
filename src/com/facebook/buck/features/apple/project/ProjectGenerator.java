@@ -3050,7 +3050,7 @@ public class ProjectGenerator {
     // Writes the resulting header map.
     Path mergedHeaderMapRoot = getPathToMergedHeaderMap();
     Path headerMapLocation = getHeaderMapLocationFromSymlinkTreeRoot(mergedHeaderMapRoot);
-    Cell workspaceCell = projectCell.getCell(workspaceTarget.get());
+    Cell workspaceCell = projectCell.getCell(workspaceTarget.get().getCell());
     workspaceCell.getFilesystem().mkdirs(mergedHeaderMapRoot);
     workspaceCell
         .getFilesystem()
@@ -3747,7 +3747,7 @@ public class ProjectGenerator {
           getHeaderSearchPathFromSymlinkTreeRoot(
               getHeaderSymlinkTreePath(targetNode, HeaderVisibility.PRIVATE)));
       if (options.shouldUseAbsoluteHeaderMapPaths()) {
-        Cell workspaceCell = projectCell.getCell(workspaceTarget.get());
+        Cell workspaceCell = projectCell.getCell(workspaceTarget.get().getCell());
         Path absolutePath = workspaceCell.getFilesystem().resolve(getPathToMergedHeaderMap());
         builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
       } else {

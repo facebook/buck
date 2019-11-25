@@ -209,7 +209,7 @@ public class PerBuildStateFactory {
         ConfigurationRuleRegistryFactory.createRegistry(
             (target, callerContext) ->
                 nonResolvingTargetNodeParsePipeline.getNode(
-                    cellManager.getCell(target), target, callerContext));
+                    cellManager.getCell(target.getCell()), target, callerContext));
 
     SelectableResolver selectableResolver =
         new ConfigurationRuleSelectableResolver(

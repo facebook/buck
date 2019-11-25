@@ -17,9 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.util.types.Unit;
 import java.io.IOException;
@@ -45,20 +43,16 @@ class CellManager {
     }
   }
 
-  Cell getCell(UnconfiguredBuildTargetView target) {
-    Cell cell = rootCell.getCell(target);
+  Cell getCell(CanonicalCellName cellName) {
+    Cell cell = rootCell.getCell(cellName);
     register(cell);
     return cell;
   }
 
-  Cell getCell(BuildTarget target) {
-    return getCell(target.getUnconfiguredBuildTargetView());
-  }
-
   void registerInputsUnderSymlinks(Path buildFile, TargetNode<?> node) throws IOException {
-    Cell currentCell = getCell(node.getBuildTarget());
+    Cell currentCell = getCell(node.getBuildTarget().getCell());
     symlinkCache.registerInputsUnderSymlinks(
-        currentCell, getCell(node.getBuildTarget()), buildFile, node);
+        currentCell, getCell(node.getBuildTarget().getCell()), buildFile, node);
   }
 
   void close() {

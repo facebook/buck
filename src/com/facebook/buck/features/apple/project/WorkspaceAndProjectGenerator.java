@@ -454,7 +454,7 @@ public class WorkspaceAndProjectGenerator {
         ImmutableMultimap.builder();
     for (TargetNode<?> targetNode : projectGraph.getNodes()) {
       BuildTarget buildTarget = targetNode.getBuildTarget();
-      projectCellToBuildTargetsBuilder.put(rootCell.getCell(buildTarget), buildTarget);
+      projectCellToBuildTargetsBuilder.put(rootCell.getCell(buildTarget.getCell()), buildTarget);
     }
     ImmutableMultimap<Cell, BuildTarget> projectCellToBuildTargets =
         projectCellToBuildTargetsBuilder.build();

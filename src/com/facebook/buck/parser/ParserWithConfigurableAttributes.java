@@ -117,7 +117,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
       throws BuildFileParseException {
     BuildTarget buildTarget = targetNode.getBuildTarget();
-    Cell owningCell = cell.getCell(buildTarget);
+    Cell owningCell = cell.getCell(buildTarget.getCell());
     BuildFileManifest buildFileManifest =
         getTargetNodeRawAttributes(
             state,
@@ -131,7 +131,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   public ListenableFuture<SortedMap<String, Object>> getTargetNodeRawAttributesJob(
       PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
       throws BuildFileParseException {
-    Cell owningCell = cell.getCell(targetNode.getBuildTarget());
+    Cell owningCell = cell.getCell(targetNode.getBuildTarget().getCell());
     ListenableFuture<BuildFileManifest> buildFileManifestFuture =
         state.getBuildFileManifestJob(
             owningCell,

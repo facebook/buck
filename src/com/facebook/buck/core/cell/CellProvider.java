@@ -16,7 +16,6 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -81,9 +80,5 @@ public final class CellProvider {
 
   public ImmutableMap<Path, Cell> getLoadedCells() {
     return ImmutableMap.copyOf(cells.asMap());
-  }
-
-  public Cell getBuildTargetCell(BuildTarget buildTarget) {
-    return getCellByCanonicalCellName(buildTarget.getCell());
   }
 }

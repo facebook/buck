@@ -96,7 +96,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = unconfiguredTargetNode.getRuleType();
     BaseDescription<?> description = knownRuleTypes.getDescription(ruleType);
-    Cell targetCell = cell.getCell(target);
+    Cell targetCell = cell.getCell(target.getCell());
 
     SelectableConfigurationContext configurationContext =
         DefaultSelectableConfigurationContext.of(

@@ -326,7 +326,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   public Set<QueryFileTarget> getInputs(QueryBuildTarget target) throws QueryException {
     TargetNode<?> node = getNode(target);
     BuildTarget buildTarget = target.getBuildTarget();
-    Cell cell = rootCell.getCell(buildTarget);
+    Cell cell = rootCell.getCell(buildTarget.getCell());
     return node.getInputs().stream()
         .map(
             path ->
@@ -511,7 +511,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
         ImmutableSet.builderWithExpectedSize(targets.size());
     for (QueryBuildTarget target : targets) {
       BuildTarget buildTarget = target.getBuildTarget();
-      Cell cell = rootCell.getCell(buildTarget);
+      Cell cell = rootCell.getCell(buildTarget.getCell());
       BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
       Optional<Path> path =
           buildFileTree.getBasePathOfAncestorTarget(

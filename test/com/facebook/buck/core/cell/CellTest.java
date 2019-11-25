@@ -52,7 +52,7 @@ public class CellTest {
     Cell cell = new TestCellBuilder().build();
 
     BuildTarget target = BuildTargetFactory.newInstance("//does/not:matter");
-    Cell owner = cell.getCell(target);
+    Cell owner = cell.getCell(target.getCell());
 
     assertSame(cell, owner);
   }
@@ -65,7 +65,7 @@ public class CellTest {
 
     // Unregistered cell
     expectedException.expect(Exception.class);
-    cell.getCell(target);
+    cell.getCell(target.getCell());
   }
 
   @Test
@@ -90,7 +90,7 @@ public class CellTest {
 
     Cell cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
     BuildTarget target = BuildTargetFactory.newInstance("example//does/not:matter");
-    Cell other = cell1.getCell(target);
+    Cell other = cell1.getCell(target.getCell());
 
     assertEquals(cell2Root, other.getFilesystem().getRootPath());
   }
@@ -158,12 +158,12 @@ public class CellTest {
             .build();
     BuildTarget target = BuildTargetFactory.newInstance("second//does/not:matter");
 
-    Cell cell2 = cell1.getCell(target);
+    Cell cell2 = cell1.getCell(target.getCell());
     assertThat(
         cell2.getBuckConfig().getValue("test", "value"), Matchers.equalTo(Optional.of("cell2")));
 
     BuildTarget target3 = BuildTargetFactory.newInstance("third//does/not:matter");
-    Cell cell3 = cell1.getCell(target3);
+    Cell cell3 = cell1.getCell(target3.getCell());
     assertThat(
         cell3.getBuckConfig().getValue("test", "common_value"),
         Matchers.equalTo(Optional.of("all")));

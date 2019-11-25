@@ -357,7 +357,7 @@ public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
    * @return path which may or may not exist.
    */
   public Path getAbsolutePathToBuildFileUnsafe(Cell cell, UnconfiguredBuildTargetView target) {
-    Cell targetCell = cell.getCell(target);
+    Cell targetCell = cell.getCell(target.getCell());
     ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
     return targetFilesystem
         .resolve(target.getCellRelativeBasePath().getPath())
@@ -372,7 +372,7 @@ public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public Path getAbsolutePathToBuildFile(Cell cell, UnconfiguredBuildTargetView target)
       throws MissingBuildFileException {
     Path buildFile = getAbsolutePathToBuildFileUnsafe(cell, target);
-    Cell targetCell = cell.getCell(target);
+    Cell targetCell = cell.getCell(target.getCell());
     if (!targetCell.getFilesystem().isFile(buildFile)) {
       throw new MissingBuildFileException(
           target.getFullyQualifiedName(),

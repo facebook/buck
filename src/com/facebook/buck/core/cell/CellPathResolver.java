@@ -16,8 +16,8 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -55,7 +55,7 @@ public interface CellPathResolver {
    * @return Absolute path to the physical location of the cell that contains the provided target
    * @throws AssertionError if cell is not known
    */
-  Path getCellPathOrThrow(UnflavoredBuildTargetView buildTarget);
+  Path getCellPathOrThrow(CanonicalCellName cellName);
 
   /** Resolve a cell-relative path to an absolute path. */
   Path resolveCellRelativePath(CellRelativePath cellRelativePath);

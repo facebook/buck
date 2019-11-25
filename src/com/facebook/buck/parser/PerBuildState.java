@@ -63,14 +63,14 @@ public class PerBuildState implements AutoCloseable {
 
   TargetNode<?> getTargetNode(BuildTarget target, DependencyStack dependencyStack)
       throws BuildFileParseException {
-    Cell owningCell = cellManager.getCell(target);
+    Cell owningCell = cellManager.getCell(target.getCell());
 
     return targetNodeParsePipeline.getNode(owningCell, target, dependencyStack);
   }
 
   ListenableFuture<TargetNode<?>> getTargetNodeJob(
       BuildTarget target, DependencyStack dependencyStack) throws BuildTargetException {
-    Cell owningCell = cellManager.getCell(target);
+    Cell owningCell = cellManager.getCell(target.getCell());
 
     return targetNodeParsePipeline.getNodeJob(owningCell, target, dependencyStack);
   }
@@ -85,7 +85,7 @@ public class PerBuildState implements AutoCloseable {
 
   ListenableFuture<TargetNode<?>> getRequestedTargetNodeJob(
       UnconfiguredBuildTargetView target, Optional<TargetConfiguration> targetConfiguration) {
-    Cell owningCell = cellManager.getCell(target);
+    Cell owningCell = cellManager.getCell(target.getCell());
 
     return targetNodeParsePipeline.getRequestedTargetNodeJob(
         owningCell, target, targetConfiguration);

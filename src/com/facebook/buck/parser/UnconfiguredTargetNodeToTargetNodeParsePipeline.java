@@ -139,7 +139,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       executorService.submit(
           () -> {
             for (BuildTarget depTarget : targetNode.getParseDeps()) {
-              Cell depCell = cell.getCell(depTarget);
+              Cell depCell = cell.getCell(depTarget.getCell());
               try {
                 if (depTarget.isFlavored()) {
                   BuildTarget depTargetWithoutFlavors = depTarget.withoutFlavors();

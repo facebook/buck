@@ -24,9 +24,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -113,13 +111,8 @@ abstract class AbstractImmutableCell implements Cell {
   }
 
   @Override
-  public Cell getCell(UnconfiguredBuildTargetView target) {
-    return getCellProvider().getCellByCanonicalCellName(target.getCell());
-  }
-
-  @Override
-  public Cell getCell(BuildTarget target) {
-    return getCellProvider().getCellByCanonicalCellName(target.getCell());
+  public Cell getCell(CanonicalCellName cellName) {
+    return getCellProvider().getCellByCanonicalCellName(cellName);
   }
 
   @Override

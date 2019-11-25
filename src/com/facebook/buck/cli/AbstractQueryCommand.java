@@ -524,7 +524,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       throws QueryException {
     Cell cell = params.getCell();
     BuildTarget buildTarget = env.getNode((QueryBuildTarget) target).getBuildTarget();
-    Cell owningCell = cell.getCell(buildTarget);
+    Cell owningCell = cell.getCell(buildTarget.getCell());
     BuildFileManifest buildFileManifest =
         env.getParserState()
             .getBuildFileManifest(

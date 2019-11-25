@@ -19,9 +19,7 @@ package com.facebook.buck.core.cell;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
@@ -68,9 +66,7 @@ public interface Cell {
 
   Cell getCell(Path cellPath);
 
-  Cell getCell(UnconfiguredBuildTargetView target);
-
-  Cell getCell(BuildTarget target);
+  Cell getCell(CanonicalCellName cellName);
 
   /**
    * Returns a list of all cells, including this cell. If this cell is the root, getAllCells will

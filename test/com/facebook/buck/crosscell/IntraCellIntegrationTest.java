@@ -83,7 +83,7 @@ public class IntraCellIntegrationTest {
             .build(),
         ImmutableSet.of(BuildTargetFactory.newInstance("//just-a-directory:rule")));
 
-    Cell childCell = cell.getCell(BuildTargetFactory.newInstance("child//:child-target"));
+    Cell childCell = cell.getCell(BuildTargetFactory.newInstance("child//:child-target").getCell());
 
     try {
       // Whereas, because visibility is limited to the same cell, this won't.
@@ -111,7 +111,7 @@ public class IntraCellIntegrationTest {
     assertEquals(
         cell.getFilesystem().getBuckPaths().getGenDir().toString(),
         MorePaths.pathWithPlatformSeparators("buck-out/gen"));
-    Cell childCell = cell.getCell(BuildTargetFactory.newInstance("child//:child-target"));
+    Cell childCell = cell.getCell(BuildTargetFactory.newInstance("child//:child-target").getCell());
     assertEquals(
         childCell.getFilesystem().getBuckPaths().getGenDir().toString(),
         MorePaths.pathWithPlatformSeparators("../buck-out/cells/child/gen"));
