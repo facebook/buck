@@ -17,6 +17,7 @@
 package com.facebook.buck.core.model;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 
 public abstract class AbstractBuildTarget implements BuildTarget {
@@ -93,25 +94,14 @@ public abstract class AbstractBuildTarget implements BuildTarget {
   }
 
   @Override
-  public int compareTo(BuildTarget o) {
-    if (this == o) {
+  public int compareTo(BuildTarget that) {
+    if (this == that) {
       return 0;
     }
 
-    int unconfiguredBuildTargetComparison =
-        getUnconfiguredBuildTargetView().compareTo(o.getUnconfiguredBuildTargetView());
-    if (unconfiguredBuildTargetComparison != 0) {
-      return unconfiguredBuildTargetComparison;
-    }
-    if (getTargetConfiguration().equals(o.getTargetConfiguration())) {
-      return 0;
-    }
-    if (getTargetConfiguration().hashCode() == o.getTargetConfiguration().hashCode()) {
-      // configurations are not equal, but hash codes are equal (hash collision)
-      return System.identityHashCode(getTargetConfiguration())
-          - System.identityHashCode(o.getTargetConfiguration());
-    } else {
-      return getTargetConfiguration().hashCode() - o.getTargetConfiguration().hashCode();
-    }
+    return ComparisonChain.start()
+        .compare(this.getUnconfiguredBuildTargetView(), that.getUnconfiguredBuildTargetView())
+        .compare(this.getTargetConfiguration(), that.getTargetConfiguration())
+        .result();
   }
 }

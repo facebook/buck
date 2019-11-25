@@ -23,7 +23,7 @@ import java.util.Optional;
  * Configuration that resolves to unconfigured platform, which results in error on any operations
  * with platforms (like {@code compatible_with} or {@code select()}
  */
-public class UnconfiguredTargetConfiguration implements TargetConfiguration {
+public class UnconfiguredTargetConfiguration extends TargetConfiguration {
   public static final UnconfiguredTargetConfiguration INSTANCE =
       new UnconfiguredTargetConfiguration();
 

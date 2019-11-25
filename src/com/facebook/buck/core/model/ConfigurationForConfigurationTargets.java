@@ -23,7 +23,7 @@ import java.util.Optional;
  * Special configuration that is used together with {@link UnconfiguredBuildTarget} that represent
  * configuration targets in order to form {@link BuildTarget}.
  */
-public class ConfigurationForConfigurationTargets implements TargetConfiguration {
+public class ConfigurationForConfigurationTargets extends TargetConfiguration {
   public static final ConfigurationForConfigurationTargets INSTANCE =
       new ConfigurationForConfigurationTargets();
 

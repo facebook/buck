@@ -18,6 +18,21 @@ package com.facebook.buck.core.model;
 import java.util.Optional;
 
 /** Contains configuration information attached to a configured build target. */
-public interface TargetConfiguration {
-  Optional<BuildTarget> getConfigurationTarget();
+public abstract class TargetConfiguration implements Comparable<TargetConfiguration> {
+  public abstract Optional<BuildTarget> getConfigurationTarget();
+
+  @Override
+  public final int compareTo(TargetConfiguration that) {
+    if (this.getClass() != that.getClass()) {
+      return this.getClass().getName().compareTo(that.getClass().getName());
+    }
+    if (this instanceof RuleBasedTargetConfiguration) {
+      RuleBasedTargetConfiguration thisRb = (RuleBasedTargetConfiguration) this;
+      RuleBasedTargetConfiguration thatRb = (RuleBasedTargetConfiguration) that;
+      return thisRb.getTargetPlatform().compareTo(thatRb.getTargetPlatform());
+    } else {
+      // All other configurations are singleton, so return 0 is fine.
+      return 0;
+    }
+  }
 }

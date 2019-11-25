@@ -20,7 +20,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Stub configuration which can be used when configuration is not actually needed. */
-public class ErrorTargetConfiguration implements TargetConfiguration {
+public class ErrorTargetConfiguration extends TargetConfiguration {
   public static final ErrorTargetConfiguration INSTANCE = new ErrorTargetConfiguration();
 
   private final int hashCode = Objects.hash(ErrorTargetConfiguration.class.getName());

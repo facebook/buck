@@ -23,7 +23,7 @@ import org.immutables.value.Value.Parameter;
 
 /** Platform target implementation of {@link TargetConfiguration}. */
 @Immutable(builder = false, copy = false, prehash = true)
-public abstract class RuleBasedTargetConfiguration implements TargetConfiguration {
+public abstract class RuleBasedTargetConfiguration extends TargetConfiguration {
 
   @Value.Check
   protected void check() {
