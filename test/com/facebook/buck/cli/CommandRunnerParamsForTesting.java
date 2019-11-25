@@ -44,6 +44,7 @@ import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.manifestservice.ManifestService;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -117,11 +118,42 @@ public class CommandRunnerParamsForTesting {
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
       Optional<WebServer> webServer) {
-    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
+    Parser parser = TestParserFactory.create(executor, cell, knownRuleTypesProvider);
+    return createCommandRunnerParamsForTesting(
+        executor,
+        console,
+        cell,
+        artifactCache,
+        eventBus,
+        config,
+        platform,
+        environment,
+        javaPackageFinder,
+        webServer,
+        pluginManager,
+        knownRuleTypesProvider,
+        parser);
+  }
+
+  public static CommandRunnerParams createCommandRunnerParamsForTesting(
+      DepsAwareExecutor<? super ComputeResult, ?> executor,
+      Console console,
+      Cell cell,
+      ArtifactCache artifactCache,
+      BuckEventBus eventBus,
+      BuckConfig config,
+      Platform platform,
+      ImmutableMap<String, String> environment,
+      JavaPackageFinder javaPackageFinder,
+      Optional<WebServer> webServer,
+      PluginManager pluginManager,
+      KnownRuleTypesProvider knownRuleTypesProvider,
+      Parser parser) {
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
 
     ImmutableMap<ExecutorPool, ListeningExecutorService> executors =
         ImmutableMap.of(
@@ -155,7 +187,7 @@ public class CommandRunnerParamsForTesting {
         Optional.empty(),
         Optional.empty(),
         TargetConfigurationSerializerForTests.create(cell.getCellPathResolver()),
-        TestParserFactory.create(executor, cell, knownRuleTypesProvider),
+        parser,
         eventBus,
         platform,
         environment,
@@ -214,18 +246,26 @@ public class CommandRunnerParamsForTesting {
       if (toolchainProvider != null) {
         cellBuilder.setToolchainProvider(toolchainProvider);
       }
+      Cell cell = cellBuilder.build();
+      PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+      KnownRuleTypesProvider knownRuleTypesProvider =
+          TestKnownRuleTypesProvider.create(pluginManager);
+      Parser parser = TestParserFactory.create(executor, cell, knownRuleTypesProvider);
 
       return createCommandRunnerParamsForTesting(
           executor,
           console,
-          cellBuilder.build(),
+          cell,
           artifactCache,
           eventBus,
           config,
           platform,
           environment,
           javaPackageFinder,
-          webServer);
+          webServer,
+          pluginManager,
+          knownRuleTypesProvider,
+          parser);
     }
 
     public Builder setExecutor(DepsAwareExecutor<? super ComputeResult, ?> executor) {

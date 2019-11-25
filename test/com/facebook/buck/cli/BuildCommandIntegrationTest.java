@@ -83,6 +83,20 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
+  public void justBuildWithOutputLabel() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp).setUp();
+    workspace
+        .runBuckBuild("--just-build", "//:bar[label]", "//:foo", "//:ex ample")
+        .assertSuccess();
+
+    // The entire "//:bar" rule is built, not just the artifacts associated with "//:bar[label]"
+    assertThat(
+        workspace.getBuildLog().getAllTargets(),
+        Matchers.contains(BuildTargetFactory.newInstance("//:bar")));
+  }
+
+  @Test
   public void showOutput() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
