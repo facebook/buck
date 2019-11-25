@@ -17,9 +17,9 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.model.impl.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.sourcepath.SourcePath;

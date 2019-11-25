@@ -17,10 +17,10 @@ package com.facebook.buck.core.model.tc.factory;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
+import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.model.impl.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import java.util.Optional;
 

@@ -13,11 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.model.impl;
+package com.facebook.buck.core.model;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Optional;
 import org.immutables.value.Value;

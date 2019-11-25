@@ -22,6 +22,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.platform.FakeMultiPlatform;

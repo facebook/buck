@@ -16,6 +16,7 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.MultiPlatform;

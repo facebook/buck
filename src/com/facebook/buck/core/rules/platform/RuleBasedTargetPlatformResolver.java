@@ -17,8 +17,8 @@ package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.impl.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
