@@ -19,11 +19,12 @@ package com.facebook.buck.parser.spec;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** Matches all {@link TargetNode} objects in a repository that match the specification. */
@@ -69,17 +70,12 @@ public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
 
     CanonicalCellName cellName = cell.getCanonicalName();
 
-    Path basePath =
-        buildFileSpec
-            .getCellRelativeBaseName()
-            .getPath()
-            .toPath(cell.getFilesystem().getFileSystem());
+    ForwardRelativePath basePath = buildFileSpec.getCellRelativeBaseName().getPath();
     return ImmutableBuildTargetPattern.of(
-        cellName,
+        new ImmutableCellRelativePath(cellName, basePath),
         buildFileSpec.isRecursive()
             ? BuildTargetPattern.Kind.RECURSIVE
             : BuildTargetPattern.Kind.PACKAGE,
-        basePath,
         "");
   }
 }

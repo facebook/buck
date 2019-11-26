@@ -397,7 +397,9 @@ public class TargetsCommand extends AbstractCommand {
     // Group all specs by cell
     // TODO: figure out how to group by with ImmutableMap
     Map<CanonicalCellName, List<BuildTargetPattern>> patternsPerCell =
-        buildTargetPatterns.stream().collect(Collectors.groupingBy(pattern -> pattern.getCell()));
+        buildTargetPatterns.stream()
+            .collect(
+                Collectors.groupingBy(pattern -> pattern.getCellRelativeBasePath().getCellName()));
 
     // Build graph engines for each cell in provided specs and evaluate
     List<UnconfiguredTargetNodeWithDepsPackage> nodes = new ArrayList<>();

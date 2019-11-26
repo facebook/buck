@@ -38,7 +38,7 @@ public class BuildTargetPatternToBuildPackagePathTransformerTest
   protected ImmutableList<GraphComputationStage<?, ?>> getComputationStages(String buildFileName) {
     return ImmutableList.of(
         new GraphComputationStage<>(
-            BuildTargetPatternToBuildPackagePathComputation.of(buildFileName)),
+            BuildTargetPatternToBuildPackagePathComputation.of(buildFileName, filesystem)),
         new GraphComputationStage<>(DirectoryListComputation.of(filesystem.asView())),
         new GraphComputationStage<>(FileTreeComputation.of()));
   }

@@ -91,7 +91,11 @@ class WatchmanBuildPackageComputation
       BuildTargetPatternToBuildPackagePathKey key, ComputationEnvironment env)
       throws IOException, InterruptedException, WatchmanQueryTimedOutException {
     BuildTargetPattern targetPattern = key.getPattern();
-    Path basePath = targetPattern.getBasePath();
+    Path basePath =
+        targetPattern
+            .getCellRelativeBasePath()
+            .getPath()
+            .toPath(filesystemView.getRootPath().getFileSystem());
     try {
       ImmutableSet<String> buildFiles = findBuildFiles(basePath, targetPattern.isRecursive());
       return getPackagePathsOfBuildFiles(basePath, buildFiles);

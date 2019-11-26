@@ -1,6 +1,9 @@
 kotlin_library(
     name = "fs",
     srcs = glob(["*.kt"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/path:path",
+    ],
     tests = [
         "//test/com/facebook/buck/multitenant/fs:fs",
     ],

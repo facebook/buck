@@ -216,18 +216,18 @@ private class TargetEvaluator(
         // TODO: Cells (and flavors?) need to be supported.
         return when (buildTargetPattern.kind!!) {
             Kind.SINGLE -> {
-                val buildTarget = BuildTargets.createBuildTargetFromParts(buildTargetPattern.cell,
-                    FsAgnosticPath.of(buildTargetPattern.basePath), buildTargetPattern.targetName)
+                val buildTarget = BuildTargets.createBuildTargetFromParts(buildTargetPattern.cellRelativeBasePath.cellName,
+                    FsAgnosticPath.of(buildTargetPattern.cellRelativeBasePath.path), buildTargetPattern.targetName)
                 setOf(buildTarget)
             }
             Kind.PACKAGE -> {
-                val basePath = buildTargetPattern.basePath
+                val basePath = buildTargetPattern.cellRelativeBasePath.path
                 val targets = index.getTargetsInBasePath(generation, FsAgnosticPath.of(basePath))
                     ?: return setOf()
                 targets.toSet()
             }
             Kind.RECURSIVE -> {
-                val basePath = buildTargetPattern.basePath
+                val basePath = buildTargetPattern.cellRelativeBasePath.path
                 index.getTargetsUnderBasePath(generation, FsAgnosticPath.of(basePath)).toSet()
             }
         }

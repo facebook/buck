@@ -19,9 +19,9 @@ package com.facebook.buck.core.parser.buildtargetpattern;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import java.util.Optional;
 
 /**
@@ -142,13 +142,13 @@ public class BuildTargetPatternParser {
         "base path should not end with '%s'",
         BuildTargetLanguageConstants.PATH_SYMBOL);
 
-    // This will work on both posix and Windows and always evaluates to relative path
-    Path basePath = Paths.get(path);
+    ForwardRelativePath basePath = ForwardRelativePath.of(path);
 
     CanonicalCellName canonicalCellName =
         cellNameResolver.getName(cellName.isEmpty() ? Optional.empty() : Optional.of(cellName));
 
-    return ImmutableBuildTargetPattern.of(canonicalCellName, kind, basePath, targetName);
+    return ImmutableBuildTargetPattern.of(
+        new ImmutableCellRelativePath(canonicalCellName, basePath), kind, targetName);
   }
 
   private static void check(boolean condition, String pattern, String message, Object... args)

@@ -18,6 +18,7 @@ package com.facebook.buck.parser.spec;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -136,9 +137,8 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
     }
 
     return ImmutableBuildTargetPattern.of(
-        cell.getCanonicalName(),
+        new ImmutableCellRelativePath(cell.getCanonicalName(), basePath),
         BuildTargetPattern.Kind.SINGLE,
-        basePath.toPath(cell.getFilesystem().getFileSystem()),
         getUnconfiguredBuildTargetView().getShortNameAndFlavorPostfix());
   }
 

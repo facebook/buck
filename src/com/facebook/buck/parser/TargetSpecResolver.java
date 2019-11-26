@@ -140,7 +140,7 @@ public class TargetSpecResolver implements AutoCloseable {
                           ImmutableList.of(
                               new GraphComputationStage<>(
                                   BuildTargetPatternToBuildPackagePathComputation.of(
-                                      buildFileName)),
+                                      buildFileName, cell.getFilesystem())),
                               new GraphComputationStage<>(
                                   DirectoryListComputation.of(fileSystemView), dirListCache),
                               new GraphComputationStage<>(FileTreeComputation.of(), fileTreeCache)),

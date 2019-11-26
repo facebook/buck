@@ -5109,7 +5109,11 @@ public class ProjectGeneratorTest {
     // File should be located in the buck-out/gen/{target-path}, so iterate through the path
     // components
     // to find the configs directory.
-    for (Path component : buildTargetPattern.getBasePath()) {
+    for (Path component :
+        buildTargetPattern
+            .getCellRelativeBasePath()
+            .getPath()
+            .toPath(fakeProjectFilesystem.getFileSystem())) {
       configsGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(configsGroup, component.toString());
     }
 

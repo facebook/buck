@@ -87,7 +87,8 @@ public class GraphEngineFactory {
     // COMPUTATION: discover paths of build files needed to be parsed for provided target
     // patterns
     BuildTargetPatternToBuildPackagePathComputation patternToPackagePathComputation =
-        BuildTargetPatternToBuildPackagePathComputation.of(parserConfig.getBuildFileName());
+        BuildTargetPatternToBuildPackagePathComputation.of(
+            parserConfig.getBuildFileName(), cell.getFilesystem());
 
     // -- DEP COMPUTATION: listing of a specific directory to search for build file
     DirectoryListComputation directoryListComputation =

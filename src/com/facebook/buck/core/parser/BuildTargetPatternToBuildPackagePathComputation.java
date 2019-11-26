@@ -29,6 +29,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterators;
@@ -45,9 +46,12 @@ import java.nio.file.Path;
 public class BuildTargetPatternToBuildPackagePathComputation
     implements GraphComputation<BuildTargetPatternToBuildPackagePathKey, BuildPackagePaths> {
   private final String buildFileName;
+  private final ProjectFilesystem projectFilesystem;
 
-  private BuildTargetPatternToBuildPackagePathComputation(String buildFileName) {
+  private BuildTargetPatternToBuildPackagePathComputation(
+      String buildFileName, ProjectFilesystem projectFilesystem) {
     this.buildFileName = buildFileName;
+    this.projectFilesystem = projectFilesystem;
   }
 
   /**
@@ -56,8 +60,9 @@ public class BuildTargetPatternToBuildPackagePathComputation
    * @param buildFileName Name of the build file to determine a package root folder, for example
    *     'BUCK'
    */
-  public static BuildTargetPatternToBuildPackagePathComputation of(String buildFileName) {
-    return new BuildTargetPatternToBuildPackagePathComputation(buildFileName);
+  public static BuildTargetPatternToBuildPackagePathComputation of(
+      String buildFileName, ProjectFilesystem projectFilesystem) {
+    return new BuildTargetPatternToBuildPackagePathComputation(buildFileName, projectFilesystem);
   }
 
   @Override
@@ -69,7 +74,11 @@ public class BuildTargetPatternToBuildPackagePathComputation
   public BuildPackagePaths transform(
       BuildTargetPatternToBuildPackagePathKey key, ComputationEnvironment env) {
 
-    Path basePath = key.getPattern().getBasePath();
+    Path basePath =
+        key.getPattern()
+            .getCellRelativeBasePath()
+            .getPath()
+            .toPath(projectFilesystem.getFileSystem());
     ImmutableSortedSet<Path> packageRoots;
     switch (key.getPattern().getKind()) {
       case SINGLE:
@@ -123,11 +132,21 @@ public class BuildTargetPatternToBuildPackagePathComputation
       case PACKAGE:
         // For patterns like "//package:target" or "//package:" we only need a listing of a
         // particular directory to determine if build file is there or not
-        return ImmutableSet.of(ImmutableDirectoryListKey.of(key.getPattern().getBasePath()));
+        return ImmutableSet.of(
+            ImmutableDirectoryListKey.of(
+                key.getPattern()
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(projectFilesystem.getFileSystem())));
       case RECURSIVE:
         // For patterns like "//package/..." we need a complete directory tree structure to discover
         // all packages recursively
-        return ImmutableSet.of(ImmutableFileTreeKey.of(key.getPattern().getBasePath()));
+        return ImmutableSet.of(
+            ImmutableFileTreeKey.of(
+                key.getPattern()
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(projectFilesystem.getFileSystem())));
     }
     throw new IllegalStateException();
   }

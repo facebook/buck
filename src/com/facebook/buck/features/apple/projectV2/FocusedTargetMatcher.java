@@ -18,12 +18,12 @@ package com.facebook.buck.features.apple.projectV2;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetLanguageConstants;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
 import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -219,12 +219,14 @@ public class FocusedTargetMatcher {
     addBuildTargetPatternBasedOnKind(buildTargetPattern);
 
     // If the cell is the same, we need to support build target patterns without the cell.
-    if (buildTargetPattern.getCell().equals(cellName)) {
+    if (buildTargetPattern.getCellRelativeBasePath().getCellName().equals(cellName)) {
       addBuildTargetPatternBasedOnKind(
           ImmutableBuildTargetPattern.of(
-              CanonicalCellName.rootCell(),
+              // TODO(nga): even if cell is the same, root canonical cell might be a different cell
+              new ImmutableCellRelativePath(
+                  CanonicalCellName.rootCell(),
+                  buildTargetPattern.getCellRelativeBasePath().getPath()),
               buildTargetPattern.getKind(),
-              buildTargetPattern.getBasePath(),
               buildTargetPattern.getTargetName()));
     }
   }
@@ -246,10 +248,7 @@ public class FocusedTargetMatcher {
         break;
       case RECURSIVE:
         // Match //foo: and //foo/ but specifically not //foobar when the pattern is //foo/...
-        String base =
-            buildTargetPattern.getCell()
-                + BuildTargetLanguageConstants.ROOT_SYMBOL
-                + PathFormatter.pathWithUnixSeparators(buildTargetPattern.getBasePath());
+        String base = buildTargetPattern.getCellRelativeBasePath().toString();
         this.buildTargetPatterns.add(base + BuildTargetLanguageConstants.TARGET_SYMBOL);
         this.buildTargetPatterns.add(base + BuildTargetLanguageConstants.PATH_SYMBOL);
     }

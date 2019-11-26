@@ -16,10 +16,8 @@
 
 package com.facebook.buck.core.parser.buildtargetpattern;
 
-import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.io.pathformat.PathFormatter;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.google.common.base.Preconditions;
-import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /**
@@ -60,19 +58,13 @@ public abstract class BuildTargetPattern {
     public abstract boolean isRecursive();
   }
 
-  /** Name of the cell that current pattern specifies targets in */
+  /** Path to the package folder that is a root for all build targets matched by a pattern */
   @Value.Parameter
-  public abstract CanonicalCellName getCell();
+  public abstract CellRelativePath getCellRelativeBasePath();
 
   /** Type of the parsed pattern */
   @Value.Parameter
   public abstract Kind getKind();
-
-  /**
-   * Relative path to the package folder that is a root for all build targets matched by a pattern
-   */
-  @Value.Parameter
-  public abstract Path getBasePath();
 
   /** Target name in case pattern is single build target pattern; otherwise an empty string */
   @Value.Parameter
@@ -90,8 +82,6 @@ public abstract class BuildTargetPattern {
    */
   @Value.Check
   protected void check() {
-    Preconditions.checkArgument(!getBasePath().isAbsolute());
-
     switch (getKind()) {
       case SINGLE:
         Preconditions.checkArgument(!getTargetName().equals(""));
@@ -105,10 +95,7 @@ public abstract class BuildTargetPattern {
 
   @Override
   public String toString() {
-    String result =
-        getCell()
-            + BuildTargetLanguageConstants.ROOT_SYMBOL
-            + PathFormatter.pathWithUnixSeparators(getBasePath());
+    String result = getCellRelativeBasePath().toString();
     switch (getKind()) {
       case SINGLE:
         return result + BuildTargetLanguageConstants.TARGET_SYMBOL + getTargetName();

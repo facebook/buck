@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.multitenant.fs
 
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.io.pathformat.PathFormatter
 import com.facebook.buck.multitenant.cache.AppendOnlyBidirectionalCache
 import com.fasterxml.jackson.databind.DeserializationContext
@@ -63,6 +64,8 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
                 createWithoutVerification(path)
             }
         }
+
+        fun of(path: ForwardRelativePath): FsAgnosticPath = of(path.toString())
 
         /**
          * @param path must be a normalized, relative path.
