@@ -565,8 +565,7 @@ public class AppleBinaryDescription
                             .getAbsolutePath(entitlements.get())
                             .toString());
                 delegateArg.addAllLinkerFlags(
-                    Iterables.transform(
-                        flags, flag -> StringWithMacros.of(ImmutableList.of(Either.ofLeft(flag)))));
+                    Iterables.transform(flags, StringWithMacros::ofConstantString));
               }
             }
 

@@ -4076,7 +4076,7 @@ public class ProjectGenerator {
                             MacroContainer.of(
                                 LocationMacro.of(targetSourcePath.getTarget()), false))));
               }
-              return StringWithMacros.of(ImmutableList.of(Either.ofLeft("-isystem" + headerDir)));
+              return StringWithMacros.ofConstantString("-isystem" + headerDir);
             });
   }
 

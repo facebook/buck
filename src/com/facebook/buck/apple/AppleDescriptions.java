@@ -357,11 +357,8 @@ public class AppleDescriptions {
                 buildTarget, resolver::getRelativePath, headerPathPrefix, arg)));
     if (arg.isModular()) {
       output.addCompilerFlags(
-          StringWithMacros.of(
-              ImmutableList.of(
-                  Either.ofLeft(
-                      "-fmodule-name="
-                          + arg.getHeaderPathPrefix().orElse(buildTarget.getShortName())))));
+          StringWithMacros.ofConstantString(
+              "-fmodule-name=" + arg.getHeaderPathPrefix().orElse(buildTarget.getShortName())));
     }
 
     if (appleCxxPlatform.isPresent()) {

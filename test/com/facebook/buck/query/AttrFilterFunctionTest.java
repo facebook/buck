@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
@@ -42,7 +41,7 @@ public class AttrFilterFunctionTest {
 
   @Test
   public void singleStringWithMacroValue() throws QueryException {
-    queryEnvironment = new TestQueryEnvironment("a", strWithMacro("b"));
+    queryEnvironment = new TestQueryEnvironment("a", StringWithMacros.ofConstantString("b"));
     assertQuery("attrfilter('a', 'b', //x:y)", ImmutableSet.of(onlyTarget));
     assertQuery("attrfilter('a', 'z', //x:y)", ImmutableSet.of());
   }
@@ -58,7 +57,10 @@ public class AttrFilterFunctionTest {
   @Test
   public void listOfStringWithMacrosValue() throws QueryException {
     queryEnvironment =
-        new TestQueryEnvironment("a", ImmutableList.of(strWithMacro("b"), strWithMacro("c")));
+        new TestQueryEnvironment(
+            "a",
+            ImmutableList.of(
+                StringWithMacros.ofConstantString("b"), StringWithMacros.ofConstantString("c")));
     assertQuery("attrfilter('a', 'b', //x:y)", ImmutableSet.of(onlyTarget));
     assertQuery("attrfilter('a', 'c', //x:y)", ImmutableSet.of(onlyTarget));
     assertQuery("attrfilter('a', 'e', //x:y)", ImmutableSet.of());
@@ -69,10 +71,6 @@ public class AttrFilterFunctionTest {
 
     Set<QueryBuildTarget> result = queryExpr.eval(new NoopQueryEvaluator<>(), queryEnvironment);
     assertEquals(expected, result);
-  }
-
-  private StringWithMacros strWithMacro(String text) {
-    return StringWithMacros.of(ImmutableList.of(Either.ofLeft(text)));
   }
 
   private class TestQueryEnvironment extends BaseTestQueryEnvironment<QueryBuildTarget> {

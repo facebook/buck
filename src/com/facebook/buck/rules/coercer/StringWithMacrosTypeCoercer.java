@@ -97,7 +97,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       return null;
     }
 
-    return StringWithMacros.of(ImmutableList.of(Either.ofLeft(blob)));
+    return StringWithMacros.ofConstantString(blob);
   }
 
   private StringWithMacros parse(

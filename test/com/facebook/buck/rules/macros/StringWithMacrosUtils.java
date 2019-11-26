@@ -29,7 +29,7 @@ public class StringWithMacrosUtils {
   private StringWithMacrosUtils() {}
 
   public static StringWithMacros format(String format) {
-    return StringWithMacros.of(ImmutableList.of(Either.ofLeft(format)));
+    return StringWithMacros.ofConstantString(format);
   }
 
   /** @return a {@link StringWithMacros} object built with the given format strings and macros. */

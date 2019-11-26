@@ -364,7 +364,7 @@ public class StringWithMacrosTypeCoercerTest {
 
     assertTrue(
         coercer
-            .concat(Collections.singleton(StringWithMacros.of(ImmutableList.of())))
+            .concat(Collections.singleton(StringWithMacros.ofConstantString("")))
             .getParts()
             .isEmpty());
   }

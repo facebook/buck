@@ -40,7 +40,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
@@ -251,7 +250,7 @@ public class CgoLibraryDescription
 
   private static ImmutableList<StringWithMacros> wrapFlags(ImmutableList<String> flags) {
     return flags.stream()
-        .map(flag -> StringWithMacros.of(ImmutableList.of(Either.ofLeft(flag))))
+        .map(StringWithMacros::ofConstantString)
         .collect(ImmutableList.toImmutableList());
   }
 }
