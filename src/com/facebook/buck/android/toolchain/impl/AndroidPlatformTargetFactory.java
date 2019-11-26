@@ -68,7 +68,8 @@ public class AndroidPlatformTargetFactory implements ToolchainFactory<AndroidPla
                   toolchainTargetConfiguration,
                   AndroidSdkLocation.class),
               androidBuckConfig.getAaptOverride(),
-              aapt2Override));
+              aapt2Override,
+              androidBuckConfig.getAdbOverride()));
     } catch (HumanReadableException e) {
       throw ToolchainInstantiationException.wrap(e);
     }

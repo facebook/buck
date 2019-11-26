@@ -49,7 +49,12 @@ final class AndroidSdkResolver {
     buildToolsLocation = AndroidBuildToolsLocation.of(toolsResolver.getBuildToolsPath());
     platformTarget =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
-            fileSystem, buildToolsLocation, sdkLocation, Optional.empty(), Optional.empty());
+            fileSystem,
+            buildToolsLocation,
+            sdkLocation,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
   }
 
   /** Gets a resolver for the given workspace, if the sdk is available. */

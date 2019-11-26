@@ -33,6 +33,7 @@ public class TestAndroidPlatformTargetFactory {
             MorePathsForTests.rootRelativePath("AndroidSDK").resolve("build-tools")),
         AndroidSdkLocation.of(MorePathsForTests.rootRelativePath("AndroidSDK")),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
   }
 }

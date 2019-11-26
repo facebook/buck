@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -111,6 +112,14 @@ public class AndroidBuckConfig {
 
   public Optional<String> getBuildToolsVersion() {
     return delegate.getValue("android", "build_tools_version");
+  }
+
+  /**
+   * Returns the path to the adb executable overridden by the current project. If not specified, the
+   * adb executable in android.sdk_path/platform-tools will be used.
+   */
+  public Optional<Path> getAdbOverride() {
+    return delegate.getPath("android", "adb");
   }
 
   public Integer getAdbTimeout() {

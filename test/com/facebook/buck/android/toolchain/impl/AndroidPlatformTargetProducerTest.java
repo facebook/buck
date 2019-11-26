@@ -71,7 +71,8 @@ public class AndroidPlatformTargetProducerTest {
             platformDirectoryPath,
             additionalJarPaths,
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
+            /* aapt2Override */ Optional.empty(),
+            /* adbOverride */ Optional.empty());
     assertEquals(name, androidPlatformTarget.getPlatformName());
     assertEquals(
         ImmutableList.of(
@@ -132,7 +133,8 @@ public class AndroidPlatformTargetProducerTest {
             AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
+            /* aapt2Override */ Optional.empty(),
+            /* adbOverride */ Optional.empty());
 
     // Verify that addOnsLibsDir2 was picked up since addOnsLibsDir1 is empty.
     assertTrue(
@@ -170,7 +172,8 @@ public class AndroidPlatformTargetProducerTest {
             AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
+            /* aapt2Override */ Optional.empty(),
+            /* adbOverride */ Optional.empty());
 
     assertEquals(platformId, androidPlatformTarget.getPlatformName());
     assertEquals(
@@ -198,7 +201,8 @@ public class AndroidPlatformTargetProducerTest {
           AndroidBuildToolsLocation.of(androidSdkDir.toPath().resolve("build-tools")),
           AndroidSdkLocation.of(androidSdkDir.toPath()),
           /* aaptOverride */ Optional.empty(),
-          /* aapt2Override */ Optional.empty());
+          /* aapt2Override */ Optional.empty(),
+          /* adbOverride */ Optional.empty());
       fail("Should have thrown HumanReadableException");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -235,7 +239,8 @@ public class AndroidPlatformTargetProducerTest {
             AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
+            /* aapt2Override */ Optional.empty(),
+            /* adbOverride */ Optional.empty());
     assertEquals(
         ImmutableList.of(
             pathToAndroidSdkDir.resolve("platforms/android-17/android.jar"),
@@ -252,7 +257,8 @@ public class AndroidPlatformTargetProducerTest {
             AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
+            /* aapt2Override */ Optional.empty(),
+            /* adbOverride */ Optional.empty());
     assertEquals(
         ImmutableList.of(pathToAndroidSdkDir.resolve("platforms/android-17/android.jar")),
         androidPlatformTarget2.getBootclasspathEntries());
@@ -278,7 +284,8 @@ public class AndroidPlatformTargetProducerTest {
             AndroidBuildToolsLocation.of(buildToolsDirFromOldUpgradePath.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
+            /* aapt2Override */ Optional.empty(),
+            /* adbOverride */ Optional.empty());
 
     assertEquals(platformId, androidPlatformTarget.getPlatformName());
     String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
@@ -296,7 +303,8 @@ public class AndroidPlatformTargetProducerTest {
             AndroidBuildToolsLocation.of(buildToolsDirFromOldUpgradePath.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
+            /* aapt2Override */ Optional.empty(),
+            /* adbOverride */ Optional.empty());
     assertEquals(platformId, androidPlatformTarget.getPlatformName());
     assertEquals(
         pathToAndroidSdkDir.resolve("tools/zipalign" + binaryExtension),
