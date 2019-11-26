@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.string.StringMatcher;
 import com.facebook.buck.util.types.Either;
@@ -26,16 +25,29 @@ import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
 /** A class representing a string containing ordered, embedded, strongly typed macros. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractStringWithMacros
+public abstract class StringWithMacros
     implements TargetTranslatable<StringWithMacros>, StringMatcher {
 
-  // The components of the macro string.  Each part is either a plain string or a macro.
-  abstract ImmutableList<Either<String, MacroContainer>> getParts();
+  private StringWithMacros() {}
+
+  /** The components of the macro string. Each part is either a plain string or a macro. */
+  public abstract ImmutableList<Either<String, MacroContainer>> getParts();
+
+  /** String with macros is a sequence of strings and macros. Create it. */
+  public static StringWithMacros of(ImmutableList<Either<String, MacroContainer>> parts) {
+    return new WithMacros(parts);
+  }
+
+  /** Create a string with macros with a single string without macros */
+  public static StringWithMacros ofConstantString(String singlePart) {
+    if (singlePart.isEmpty()) {
+      return Constant.EMPTY;
+    } else {
+      return new Constant(singlePart);
+    }
+  }
 
   /** @return the list of all {@link Macro}s in the macro string. */
   public ImmutableList<MacroContainer> getMacros() {
@@ -117,5 +129,83 @@ abstract class AbstractStringWithMacros
       }
     }
     return false;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (!(obj instanceof StringWithMacros)) {
+      return false;
+    }
+    // compare parts, so `WithMacros(["s"])` is equal to `Constant("s")`
+    return this.getParts().equals(((StringWithMacros) obj).getParts());
+  }
+
+  @Override
+  public int hashCode() {
+    return getParts().hashCode();
+  }
+
+  /** String with macros without actual macros. */
+  private static class Constant extends StringWithMacros {
+
+    private static final StringWithMacros EMPTY = new Constant("");
+
+    private final String constant;
+
+    private Constant(String constant) {
+      this.constant = constant;
+    }
+
+    @Override
+    public ImmutableList<Either<String, MacroContainer>> getParts() {
+      if (constant.isEmpty()) {
+        return ImmutableList.of();
+      } else {
+        return ImmutableList.of(Either.ofLeft(constant));
+      }
+    }
+
+    // Following functions would work fine with parent class implementations,
+    // but specialize them for performance.
+
+    @Override
+    public Optional<StringWithMacros> translateTargets(
+        CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
+      return Optional.empty();
+    }
+
+    @Override
+    public StringWithMacros mapStrings(Function<String, String> mapper) {
+      return ofConstantString(mapper.apply(constant));
+    }
+
+    @Override
+    public ImmutableList<MacroContainer> getMacros() {
+      return ImmutableList.of();
+    }
+
+    @Override
+    public <T> ImmutableList<T> map(
+        Function<? super String, ? extends T> stringMapper,
+        Function<? super MacroContainer, ? extends T> macroMapper) {
+      return ImmutableList.of(stringMapper.apply(constant));
+    }
+  }
+
+  /** Default implementation */
+  private static class WithMacros extends StringWithMacros {
+    private final ImmutableList<Either<String, MacroContainer>> parts;
+
+    public WithMacros(ImmutableList<Either<String, MacroContainer>> parts) {
+      this.parts = parts;
+    }
+
+    @Override
+    public ImmutableList<Either<String, MacroContainer>> getParts() {
+      return parts;
+    }
   }
 }

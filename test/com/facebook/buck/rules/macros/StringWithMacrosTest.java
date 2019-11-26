@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
@@ -24,8 +25,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.TargetNodeTranslator;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -53,5 +56,13 @@ public class StringWithMacrosTest {
             StringWithMacrosUtils.format("--flag=%s", LocationMacro.of(target))),
         Matchers.equalTo(
             Optional.of(StringWithMacrosUtils.format("--flag=%s", LocationMacro.of(newTarget)))));
+  }
+
+  @Test
+  public void ofConstantStringGetParts() {
+    assertEquals(
+        ImmutableList.of(Either.ofLeft("foo")),
+        StringWithMacros.ofConstantString("foo").getParts());
+    assertEquals(ImmutableList.of(), StringWithMacros.ofConstantString("").getParts());
   }
 }
