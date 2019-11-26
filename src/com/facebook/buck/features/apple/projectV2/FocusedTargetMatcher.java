@@ -19,13 +19,11 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
-import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
@@ -49,7 +47,6 @@ public class FocusedTargetMatcher {
   private static final FocusedTargetMatcher NO_FOCUS =
       new FocusedTargetMatcher(
           null,
-          CanonicalCellName.rootCell(),
           new CellNameResolver() {
             @Override
             public Optional<CanonicalCellName> getNameIfResolvable(Optional<String> localName) {
@@ -88,10 +85,8 @@ public class FocusedTargetMatcher {
    * Returns a matcher configured to match any Build Target Patterns or String Regular Expressions.
    *
    * @param focus Space separated list of build target patterns or regular expressions to focus on.
-   * @param cellName The name of the current cell.
    */
-  public FocusedTargetMatcher(
-      @Nullable String focus, CanonicalCellName cellName, CellNameResolver cellNameResolver) {
+  public FocusedTargetMatcher(@Nullable String focus, CellNameResolver cellNameResolver) {
     if (focus == null) {
       this.hasEntries = false;
       return;
@@ -104,7 +99,7 @@ public class FocusedTargetMatcher {
     for (String entry : entries) {
       BuildTargetPattern buildTargetPattern = parseBuildPattern(entry, cellNameResolver);
       if (buildTargetPattern != null) {
-        addBuildTargetPattern(buildTargetPattern, cellName);
+        addBuildTargetPattern(buildTargetPattern);
       } else {
         Pattern regexPattern = parseRegex(entry);
         if (regexPattern != null) {
@@ -112,15 +107,6 @@ public class FocusedTargetMatcher {
         }
       }
     }
-  }
-
-  /**
-   * Returns a matcher configured to match any Build Target Patterns or String Regular Expressions.
-   *
-   * @param focus Space separated list of build target patterns or regular expressions to focus on.
-   */
-  public FocusedTargetMatcher(@Nullable String focus, CellNameResolver cellNameResolver) {
-    this(focus, CanonicalCellName.rootCell(), cellNameResolver);
   }
 
   /** @return A matcher configured to match all targets. */
@@ -224,31 +210,8 @@ public class FocusedTargetMatcher {
    * Add the build target pattern to the focus patterns set.
    *
    * @param buildTargetPattern The build target pattern to add.
-   * @param cellName The name of the current cell.
    */
-  private void addBuildTargetPattern(
-      BuildTargetPattern buildTargetPattern, CanonicalCellName cellName) {
-    addBuildTargetPatternBasedOnKind(buildTargetPattern);
-
-    // If the cell is the same, we need to support build target patterns without the cell.
-    if (buildTargetPattern.getCellRelativeBasePath().getCellName().equals(cellName)) {
-      addBuildTargetPatternBasedOnKind(
-          ImmutableBuildTargetPattern.of(
-              // TODO(nga): even if cell is the same, root canonical cell might be a different cell
-              new ImmutableCellRelativePath(
-                  CanonicalCellName.rootCell(),
-                  buildTargetPattern.getCellRelativeBasePath().getPath()),
-              buildTargetPattern.getKind(),
-              buildTargetPattern.getTargetName()));
-    }
-  }
-
-  /**
-   * Add the build target pattern based on the kind of pattern it is.
-   *
-   * @param buildTargetPattern The build target pattern to add.
-   */
-  private void addBuildTargetPatternBasedOnKind(BuildTargetPattern buildTargetPattern) {
+  private void addBuildTargetPattern(BuildTargetPattern buildTargetPattern) {
     switch (buildTargetPattern.getKind()) {
       case SINGLE:
         // Fully qualified targets can directly be added to the match list, eg: //foo:bar

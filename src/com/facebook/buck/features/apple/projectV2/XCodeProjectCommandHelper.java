@@ -212,8 +212,7 @@ public class XCodeProjectCommandHelper {
                 buckConfig.getView(ParserConfig.class).getDefaultFlavorsMode())
             .build();
 
-    this.focusedTargetMatcher =
-        new FocusedTargetMatcher(focus, cell.getCanonicalName(), cell.getCellNameResolver());
+    this.focusedTargetMatcher = new FocusedTargetMatcher(focus, cell.getCellNameResolver());
   }
 
   public ExitCode parseTargetsAndRunXCodeGenerator() throws IOException, InterruptedException {
