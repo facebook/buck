@@ -19,6 +19,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CanonicalCellName;
 import java.util.Optional;
 import org.junit.Test;
@@ -29,8 +30,7 @@ public class FocusedTargetMatcherTest {
   public void testNoFocus() {
     FocusedTargetMatcher focusTargetMatcher = FocusedTargetMatcher.noFocus();
 
-    assertTrue(focusTargetMatcher.matches("//foo:bar"));
-    assertTrue(focusTargetMatcher.matches("bar"));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
   }
 
   @Test
@@ -39,9 +39,8 @@ public class FocusedTargetMatcherTest {
         new FocusedTargetMatcher(
             "//foo:bar", CanonicalCellName.rootCell(), TestCellNameResolver.forRoot());
 
-    assertTrue(focusTargetMatcher.matches("//foo:bar"));
-    assertFalse(focusTargetMatcher.matches(":bar"));
-    assertFalse(focusTargetMatcher.matches("//foo:baz"));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
+    assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:baz")));
   }
 
   @Test
@@ -50,10 +49,10 @@ public class FocusedTargetMatcherTest {
         new FocusedTargetMatcher(
             "//foo:", CanonicalCellName.rootCell(), TestCellNameResolver.forRoot());
 
-    assertTrue(focusTargetMatcher.matches("//foo:bar"));
-    assertTrue(focusTargetMatcher.matches("//foo:baz"));
-    assertFalse(focusTargetMatcher.matches("//bar:foo"));
-    assertFalse(focusTargetMatcher.matches("//foo/bar:baz"));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:baz")));
+    assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//bar:foo")));
+    assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo/bar:baz")));
   }
 
   @Test
@@ -62,10 +61,10 @@ public class FocusedTargetMatcherTest {
         new FocusedTargetMatcher(
             "//foo/...", CanonicalCellName.rootCell(), TestCellNameResolver.forRoot());
 
-    assertTrue(focusTargetMatcher.matches("//foo:bar"));
-    assertTrue(focusTargetMatcher.matches("//foo:baz"));
-    assertTrue(focusTargetMatcher.matches("//foo/bar:baz"));
-    assertFalse(focusTargetMatcher.matches("//bar:foo"));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:baz")));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo/bar:baz")));
+    assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//bar:foo")));
   }
 
   @Test
@@ -76,10 +75,10 @@ public class FocusedTargetMatcherTest {
             CanonicalCellName.unsafeOf(Optional.of("oo")),
             TestCellNameResolver.forRoot("oo"));
 
-    assertTrue(focusTargetMatcher.matches("//foo:bar"));
-    assertTrue(focusTargetMatcher.matches("//foo:baz"));
-    assertTrue(focusTargetMatcher.matches("//foo/bar:baz"));
-    assertFalse(focusTargetMatcher.matches("//bar:fubar"));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:baz")));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo/bar:baz")));
+    assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//bar:fubar")));
   }
 
   @Test
@@ -90,9 +89,9 @@ public class FocusedTargetMatcherTest {
             CanonicalCellName.unsafeOf(Optional.of("foo")),
             TestCellNameResolver.forRoot("foo"));
 
-    assertTrue(focusTargetMatcher.matches("foo//bar:baz"));
-    assertTrue(focusTargetMatcher.matches("//bar:baz"));
-    assertFalse(focusTargetMatcher.matches("baz//bar:foo"));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("foo//bar:baz")));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//bar:baz")));
+    assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("baz//bar:foo")));
   }
 
   @Test
@@ -103,17 +102,17 @@ public class FocusedTargetMatcherTest {
             CanonicalCellName.rootCell(),
             TestCellNameResolver.forRoot());
 
-    assertTrue(focusTargetMatcher.matches("//foo:bar"));
-    assertFalse(focusTargetMatcher.matches("//foo:barbaz"));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
+    assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:barbaz")));
 
-    assertTrue(focusTargetMatcher.matches("//foo/alpha:bar"));
-    assertFalse(focusTargetMatcher.matches("//foo/alpha/bar:baz"));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo/alpha:bar")));
+    assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo/alpha/bar:baz")));
 
-    assertTrue(focusTargetMatcher.matches("//foo/baz:bar"));
-    assertTrue(focusTargetMatcher.matches("//foo/baz/beta:bar"));
-    assertFalse(focusTargetMatcher.matches("//foo/bazbar:alpha"));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo/baz:bar")));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo/baz/beta:bar")));
+    assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo/bazbar:alpha")));
 
-    assertTrue(focusTargetMatcher.matches("//foo/barbeta:baz"));
-    assertFalse(focusTargetMatcher.matches("//foo:fubar"));
+    assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo/barbeta:baz")));
+    assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:fubar")));
   }
 }

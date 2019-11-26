@@ -18,8 +18,11 @@ package com.facebook.buck.features.apple.projectV2;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.ImmutableCellRelativePath;
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetLanguageConstants;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
 import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
@@ -66,16 +69,20 @@ public class FocusedTargetMatcher {
 
   final boolean hasEntries;
 
-  // Match targets are tested against build target patterns to see if the match target begins with
-  // the build target pattern.
-  private final Set<String> buildTargetPatterns = new HashSet<String>();
+  // Match targets defined in given package.
+  // Example: //foo matches //foo:bar but does not match //foo/bar:baz
+  private final Set<CellRelativePath> buildTargetPackages = new HashSet<>();
+
+  // Match targets with a given prefix.
+  // Example: //foo matches //foo:bar and //foo/bar:baz
+  private final Set<CellRelativePath> buildTargetPrefixes = new HashSet<>();
 
   // Match targets are tested against regular expressions to see if the regular expression can be
   // found in the match target.
   private final Set<Pattern> regexPatterns = new HashSet<Pattern>();
 
-  private final Set<String> matchedTargets = new HashSet<String>();
-  private final Set<String> unMatchedTargets = new HashSet<String>();
+  private final Set<UnflavoredBuildTargetView> matchedTargets = new HashSet<>();
+  private final Set<UnflavoredBuildTargetView> unMatchedTargets = new HashSet<>();
 
   /**
    * Returns a matcher configured to match any Build Target Patterns or String Regular Expressions.
@@ -128,7 +135,7 @@ public class FocusedTargetMatcher {
    */
   void addTarget(BuildTarget buildTarget) {
     if (hasEntries) {
-      matchedTargets.add(buildTarget.getUnflavoredBuildTarget().getFullyQualifiedName());
+      matchedTargets.add(buildTarget.getUnflavoredBuildTarget());
     }
   }
 
@@ -139,38 +146,43 @@ public class FocusedTargetMatcher {
    * @return Whether the buildTarget is focused on.
    */
   boolean matches(BuildTarget buildTarget) {
-    return matches(buildTarget.getUnflavoredBuildTarget().getFullyQualifiedName());
+    return matches(buildTarget.getUnflavoredBuildTarget());
   }
 
   /**
    * Internal implementation that checks whether the entry is focused on.
    *
-   * @param entry Build target entry to match.
+   * @param buildTarget Build target entry to match.
    * @return Whether the entry is focused on.
    */
   @VisibleForTesting
-  boolean matches(String entry) {
+  boolean matches(UnflavoredBuildTargetView buildTarget) {
     if (!hasEntries) {
       return true;
     }
 
-    // Check cached targets which we've previously matched.
-    if (matchedTargets.contains(entry)) {
+    String entry = buildTarget.getFullyQualifiedName();
+
+    // Check cached targets which we've previously matched
+    // or populated from user input.
+    if (matchedTargets.contains(buildTarget)) {
       return true;
     }
-    if (unMatchedTargets.contains(entry)) {
+    if (unMatchedTargets.contains(buildTarget)) {
       return false;
     }
 
     // Test whether the entry starts with a build target pattern or if the regex pattern can be
     // found in the entry.
-    if (buildTargetPatterns.stream().anyMatch(pattern -> entry.startsWith(pattern))
+    if (buildTargetPackages.stream().anyMatch(p -> buildTarget.getCellRelativeBasePath().equals(p))
+        || buildTargetPrefixes.stream()
+            .anyMatch(p -> buildTarget.getCellRelativeBasePath().startsWith(p))
         || regexPatterns.stream().anyMatch(regex -> regex.matcher(entry).find())) {
-      matchedTargets.add(entry);
+      matchedTargets.add(buildTarget);
       return true;
     }
 
-    unMatchedTargets.add(entry);
+    unMatchedTargets.add(buildTarget);
     return false;
   }
 
@@ -240,17 +252,29 @@ public class FocusedTargetMatcher {
     switch (buildTargetPattern.getKind()) {
       case SINGLE:
         // Fully qualified targets can directly be added to the match list, eg: //foo:bar
-        this.matchedTargets.add(buildTargetPattern.toString());
+
+        // TODO(nga): BuildTargetPattern.targetName includes flavors,
+        //  but we match flavorless targets, thus if there's flavor, it is not match.
+        //  We should stop accept flavors when parsing patterns, at least for focus.
+        if (buildTargetPattern.getTargetName().contains("#")) {
+          break;
+        }
+
+        this.matchedTargets.add(
+            ImmutableUnflavoredBuildTargetView.of(
+                UnconfiguredBuildTarget.of(
+                    buildTargetPattern.getCellRelativeBasePath(),
+                    buildTargetPattern.getTargetName(),
+                    UnconfiguredBuildTarget.NO_FLAVORS)));
         break;
       case PACKAGE:
         // Match //foo:
-        this.buildTargetPatterns.add(buildTargetPattern.toString());
+        this.buildTargetPackages.add(buildTargetPattern.getCellRelativeBasePath());
         break;
       case RECURSIVE:
-        // Match //foo: and //foo/ but specifically not //foobar when the pattern is //foo/...
-        String base = buildTargetPattern.getCellRelativeBasePath().toString();
-        this.buildTargetPatterns.add(base + BuildTargetLanguageConstants.TARGET_SYMBOL);
-        this.buildTargetPatterns.add(base + BuildTargetLanguageConstants.PATH_SYMBOL);
+        // Match //foo/...
+        this.buildTargetPrefixes.add(buildTargetPattern.getCellRelativeBasePath());
+        break;
     }
   }
 }
