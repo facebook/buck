@@ -19,6 +19,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
@@ -469,24 +470,25 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       Set<QueryBuildTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
-    Map<TargetNode<?>, Integer> ranks =
-        computeRanks(env.getTargetGraph(), env.getNodesFromQueryTargets(queryResult)::contains);
-
     if (shouldOutputAttributes()) {
       ImmutableSortedMap<String, ImmutableSortedMap<String, Object>> attributesWithRanks =
-          extendAttributesWithRankMetadata(params, env, ranks.entrySet());
+          getAttributesWithRankMetadata(params, env, queryResult);
       printAttributesAsJson(attributesWithRanks, printStream);
     } else {
+      Map<UnflavoredBuildTargetView, Integer> ranks =
+          computeRanksByTarget(
+              env.getTargetGraph(), env.getNodesFromQueryTargets(queryResult)::contains);
+
       printRankOutputAsPlainText(ranks, printStream);
     }
   }
 
   private void printRankOutputAsPlainText(
-      Map<TargetNode<?>, Integer> ranks, PrintStream printStream) {
+      Map<UnflavoredBuildTargetView, Integer> ranks, PrintStream printStream) {
     ranks.entrySet().stream()
         // sort by rank and target nodes to break ties in order to make output deterministic
         .sorted(
-            Comparator.comparing(Map.Entry<TargetNode<?>, Integer>::getValue)
+            Comparator.comparing(Map.Entry<UnflavoredBuildTargetView, Integer>::getValue)
                 .thenComparing(Map.Entry::getKey))
         .forEach(
             entry -> {
@@ -637,29 +639,29 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   /**
    * Returns {@code attributes} with included min/max rank metadata into keyed by the result of
    * {@link #toPresentationForm(TargetNode)}
-   *
-   * @param rankEntries A set of pairs that map {@link TargetNode}s to their rank value (min or max)
-   *     depending on {@code sortOutputFormat}.
    */
   private ImmutableSortedMap<String, ImmutableSortedMap<String, Object>>
-      extendAttributesWithRankMetadata(
-          CommandRunnerParams params,
-          BuckQueryEnvironment env,
-          Set<Map.Entry<TargetNode<?>, Integer>> rankEntries) {
+      getAttributesWithRankMetadata(
+          CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryBuildTarget> queryResult)
+          throws QueryException {
+    ImmutableSet<TargetNode<?>> nodes = env.getNodesFromQueryTargets(queryResult);
+    Map<UnflavoredBuildTargetView, Integer> rankEntries =
+        computeRanksByTarget(env.getTargetGraph(), nodes::contains);
+
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
     // since some nodes differ in their flavors but ultimately have the same attributes, immutable
     // resulting map is created only after duplicates are merged by using regular HashMap
     Map<String, Integer> rankIndex =
-        rankEntries.stream()
+        rankEntries.entrySet().stream()
             .collect(
                 Collectors.toMap(entry -> toPresentationForm(entry.getKey()), Map.Entry::getValue));
     return ImmutableSortedMap.copyOf(
-        rankEntries.stream()
+        nodes.stream()
             .collect(
                 Collectors.toMap(
-                    entry -> toPresentationForm(entry.getKey()),
-                    entry -> {
-                      String label = toPresentationForm(entry.getKey());
+                    AbstractQueryCommand::toPresentationForm,
+                    node -> {
+                      String label = toPresentationForm(node);
                       // NOTE: for resiliency in case attributes cannot be resolved a map with only
                       // minrank is returned, which means clients should be prepared to deal with
                       // potentially missing fields. Consider not returning a node in such case,
@@ -669,8 +671,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
                                   params,
                                   env,
                                   patternsMatcher,
-                                  entry.getKey(),
-                                  DependencyStack.top(entry.toString()))
+                                  node,
+                                  DependencyStack.top(node.getBuildTarget()))
                               .orElseGet(TreeMap::new);
                       return ImmutableSortedMap.<String, Object>naturalOrder()
                           .putAll(attributes)
@@ -680,11 +682,11 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
         Comparator.<String>comparingInt(rankIndex::get).thenComparing(Comparator.naturalOrder()));
   }
 
-  private Map<TargetNode<?>, Integer> computeRanks(
+  private Map<UnflavoredBuildTargetView, Integer> computeRanksByTarget(
       DirectedAcyclicGraph<TargetNode<?>> graph, Predicate<TargetNode<?>> shouldContainNode) {
-    Map<TargetNode<?>, Integer> ranks = new HashMap<>();
+    HashMap<UnflavoredBuildTargetView, Integer> ranks = new HashMap<>();
     for (TargetNode<?> root : ImmutableSortedSet.copyOf(graph.getNodesWithNoIncomingEdges())) {
-      ranks.put(root, 0);
+      ranks.put(root.getBuildTarget().getUnflavoredBuildTarget(), 0);
       new AbstractBreadthFirstTraversal<TargetNode<?>>(root) {
 
         @Override
@@ -693,22 +695,18 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
             return ImmutableSet.of();
           }
 
-          int nodeRank = Objects.requireNonNull(ranks.get(node));
+          int nodeRank =
+              Objects.requireNonNull(ranks.get(node.getBuildTarget().getUnflavoredBuildTarget()));
           ImmutableSortedSet<TargetNode<?>> sinks =
               ImmutableSortedSet.copyOf(
                   Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test));
           for (TargetNode<?> sink : sinks) {
-            if (!ranks.containsKey(sink)) {
-              ranks.put(sink, nodeRank + 1);
-            } else {
-              // min rank is the length of the shortest path from a root node
-              // max rank is the length of the longest path from a root node
-              ranks.put(
-                  sink,
-                  sortOutputFormat == QueryCommand.SortOutputFormat.MINRANK
-                      ? Math.min(ranks.get(sink), nodeRank + 1)
-                      : Math.max(ranks.get(sink), nodeRank + 1));
-            }
+            ranks.merge(
+                sink.getBuildTarget().getUnflavoredBuildTarget(),
+                nodeRank + 1,
+                // min rank is the length of the shortest path from a root node
+                // max rank is the length of the longest path from a root node
+                sortOutputFormat == SortOutputFormat.MINRANK ? Math::min : Math::max);
           }
           return sinks;
         }
@@ -814,7 +812,11 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   }
 
   private static String toPresentationForm(TargetNode<?> node) {
-    return node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName();
+    return toPresentationForm(node.getBuildTarget().getUnflavoredBuildTarget());
+  }
+
+  private static String toPresentationForm(UnflavoredBuildTargetView unflavoredBuildTarget) {
+    return unflavoredBuildTarget.getFullyQualifiedName();
   }
 
   @Override
