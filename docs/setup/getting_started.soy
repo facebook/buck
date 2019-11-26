@@ -298,10 +298,13 @@ This automatically adds buck to Chocolatey's path, and lets you run commands jus
 # Install command line tools. NOTE: If you have Xcode installed, these may
 # already be installed.
 xcode-select --install
-# Install Java - this installs the JDK 8, a superset of the JRE
-brew tap caskroom/cask
-brew tap caskroom/versions
-brew cask install java8
+# Download and Install Java SE 8 from:
++# https://www.oracle.com/technetwork/java/javase/downloads/index.html.
++# This installs the JDK 8, a superset of the JRE.
++# Alternatively, install AdoptOpenJDK 8 with Homebrew Cask:
++brew tap homebrew/cask-cask
++brew tap homebrew/cask-versions
++brew cask install homebrew/cask-versions/adoptopenjdk8
 </pre>{/literal}
 
 <span><block class="mac ios" /></span>
