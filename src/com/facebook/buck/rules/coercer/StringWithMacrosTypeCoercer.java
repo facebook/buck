@@ -36,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros> {
 
@@ -88,6 +89,17 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
     }
   }
 
+  // Most strings with macros do not contain any macros.
+  // This method is optimistic fast-path optimization of string with macro parsing.
+  @Nullable
+  private StringWithMacros tryParseFast(String blob) {
+    if (blob.indexOf('$') >= 0) {
+      return null;
+    }
+
+    return StringWithMacros.of(ImmutableList.of(Either.ofLeft(blob)));
+  }
+
   private StringWithMacros parse(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
@@ -96,6 +108,11 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       TargetConfiguration hostConfiguration,
       String blob)
       throws CoerceFailedException {
+
+    StringWithMacros fast = tryParseFast(blob);
+    if (fast != null) {
+      return fast;
+    }
 
     ImmutableList.Builder<Either<String, MacroContainer>> parts = ImmutableList.builder();
 
