@@ -25,5 +25,5 @@ public class InternalTargetAttributeNames {
   public static final String DIRECT_DEPENDENCIES = "buck.direct_dependencies";
 
   /** Target configuration attached to target */
-  public static final String TARGET_CONFIGURATION = "buck.target_configuration";
+  public static final String TARGET_CONFIGURATIONS = "buck.target_configurations";
 }

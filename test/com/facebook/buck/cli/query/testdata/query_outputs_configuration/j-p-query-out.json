@@ -2,7 +2,7 @@
     "//:j":{
         "buck.base_path":"",
         "buck.direct_dependencies":[],
-        "buck.target_configuration":"//:p",
+        "buck.target_configurations":["//:p"],
         "buck.type":"java_library"
     }
 }

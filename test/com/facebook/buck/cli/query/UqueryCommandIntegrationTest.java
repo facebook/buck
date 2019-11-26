@@ -81,7 +81,7 @@ public class UqueryCommandIntegrationTest {
     ProcessResult resultJson =
         workspace.runBuckCommand(
             "query", "//:dummy_without_selects",
-            "--output-attributes", ".*");
+            "--output-attributes", "(?!buck.target_configurations).*");
     resultJson.assertSuccess();
 
     assertEquals(resultJsonUncofigured.getStdout(), resultJson.getStdout());

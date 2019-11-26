@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -28,7 +29,8 @@ import javax.annotation.concurrent.ThreadSafe;
  * <p>If used as data class, consider {@link UnconfiguredBuildTarget} instead
  */
 @ThreadSafe
-public interface UnflavoredBuildTargetView extends Comparable<UnflavoredBuildTargetView> {
+public interface UnflavoredBuildTargetView
+    extends Comparable<UnflavoredBuildTargetView>, DependencyStack.Element {
 
   String BUILD_TARGET_PREFIX = "//";
 

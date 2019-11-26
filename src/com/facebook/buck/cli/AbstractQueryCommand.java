@@ -20,6 +20,8 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.targetgraph.MergedTargetGraph;
+import com.facebook.buck.core.model.targetgraph.MergedTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
@@ -42,6 +44,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -254,7 +257,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
             // generateJsonOutput is deprecated and have to be set as outputFormat parameter
             outputFormat == OutputFormat.JSON,
             outputAttributes(),
-            printStreamWrapper.get());
+            printStreamWrapper.get(),
+            whichQueryCommand());
       }
       return;
     }
@@ -276,7 +280,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       List<String> inputsFormattedAsBuildTargets,
       boolean generateJsonOutput,
       ImmutableSet<String> attributesFilter,
-      PrintStream printStream)
+      PrintStream printStream,
+      WhichQueryCommand whichQueryCommand)
       throws IOException, InterruptedException, QueryException {
     if (inputsFormattedAsBuildTargets.isEmpty()) {
       throw new CommandLineException(
@@ -313,7 +318,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
               .flatMap(Collection::stream)
               .collect(ImmutableSet.toImmutableSet()),
           attributesFilter,
-          printStream);
+          printStream,
+          whichQueryCommand);
     } else if (generateJsonOutput) {
       CommandHelper.printJsonOutput(queryResultMap, printStream);
     } else {
@@ -404,7 +410,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       PrintStream printStream)
       throws IOException, QueryException {
     if (shouldOutputAttributes()) {
-      collectAndPrintAttributesAsJson(params, env, queryResult, outputAttributes(), printStream);
+      collectAndPrintAttributesAsJson(
+          params, env, queryResult, outputAttributes(), printStream, whichQueryCommand());
     } else {
       CommandHelper.printJsonOutput(queryResult, printStream);
     }
@@ -431,15 +438,23 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       PrintStream printStream,
       boolean compactMode)
       throws IOException, QueryException {
-    Dot.Builder<TargetNode<?>> dotBuilder =
-        Dot.builder(env.getTargetGraph(), "result_graph")
-            .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
+    MergedTargetGraph mergedTargetGraph = MergedTargetGraph.merge(env.getTargetGraph());
+
+    ImmutableSet<TargetNode<?>> nodesFromQueryTargets = env.getNodesFromQueryTargets(queryResult);
+    ImmutableSet<UnflavoredBuildTargetView> targetsFromQueryTargets =
+        nodesFromQueryTargets.stream()
+            .map(t -> t.getBuildTarget().getUnflavoredBuildTarget())
+            .collect(ImmutableSet.toImmutableSet());
+
+    Dot.Builder<MergedTargetNode> dotBuilder =
+        Dot.builder(mergedTargetGraph, "result_graph")
+            .setNodesToFilter(n -> targetsFromQueryTargets.contains(n.getBuildTarget()))
             .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
             .setNodeToTypeName(targetNode -> targetNode.getRuleType().getName())
             .setOutputOrder(outputOrder)
             .setCompactMode(compactMode);
     if (shouldOutputAttributes()) {
-      Function<TargetNode<?>, ImmutableSortedMap<String, String>> nodeToAttributes =
+      Function<MergedTargetNode, ImmutableSortedMap<String, String>> nodeToAttributes =
           getNodeToAttributeFunction(params, env);
       dotBuilder.setNodeToAttributes(nodeToAttributes);
     }
@@ -447,12 +462,17 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   }
 
   @Nonnull
-  private Function<TargetNode<?>, ImmutableSortedMap<String, String>> getNodeToAttributeFunction(
+  private Function<MergedTargetNode, ImmutableSortedMap<String, String>> getNodeToAttributeFunction(
       CommandRunnerParams params, BuckQueryEnvironment env) {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
     return node ->
         getAttributes(
-                params, env, patternsMatcher, node, DependencyStack.top(node.getBuildTarget()))
+                params,
+                env,
+                patternsMatcher,
+                node,
+                DependencyStack.top(node.getBuildTarget()),
+                whichQueryCommand())
             .map(
                 attrs ->
                     attrs.entrySet().stream()
@@ -505,19 +525,28 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       PrintStream printStream)
       throws IOException, QueryException {
 
-    ThriftOutput.Builder<TargetNode<?>> targetNodeBuilder =
-        ThriftOutput.builder(env.getTargetGraph())
-            .filter(env.getNodesFromQueryTargets(queryResult)::contains)
+    DirectedAcyclicGraph<TargetNode<?>> targetGraph = env.getTargetGraph();
+    MergedTargetGraph mergedTargetGraph = MergedTargetGraph.merge(targetGraph);
+
+    ImmutableSet<TargetNode<?>> nodesFromQueryTargets = env.getNodesFromQueryTargets(queryResult);
+    ImmutableSet<UnflavoredBuildTargetView> targetsFromQueryTargets =
+        nodesFromQueryTargets.stream()
+            .map(n -> n.getBuildTarget().getUnflavoredBuildTarget())
+            .collect(ImmutableSet.toImmutableSet());
+
+    ThriftOutput.Builder<MergedTargetNode> targetNodeBuilder =
+        ThriftOutput.builder(mergedTargetGraph)
+            .filter(n -> targetsFromQueryTargets.contains(n.getBuildTarget()))
             .nodeToNameMappingFunction(
                 targetNode -> targetNode.getBuildTarget().getFullyQualifiedName());
 
     if (shouldOutputAttributes()) {
-      Function<TargetNode<?>, ImmutableSortedMap<String, String>> nodeToAttributes =
+      Function<MergedTargetNode, ImmutableSortedMap<String, String>> nodeToAttributes =
           getNodeToAttributeFunction(params, env);
       targetNodeBuilder.nodeToAttributesFunction(nodeToAttributes);
     }
 
-    ThriftOutput<TargetNode<?>> thriftOutput = targetNodeBuilder.build();
+    ThriftOutput<MergedTargetNode> thriftOutput = targetNodeBuilder.build();
     thriftOutput.writeOutput(printStream);
   }
 
@@ -648,6 +677,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     Map<UnflavoredBuildTargetView, Integer> rankEntries =
         computeRanksByTarget(env.getTargetGraph(), nodes::contains);
 
+    ImmutableCollection<MergedTargetNode> mergedNodes = MergedTargetNode.group(nodes).values();
+
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
     // since some nodes differ in their flavors but ultimately have the same attributes, immutable
     // resulting map is created only after duplicates are merged by using regular HashMap
@@ -656,7 +687,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
             .collect(
                 Collectors.toMap(entry -> toPresentationForm(entry.getKey()), Map.Entry::getValue));
     return ImmutableSortedMap.copyOf(
-        nodes.stream()
+        mergedNodes.stream()
             .collect(
                 Collectors.toMap(
                     AbstractQueryCommand::toPresentationForm,
@@ -672,7 +703,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
                                   env,
                                   patternsMatcher,
                                   node,
-                                  DependencyStack.top(node.getBuildTarget()))
+                                  DependencyStack.top(node.getBuildTarget()),
+                                  whichQueryCommand())
                               .orElseGet(TreeMap::new);
                       return ImmutableSortedMap.<String, Object>naturalOrder()
                           .putAll(attributes)
@@ -720,9 +752,11 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult,
       ImmutableSet<String> attributes,
-      PrintStream printStream)
+      PrintStream printStream,
+      WhichQueryCommand whichQueryCommand)
       throws QueryException, IOException {
-    printAttributesAsJson(collectAttributes(params, env, queryResult, attributes), printStream);
+    printAttributesAsJson(
+        collectAttributes(params, env, queryResult, attributes, whichQueryCommand), printStream);
   }
 
   private static <T extends SortedMap<String, Object>> void printAttributesAsJson(
@@ -742,22 +776,28 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult,
-      ImmutableSet<String> attrs)
+      ImmutableSet<String> attrs,
+      WhichQueryCommand whichQueryCommand)
       throws QueryException {
+    ImmutableList<TargetNode<?>> nodes = queryResultToTargetNodes(env, queryResult);
+
+    ImmutableCollection<MergedTargetNode> mergedNodes = MergedTargetNode.group(nodes).values();
+
     PatternsMatcher patternsMatcher = new PatternsMatcher(attrs);
     // use HashMap instead of ImmutableSortedMap.Builder to allow duplicates
     // TODO(buckteam): figure out if duplicates should actually be allowed. It seems like the only
     // reason why duplicates may occur is because TargetNode's unflavored name is used as a key,
     // which may or may not be a good idea
     Map<String, SortedMap<String, Object>> attributesMap = new HashMap<>();
-    for (QueryTarget target : queryResult) {
-      if (!(target instanceof QueryBuildTarget)) {
-        continue;
-      }
-      TargetNode<?> node = env.getNode((QueryBuildTarget) target);
+    for (MergedTargetNode node : mergedNodes) {
       try {
         getAttributes(
-                params, env, patternsMatcher, node, DependencyStack.top(node.getBuildTarget()))
+                params,
+                env,
+                patternsMatcher,
+                node,
+                DependencyStack.top(node.getBuildTarget()),
+                whichQueryCommand)
             .ifPresent(attrMap -> attributesMap.put(toPresentationForm(node), attrMap));
 
       } catch (BuildFileParseException e) {
@@ -770,17 +810,31 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return ImmutableSortedMap.copyOf(attributesMap);
   }
 
+  private static ImmutableList<TargetNode<?>> queryResultToTargetNodes(
+      BuckQueryEnvironment env, Collection<QueryTarget> queryResult) throws QueryException {
+    ImmutableList.Builder<TargetNode<?>> builder = ImmutableList.builder();
+    for (QueryTarget target : queryResult) {
+      if (!(target instanceof QueryBuildTarget)) {
+        continue;
+      }
+
+      builder.add(env.getNode((QueryBuildTarget) target));
+    }
+    return builder.build();
+  }
+
   private static Optional<SortedMap<String, Object>> getAttributes(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       PatternsMatcher patternsMatcher,
-      TargetNode<?> node,
-      DependencyStack dependencyStack) {
+      MergedTargetNode node,
+      DependencyStack dependencyStack,
+      WhichQueryCommand whichQueryCommand) {
     SortedMap<String, Object> targetNodeAttributes =
         params
             .getParser()
             .getTargetNodeRawAttributes(
-                env.getParserState(), params.getCell(), node, dependencyStack);
+                env.getParserState(), params.getCell(), node.getAnyNode(), dependencyStack);
     if (targetNodeAttributes == null) {
       params
           .getConsole()
@@ -798,17 +852,21 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
         }
       }
 
-      if (patternsMatcher.matches(InternalTargetAttributeNames.TARGET_CONFIGURATION)) {
-        Optional<BuildTarget> configuration =
-            node.getBuildTarget().getTargetConfiguration().getConfigurationTarget();
-        configuration.ifPresent(
-            buildTarget ->
-                attributes.put(
-                    InternalTargetAttributeNames.TARGET_CONFIGURATION,
-                    buildTarget.getFullyQualifiedName()));
+      if (whichQueryCommand == WhichQueryCommand.QUERY
+          && patternsMatcher.matches(InternalTargetAttributeNames.TARGET_CONFIGURATIONS)) {
+        ImmutableList<String> targetConfigurations =
+            node.getTargetConfigurations().stream()
+                .map(Object::toString)
+                .sorted()
+                .collect(ImmutableList.toImmutableList());
+        attributes.put(InternalTargetAttributeNames.TARGET_CONFIGURATIONS, targetConfigurations);
       }
     }
     return Optional.of(attributes);
+  }
+
+  private static String toPresentationForm(MergedTargetNode node) {
+    return toPresentationForm(node.getBuildTarget());
   }
 
   private static String toPresentationForm(TargetNode<?> node) {

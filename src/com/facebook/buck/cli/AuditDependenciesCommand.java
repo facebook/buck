@@ -138,7 +138,8 @@ public class AuditDependenciesCommand extends AbstractCommand {
               params.getCell(), params.getClientWorkingDir(), params.getBuckConfig()),
           shouldGenerateJsonOutput(),
           ImmutableSet.of(),
-          params.getConsole().getStdOut());
+          params.getConsole().getStdOut(),
+          AbstractQueryCommand.WhichQueryCommand.QUERY);
     } catch (Exception e) {
       if (e.getCause() instanceof InterruptedException) {
         throw (InterruptedException) e.getCause();
