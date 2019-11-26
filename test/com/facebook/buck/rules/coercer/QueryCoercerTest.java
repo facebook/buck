@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -38,7 +39,7 @@ public class QueryCoercerTest {
     QueryCoercer coercer =
         new QueryCoercer(
             new DefaultTypeCoercerFactory(), new ParsingUnconfiguredBuildTargetViewFactory());
-    Query query = Query.of("deps(//:a)", UnconfiguredTargetConfiguration.INSTANCE, "//");
+    Query query = Query.of("deps(//:a)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT);
     List<Object> traversed = new ArrayList<>();
     coercer.traverse(createCellRoots(filesystem), query, traversed::add);
     assertThat(traversed, Matchers.contains(BuildTargetFactory.newInstance("//:a")));

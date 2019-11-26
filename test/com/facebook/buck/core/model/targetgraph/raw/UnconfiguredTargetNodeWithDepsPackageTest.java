@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.targetgraph.raw;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -51,7 +52,10 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
 
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         UnconfiguredBuildTarget.of(
-            CanonicalCellName.rootCell(), "//base", "target1", UnconfiguredBuildTarget.NO_FLAVORS);
+            CanonicalCellName.rootCell(),
+            BaseName.of("//base"),
+            "target1",
+            UnconfiguredBuildTarget.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode1 =
         ImmutableUnconfiguredTargetNode.of(
             unconfiguredBuildTarget1,
@@ -65,7 +69,10 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
 
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
         UnconfiguredBuildTarget.of(
-            CanonicalCellName.rootCell(), "//base", "target2", UnconfiguredBuildTarget.NO_FLAVORS);
+            CanonicalCellName.rootCell(),
+            BaseName.of("//base"),
+            "target2",
+            UnconfiguredBuildTarget.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode2 =
         ImmutableUnconfiguredTargetNode.of(
             unconfiguredBuildTarget2,

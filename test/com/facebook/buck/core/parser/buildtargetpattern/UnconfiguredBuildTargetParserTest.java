@@ -18,6 +18,7 @@ package com.facebook.buck.core.parser.buildtargetpattern;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.ImmutableCanonicalCellName;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -44,7 +45,7 @@ public class UnconfiguredBuildTargetParserTest {
         "cell//path/to:target",
         UnconfiguredBuildTarget.of(
             ImmutableCanonicalCellName.of(Optional.of("cell")),
-            "//path/to",
+            BaseName.of("//path/to"),
             "target",
             UnconfiguredBuildTarget.NO_FLAVORS)
       },
@@ -52,33 +53,39 @@ public class UnconfiguredBuildTargetParserTest {
         "cell//path/to:target#flavor1,flavor2",
         UnconfiguredBuildTarget.of(
             ImmutableCanonicalCellName.of(Optional.of("cell")),
-            "//path/to",
+            BaseName.of("//path/to"),
             "target",
             ImmutableSortedSet.of(InternalFlavor.of("flavor1"), InternalFlavor.of("flavor2")))
       },
       new Object[] {
         "//path/to:target",
         UnconfiguredBuildTarget.of(
-            CanonicalCellName.rootCell(), "//path/to", "target", UnconfiguredBuildTarget.NO_FLAVORS)
+            CanonicalCellName.rootCell(),
+            BaseName.of("//path/to"),
+            "target",
+            UnconfiguredBuildTarget.NO_FLAVORS)
       },
       new Object[] {
         "//path/to:target#flavor",
         UnconfiguredBuildTarget.of(
             CanonicalCellName.rootCell(),
-            "//path/to",
+            BaseName.of("//path/to"),
             "target",
             ImmutableSortedSet.of(InternalFlavor.of("flavor")))
       },
       new Object[] {
         "//:target",
         UnconfiguredBuildTarget.of(
-            CanonicalCellName.rootCell(), "//", "target", UnconfiguredBuildTarget.NO_FLAVORS)
+            CanonicalCellName.rootCell(),
+            BaseName.of("//"),
+            "target",
+            UnconfiguredBuildTarget.NO_FLAVORS)
       },
       new Object[] {
         "cell//:target",
         UnconfiguredBuildTarget.of(
             ImmutableCanonicalCellName.of(Optional.of("cell")),
-            "//",
+            BaseName.of("//"),
             "target",
             UnconfiguredBuildTarget.NO_FLAVORS)
       },
@@ -86,7 +93,7 @@ public class UnconfiguredBuildTargetParserTest {
         "cell//path:target",
         UnconfiguredBuildTarget.of(
             ImmutableCanonicalCellName.of(Optional.of("cell")),
-            "//path",
+            BaseName.of("//path"),
             "target",
             UnconfiguredBuildTarget.NO_FLAVORS)
       }

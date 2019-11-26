@@ -41,7 +41,7 @@ public abstract class AbstractBuildTarget implements BuildTarget {
   }
 
   @Override
-  public String getBaseName() {
+  public BaseName getBaseName() {
     return getUnconfiguredBuildTargetView().getBaseName();
   }
 

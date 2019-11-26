@@ -16,12 +16,12 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.core.model.UnflavoredBuildTargetView.BUILD_TARGET_PREFIX;
-
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -44,7 +44,8 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
   private static final String SWIFT_RUNTIME = "_swift_runtime";
 
   private static final UnconfiguredBuildTargetView PSEUDO_BUILD_TARGET =
-      ImmutableUnconfiguredBuildTargetView.of(BUILD_TARGET_PREFIX + SWIFT_RUNTIME, SWIFT_RUNTIME);
+      ImmutableUnconfiguredBuildTargetView.of(
+          BaseName.ofPath(ForwardRelativePath.of(SWIFT_RUNTIME)), SWIFT_RUNTIME);
 
   private final SwiftPlatform swiftPlatform;
   private final BuildTarget buildTarget;

@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException
+import com.facebook.buck.core.model.BaseName
 import com.facebook.buck.core.model.CanonicalCellName
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser
@@ -29,18 +30,18 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 object BuildTargets {
     fun createBuildTargetFromParts(
         cell: CanonicalCellName,
-        basePath: FsAgnosticPath,
+        baseName: FsAgnosticPath,
         name: String
     ): UnconfiguredBuildTarget {
         return UnconfiguredBuildTarget.of(
             cell,
-            "//$basePath", name, UnconfiguredBuildTarget.NO_FLAVORS)
+            BaseName.ofPath(baseName.path), name, UnconfiguredBuildTarget.NO_FLAVORS)
     }
 
     fun createBuildTargetFromParts(
-        basePath: FsAgnosticPath,
+        baseName: FsAgnosticPath,
         name: String
-    ): UnconfiguredBuildTarget = createBuildTargetFromParts(CanonicalCellName.rootCell(), basePath, name)
+    ): UnconfiguredBuildTarget = createBuildTargetFromParts(CanonicalCellName.rootCell(), baseName, name)
 
     /**
      * @param target must be a fully-qualified build target

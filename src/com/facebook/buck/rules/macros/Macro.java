@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
 import java.util.Optional;
@@ -26,7 +27,7 @@ public interface Macro extends TargetTranslatable<Macro> {
 
   @Override
   default Optional<Macro> translateTargets(
-      CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
     return Optional.empty();
   }
 }

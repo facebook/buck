@@ -18,6 +18,7 @@ package com.facebook.buck.rules.query;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -90,7 +91,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
       TypeCoercerFactory typeCoercerFactory,
       CellPathResolver cellNames,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      String targetBaseName,
+      BaseName targetBaseName,
       Set<BuildTarget> declaredDeps,
       TargetConfiguration targetConfiguration) {
     this.graphBuilder = graphBuilder;
@@ -270,7 +271,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
 
   private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator {
     private final CellPathResolver cellNames;
-    private final String targetBaseName;
+    private final BaseName targetBaseName;
     private final ImmutableSet<BuildTarget> declaredDeps;
     private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
     private final TargetConfiguration targetConfiguration;
@@ -278,7 +279,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
     private TargetEvaluator(
         CellPathResolver cellNames,
         UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-        String targetBaseName,
+        BaseName targetBaseName,
         Set<BuildTarget> declaredDeps,
         TargetConfiguration targetConfiguration) {
       this.cellNames = cellNames;

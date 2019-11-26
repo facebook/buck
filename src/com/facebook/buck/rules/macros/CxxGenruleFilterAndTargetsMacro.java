@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.google.common.collect.ImmutableList;
@@ -38,7 +39,7 @@ public abstract class CxxGenruleFilterAndTargetsMacro implements Macro {
 
   @Override
   public Optional<Macro> translateTargets(
-      CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
     return translator
         .translate(cellPathResolver, targetBaseName, getTargets())
         .map(this::withTargets);

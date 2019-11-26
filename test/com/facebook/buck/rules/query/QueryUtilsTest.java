@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -40,7 +41,8 @@ public class QueryUtilsTest {
         QueryUtils.extractParseTimeTargets(
                 TARGET,
                 CELL_NAMES,
-                Query.of("deps(//some:rule)", UnconfiguredTargetConfiguration.INSTANCE, "//"))
+                Query.of(
+                    "deps(//some:rule)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT))
             .collect(Collectors.toList()),
         Matchers.contains(BuildTargetFactory.newInstance("//some:rule")));
   }

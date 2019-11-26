@@ -40,7 +40,7 @@ public class BuildTargetTest {
   public void testRootBuildTarget() {
     BuildTarget rootTarget = BuildTargetFactory.newInstance("//", "fb4a");
     assertEquals("fb4a", rootTarget.getShortNameAndFlavorPostfix());
-    assertEquals("//", rootTarget.getBaseName());
+    assertEquals("//", rootTarget.getBaseName().toString());
     assertEquals(
         Paths.get(""), rootTarget.getCellRelativeBasePath().getPath().toPath(ROOT.getFileSystem()));
     assertEquals("//:fb4a", rootTarget.getFullyQualifiedName());
@@ -51,7 +51,7 @@ public class BuildTargetTest {
   public void testBuildTargetTwoLevelsDeep() {
     BuildTarget rootTarget = BuildTargetFactory.newInstance("//java/com/facebook", "fb4a");
     assertEquals("fb4a", rootTarget.getShortNameAndFlavorPostfix());
-    assertEquals("//java/com/facebook", rootTarget.getBaseName());
+    assertEquals("//java/com/facebook", rootTarget.getBaseName().toString());
     assertEquals(
         Paths.get("java/com/facebook"),
         rootTarget.getCellRelativeBasePath().getPath().toPath(ROOT.getFileSystem()));
@@ -135,7 +135,8 @@ public class BuildTargetTest {
   @Test
   public void testGetUnflavoredTarget() {
     UnflavoredBuildTargetView unflavoredTarget =
-        ImmutableUnflavoredBuildTargetView.of(CanonicalCellName.rootCell(), "//foo/bar", "baz");
+        ImmutableUnflavoredBuildTargetView.of(
+            CanonicalCellName.rootCell(), BaseName.of("//foo/bar"), "baz");
 
     BuildTarget flavoredTarget =
         BuildTargetFactory.newInstance("//foo/bar", "baz", InternalFlavor.of("biz"));
@@ -163,10 +164,12 @@ public class BuildTargetTest {
   @Test
   public void unflavoredBuildTargetsAreInterned() {
     UnflavoredBuildTargetView target1 =
-        ImmutableUnflavoredBuildTargetView.of(CanonicalCellName.rootCell(), "//foo", "bar");
+        ImmutableUnflavoredBuildTargetView.of(
+            CanonicalCellName.rootCell(), BaseName.of("//foo"), "bar");
 
     UnflavoredBuildTargetView target2 =
-        ImmutableUnflavoredBuildTargetView.of(CanonicalCellName.rootCell(), "//foo", "bar");
+        ImmutableUnflavoredBuildTargetView.of(
+            CanonicalCellName.rootCell(), BaseName.of("//foo"), "bar");
 
     assertSame(target1, target2);
   }

@@ -40,7 +40,7 @@ public interface UnflavoredBuildTargetView
    * If this build target were cell//third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava".
    */
-  String getBaseName();
+  BaseName getBaseName();
 
   String getShortName();
 

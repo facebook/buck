@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.HasApplicationModuleBlacklist;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.arg.HasProvidedDepsQuery;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -180,7 +181,8 @@ public final class QueryUtils {
   }
 
   public static Stream<BuildTarget> extractBuildTargets(
-      CellPathResolver cellPathResolver, String targetBaseName, Query query) throws QueryException {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, Query query)
+      throws QueryException {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             Optional.empty(),

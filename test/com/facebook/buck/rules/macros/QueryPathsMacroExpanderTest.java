@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -123,7 +124,7 @@ public class QueryPathsMacroExpanderTest {
                         Query.of(
                             dep.getBuildTarget().getFullyQualifiedName(),
                             dep.getBuildTarget().getTargetConfiguration(),
-                            "//"))))
+                            BaseName.ROOT))))
             .build();
 
     TargetGraph graph = TargetGraphFactory.newInstance(dep, target);

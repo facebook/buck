@@ -19,6 +19,7 @@ package com.facebook.buck.query;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -36,8 +37,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class QueryTargetCollectorTest {
-  private static Path ROOT = Paths.get("/fake/cell/root");
-  private static String baseName = "//app";
+  private static final Path ROOT = Paths.get("/fake/cell/root");
+  private static final String baseName = "//app";
   private QueryEnvironment env =
       new GraphEnhancementQueryEnvironment(
           Optional.empty(),
@@ -45,7 +46,7 @@ public class QueryTargetCollectorTest {
           new DefaultTypeCoercerFactory(),
           TestCellPathResolver.create(ROOT),
           new ParsingUnconfiguredBuildTargetViewFactory(),
-          baseName,
+          BaseName.of(baseName),
           ImmutableSet.of(),
           UnconfiguredTargetConfiguration.INSTANCE);
   private QueryTargetCollector<QueryBuildTarget> collector;

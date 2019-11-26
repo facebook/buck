@@ -227,6 +227,15 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
     }
   }
 
+  /** A string to be prepended to another path to make a relative path */
+  public String toPathPrefix() {
+    if (isEmpty()) {
+      return "";
+    } else {
+      return toString() + "/";
+    }
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {

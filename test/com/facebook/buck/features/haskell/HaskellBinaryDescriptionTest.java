@@ -18,6 +18,7 @@ package com.facebook.buck.features.haskell;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -63,7 +64,7 @@ public class HaskellBinaryDescriptionTest {
                 Query.of(
                     "filter(transitive, deps(//:dep))",
                     UnconfiguredTargetConfiguration.INSTANCE,
-                    "//"));
+                    BaseName.ROOT));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             transitiveDepBuilder.build(), depBuilder.build(), builder.build());

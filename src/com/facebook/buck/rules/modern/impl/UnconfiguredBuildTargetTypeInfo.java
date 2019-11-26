@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.ImmutableCanonicalCellName;
@@ -53,7 +54,7 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
       UnconfiguredBuildTargetView value, ValueVisitor<E> visitor) throws E {
     UnflavoredBuildTargetView unflavored = value.getUnflavoredBuildTargetView();
     Holder.cellNameTypeInfo.visit(unflavored.getCell().getLegacyName(), visitor);
-    visitor.visitString(unflavored.getBaseName());
+    visitor.visitString(unflavored.getBaseName().toString());
     visitor.visitString(unflavored.getShortName());
     Holder.flavorsTypeInfo.visit(
         value.getFlavors().stream()
@@ -72,6 +73,6 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
     Stream<Flavor> flavors =
         Holder.flavorsTypeInfo.createNotNull(creator).stream().map(InternalFlavor::of);
     return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(cellName, baseName, shortName), flavors);
+        ImmutableUnflavoredBuildTargetView.of(cellName, BaseName.of(baseName), shortName), flavors);
   }
 }

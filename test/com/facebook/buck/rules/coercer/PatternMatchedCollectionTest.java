@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -50,7 +51,7 @@ public class PatternMatchedCollectionTest {
             .build();
     assertThat(
         translator
-            .translate(CELL_PATH_RESOLVER, "", collection)
+            .translate(CELL_PATH_RESOLVER, BaseName.ROOT, collection)
             .map(PatternMatchedCollection::getValues),
         Matchers.equalTo(Optional.of(ImmutableList.of(newTarget))));
   }
@@ -65,7 +66,7 @@ public class PatternMatchedCollectionTest {
             .add(Pattern.compile("something"), target)
             .build();
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, "", collection),
+        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, collection),
         Matchers.equalTo(Optional.empty()));
   }
 }

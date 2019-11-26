@@ -16,8 +16,8 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.path.ForwardRelativePath;
 
 /** A factory that parses a given build target name using the provided {@link BuildTargetParser}. */
@@ -29,12 +29,12 @@ public class ParsingUnconfiguredBuildTargetViewFactory
   @Override
   public UnconfiguredBuildTargetView create(
       CellPathResolver cellPathResolver, String buildTargetName) {
-    return buildTargetParser.parse(cellPathResolver, buildTargetName, "", false);
+    return buildTargetParser.parse(cellPathResolver, buildTargetName, null, false);
   }
 
   @Override
   public UnconfiguredBuildTargetView createForBaseName(
-      CellPathResolver cellPathResolver, String baseName, String buildTargetName) {
+      CellPathResolver cellPathResolver, BaseName baseName, String buildTargetName) {
     return buildTargetParser.parse(cellPathResolver, buildTargetName, baseName, false);
   }
 
@@ -43,15 +43,13 @@ public class ParsingUnconfiguredBuildTargetViewFactory
       CellPathResolver cellPathResolver,
       ForwardRelativePath pathRelativeToProjectRoot,
       String buildTargetName) {
-    String baseName =
-        UnflavoredBuildTargetView.BUILD_TARGET_PREFIX + pathRelativeToProjectRoot.toString();
-
-    return createForBaseName(cellPathResolver, baseName, buildTargetName);
+    return createForBaseName(
+        cellPathResolver, BaseName.ofPath(pathRelativeToProjectRoot), buildTargetName);
   }
 
   @Override
   public UnconfiguredBuildTargetView createWithWildcard(
       CellPathResolver cellPathResolver, String buildTargetName) {
-    return buildTargetParser.parse(cellPathResolver, buildTargetName, "", true);
+    return buildTargetParser.parse(cellPathResolver, buildTargetName, null, true);
   }
 }

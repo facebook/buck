@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.string.StringMatcher;
 import com.facebook.buck.util.types.Either;
@@ -90,7 +91,7 @@ public abstract class StringWithMacros
 
   @Override
   public Optional<StringWithMacros> translateTargets(
-      CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
     boolean modified = false;
     ImmutableList.Builder<Either<String, MacroContainer>> parts = ImmutableList.builder();
     for (Either<String, MacroContainer> part : getParts()) {
@@ -173,7 +174,9 @@ public abstract class StringWithMacros
 
     @Override
     public Optional<StringWithMacros> translateTargets(
-        CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
+        CellPathResolver cellPathResolver,
+        BaseName targetBaseName,
+        TargetNodeTranslator translator) {
       return Optional.empty();
     }
 

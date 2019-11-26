@@ -48,7 +48,7 @@ public class AliasConfigTest {
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals(
-          "When parsing :app_release: Path in :app_release must start with //.",
+          "When parsing :app_release: relative path is not allowed.",
           e.getHumanReadableErrorMessage());
     }
   }

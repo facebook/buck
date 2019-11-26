@@ -435,7 +435,7 @@ public class ParserWithConfigurableAttributesTest {
   public void shouldThrowAnExceptionIfConstructorArgMashallingFails()
       throws IOException, BuildFileParseException {
     thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("found ////cake:walk");
+    thrown.expectMessage("When parsing ////cake:walk");
 
     Path buckFile = cellRoot.resolve("BUCK");
     Files.write(
@@ -2681,7 +2681,8 @@ public class ParserWithConfigurableAttributesTest {
                     .getPath()
                     .toPath(filesystem.getFileSystem())
                     .resolve("BUCK"),
-                HashCode.fromBytes(buildTarget.getBaseName().getBytes(StandardCharsets.UTF_8))));
+                HashCode.fromBytes(
+                    buildTarget.getBaseName().toString().getBytes(StandardCharsets.UTF_8))));
 
     try (PerBuildState state =
         new PerBuildStateFactory(

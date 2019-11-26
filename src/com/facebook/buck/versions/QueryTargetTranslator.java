@@ -17,6 +17,7 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.query.QueryException;
@@ -44,7 +45,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
   @Override
   public Optional<Query> translateTargets(
       CellPathResolver cellPathResolver,
-      String targetBaseName,
+      BaseName targetBaseName,
       TargetNodeTranslator translator,
       Query query) {
 

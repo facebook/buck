@@ -17,6 +17,7 @@
 package com.facebook.buck.core.parser.buildtargetpattern;
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -132,7 +133,7 @@ public class UnconfiguredBuildTargetParser {
         "should have '%s' followed by target name",
         BuildTargetLanguageConstants.TARGET_SYMBOL);
 
-    String baseName = target.substring(rootPos, targetSymbolPos);
+    BaseName baseName = BaseName.of(target.substring(rootPos, targetSymbolPos));
     String targetName = target.substring(targetSymbolPos + 1, flavorSymbolPos);
 
     check(
@@ -145,9 +146,6 @@ public class UnconfiguredBuildTargetParser {
         cellName.isEmpty()
             ? CanonicalCellName.rootCell()
             : CanonicalCellName.unsafeOf(Optional.of(cellName));
-    if (intern) {
-      return UnconfiguredBuildTarget.of(canonicalCellName, baseName.intern(), targetName, flavors);
-    }
     return UnconfiguredBuildTarget.of(canonicalCellName, baseName, targetName, flavors);
   }
 

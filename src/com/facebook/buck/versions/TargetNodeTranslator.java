@@ -17,6 +17,7 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -59,7 +60,7 @@ public abstract class TargetNodeTranslator {
       BuildTarget target);
 
   private <A> Optional<Optional<A>> translateOptional(
-      CellPathResolver cellPathResolver, String targetBaseName, Optional<A> val) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, Optional<A> val) {
     if (!val.isPresent()) {
       return Optional.empty();
     }
@@ -71,7 +72,7 @@ public abstract class TargetNodeTranslator {
   }
 
   private <A> Optional<ImmutableList<A>> translateList(
-      CellPathResolver cellPathResolver, String targetBaseName, ImmutableList<A> val) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, ImmutableList<A> val) {
     boolean modified = false;
     ImmutableList.Builder<A> builder = ImmutableList.builder();
     for (A a : val) {
@@ -83,7 +84,7 @@ public abstract class TargetNodeTranslator {
   }
 
   private <A> Optional<ImmutableSet<A>> translateSet(
-      CellPathResolver cellPathResolver, String targetBaseName, ImmutableSet<A> val) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, ImmutableSet<A> val) {
     boolean modified = false;
     ImmutableSet.Builder<A> builder = ImmutableSet.builder();
     for (A a : val) {
@@ -95,7 +96,7 @@ public abstract class TargetNodeTranslator {
   }
 
   private <A extends Comparable<?>> Optional<ImmutableSortedSet<A>> translateSortedSet(
-      CellPathResolver cellPathResolver, String targetBaseName, ImmutableSortedSet<A> val) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, ImmutableSortedSet<A> val) {
     boolean modified = false;
     ImmutableSortedSet.Builder<A> builder = ImmutableSortedSet.naturalOrder();
     for (A a : val) {
@@ -107,7 +108,7 @@ public abstract class TargetNodeTranslator {
   }
 
   private <A extends Comparable<?>, B> Optional<ImmutableMap<A, B>> translateMap(
-      CellPathResolver cellPathResolver, String targetBaseName, ImmutableMap<A, B> val) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, ImmutableMap<A, B> val) {
     boolean modified = false;
     ImmutableMap.Builder<A, B> builder = ImmutableMap.builder();
     for (Map.Entry<A, B> ent : val.entrySet()) {
@@ -120,7 +121,7 @@ public abstract class TargetNodeTranslator {
   }
 
   private <A extends Comparable<?>, B> Optional<ImmutableSortedMap<A, B>> translateSortedMap(
-      CellPathResolver cellPathResolver, String targetBaseName, ImmutableSortedMap<A, B> val) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, ImmutableSortedMap<A, B> val) {
     boolean modified = false;
     ImmutableSortedMap.Builder<A, B> builder = ImmutableSortedMap.naturalOrder();
     for (Map.Entry<A, B> ent : val.entrySet()) {
@@ -134,7 +135,7 @@ public abstract class TargetNodeTranslator {
 
   @VisibleForTesting
   <A, B> Optional<Pair<A, B>> translatePair(
-      CellPathResolver cellPathResolver, String targetBaseName, Pair<A, B> val) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, Pair<A, B> val) {
     Optional<A> first = translate(cellPathResolver, targetBaseName, val.getFirst());
     Optional<B> second = translate(cellPathResolver, targetBaseName, val.getSecond());
     if (!first.isPresent() && !second.isPresent()) {
@@ -145,7 +146,9 @@ public abstract class TargetNodeTranslator {
 
   @VisibleForTesting
   Optional<DefaultBuildTargetSourcePath> translateBuildTargetSourcePath(
-      CellPathResolver cellPathResolver, String targetBaseName, DefaultBuildTargetSourcePath val) {
+      CellPathResolver cellPathResolver,
+      BaseName targetBaseName,
+      DefaultBuildTargetSourcePath val) {
     BuildTarget target = val.getTarget();
     Optional<BuildTarget> translatedTarget = translate(cellPathResolver, targetBaseName, target);
     return translatedTarget.map(DefaultBuildTargetSourcePath::of);
@@ -153,7 +156,7 @@ public abstract class TargetNodeTranslator {
 
   @VisibleForTesting
   Optional<SourceWithFlags> translateSourceWithFlags(
-      CellPathResolver cellPathResolver, String targetBaseName, SourceWithFlags val) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, SourceWithFlags val) {
     Optional<SourcePath> translatedSourcePath =
         translate(cellPathResolver, targetBaseName, val.getSourcePath());
     return translatedSourcePath.map(sourcePath -> SourceWithFlags.of(sourcePath, val.getFlags()));
@@ -162,7 +165,7 @@ public abstract class TargetNodeTranslator {
   @SuppressWarnings("unchecked")
   private <A, T> Optional<Optional<T>> tryTranslate(
       CellPathResolver cellPathResolver,
-      String targetBaseName,
+      BaseName targetBaseName,
       TargetTranslator<A> translator,
       T object) {
     Class<A> clazz = translator.getTranslatableClass();
@@ -176,7 +179,7 @@ public abstract class TargetNodeTranslator {
 
   @SuppressWarnings("unchecked")
   public <A> Optional<A> translate(
-      CellPathResolver cellPathResolver, String targetBaseName, A object) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, A object) {
 
     // `null`s require no translating.
     if (object == null) {
@@ -239,7 +242,7 @@ public abstract class TargetNodeTranslator {
 
   private boolean translateConstructorArg(
       CellPathResolver cellPathResolver,
-      String targetBaseName,
+      BaseName targetBaseName,
       ConstructorArg constructorArg,
       Object newConstructorArgOrBuilder) {
     boolean modified = false;
@@ -258,7 +261,7 @@ public abstract class TargetNodeTranslator {
   }
 
   private <A extends ConstructorArg> Optional<A> translateConstructorArg(
-      CellPathResolver cellPathResolver, String targetBaseName, TargetNode<A> node) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, TargetNode<A> node) {
     A constructorArg = node.getConstructorArg();
     DataTransferObjectDescriptor<A> newArgAndBuild =
         typeCoercerFactory.getConstructorArgDescriptor(
@@ -278,7 +281,7 @@ public abstract class TargetNodeTranslator {
    */
   public <A extends ConstructorArg> Optional<TargetNode<A>> translateNode(TargetNode<A> node) {
     CellPathResolver cellPathResolver = node.getCellNames();
-    String targetBaseName = node.getBuildTarget().getBaseName();
+    BaseName targetBaseName = node.getBuildTarget().getBaseName();
 
     Optional<BuildTarget> target = translateBuildTarget(node.getBuildTarget());
     Optional<A> constructorArg = translateConstructorArg(cellPathResolver, targetBaseName, node);

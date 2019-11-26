@@ -23,6 +23,7 @@ import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -34,9 +35,9 @@ import com.facebook.buck.core.model.targetgraph.raw.ImmutableUnconfiguredTargetN
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -207,7 +208,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
 
     BuildFileManifest buildFileManifest =
         env.getDep(ImmutableBuildPackagePathToBuildFileManifestKey.of(key.getPath()));
-    String baseName = "//" + PathFormatter.pathWithUnixSeparators(key.getPath());
+    ForwardRelativePath basePath = ForwardRelativePath.ofPath(key.getPath());
 
     ImmutableSet.Builder<BuildTargetToUnconfiguredTargetNodeKey> builder =
         ImmutableSet.builderWithExpectedSize(buildFileManifest.getTargets().size());
@@ -216,7 +217,10 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
       BuildTargetToUnconfiguredTargetNodeKey depkey =
           ImmutableBuildTargetToUnconfiguredTargetNodeKey.of(
               UnconfiguredBuildTarget.of(
-                  cell.getCanonicalName(), baseName, target, UnconfiguredBuildTarget.NO_FLAVORS),
+                  cell.getCanonicalName(),
+                  BaseName.ofPath(basePath),
+                  target,
+                  UnconfiguredBuildTarget.NO_FLAVORS),
               key.getPath());
       builder.add(depkey);
     }

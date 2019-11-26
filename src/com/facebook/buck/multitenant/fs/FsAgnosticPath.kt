@@ -53,7 +53,7 @@ private val PATH_TO_INDEX_CACHE = AppendOnlyBidirectionalCache<FsAgnosticPath>()
  */
 @JsonSerialize(using = ToStringSerializer::class)
 @JsonDeserialize(using = FsAgnosticPathDeserializer::class)
-class FsAgnosticPath private constructor(private val path: ForwardRelativePath) : Comparable<FsAgnosticPath> {
+class FsAgnosticPath private constructor(val path: ForwardRelativePath) : Comparable<FsAgnosticPath> {
     companion object {
         /**
          * @param path must be a normalized, relative path.

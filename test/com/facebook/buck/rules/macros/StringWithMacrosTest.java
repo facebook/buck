@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -47,12 +48,13 @@ public class StringWithMacrosTest {
         new FixedTargetNodeTranslator(
             new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, "", StringWithMacrosUtils.format("--flag")),
+        translator.translate(
+            CELL_PATH_RESOLVER, BaseName.ROOT, StringWithMacrosUtils.format("--flag")),
         Matchers.equalTo(Optional.empty()));
     assertThat(
         translator.translate(
             CELL_PATH_RESOLVER,
-            "",
+            BaseName.ROOT,
             StringWithMacrosUtils.format("--flag=%s", LocationMacro.of(target))),
         Matchers.equalTo(
             Optional.of(StringWithMacrosUtils.format("--flag=%s", LocationMacro.of(newTarget)))));

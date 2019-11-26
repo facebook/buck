@@ -15,9 +15,11 @@
  */
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Joiner;
 import java.nio.file.Path;
@@ -53,6 +55,6 @@ public class UnflavoredBuildTargetFactory {
               basePath, otherBasePath));
     }
     return ImmutableUnflavoredBuildTargetView.of(
-        cellName, UnflavoredBuildTargetView.BUILD_TARGET_PREFIX + basePath, name);
+        cellName, BaseName.ofPath(ForwardRelativePath.of(basePath)), name);
   }
 }

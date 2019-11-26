@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.AbstractBuildTarget;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
@@ -55,11 +56,16 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
     return super.getCell();
   }
 
+  @Override
+  @JsonIgnore
+  public BaseName getBaseName() {
+    return super.getBaseName();
+  }
+
   @JsonProperty("baseName")
   @JsonView(JsonViews.MachineReadableLog.class)
-  @Override
-  public String getBaseName() {
-    return super.getBaseName();
+  private String getBaseNameString() {
+    return getBaseName().toString();
   }
 
   @JsonProperty("shortName")

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -79,7 +80,10 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
             ImmutableSortedSet.of(":target2"));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         UnconfiguredBuildTarget.of(
-            cell.getCanonicalName(), "//", "target1", UnconfiguredBuildTarget.NO_FLAVORS);
+            cell.getCanonicalName(),
+            BaseName.of("//"),
+            "target1",
+            UnconfiguredBuildTarget.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode1 =
         ImmutableUnconfiguredTargetNode.of(
             unconfiguredBuildTarget1,
@@ -105,7 +109,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
     assertEquals(1, deps.size());
 
     UnconfiguredBuildTarget dep = deps.iterator().next();
-    assertEquals("//", dep.getBaseName());
+    assertEquals("//", dep.getBaseName().toString());
     assertEquals("target2", dep.getName());
   }
 }

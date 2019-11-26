@@ -17,6 +17,7 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.AbstractUnflavoredBuildTargetView;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
@@ -53,7 +54,7 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
   }
 
   @Override
-  public String getBaseName() {
+  public BaseName getBaseName() {
     return data.getBaseName();
   }
 
@@ -75,7 +76,7 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
    * @param shortName Last part of build target name after colon
    */
   public static ImmutableUnflavoredBuildTargetView of(
-      CanonicalCellName cellName, String baseName, String shortName) {
+      CanonicalCellName cellName, BaseName baseName, String shortName) {
     return of(
         UnconfiguredBuildTarget.of(
             cellName, baseName, shortName, UnconfiguredBuildTarget.NO_FLAVORS));
@@ -100,7 +101,7 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
     if (cmp != 0) {
       return cmp;
     }
-    cmp = MoreStrings.compareStrings(getBaseName(), o.getBaseName());
+    cmp = getBaseName().compareTo(o.getBaseName());
     if (cmp != 0) {
       return cmp;
     }

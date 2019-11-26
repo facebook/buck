@@ -17,6 +17,7 @@
 package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
@@ -79,7 +80,7 @@ abstract class AbstractLuaPlatform implements FlavorConvertible {
                                 "Cannot find C/C++ library rule %s", target)))
         .orElse(
             new SystemLuaCxxLibrary(
-                ImmutableUnconfiguredBuildTargetView.of("//system", "lua")
+                ImmutableUnconfiguredBuildTargetView.of(BaseName.of("//system"), "lua")
                     .configure(targetConfiguration)));
   }
 

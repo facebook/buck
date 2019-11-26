@@ -233,4 +233,11 @@ public class ForwardRelativePathTest {
         Optional.of(ForwardRelativePath.of("foo/bar")),
         ForwardRelativePath.of("foo/bar/baz").parent());
   }
+
+  @Test
+  public void toPathPrefix() {
+    assertEquals("", ForwardRelativePath.of("").toPathPrefix());
+    assertEquals("foo/", ForwardRelativePath.of("foo").toPathPrefix());
+    assertEquals("foo/bar/", ForwardRelativePath.of("foo/bar").toPathPrefix());
+  }
 }

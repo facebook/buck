@@ -21,6 +21,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -34,8 +35,8 @@ import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Use {@link com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser
@@ -76,7 +77,7 @@ class BuildTargetParser {
   UnconfiguredBuildTargetView parse(
       CellPathResolver legacyCellPathResolver,
       String buildTargetName,
-      String buildTargetBaseName,
+      @Nullable BaseName buildTargetBaseName,
       boolean allowWildCards) {
     CellNameResolver cellNameResolver = legacyCellPathResolver.getCellNameResolver();
 
@@ -109,9 +110,20 @@ class BuildTargetParser {
     }
 
     try {
-
       CanonicalCellName canonicalCellName = cellNameResolver.getName(givenCellName);
-      String baseName = parts.get(0).isEmpty() ? buildTargetBaseName : parts.get(0);
+      BaseName baseName;
+      if (parts.get(0).isEmpty()) {
+        if (buildTargetBaseName == null) {
+          throw new HumanReadableException("relative path is not allowed");
+        }
+        baseName = buildTargetBaseName;
+      } else {
+        try {
+          baseName = BaseName.of(parts.get(0));
+        } catch (Exception e) {
+          throw new HumanReadableException("incorrect base name: " + parts.get(0));
+        }
+      }
       String shortName = parts.get(1);
       Iterable<String> flavorNames = new HashSet<>();
       int hashIndex = shortName.indexOf('#');
@@ -119,11 +131,6 @@ class BuildTargetParser {
         flavorNames = flavorParser.parseFlavorString(shortName.substring(hashIndex + 1));
         shortName = shortName.substring(0, hashIndex);
       }
-
-      Objects.requireNonNull(baseName);
-      // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
-      baseName = baseName.replace('\\', '/');
-      BaseNameParser.checkBaseName(baseName, buildTargetName);
 
       // Set the cell path correctly. Because the cellNames comes from the owning cell we can
       // be sure that if this doesn't throw an exception the target cell is visible to the

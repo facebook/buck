@@ -54,7 +54,7 @@ public interface UnconfiguredBuildTargetView
    * <p>For example, for {@code cell//third_party/java/guava:guava} this returns {@code
    * //third_party/java/guava}.
    */
-  String getBaseName();
+  BaseName getBaseName();
 
   /**
    * The path of the directory where this target is located.

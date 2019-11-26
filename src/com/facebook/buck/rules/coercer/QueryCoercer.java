@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -100,7 +101,8 @@ public class QueryCoercer implements TypeCoercer<Query> {
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {
-      return Query.of((String) object, targetConfiguration, "//" + pathRelativeToProjectRoot);
+      return Query.of(
+          (String) object, targetConfiguration, BaseName.ofPath(pathRelativeToProjectRoot));
     }
     throw CoerceFailedException.simple(object, getOutputClass());
   }

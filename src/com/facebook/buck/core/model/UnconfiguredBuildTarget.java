@@ -17,7 +17,6 @@
 package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -61,8 +60,6 @@ public class UnconfiguredBuildTarget
   public static final ImmutableSortedSet<Flavor> NO_FLAVORS =
       ImmutableSortedSet.orderedBy(FLAVOR_ORDERING).build();
 
-  private static final String BUILD_TARGET_PREFIX = "//";
-
   private final CellRelativePath cellRelativePath;
   private final String name;
   private final ImmutableSortedSet<Flavor> flavors;
@@ -91,16 +88,19 @@ public class UnconfiguredBuildTarget
    * "//third_party/java/guava"
    */
   @JsonProperty("baseName")
-  public String getBaseName() {
-    return BUILD_TARGET_PREFIX + cellRelativePath.getPath();
+  private String getBaseNameString() {
+    return getBaseName().toString();
+  }
+
+  @JsonIgnore
+  public BaseName getBaseName() {
+    return BaseName.ofPath(getCellRelativeBasePath().getPath());
   }
 
   /** Typed version of {@link #getBaseName()}. */
   @JsonIgnore
   public CellRelativePath getCellRelativeBasePath() {
-    // TODO(nga): store only this property, and make `getBaseName` computed
-    return new ImmutableCellRelativePath(
-        getCell(), ForwardRelativePath.ofSubstring(getBaseName(), BUILD_TARGET_PREFIX.length()));
+    return cellRelativePath;
   }
 
   /**
@@ -200,13 +200,8 @@ public class UnconfiguredBuildTarget
 
   /** A constructor */
   public static UnconfiguredBuildTarget of(
-      CanonicalCellName cell, String baseName, String name, ImmutableSortedSet<Flavor> flavors) {
-    Preconditions.checkArgument(baseName.startsWith(BUILD_TARGET_PREFIX));
-    return of(
-        new ImmutableCellRelativePath(
-            cell, ForwardRelativePath.ofSubstring(baseName, BUILD_TARGET_PREFIX.length())),
-        name,
-        flavors);
+      CanonicalCellName cell, BaseName baseName, String name, ImmutableSortedSet<Flavor> flavors) {
+    return of(new ImmutableCellRelativePath(cell, baseName.getPath()), name, flavors);
   }
 
   @JsonCreator
@@ -215,6 +210,6 @@ public class UnconfiguredBuildTarget
       @JsonProperty("baseName") String baseName,
       @JsonProperty("name") String name,
       @JsonProperty("flavors") ImmutableSortedSet<Flavor> flavors) {
-    return of(cell, baseName, name, flavors);
+    return of(cell, BaseName.of(baseName), name, flavors);
   }
 }

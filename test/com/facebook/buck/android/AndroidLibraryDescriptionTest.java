@@ -20,6 +20,7 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -139,7 +140,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
                 Query.of(
                     "filter('.*lib', deps($declared_deps))",
                     UnconfiguredTargetConfiguration.INSTANCE,
-                    "//"));
+                    BaseName.ROOT));
     TargetNode<AndroidLibraryDescriptionArg> rule = ruleBuilder.build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode, rule);

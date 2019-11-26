@@ -130,7 +130,7 @@ class MultitenantQueryEnvironment(
     override fun getBuildFiles(targets: Set<UnconfiguredBuildTarget>): Set<QueryFileTarget> =
         targets.map { target ->
             val path = FsAgnosticSourcePath(FsAgnosticPath.of(
-                "${target.baseName.substring(2)}/${cellToBuildFileName[target.cell.name]!!}"))
+                "${target.cellRelativeBasePath.path.toPathPrefix()}${cellToBuildFileName[target.cell.name]!!}"))
             QueryFileTarget.of(path)
         }.toSet()
 
@@ -269,7 +269,7 @@ private fun extractInputs(targetNode: UnconfiguredTargetNode): Set<QueryFileTarg
 }
 
 private fun toBasePath(target: UnconfiguredBuildTarget): FsAgnosticPath {
-    return FsAgnosticPath.of(target.baseName.substring(2))
+    return FsAgnosticPath.of(target.cellRelativeBasePath.path.toString())
 }
 
 private fun extractTests(targetNode: UnconfiguredTargetNode): Set<UnconfiguredBuildTarget> {

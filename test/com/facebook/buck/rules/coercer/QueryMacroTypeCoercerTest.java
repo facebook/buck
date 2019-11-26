@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -54,6 +55,9 @@ public class QueryMacroTypeCoercerTest {
     assertThat(
         queryMacro.getQuery(),
         Matchers.equalTo(
-            Query.of("some query", UnconfiguredTargetConfiguration.INSTANCE, "//" + basePath)));
+            Query.of(
+                "some query",
+                UnconfiguredTargetConfiguration.INSTANCE,
+                BaseName.ofPath(basePath))));
   }
 }

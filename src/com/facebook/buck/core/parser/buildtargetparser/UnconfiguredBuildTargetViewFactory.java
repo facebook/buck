@@ -16,6 +16,7 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import java.nio.file.Path;
@@ -32,7 +33,7 @@ public interface UnconfiguredBuildTargetViewFactory {
    * specified in the target name. The build target contains a {@link
    * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    *
-   * @see #createForBaseName(CellPathResolver, String, String) for more information about other
+   * @see #createForBaseName(CellPathResolver, BaseName, String) for more information about other
    *     types of target names.
    */
   UnconfiguredBuildTargetView create(CellPathResolver cellPathResolver, String buildTargetName);
@@ -51,7 +52,7 @@ public interface UnconfiguredBuildTargetViewFactory {
    * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    */
   UnconfiguredBuildTargetView createForBaseName(
-      CellPathResolver cellPathResolver, String baseName, String buildTargetName);
+      CellPathResolver cellPathResolver, BaseName baseName, String buildTargetName);
 
   UnconfiguredBuildTargetView createForPathRelativeToProjectRoot(
       CellPathResolver cellPathResolver,

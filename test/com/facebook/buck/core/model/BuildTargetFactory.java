@@ -40,12 +40,13 @@ public class BuildTargetFactory {
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
       return ImmutableUnconfiguredBuildTargetView.of(
-              ImmutableUnflavoredBuildTargetView.of(cellName, parts[0], parts[1]))
+              ImmutableUnflavoredBuildTargetView.of(cellName, BaseName.of(parts[0]), parts[1]))
           .configure(UnconfiguredTargetConfiguration.INSTANCE);
     }
     String[] flavors = nameAndFlavor[1].split(",");
     return ImmutableUnconfiguredBuildTargetView.of(
-            ImmutableUnflavoredBuildTargetView.of(cellName, parts[0], nameAndFlavor[0]),
+            ImmutableUnflavoredBuildTargetView.of(
+                cellName, BaseName.of(parts[0]), nameAndFlavor[0]),
             RichStream.from(flavors).map(InternalFlavor::of))
         .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
@@ -54,7 +55,9 @@ public class BuildTargetFactory {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return ImmutableUnconfiguredBuildTargetView.of(
             ImmutableUnflavoredBuildTargetView.of(
-                ImmutableCanonicalCellName.of(arg.getCellName()), arg.getBasePath(), shortName))
+                ImmutableCanonicalCellName.of(arg.getCellName()),
+                BaseName.of(arg.getBasePath()),
+                shortName))
         .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
 
@@ -62,7 +65,9 @@ public class BuildTargetFactory {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return ImmutableUnconfiguredBuildTargetView.of(
             ImmutableUnflavoredBuildTargetView.of(
-                ImmutableCanonicalCellName.of(arg.getCellName()), arg.getBasePath(), shortName),
+                ImmutableCanonicalCellName.of(arg.getCellName()),
+                BaseName.of(arg.getBasePath()),
+                shortName),
             RichStream.from(flavors))
         .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }

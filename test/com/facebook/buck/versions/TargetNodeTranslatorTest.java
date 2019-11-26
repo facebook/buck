@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -149,7 +150,7 @@ public class TargetNodeTranslatorTest {
           }
         };
     assertThat(
-        translator.translatePair(CELL_PATH_RESOLVER, "", new Pair<>("hello", a)),
+        translator.translatePair(CELL_PATH_RESOLVER, BaseName.ROOT, new Pair<>("hello", a)),
         Matchers.equalTo(Optional.of(new Pair<>("hello", b))));
   }
 
@@ -172,7 +173,7 @@ public class TargetNodeTranslatorTest {
         };
     assertThat(
         translator.translateBuildTargetSourcePath(
-            CELL_PATH_RESOLVER, "", DefaultBuildTargetSourcePath.of(a)),
+            CELL_PATH_RESOLVER, BaseName.ROOT, DefaultBuildTargetSourcePath.of(a)),
         Matchers.equalTo(Optional.of(DefaultBuildTargetSourcePath.of(b))));
   }
 
@@ -196,7 +197,7 @@ public class TargetNodeTranslatorTest {
     assertThat(
         translator.translateSourceWithFlags(
             CELL_PATH_RESOLVER,
-            "",
+            BaseName.ROOT,
             SourceWithFlags.of(DefaultBuildTargetSourcePath.of(a), ImmutableList.of("-flag"))),
         Matchers.equalTo(
             Optional.of(
@@ -216,7 +217,7 @@ public class TargetNodeTranslatorTest {
           @Override
           public Optional<Integer> translateTargets(
               CellPathResolver cellPathResolver,
-              String targetBaseName,
+              BaseName targetBaseName,
               TargetNodeTranslator translator,
               Integer val) {
             return Optional.of(0);
@@ -227,6 +228,8 @@ public class TargetNodeTranslatorTest {
             new DefaultTypeCoercerFactory(),
             ImmutableList.of(integerTranslator),
             ImmutableMap.of());
-    assertThat(translator.translate(CELL_PATH_RESOLVER, "", 12), Matchers.equalTo(Optional.of(0)));
+    assertThat(
+        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, 12),
+        Matchers.equalTo(Optional.of(0)));
   }
 }

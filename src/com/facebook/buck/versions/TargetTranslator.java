@@ -17,6 +17,7 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import java.util.Optional;
 
@@ -27,7 +28,7 @@ interface TargetTranslator<T> {
 
   Optional<T> translateTargets(
       CellPathResolver cellPathResolver,
-      String targetBaseName,
+      BaseName targetBaseName,
       TargetNodeTranslator translator,
       T val);
 }

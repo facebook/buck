@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.TargetNodeTranslator;
@@ -120,7 +121,7 @@ public class VersionMatchedCollection<T>
 
   @Override
   public Optional<VersionMatchedCollection<T>> translateTargets(
-      CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
     boolean translated = false;
     ImmutableList.Builder<Pair<ImmutableMap<BuildTarget, Version>, T>> newValues =
         ImmutableList.builder();

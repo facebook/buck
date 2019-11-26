@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -54,7 +55,7 @@ public class SourceSortedSetTest {
     assertThat(
         translator.translate(
             CELL_PATH_RESOLVER,
-            "",
+            BaseName.ROOT,
             SourceSortedSet.ofNamedSources(
                 ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(target)))),
         Matchers.equalTo(
@@ -72,7 +73,8 @@ public class SourceSortedSetTest {
         SourceSortedSet.ofNamedSources(
             ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(target)));
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, "", list), Matchers.equalTo(Optional.empty()));
+        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, list),
+        Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -85,7 +87,7 @@ public class SourceSortedSetTest {
     assertThat(
         translator.translate(
             CELL_PATH_RESOLVER,
-            "",
+            BaseName.ROOT,
             SourceSortedSet.ofUnnamedSources(
                 ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)))),
         Matchers.equalTo(
@@ -103,7 +105,8 @@ public class SourceSortedSetTest {
         SourceSortedSet.ofUnnamedSources(
             ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)));
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, "", list), Matchers.equalTo(Optional.empty()));
+        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, list),
+        Matchers.equalTo(Optional.empty()));
   }
 
   @Test

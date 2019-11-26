@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.CellRelativePath;
@@ -58,7 +59,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
       // unflavored view
       UnconfiguredBuildTarget from = unflavoredBuildTargetView.getData();
       this.data =
-          UnconfiguredBuildTarget.of(from.getCell(), from.getBaseName(), from.getName(), flavors);
+          UnconfiguredBuildTarget.of(from.getCellRelativeBasePath(), from.getName(), flavors);
     }
     this.unflavoredBuildTargetView = unflavoredBuildTargetView;
     this.hash = Objects.hash(this.data, this.unflavoredBuildTargetView);
@@ -73,8 +74,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
       this.unflavoredBuildTargetView =
           ImmutableUnflavoredBuildTargetView.of(
               UnconfiguredBuildTarget.of(
-                  data.getCell(),
-                  data.getBaseName(),
+                  data.getCellRelativeBasePath(),
                   data.getName(),
                   UnconfiguredBuildTarget.NO_FLAVORS));
     }
@@ -137,7 +137,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   }
 
   /** Helper for creating a build target in the root cell with no flavors. */
-  public static ImmutableUnconfiguredBuildTargetView of(String baseName, String shortName) {
+  public static ImmutableUnconfiguredBuildTargetView of(BaseName baseName, String shortName) {
     // TODO(buck_team): this is unsafe. It allows us to potentially create an inconsistent build
     // target where the cell name doesn't match the cell path.
     return ImmutableUnconfiguredBuildTargetView.of(
@@ -165,8 +165,13 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
 
   @JsonProperty("baseName")
   @JsonView(JsonViews.MachineReadableLog.class)
+  private String getBaseNameString() {
+    return data.getBaseName().toString();
+  }
+
   @Override
-  public String getBaseName() {
+  @JsonIgnore
+  public BaseName getBaseName() {
     return data.getBaseName();
   }
 

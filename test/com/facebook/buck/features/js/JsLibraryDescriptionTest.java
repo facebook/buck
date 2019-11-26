@@ -27,6 +27,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeFalse;
 
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -368,7 +369,9 @@ public class JsLibraryDescriptionTest {
             .library(
                 target,
                 Query.of(
-                    String.format("deps(%s)", x), UnconfiguredTargetConfiguration.INSTANCE, "//"),
+                    String.format("deps(%s)", x),
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    BaseName.ROOT),
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
@@ -413,7 +416,9 @@ public class JsLibraryDescriptionTest {
             .library(
                 target,
                 Query.of(
-                    String.format("deps(%s)", x), UnconfiguredTargetConfiguration.INSTANCE, "//"),
+                    String.format("deps(%s)", x),
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    BaseName.ROOT),
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
@@ -446,7 +451,9 @@ public class JsLibraryDescriptionTest {
             .library(a)
             .library(b)
             .library(
-                target, Query.of(a.toString(), UnconfiguredTargetConfiguration.INSTANCE, "//"), b)
+                target,
+                Query.of(a.toString(), UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT),
+                b)
             .build();
 
     JsLibrary lib = scenario.graphBuilder.getRuleWithType(target, JsLibrary.class);

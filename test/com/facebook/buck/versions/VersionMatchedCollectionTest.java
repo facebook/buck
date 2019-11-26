@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -106,7 +107,7 @@ public class VersionMatchedCollectionTest {
         VersionMatchedCollection.<BuildTarget>builder().add(ImmutableMap.of(), target).build();
     assertThat(
         translator
-            .translate(CELL_PATH_RESOLVER, "", collection)
+            .translate(CELL_PATH_RESOLVER, BaseName.ROOT, collection)
             .map(VersionMatchedCollection::getValues),
         Matchers.equalTo(Optional.of(ImmutableList.of(newTarget))));
   }
@@ -124,7 +125,7 @@ public class VersionMatchedCollectionTest {
             .build();
     assertThat(
         translator
-            .translate(CELL_PATH_RESOLVER, "", collection)
+            .translate(CELL_PATH_RESOLVER, BaseName.ROOT, collection)
             .map(VersionMatchedCollection::getValuePairs),
         Matchers.equalTo(
             Optional.of(ImmutableList.of(new Pair<>(ImmutableMap.of(target, V1), newTarget)))));
@@ -138,7 +139,7 @@ public class VersionMatchedCollectionTest {
     VersionMatchedCollection<BuildTarget> collection =
         VersionMatchedCollection.<BuildTarget>builder().add(ImmutableMap.of(), target).build();
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, "", collection),
+        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, collection),
         Matchers.equalTo(Optional.empty()));
   }
 }

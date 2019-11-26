@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -48,11 +49,12 @@ public class QueryTargetTranslatorTest {
     assertThat(
         queryTranslator.translateTargets(
             CELL_PATH_RESOLVER,
-            "",
+            BaseName.ROOT,
             translator,
-            Query.of("deps(//:a)", UnconfiguredTargetConfiguration.INSTANCE, "//")),
+            Query.of("deps(//:a)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),
         Matchers.equalTo(
-            Optional.of(Query.of("deps(//:b)", UnconfiguredTargetConfiguration.INSTANCE, "//"))));
+            Optional.of(
+                Query.of("deps(//:b)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT))));
   }
 
   @Test
@@ -64,9 +66,9 @@ public class QueryTargetTranslatorTest {
     assertThat(
         queryTranslator.translateTargets(
             CELL_PATH_RESOLVER,
-            "",
+            BaseName.ROOT,
             translator,
-            Query.of("$declared_deps", UnconfiguredTargetConfiguration.INSTANCE, "//")),
+            Query.of("$declared_deps", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),
         Matchers.equalTo(Optional.empty()));
   }
 }

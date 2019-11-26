@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -143,7 +144,7 @@ abstract class AbstractSourceSortedSet implements TargetTranslatable<SourceSorte
 
   @Override
   public Optional<SourceSortedSet> translateTargets(
-      CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
+      CellPathResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
     Optional<Optional<ImmutableSortedMap<String, SourcePath>>> namedSources =
         translator.translate(cellPathResolver, targetBaseName, getNamedSources());
     Optional<Optional<ImmutableSortedSet<SourcePath>>> unNamedSources =

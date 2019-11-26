@@ -16,6 +16,7 @@
 package com.facebook.buck.core.model.tc.factory;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -60,7 +61,7 @@ public class TargetConfigurationFactory {
   }
 
   /** Create a target configuration by absolute or relative buck target name */
-  public TargetConfiguration createForBaseName(String baseName, String targetConfiguration) {
+  public TargetConfiguration createForBaseName(BaseName baseName, String targetConfiguration) {
     Optional<TargetConfiguration> builtin = tryNonBuildTarget(targetConfiguration);
     if (builtin.isPresent()) {
       return builtin.get();

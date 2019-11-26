@@ -25,9 +25,15 @@ public class UnconfiguredBuildTargetTest {
   public void intern() {
     assertSame(
         UnconfiguredBuildTarget.of(
-            CanonicalCellName.rootCell(), "//foo", "bar", UnconfiguredBuildTarget.NO_FLAVORS),
+            CanonicalCellName.rootCell(),
+            BaseName.of("//foo"),
+            "bar",
+            UnconfiguredBuildTarget.NO_FLAVORS),
         UnconfiguredBuildTarget.of(
-            CanonicalCellName.rootCell(), "//foo", "bar", UnconfiguredBuildTarget.NO_FLAVORS));
+            CanonicalCellName.rootCell(),
+            BaseName.of("//foo"),
+            "bar",
+            UnconfiguredBuildTarget.NO_FLAVORS));
   }
 
   @Test
@@ -36,7 +42,10 @@ public class UnconfiguredBuildTargetTest {
     // Run this test for a while, if it does not crash with OOM, it means GC collects objects
     for (long i = 0; ; ++i) {
       UnconfiguredBuildTarget.of(
-          CanonicalCellName.rootCell(), "//foo", "bar" + i, UnconfiguredBuildTarget.NO_FLAVORS);
+          CanonicalCellName.rootCell(),
+          BaseName.of("//foo"),
+          "bar" + i,
+          UnconfiguredBuildTarget.NO_FLAVORS);
       if (i % 1000_000 == 0) {
         System.out.println(i);
       }
