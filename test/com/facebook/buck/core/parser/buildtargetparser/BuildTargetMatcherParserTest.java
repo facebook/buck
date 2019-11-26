@@ -276,4 +276,12 @@ public class BuildTargetMatcherParserTest {
     new BuildTargetMatcherTargetNodeParser()
         .parse(createCellRoots(filesystem), "//test/com/facebook/buck/parser/...[noms]");
   }
+
+  @Test
+  public void doesNotAllowFlavorsWithPackage() {
+    exception.expect(Matchers.instanceOf(BuildTargetParseException.class));
+    exception.expectMessage("cannot specify flavors for package matcher");
+
+    new BuildTargetMatcherTargetNodeParser().parse(createCellRoots(filesystem), "//test:#fla");
+  }
 }

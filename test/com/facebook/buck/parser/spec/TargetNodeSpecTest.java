@@ -48,22 +48,18 @@ public class TargetNodeSpecTest {
       "//:",
       "//:mytarget",
       "//:mytarget#myflavor",
-      "//:#myflavor",
       "//...",
       "//mypackage:",
       "//mypackage:mytarget",
       "//mypackage:mytarget#myflavor",
-      "//mypackage:#myflavor",
       "//mypackage/...",
       "mycell//mypackage:",
       "mycell//mypackage:mytarget",
       "mycell//mypackage:mytarget#myflavor",
-      "mycell//mypackage:#myflavor",
       "mycell//mypackage/...",
       "nestedcell//mypackage:",
       "nestedcell//mypackage:mytarget",
       "nestedcell//mypackage:mytarget#myflavor",
-      "nestedcell//mypackage:#myflavor",
       "nestedcell//mypackage/...",
     };
   }
@@ -103,11 +99,7 @@ public class TargetNodeSpecTest {
   @SuppressWarnings("unused")
   private String[] getCellTargetPatterns() {
     return new String[] {
-      "cell-a//:",
-      "cell-a//:mytarget",
-      "cell-a//:mytarget#myflavor",
-      "cell-a//:#myflavor",
-      "cell-a//...",
+      "cell-a//:", "cell-a//:mytarget", "cell-a//:mytarget#myflavor", "cell-a//...",
     };
   }
 

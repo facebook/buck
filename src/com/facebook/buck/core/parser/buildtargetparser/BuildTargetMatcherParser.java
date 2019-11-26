@@ -88,6 +88,11 @@ public abstract class BuildTargetMatcherParser<T> {
       }
       return createForChildren(target.getCellRelativeBasePath());
     } else {
+      // TODO(nga): prohibit empty local name in build target
+      if (target.getShortName().isEmpty()) {
+        throw new BuildTargetParseException("cannot specify flavors for package matcher");
+      }
+
       return createForSingleton(
           ImmutableUnconfiguredBuildTargetWithOutputs.of(
               target, targetWithOutputLabel.getOutputLabel()));
