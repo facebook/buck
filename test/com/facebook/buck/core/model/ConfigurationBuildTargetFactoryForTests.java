@@ -23,4 +23,8 @@ public class ConfigurationBuildTargetFactoryForTests {
         .getUnconfiguredBuildTargetView()
         .configure(ConfigurationForConfigurationTargets.INSTANCE);
   }
+
+  public static TargetConfiguration newConfiguration(String fullyQualifiedName) {
+    return ImmutableRuleBasedTargetConfiguration.of(newInstance(fullyQualifiedName));
+  }
 }
