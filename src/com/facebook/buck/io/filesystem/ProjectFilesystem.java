@@ -44,7 +44,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.jar.Manifest;
 
-/** An injectable service for interacting with the filesystem relative to the project root. */
+/** An injectable service for interacting with the filesystem relative to the cell root. */
 public interface ProjectFilesystem {
 
   /**
