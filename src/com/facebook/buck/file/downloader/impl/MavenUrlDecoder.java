@@ -130,6 +130,9 @@ public class MavenUrlDecoder {
       case "aar":
         return ".aar";
 
+      case "egg":
+        return ".egg";
+
       case "exe":
         return ".exe";
 
@@ -153,6 +156,9 @@ public class MavenUrlDecoder {
 
       case "src":
         return "-sources.jar";
+
+      case "whl":
+        return ".whl";
 
       default:
         return String.format("-%s.jar", type);
