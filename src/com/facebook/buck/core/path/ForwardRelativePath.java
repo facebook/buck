@@ -25,6 +25,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * A normalized relative path object which:
@@ -203,6 +204,26 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
       return segments[0];
     } else {
       return String.join("/", segments);
+    }
+  }
+
+  /** Last segment of path */
+  public Optional<ForwardRelativePath> nameAsPath() {
+    if (isEmpty()) {
+      return Optional.empty();
+    } else {
+      return Optional.of(new ForwardRelativePath(new String[] {segments[segments.length - 1]}));
+    }
+  }
+
+  /** Path without last segment */
+  public Optional<ForwardRelativePath> parent() {
+    if (isEmpty()) {
+      return Optional.empty();
+    } else if (segments.length == 1) {
+      return Optional.of(EMPTY);
+    } else {
+      return Optional.of(new ForwardRelativePath(Arrays.copyOf(segments, segments.length - 1)));
     }
   }
 

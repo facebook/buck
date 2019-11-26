@@ -53,15 +53,16 @@ private val PATH_TO_INDEX_CACHE = AppendOnlyBidirectionalCache<FsAgnosticPath>()
  */
 @JsonSerialize(using = ToStringSerializer::class)
 @JsonDeserialize(using = FsAgnosticPathDeserializer::class)
-class FsAgnosticPath private constructor(private val path: String) : Comparable<FsAgnosticPath> {
+class FsAgnosticPath private constructor(private val path: ForwardRelativePath) : Comparable<FsAgnosticPath> {
     companion object {
         /**
          * @param path must be a normalized, relative path.
          */
         fun of(path: String): FsAgnosticPath {
             return PATH_CACHE.getIfPresent(path) ?: run {
-                verifyPath(path)
-                createWithoutVerification(path)
+                val pathObject = FsAgnosticPath(ForwardRelativePath.of(path))
+                PATH_CACHE.put(path, pathObject)
+                pathObject
             }
         }
 
@@ -71,14 +72,6 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
          * @param path must be a normalized, relative path.
          */
         fun of(path: Path): FsAgnosticPath = of(PathFormatter.pathWithUnixSeparators(path))
-
-        /** Caller is responsible for verifying that the string is well-formed. */
-        private fun createWithoutVerification(verifiedPath: String): FsAgnosticPath {
-            val internedPath = verifiedPath.intern()
-            val fsAgnosticPath = FsAgnosticPath(internedPath)
-            PATH_CACHE.put(internedPath, fsAgnosticPath)
-            return fsAgnosticPath
-        }
 
         /**
          * Returns [FsAgnosticPath] associated with the given [index]
@@ -100,15 +93,7 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
     }
 
     fun startsWith(prefixPath: FsAgnosticPath): Boolean {
-        return if (path.startsWith(prefixPath.path)) {
-            if (prefixPath.path.isEmpty() || prefixPath.path.length == path.length) {
-                true
-            } else {
-                path[prefixPath.path.length] == '/'
-            }
-        } else {
-            false
-        }
+        return path.startsWith(prefixPath.path)
     }
 
     /**
@@ -118,7 +103,7 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
         return when {
             isEmpty() -> other
             other.isEmpty() -> this
-            else -> createWithoutVerification("$path/$other")
+            else -> FsAgnosticPath(path.resolve(other.path))
         }
     }
 
@@ -127,9 +112,7 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
      * including extension if it has one
      */
     fun name(): FsAgnosticPath {
-        val lastIndex = path.lastIndexOf('/')
-        return if (lastIndex == -1) this
-        else createWithoutVerification(path.substring(lastIndex + 1))
+        return path.nameAsPath().map { FsAgnosticPath(it) }.orElse(this)
     }
 
     /**
@@ -137,8 +120,7 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
      * if the path does not have a parent.
      */
     fun dirname(): FsAgnosticPath {
-        val lastIndex = path.lastIndexOf('/')
-        return createWithoutVerification(if (lastIndex == -1) "" else path.substring(0, lastIndex))
+        return path.parent().map { FsAgnosticPath(it) }.orElse(this)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -154,7 +136,7 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
     }
 
     override fun toString(): String {
-        return path
+        return path.toString()
     }
 
     /**
@@ -169,21 +151,6 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
         } else {
             fileSystem.getPath(first)
         }
-    }
-}
-
-private fun verifyPath(path: String) {
-    if (path == "") {
-        return
-    }
-
-    require(!path.startsWith('/')) { "'$path' must be relative but starts with '/'" }
-    require(!path.endsWith('/')) { "'$path' cannot have a trailing slash" }
-
-    for (component in path.split("/")) {
-        require(component != "") { "'$path' contained an empty path component" }
-        require(component != ".") { "'$path' contained illegal path component: '.'" }
-        require(component != "..") { "'$path' contained illegal path component: '..'" }
     }
 }
 

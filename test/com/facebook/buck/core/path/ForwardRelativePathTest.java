@@ -28,6 +28,7 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.nio.file.FileSystem;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -211,5 +212,25 @@ public class ForwardRelativePathTest {
         assertEquals(naive, fast);
       }
     }
+  }
+
+  @Test
+  public void nameAsPath() {
+    assertEquals(Optional.empty(), ForwardRelativePath.of("").nameAsPath());
+    assertEquals(
+        Optional.of(ForwardRelativePath.of("foo")), ForwardRelativePath.of("foo").nameAsPath());
+    assertEquals(
+        Optional.of(ForwardRelativePath.of("bar")), ForwardRelativePath.of("foo/bar").nameAsPath());
+  }
+
+  @Test
+  public void dirname() {
+    assertEquals(Optional.empty(), ForwardRelativePath.of("").parent());
+    assertEquals(Optional.of(ForwardRelativePath.of("")), ForwardRelativePath.of("foo").parent());
+    assertEquals(
+        Optional.of(ForwardRelativePath.of("foo")), ForwardRelativePath.of("foo/bar").parent());
+    assertEquals(
+        Optional.of(ForwardRelativePath.of("foo/bar")),
+        ForwardRelativePath.of("foo/bar/baz").parent());
   }
 }

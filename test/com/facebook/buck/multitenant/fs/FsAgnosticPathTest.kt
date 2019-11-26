@@ -93,56 +93,56 @@ class FsAgnosticPathTest {
     @Test
     fun invalidSingleDotPath() {
         thrown.expect(IllegalArgumentException::class.java)
-        thrown.expectMessage("'.' contained illegal path component: '.'")
+        thrown.expectMessage("dot in path")
         FsAgnosticPath.of(".")
     }
 
     @Test
     fun invalidDoubleDotPath() {
         thrown.expect(IllegalArgumentException::class.java)
-        thrown.expectMessage("'..' contained illegal path component: '..'")
+        thrown.expectMessage("dot-dot in path")
         FsAgnosticPath.of("..")
     }
 
     @Test
     fun invalidSlashOnlyPath() {
         thrown.expect(IllegalArgumentException::class.java)
-        thrown.expectMessage("'/' must be relative but starts with '/'")
+        thrown.expectMessage("path must not start with slash")
         FsAgnosticPath.of("/")
     }
 
     @Test
     fun invalidAbsolutePath() {
         thrown.expect(IllegalArgumentException::class.java)
-        thrown.expectMessage("'/foo/bar' must be relative but starts with '/'")
+        thrown.expectMessage("path must not start with slash")
         FsAgnosticPath.of("/foo/bar")
     }
 
     @Test
     fun invalidPathWithTrailingSlash() {
         thrown.expect(IllegalArgumentException::class.java)
-        thrown.expectMessage("'foo/bar/' cannot have a trailing slash")
+        thrown.expectMessage("must not end with slash")
         FsAgnosticPath.of("foo/bar/")
     }
 
     @Test
     fun invalidPathWithDoubleSlash() {
         thrown.expect(IllegalArgumentException::class.java)
-        thrown.expectMessage("'foo//bar' contained an empty path component")
+        thrown.expectMessage("two slashes")
         FsAgnosticPath.of("foo//bar")
     }
 
     @Test
     fun invalidPathWithDotComponent() {
         thrown.expect(IllegalArgumentException::class.java)
-        thrown.expectMessage("'foo/./bar' contained illegal path component: '.'")
+        thrown.expectMessage("dot in path")
         FsAgnosticPath.of("foo/./bar")
     }
 
     @Test
     fun invalidPathWithDoubleDotComponent() {
         thrown.expect(IllegalArgumentException::class.java)
-        thrown.expectMessage("'foo/../bar' contained illegal path component: '..'")
+        thrown.expectMessage("dot-dot in path")
         FsAgnosticPath.of("foo/../bar")
     }
 
