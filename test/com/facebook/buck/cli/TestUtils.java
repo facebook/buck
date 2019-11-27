@@ -34,6 +34,7 @@ class TestUtils {
       throws IOException {
     assertTrue(Files.exists(buildReportPath));
     String randomNumberPlaceholder = "<RANDOM_NUMBER>";
+    String outputPrefixPlaceholder = "<OUTPUT_PREFIX>";
     String extension = "sh";
     String fileSeparator = "/";
     if (Platform.detect() == Platform.WINDOWS) {
@@ -44,7 +45,8 @@ class TestUtils {
         new String(Files.readAllBytes(buildReportPath), Charsets.UTF_8)
             .replaceFirst(
                 "genrule-\\d+\\." + extension,
-                "genrule-" + randomNumberPlaceholder + "." + extension);
+                "genrule-" + randomNumberPlaceholder + "." + extension)
+            .replaceFirst("buck-out(.*[\\\\/])", outputPrefixPlaceholder);
 
     String expectedResult =
         String.format(

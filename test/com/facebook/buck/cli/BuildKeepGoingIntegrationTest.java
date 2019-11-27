@@ -21,7 +21,10 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -29,18 +32,30 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 /** Verifies that {@code buck build --keep-going} works as intended. */
 public class BuildKeepGoingIntegrationTest {
 
-  private static final String GENRULE_OUTPUT = "buck-out/gen/rule_with_output/rule_with_output.txt";
-  private static final String GENRULE_OUTPUT_PATH =
-      MorePaths.pathWithPlatformSeparators("buck-out/gen/rule_with_output/rule_with_output.txt");
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule public TemporaryPaths tmpFolderForBuildReport = new TemporaryPaths();
+
+  private ProjectFilesystem filesystem;
+  private String genruleOutputPath;
+
+  @Before
+  public void setUp() {
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    // genrule uses legacy format
+    genruleOutputPath =
+        BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance("//:rule_with_output"), "%s")
+            .resolve("rule_with_output.txt")
+            .toString();
+  }
 
   @Test
   public void testKeepGoingWithMultipleSuccessfulTargets() throws IOException {
@@ -50,7 +65,7 @@ public class BuildKeepGoingIntegrationTest {
     ProcessResult result = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport =
         linesToText(
-            "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_with_output BUILT_LOCALLY " + genruleOutputPath,
             "OK   //:rule_without_output BUILT_LOCALLY",
             "");
     assertThat(result.getStderr(), containsString(expectedReport));
@@ -67,11 +82,11 @@ public class BuildKeepGoingIntegrationTest {
             .assertFailure();
     String expectedReport =
         linesToText(
-            "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_with_output BUILT_LOCALLY " + genruleOutputPath,
             "FAIL //:failing_rule",
             "");
     assertThat(result.getStderr(), containsString(expectedReport));
-    Path outputFile = workspace.getPath(GENRULE_OUTPUT);
+    Path outputFile = workspace.getPath(genruleOutputPath);
     assertTrue(Files.exists(outputFile));
   }
 
@@ -84,7 +99,7 @@ public class BuildKeepGoingIntegrationTest {
     ProcessResult result1 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport1 =
         linesToText(
-            "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_with_output BUILT_LOCALLY " + genruleOutputPath,
             "OK   //:rule_without_output BUILT_LOCALLY",
             "");
     assertThat(result1.getStderr(), containsString(expectedReport1));
@@ -92,7 +107,7 @@ public class BuildKeepGoingIntegrationTest {
     ProcessResult result2 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport2 =
         linesToText(
-            "OK   //:rule_with_output MATCHING_RULE_KEY " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_with_output MATCHING_RULE_KEY " + genruleOutputPath,
             "OK   //:rule_without_output MATCHING_RULE_KEY",
             "");
     assertThat(result2.getStderr(), containsString(expectedReport2));
@@ -102,7 +117,7 @@ public class BuildKeepGoingIntegrationTest {
     ProcessResult result3 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport3 =
         linesToText(
-            "OK   //:rule_with_output FETCHED_FROM_CACHE " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_with_output FETCHED_FROM_CACHE " + genruleOutputPath,
             "OK   //:rule_without_output BUILT_LOCALLY",
             "");
     assertThat(result3.getStderr(), containsString(expectedReport3));

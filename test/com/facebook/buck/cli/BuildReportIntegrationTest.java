@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -58,12 +57,9 @@ public class BuildReportIntegrationTest {
         .assertSuccess();
 
     assertTrue(Files.exists(buildReport));
-    String buildReportContents =
-        new String(Files.readAllBytes(buildReport), Charsets.UTF_8).replace("\r\n", "\n");
-    assertThat(
-        buildReportContents,
-        equalToIgnoringPlatformNewlines(
-            workspace.getFileContents("expected_successful_build_report.json")));
+
+    TestUtils.assertBuildReport(
+        workspace, tmp, buildReport, "expected_successful_build_report.json");
   }
 
   @Test
