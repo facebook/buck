@@ -495,6 +495,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
         .orElse(false);
   }
 
+  public boolean shouldUseModernBuildSystem() {
+    return delegate.getBooleanValue(APPLE_SECTION, "use_modern_build_system", true);
+  }
+
   @Value.Immutable
   @BuckStyleTuple
   interface AbstractApplePackageConfig {
