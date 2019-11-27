@@ -1614,6 +1614,12 @@ public class ProjectGenerator {
           BuildTarget testTarget = bundleLoaderNode.get().getBuildTarget();
           extraSettingsBuilder.put("TEST_TARGET_NAME", getXcodeTargetName(testTarget));
           addPBXTargetDependency(target, testTarget);
+          for (BuildTarget depTarget : buildTargetNode.getDeclaredDeps()) {
+            Object depArg = targetGraph.get(depTarget).getConstructorArg();
+            if (depArg instanceof HasAppleBundleFields && isApp((HasAppleBundleFields) depArg)) {
+              addPBXTargetDependency(target, depTarget);
+            }
+          }
         } else {
           throw new HumanReadableException(
               "The test rule '%s' is configured with 'is_ui_test' but has no test_host_app",
@@ -4707,8 +4713,15 @@ public class ProjectGenerator {
   }
 
   private static boolean isFrameworkBundle(HasAppleBundleFields arg) {
-    return arg.getExtension().isLeft()
-        && arg.getExtension().getLeft().equals(AppleBundleExtension.FRAMEWORK);
+    return hasExtension(arg, AppleBundleExtension.FRAMEWORK);
+  }
+
+  private static boolean isApp(HasAppleBundleFields arg) {
+    return hasExtension(arg, AppleBundleExtension.APP);
+  }
+
+  private static boolean hasExtension(HasAppleBundleFields arg, AppleBundleExtension extension) {
+    return arg.getExtension().isLeft() && arg.getExtension().getLeft().equals(extension);
   }
 
   private static boolean isModularAppleLibrary(TargetNode<?> libraryNode) {
