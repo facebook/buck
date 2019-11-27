@@ -18,6 +18,7 @@ package com.facebook.buck.util.json;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.ImmutableList;
@@ -65,5 +66,28 @@ public class ObjectMappersTest {
     Obj actual = reader.forType(Obj.class).readValue(data);
 
     assertEquals(path, actual.path);
+  }
+
+  @Test
+  public void canSerializeToJsonAsString() throws Exception {
+    ForwardRelativePath path = ForwardRelativePath.of("bar/baz");
+    String data = ObjectMappers.WRITER.writeValueAsString(path);
+    assertEquals("\"bar/baz\"", data);
+  }
+
+  @Test
+  public void canDeserializeFromJsonString() throws Exception {
+    String data = "\"bar/baz\"";
+    ForwardRelativePath path =
+        ObjectMappers.READER.forType(ForwardRelativePath.class).readValue(data);
+    assertEquals(ForwardRelativePath.of("bar/baz"), path);
+  }
+
+  @Test
+  public void canDeserializeFromEmptyString() throws Exception {
+    String data = "\"\"";
+    ForwardRelativePath path =
+        ObjectMappers.READER.forType(ForwardRelativePath.class).readValue(data);
+    assertEquals(ForwardRelativePath.of(""), path);
   }
 }

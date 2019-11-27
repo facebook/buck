@@ -16,7 +16,7 @@
 
 package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import com.facebook.buck.core.path.ForwardRelativePath
 
 /**
  * A collection of packages (package is represented by the relative path to its root) that may have
@@ -24,9 +24,9 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
  */
 data class PotentiallyAffectedBuildPackages(
     val commit: Commit,
-    val added: List<FsAgnosticPath> = emptyList(),
-    val modified: List<FsAgnosticPath> = emptyList(),
-    val removed: List<FsAgnosticPath> = emptyList()
+    val added: List<ForwardRelativePath> = emptyList(),
+    val modified: List<ForwardRelativePath> = emptyList(),
+    val removed: List<ForwardRelativePath> = emptyList()
 ) {
     /**
      * True if no packages are affected by commit
@@ -50,7 +50,7 @@ data class PotentiallyAffectedBuildPackages(
  * sacrifice correctness.
  *
  * @param fsChanges Changes in files relative to the root of the repo
- * @param buildFileName Name of the build file (like 'BUCK'), expressed as [FsAgnosticPath], for
+ * @param buildFileName Name of the build file (like 'BUCK'), expressed as [ForwardRelativePath], for
  * current cell being parsed
  * @param includesProvider returns paths to build packages that transitively includes passed include path
  * TODO: change to a function
@@ -62,14 +62,14 @@ data class PotentiallyAffectedBuildPackages(
  */
 fun getPotentiallyAffectedBuildPackages(
     fsChanges: FsChanges,
-    buildFileName: FsAgnosticPath,
-    includesProvider: (includePath: Include) -> Iterable<FsAgnosticPath>,
-    cellPathNormalizer: (path: FsAgnosticPath) -> FsAgnosticPath?,
-    packageExists: (path: FsAgnosticPath) -> Boolean
+    buildFileName: ForwardRelativePath,
+    includesProvider: (includePath: Include) -> Iterable<ForwardRelativePath>,
+    cellPathNormalizer: (path: ForwardRelativePath) -> ForwardRelativePath?,
+    packageExists: (path: ForwardRelativePath) -> Boolean
 ): PotentiallyAffectedBuildPackages {
-    val newPackages = mutableSetOf<FsAgnosticPath>()
-    val changedPackages = mutableSetOf<FsAgnosticPath>()
-    val removedPackages = mutableSetOf<FsAgnosticPath>()
+    val newPackages = mutableSetOf<ForwardRelativePath>()
+    val changedPackages = mutableSetOf<ForwardRelativePath>()
+    val removedPackages = mutableSetOf<ForwardRelativePath>()
 
     fsChanges.added.forEach { added ->
         // Adding a new file cannot be a parse-time dependency, as they have to be explicitly
@@ -80,17 +80,17 @@ fun getPotentiallyAffectedBuildPackages(
 
             // Adding a new package: need to parse it and also its parent, because a parent may lose
             // targets
-            if (path.name() == buildFileName) {
-                val newPackagePath = path.dirname()
+            if (path.nameAsPath().orElse(ForwardRelativePath.EMPTY) == buildFileName) {
+                val newPackagePath = path.parent().orElse(ForwardRelativePath.EMPTY)
                 newPackages.add(newPackagePath)
-                getContainingPackage(newPackagePath.dirname(),
+                getContainingPackage(newPackagePath.parent().orElse(ForwardRelativePath.EMPTY),
                     packageExists)?.let { changedPackages.add(it) }
                 return@forEach
             }
 
             // Adding a new source file: reparse package that potentially owns the file because
             // some target contents may change
-            getContainingPackage(path.dirname(), packageExists)?.let { changedPackages.add(it) }
+            getContainingPackage(path.parent().orElse(ForwardRelativePath.EMPTY), packageExists)?.let { changedPackages.add(it) }
         }
     }
 
@@ -102,8 +102,8 @@ fun getPotentiallyAffectedBuildPackages(
         // Only if modified file belongs to the cell
         cellPathNormalizer(modified.path)?.let { path ->
             // Modifying existing package: need to reparse it
-            if (path.name() == buildFileName) {
-                val packagePath = path.dirname()
+            if (path.nameAsPath().orElse(ForwardRelativePath.EMPTY) == buildFileName) {
+                val packagePath = path.parent().orElse(ForwardRelativePath.EMPTY)
                 changedPackages.add(packagePath)
             }
 
@@ -121,17 +121,17 @@ fun getPotentiallyAffectedBuildPackages(
         cellPathNormalizer(removed.path)?.let { path ->
             // Removing a package: need to remove the package itself and reparse the parent as its
             // targets can change because parent package may start to own more files
-            if (path.name() == buildFileName) {
-                val packagePath = path.dirname()
+            if (path.nameAsPath().orElse(ForwardRelativePath.EMPTY) == buildFileName) {
+                val packagePath = path.parent().orElse(ForwardRelativePath.EMPTY)
                 removedPackages.add(packagePath)
-                getContainingPackage(packagePath.dirname(),
+                getContainingPackage(packagePath.parent().orElse(ForwardRelativePath.EMPTY),
                     packageExists)?.let { changedPackages.add(it) }
                 return@forEach
             }
 
             // Removing a source file: reparse package that potentially owns the file because
             // some target contents may change
-            getContainingPackage(path.dirname(), packageExists)?.let { changedPackages.add(it) }
+            getContainingPackage(path.parent().orElse(ForwardRelativePath.EMPTY), packageExists)?.let { changedPackages.add(it) }
         }
     }
 
@@ -150,9 +150,9 @@ fun getPotentiallyAffectedBuildPackages(
  * @param packageExists Predicate used to check if some package exists in the universe
  */
 private fun getContainingPackage(
-    dir: FsAgnosticPath,
-    packageExists: (path: FsAgnosticPath) -> Boolean
-): FsAgnosticPath? {
+    dir: ForwardRelativePath,
+    packageExists: (path: ForwardRelativePath) -> Boolean
+): ForwardRelativePath? {
     var current = dir
     while (true) {
         if (packageExists(current)) {
@@ -164,6 +164,6 @@ private fun getContainingPackage(
         }
 
         // traverse up the directory tree
-        current = current.dirname()
+        current = current.parent().orElse(ForwardRelativePath.EMPTY)
     }
 }

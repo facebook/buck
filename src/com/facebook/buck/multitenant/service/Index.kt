@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.multitenant.cache.AppendOnlyBidirectionalCache
 import com.facebook.buck.multitenant.collect.Generation
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
@@ -60,7 +61,7 @@ class Index internal constructor(
             return this
         }
 
-        val buildPackageMap: Map<FsAgnosticPath, BuildRuleNames?> =
+        val buildPackageMap: Map<ForwardRelativePath, BuildRuleNames?> =
             deltas.buildPackageDeltas.asSequence().map { delta ->
                 when (delta) {
                     is BuildPackageDelta.Updated -> {
@@ -293,7 +294,7 @@ class Index internal constructor(
      */
     fun getTargetsInBasePath(
         generation: Generation,
-        basePath: FsAgnosticPath
+        basePath: ForwardRelativePath
     ): List<UnconfiguredBuildTarget>? {
         val targetNames = indexGenerationData.withBuildPackageMap { buildPackageMap ->
             buildPackageMap.getVersion(basePath, generation)
@@ -307,19 +308,19 @@ class Index internal constructor(
     /**
      * Return true if package exists in [basePath] for the specified [generation]
      */
-    fun packageExists(generation: Generation, basePath: FsAgnosticPath): Boolean {
+    fun packageExists(generation: Generation, basePath: ForwardRelativePath): Boolean {
         return indexGenerationData.withBuildPackageMap { buildPackageMap ->
             buildPackageMap.getVersion(basePath, generation) != null
         }
     }
 
     /**
-     * Return [Iterable] representation of [FsAgnosticPath]s (relative to the cell path) that includes [includePath] file (relative to the repo) for the specified [generation]
+     * Return [Iterable] representation of [ForwardRelativePath]s (relative to the cell path) that includes [includePath] file (relative to the repo) for the specified [generation]
      *
      * @param includePath is relative to the repo path to an include file
      * @param generation [Generation] that defines a current state of [Index]
      */
-    fun getReverseIncludes(generation: Generation, includePath: Include): Iterable<FsAgnosticPath> =
+    fun getReverseIncludes(generation: Generation, includePath: Include): Iterable<ForwardRelativePath> =
         indexGenerationData.withIncludesMap { (_, reverseMap) ->
             reverseMap.getVersion(includePath, generation)
         }?.map { FsAgnosticPath.fromIndex(it) } ?: setOf()
@@ -385,8 +386,8 @@ class Index internal constructor(
      */
     fun getTargetsInOwningBuildPackage(
         generation: Generation,
-        basePath: FsAgnosticPath
-    ): Pair<FsAgnosticPath, List<UnconfiguredBuildTarget>>? {
+        basePath: ForwardRelativePath
+    ): Pair<ForwardRelativePath, List<UnconfiguredBuildTarget>>? {
         var candidateBasePath = basePath
         val targetNames = indexGenerationData.withBuildPackageMap { buildPackageMap ->
             do {
@@ -394,7 +395,7 @@ class Index internal constructor(
                 if (targetNames != null) {
                     return@withBuildPackageMap targetNames
                 } else {
-                    candidateBasePath = candidateBasePath.dirname()
+                    candidateBasePath = candidateBasePath.parent().orElse(ForwardRelativePath.EMPTY)
                 }
             } while (!candidateBasePath.isEmpty())
             null
@@ -416,7 +417,7 @@ class Index internal constructor(
      */
     fun getTargetsUnderBasePath(
         generation: Generation,
-        basePath: FsAgnosticPath
+        basePath: ForwardRelativePath
     ): List<UnconfiguredBuildTarget> {
         if (basePath.isEmpty()) {
             return getTargets(generation)

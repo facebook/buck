@@ -16,7 +16,7 @@
 
 package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.multitenant.service.FsChange.Added
 import com.facebook.buck.multitenant.service.FsChange.Modified
 import com.facebook.buck.multitenant.service.FsChange.Removed
@@ -27,9 +27,9 @@ import com.facebook.buck.multitenant.service.FsChange.Removed
  * of the file to do its job.
  */
 sealed class FsChange {
-    data class Added(val path: FsAgnosticPath, val contents: ByteArray?) : FsChange()
-    data class Modified(val path: FsAgnosticPath, val contents: ByteArray?) : FsChange()
-    data class Removed(val path: FsAgnosticPath) : FsChange()
+    data class Added(val path: ForwardRelativePath, val contents: ByteArray?) : FsChange()
+    data class Modified(val path: ForwardRelativePath, val contents: ByteArray?) : FsChange()
+    data class Removed(val path: ForwardRelativePath) : FsChange()
 }
 
 /**

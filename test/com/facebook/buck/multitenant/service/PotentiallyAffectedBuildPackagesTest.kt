@@ -16,6 +16,7 @@
 
 package com.facebook.buck.multitenant.service
 
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -274,7 +275,7 @@ class PotentiallyAffectedBuildPackagesTest {
         }
     }
 
-    private fun normalizeCellPath(cellPrefix: String, path: FsAgnosticPath): FsAgnosticPath? {
+    private fun normalizeCellPath(cellPrefix: String, path: ForwardRelativePath): ForwardRelativePath? {
         return if (path.startsWith(FsAgnosticPath.of(cellPrefix))) {
             FsAgnosticPath.of(path.toString().removePrefix("$cellPrefix/"))
         } else {

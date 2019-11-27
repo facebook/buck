@@ -17,7 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import com.facebook.buck.core.path.ForwardRelativePath
 import java.util.Objects
 
 typealias Commit = String
@@ -87,18 +87,18 @@ private fun hashCodeBuildTargetSet(set: BuildTargetSet): Int {
  * @param includes collection of all includes for this build package (all transitive includes from a build file)
  */
 data class BuildPackage(
-    val buildFileDirectory: FsAgnosticPath,
+    val buildFileDirectory: ForwardRelativePath,
     val rules: Set<RawBuildRule>,
     val errors: List<BuildPackageParsingError> = emptyList(),
     /** Note that [HashSet] type used intentionally instead of [Set] to compare with existing includes in the generation map
      * Check [IncludesMapChangeBuilder.processModifiedPackage] for more details */
-    val includes: HashSet<FsAgnosticPath> = hashSetOf()
+    val includes: HashSet<ForwardRelativePath> = hashSetOf()
 )
 
 internal data class InternalBuildPackage(
-    val buildFileDirectory: FsAgnosticPath,
+    val buildFileDirectory: ForwardRelativePath,
     val rules: Set<InternalRawBuildRule>,
-    val includes: HashSet<FsAgnosticPath>
+    val includes: HashSet<ForwardRelativePath>
 )
 
 /**
@@ -108,7 +108,7 @@ internal data class InternalBuildPackage(
 data class BuildPackageChanges(
     val addedBuildPackages: List<BuildPackage> = emptyList(),
     val modifiedBuildPackages: List<BuildPackage> = emptyList(),
-    val removedBuildPackages: List<FsAgnosticPath> = emptyList()
+    val removedBuildPackages: List<ForwardRelativePath> = emptyList()
 ) {
     fun isEmpty(): Boolean = addedBuildPackages.isEmpty() && modifiedBuildPackages.isEmpty() && removedBuildPackages.isEmpty()
 }
@@ -116,7 +116,7 @@ data class BuildPackageChanges(
 internal data class InternalChanges(
     val addedBuildPackages: List<InternalBuildPackage>,
     val modifiedBuildPackages: List<InternalBuildPackage>,
-    val removedBuildPackages: List<FsAgnosticPath>
+    val removedBuildPackages: List<ForwardRelativePath>
 )
 
 /**

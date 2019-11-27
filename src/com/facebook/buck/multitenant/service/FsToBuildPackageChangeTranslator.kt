@@ -16,7 +16,7 @@
 
 package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import com.facebook.buck.core.path.ForwardRelativePath
 import java.nio.file.Path
 
 /**
@@ -45,11 +45,11 @@ interface FsToBuildPackageChangeTranslator {
  * @param includesProvider returns paths to build packages that transitively includes passed include path
  */
 class DefaultFsToBuildPackageChangeTranslator(
-    private val buildFileName: FsAgnosticPath,
+    private val buildFileName: ForwardRelativePath,
     private val projectRoot: Path,
-    private val existenceChecker: (packagePath: FsAgnosticPath) -> Boolean,
+    private val existenceChecker: (packagePath: ForwardRelativePath) -> Boolean,
     private val equalityChecker: (buildPackage: BuildPackage) -> Boolean,
-    private val includesProvider: (includePath: Include) -> Iterable<FsAgnosticPath>
+    private val includesProvider: (includePath: Include) -> Iterable<ForwardRelativePath>
 ) : FsToBuildPackageChangeTranslator {
     override fun translateChanges(fsChanges: FsChanges): BuildPackageChanges {
 

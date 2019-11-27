@@ -18,6 +18,7 @@ package com.facebook.buck.multitenant.query
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver
 import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildPackage
 import com.facebook.buck.multitenant.service.BuildPackageChanges
@@ -103,7 +104,7 @@ private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTrans
     override fun translateChanges(fsChanges: FsChanges): BuildPackageChanges {
         val addedBuildPackageChanges: MutableList<BuildPackage> = mutableListOf()
         val modifiedBuildPackageChanges: MutableList<BuildPackage> = mutableListOf()
-        val removedBuildPackages: MutableList<FsAgnosticPath> = mutableListOf()
+        val removedBuildPackages: MutableList<ForwardRelativePath> = mutableListOf()
 
         fsChanges.added.forEach { added ->
             val contents = added.contents ?: return@forEach

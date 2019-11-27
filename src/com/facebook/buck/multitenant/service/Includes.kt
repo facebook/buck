@@ -17,10 +17,11 @@
 
 package com.facebook.buck.multitenant.service
 
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.multitenant.collect.Generation
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
-typealias Include = FsAgnosticPath
+typealias Include = ForwardRelativePath
 
 /**
  * Processes parse-time includes changes - calculates new includes map state based on the previous state and new changes [internalChanges].
@@ -75,8 +76,8 @@ private typealias EmptyValue = Unit
  */
 class IncludesMapChangeBuilder(private val prevState: IncludesMapChange) {
 
-    private val forwardMapValues: MutableMap<FsAgnosticPath, EmptyValue?> = mutableMapOf()
-    private val forwardMapDeltas: MutableList<Pair<FsAgnosticPath, SetDelta>> = mutableListOf()
+    private val forwardMapValues: MutableMap<ForwardRelativePath, EmptyValue?> = mutableMapOf()
+    private val forwardMapDeltas: MutableList<Pair<ForwardRelativePath, SetDelta>> = mutableListOf()
     private val reverseMapDeltas: MutableList<Pair<Include, SetDelta>> = mutableListOf()
 
     /**
@@ -86,7 +87,7 @@ class IncludesMapChangeBuilder(private val prevState: IncludesMapChange) {
      * @param packagePath build file directory path that corresponds to the added package
      * @param includes parse time includes that corresponds to the added package
      */
-    fun processAddedPackage(packagePath: FsAgnosticPath, includes: HashSet<FsAgnosticPath>) {
+    fun processAddedPackage(packagePath: ForwardRelativePath, includes: HashSet<ForwardRelativePath>) {
         // verification that the package is new
         require(prevState.forwardMap[packagePath] == null) {
             "New package $packagePath already existed"
@@ -109,7 +110,7 @@ class IncludesMapChangeBuilder(private val prevState: IncludesMapChange) {
      * @param packagePath build file directory path that corresponds to the modified package
      * @param includes parse time includes that corresponds to the modified package
      */
-    fun processModifiedPackage(packagePath: FsAgnosticPath, includes: HashSet<FsAgnosticPath>) {
+    fun processModifiedPackage(packagePath: ForwardRelativePath, includes: HashSet<ForwardRelativePath>) {
         val previousIncludes = prevState.forwardMap[packagePath]
         val brandNewIncludes = previousIncludes.isNullOrEmpty() && includes.isNotEmpty()
         val previousIncludesHashSet =
@@ -130,7 +131,7 @@ class IncludesMapChangeBuilder(private val prevState: IncludesMapChange) {
      *
      * @param packageToRemove build file directory path that corresponds to the removed package
      */
-    fun processRemovedPackage(packageToRemove: FsAgnosticPath) {
+    fun processRemovedPackage(packageToRemove: ForwardRelativePath) {
         forwardMapValues[packageToRemove] = null
 
         val previousIncludes = prevState.forwardMap[packageToRemove]
@@ -156,10 +157,10 @@ class IncludesMapChangeBuilder(private val prevState: IncludesMapChange) {
         applyUpdates(map = prevState.reverseMap, deltas = reverseMapDeltas)
 
     private fun applyUpdates(
-        map: Map<FsAgnosticPath, MemorySharingIntSet?>,
-        deltas: List<Pair<FsAgnosticPath, SetDelta>>,
-        valuesMap: Map<FsAgnosticPath, Unit?> = emptyMap()
-    ): Map<FsAgnosticPath, MemorySharingIntSet?> {
+        map: Map<ForwardRelativePath, MemorySharingIntSet?>,
+        deltas: List<Pair<ForwardRelativePath, SetDelta>>,
+        valuesMap: Map<ForwardRelativePath, Unit?> = emptyMap()
+    ): Map<ForwardRelativePath, MemorySharingIntSet?> {
         if (valuesMap.isEmpty() && deltas.isEmpty()) {
             return map
         }
@@ -175,15 +176,15 @@ class IncludesMapChangeBuilder(private val prevState: IncludesMapChange) {
         return out
     }
 
-    private fun appendForwardMap(buildFilePath: FsAgnosticPath, include: Include) {
+    private fun appendForwardMap(buildFilePath: ForwardRelativePath, include: Include) {
         forwardMapDeltas.add(buildFilePath to SetDelta.Add(FsAgnosticPath.toIndex(include)))
     }
 
-    private fun appendReverseMap(buildFilePath: FsAgnosticPath, include: Include) {
+    private fun appendReverseMap(buildFilePath: ForwardRelativePath, include: Include) {
         reverseMapDeltas.add(include to SetDelta.Add(FsAgnosticPath.toIndex(buildFilePath)))
     }
 
-    private fun removeFromReverseMap(buildFilePath: FsAgnosticPath, include: Include) {
+    private fun removeFromReverseMap(buildFilePath: ForwardRelativePath, include: Include) {
         reverseMapDeltas.add(include to SetDelta.Remove(FsAgnosticPath.toIndex(buildFilePath)))
     }
 }

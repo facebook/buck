@@ -18,6 +18,7 @@ package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.google.common.collect.ImmutableMap
 import org.junit.Assert.assertEquals
@@ -124,7 +125,7 @@ class MapDiffTest {
     }
 }
 
-private val BUILD_FILE_DIRECTORY: FsAgnosticPath = FsAgnosticPath.of("foo")
+private val BUILD_FILE_DIRECTORY: ForwardRelativePath = FsAgnosticPath.of("foo")
 private val BUILD_TARGET_PARSER: ((shortOrFullyQualifiedName: String) -> UnconfiguredBuildTarget) = {
     BuildTargets.createBuildTargetFromParts(BUILD_FILE_DIRECTORY, it)
 }

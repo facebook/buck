@@ -15,18 +15,18 @@
  */
 package com.facebook.buck.multitenant.service
 
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.multitenant.collect.DefaultGenerationMap
 import com.facebook.buck.multitenant.collect.ForwardingGenerationMap
 import com.facebook.buck.multitenant.collect.Generation
 import com.facebook.buck.multitenant.collect.GenerationMap
 import com.facebook.buck.multitenant.collect.MutableGenerationMap
-import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
-internal typealias BuildPackageMap = GenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>
-internal typealias MutableBuildPackageMap = MutableGenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>
+internal typealias BuildPackageMap = GenerationMap<ForwardRelativePath, BuildRuleNames, ForwardRelativePath>
+internal typealias MutableBuildPackageMap = MutableGenerationMap<ForwardRelativePath, BuildRuleNames, ForwardRelativePath>
 
 internal typealias RuleMap = GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>
 internal typealias MutableRuleMap = MutableGenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>
@@ -90,7 +90,7 @@ internal interface IndexGenerationData {
      */
     fun createForwardingIndexGenerationData(
         generation: Generation,
-        localBuildPackageChanges: Map<FsAgnosticPath, BuildRuleNames?>,
+        localBuildPackageChanges: Map<ForwardRelativePath, BuildRuleNames?>,
         localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>,
         localRdepsRuleMapChanges: Map<BuildTargetId, MemorySharingIntSet?>,
         localIncludesMapChange: IncludesMapChange
@@ -154,7 +154,7 @@ internal open class DefaultIndexGenerationData(
 
     override fun createForwardingIndexGenerationData(
         generation: Generation,
-        localBuildPackageChanges: Map<FsAgnosticPath, BuildRuleNames?>,
+        localBuildPackageChanges: Map<ForwardRelativePath, BuildRuleNames?>,
         localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>,
         localRdepsRuleMapChanges: Map<BuildTargetId, MemorySharingIntSet?>,
         localIncludesMapChange: IncludesMapChange

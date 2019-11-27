@@ -17,9 +17,9 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.multitenant.cache.AppendOnlyBidirectionalCache
 import com.facebook.buck.multitenant.collect.Generation
-import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
 /**
  * Represents a collection of changes to apply to an [Index] to reflect [BuildPackageChanges] on top
@@ -156,7 +156,7 @@ private fun lookupBuildPackages(
     // We allocate the arrays before taking the lock to reduce the number of allocations made while
     // holding the lock.
     val modified = ArrayList<Pair<InternalBuildPackage, BuildRuleNames>>(internalChanges.modifiedBuildPackages.size)
-    val removed = ArrayList<Pair<FsAgnosticPath, BuildRuleNames>>(internalChanges.removedBuildPackages.size)
+    val removed = ArrayList<Pair<ForwardRelativePath, BuildRuleNames>>(internalChanges.removedBuildPackages.size)
 
     indexGenerationData.withBuildPackageMap { buildPackageMap ->
         // As a sanity check, make sure there are no oldRules for any of the "added" packages.
@@ -325,7 +325,7 @@ private fun toBuildTargetSet(
  */
 private data class BuildPackagesLookup(
     val modifiedPackageInfo: List<ModifiedPackageByIds>,
-    val removedPackageInfo: List<Pair<FsAgnosticPath, BuildRuleNames>>
+    val removedPackageInfo: List<Pair<ForwardRelativePath, BuildRuleNames>>
 )
 
 /**

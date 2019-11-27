@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -266,7 +267,28 @@ public class ObjectMappers {
           }
         });
     mapper.registerModule(buildTargetModule);
+    mapper.registerModule(forwardRelativePathModule());
     return mapper;
+  }
+
+  private static SimpleModule forwardRelativePathModule() {
+    SimpleModule module = new SimpleModule();
+    module.addSerializer(ForwardRelativePath.class, new ToStringSerializer());
+    module.addDeserializer(
+        ForwardRelativePath.class,
+        new FromStringDeserializer<ForwardRelativePath>(ForwardRelativePath.class) {
+          @Override
+          protected ForwardRelativePath _deserialize(String value, DeserializationContext ctxt)
+              throws IOException {
+            return ForwardRelativePath.of(value);
+          }
+
+          @Override
+          protected ForwardRelativePath _deserializeFromEmptyString() throws IOException {
+            return ForwardRelativePath.EMPTY;
+          }
+        });
+    return module;
   }
 
   private static ObjectMapper create_with_type() {

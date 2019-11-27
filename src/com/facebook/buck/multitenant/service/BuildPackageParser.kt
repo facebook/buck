@@ -16,7 +16,7 @@
 
 package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import com.facebook.buck.core.path.ForwardRelativePath
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -36,7 +36,7 @@ interface BuildPackageParser {
     /**
      * Parse packages at selected paths
      */
-    fun parsePackages(packagePaths: List<FsAgnosticPath>): List<BuildPackage>
+    fun parsePackages(packagePaths: List<ForwardRelativePath>): List<BuildPackage>
 
     /**
      * Parse all packages known in current universe
@@ -61,13 +61,13 @@ class BuckShellBuildPackageParser(
     private val timeout: Long = 45,
     private val timeUnit: TimeUnit = TimeUnit.MINUTES
 ) : BuildPackageParser {
-    override fun parsePackages(packagePaths: List<FsAgnosticPath>): List<BuildPackage> {
+    override fun parsePackages(packagePaths: List<ForwardRelativePath>): List<BuildPackage> {
         return if (packagePaths.isEmpty()) listOf() else parse(packagePaths)
     }
 
     override fun parseUniverse(): List<BuildPackage> = parse()
 
-    private fun parse(packagePaths: List<FsAgnosticPath> = listOf()): List<BuildPackage> {
+    private fun parse(packagePaths: List<ForwardRelativePath> = listOf()): List<BuildPackage> {
         // not using NamedTemporaryFile to reduce dependency set in multitenant
         val patternsFilePath = Files.createTempFile("patterns", "")
         try {

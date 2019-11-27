@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.BaseName
 import com.facebook.buck.core.model.CanonicalCellName
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser
-import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import com.facebook.buck.core.path.ForwardRelativePath
 
 /**
  * Collection of convenience methods for parsing build targets. Returned build targets are strongly
@@ -30,16 +30,16 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 object BuildTargets {
     fun createBuildTargetFromParts(
         cell: CanonicalCellName,
-        baseName: FsAgnosticPath,
+        baseName: ForwardRelativePath,
         name: String
     ): UnconfiguredBuildTarget {
         return UnconfiguredBuildTarget.of(
             cell,
-            BaseName.ofPath(baseName.path), name, UnconfiguredBuildTarget.NO_FLAVORS)
+            BaseName.ofPath(baseName), name, UnconfiguredBuildTarget.NO_FLAVORS)
     }
 
     fun createBuildTargetFromParts(
-        baseName: FsAgnosticPath,
+        baseName: ForwardRelativePath,
         name: String
     ): UnconfiguredBuildTarget = createBuildTargetFromParts(CanonicalCellName.rootCell(), baseName, name)
 

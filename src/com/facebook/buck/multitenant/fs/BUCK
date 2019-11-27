@@ -12,7 +12,6 @@ kotlin_library(
         "//test/com/facebook/buck/multitenant/...",
     ],
     deps = [
-        "//src/com/facebook/buck/core/path:path",
         "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/multitenant/cache:cache",
         "//src/com/facebook/buck/util/json:json",

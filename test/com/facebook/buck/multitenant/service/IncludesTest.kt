@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.multitenant.service
 
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.multitenant.collect.DefaultGenerationMap
 import com.facebook.buck.multitenant.collect.ForwardingGenerationMap
 import com.facebook.buck.multitenant.collect.Generation
@@ -357,7 +358,7 @@ internal class IncludesTest {
 
     @SuppressWarnings("SpreadOperator")
     private fun internalBuildPackage(
-        packageA: FsAgnosticPath,
+        packageA: ForwardRelativePath,
         vararg includes: Include
     ): InternalBuildPackage =
         InternalBuildPackage(buildFileDirectory = packageA, rules = setOf(),
@@ -372,7 +373,7 @@ internal class IncludesTest {
 
     private fun createGenerationMap(
         localChanges: Map<Include, MemorySharingIntSet?> = mapOf()
-    ): ForwardingGenerationMap<FsAgnosticPath, MemorySharingIntSet> =
+    ): ForwardingGenerationMap<ForwardRelativePath, MemorySharingIntSet> =
         ForwardingGenerationMap(CURRENT_GENERATION, localChanges, DefaultGenerationMap { it })
 
     private fun getIndexGenerationData(
@@ -388,8 +389,8 @@ internal class IncludesTest {
     }
 
     private fun verifyMap(
-        map: Map<FsAgnosticPath, MemorySharingIntSet?>,
-        vararg expectedValues: Pair<FsAgnosticPath, MemorySharingIntSet?>
+        map: Map<ForwardRelativePath, MemorySharingIntSet?>,
+        vararg expectedValues: Pair<ForwardRelativePath, MemorySharingIntSet?>
     ) {
         assertThat("Number of expected values must be the same as map size", map.size,
             equalTo(expectedValues.size))
@@ -400,7 +401,7 @@ internal class IncludesTest {
         }
     }
 
-    private fun uniqueSet(vararg values: FsAgnosticPath): MemorySharingIntSet.Unique =
+    private fun uniqueSet(vararg values: ForwardRelativePath): MemorySharingIntSet.Unique =
         MemorySharingIntSet.Unique(values.map {
             checkNotNull(FsAgnosticPath.toIndex(it))
         }.toIntArray().sortedArray())

@@ -18,7 +18,7 @@ package com.facebook.buck.multitenant.runner
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver
 import com.facebook.buck.core.model.CanonicalCellName
-import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.multitenant.query.MultitenantQueryEnvironment
 import com.facebook.buck.multitenant.service.DefaultFsToBuildPackageChangeTranslator
 import com.facebook.buck.multitenant.service.FsChanges
@@ -37,7 +37,7 @@ import java.util.Optional
 class FakeMultitenantService(
     private val index: Index,
     private val indexAppender: IndexAppender,
-    private val buildFileName: FsAgnosticPath,
+    private val buildFileName: ForwardRelativePath,
     private val projectRoot: Path
 ) {
     fun handleBuckQueryRequest(query: String, changes: FsChanges): List<String> {

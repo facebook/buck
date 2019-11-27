@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.multitenant.fs
 
-import com.facebook.buck.util.json.ObjectMappers
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 import org.hamcrest.Matchers
@@ -189,61 +188,6 @@ class FsAgnosticPathTest {
         val b = FsAgnosticPath.of("baz/buzz")
         assertEquals(FsAgnosticPath.of("foo/bar/baz/buzz"), a.resolve(b))
         assertEquals(FsAgnosticPath.of("baz/buzz/foo/bar"), b.resolve(a))
-    }
-
-    @Test
-    fun dirnameEmptyPath() {
-        assertEquals(FsAgnosticPath.of(""), FsAgnosticPath.of("").dirname())
-    }
-
-    @Test
-    fun dirnameFileInRoot() {
-        assertEquals(FsAgnosticPath.of(""), FsAgnosticPath.of("foo").dirname())
-    }
-
-    @Test
-    fun dirnameFileBelowRoot() {
-        assertEquals(FsAgnosticPath.of("foo"), FsAgnosticPath.of("foo/bar").dirname())
-        assertEquals(FsAgnosticPath.of("foo/bar"), FsAgnosticPath.of("foo/bar/baz").dirname())
-    }
-
-    @Test
-    fun nameEmptyPath() {
-        assertEquals(FsAgnosticPath.of(""), FsAgnosticPath.of("").name())
-    }
-
-    @Test
-    fun nameFileInRoot() {
-        assertEquals(FsAgnosticPath.of("foo"), FsAgnosticPath.of("foo").name())
-    }
-
-    @Test
-    fun nameFileBelowRoot() {
-        assertEquals(FsAgnosticPath.of("bar"), FsAgnosticPath.of("foo/bar").name())
-        assertEquals(FsAgnosticPath.of("baz"), FsAgnosticPath.of("foo/bar/baz").name())
-    }
-
-    @Test
-    fun canSerializeToJsonAsString() {
-        val path = FsAgnosticPath.of("bar/baz")
-        val data = ObjectMappers.WRITER.writeValueAsString(path)
-        assertEquals("\"bar/baz\"", data)
-    }
-
-    @Test
-    fun canDeserializeFromJsonString() {
-        val data = "\"bar/baz\""
-        val path =
-            ObjectMappers.READER.forType(FsAgnosticPath::class.java).readValue<FsAgnosticPath>(data)
-        assertEquals(FsAgnosticPath.of("bar/baz"), path)
-    }
-
-    @Test
-    fun canDeserializeFromEmptyString() {
-        val data = "\"\""
-        val path =
-            ObjectMappers.READER.forType(FsAgnosticPath::class.java).readValue<FsAgnosticPath>(data)
-        assertEquals(FsAgnosticPath.of(""), path)
     }
 
     @Test

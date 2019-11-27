@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.util.json.ObjectMappers
 import com.fasterxml.jackson.core.JsonGenerator
@@ -60,7 +61,7 @@ fun populateIndexFromStream(
         var commit: String? = null
         val added = mutableListOf<BuildPackage>()
         val modified = mutableListOf<BuildPackage>()
-        val removed = mutableListOf<FsAgnosticPath>()
+        val removed = mutableListOf<ForwardRelativePath>()
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             // commit data is defined with 4 possible fields: commit, added, modified, removed
             // 'added' and 'modified' contain a list of packages
@@ -108,7 +109,7 @@ fun serializePackagesToStream(packages: List<BuildPackage>, stream: OutputStream
 /**
  * Write paths to JSON
  */
-fun serializePathsToStream(paths: List<FsAgnosticPath>, stream: OutputStream) {
+fun serializePathsToStream(paths: List<ForwardRelativePath>, stream: OutputStream) {
     ObjectMappers.WRITER.without(JsonGenerator.Feature.AUTO_CLOSE_TARGET).writeValue(stream, paths)
 }
 
@@ -118,7 +119,7 @@ private fun createParser(stream: InputStream): JsonParser {
         .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA)
 }
 
-private fun parsePaths(parser: JsonParser, list: MutableList<FsAgnosticPath>) {
+private fun parsePaths(parser: JsonParser, list: MutableList<ForwardRelativePath>) {
     check(parser.nextToken() == JsonToken.START_ARRAY)
     val removeNode = parser.readValueAsTree<JsonNode>()
     // 'removeNode' is an Array node, iterating through which gives paths of removed packages

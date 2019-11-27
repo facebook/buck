@@ -16,6 +16,7 @@
 
 package com.facebook.buck.multitenant.query
 
+import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.core.sourcepath.SourcePath
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
@@ -24,7 +25,7 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
  * `com.facebook.buck.multitenant`. It is designed to be used with
  * [com.facebook.buck.query.QueryFileTarget].
  */
-data class FsAgnosticSourcePath(private val path: FsAgnosticPath) : SourcePath {
+data class FsAgnosticSourcePath(private val path: ForwardRelativePath) : SourcePath {
     companion object {
         /**
          * @param path must be a normalized, relative path.
