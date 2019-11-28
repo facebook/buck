@@ -68,7 +68,7 @@ public abstract class BuildTargetPattern {
 
   /** Target name in case pattern is single build target pattern; otherwise an empty string */
   @Value.Parameter
-  public abstract String getTargetName();
+  public abstract String getLocalNameAndFlavors();
 
   /** Whether this is a '//package/...' pattern. */
   public boolean isRecursive() {
@@ -84,11 +84,12 @@ public abstract class BuildTargetPattern {
   protected void check() {
     switch (getKind()) {
       case SINGLE:
-        Preconditions.checkArgument(!getTargetName().equals(""));
+        Preconditions.checkArgument(!getLocalNameAndFlavors().equals(""));
+        Preconditions.checkArgument(!getLocalNameAndFlavors().startsWith("#"));
         break;
       case PACKAGE:
       case RECURSIVE:
-        Preconditions.checkArgument(getTargetName().equals(""));
+        Preconditions.checkArgument(getLocalNameAndFlavors().equals(""));
         break;
     }
   }
@@ -98,7 +99,7 @@ public abstract class BuildTargetPattern {
     String result = getCellRelativeBasePath().toString();
     switch (getKind()) {
       case SINGLE:
-        return result + BuildTargetLanguageConstants.TARGET_SYMBOL + getTargetName();
+        return result + BuildTargetLanguageConstants.TARGET_SYMBOL + getLocalNameAndFlavors();
       case PACKAGE:
         return result + BuildTargetLanguageConstants.TARGET_SYMBOL;
       case RECURSIVE:

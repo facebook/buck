@@ -216,7 +216,7 @@ private class TargetEvaluator(
         return when (buildTargetPattern.kind!!) {
             Kind.SINGLE -> {
                 val buildTarget = BuildTargets.createBuildTargetFromParts(buildTargetPattern.cellRelativeBasePath.cellName,
-                    buildTargetPattern.cellRelativeBasePath.path, buildTargetPattern.targetName)
+                    buildTargetPattern.cellRelativeBasePath.path, buildTargetPattern.localNameAndFlavors)
                 setOf(buildTarget)
             }
             Kind.PACKAGE -> {

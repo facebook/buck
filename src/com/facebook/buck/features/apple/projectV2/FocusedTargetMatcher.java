@@ -219,7 +219,7 @@ public class FocusedTargetMatcher {
         // TODO(nga): BuildTargetPattern.targetName includes flavors,
         //  but we match flavorless targets, thus if there's flavor, it is not match.
         //  We should stop accept flavors when parsing patterns, at least for focus.
-        if (buildTargetPattern.getTargetName().contains("#")) {
+        if (buildTargetPattern.getLocalNameAndFlavors().contains("#")) {
           break;
         }
 
@@ -227,7 +227,7 @@ public class FocusedTargetMatcher {
             ImmutableUnflavoredBuildTargetView.of(
                 UnconfiguredBuildTarget.of(
                     buildTargetPattern.getCellRelativeBasePath(),
-                    buildTargetPattern.getTargetName(),
+                    buildTargetPattern.getLocalNameAndFlavors(),
                     UnconfiguredBuildTarget.NO_FLAVORS)));
         break;
       case PACKAGE:
