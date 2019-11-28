@@ -128,8 +128,11 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     annotationScenarioGenPath =
         filesystem
-            .resolve(filesystem.getBuckPaths().getAnnotationDir())
-            .resolve("android/java/src/com/facebook/__fb_gen__")
+            .resolve(
+                AbstractCompilerOutputPaths.of(
+                        BuildTargetFactory.newInstance("//android/java/src/com/facebook:fb"),
+                        filesystem)
+                    .getAnnotationPath())
             .toAbsolutePath()
             .toString();
   }
