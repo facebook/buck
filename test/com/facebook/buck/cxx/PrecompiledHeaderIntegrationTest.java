@@ -21,8 +21,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.file.ProjectFilesystemMatchers;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -53,6 +56,15 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  private String getHeaderGenPath(String buildTarget, String suffix) {
+    return BuildTargetPaths.getGenPath(
+                TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
+                BuildTargetFactory.newInstance(buildTarget),
+                "%s")
+            .toString()
+        + suffix;
+  }
+
   @Before
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "precompiled_headers", tmp);
@@ -78,7 +90,7 @@ public class PrecompiledHeaderIntegrationTest {
         target -> {
           String depFileContents =
               workspace.getFileContents(
-                  "buck-out/gen/" + target.getShortNameAndFlavorPostfix() + ".h.gch.dep");
+                  getHeaderGenPath(target.getFullyQualifiedName(), ".h.gch.dep"));
           assertThat(depFileContents, containsString("referenced_by_prefix_header.h"));
         });
   }
@@ -165,8 +177,8 @@ public class PrecompiledHeaderIntegrationTest {
             assertThat(
                 workspace.asCell().getFilesystem(),
                 ProjectFilesystemMatchers.pathExists(
-                    workspace.getPath(
-                        "buck-out/gen/" + target.getShortNameAndFlavorPostfix() + ".h.gch"))));
+                    tmp.getRoot()
+                        .resolve(getHeaderGenPath(target.getFullyQualifiedName(), ".h.gch")))));
     buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
