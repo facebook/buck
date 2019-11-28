@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -178,7 +179,11 @@ public class JavacPluginPropertiesTest {
     ImmutableMap.Builder builder =
         ImmutableMap.builder()
             .put(
-                filesystem.resolve(Paths.get("buck-out/gen/internal_java_lib.jar")),
+                filesystem.resolve(
+                    BuildTargetPaths.getGenPath(
+                        filesystem,
+                        BuildTargetFactory.newInstance("//:internal_java_lib"),
+                        "%s.jar")),
                 HashCode.fromInt(0));
     if (resource.isPresent()) {
       builder.put(
