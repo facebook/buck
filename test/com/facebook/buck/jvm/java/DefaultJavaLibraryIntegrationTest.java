@@ -752,10 +752,17 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     String utilJarPath;
     if (compileAgainstAbis.equals(TRUE)) {
+      BuildTarget utilTarget = BuildTargetFactory.newInstance("//:util#class-abi");
       utilJarPath =
-          MorePaths.pathWithPlatformSeparators("buck-out/gen/util#class-abi/util-abi.jar");
+          MorePaths.pathWithPlatformSeparators(
+              BuildTargetPaths.getGenPath(
+                  filesystem, utilTarget, "%s/" + utilTarget.getShortName() + "-abi.jar"));
     } else {
-      utilJarPath = MorePaths.pathWithPlatformSeparators("buck-out/gen/lib__util__output/util.jar");
+      BuildTarget utilTarget = BuildTargetFactory.newInstance("//:util");
+      utilJarPath =
+          MorePaths.pathWithPlatformSeparators(
+              BuildTargetPaths.getGenPath(
+                  filesystem, utilTarget, "lib__%s__output/" + utilTarget.getShortName() + ".jar"));
     }
     String utilClassPath = MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 
@@ -817,13 +824,23 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     String utilJarPath;
     if (compileAgainstAbis.equals(TRUE)) {
+      BuildTarget utilTarget = BuildTargetFactory.newInstance("//util:util#class-abi");
       utilJarPath =
           MorePaths.pathWithPlatformSeparators(
-              "/away_cell/buck-out/gen/util/util#class-abi/util-abi.jar");
+              "/away_cell/"
+                  + BuildTargetPaths.getGenPath(
+                          filesystem, utilTarget, "%s/" + utilTarget.getShortName() + "-abi.jar")
+                      .toString());
     } else {
+      BuildTarget utilTarget = BuildTargetFactory.newInstance("//util:util");
       utilJarPath =
-          MorePaths.pathWithPlatformSeparators(
-              "/away_cell/buck-out/gen/util/lib__util__output/util.jar");
+          "/away_cell/"
+              + MorePaths.pathWithPlatformSeparators(
+                  BuildTargetPaths.getGenPath(
+                          filesystem,
+                          utilTarget,
+                          "lib__%s__output/" + utilTarget.getShortName() + ".jar")
+                      .toString());
     }
     String utilClassPath = MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 
