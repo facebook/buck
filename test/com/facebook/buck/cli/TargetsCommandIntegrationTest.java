@@ -37,7 +37,14 @@ import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
+import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.testutil.ProcessResult;
@@ -91,6 +98,24 @@ public class TargetsCommandIntegrationTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  private static Path getLegacyGenDir(String buildTarget, ProjectWorkspace workspace) {
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    BuildTarget target = BuildTargetFactory.newInstance(buildTarget);
+    // targets like genrule use the legacy path (without double underscore suffix)
+    return BuildTargetPaths.getGenPath(filesystem, target, "%s");
+  }
+
+  private static void assertJsonMatchesWithOutputPlaceholder(String expectedJson, String actualJson)
+      throws IOException {
+    String outputPrefixPlaceholder = "<OUTPUT_PREFIX>";
+    String regex = "buck-out(.*[\\\\/])";
+
+    assertJsonMatches(
+        expectedJson.replaceAll(regex, outputPrefixPlaceholder),
+        actualJson.replaceAll(regex, outputPrefixPlaceholder));
+  }
+
   @Test
   public void testShowTargetsNamesWhenNoOptionsProvided() throws IOException {
     ProjectWorkspace workspace =
@@ -117,8 +142,13 @@ public class TargetsCommandIntegrationTest {
     assertEquals(
         linesToText(
             "//:another-test "
-                + MorePaths.pathWithPlatformSeparators("buck-out/gen/another-test/test-output"),
-            "//:test " + MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output"),
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:another-test", workspace)
+                        .resolve("test-output")
+                        .toString()),
+            "//:test "
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:test", workspace).resolve("test-output").toString()),
             ""),
         result.getStdout());
   }
@@ -133,8 +163,12 @@ public class TargetsCommandIntegrationTest {
     result.assertSuccess();
     assertEquals(
         linesToText(
-            "//:A " + MorePaths.pathWithPlatformSeparators("buck-out/gen/A/A.txt"),
-            "//:B " + MorePaths.pathWithPlatformSeparators("buck-out/gen/B/B.txt"),
+            "//:A "
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:A", workspace).resolve("A.txt").toString()),
+            "//:B "
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:B", workspace).resolve("B.txt").toString()),
             "//:C",
             "//:test-library"),
         result.getStdout().trim());
@@ -157,7 +191,9 @@ public class TargetsCommandIntegrationTest {
     result.assertSuccess();
     assertEquals(
         linesToText(
-            "//android:D " + MorePaths.pathWithPlatformSeparators("buck-out/gen/android/D.apk")),
+            "//android:D "
+                + MorePaths.pathWithPlatformSeparators(getLegacyGenDir("//android:D", workspace))
+                + ".apk"),
         result.getStdout().trim());
   }
 
@@ -168,11 +204,14 @@ public class TargetsCommandIntegrationTest {
             this, "targets_command_annotation_processor", tmp);
     workspace.setUp();
 
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", "//:");
     result.assertSuccess();
 
     verifyTestConfigurationRulesWithAnnotationProcessorOutput(
-        result, MorePaths::pathWithPlatformSeparators);
+        filesystem, result, MorePaths::pathWithPlatformSeparators);
   }
 
   @Test
@@ -182,33 +221,56 @@ public class TargetsCommandIntegrationTest {
             this, "targets_command_annotation_processor", tmp);
     workspace.setUp();
 
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
     ProcessResult result = workspace.runBuckCommand("targets", "--show-full-output", "//:");
     result.assertSuccess();
 
     verifyTestConfigurationRulesWithAnnotationProcessorOutput(
-        result, s -> MorePaths.pathWithPlatformSeparators(tmp.getRoot().resolve(s)));
+        filesystem, result, s -> MorePaths.pathWithPlatformSeparators(tmp.getRoot().resolve(s)));
   }
 
   private static void verifyTestConfigurationRulesWithAnnotationProcessorOutput(
-      ProcessResult result, Function<String, String> resolvePath) {
+      ProjectFilesystem filesystem, ProcessResult result, Function<String, String> resolvePath) {
+
     assertEquals(
         linesToText(
             "//:annotation_processor",
             "//:annotation_processor_lib "
                 + resolvePath.apply(
-                    "buck-out/gen/lib__annotation_processor_lib__output/annotation_processor_lib.jar"),
+                    CompilerOutputPaths.getOutputJarPath(
+                            BuildTargetFactory.newInstance("//:annotation_processor_lib"),
+                            filesystem)
+                        .toString()),
             "//:test-library",
             "//:test-library-with-processing "
-                + resolvePath.apply("buck-out/annotation/__test-library-with-processing_gen__"),
+                + resolvePath.apply(
+                    CompilerOutputPaths.getAnnotationPath(
+                            filesystem,
+                            BuildTargetFactory.newInstance("//:test-library-with-processing"))
+                        .get()
+                        .toString()),
             "//:test-library-with-processing-with-srcs "
                 + resolvePath.apply(
-                    "buck-out/gen/lib__test-library-with-processing-with-srcs__output/test-library-with-processing-with-srcs.jar")
+                    CompilerOutputPaths.getOutputJarPath(
+                            BuildTargetFactory.newInstance(
+                                "//:test-library-with-processing-with-srcs"),
+                            filesystem)
+                        .toString())
                 + " "
                 + resolvePath.apply(
-                    "buck-out/annotation/__test-library-with-processing-with-srcs_gen__"),
+                    CompilerOutputPaths.getAnnotationPath(
+                            filesystem,
+                            BuildTargetFactory.newInstance(
+                                "//:test-library-with-processing-with-srcs"))
+                        .get()
+                        .toString()),
             "//:test-library-with-srcs "
                 + resolvePath.apply(
-                    "buck-out/gen/lib__test-library-with-srcs__output/test-library-with-srcs.jar")),
+                    CompilerOutputPaths.getOutputJarPath(
+                            BuildTargetFactory.newInstance("//:test-library-with-srcs"), filesystem)
+                        .toString())),
         result.getStdout().trim());
   }
 
@@ -261,7 +323,8 @@ public class TargetsCommandIntegrationTest {
         Matchers.matchesPattern(
             "//:test [a-f0-9]{40} "
                 + Pattern.quote(
-                    MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output"))));
+                    MorePaths.pathWithPlatformSeparators(
+                        getLegacyGenDir("//:test", workspace).resolve("test-output").toString()))));
   }
 
   @Test
@@ -272,17 +335,26 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", "...");
     result.assertSuccess();
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    BuildTarget javaLibTarget = BuildTargetFactory.newInstance("//:java_lib");
     assertEquals(
         linesToText(
             "//:another-test "
-                + MorePaths.pathWithPlatformSeparators("buck-out/gen/another-test/test-output"),
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:another-test", workspace)
+                        .resolve("test-output")
+                        .toString()),
             "//:java_lib "
                 + MorePaths.pathWithPlatformSeparators(
-                    "buck-out/gen/lib__java_lib__output/java_lib.jar")
+                    CompilerOutputPaths.getOutputJarPath(javaLibTarget, filesystem))
                 + " "
-                + MorePaths.pathWithPlatformSeparators("buck-out/annotation/__java_lib_gen__"),
+                + MorePaths.pathWithPlatformSeparators(
+                    CompilerOutputPaths.getAnnotationPath(filesystem, javaLibTarget).get()),
             "//:plugin",
-            "//:test " + MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output"),
+            "//:test "
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:test", workspace).resolve("test-output").toString()),
             ""),
         result.getStdout());
   }
@@ -350,7 +422,8 @@ public class TargetsCommandIntegrationTest {
         "//:test "
             + MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath())
             + " "
-            + MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output")
+            + MorePaths.pathWithPlatformSeparators(
+                getLegacyGenDir("//:test", workspace).resolve("test-output").toString())
             + System.lineSeparator(),
         result.getStdout());
   }
@@ -759,7 +832,8 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("targets", "--json", "--show-output", "//:test");
 
-    assertJsonMatches(workspace.getFileContents("output_path_json.js"), result.getStdout());
+    assertJsonMatchesWithOutputPlaceholder(
+        workspace.getFileContents("output_path_json.js"), result.getStdout());
   }
 
   @Test
@@ -812,7 +886,9 @@ public class TargetsCommandIntegrationTest {
     JsonNode cellPath = targetNode.get("buck.outputPath");
     assertNotNull(cellPath);
 
-    Path expectedPath = tmp.getRoot().resolve("buck-out/gen/test/test-output");
+    Path expectedPath =
+        tmp.getRoot()
+            .resolve(getLegacyGenDir("//:test", workspace).resolve("test-output").toString());
     String expectedRootPath = MorePaths.pathWithPlatformSeparators(expectedPath);
 
     assertEquals(expectedRootPath, cellPath.asText());
@@ -917,7 +993,8 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("targets", "--json", "--show-output", "...");
     result.assertSuccess();
 
-    assertJsonMatches(workspace.getFileContents("output_path_json_all.js"), result.getStdout());
+    assertJsonMatchesWithOutputPlaceholder(
+        workspace.getFileContents("output_path_json_all.js"), result.getStdout());
   }
 
   @Test
@@ -936,7 +1013,7 @@ public class TargetsCommandIntegrationTest {
             "...");
     result.assertSuccess();
 
-    assertJsonMatches(
+    assertJsonMatchesWithOutputPlaceholder(
         workspace.getFileContents("output_path_json_all_snake_case.js"), result.getStdout());
 
     result =
@@ -944,7 +1021,8 @@ public class TargetsCommandIntegrationTest {
             "targets", "--json", "-c", "ui.json_attribute_format=legacy", "--show-output", "...");
     result.assertSuccess();
 
-    assertJsonMatches(workspace.getFileContents("output_path_json_all.js"), result.getStdout());
+    assertJsonMatchesWithOutputPlaceholder(
+        workspace.getFileContents("output_path_json_all.js"), result.getStdout());
   }
 
   @Test
@@ -964,7 +1042,7 @@ public class TargetsCommandIntegrationTest {
             "name");
     result.assertSuccess();
 
-    assertJsonMatches(
+    assertJsonMatchesWithOutputPlaceholder(
         workspace.getFileContents("output_path_json_all_filtered.js"), result.getStdout());
   }
 
@@ -1138,7 +1216,7 @@ public class TargetsCommandIntegrationTest {
 
     String expected =
         "//:exported.txt "
-            + workspace.getBuckPaths().getGenDir().resolve("exported.txt").resolve("exported.txt")
+            + getLegacyGenDir("//exported.txt:exported.txt", workspace)
             + System.lineSeparator();
     assertEquals(expected, result.getStdout());
   }
@@ -1337,7 +1415,7 @@ public class TargetsCommandIntegrationTest {
             "...");
     result.assertSuccess();
     String expectedJson = workspace.getFileContents("output_path_json_all_snake_case.js");
-    assertJsonMatches(expectedJson, result.getStdout());
+    assertJsonMatchesWithOutputPlaceholder(expectedJson, result.getStdout());
     assertThat(
         GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " not provided",
         result.getStderr(),
@@ -1349,7 +1427,7 @@ public class TargetsCommandIntegrationTest {
         workspace.runBuckdCommand(
             "targets", "--json", GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG, "--show-output", "...");
     result.assertSuccess();
-    assertJsonMatches(expectedJson, result.getStdout());
+    assertJsonMatchesWithOutputPlaceholder(expectedJson, result.getStdout());
     String stderr = result.getStderr();
     assertThat(
         GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " provided",
