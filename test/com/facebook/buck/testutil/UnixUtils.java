@@ -24,11 +24,11 @@ import java.nio.file.Paths;
 
 /** An for abstraction of {@link PlatformUtils} for Unix platforms (Mac OS, Linux) */
 public abstract class UnixUtils extends PlatformUtils {
+  //  TODO(gabrielrc): Don't rely on buck being there. It's built by Sandcastle using
+  //  scripts/facebook/sandcastle/lego_windows_build.ps1
+  //  scripts/facebook/sandcastle/buck_verify_build_release.sh
   private static final String BUCK_EXE =
-      FileSystems.getDefault()
-          .getPath("buck-out", "gen", "programs", "buck.pex")
-          .toAbsolutePath()
-          .toString();
+      FileSystems.getDefault().getPath("new_buck.pex").toAbsolutePath().toString();
 
   protected UnixUtils() {}
 
