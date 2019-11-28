@@ -188,11 +188,15 @@ public class CxxCompilationDatabaseTest {
                     "-fdebug-prefix-map=/Users/user/src=.",
                     "-gno-record-gcc-switches",
                     "-o",
-                    "buck-out/gen/foo/baz#compile-test.cpp/test.o",
+                    BuildTargetPaths.getGenPath(filesystem, compileTarget, "%s")
+                        .resolve("test.o")
+                        .toString(),
                     "-c",
                     "-MD",
                     "-MF",
-                    "buck-out/gen/foo/baz#compile-test.cpp/test.o.dep",
+                    BuildTargetPaths.getGenPath(filesystem, compileTarget, "%s")
+                        .resolve("test.o.dep")
+                        .toString(),
                     "test.cpp")));
     MoreAsserts.assertIterablesEquals(expectedEntries, observedEntries);
   }
