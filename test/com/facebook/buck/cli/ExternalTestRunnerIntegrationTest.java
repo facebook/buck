@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.cxx.CxxToolchainUtilsForTests;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.ProcessResult;
@@ -104,9 +105,23 @@ public class ExternalTestRunnerIntegrationTest {
 
     result.assertSuccess();
     if (isWindowsOs) {
-      assertTrue(result.getStdout().trim().endsWith("\\buck-out\\gen\\dir\\cpp_binary.exe"));
+      assertTrue(
+          result
+              .getStdout()
+              .trim()
+              .endsWith(
+                  workspace
+                      .getGenPath(BuildTargetFactory.newInstance("//dir:cpp_binary"), "%s.exe")
+                      .toString()));
     } else {
-      assertTrue(result.getStdout().trim().endsWith("/buck-out/gen/dir/cpp_binary"));
+      assertTrue(
+          result
+              .getStdout()
+              .trim()
+              .endsWith(
+                  workspace
+                      .getGenPath(BuildTargetFactory.newInstance("//dir:cpp_binary"), "%s")
+                      .toString()));
     }
   }
 
@@ -124,9 +139,23 @@ public class ExternalTestRunnerIntegrationTest {
 
     result.assertSuccess();
     if (isWindowsOs) {
-      assertTrue(result.getStdout().trim().endsWith("\\buck-out\\gen\\dir\\cpp_binary.exe"));
+      assertTrue(
+          result
+              .getStdout()
+              .trim()
+              .endsWith(
+                  workspace
+                      .getGenPath(BuildTargetFactory.newInstance("//dir:cpp_binary"), "%s.exe")
+                      .toString()));
     } else {
-      assertTrue(result.getStdout().trim().endsWith("/buck-out/gen/dir/cpp_binary"));
+      assertTrue(
+          result
+              .getStdout()
+              .trim()
+              .endsWith(
+                  workspace
+                      .getGenPath(BuildTargetFactory.newInstance("//dir:cpp_binary"), "%s")
+                      .toString()));
     }
   }
 
