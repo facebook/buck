@@ -38,6 +38,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -904,6 +905,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
   public void verify() throws IOException {
     assertPathsEqual(templatePath, destPath);
+  }
+
+  public Path getGenPath(BuildTarget buildTarget, String format) throws IOException {
+    return getProjectFileSystem()
+        .resolve(BuildTargetPaths.getGenPath(getProjectFileSystem(), buildTarget, format));
   }
 
   public void verify(Path subdirectory) throws IOException {
