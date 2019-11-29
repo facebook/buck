@@ -55,6 +55,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -462,14 +463,16 @@ public class XcodeNativeTargetProjectWriterTest {
     PBXShellScriptBuildPhase phase =
         getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
     String shellScript = phase.getShellScript();
-    Path genDir = scenario.filesystem.getBuckPaths().getGenDir().toAbsolutePath();
+    Path genPath = BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s");
+    Path jsGenPath = genPath.resolve("js").toAbsolutePath();
+    Path resGenPath = genPath.resolve("res").toAbsolutePath();
     assertEquals(
         String.format(
             "BASE_DIR=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\n"
                 + "mkdir -p \"${BASE_DIR}\"\n\n"
-                + "cp -a \"%s/foo/dep/js/\" \"${BASE_DIR}/\"\n"
-                + "cp -a \"%s/foo/dep/res/\" \"${BASE_DIR}/\"\n",
-            genDir, genDir),
+                + "cp -a \"%s/\" \"${BASE_DIR}/\"\n"
+                + "cp -a \"%s/\" \"${BASE_DIR}/\"\n",
+            jsGenPath, resGenPath),
         shellScript);
   }
 
@@ -495,14 +498,21 @@ public class XcodeNativeTargetProjectWriterTest {
     PBXShellScriptBuildPhase phase =
         getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
     String shellScript = phase.getShellScript();
-    Path genDir = scenario.filesystem.getBuckPaths().getGenDir().toAbsolutePath();
+    Path depGenPath =
+        BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s")
+            .resolve("js")
+            .toAbsolutePath();
+    Path bundleGenPath =
+        BuildTargetPaths.getGenPath(scenario.filesystem, bundleBuildTarget, "%s")
+            .resolve("res")
+            .toAbsolutePath();
     assertEquals(
         String.format(
             "BASE_DIR=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\n"
                 + "mkdir -p \"${BASE_DIR}\"\n\n"
-                + "cp -a \"%s/foo/dep/js/\" \"${BASE_DIR}/\"\n"
-                + "cp -a \"%s/foo/bundle/res/\" \"${BASE_DIR}/\"\n",
-            genDir, genDir),
+                + "cp -a \"%s/\" \"${BASE_DIR}/\"\n"
+                + "cp -a \"%s/\" \"${BASE_DIR}/\"\n",
+            depGenPath, bundleGenPath),
         shellScript);
   }
 
