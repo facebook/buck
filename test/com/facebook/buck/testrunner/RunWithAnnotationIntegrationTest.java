@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -77,8 +78,11 @@ public class RunWithAnnotationIntegrationTest {
 
     Reader reader =
         Files.newBufferedReader(
-            workspace.getPath(
-                "buck-out/gen/__java_test_ParametrizedTest_output__/com.example.ParametrizedTest.xml"),
+            workspace
+                .getGenPath(
+                    BuildTargetFactory.newInstance("//:ParametrizedTest"),
+                    "__java_test_%s_output__")
+                .resolve("com.example.ParametrizedTest.xml"),
             Charset.defaultCharset());
     Document doc = XmlDomParser.parse(new InputSource(reader), false);
 
