@@ -30,6 +30,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -188,10 +189,10 @@ public class PythonBinaryIntegrationTest {
   }
 
   @Test
-  public void testOutput() {
+  public void testOutput() throws Exception {
     workspace.runBuckBuild("//:bin").assertSuccess();
 
-    File output = workspace.getPath("buck-out/gen/bin.pex").toFile();
+    File output = workspace.getGenPath(BuildTargetFactory.newInstance("//:bin"), "%s.pex").toFile();
     if (pexDirectory) {
       assertTrue(output.isDirectory());
     } else {
@@ -354,7 +355,8 @@ public class PythonBinaryIntegrationTest {
     workspace.runBuckCommand("run", "//:main_module_with_prebuilt_dep_bin").assertSuccess();
     Path binPath =
         workspace.resolve(
-            workspace.getBuckPaths().getGenDir().resolve("main_module_with_prebuilt_dep_bin.pex"));
+            workspace.getGenPath(
+                BuildTargetFactory.newInstance("//:main_module_with_prebuilt_dep_bin"), "%s.pex"));
 
     ImmutableSet<Path> expectedPaths =
         ImmutableSet.of(
@@ -403,18 +405,11 @@ public class PythonBinaryIntegrationTest {
     res.assertSuccess();
 
     Path linkTreeDir =
-        workspace.resolve(
-            workspace
-                .getBuckPaths()
-                .getGenDir()
-                .resolve("main_module_with_prebuilt_dep_bin#link-tree"));
+        workspace.getGenPath(
+            workspace.newBuildTarget("//:main_module_with_prebuilt_dep_bin#link-tree"), "%s");
     Path originalWhlDir =
-        workspace.resolve(
-            workspace
-                .getBuckPaths()
-                .getGenDir()
-                .resolve("external_sources")
-                .resolve("__whl_dep__extracted"));
+        workspace.getGenPath(
+            BuildTargetFactory.newInstance("//external_sources:whl_dep"), "__%s__extracted");
 
     ImmutableSet<Path> expectedPaths =
         ImmutableSet.of(
