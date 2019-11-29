@@ -33,6 +33,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -132,7 +133,11 @@ public class BuildCommandIntegrationTest {
     assertThat(
         runBuckResult.getStdout(),
         Matchers.containsString(
-            "\"//:bar\" : \"buck-out/gen/bar/bar\",\n  \"//:ex ample\" : \"buck-out/gen/ex ample/example\",\n  \"//:foo\" : \"buck-out/gen/foo/foo\"\n}"));
+            String.format(
+                "\"//:bar\" : \"buck-out/gen/%s/bar\",\n  \"//:ex ample\" : \"buck-out/gen/%s/example\",\n  \"//:foo\" : \"buck-out/gen/%s/foo\"\n}",
+                BuildTargetPaths.getBasePath(BuildTargetFactory.newInstance("//:bar"), "%s"),
+                BuildTargetPaths.getBasePath(BuildTargetFactory.newInstance("//:ex ample"), "%s"),
+                BuildTargetPaths.getBasePath(BuildTargetFactory.newInstance("//:foo"), "%s"))));
   }
 
   @Test
@@ -145,17 +150,26 @@ public class BuildCommandIntegrationTest {
         workspace.runBuckBuild("--show-full-json-output", "//:bar", "//:foo", "//:ex ample");
     runBuckResult.assertSuccess();
     Path expectedRootDirectory = tmp.getRoot();
-    String expectedOutputDirectory = expectedRootDirectory.resolve("buck-out/").toString();
     assertThat(
         runBuckResult.getStdout(),
         Matchers.containsString(
-            "{\n  \"//:bar\" : \""
-                + expectedOutputDirectory
-                + "/gen/bar/bar\",\n  \"//:ex ample\" : \""
-                + expectedOutputDirectory
-                + "/gen/ex ample/example\",\n  \"//:foo\" : \""
-                + expectedOutputDirectory
-                + "/gen/foo/foo\"\n}"));
+            String.format(
+                "{\n  \"//:bar\" : \"%s/bar\",\n  \"//:ex ample\" : \"%s/example\",\n  \"//:foo\" : \"%s/foo\"\n}",
+                expectedRootDirectory.resolve(
+                    BuildTargetPaths.getGenPath(
+                        workspace.getProjectFileSystem(),
+                        BuildTargetFactory.newInstance("//:bar"),
+                        "%s")),
+                expectedRootDirectory.resolve(
+                    BuildTargetPaths.getGenPath(
+                        workspace.getProjectFileSystem(),
+                        BuildTargetFactory.newInstance("//:ex ample"),
+                        "%s")),
+                expectedRootDirectory.resolve(
+                    BuildTargetPaths.getGenPath(
+                        workspace.getProjectFileSystem(),
+                        BuildTargetFactory.newInstance("//:foo"),
+                        "%s")))));
   }
 
   @Test
