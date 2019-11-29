@@ -112,17 +112,39 @@ public class BuildTargetPaths {
    * @return A {@link java.nio.file.Path} scoped to the base path of {@code target}.
    */
   public static ForwardRelativePath getBasePath(BuildTarget target, String format) {
-    Preconditions.checkArgument(
-        !format.startsWith("/"), "format string should not start with a slash");
+    return target
+        .getCellRelativeBasePath()
+        .getPath()
+        .resolve(formatLastSegment(format, target.getShortNameAndFlavorPostfix()));
+  }
 
+  private static String formatLastSegment(String format, String arg) {
     if (Platform.detect() == Platform.WINDOWS) {
       // TODO(nga): prohibit backslashes in format
       format = format.replace('\\', '/');
     }
 
-    return target
-        .getCellRelativeBasePath()
-        .getPath()
-        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
+    Preconditions.checkArgument(
+        !format.startsWith("/"), "format string should not start with a slash: %s", format);
+    Preconditions.checkArgument(
+        !format.endsWith("/"), "format string should not end with a slash: %s", format);
+
+    int percent = format.indexOf('%');
+    Preconditions.checkArgument(
+        percent >= 0, "format string must have exactly one placeholder: %s", format);
+    Preconditions.checkArgument(
+        format.startsWith("%s", percent),
+        "format string must have exactly one placeholder: %s",
+        format);
+    Preconditions.checkArgument(
+        format.indexOf('%', percent + "%s".length()) < 0,
+        "format string must have exactly one placeholder: %s",
+        format);
+
+    StringBuilder sb = new StringBuilder();
+    sb.append(format, 0, percent);
+    sb.append(arg);
+    sb.append(format, percent + "%s".length(), format.length());
+    return sb.toString();
   }
 }

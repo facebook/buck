@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -222,8 +223,10 @@ public class BuiltinApplePackageIntegrationTest {
           workspace.getPath(
               BuildTargetPaths.getGenPath(
                   filesystem,
-                  target,
-                  "DemoWatchApp#dwarf-and-dsym,no-include-frameworks," + platformInfo.getFirst()));
+                  target.withAppendedFlavors(
+                      InternalFlavor.of("dwarf-and-dsym"),
+                      InternalFlavor.of("no-include-frameworks")),
+                  "%s"));
 
       Path binaryPath = outputPath.resolve("DemoWatchApp.app/DemoWatchApp");
       ImmutableList<String> command =
