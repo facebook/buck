@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.util.environment.Platform;
@@ -160,16 +161,15 @@ public class JsBundleWorkerJobArgsTest {
     buildContext(scenario);
     String expectedStr;
 
+    String genPath =
+        BuildTargetPaths.getGenPath(scenario.filesystem, referenced, "%s")
+            .resolve("escaping")
+            .toAbsolutePath()
+            .toString();
     if (Platform.detect() == Platform.WINDOWS) {
-      expectedStr =
-          String.format(
-              "[\"1 %s\\\\buck-out\\\\gen\\\\needs\'\'\\\\escaping\\\\escaping 2\"]",
-              JsUtil.escapeJsonForStringEmbedding(context.getBuildCellRootPath().toString()));
+      expectedStr = String.format("[\"1 %s 2\"]", JsUtil.escapeJsonForStringEmbedding(genPath));
     } else {
-      expectedStr =
-          String.format(
-              "[\"1 %s/buck-out/gen/needs\\t\\\"/escaping/escaping 2\"]",
-              JsUtil.escapeJsonForStringEmbedding(context.getBuildCellRootPath().toString()));
+      expectedStr = String.format("[\"1 %s 2\"]", JsUtil.escapeJsonForStringEmbedding(genPath));
     }
 
     assertThat(getJobJson(bundle).get("extraData").toString(), equalTo(expectedStr));
