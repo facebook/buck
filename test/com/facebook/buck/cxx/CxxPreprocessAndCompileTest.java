@@ -61,6 +61,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -627,8 +628,10 @@ public class CxxPreprocessAndCompileTest {
             .addRuleFlags(StringArg.of("-O3"))
             .addRuleFlags(StringArg.of("-I " + includedPathStr))
             .build();
-    String outputName = "baz\\test.o";
-    Path input = Paths.get("foo\\test.ii");
+
+    String slash = File.separator;
+    String outputName = "baz" + slash + "test.o";
+    Path input = Paths.get("foo" + slash + "test.ii");
 
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.compile(
