@@ -21,8 +21,10 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -42,7 +44,6 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TemporaryPaths;
-import java.io.File;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -108,9 +109,13 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
         String.format(
             "%s %s %s %s",
             "//exciting:dep",
-            absolutify("exciting/lib__dep__output/dep.jar"),
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:dep"), "lib__%s__output", "dep.jar"),
             "//exciting:target",
-            absolutify("exciting/lib__target__output/target.jar")));
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:target"),
+                "lib__%s__output",
+                "target.jar")));
   }
 
   @Test
@@ -121,9 +126,13 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
         String.format(
             "%s %s %s %s",
             "//exciting:dep",
-            absolutify("exciting/lib__dep__output/dep.jar"),
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:dep"), "lib__%s__output", "dep.jar"),
             "//exciting:target",
-            absolutify("exciting/lib__target__output/target.jar")));
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:target"),
+                "lib__%s__output",
+                "target.jar")));
   }
 
   @Test
@@ -134,9 +143,13 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
         String.format(
             "%s test %s test %s test %s",
             "//exciting:dep",
-            absolutify("exciting/lib__dep__output/dep.jar"),
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:dep"), "lib__%s__output", "dep.jar"),
             "//exciting:target",
-            absolutify("exciting/lib__target__output/target.jar")));
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:target"),
+                "lib__%s__output",
+                "target.jar")));
   }
 
   @Test
@@ -153,9 +166,13 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
         String.format(
             "%s %s %s %s",
             "//exciting:dep",
-            absolutify("exciting/lib__dep__output/dep.jar"),
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:dep"), "lib__%s__output", "dep.jar"),
             "//exciting:target",
-            absolutify("exciting/lib__target__output/target.jar")));
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:target"),
+                "lib__%s__output",
+                "target.jar")));
     // No new cache entry should have appeared
     assertThat(cache.values(), Matchers.hasSize(1));
     assertEquals(1, cache.numPuts());
@@ -183,8 +200,13 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
     assertEquals(expected, results);
   }
 
-  private String absolutify(String relativePath) {
-    relativePath = relativePath.replace("/", File.separator);
-    return filesystem.resolve(Paths.get("buck-out", "gen", relativePath)).toString();
+  private String absolutify(BuildTarget buildTarget, String format, String last) {
+    return filesystem
+        .resolve("buck-out/gen")
+        .resolve(
+            BuildTargetPaths.getBasePath(buildTarget, format)
+                .resolve(last)
+                .toPath(filesystem.getFileSystem()))
+        .toString();
   }
 }
