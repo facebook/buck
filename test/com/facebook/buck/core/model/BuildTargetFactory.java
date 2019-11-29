@@ -33,6 +33,11 @@ public class BuildTargetFactory {
   }
 
   public static BuildTarget newInstance(String fullyQualifiedName) {
+    return newInstance(fullyQualifiedName, UnconfiguredTargetConfiguration.INSTANCE);
+  }
+
+  public static BuildTarget newInstance(
+      String fullyQualifiedName, TargetConfiguration targetConfiguration) {
     BuckCellArg arg = BuckCellArg.of(fullyQualifiedName);
     ImmutableCanonicalCellName cellName = ImmutableCanonicalCellName.of(arg.getCellName());
     String[] parts = arg.getBasePath().split(":");
@@ -41,14 +46,14 @@ public class BuildTargetFactory {
     if (nameAndFlavor.length != 2) {
       return ImmutableUnconfiguredBuildTargetView.of(
               ImmutableUnflavoredBuildTargetView.of(cellName, BaseName.of(parts[0]), parts[1]))
-          .configure(UnconfiguredTargetConfiguration.INSTANCE);
+          .configure(targetConfiguration);
     }
     String[] flavors = nameAndFlavor[1].split(",");
     return ImmutableUnconfiguredBuildTargetView.of(
             ImmutableUnflavoredBuildTargetView.of(
                 cellName, BaseName.of(parts[0]), nameAndFlavor[0]),
             RichStream.from(flavors).map(InternalFlavor::of))
-        .configure(UnconfiguredTargetConfiguration.INSTANCE);
+        .configure(targetConfiguration);
   }
 
   public static BuildTarget newInstance(String baseName, String shortName) {

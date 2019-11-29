@@ -39,6 +39,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -189,10 +190,16 @@ public class TargetsCommandIntegrationTest {
             "--show-output",
             "//android:D");
     result.assertSuccess();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            "//android:D",
+            ConfigurationBuildTargetFactoryForTests.newConfiguration("//android:linux_platform"));
     assertEquals(
         linesToText(
             "//android:D "
-                + MorePaths.pathWithPlatformSeparators(getLegacyGenDir("//android:D", workspace))
+                + MorePaths.pathWithPlatformSeparators(
+                    BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"))
                 + ".apk"),
         result.getStdout().trim());
   }
