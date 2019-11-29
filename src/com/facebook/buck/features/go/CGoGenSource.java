@@ -92,7 +92,7 @@ public class CGoGenSource extends AbstractBuildRule {
     this.cgoCompilerFlags = cgoCompilerFlags;
     this.platform = platform;
     this.preprocessor = preprocessor;
-    this.genDir = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/gen/");
+    this.genDir = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/gen");
     this.argsFile = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/cgo.argsfile");
     this.ppFlags = ppFlags;
     this.headerLinkTreeMap =

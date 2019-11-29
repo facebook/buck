@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
@@ -89,9 +88,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     this.compileRules = compileRules;
     this.outputJsonFile =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(),
-            buildTarget,
-            Paths.get("__%s", "compile_commands.json").toString());
+            getProjectFilesystem(), buildTarget, "__%s/compile_commands.json");
     this.runtimeDeps = runtimeDeps;
   }
 

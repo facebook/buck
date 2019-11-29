@@ -121,7 +121,7 @@ public class BuildInfo {
    */
   @VisibleForTesting
   public static Path getPathToMetadataDirectory(BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargetPaths.getScratchPath(filesystem, target, ".%s/metadata/");
+    return BuildTargetPaths.getScratchPath(filesystem, target, ".%s/metadata");
   }
 
   public static Path getPathToArtifactMetadataDirectory(

@@ -19,9 +19,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -37,39 +37,42 @@ public class BuildPathsTest {
   private Object getTargetsForTest() {
     return new Object[] {
       new Object[] {
-        BuildTargetFactory.newInstance("//my/folder:foo"), Paths.get("my/folder/foo__")
+        BuildTargetFactory.newInstance("//my/folder:foo"), ForwardRelativePath.of("my/folder/foo__")
       },
       new Object[] {
         BuildTargetFactory.newInstance("//my/folder:foo#flavour"),
-        Paths.get("my/folder/foo#flavour")
+        ForwardRelativePath.of("my/folder/foo#flavour")
       }
     };
   }
 
   @Test
   @Parameters(method = "getTargetsForTest")
-  public void genPathFormat(BuildTarget target, Path path) {
-    assertEquals(Paths.get("buck-out/gen").resolve(path), BuildPaths.getGenDir(filesystem, target));
+  public void genPathFormat(BuildTarget target, ForwardRelativePath path) {
+    assertEquals(
+        Paths.get("buck-out/gen").resolve(path.toPathDefaultFileSystem()),
+        BuildPaths.getGenDir(filesystem, target));
   }
 
   @Test
   @Parameters(method = "getTargetsForTest")
-  public void annotationPathFormat(BuildTarget target, Path path) {
+  public void annotationPathFormat(BuildTarget target, ForwardRelativePath path) {
     assertEquals(
-        Paths.get("buck-out/annotation/").resolve(path),
+        Paths.get("buck-out/annotation/").resolve(path.toPathDefaultFileSystem()),
         BuildPaths.getAnnotationDir(filesystem, target));
   }
 
   @Test
   @Parameters(method = "getTargetsForTest")
-  public void scratchPathFormat(BuildTarget target, Path path) {
+  public void scratchPathFormat(BuildTarget target, ForwardRelativePath path) {
     assertEquals(
-        Paths.get("buck-out/bin").resolve(path), BuildPaths.getScratchDir(filesystem, target));
+        Paths.get("buck-out/bin").resolve(path.toPathDefaultFileSystem()),
+        BuildPaths.getScratchDir(filesystem, target));
   }
 
   @Test
   @Parameters(method = "getTargetsForTest")
-  public void basePathFormat(BuildTarget target, Path path) {
-    assertEquals(path, BuildPaths.getBaseDir(target, path.getFileSystem()));
+  public void basePathFormat(BuildTarget target, ForwardRelativePath path) {
+    assertEquals(path, BuildPaths.getBaseDir(target));
   }
 }

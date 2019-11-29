@@ -450,7 +450,7 @@ public class AndroidPackageableCollectorTest {
         "Classpath entries should include facebook/base but not keystore/base.",
         ImmutableSet.of(
             BuildTargetPaths.getGenPath(
-                    androidBinary.getProjectFilesystem(), androidLibraryTarget, "lib__%s__output/")
+                    androidBinary.getProjectFilesystem(), androidLibraryTarget, "lib__%s__output")
                 .resolve(androidLibraryTarget.getShortNameAndFlavorPostfix() + ".jar")),
         packageableCollection.getClasspathEntriesToDex().stream()
             .map(graphBuilder.getSourcePathResolver()::getRelativePath)

@@ -87,8 +87,9 @@ public class SkylarkDescriptionTest {
     args.build();
     ProviderInfoCollection infos = description.ruleImpl(context, target, args);
     Path expectedShortPath =
-        BuildPaths.getBaseDir(target, new FakeProjectFilesystem().getFileSystem())
-            .resolve("baz.sh");
+        BuildPaths.getBaseDir(target)
+            .resolve("baz.sh")
+            .toPath(new FakeProjectFilesystem().getFileSystem());
 
     DefaultInfo info = infos.get(DefaultInfo.PROVIDER).get();
     Artifact artifact = Iterables.getOnlyElement(info.defaultOutputs());
@@ -124,8 +125,9 @@ public class SkylarkDescriptionTest {
     args.build();
     ProviderInfoCollection infos = description.ruleImpl(context, target, args);
     Path expectedShortPath =
-        BuildPaths.getBaseDir(target, new FakeProjectFilesystem().getFileSystem())
-            .resolve("baz1.sh");
+        BuildPaths.getBaseDir(target)
+            .resolve("baz1.sh")
+            .toPath(new FakeProjectFilesystem().getFileSystem());
 
     DefaultInfo info = infos.get(DefaultInfo.PROVIDER).get();
     Artifact artifact = Iterables.getOnlyElement(info.defaultOutputs());

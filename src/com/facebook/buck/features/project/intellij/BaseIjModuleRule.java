@@ -309,7 +309,7 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
     return targetNode.getConstructorArg().getLabels().stream()
         .map(labelToGeneratedSourcesMap::get)
         .filter(Objects::nonNull)
-        .map(pattern -> pattern.replaceAll("%name%", buildTarget.getShortNameAndFlavorPostfix()))
+        .map(pattern -> pattern.replace("%name%", "%s"))
         .map(path -> BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, path))
         .collect(ImmutableSet.toImmutableSet());
   }

@@ -17,10 +17,11 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
-import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
 /**
@@ -54,7 +55,7 @@ public class BuildTargetPaths {
     return filesystem
         .getBuckPaths()
         .getScratchDir()
-        .resolve(getBasePath(target, format, filesystem.getFileSystem()));
+        .resolve(getBasePath(target, format).toPath(filesystem.getFileSystem()));
   }
 
   /**
@@ -75,7 +76,7 @@ public class BuildTargetPaths {
     return filesystem
         .getBuckPaths()
         .getAnnotationDir()
-        .resolve(getBasePath(target, format, filesystem.getFileSystem()));
+        .resolve(getBasePath(target, format).toPath(filesystem.getFileSystem()));
   }
 
   /**
@@ -95,7 +96,7 @@ public class BuildTargetPaths {
     return filesystem
         .getBuckPaths()
         .getGenDir()
-        .resolve(getBasePath(target, format, filesystem.getFileSystem()));
+        .resolve(getBasePath(target, format).toPath(filesystem.getFileSystem()));
   }
 
   /**
@@ -110,13 +111,18 @@ public class BuildTargetPaths {
    *     will be filled in with the rule's short name. It should not start with a slash.
    * @return A {@link java.nio.file.Path} scoped to the base path of {@code target}.
    */
-  public static Path getBasePath(BuildTarget target, String format, FileSystem fileSystem) {
+  public static ForwardRelativePath getBasePath(BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
+
+    if (Platform.detect() == Platform.WINDOWS) {
+      // TODO(nga): prohibit backslashes in format
+      format = format.replace('\\', '/');
+    }
+
     return target
         .getCellRelativeBasePath()
         .getPath()
-        .toPath(fileSystem)
         .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
   }
 }

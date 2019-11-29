@@ -79,7 +79,7 @@ public class SplitResources extends AbstractBuildRule {
   }
 
   private Path getOutputDirectory() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/");
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
   @Override
@@ -135,7 +135,7 @@ public class SplitResources extends AbstractBuildRule {
   }
 
   public Path getScratchDirectory() {
-    return BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s/");
+    return BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
   private class SplitResourcesStep implements Step {

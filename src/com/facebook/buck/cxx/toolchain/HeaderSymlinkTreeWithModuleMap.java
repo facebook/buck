@@ -28,6 +28,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.collect.ImmutableList;
@@ -108,7 +109,9 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
                                 .collect(ImmutableList.toImmutableList()))
                         .render(),
                     BuildTargetPaths.getGenPath(
-                        getProjectFilesystem(), getBuildTarget(), "%s/" + umbrellaHeaderPath),
+                        getProjectFilesystem(),
+                        getBuildTarget(),
+                        "%s/" + PathFormatter.pathWithUnixSeparators(umbrellaHeaderPath)),
                     false));
           }
         });

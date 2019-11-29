@@ -135,7 +135,7 @@ public class AndroidBinaryTest {
             InternalFlavor.of(APKModuleGraph.ROOT_APKMODULE_NAME));
     Path aaptProguardDir =
         BuildTargetPaths.getGenPath(
-            androidBinary.getProjectFilesystem(), aaptPackageTarget, "%s/proguard/");
+            androidBinary.getProjectFilesystem(), aaptPackageTarget, "%s/proguard");
 
     Path proguardOutputDir =
         androidBinary.getEnhancementResult().getNonPreDexedDex().get().getProguardConfigDir();
@@ -177,7 +177,7 @@ public class AndroidBinaryTest {
                 BuildTargetPaths.getGenPath(
                         libraryOneRule.getProjectFilesystem(),
                         libraryOneRule.getBuildTarget(),
-                        "lib__%s__output/")
+                        "lib__%s__output")
                     .resolve(
                         libraryOne.getBuildTarget().getShortNameAndFlavorPostfix()
                             + "-obfuscated.jar"))),
