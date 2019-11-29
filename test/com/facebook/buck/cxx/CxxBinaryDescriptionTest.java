@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -73,7 +74,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -494,9 +494,13 @@ public class CxxBinaryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxBinary binary = binaryBuilder.build(graphBuilder, targetGraph);
+    String expectOutputPath =
+        BuildTargetPaths.getGenPath(
+                new FakeProjectFilesystem(), BuildTargetFactory.newInstance("//:foo"), "%s")
+            .toString();
     assertEquals(
         binary.getLinkRule().getSourcePathToOutput().toString(),
-        "Pair(//:foo#binary, buck-out" + File.separator + "gen" + File.separator + "foo)");
+        "Pair(//:foo#binary, " + expectOutputPath + ")");
   }
 
   @Test
@@ -521,14 +525,13 @@ public class CxxBinaryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxBinary binary = binaryBuilder.build(graphBuilder, targetGraph);
+    String expectOutputPath =
+        BuildTargetPaths.getGenPath(
+                new FakeProjectFilesystem(), BuildTargetFactory.newInstance("//:foo"), "%s")
+            .resolve("FooBarBaz")
+            .toString();
     assertEquals(
         binary.getLinkRule().getSourcePathToOutput().toString(),
-        "Pair(//:foo#binary, buck-out"
-            + File.separator
-            + "gen"
-            + File.separator
-            + "foo"
-            + File.separator
-            + "FooBarBaz)");
+        "Pair(//:foo#binary, " + expectOutputPath + ")");
   }
 }
