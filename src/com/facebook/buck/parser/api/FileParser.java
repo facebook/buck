@@ -24,7 +24,7 @@ import java.nio.file.Path;
 public interface FileParser<T extends FileManifest> extends AutoCloseable {
 
   /**
-   * Collect all information from a particular file, along with metadata about the information, for
+   * Collect all information from a particular, along with metadata about the information, for
    * example which other files were also parsed.
    *
    * @param parseFile should be an absolute path to a file. Must have rootPath as its prefix.
@@ -32,7 +32,7 @@ public interface FileParser<T extends FileManifest> extends AutoCloseable {
   T getManifest(Path parseFile) throws BuildFileParseException, InterruptedException, IOException;
 
   /**
-   * Collects the loaded files and extensions when parsing the {@code parseFile}.
+   * Collects the loaded files and extensions when parsing the {@code parseFile} build spec.
    *
    * @param parseFile should be an absolute path to a file. Must have rootPath as its prefix.
    */

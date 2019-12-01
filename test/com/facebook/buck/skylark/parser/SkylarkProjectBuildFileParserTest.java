@@ -444,7 +444,7 @@ public class SkylarkProjectBuildFileParserTest {
       parser.getManifest(buildFile);
       fail("Should not reach here.");
     } catch (BuildFileParseException e) {
-      assertThat(e.getMessage(), startsWith("Cannot evaluate build file "));
+      assertThat(e.getMessage(), startsWith("Cannot evaluate file "));
     }
     assertThat(eventCollector.count(), is(1));
     assertThat(
@@ -842,7 +842,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(buildFile, Arrays.asList("def foo():", "  pass"));
 
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot parse build file");
+    thrown.expectMessage("Cannot parse file");
 
     parser.getManifest(buildFile);
   }
@@ -855,7 +855,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(buildFile, Collections.singletonList("foo()"));
 
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot parse build file " + buildFile);
+    thrown.expectMessage("Cannot parse file " + buildFile);
 
     parser.getManifest(buildFile);
   }
@@ -1126,7 +1126,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot parse build file");
+    thrown.expectMessage("Cannot parse file");
 
     try {
       parser.getManifest(projectFilesystem.resolve(buildFile));
@@ -1160,7 +1160,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate build file");
+    thrown.expectMessage("Cannot evaluate file");
 
     try {
       parser.getManifest(projectFilesystem.resolve(buildFile));
@@ -1241,7 +1241,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate build file");
+    thrown.expectMessage("Cannot evaluate file");
 
     try {
       parser.getManifest(projectFilesystem.resolve(buildFile));
@@ -1608,7 +1608,7 @@ public class SkylarkProjectBuildFileParserTest {
   @Test
   public void failsIfMissingSymbolRequested() throws IOException, InterruptedException {
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate build file");
+    thrown.expectMessage("Cannot evaluate file");
 
     Path implicitExtension = projectFilesystem.resolve("src").resolve("get_name.bzl");
     Files.createDirectories(implicitExtension.getParent());
@@ -1633,6 +1633,24 @@ public class SkylarkProjectBuildFileParserTest {
             "prebuilt_jar(name=implicit_package_symbol('missing_method') + '_cant_concat_with_none', binary_jar=\"foo.jar\")"));
 
     getSingleRule(buildFile);
+  }
+
+  @Test
+  public void cannotParsePackageRule() throws IOException, InterruptedException {
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(eventCollector);
+    Path buildFile = projectFilesystem.resolve("BUCK");
+    Files.write(buildFile, Collections.singletonList("package()"));
+    try {
+      parser.getManifest(buildFile);
+      fail("Should not reach here.");
+    } catch (BuildFileParseException e) {
+      assertThat(e.getMessage(), startsWith("Cannot parse file "));
+    }
+    assertThat(eventCollector.count(), is(1));
+    assertThat(
+        eventCollector.iterator().next().getMessage(),
+        stringContainsInOrder("name 'package' is not defined"));
   }
 
   private Map<String, Object> getSingleRule(Path buildFile)

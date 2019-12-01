@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.parser.api.ImmutablePackageMetadata;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
@@ -26,10 +27,18 @@ import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-/** Parse result containing build rules defined in build file and supporting metadata. */
+/**
+ * Parse result containing build/package rules and package defined in build or package files and
+ * supporting metadata.
+ */
 @Value.Immutable(builder = false)
 @BuckStyleImmutable
 abstract class AbstractParseResult {
+
+  /** Contains the package defined in a package file. */
+  @Value.Parameter
+  public abstract ImmutablePackageMetadata getPackage();
+
   /**
    * Returns rules organized in a map where a key is a rule name and the value is a map with keys
    * representing rule parameters and values representing rule arguments.
@@ -38,15 +47,16 @@ abstract class AbstractParseResult {
    */
   @Value.Parameter
   public abstract ImmutableMap<String, Map<String, Object>> getRawRules();
+
   /**
    * Returns a set of extension paths that were loaded explicitly or transitively when parsing
-   * current build file.
+   * current build or package file.
    */
   @Value.Parameter
   public abstract ImmutableSet<String> getLoadedPaths();
 
   /**
-   * Returns all configuration options accessed during parsing of the build file.
+   * Returns all configuration options accessed during parsing of the build or package file.
    *
    * <p>The schema is section->key->value
    */
