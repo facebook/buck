@@ -24,6 +24,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.targetgraph.Package;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -111,7 +112,8 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       Path buildFile,
       UnconfiguredBuildTargetView target,
       DependencyStack dependencyStack,
-      Map<String, Object> rawAttributes) {
+      Map<String, Object> rawAttributes,
+      Package pkg) {
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);
 
@@ -133,12 +135,21 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             "visibility",
             rawAttributes.get("visibility"),
             () -> visibilityDefinerDescription);
+
+    if (visibilityPatterns.isEmpty()) {
+      visibilityPatterns = pkg.getVisibilityPatterns();
+    }
+    
     ImmutableSet<VisibilityPattern> withinViewPatterns =
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
             "within_view",
             rawAttributes.get("within_view"),
             () -> visibilityDefinerDescription);
+
+    if (withinViewPatterns.isEmpty()) {
+      withinViewPatterns = pkg.getWithinViewPatterns();
+    }
 
     ImmutableMap<String, Object> withSelects =
         convertSelects(rawAttributes, target.getCellRelativeBasePath().getPath(), dependencyStack);

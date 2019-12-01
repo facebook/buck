@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.targetgraph.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import java.nio.file.Path;
 import java.util.Map;
@@ -35,11 +36,13 @@ public interface UnconfiguredTargetNodeFactory {
    *     UnconfiguredTargetNode}
    * @param dependencyStack
    * @param rawNode Raw attributes that forms the node, a Map where a key is attribute name as
+   * @param pkg Package to apply to this node.
    */
   UnconfiguredTargetNode create(
       Cell cell,
       Path buildFile,
       UnconfiguredBuildTargetView buildTarget,
       DependencyStack dependencyStack,
-      Map<String, Object> rawNode);
+      Map<String, Object> rawNode,
+      Package pkg);
 }

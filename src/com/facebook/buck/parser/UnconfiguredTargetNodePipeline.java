@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.targetgraph.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -28,6 +29,7 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
+import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.collect.ImmutableList;
@@ -102,6 +104,8 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
       return cachedFuture;
     }
 
+    Package stubPackage = PackageFactory.create(cell, buildFile, PackageMetadata.SINGLETON);
+
     try {
       ListenableFuture<List<UnconfiguredTargetNode>> allNodesListJob =
           Futures.transformAsync(
@@ -126,7 +130,8 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                           cell,
                           target,
                           () ->
-                              dispatchComputeNode(cell, target, DependencyStack.top(target), from),
+                              dispatchComputeNode(
+                                  cell, target, DependencyStack.top(target), from, stubPackage),
                           eventBus));
                 }
 
@@ -144,13 +149,18 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
   public ListenableFuture<UnconfiguredTargetNode> getNodeJob(
       Cell cell, UnconfiguredBuildTargetView buildTarget, DependencyStack dependencyStack)
       throws BuildTargetException {
+
+    Path buildFile =
+        cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, buildTarget);
+    Package stubPackage = PackageFactory.create(cell, buildFile, PackageMetadata.SINGLETON);
+
     return cache.getJobWithCacheLookup(
         cell,
         buildTarget,
         () ->
             Futures.transformAsync(
                 buildTargetRawNodeParsePipeline.getNodeJob(cell, buildTarget),
-                from -> dispatchComputeNode(cell, buildTarget, dependencyStack, from),
+                from -> dispatchComputeNode(cell, buildTarget, dependencyStack, from, stubPackage),
                 executorService),
         eventBus);
   }
@@ -159,7 +169,8 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
       Cell cell,
       UnconfiguredBuildTargetView buildTarget,
       DependencyStack dependencyStack,
-      Map<String, Object> from)
+      Map<String, Object> from,
+      Package pkg)
       throws BuildTargetException {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
@@ -182,7 +193,8 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                   .getAbsolutePathToBuildFile(cell, buildTarget),
               buildTarget,
               dependencyStack,
-              from);
+              from,
+              pkg);
     }
     return Futures.immediateFuture(result);
   }

@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.targetgraph.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -35,6 +36,7 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
+import com.facebook.buck.parser.api.ImmutablePackageMetadata;
 import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
@@ -43,25 +45,36 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class DefaultUnconfiguredTargetNodeFactoryTest {
 
-  @Test
-  public void testCreatePopulatesNode() {
+  private DefaultUnconfiguredTargetNodeFactory factory;
+  private Cell cell;
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
+
+  @Before
+  public void setUp() {
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
 
-    Cell cell = new TestCellBuilder().build();
+    cell = new TestCellBuilder().build();
 
-    DefaultUnconfiguredTargetNodeFactory factory =
+    factory =
         new DefaultUnconfiguredTargetNodeFactory(
             knownRuleTypesProvider,
             new BuiltTargetVerifier(),
             cell.getCellPathResolver(),
             new SelectorListFactory(
                 new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory())));
+  }
 
+  @Test
+  public void testCreatePopulatesNode() {
     UnconfiguredBuildTargetView buildTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c");
 
@@ -118,7 +131,8 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             cell.getRoot().resolve("a/b/BUCK"),
             buildTarget,
             DependencyStack.root(),
-            inputAttributes);
+            inputAttributes,
+            getPackage());
 
     assertEquals(
         RuleType.of("java_library", RuleType.Kind.BUILD), unconfiguredTargetNode.getRuleType());
@@ -134,5 +148,12 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
         "//b/...",
         Iterables.getFirst(unconfiguredTargetNode.getWithinViewPatterns(), null)
             .getRepresentation());
+  }
+
+  Package getPackage() {
+    ImmutablePackageMetadata pkg =
+        new ImmutablePackageMetadata(ImmutableList.of("//a/..."), ImmutableList.of("//d/..."));
+
+    return PackageFactory.create(cell, cell.getRoot().resolve("a/b/BUCK"), pkg);
   }
 }

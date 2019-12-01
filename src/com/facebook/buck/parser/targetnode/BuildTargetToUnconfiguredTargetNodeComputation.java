@@ -26,9 +26,12 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.targetgraph.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.parser.PackageFactory;
 import com.facebook.buck.parser.UnconfiguredTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestKey;
@@ -92,6 +95,15 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
     UnconfiguredBuildTargetView unconfiguredBuildTargetView =
         ImmutableUnconfiguredBuildTargetView.of(buildTarget);
 
+    /**
+     * TODO: If we want to support packages in the query service, we'll need to implement the
+     * required computations.
+     */
+    Path buildFile =
+        cell.getBuckConfigView(ParserConfig.class)
+            .getAbsolutePathToBuildFile(cell, unconfiguredBuildTargetView);
+    Package stubPackage = PackageFactory.create(cell, buildFile, PackageMetadata.SINGLETON);
+
     return unconfiguredTargetNodeFactory.create(
         cell,
         cell.getRoot()
@@ -103,7 +115,8 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
             .resolve(buildFileName),
         unconfiguredBuildTargetView,
         DependencyStack.root(),
-        rawAttributes);
+        rawAttributes,
+        stubPackage);
   }
 
   @Override
