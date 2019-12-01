@@ -18,10 +18,10 @@ package com.facebook.buck.rules.visibility.parser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Provides additional ways to create {@link VisibilityPattern}s. */
@@ -35,7 +35,7 @@ public class VisibilityPatterns {
       CellPathResolver cellNames,
       String paramName,
       @Nullable Object value,
-      UnconfiguredBuildTarget target) {
+      Supplier<String> visibilityDefinerDescription) {
     if (value == null) {
       return ImmutableSet.of();
     }
@@ -55,7 +55,7 @@ public class VisibilityPatterns {
             "Bad visibility expression: %s listed %s in its %s argument, but only %s "
                 + "or fully qualified target patterns are allowed (i.e. those starting with "
                 + "// or a cell).",
-            target.getFullyQualifiedName(),
+            visibilityDefinerDescription.get(),
             visibility,
             paramName,
             VisibilityPatternParser.VISIBILITY_PUBLIC);

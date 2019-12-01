@@ -125,18 +125,20 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     builtTargetVerifier.verifyBuildTarget(
         cell, ruleType, buildFile, target, description, rawAttributes);
 
+    String visibilityDefinerDescription = target.getData().getFullyQualifiedName();
+
     ImmutableSet<VisibilityPattern> visibilityPatterns =
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
             "visibility",
             rawAttributes.get("visibility"),
-            target.getData());
+            () -> visibilityDefinerDescription);
     ImmutableSet<VisibilityPattern> withinViewPatterns =
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
             "within_view",
             rawAttributes.get("within_view"),
-            target.getData());
+            () -> visibilityDefinerDescription);
 
     ImmutableMap<String, Object> withSelects =
         convertSelects(rawAttributes, target.getCellRelativeBasePath().getPath(), dependencyStack);
