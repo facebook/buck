@@ -20,6 +20,7 @@ import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInst
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.parser.api.FileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -33,7 +34,7 @@ import java.util.concurrent.ExecutionException;
  *
  * @param <T> The type of node this pipeline will produce (raw nodes, target nodes, etc)
  */
-public interface BuildFileParsePipeline<T> extends AutoCloseable {
+public interface FileParsePipeline<T extends FileManifest> extends AutoCloseable {
 
   /**
    * Obtain all {@link TargetNode}s from a build file. This may block if the file is not cached.
