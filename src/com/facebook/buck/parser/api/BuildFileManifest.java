@@ -30,28 +30,25 @@ import org.immutables.value.Value;
 /** Describes the content of a build file, which includes defined targets and their metadata. */
 @Value.Immutable(builder = false, copy = false)
 @JsonDeserialize
-public abstract class BuildFileManifest implements ComputeResult {
+public abstract class BuildFileManifest implements ComputeResult, FileManifest {
   /** @return a list of targets defined in the build file. */
   @Value.Parameter
   @JsonProperty("targets")
   public abstract ImmutableMap<String, ImmutableMap<String, Object>> getTargets();
 
-  /** @return a set of extension files read during parsing. */
   @Value.Parameter
   @JsonProperty("includes")
+  @Override
   public abstract ImmutableSortedSet<String> getIncludes();
 
-  /**
-   * @return a map from configuration section to configuration key to the value returned during
-   *     parsing.
-   */
   @Value.Parameter
   @JsonProperty("configs")
+  @Override
   public abstract ImmutableMap<String, Object> getConfigs();
 
-  /** @return an optional map from environment variable to a value read during parsing (if any). */
   @Value.Parameter
   @JsonProperty("env")
+  @Override
   public abstract Optional<ImmutableMap<String, Optional<String>>> getEnv();
 
   /** @return A list of the glob operations performed with their results. */
@@ -59,12 +56,8 @@ public abstract class BuildFileManifest implements ComputeResult {
   @JsonProperty("globManifest")
   public abstract ImmutableList<GlobSpecWithResult> getGlobManifest();
 
-  /**
-   * @return A list of fatal errors occurred during parsing a build file, i.e. errors that might
-   *     render manifest incomplete. It is up for the parser to decide if still wants to fill this
-   *     object with unaffected targets
-   */
   @Value.Parameter
   @JsonProperty("errors")
+  @Override
   public abstract ImmutableList<ParsingError> getErrors();
 }

@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /** Generic file parser, meant to be extended for more specific parsers. */
-public interface FileParser<T> extends AutoCloseable {
+public interface FileParser<T extends FileManifest> extends AutoCloseable {
 
   /**
    * Collect all information from a particular file, along with metadata about the information, for
