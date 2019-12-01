@@ -44,7 +44,7 @@ public class BuildTargetRawNodeParsePipeline
   public ListenableFuture<Map<String, Object>> getNodeJob(
       Cell cell, UnconfiguredBuildTargetView buildTarget) throws BuildTargetException {
     return Futures.transformAsync(
-        buildFileRawNodeParsePipeline.getAllNodesJob(
+        buildFileRawNodeParsePipeline.getFileJob(
             cell,
             cell.getBuckConfigView(ParserConfig.class)
                 .getAbsolutePathToBuildFile(cell, buildTarget)),

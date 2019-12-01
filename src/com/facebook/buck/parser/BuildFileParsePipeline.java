@@ -43,9 +43,9 @@ public interface BuildFileParsePipeline<T> extends AutoCloseable {
    * @return all targets from the file
    * @throws BuildFileParseException for syntax errors.
    */
-  default T getAllNodes(Cell cell, Path buildFile) throws BuildFileParseException {
+  default T getFile(Cell cell, Path buildFile) throws BuildFileParseException {
     try {
-      return getAllNodesJob(cell, buildFile).get();
+      return getFileJob(cell, buildFile).get();
     } catch (Exception e) {
       propagateCauseIfInstanceOf(e, BuildFileParseException.class);
       propagateCauseIfInstanceOf(e, ExecutionException.class);
@@ -66,5 +66,5 @@ public interface BuildFileParsePipeline<T> extends AutoCloseable {
    * @param buildFile absolute path to the file to process.
    * @return future.
    */
-  ListenableFuture<T> getAllNodesJob(Cell cell, Path buildFile) throws BuildTargetException;
+  ListenableFuture<T> getFileJob(Cell cell, Path buildFile) throws BuildTargetException;
 }

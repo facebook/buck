@@ -105,7 +105,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
     try {
       ListenableFuture<List<UnconfiguredTargetNode>> allNodesListJob =
           Futures.transformAsync(
-              buildFileRawNodeParsePipeline.getAllNodesJob(cell, buildFile),
+              buildFileRawNodeParsePipeline.getFileJob(cell, buildFile),
               buildFileManifest -> {
                 ImmutableList<Map<String, Object>> allToConvert =
                     ImmutableList.copyOf(buildFileManifest.getTargets().values());

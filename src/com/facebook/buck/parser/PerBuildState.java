@@ -103,13 +103,13 @@ public class PerBuildState implements AutoCloseable {
   public BuildFileManifest getBuildFileManifest(Cell cell, Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
-    return buildFileRawNodeParsePipeline.getAllNodes(cell, buildFile);
+    return buildFileRawNodeParsePipeline.getFile(cell, buildFile);
   }
 
   ListenableFuture<BuildFileManifest> getBuildFileManifestJob(Cell cell, Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
-    return buildFileRawNodeParsePipeline.getAllNodesJob(cell, buildFile);
+    return buildFileRawNodeParsePipeline.getFileJob(cell, buildFile);
   }
 
   ParsingContext getParsingContext() {

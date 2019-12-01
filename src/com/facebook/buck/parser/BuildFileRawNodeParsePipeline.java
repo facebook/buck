@@ -52,7 +52,7 @@ public class BuildFileRawNodeParsePipeline implements BuildFileParsePipeline<Bui
   }
 
   @Override
-  public ListenableFuture<BuildFileManifest> getAllNodesJob(Cell cell, Path buildFile)
+  public ListenableFuture<BuildFileManifest> getFileJob(Cell cell, Path buildFile)
       throws BuildTargetException {
 
     if (shuttingDown.get()) {

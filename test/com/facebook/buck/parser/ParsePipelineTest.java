@@ -202,7 +202,7 @@ public class ParsePipelineTest {
           stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
       fixture
           .getBuildFileRawNodeParsePipeline()
-          .getAllNodes(cell, cell.getFilesystem().resolve("no/such/file/BUCK"));
+          .getFile(cell, cell.getFilesystem().resolve("no/such/file/BUCK"));
     }
   }
 
