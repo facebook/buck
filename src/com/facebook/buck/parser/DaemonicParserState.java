@@ -48,6 +48,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MapDifference;
 import com.google.common.eventbus.Subscribe;
@@ -212,19 +213,7 @@ public class DaemonicParserState {
 
       ImmutableSet.Builder<Path> dependentsOfEveryNode = ImmutableSet.builder();
 
-      manifest
-          .getIncludes()
-          .forEach(
-              includedPath ->
-                  dependentsOfEveryNode.add(cell.getFilesystem().resolve(includedPath)));
-
-      // We also know that the rules all depend on the default includes for the cell.
-      BuckConfig buckConfig = cell.getBuckConfig();
-      Iterable<String> defaultIncludes =
-          buckConfig.getView(ParserConfig.class).getDefaultIncludes();
-      for (String include : defaultIncludes) {
-        dependentsOfEveryNode.add(resolveIncludePath(cell, include, cell.getCellPathResolver()));
-      }
+      addAllIncludes(dependentsOfEveryNode, manifest.getIncludes(), cell);
 
       return getOrCreateCellState(cell)
           .putBuildFileManifestIfNotPresent(
@@ -233,24 +222,44 @@ public class DaemonicParserState {
               dependentsOfEveryNode.build(),
               manifest.getEnv().orElse(ImmutableMap.of()));
     }
+  }
 
-    /**
-     * Resolves a path of an include string like {@code repo//foo/macro_defs} to a filesystem path.
-     */
-    private Path resolveIncludePath(Cell cell, String include, CellPathResolver cellPathResolver) {
-      // Default includes are given as "cell//path/to/file". They look like targets
-      // but they are not. However, I bet someone will try and treat it like a
-      // target, so find the owning cell if necessary, and then fully resolve
-      // the path against the owning cell's root.
-      Matcher matcher = INCLUDE_PATH_PATTERN.matcher(include);
-      Preconditions.checkState(matcher.matches());
-      Optional<String> cellName = Optional.ofNullable(matcher.group(1));
-      String includePath = matcher.group(2);
-      return cellPathResolver
-          .getCellPath(cellName)
-          .map(cellPath -> cellPath.resolve(includePath))
-          .orElseGet(() -> cell.getFilesystem().resolve(includePath));
+  /** Add all the includes from the manifest and Buck defaults. */
+  private static void addAllIncludes(
+      ImmutableSet.Builder<Path> dependents,
+      ImmutableSortedSet<String> manifestIncludes,
+      Cell cell) {
+    manifestIncludes.forEach(
+        includedPath -> dependents.add(cell.getFilesystem().resolve(includedPath)));
+
+    // We also know that the all manifests depend on the default includes for the cell.
+    // Note: This is a bad assumption. While both the project build file and package parsers set
+    // the default includes of the ParserConfig, it is not required and this assumption may not
+    // always hold.
+    BuckConfig buckConfig = cell.getBuckConfig();
+    Iterable<String> defaultIncludes = buckConfig.getView(ParserConfig.class).getDefaultIncludes();
+    for (String include : defaultIncludes) {
+      dependents.add(resolveIncludePath(cell, include, cell.getCellPathResolver()));
     }
+  }
+
+  /**
+   * Resolves a path of an include string like {@code repo//foo/macro_defs} to a filesystem path.
+   */
+  private static Path resolveIncludePath(
+      Cell cell, String include, CellPathResolver cellPathResolver) {
+    // Default includes are given as "cell//path/to/file". They look like targets
+    // but they are not. However, I bet someone will try and treat it like a
+    // target, so find the owning cell if necessary, and then fully resolve
+    // the path against the owning cell's root.
+    Matcher matcher = INCLUDE_PATH_PATTERN.matcher(include);
+    Preconditions.checkState(matcher.matches());
+    Optional<String> cellName = Optional.ofNullable(matcher.group(1));
+    String includePath = matcher.group(2);
+    return cellPathResolver
+        .getCellPath(cellName)
+        .map(cellPath -> cellPath.resolve(includePath))
+        .orElseGet(() -> cell.getFilesystem().resolve(includePath));
   }
 
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;

@@ -61,7 +61,7 @@ class DaemonicCellState {
     private final CellCacheType<K, T> type;
 
     /** Unbounded cache for all computed objects associated with build targets. */
-    @GuardedBy("rawAndComputedNodesLock")
+    @GuardedBy("cachesLock")
     public final ConcurrentMapCache<K, T> allComputedNodes =
         new ConcurrentMapCache<>(parsingThreads);
 
@@ -72,7 +72,7 @@ class DaemonicCellState {
      * <p>This map is used to locate all the build targets that need to be invalidated when a build
      * build file that produced those build targets has changed.
      */
-    @GuardedBy("rawAndComputedNodesLock")
+    @GuardedBy("cachesLock")
     private final SetMultimap<UnflavoredBuildTargetView, K> targetsCornucopia =
         HashMultimap.create();
 
@@ -86,13 +86,13 @@ class DaemonicCellState {
     }
 
     public Optional<T> lookupComputedNode(K target) throws BuildTargetException {
-      try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
+      try (AutoCloseableLock readLock = cachesLock.readLock()) {
         return Optional.ofNullable(allComputedNodes.getIfPresent(target));
       }
     }
 
     public T putComputedNodeIfNotPresent(K target, T targetNode) throws BuildTargetException {
-      try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
+      try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
         T updatedNode = allComputedNodes.putIfAbsentAndGet(target, targetNode);
         Preconditions.checkState(
             allRawNodeTargets.contains(type.keyToUnflavoredBuildTargetView.apply(target)),
@@ -118,7 +118,7 @@ class DaemonicCellState {
    * <p>The purpose of this set is to invalidate build file manifests produced from the build files
    * that include changes files.
    */
-  @GuardedBy("rawAndComputedNodesLock")
+  @GuardedBy("cachesLock")
   private final SetMultimap<Path, Path> buildFileDependents;
 
   /**
@@ -128,11 +128,11 @@ class DaemonicCellState {
    * variables used during parsing of a build file that produced that build file manifest have
    * changed.
    */
-  @GuardedBy("rawAndComputedNodesLock")
+  @GuardedBy("cachesLock")
   private final Map<Path, ImmutableMap<String, Optional<String>>> buildFileEnv;
 
   /** Used as an unbounded cache to stored build file manifests by build file path. */
-  @GuardedBy("rawAndComputedNodesLock")
+  @GuardedBy("cachesLock")
   private final ConcurrentMapCache<Path, BuildFileManifest> allBuildFileManifests;
 
   /**
@@ -143,7 +143,7 @@ class DaemonicCellState {
    * Cache#allComputedNodes}) is also in {@link #allBuildFileManifests}, as we use the latter to
    * handle invalidations.
    */
-  @GuardedBy("rawAndComputedNodesLock")
+  @GuardedBy("cachesLock")
   private final Set<UnflavoredBuildTargetView> allRawNodeTargets;
 
   /** Type-safe accessor to one of state caches */
@@ -187,7 +187,7 @@ class DaemonicCellState {
 
   private final Cache<UnconfiguredBuildTargetView, UnconfiguredTargetNode> rawTargetNodeCache;
 
-  private final AutoCloseableReadWriteUpdateLock rawAndComputedNodesLock;
+  private final AutoCloseableReadWriteUpdateLock cachesLock;
   private final int parsingThreads;
 
   DaemonicCellState(Cell cell, int parsingThreads) {
@@ -199,7 +199,7 @@ class DaemonicCellState {
     this.buildFileEnv = new HashMap<>();
     this.allBuildFileManifests = new ConcurrentMapCache<>(parsingThreads);
     this.allRawNodeTargets = new HashSet<>();
-    this.rawAndComputedNodesLock = new AutoCloseableReadWriteUpdateLock();
+    this.cachesLock = new AutoCloseableReadWriteUpdateLock();
     this.targetNodeCache = new Cache<>(TARGET_NODE_CACHE_TYPE);
     this.rawTargetNodeCache = new Cache<>(RAW_TARGET_NODE_CACHE_TYPE);
   }
@@ -218,7 +218,7 @@ class DaemonicCellState {
   }
 
   Optional<BuildFileManifest> lookupBuildFileManifest(Path buildFile) {
-    try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
+    try (AutoCloseableLock readLock = cachesLock.readLock()) {
       return Optional.ofNullable(allBuildFileManifests.getIfPresent(buildFile));
     }
   }
@@ -228,7 +228,7 @@ class DaemonicCellState {
       BuildFileManifest buildFileManifest,
       ImmutableSet<Path> dependentsOfEveryNode,
       ImmutableMap<String, Optional<String>> env) {
-    try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
+    try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
       BuildFileManifest updated =
           allBuildFileManifests.putIfAbsentAndGet(buildFile, buildFileManifest);
       for (Map<String, Object> node : updated.getTargets().values()) {
@@ -249,7 +249,7 @@ class DaemonicCellState {
   }
 
   int invalidatePath(Path path) {
-    try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
+    try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
       int invalidatedRawNodes = 0;
       BuildFileManifest buildFileManifest = allBuildFileManifests.getIfPresent(path);
       if (buildFileManifest != null) {
@@ -289,7 +289,7 @@ class DaemonicCellState {
   Optional<MapDifference<String, String>> invalidateIfEnvHasChanged(Cell cell, Path buildFile) {
     // Invalidate if env vars have changed.
     ImmutableMap<String, Optional<String>> usedEnv;
-    try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
+    try (AutoCloseableLock readLock = cachesLock.readLock()) {
       usedEnv = buildFileEnv.get(buildFile);
     }
     if (usedEnv == null) {
