@@ -19,7 +19,10 @@ package com.facebook.buck.features.project.intellij;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidPrebuiltAarBuilder;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -66,9 +69,10 @@ public class DefaultIjLibraryFactoryTest {
             .build();
 
     androidSupportBinaryPath = FakeSourcePath.of("third_party/java/support/support.aar");
+    BuildTarget androidSupportTarget =
+        BuildTargetFactory.newInstance("//third_party/java/support:support");
     androidSupport =
-        AndroidPrebuiltAarBuilder.createBuilder(
-                BuildTargetFactory.newInstance("//third_party/java/support:support"))
+        AndroidPrebuiltAarBuilder.createBuilder(androidSupportTarget)
             .setBinaryAar(androidSupportBinaryPath)
             .build();
 
@@ -80,9 +84,16 @@ public class DefaultIjLibraryFactoryTest {
 
     androidSupportBinaryJarPath =
         FakeSourcePath.of(
-            "buck-out/bin/third_party/java/support/__unpack_support#aar_unzip__/classes.jar");
+            "buck-out/bin/"
+                + BuildTargetPaths.getBasePath(
+                    androidSupportTarget.withAppendedFlavors(InternalFlavor.of("aar")),
+                    "__unpack_%s_unzip__/classes.jar"));
     androidSupportResClassPath =
-        FakeSourcePath.of("buck-out/bin/third_party/java/support/__unpack_support#aar_unzip__/res");
+        FakeSourcePath.of(
+            "buck-out/bin/"
+                + BuildTargetPaths.getBasePath(
+                    androidSupportTarget.withAppendedFlavors(InternalFlavor.of("aar")),
+                    "__unpack_%s_unzip__/res"));
     baseOutputPath = FakeSourcePath.of("buck-out/base.jar");
 
     libraryFactoryResolver =
