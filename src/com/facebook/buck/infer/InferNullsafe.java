@@ -22,13 +22,15 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.CalculateAbi;
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
-import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -46,6 +48,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -86,27 +89,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     JavaLibrary baseLibrary = (JavaLibrary) graphBuilder.requireRule(unflavored);
 
     ImmutableSortedSet<SourcePath> sources = baseLibrary.getJavaSrcs();
-
-    // Add only those dependencies that contribute to "direct" classpath of base library.
-    // This includes direct deps and exported deps of direct deps.
-    ImmutableSortedSet.Builder<SourcePath> directClasspathBuilder =
-        ImmutableSortedSet.naturalOrder();
-    baseLibrary
-        .getDepsForTransitiveClasspathEntries()
-        .forEach(
-            dep -> {
-              if (dep instanceof JavaLibrary) {
-                directClasspathBuilder.addAll(
-                    JavaLibraryClasspathProvider.getOutputClasspathJars(
-                        (JavaLibrary) dep, Optional.ofNullable(dep.getSourcePathToOutput())));
-              }
-            });
-    // Add exported deps of base lib into classpath (since 2nd argument is empty the result doesn't
-    // include the lib itself).
-    directClasspathBuilder.addAll(
-        JavaLibraryClasspathProvider.getOutputClasspathJars(baseLibrary, Optional.empty()));
-    ImmutableSortedSet<SourcePath> directClasspath = directClasspathBuilder.build();
-
+    ImmutableSortedSet<SourcePath> compileTimeClasspath = calcCompilationClasspath(baseLibrary);
     SourcePath outputJar = baseLibrary.getSourcePathToOutput();
 
     InferPlatform platform =
@@ -120,11 +103,46 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
             platform,
             config.getNullsafeArgs(),
             sources,
-            directClasspath,
+            compileTimeClasspath,
             javacOptions,
             extraClasspathProvider,
             outputJar,
             config.getPrettyPrint()));
+  }
+
+  /**
+   * Calculate compile time classpath from general dependencies of {@link JavaLibrary}, by filtering
+   * only those deps that {@link HasJavaAbi}. This includes full libraries and/or ABI libraries
+   * depending on the java compilation settings.
+   *
+   * <p>The resulting classpath can be not as minimal as the one from {@link
+   * com.facebook.buck.jvm.java.DefaultJavaLibrary#getCompileTimeClasspathSourcePaths()} which gives
+   * a more accurate list. But is pretty close to it and works for all kinds of {@link JavaLibrary}s
+   * and not only those that inherit from DefaultJavaLibrary.
+   *
+   * <p>Note: this method plays nicely with the way libraries are commonly built in the project,
+   * since it takes whatever jar (full or ABI) is available during regular build, but it is not
+   * suited for situations when you actually need to access full jars of dependencies.
+   */
+  private static ImmutableSortedSet<SourcePath> calcCompilationClasspath(JavaLibrary baseLibrary) {
+    return baseLibrary.getBuildDeps().stream()
+        .filter(HasJavaAbi.class::isInstance) // take only deps that produce jars
+        .filter(x -> !areBuildingInterfaceForSameLibrary(baseLibrary, x))
+        .map(BuildRule::getSourcePathToOutput)
+        .filter(Objects::nonNull)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
+  }
+
+  /**
+   * With ABI compilation, a {@link JavaLibrary} rule usually has as a dependency a {@link
+   * CalculateAbi} rule that builds the interface for the same library. We **should exclude** such
+   * dependencies since dumping into the classpath an ABI jar for the library under analysis will
+   * mess up nullsafe.
+   */
+  private static boolean areBuildingInterfaceForSameLibrary(
+      JavaLibrary baseLibrary, BuildRule other) {
+    return (other instanceof CalculateAbi || other instanceof JavaLibrary)
+        && other.getBuildTarget().withoutFlavors().equals(baseLibrary.getBuildTarget());
   }
 
   @Override
@@ -199,6 +217,13 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
       this.extraClasspathProvider = extraClasspathProvider;
       this.generatedClasses = generatedClasses;
       this.prettyPrint = prettyPrint;
+    }
+
+    private static void addNotEmpty(
+        ImmutableList.Builder<String> argBuilder, String argName, String argValue) {
+      if (!argValue.isEmpty()) {
+        argBuilder.add(argName, argValue);
+      }
     }
 
     @Override
@@ -340,13 +365,6 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
           .ifPresent(dir -> addNotEmpty(argsBuilder, "--nullsafe-third-party-signatures", dir));
 
       return argsBuilder.build();
-    }
-
-    private static void addNotEmpty(
-        ImmutableList.Builder<String> argBuilder, String argName, String argValue) {
-      if (!argValue.isEmpty()) {
-        argBuilder.add(argName, argValue);
-      }
     }
   }
 }

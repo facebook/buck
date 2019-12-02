@@ -14,10 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.jvm.core.HasJavaAbi;
 import java.util.Optional;
 
 /** Tag interface for rules that calculate ABIs for Java code. */

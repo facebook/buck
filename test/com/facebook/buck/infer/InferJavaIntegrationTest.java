@@ -39,27 +39,49 @@ public class InferJavaIntegrationTest {
   }
 
   @Test
-  public void inferJavaLibraryBuild() throws IOException {
+  public void inferJavaLibrarySmokeTest() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
     workspace.setUp();
 
-    Path output = workspace.buildAndReturnOutput("//:j#nullsafe");
+    Path output = workspace.buildAndReturnOutput("//:java-smoke-test#nullsafe");
     JsonNode issues = ObjectMappers.READER.readTree(workspace.getFileContents(output));
     assertEquals("ERADICATE_RETURN_NOT_NULLABLE", issues.path(0).path("bug_type").asText());
   }
 
   @Test
-  public void inferJavaEmptySourcesBuild() throws IOException {
+  public void inferJavaEmptySourcesTest() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
     workspace.setUp();
 
-    workspace.runBuckBuild("//:empty#nullsafe").assertSuccess();
+    workspace.runBuckBuild("//:empty-srcs-test#nullsafe").assertSuccess();
   }
 
   @Test
-  public void inferJavaFromDist() throws IOException {
+  public void inferJavaProvidedDepTest() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("//:java-provided-dep-test#nullsafe");
+    JsonNode issues = ObjectMappers.READER.readTree(workspace.getFileContents(output));
+    assertEquals(0, issues.size());
+  }
+
+  @Test
+  public void inferJavaExportedProvidedDepTest() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("//:java-exported-provided-dep-test#nullsafe");
+    JsonNode issues = ObjectMappers.READER.readTree(workspace.getFileContents(output));
+    assertEquals(0, issues.size());
+  }
+
+  @Test
+  public void inferJavaFromDistTest() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "dist", tmp);
     workspace.setUp();
@@ -72,12 +94,12 @@ public class InferJavaIntegrationTest {
   @Test
   @Ignore(
       "TODO: `buck test` fails with unknown android-platform-target toolchain (but works in Idea)")
-  public void inferAndroidLibraryBuild() throws IOException {
+  public void inferAndroidLibrarySmokeTest() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckBuild("//:a#nullsafe");
+    ProcessResult result = workspace.runBuckBuild("//:android-smoke-test#nullsafe");
     result.assertSuccess();
   }
 }

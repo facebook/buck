@@ -308,7 +308,6 @@ java_library_with_plugins(
         "AbstractDefaultJavaLibraryClasspaths.java",
         "AbstractUnusedDependenciesFinder.java",
         "BuiltInJavac.java",
-        "CalculateAbi.java",
         "CalculateClassAbi.java",
         "CalculateSourceAbi.java",
         "CalculateSourceAbiFromLibraryTarget.java",
