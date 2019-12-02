@@ -51,7 +51,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
-import com.facebook.buck.step.fs.WriteHashVerificationStep;
 import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -217,7 +216,6 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .add(
             new StringTemplateStep(TEMPLATE, getProjectFilesystem(), output, valuesBuilder.build()))
         .add(new MakeExecutableStep(getProjectFilesystem(), output))
-        .add(new WriteHashVerificationStep(getProjectFilesystem(), output, getBuildTarget()))
         .build();
   }
 
