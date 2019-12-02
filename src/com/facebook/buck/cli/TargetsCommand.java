@@ -679,11 +679,9 @@ public class TargetsCommand extends AbstractCommand {
       printJsonForTargets(
           params, executor, matchingNodes.values(), ImmutableMap.of(), outputAttributes.get());
     } else if (print0) {
-      printNullDelimitedTargets(matchingNodes.keySet(), params.getConsole().getStdOut());
+      printTargets(matchingNodes.keySet(), "\0", params.getConsole().getStdOut());
     } else {
-      for (String target : matchingNodes.keySet()) {
-        params.getConsole().getStdOut().println(target);
-      }
+      printTargets(matchingNodes.keySet(), System.lineSeparator(), params.getConsole().getStdOut());
     }
   }
 
@@ -1025,10 +1023,14 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   @VisibleForTesting
-  static void printNullDelimitedTargets(Iterable<String> targets, PrintStream printStream) {
+  static void printTargets(Iterable<String> targets, String newline, PrintStream printStream) {
+    StringBuilder sb = new StringBuilder();
     for (String target : targets) {
-      printStream.print(target + '\0');
+      sb.append(target);
+      sb.append(newline);
     }
+    printStream.print(sb.toString());
+    printStream.flush();
   }
 
   /**

@@ -237,11 +237,11 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testPrintNullDelimitedTargets() throws UnsupportedEncodingException {
+  public void printTargets() throws UnsupportedEncodingException {
     Iterable<String> targets = ImmutableList.of("//foo:bar", "//foo:baz");
     FakeOutputStream fakeStream = new FakeOutputStream();
     PrintStream printStream = new PrintStream(fakeStream);
-    TargetsCommand.printNullDelimitedTargets(targets, printStream);
+    TargetsCommand.printTargets(targets, "\0", printStream);
     printStream.flush();
     assertEquals("//foo:bar\0//foo:baz\0", fakeStream.toString(Charsets.UTF_8.name()));
   }
