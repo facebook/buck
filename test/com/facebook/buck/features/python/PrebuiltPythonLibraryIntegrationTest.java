@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.features.python.toolchain.impl.PythonPlatformsProviderFactoryUtils;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.ProcessResult;
@@ -83,9 +84,9 @@ public class PrebuiltPythonLibraryIntegrationTest {
     whlResults.assertSuccess();
 
     Path extractedEgg =
-        workspace.resolve(workspace.getBuckPaths().getGenDir()).resolve("__python_egg__extracted");
+        workspace.getGenPath(BuildTargetFactory.newInstance("//:python_egg"), "__%s__extracted");
     Path extractedWhl =
-        workspace.resolve(workspace.getBuckPaths().getGenDir()).resolve("__python_whl__extracted");
+        workspace.getGenPath(BuildTargetFactory.newInstance("//:python_whl"), "__%s__extracted");
 
     Assert.assertTrue(Files.exists(extractedEgg.resolve(Paths.get("package", "__init__.py"))));
     Assert.assertTrue(Files.exists(extractedEgg.resolve(Paths.get("package", "file.py"))));
