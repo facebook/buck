@@ -66,6 +66,12 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
     // TODO: We'll want to probably eventually do annotation processors to make these compile time
     // errors.
     Class<U> infoApiClass = BuiltInProviderClassUtilities.findDeclaringClass(infoClass);
+    if (infoApiClass.equals(infoClass)) {
+      throw new IllegalArgumentException(
+          "The given class should be the Immutable implementation class of the BuildInProvider "
+              + "class, not the declaring API class that defined the @ImmutableInfo annotation.");
+    }
+
     ImmutableInfo info = infoApiClass.getAnnotation(ImmutableInfo.class);
     ImmutableMap<String, Method> methodMap = MethodLookup.getMethods(infoApiClass);
     ImmutableList<String> argNames = ImmutableList.copyOf(info.args());
