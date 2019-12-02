@@ -26,7 +26,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,11 +53,12 @@ public class WriteActionTest {
 
     Artifact output1 = runner.declareArtifact(Paths.get("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("bar2"));
-    ImmutableSet<Artifact> outputs = ImmutableSet.of(output1, output2);
+    ImmutableSortedSet<Artifact> outputs = ImmutableSortedSet.of(output1, output2);
 
     TestActionExecutionRunner.ExecutionDetails<WriteAction> result =
         runner.runAction(
-            new WriteAction(runner.getRegistry(), ImmutableSet.of(), outputs, "foobar", false));
+            new WriteAction(
+                runner.getRegistry(), ImmutableSortedSet.of(), outputs, "foobar", false));
 
     Path outputPath1 =
         Objects.requireNonNull(output1.asBound().asBuildArtifact())
@@ -83,11 +84,12 @@ public class WriteActionTest {
   public void writesContentsToNestedFile() throws ActionCreationException, IOException {
     Artifact output1 = runner.declareArtifact(Paths.get("foo").resolve("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("foo").resolve("bar2"));
-    ImmutableSet<Artifact> outputs = ImmutableSet.of(output1, output2);
+    ImmutableSortedSet<Artifact> outputs = ImmutableSortedSet.of(output1, output2);
 
     TestActionExecutionRunner.ExecutionDetails<WriteAction> result =
         runner.runAction(
-            new WriteAction(runner.getRegistry(), ImmutableSet.of(), outputs, "foobar", false));
+            new WriteAction(
+                runner.getRegistry(), ImmutableSortedSet.of(), outputs, "foobar", false));
 
     Path outputPath1 =
         Objects.requireNonNull(output1.asBound().asBuildArtifact())
@@ -113,11 +115,12 @@ public class WriteActionTest {
   public void setsFileExecutable() throws ActionCreationException, IOException {
     Artifact output1 = runner.declareArtifact(Paths.get("foo").resolve("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("foo").resolve("bar2"));
-    ImmutableSet<Artifact> outputs = ImmutableSet.of(output1, output2);
+    ImmutableSortedSet<Artifact> outputs = ImmutableSortedSet.of(output1, output2);
 
     TestActionExecutionRunner.ExecutionDetails<WriteAction> result =
         runner.runAction(
-            new WriteAction(runner.getRegistry(), ImmutableSet.of(), outputs, "foobar", true));
+            new WriteAction(
+                runner.getRegistry(), ImmutableSortedSet.of(), outputs, "foobar", true));
 
     Path outputPath1 =
         Objects.requireNonNull(output1.asBound().asBuildArtifact())

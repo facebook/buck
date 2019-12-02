@@ -20,6 +20,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.util.function.TriFunction;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
 
 public class FakeAction extends AbstractAction {
@@ -28,8 +29,8 @@ public class FakeAction extends AbstractAction {
 
   public FakeAction(
       ActionRegistry actionRegistry,
-      ImmutableSet<Artifact> inputs,
-      ImmutableSet<Artifact> outputs,
+      ImmutableSortedSet<Artifact> inputs,
+      ImmutableSortedSet<Artifact> outputs,
       FakeActionExecuteLambda executeFunction) {
     super(actionRegistry, inputs, outputs);
     this.hasheableWrapper = new HashableWrapper(executeFunction);

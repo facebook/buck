@@ -54,7 +54,7 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.devtools.build.lib.events.Location;
 import java.io.IOException;
@@ -97,14 +97,14 @@ public class RuleKeyBuilderTest {
     ACTION_1 =
         new FakeAction(
             actionRegistry,
-            ImmutableSet.of(),
-            ImmutableSet.of(actionRegistry.declareArtifact("foo", Location.BUILTIN)),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(actionRegistry.declareArtifact("foo", Location.BUILTIN)),
             executeLambda);
     ACTION_2 =
         new FakeAction(
             actionRegistry,
-            ImmutableSet.of(),
-            ImmutableSet.of(actionRegistry.declareArtifact("bar", Location.BUILTIN)),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(actionRegistry.declareArtifact("bar", Location.BUILTIN)),
             executeLambda);
   }
 

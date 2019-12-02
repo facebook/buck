@@ -50,7 +50,7 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -73,7 +73,7 @@ public class ActionExecutionStepTest {
 
     FakeAction.FakeActionExecuteLambda actionFunction =
         (inputs, outputs, ctx) -> {
-          assertEquals(ImmutableSet.of(), inputs);
+          assertEquals(ImmutableSortedSet.of(), inputs);
           assertThat(outputs, Matchers.hasSize(1));
           assertEquals(
               ExplicitBuildTargetSourcePath.of(
@@ -92,8 +92,8 @@ public class ActionExecutionStepTest {
     FakeAction action =
         new FakeAction(
             actionFactoryForTests,
-            ImmutableSet.of(),
-            ImmutableSet.of(declaredArtifact),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(declaredArtifact),
             actionFunction);
 
     ActionExecutionStep step =
@@ -150,8 +150,8 @@ public class ActionExecutionStepTest {
     FakeAction action =
         new FakeAction(
             actionFactoryForTests,
-            ImmutableSet.of(),
-            ImmutableSet.of(declaredArtifact),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(declaredArtifact),
             (inputs, outputs, ctx) -> result);
 
     ActionExecutionStep step =
@@ -202,8 +202,8 @@ public class ActionExecutionStepTest {
     FakeAction action =
         new FakeAction(
             actionFactoryForTests,
-            ImmutableSet.of(),
-            ImmutableSet.of(declaredArtifact),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(declaredArtifact),
             (inputs, outputs, ctx) -> result);
 
     ActionExecutionStep step =

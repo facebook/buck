@@ -34,7 +34,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -65,12 +65,12 @@ public class ActionWrapperDataFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     ActionRegistry actionRegistry =
         new DefaultActionRegistry(target, actionAnalysisDataRegistry, filesystem);
-    ImmutableSet<Artifact> inputs =
-        ImmutableSet.of(
+    ImmutableSortedSet<Artifact> inputs =
+        ImmutableSortedSet.of(
             ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("myinput"))));
 
     Artifact output = actionRegistry.declareArtifact(Paths.get("myoutput"));
-    ImmutableSet<Artifact> outputs = ImmutableSet.of(output);
+    ImmutableSortedSet<Artifact> outputs = ImmutableSortedSet.of(output);
 
     FakeAction.FakeActionExecuteLambda executeFunc =
         (inputs1, outputs1, executionContext) ->
@@ -113,7 +113,7 @@ public class ActionWrapperDataFactoryTest {
     ActionRegistry actionRegistry =
         new DefaultActionRegistry(target, actionAnalysisDataRegistry, filesystem);
 
-    ImmutableSet<Artifact> inputs = ImmutableSet.of();
+    ImmutableSortedSet<Artifact> inputs = ImmutableSortedSet.of();
     Artifact output = actionRegistry.declareArtifact(Paths.get("myoutput"));
 
     Path expectedBasePath = BuildPaths.getGenDir(filesystem, target);
@@ -123,7 +123,7 @@ public class ActionWrapperDataFactoryTest {
             ImmutableActionExecutionSuccess.of(
                 Optional.empty(), Optional.empty(), ImmutableList.of());
 
-    new FakeAction(actionRegistry, inputs, ImmutableSet.of(output), executeFunc);
+    new FakeAction(actionRegistry, inputs, ImmutableSortedSet.of(output), executeFunc);
 
     BuildArtifact builtArtifact = Objects.requireNonNull(output.asBound().asBuildArtifact());
     assertEquals(

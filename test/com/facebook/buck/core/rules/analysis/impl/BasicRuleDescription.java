@@ -34,6 +34,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
 import com.google.devtools.build.lib.events.Location;
@@ -91,7 +92,7 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
               Optional.empty(), Optional.empty(), ImmutableList.of());
         };
 
-    ImmutableSet.Builder<Artifact> inputsBuilder = ImmutableSet.builder();
+    ImmutableSortedSet.Builder<Artifact> inputsBuilder = ImmutableSortedSet.naturalOrder();
     for (ProviderInfoCollection providerInfoCollection : context.deps().values()) {
       providerInfoCollection
           .get(DefaultInfo.PROVIDER)
@@ -101,7 +102,7 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
     new FakeAction(
         context.actionRegistry(),
         inputsBuilder.build(),
-        ImmutableSet.of(artifact),
+        ImmutableSortedSet.of(artifact),
         actionExecution);
     return ProviderInfoCollectionImpl.builder()
         .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact)));

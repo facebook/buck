@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 /** Just a Fake do nothing Action for rulekey tests */
@@ -32,15 +32,15 @@ class SomeAction extends AbstractAction {
   private String a;
 
   protected SomeAction(ActionRegistry actionRegistry, int i, String a) {
-    super(actionRegistry, ImmutableSet.of(), ImmutableSet.of());
+    super(actionRegistry, ImmutableSortedSet.of(), ImmutableSortedSet.of());
     this.i = i;
     this.a = a;
   }
 
   protected SomeAction(
       ActionRegistry actionRegistry,
-      ImmutableSet<Artifact> inputs,
-      ImmutableSet<Artifact> outputs,
+      ImmutableSortedSet<Artifact> inputs,
+      ImmutableSortedSet<Artifact> outputs,
       int i,
       String a) {
     super(actionRegistry, inputs, outputs);

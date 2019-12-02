@@ -29,7 +29,7 @@ import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilderApi;
 import com.facebook.buck.util.CommandLineException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
@@ -68,7 +68,8 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
   public void write(Artifact output, String content, boolean isExecutable, Location location)
       throws EvalException {
     try {
-      new WriteAction(registry, ImmutableSet.of(), ImmutableSet.of(output), content, isExecutable);
+      new WriteAction(
+          registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(output), content, isExecutable);
     } catch (HumanReadableException e) {
       throw new EvalException(location, e.getHumanReadableErrorMessage());
     }
@@ -129,8 +130,8 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
 
     new RunAction(
         registry,
-        ImmutableSet.copyOf(inputsValidated),
-        ImmutableSet.copyOf(outputsValidated),
+        ImmutableSortedSet.copyOf(inputsValidated),
+        ImmutableSortedSet.copyOf(outputsValidated),
         shortNameValidated,
         argumentsValidated,
         ImmutableMap.copyOf(userEnvValidated));

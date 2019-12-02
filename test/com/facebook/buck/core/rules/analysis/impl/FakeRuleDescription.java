@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.io.IOException;
@@ -64,7 +64,10 @@ public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionA
         };
 
     new FakeAction(
-        context.actionRegistry(), ImmutableSet.of(), ImmutableSet.of(artifact), actionExecution);
+        context.actionRegistry(),
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(artifact),
+        actionExecution);
     return TestProviderInfoCollectionImpl.builder()
         .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()));
   }

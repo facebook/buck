@@ -36,7 +36,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.sun.jna.Platform;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -69,8 +69,8 @@ public class RunActionTest {
     runner.runAction(
         new WriteAction(
             runner.getRegistry(),
-            ImmutableSet.of(),
-            ImmutableSet.of(script),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(script),
             filesystem.readFileIfItExists(scriptPath).get(),
             true));
   }
@@ -94,8 +94,8 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSet.of(),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
             ImmutableMap.of("CUSTOM_ENV", "value"));
@@ -110,8 +110,8 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSet.of(),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of()),
             ImmutableMap.of());
@@ -134,8 +134,8 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSet.of(),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
             ImmutableMap.of());
@@ -162,8 +162,8 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSet.of(),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(sourceScript, "--foo", "bar")),
             ImmutableMap.of());
@@ -181,8 +181,8 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSet.of(),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
             ImmutableMap.of());
@@ -207,8 +207,8 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSet.of(),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
             ImmutableMap.of("EXIT_CODE", "1"));

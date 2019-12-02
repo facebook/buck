@@ -41,7 +41,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -167,9 +167,9 @@ public class RuleAnalysisContextImplTest {
     RuleAnalysisContextImpl context =
         new RuleAnalysisContextImpl(target, ImmutableMap.of(), fakeFilesystem, eventBus);
 
-    ImmutableSet<Artifact> inputs = ImmutableSet.of();
-    ImmutableSet<Artifact> outputs =
-        ImmutableSet.of(context.actionRegistry().declareArtifact(Paths.get("output")));
+    ImmutableSortedSet<Artifact> inputs = ImmutableSortedSet.of();
+    ImmutableSortedSet<Artifact> outputs =
+        ImmutableSortedSet.of(context.actionRegistry().declareArtifact(Paths.get("output")));
     FakeAction.FakeActionExecuteLambda actionFunction =
         (inputs1, outputs1, ctx) ->
             ImmutableActionExecutionSuccess.of(

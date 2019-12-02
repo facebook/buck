@@ -173,7 +173,10 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                               Optional.empty(), Optional.empty(), ImmutableList.of());
 
                   new FakeAction(
-                      actionRegistry, ImmutableSet.of(), ImmutableSet.of(artifact), actionFunction);
+                      actionRegistry,
+                      ImmutableSortedSet.of(),
+                      ImmutableSortedSet.of(artifact),
+                      actionFunction);
                   ActionAnalysisData actionAnalysisData =
                       Iterables.getOnlyElement(actionAnalysisRegistry.getRegistered().entrySet())
                           .getValue();

@@ -32,7 +32,7 @@ import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.hamcrest.Matchers;
@@ -76,8 +76,8 @@ public class DefaultRuleKeyCacheTest {
     FakeAction fakeAction =
         new FakeAction(
             new ActionRegistryForTests(BuildTargetFactory.newInstance("//my:test")),
-            ImmutableSet.of(),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             (ignored1, ignored2, ignored3) ->
                 ImmutableActionExecutionSuccess.of(
                     Optional.empty(), Optional.empty(), ImmutableList.of()));

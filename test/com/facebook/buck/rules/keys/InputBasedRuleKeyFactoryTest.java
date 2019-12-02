@@ -55,7 +55,6 @@ import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -134,10 +133,10 @@ public class InputBasedRuleKeyFactoryTest {
     SomeAction action =
         new SomeAction(
             new ActionRegistryForTests(BuildTargetFactory.newInstance("//:foo")),
-            ImmutableSet.of(
+            ImmutableSortedSet.of(
                 BuildTargetSourcePathToArtifactConverter.convert(
                     filesystem, dep.getSourcePathToOutput())),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             1,
             "a");
 
@@ -186,8 +185,9 @@ public class InputBasedRuleKeyFactoryTest {
     SomeAction action =
         new SomeAction(
             new ActionRegistryForTests(BuildTargetFactory.newInstance("//:rule")),
-            ImmutableSet.of(ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, output))),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(
+                ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, output))),
+            ImmutableSortedSet.of(),
             1,
             "a");
 
@@ -258,10 +258,10 @@ public class InputBasedRuleKeyFactoryTest {
     SomeAction action =
         new SomeAction(
             new ActionRegistryForTests(BuildTargetFactory.newInstance("//:action")),
-            ImmutableSet.of(
+            ImmutableSortedSet.of(
                 BuildTargetSourcePathToArtifactConverter.convert(
                     filesystem, dep.getSourcePathToOutput())),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             1,
             "");
 

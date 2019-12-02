@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Objects;
 
@@ -29,8 +30,8 @@ import java.util.Objects;
 public abstract class AbstractAction implements Action {
 
   protected final BuildTarget owner;
-  protected final ImmutableSet<Artifact> inputs;
-  protected final ImmutableSet<Artifact> outputs;
+  protected final ImmutableSortedSet<Artifact> inputs;
+  protected final ImmutableSortedSet<Artifact> outputs;
 
   /**
    * @param registry the {@link DefaultActionRegistry} to registry this action for.
@@ -39,7 +40,9 @@ public abstract class AbstractAction implements Action {
    * @param outputs the outputs for this {@link Action}
    */
   protected AbstractAction(
-      ActionRegistry registry, ImmutableSet<Artifact> inputs, ImmutableSet<Artifact> outputs) {
+      ActionRegistry registry,
+      ImmutableSortedSet<Artifact> inputs,
+      ImmutableSortedSet<Artifact> outputs) {
     this.inputs = inputs;
     this.outputs = outputs;
     this.owner = registry.getOwner();
@@ -53,18 +56,18 @@ public abstract class AbstractAction implements Action {
   }
 
   @Override
-  public final ImmutableSet<Artifact> getInputs() {
+  public final ImmutableSortedSet<Artifact> getInputs() {
     return inputs;
   }
 
   @Override
-  public final ImmutableSet<Artifact> getOutputs() {
+  public final ImmutableSortedSet<Artifact> getOutputs() {
     return outputs;
   }
 
   @Override
-  public ImmutableSet<SourcePath> getSourcePathOutputs() {
-    return ImmutableSet.copyOf(
+  public ImmutableSortedSet<SourcePath> getSourcePathOutputs() {
+    return ImmutableSortedSet.copyOf(
         Iterables.transform(getOutputs(), artifact -> artifact.asBound().getSourcePath()));
   }
 

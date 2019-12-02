@@ -64,7 +64,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -153,10 +152,10 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             projectFilesystem,
             target,
             DependencyStack.root(),
-            ImmutableSet.of(),
             ImmutableSortedSet.of(),
-            ImmutableSet.of(),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             TestCellPathResolver.create(Paths.get("")));
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
@@ -173,8 +172,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
     new FakeAction(
         actionRegistry,
-        ImmutableSet.of(),
-        ImmutableSet.of(artifact),
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(artifact),
         (ins, outs, ctx) ->
             ImmutableActionExecutionSuccess.of(
                 Optional.empty(), Optional.empty(), ImmutableList.of()));
@@ -226,7 +225,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
         ExplicitBuildTargetSourcePath.of(
             target, BuildPaths.getGenDir(fakeFilesystem, target).resolve(output)),
         rule.getSourcePathToOutput());
-    assertEquals(ImmutableSet.of(), rule.getBuildDeps());
+    assertEquals(ImmutableSortedSet.of(), rule.getBuildDeps());
 
     assertThat(rule, Matchers.instanceOf(RuleAnalysisLegacyBuildRuleView.class));
   }
@@ -259,10 +258,10 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             projectFilesystem,
             target,
             DependencyStack.root(),
-            ImmutableSet.of(),
             ImmutableSortedSet.of(),
-            ImmutableSet.of(),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             TestCellPathResolver.create(Paths.get("")));
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
@@ -308,7 +307,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     assertTrue(ruleAnalysisCalled.get());
     assertSame(target, rule.getBuildTarget());
     assertNull(rule.getSourcePathToOutput());
-    assertEquals(ImmutableSet.of(), rule.getBuildDeps());
+    assertEquals(ImmutableSortedSet.of(), rule.getBuildDeps());
 
     assertThat(rule, Matchers.instanceOf(NoopBuildRule.class));
   }

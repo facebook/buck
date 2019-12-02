@@ -39,7 +39,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.events.Location;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -136,8 +136,8 @@ public class ContentAgnosticRuleKeyFactoryTest {
     Action action =
         new FakeAction(
             actionRegistry,
-            ImmutableSet.of(ImmutableSourceArtifactImpl.of(sourcePath)),
-            ImmutableSet.of(artifact),
+            ImmutableSortedSet.of(ImmutableSourceArtifactImpl.of(sourcePath)),
+            ImmutableSortedSet.of(artifact),
             (ignored1, ignored2, ignored3) ->
                 ImmutableActionExecutionSuccess.of(
                     Optional.empty(), Optional.empty(), ImmutableList.of()));

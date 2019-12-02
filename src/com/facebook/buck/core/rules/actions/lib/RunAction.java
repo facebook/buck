@@ -33,7 +33,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,8 +58,8 @@ public class RunAction extends AbstractAction {
    */
   public RunAction(
       ActionRegistry registry,
-      ImmutableSet<Artifact> inputs,
-      ImmutableSet<Artifact> outputs,
+      ImmutableSortedSet<Artifact> inputs,
+      ImmutableSortedSet<Artifact> outputs,
       String shortName,
       CommandLineArgs args,
       ImmutableMap<String, String> env) {

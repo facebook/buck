@@ -19,7 +19,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 /**
  * An {@link Action} that forms the Action graph.
@@ -32,13 +32,13 @@ public interface Action extends BuildEngineAction {
   BuildTarget getOwner();
 
   /** @return the set of inputs required to complete this action */
-  ImmutableSet<Artifact> getInputs();
+  ImmutableSortedSet<Artifact> getInputs();
 
   /** @return the set of outputs this action generates */
-  ImmutableSet<Artifact> getOutputs();
+  ImmutableSortedSet<Artifact> getOutputs();
 
   @Override
-  ImmutableSet<SourcePath> getSourcePathOutputs();
+  ImmutableSortedSet<SourcePath> getSourcePathOutputs();
 
   /**
    * @return a name for this action to be printed to console when executing and for logging purposes

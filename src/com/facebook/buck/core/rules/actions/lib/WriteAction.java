@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -51,8 +51,8 @@ public class WriteAction extends AbstractAction {
    */
   public WriteAction(
       ActionRegistry actionRegistry,
-      ImmutableSet<Artifact> inputs,
-      ImmutableSet<Artifact> outputs,
+      ImmutableSortedSet<Artifact> inputs,
+      ImmutableSortedSet<Artifact> outputs,
       String contents,
       boolean isExecutable) {
     super(actionRegistry, inputs, outputs);

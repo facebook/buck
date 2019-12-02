@@ -59,7 +59,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
@@ -119,7 +118,10 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     Artifact depArtifact = actionRegistry.declareArtifact(Paths.get("bar.output"));
 
     new FakeAction(
-        actionRegistry, ImmutableSet.of(), ImmutableSet.of(depArtifact), depActionFunction);
+        actionRegistry,
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(depArtifact),
+        depActionFunction);
 
     Path outpath = Paths.get("foo.output");
     Path packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
@@ -127,7 +129,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     AtomicBoolean functionCalled = new AtomicBoolean();
     FakeAction.FakeActionExecuteLambda actionFunction =
         (ins, outs, ctx) -> {
-          assertEquals(ImmutableSet.of(depArtifact), ins);
+          assertEquals(ImmutableSortedSet.of(depArtifact), ins);
           assertEquals(
               buildTarget,
               Objects.requireNonNull(Iterables.getOnlyElement(outs).asBound().asBuildArtifact())
@@ -145,7 +147,10 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     Artifact artifact = actionRegistry.declareArtifact(outpath);
 
     new FakeAction(
-        actionRegistry, ImmutableSet.of(depArtifact), ImmutableSet.of(artifact), actionFunction);
+        actionRegistry,
+        ImmutableSortedSet.of(depArtifact),
+        ImmutableSortedSet.of(artifact),
+        actionFunction);
 
     ProviderInfoCollection providerInfoCollection =
         TestProviderInfoCollectionImpl.builder()
@@ -190,7 +195,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     ImmutableList<? extends Step> steps =
         buildRule.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, buildableContext);
     assertEquals(
-        ImmutableSet.of(packagePath.resolve("foo.output")),
+        ImmutableSortedSet.of(packagePath.resolve("foo.output")),
         buildableContext.getRecordedArtifacts());
     assertThat(steps, Matchers.hasSize(1));
 
