@@ -19,8 +19,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
-import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
@@ -35,18 +33,15 @@ public class ArtifactTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//test:foo");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildArtifactFactory artifactFactory = new BuildArtifactFactory(target, filesystem);
+    BuildArtifactFactoryForTests artifactFactory =
+        new BuildArtifactFactoryForTests(target, filesystem);
 
-    Artifact artifact1 = artifactFactory.createDeclaredArtifact("path1", Location.BUILTIN);
-    Artifact artifact2 = artifactFactory.createDeclaredArtifact("path2", Location.BUILTIN);
-    Artifact artifact3 =
-        artifactFactory
-            .createDeclaredArtifact("path3", Location.BUILTIN)
-            .materialize(ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {}));
-    Artifact artifact4 =
-        artifactFactory
-            .createDeclaredArtifact("path4", Location.BUILTIN)
-            .materialize(ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {}));
+    Artifact artifact1 =
+        artifactFactory.createDeclaredArtifact(Paths.get("path1"), Location.BUILTIN);
+    Artifact artifact2 =
+        artifactFactory.createDeclaredArtifact(Paths.get("path2"), Location.BUILTIN);
+    Artifact artifact3 = artifactFactory.createBuildArtifact(Paths.get("path3"), Location.BUILTIN);
+    Artifact artifact4 = artifactFactory.createBuildArtifact(Paths.get("path4"), Location.BUILTIN);
     Artifact artifact5 =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("path5")));
 
