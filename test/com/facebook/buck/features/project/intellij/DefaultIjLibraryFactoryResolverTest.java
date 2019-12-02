@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -64,11 +65,15 @@ public class DefaultIjLibraryFactoryResolverTest {
 
   @Test
   public void getPathIfJavaLibraryWithSrc() {
+    BuildTarget t = BuildTargetFactory.newInstance("//java:foo");
     assertEquals(
         Optional.of(
             ExplicitBuildTargetSourcePath.of(
-                BuildTargetFactory.newInstance("//java:foo"),
-                Paths.get("buck-out", "gen", "java", "lib__foo__output", "foo.jar"))),
+                t,
+                Paths.get("buck-out/gen")
+                    .resolve(
+                        BuildTargetPaths.getBasePath(t, "lib__%s__output/foo.jar")
+                            .toPathDefaultFileSystem()))),
         libraryFactoryResolver.getPathIfJavaLibrary(withSrc));
     assertEquals(1, targetsToBuild.size());
   }
