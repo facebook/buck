@@ -11,10 +11,10 @@ def _source_list_rule_impl(ctx):
     second = ctx.attr.srcs[1].short_path.replace("\\", "/")
     expected_first = "src.txt"
     expected_second = "file__/out.txt"
-    if first != expected_first:
-        fail("Expected short path {}, got {}".format(expected_first, first))
-    if second != expected_second:
-        fail("Expected short path {}, got {}".format(expected_second, second))
+    if not first.endswith(expected_first):
+        fail("Expected short path endswith {}, got {}".format(expected_first, first))
+    if not second.endswith(expected_second):
+        fail("Expected short path endswith {}, got {}".format(expected_second, second))
 
     f = ctx.actions.declare_file("out2.txt")
     ctx.actions.write(f, "contents2")

@@ -6,8 +6,8 @@ def _output_list_rule_impl(ctx):
     first = ctx.attr.outputs[0].short_path.replace("\\", "/")
 
     expected_first = "{}__/some_out.txt".format(ctx.label.name)
-    if first != expected_first:
-        fail("Expected short path {}, got {}".format(expected_first, first))
+    if not first.endswith(expected_first):
+        fail("Expected short path endswith {}, got {}".format(expected_first, first))
 
     # TODO(pjameson): Make sure this works properly later when multiple actions are
     #                 working

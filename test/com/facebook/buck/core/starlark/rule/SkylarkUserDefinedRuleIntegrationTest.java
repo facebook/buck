@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -576,7 +577,11 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     result2.assertSuccess();
 
     Path expectedLeafPath =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:file"))
+        BuildPaths.getGenDir(
+                filesystem,
+                BuildTargetFactory.newInstance(
+                    "//:file",
+                    ConfigurationBuildTargetFactoryForTests.newConfiguration("//:red-p")))
             .resolve("out.txt");
 
     assertEquals("contents", filesystem.readFileIfItExists(expectedLeafPath).get());

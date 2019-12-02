@@ -3,8 +3,8 @@
 def _output_rule_impl(ctx):
     output = ctx.attr.output.short_path.replace("\\", "/")
     expected_output = "{}__/some_out.txt".format(ctx.label.name)
-    if output != expected_output:
-        fail("Expected short path {}, got {}".format(expected_output, output))
+    if not output.endswith(expected_output):
+        fail("Expected short path endswith {}, got {}".format(expected_output, output))
 
     if ctx.attr.contents:
         ctx.actions.write(ctx.attr.output, ctx.attr.contents)
