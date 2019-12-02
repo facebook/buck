@@ -56,8 +56,23 @@ class BuckStarlarkCallable implements SkylarkCallable {
       List<String> defaultSkylarkValues) {
     Class<?>[] parameters = method.type().parameterArray();
     Param[] skylarkParams = new Param[parameters.length];
+
+    if (namedParams.size() > parameters.length) {
+      throw new IllegalArgumentException(
+          String.format(
+              "The supplied list of named parameters (size %s) is larger than the number of parameters of the method size (%s).",
+              namedParams.size(), parameters.length));
+    }
     int namedParamsIndex = namedParams.size() - 1;
+
+    if (defaultSkylarkValues.size() > parameters.length) {
+      throw new IllegalArgumentException(
+          String.format(
+              "The supplied list of default parameters (size %s) is larger than the number of parameters of the method size (%s).",
+              defaultSkylarkValues.size(), parameters.length));
+    }
     int defaultValuesIndex = defaultSkylarkValues.size() - 1;
+
     for (int i = parameters.length - 1; i >= 0; i--) {
       String namedParam = namedParamsIndex >= 0 ? namedParams.get(namedParamsIndex--) : null;
       String defaultValue =
@@ -65,6 +80,7 @@ class BuckStarlarkCallable implements SkylarkCallable {
 
       skylarkParams[i] = BuckStarlarkParam.fromParam(parameters[i], namedParam, defaultValue);
     }
+
     return new BuckStarlarkCallable(name, skylarkParams);
   }
 

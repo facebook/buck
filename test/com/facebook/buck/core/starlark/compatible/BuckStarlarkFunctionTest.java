@@ -28,9 +28,13 @@ import com.google.devtools.build.lib.syntax.IntegerLiteral;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParamDescriptor;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class BuckStarlarkFunctionTest {
+
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void simpleArgument() throws Throwable {
@@ -175,5 +179,33 @@ public class BuckStarlarkFunctionTest {
                 new Argument.Keyword(new Identifier("numWithDefault"), new IntegerLiteral(5))));
 
     assertEquals("115", ast.eval(env));
+  }
+
+  @Test
+  @SuppressWarnings("unused")
+  public void throwsIfNamedParametersMoreThanMethodParameters() throws Throwable {
+    expectedException.expect(IllegalArgumentException.class);
+
+    BuckStarlarkFunction function =
+        new BuckStarlarkFunction(
+            "myFoo", ImmutableList.of("correct", "extra"), ImmutableList.of()) {
+          public String myFoo(Integer correct) {
+            return "";
+          }
+        };
+  }
+
+  @Test
+  @SuppressWarnings("unused")
+  public void throwsIfDefaultParametersMoreThanMethodParameters() throws Throwable {
+    expectedException.expect(IllegalArgumentException.class);
+
+    BuckStarlarkFunction function =
+        new BuckStarlarkFunction(
+            "myFoo", ImmutableList.of(), ImmutableList.of("correct", "extra")) {
+          public String myFoo(Integer correct) {
+            return "";
+          }
+        };
   }
 }
