@@ -24,11 +24,9 @@ import com.facebook.buck.core.artifact.BuildTargetSourcePathToArtifactConverter;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.artifact.SourceArtifact;
 import com.facebook.buck.core.build.action.BuildEngineAction;
-import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -38,8 +36,7 @@ import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
-import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.core.rules.resolver.impl.FakeActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -66,7 +63,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -332,24 +328,6 @@ public class RuleKeyBuilderTest {
         return setNonHashingSourcePathDirectly(sourcePath);
       }
     };
-  }
-
-  // This ugliness is necessary as we don't have mocks in Buck unit tests.
-  private static class FakeActionGraphBuilder extends TestActionGraphBuilder {
-    private final Map<BuildTarget, BuildRule> ruleMap;
-
-    public FakeActionGraphBuilder(Map<BuildTarget, BuildRule> ruleMap) {
-      super(
-          TargetGraph.EMPTY,
-          new DefaultTargetNodeToBuildRuleTransformer(),
-          new TestCellBuilder().build().getCellProvider());
-      this.ruleMap = ruleMap;
-    }
-
-    @Override
-    public BuildRule getRule(BuildTarget target) {
-      return Objects.requireNonNull(ruleMap.get(target), "No rule for target: " + target);
-    }
   }
 
   private static class FakeRuleKeyAppendable implements AddsToRuleKey {
