@@ -85,6 +85,15 @@ public class BuiltInProviderInfoTest {
     public abstract SkylarkDict<String, Integer> map();
   }
 
+  @ImmutableInfo(args = {"val"})
+  public abstract static class InfoWithNoDefaultValOnAnnotation
+      extends BuiltInProviderInfo<InfoWithNoDefaultValOnAnnotation> {
+    public static final BuiltInProvider<InfoWithNoDefaultValOnAnnotation> PROVIDER =
+        BuiltInProvider.of(ImmutableInfoWithNoDefaultValOnAnnotation.class);
+
+    public abstract Integer val();
+  }
+
   @Test
   public void someInfoProviderCreatesCorrectInfo()
       throws IllegalAccessException, InstantiationException, InvocationTargetException,
@@ -186,5 +195,27 @@ public class BuiltInProviderInfoTest {
                 new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(2))));
 
     assertEquals(new ImmutableSomeInfo("default value", 2), ast.eval(env));
+  }
+
+  @Test
+  public void infoWithNoDefaultValueOnAnnotationWorks() throws InterruptedException, EvalException {
+
+    Mutability mutability = Mutability.create("test");
+    Environment env =
+        Environment.builder(mutability)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+            .setGlobals(
+                Environment.GlobalFrame.createForBuiltins(
+                    ImmutableMap.of(
+                        InfoWithNoDefaultValOnAnnotation.PROVIDER.getName(),
+                        InfoWithNoDefaultValOnAnnotation.PROVIDER)))
+            .build();
+
+    FuncallExpression ast =
+        new FuncallExpression(
+            new Identifier(ImmutableInfoWithNoDefaultValOnAnnotation.PROVIDER.getName()),
+            ImmutableList.of(new Argument.Keyword(new Identifier("val"), new IntegerLiteral(2))));
+
+    assertEquals(new ImmutableInfoWithNoDefaultValOnAnnotation(2), ast.eval(env));
   }
 }

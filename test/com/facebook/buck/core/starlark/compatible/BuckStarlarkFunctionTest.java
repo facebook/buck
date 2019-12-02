@@ -111,4 +111,69 @@ public class BuckStarlarkFunctionTest {
 
     assertEquals("1", ast.eval(env));
   }
+
+  @Test
+  public void noDefaultValues() throws Throwable {
+    BuckStarlarkFunction function =
+        new BuckStarlarkFunction("toStr", ImmutableList.of("num"), ImmutableList.of()) {
+          public String toStr(Integer num) {
+            return num.toString();
+          }
+        };
+
+    Mutability mutability = Mutability.create("test");
+    Environment env =
+        Environment.builder(mutability)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+            .setGlobals(
+                Environment.GlobalFrame.createForBuiltins(
+                    ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
+            .build();
+
+    FuncallExpression ast =
+        new FuncallExpression(
+            new Identifier("toStr"),
+            ImmutableList.of(new Argument.Keyword(new Identifier("num"), new IntegerLiteral(1))));
+
+    assertEquals("1", ast.eval(env));
+  }
+
+  @Test
+  public void withPartialNamedAndDefault() throws Throwable {
+    BuckStarlarkFunction function =
+        new BuckStarlarkFunction(
+            "myFoo", ImmutableList.of("numNoDefault", "numWithDefault"), ImmutableList.of("1")) {
+          public String myFoo(Integer mand, Integer numNoDefault, Integer withDefault) {
+            return String.valueOf(mand + numNoDefault + withDefault);
+          }
+        };
+
+    Mutability mutability = Mutability.create("test");
+    Environment env =
+        Environment.builder(mutability)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+            .setGlobals(
+                Environment.GlobalFrame.createForBuiltins(
+                    ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
+            .build();
+
+    FuncallExpression ast =
+        new FuncallExpression(
+            new Identifier("myFoo"),
+            ImmutableList.of(
+                new Argument.Positional(new IntegerLiteral(100)),
+                new Argument.Keyword(new Identifier("numNoDefault"), new IntegerLiteral(10))));
+
+    assertEquals("111", ast.eval(env));
+
+    ast =
+        new FuncallExpression(
+            new Identifier("myFoo"),
+            ImmutableList.of(
+                new Argument.Positional(new IntegerLiteral(100)),
+                new Argument.Keyword(new Identifier("numNoDefault"), new IntegerLiteral(10)),
+                new Argument.Keyword(new Identifier("numWithDefault"), new IntegerLiteral(5))));
+
+    assertEquals("115", ast.eval(env));
+  }
 }

@@ -52,5 +52,5 @@ public @interface ImmutableInfo {
    * @return an array of string representations of default values to use in the Starlark interpreter
    *     if a kwarg is not provided.
    */
-  String[] defaultSkylarkValues();
+  String[] defaultSkylarkValues() default {};
 }
