@@ -53,7 +53,10 @@ class ZipFileJarEntryContainer implements JarEntryContainer {
 
   @Override
   public void close() throws IOException {
-    getJarFile().close();
+    if (jar != null) {
+      jar.close();
+      jar = null;
+    }
   }
 
   private JarFile getJarFile() throws IOException {

@@ -158,6 +158,11 @@ public class JarBuilder {
         throw new HumanReadableException("ERROR: Main class %s does not exist.", mainClass);
       }
 
+      // Clean up any open file handles that we may have
+      for (JarEntryContainer sourceContainer : sourceContainers) {
+        sourceContainer.close();
+      }
+
       return 0;
     }
   }
