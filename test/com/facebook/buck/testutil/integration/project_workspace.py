@@ -23,7 +23,9 @@ import tempfile
 def run_buck_process(command, cwd=None):
     root_directory = os.getcwd()
     cwd = cwd or root_directory
-    buck_path = os.path.join(root_directory, "buck-out", "gen", "programs", "buck.pex")
+    buck_path = os.getenv("TEST_BUCK")
+    if not buck_path:
+        raise Exception("TEST_BUCK environment variable must be set for tests")
     if platform.system() == "Windows":
         args = ["python", buck_path] + list(command)
     else:
