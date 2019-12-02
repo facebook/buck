@@ -1193,7 +1193,8 @@ public class TargetsCommand extends AbstractCommand {
                     rule,
                     params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
                     // TODO(irenewchen): Targets command isn't supported with output labels (yet)
-                    OutputLabel.DEFAULT)
+                    OutputLabel.DEFAULT,
+                    false)
                 .map(path -> pathToString(path, params))
                 .ifPresent(builder::setOutputPath);
             // If the output dir is requested, also calculate the generated src dir

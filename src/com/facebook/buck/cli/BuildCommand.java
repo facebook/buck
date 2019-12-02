@@ -110,6 +110,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String SHALLOW_LONG_ARG = "--shallow";
   private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
   private static final String SHOW_OUTPUT_LONG_ARG = "--show-output";
+  private static final String SHOW_OUTPUTS_LONG_ARG = "--show-outputs";
   private static final String SHOW_FULL_OUTPUT_LONG_ARG = "--show-full-output";
   private static final String SHOW_JSON_OUTPUT_LONG_ARG = "--show-json-output";
   private static final String SHOW_FULL_JSON_OUTPUT_LONG_ARG = "--show-full-json-output";
@@ -170,6 +171,11 @@ public class BuildCommand extends AbstractCommand {
       name = SHOW_OUTPUT_LONG_ARG,
       usage = "Print the path to the output for each of the built rules relative to the cell.")
   private boolean showOutput;
+
+  @Option(
+      name = SHOW_OUTPUTS_LONG_ARG,
+      usage = "Print the path to the outputs for each of the built rules relative to the cell.")
+  private boolean showOutputs;
 
   @Option(name = OUT_LONG_ARG, usage = "Copies the output of the lone build target to this path.")
   @Nullable
@@ -551,7 +557,13 @@ public class BuildCommand extends AbstractCommand {
       symLinkBuildResults(params, graphsAndBuildTargets);
     }
     ActionAndTargetGraphs graphs = graphsAndBuildTargets.getGraphs();
-    if (showOutput || showFullOutput || showJsonOutput || showFullJsonOutput || showRuleKey) {
+    // TODO(irenewchen): Merge full output, JSON output, full JSON output into a enum
+    if (showOutput
+        || showOutputs
+        || showFullOutput
+        || showJsonOutput
+        || showFullJsonOutput
+        || showRuleKey) {
       showOutputs(params, graphsAndBuildTargets, ruleKeyCacheScope);
     }
     if (outputPathForSingleBuildTarget != null) {
@@ -607,7 +619,8 @@ public class BuildCommand extends AbstractCommand {
             pathResolver,
             rule,
             buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink(),
-            OutputLabel.DEFAULT);
+            OutputLabel.DEFAULT,
+            showOutputs);
     if (outputPath.isPresent()) {
       Path absolutePath = outputPath.get();
       Path destPath;
@@ -686,7 +699,8 @@ public class BuildCommand extends AbstractCommand {
                   graphBuilder.getSourcePathResolver(),
                   rule,
                   params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
-                  OutputLabel.DEFAULT)
+                  OutputLabel.DEFAULT,
+                  showOutputs)
               .map(
                   path ->
                       showFullOutput || showFullJsonOutput
@@ -705,7 +719,7 @@ public class BuildCommand extends AbstractCommand {
                 "%s%s%s\n",
                 rule.getFullyQualifiedName(),
                 showRuleKey ? " " + ruleKeyFactory.get().build(rule) : "",
-                showOutput || showFullOutput
+                showOutput || showOutputs || showFullOutput
                     ? " " + outputPath.map(Object::toString).orElse("")
                     : "");
       }

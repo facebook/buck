@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
@@ -43,9 +44,15 @@ public class PathUtils {
       SourcePathResolverAdapter pathResolver,
       BuildRule rule,
       boolean buckOutCompatLink,
-      OutputLabel outputLabel) {
+      OutputLabel outputLabel,
+      boolean showOutputLabels) {
     Optional<Path> outputPathOptional;
     if (rule instanceof HasMultipleOutputs) {
+      if (!showOutputLabels && !outputLabel.equals(OutputLabel.DEFAULT)) {
+        throw new HumanReadableException(
+            "%s target %s[%s] should use --show-outputs",
+            rule.getType(), rule.getFullyQualifiedName(), outputLabel.getLabel().get());
+      }
       ImmutableSortedSet<SourcePath> sourcePaths =
           ((HasMultipleOutputs) rule).getSourcePathToOutput(outputLabel);
       outputPathOptional =
