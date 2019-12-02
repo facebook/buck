@@ -30,6 +30,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
@@ -440,7 +441,10 @@ public class CxxPreprocessAndCompileTest {
             .add("-O3")
             .add(
                 "-o",
-                PathNormalizer.toWindowsPathIfNeeded(Paths.get("buck-out/gen/foo/bar__/test.o"))
+                Paths.get("buck-out/gen")
+                    .resolve(
+                        BuildTargetPaths.getBasePath(target, "%s__/test.o")
+                            .toPathDefaultFileSystem())
                     .toString())
             .add("-c")
             .add(input.toString())
@@ -467,9 +471,9 @@ public class CxxPreprocessAndCompileTest {
 
     projectFilesystem.writeContentsToPath(
         "test.o: " + pathResolver.getRelativePath(DEFAULT_INPUT) + " ",
-        projectFilesystem.getPath(
-            PathNormalizer.toWindowsPathIfNeeded(Paths.get("buck-out/gen/foo/bar__/test.o.dep"))
-                .toString()));
+        BuildTargetPaths.getGenPath(
+                projectFilesystem, BuildTargetFactory.newInstance("//foo:bar"), "%s__")
+            .resolve("test.o.dep"));
     PathSourcePath fakeInput = FakeSourcePath.of(projectFilesystem, "test.cpp");
 
     CxxPreprocessAndCompile cxxPreprocess =
@@ -662,7 +666,12 @@ public class CxxPreprocessAndCompileTest {
             .add("-ffunction-sections")
             .add("-O3")
             .add("-I " + PathFormatter.pathWithUnixSeparators(includePath))
-            .add("-o", "buck-out/gen/foo/bar__/baz/test.o")
+            .add(
+                "-o",
+                "buck-out/gen/"
+                    + BuildTargetPaths.getBasePath(
+                        BuildTargetFactory.newInstance("//foo:bar"), "%s__")
+                    + "/baz/test.o")
             .add("-c")
             .add(PathFormatter.pathWithUnixSeparators(input.toString()))
             .build();
