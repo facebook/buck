@@ -19,6 +19,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.io.file.MorePaths;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
@@ -128,6 +130,18 @@ class ArtifactImpl extends AbstractArtifact
         ExplicitBuildTargetSourcePath.of(
             getBuildTarget(), getPackagePath().resolve(getOutputPath()));
     return this;
+  }
+
+  @Override
+  public int compareDeclared(DeclaredArtifact artifact) {
+    Preconditions.checkState(!isBound() && artifact instanceof ArtifactImpl);
+    ArtifactImpl other = (ArtifactImpl) artifact;
+    return ComparisonChain.start()
+        .compare(target, other.target)
+        .compare(outputPath, other.outputPath)
+        .compare(genDir, other.genDir)
+        .compare(basePath, other.basePath)
+        .result();
   }
 
   @Override

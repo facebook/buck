@@ -34,4 +34,7 @@ interface DeclaredArtifact extends Artifact {
    *     ActionAnalysisDataKey}.
    */
   BuildArtifact materialize(ActionAnalysisDataKey key);
+
+  /** Intended for framework use only, comparing order for {@link DeclaredArtifact} */
+  int compareDeclared(DeclaredArtifact artifact);
 }

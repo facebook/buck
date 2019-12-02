@@ -47,7 +47,7 @@ public class ExecCompatibleCommandLineBuilderTest {
         new CommandLineArgs() {
           @Override
           public Stream<Object> getArgs() {
-            return ImmutableList.of(path1, path2, 1, "foo", "bar").stream();
+            return ImmutableList.<Object>of(path1, path2, 1, "foo", "bar").stream();
           }
 
           @Override
@@ -60,7 +60,7 @@ public class ExecCompatibleCommandLineBuilderTest {
         new CommandLineArgs() {
           @Override
           public Stream<Object> getArgs() {
-            return ImmutableList.of(path3, path2, 1, "foo", "bar").stream();
+            return ImmutableList.<Object>of(path3, path2, 1, "foo", "bar").stream();
           }
 
           @Override

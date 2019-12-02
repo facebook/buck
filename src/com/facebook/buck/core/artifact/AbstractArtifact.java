@@ -67,4 +67,43 @@ abstract class AbstractArtifact implements Artifact {
    *     applicable. This is converted to a Skylark appropriate type by {@link #getOwner()}
    */
   protected abstract Optional<Label> getOwnerTyped();
+
+  @Override
+  public final int compareTo(Artifact artifact) {
+    if (artifact == this) {
+      return 0;
+    }
+
+    int classComparison = compareClasses(artifact);
+    if (classComparison != 0) {
+      return classComparison;
+    }
+
+    int boundComparison = Boolean.compare(isBound(), artifact.isBound());
+    if (boundComparison != 0) {
+      return boundComparison;
+    }
+
+    if (isBound()) {
+      return asBound().getSourcePath().compareTo(artifact.asBound().getSourcePath());
+    }
+    return asDeclared().compareDeclared(artifact.asDeclared());
+  }
+
+  private final int compareClasses(Artifact other) {
+    if (this.getClass() != other.getClass()) {
+      int result = this.getClass().getName().compareTo(other.getClass().getName());
+      if (result != 0) {
+        return result;
+      }
+
+      Preconditions.checkState(
+          this.getClass().equals(other.getClass()),
+          "Classes are different but have the same name: %s %s",
+          this.getClass(),
+          other.getClass());
+    }
+
+    return 0;
+  }
 }

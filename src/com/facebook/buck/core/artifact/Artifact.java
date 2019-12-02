@@ -23,7 +23,7 @@ import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
  *
  * <p>This is the interface exposed to users.
  */
-public interface Artifact extends SkylarkArtifactApi {
+public interface Artifact extends SkylarkArtifactApi, Comparable<Artifact> {
 
   /** TODO: we should make the below package protected. */
 
