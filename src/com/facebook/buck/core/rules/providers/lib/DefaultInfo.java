@@ -44,6 +44,7 @@ public abstract class DefaultInfo extends BuiltInProviderInfo<DefaultInfo> {
   public abstract SkylarkDict<String, Set<Artifact>> namedOutputs();
 
   /** @return the set of default outputs built by the rule if no output selection is specified. */
+  // TODO: replace with determinstic ordered set
   public abstract Set<Artifact> defaultOutputs();
 
   // TODO: add run files and such

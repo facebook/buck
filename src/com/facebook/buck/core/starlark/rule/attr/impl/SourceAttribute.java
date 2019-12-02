@@ -16,6 +16,7 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.converter.SourceArtifactConverter;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
@@ -31,10 +32,7 @@ import com.facebook.buck.rules.coercer.SourcePathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
-import java.util.Collection;
-import java.util.NoSuchElementException;
 
 /**
  * Represents a single source file, whether on disk or another build target
@@ -81,14 +79,10 @@ public abstract class SourceAttribute extends Attribute<SourcePath> {
   @SuppressWarnings("unused")
   private Artifact postCoercionTransform(
       Object src, ActionRegistry registry, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
-
-    Collection<Artifact> outputs = SourceArtifactResolver.getArtifactsFromSrcs(src, deps);
-    try {
-      return Iterables.getOnlyElement(outputs);
-    } catch (NoSuchElementException | IllegalArgumentException e) {
-      throw new IllegalStateException(
-          String.format(
-              "%s must have exactly one output, but had %s outputs", src, outputs.size()));
+    if (!(src instanceof SourcePath)) {
+      throw new IllegalStateException(String.format("%s needs to be a SourcePath", src));
     }
+
+    return SourceArtifactConverter.getArtifactsFromSrc((SourcePath) src, deps);
   }
 }

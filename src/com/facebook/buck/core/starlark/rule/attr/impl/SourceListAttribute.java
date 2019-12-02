@@ -16,6 +16,7 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.converter.SourceArtifactConverter;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
 
@@ -99,13 +101,19 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
       throw new IllegalArgumentException(String.format("Value %s must be a list", coercedValue));
     }
     List<?> listValue = (List<?>) coercedValue;
-    // Start with a reasonable-ish default size. If we have a lot of build-target sources, this
-    // will obviously be too small.
-    ImmutableList.Builder<Artifact> builder =
-        ImmutableList.builderWithExpectedSize(listValue.size());
-    for (Object src : listValue) {
-      builder.addAll(SourceArtifactResolver.getArtifactsFromSrcs(src, deps));
-    }
-    return builder.build();
+
+    return ImmutableList.copyOf(
+        SourceArtifactConverter.getArtifactsFromSrcs(
+            Iterables.transform(
+                listValue,
+                src -> {
+                  if (!(src instanceof SourcePath)) {
+                    throw new IllegalStateException(
+                        String.format("%s needs to be a SourcePath", src));
+                  } else {
+                    return (SourcePath) src;
+                  }
+                }),
+            deps));
   }
 }

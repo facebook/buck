@@ -1,0 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "converter",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/artifact/converter:converter",
+        "//test/com/facebook/buck/core/artifact:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/rules/providers/collect/impl:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

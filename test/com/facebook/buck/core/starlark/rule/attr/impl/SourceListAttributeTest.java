@@ -213,12 +213,10 @@ public class SourceListAttributeTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
     Artifact buildArtifact1 = registry.declareArtifact(Paths.get("baz1"));
-    Artifact buildArtifact2 = registry.declareArtifact(Paths.get("baz2"));
     SourceArtifact sourceArtifact =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("src", "main.cpp")));
     ImmutableDefaultInfo defaultInfo =
-        new ImmutableDefaultInfo(
-            SkylarkDict.empty(), ImmutableList.of(buildArtifact1, buildArtifact2));
+        new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(buildArtifact1));
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
         ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().build(defaultInfo));
@@ -232,8 +230,7 @@ public class SourceListAttributeTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//foo:bar", "src/main.cpp"));
 
-    ImmutableList<Artifact> expected =
-        ImmutableList.of(buildArtifact1, buildArtifact2, sourceArtifact);
+    ImmutableList<Artifact> expected = ImmutableList.of(buildArtifact1, sourceArtifact);
 
     Object transformed =
         attr.getPostCoercionTransform().postCoercionTransform(coerced, runner.getRegistry(), deps);

@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.starlark.rule.attr.impl;
+package com.facebook.buck.core.artifact.converter;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
@@ -21,34 +21,61 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import java.util.Collection;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import java.util.NoSuchElementException;
 
-/** Utility class to resolve specified sources into {@link Artifact}s. */
-class SourceArtifactResolver {
+/**
+ * Utility class to resolve specified {@link com.facebook.buck.core.sourcepath.SourcePath} into
+ * {@link Artifact}s.
+ */
+public class SourceArtifactConverter {
 
-  private SourceArtifactResolver() {}
+  private SourceArtifactConverter() {}
 
   /**
    * @param src the object representing the sources of a rule attribute
    * @param deps the {@link ProviderInfoCollection} from the dependencies of a rule
    * @return the {@link Artifact}s representing the sources.
    */
-  static Collection<Artifact> getArtifactsFromSrcs(
-      Object src, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+  public static Artifact getArtifactsFromSrc(
+      SourcePath src, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     if (src instanceof BuildTargetSourcePath) {
       BuildTarget target = ((BuildTargetSourcePath) src).getTarget();
       ProviderInfoCollection providerInfos = deps.get(target);
       if (providerInfos == null) {
         throw new IllegalStateException(String.format("Deps %s did not contain %s", deps, src));
       }
-      return providerInfos.getDefaultInfo().defaultOutputs();
+
+      try {
+        return Iterables.getOnlyElement(providerInfos.getDefaultInfo().defaultOutputs());
+      } catch (NoSuchElementException | IllegalArgumentException e) {
+        throw new IllegalStateException(
+            String.format(
+                "%s must have exactly one output, but had %s outputs",
+                src, providerInfos.getDefaultInfo().defaultOutputs().size()));
+      }
     } else if (src instanceof PathSourcePath) {
-      return ImmutableSet.of(ImmutableSourceArtifactImpl.of((PathSourcePath) src));
+      return ImmutableSourceArtifactImpl.of((PathSourcePath) src);
     } else {
       throw new IllegalStateException(
           String.format("%s must either be a source file, or a BuildTarget", src));
     }
+  }
+
+  /**
+   * @param srcs the set of the sources of a rule attribute
+   * @param deps the {@link ProviderInfoCollection} from the dependencies of a rule
+   * @return the {@link Artifact}s representing the sources.
+   */
+  public static ImmutableSortedSet<Artifact> getArtifactsFromSrcs(
+      Iterable<SourcePath> srcs, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+    ImmutableSortedSet.Builder<Artifact> artifacts = ImmutableSortedSet.naturalOrder();
+    for (SourcePath src : srcs) {
+      artifacts.add(SourceArtifactConverter.getArtifactsFromSrc(src, deps));
+    }
+    return artifacts.build();
   }
 }
