@@ -26,6 +26,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -90,7 +91,9 @@ public class ModernBuildRuleTest {
                     filesystem
                         .getBuckPaths()
                         .getGenDir()
-                        .resolve(filesystem.getPath("foo", "bar__"))))
+                        .resolve(
+                            BuildTargetPaths.getBasePath(target, "%s__")
+                                .toPath(filesystem.getFileSystem()))))
             .withRecursive(true),
         steps.get(0));
 
@@ -99,7 +102,12 @@ public class ModernBuildRuleTest {
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(),
                 filesystem,
-                filesystem.getBuckPaths().getGenDir().resolve(filesystem.getPath("foo", "bar__")))),
+                filesystem
+                    .getBuckPaths()
+                    .getGenDir()
+                    .resolve(
+                        BuildTargetPaths.getBasePath(target, "%s__")
+                            .toPath(filesystem.getFileSystem())))),
         steps.get(1));
 
     assertEquals(
@@ -110,7 +118,9 @@ public class ModernBuildRuleTest {
                     filesystem
                         .getBuckPaths()
                         .getScratchDir()
-                        .resolve(filesystem.getPath("foo", "bar__"))))
+                        .resolve(
+                            BuildTargetPaths.getBasePath(target, "%s__")
+                                .toPath(filesystem.getFileSystem()))))
             .withRecursive(true),
         steps.get(2));
 
@@ -122,7 +132,9 @@ public class ModernBuildRuleTest {
                 filesystem
                     .getBuckPaths()
                     .getScratchDir()
-                    .resolve(filesystem.getPath("foo", "bar__")))),
+                    .resolve(
+                        BuildTargetPaths.getBasePath(target, "%s__")
+                            .toPath(filesystem.getFileSystem())))),
         steps.get(3));
   }
 
