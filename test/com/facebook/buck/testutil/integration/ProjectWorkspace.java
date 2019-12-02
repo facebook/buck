@@ -925,6 +925,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
         .resolve(BuildTargetPaths.getGenPath(getProjectFileSystem(), buildTarget, format));
   }
 
+  public Path getScratchPath(BuildTarget buildTarget, String format) throws IOException {
+    return getProjectFileSystem()
+        .resolve(BuildTargetPaths.getScratchPath(getProjectFileSystem(), buildTarget, format));
+  }
+
   public void verify(Path subdirectory) throws IOException {
     Preconditions.checkArgument(
         !subdirectory.isAbsolute(),
