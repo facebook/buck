@@ -144,7 +144,6 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                             .getBuckOut()
                             .relativize(symlinkTreeRoot)
                             .resolve("directory/then/file")),
-                    buildTarget,
                     buildableContext))
             .build();
     ImmutableList<Step> actualBuildSteps =
