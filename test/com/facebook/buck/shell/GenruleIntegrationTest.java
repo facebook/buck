@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -82,13 +83,13 @@ public class GenruleIntegrationTest {
     if (Platform.detect() == Platform.WINDOWS) {
       outputPattern =
           "(?s).*Command failed with exit code 1\\..*"
-              + "When running <\\(cd buck-out\\\\gen\\\\fail__srcs && "
+              + "When running <\\(cd buck-out\\\\gen(\\\\[0-9a-zA-Z]+)?\\\\fail__srcs && "
               + ".*\\\\buck-out\\\\tmp\\\\genrule-[0-9]*\\.cmd\\)>.*";
 
     } else {
       outputPattern =
           "(?s).*Command failed with exit code 1\\.(?s).*"
-              + "When running <\\(cd buck-out/gen/fail__srcs && "
+              + "When running <\\(cd buck-out/gen(/[0-9a-zA-Z]+)?/fail__srcs && "
               + "/bin/bash -e .*/buck-out/tmp/genrule-[0-9]*\\.sh\\)>(?s).*";
     }
 
@@ -140,22 +141,23 @@ public class GenruleIntegrationTest {
 
     workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
 
-    assertThat(Files.isDirectory(workspace.resolve("buck-out/gen/mkdir/directory")), equalTo(true));
-    assertThat(
-        workspace.getFileContents("buck-out/gen/mkdir/directory/file"),
-        equalTo("something" + System.lineSeparator()));
+    Path directoryPath =
+        workspace.getGenPath(BuildTargetFactory.newInstance("//:mkdir"), "%s/directory");
+    assertTrue(Files.isDirectory(directoryPath));
+    Path filePath =
+        workspace.getGenPath(BuildTargetFactory.newInstance("//:mkdir"), "%s/directory/file");
+
+    assertThat(workspace.getFileContents(filePath), equalTo("something" + System.lineSeparator()));
 
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
-    assertThat(Files.isDirectory(workspace.resolve("buck-out/gen")), equalTo(false));
+    assertFalse(Files.isDirectory(workspace.resolve("buck-out/gen")));
     // Retrieving the genrule output from the local cache should recreate the directory contents.
     workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
 
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//:mkdir");
-    assertThat(Files.isDirectory(workspace.resolve("buck-out/gen/mkdir/directory")), equalTo(true));
-    assertThat(
-        workspace.getFileContents("buck-out/gen/mkdir/directory/file"),
-        equalTo("something" + System.lineSeparator()));
+    assertTrue(Files.isDirectory(workspace.resolve(directoryPath)));
+    assertThat(workspace.getFileContents(filePath), equalTo("something" + System.lineSeparator()));
   }
 
   @Test
@@ -167,8 +169,8 @@ public class GenruleIntegrationTest {
 
     workspace.runBuckCommand("build", "//:big").assertSuccess();
 
-    Path outputPath = workspace.resolve("buck-out/gen/big/file");
-    assertThat(Files.isRegularFile(outputPath), equalTo(true));
+    Path outputPath = workspace.getGenPath(BuildTargetFactory.newInstance("//:big"), "%s/file");
+    assertTrue(Files.isRegularFile(outputPath));
 
     int stringSize = 1000;
 
@@ -195,21 +197,25 @@ public class GenruleIntegrationTest {
     assertTrue(
         "mkdir_another should be built",
         Files.isRegularFile(
-            workspace.resolve("buck-out/gen/mkdir_another/another_directory/file")));
+            workspace.getGenPath(
+                BuildTargetFactory.newInstance("//:mkdir_another"), "%s/another_directory/file")));
 
     workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
 
     workspace.getBuildLog().assertTargetBuiltLocally("//:mkdir");
     assertTrue(
         "BUCK.1 should create its output",
-        Files.isRegularFile(workspace.resolve("buck-out/gen/mkdir/directory/one")));
+        Files.isRegularFile(
+            workspace.getGenPath(BuildTargetFactory.newInstance("//:mkdir"), "%s/directory/one")));
     assertFalse(
         "BUCK.1 should not touch the output of BUCK.2",
-        Files.isRegularFile(workspace.resolve("buck-out/gen/mkdir/directory/two")));
+        Files.isRegularFile(
+            workspace.getGenPath(BuildTargetFactory.newInstance("//:mkdir"), "%s/directory/two")));
     assertTrue(
         "output of mkdir_another should still exist",
         Files.isRegularFile(
-            workspace.resolve("buck-out/gen/mkdir_another/another_directory/file")));
+            workspace.getGenPath(
+                BuildTargetFactory.newInstance("//:mkdir_another"), "%s/another_directory/file")));
 
     workspace.copyFile("BUCK.2", "BUCK");
     workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
@@ -217,14 +223,17 @@ public class GenruleIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally("//:mkdir");
     assertFalse(
         "Output of BUCK.1 should be deleted before output of BUCK.2 is built",
-        Files.isRegularFile(workspace.resolve("buck-out/gen/mkdir/directory/one")));
+        Files.isRegularFile(
+            workspace.getGenPath(BuildTargetFactory.newInstance("//:mkdir"), "%s/directory/one")));
     assertTrue(
         "BUCK.2 should create its output",
-        Files.isRegularFile(workspace.resolve("buck-out/gen/mkdir/directory/two")));
+        Files.isRegularFile(
+            workspace.getGenPath(BuildTargetFactory.newInstance("//:mkdir"), "%s/directory/two")));
     assertTrue(
         "output of mkdir_another should still exist",
         Files.isRegularFile(
-            workspace.resolve("buck-out/gen/mkdir_another/another_directory/file")));
+            workspace.getGenPath(
+                BuildTargetFactory.newInstance("//:mkdir_another"), "%s/another_directory/file")));
 
     workspace.copyFile("BUCK.1", "BUCK");
     workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
@@ -232,15 +241,21 @@ public class GenruleIntegrationTest {
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//:mkdir");
     assertTrue(
         "Output of BUCK.1 should be fetched from the cache",
-        Files.isRegularFile(workspace.resolve("buck-out/gen/mkdir/directory/one")));
+        Files.isRegularFile(
+            workspace.getGenPath(BuildTargetFactory.newInstance("//:mkdir"), "%s/directory/one")));
     assertFalse(
         "Output of BUCK.2 should be deleted before output of BUCK.1 is fetched from cache",
-        Files.isRegularFile(workspace.resolve("buck-out/gen/mkdir/directory/two")));
+        Files.isRegularFile(
+            workspace.getGenPath(BuildTargetFactory.newInstance("//:mkdir"), "%s/directory/two")));
     assertTrue(
         "output of mkdir_another should still exist",
         Files.isRegularFile(
-            workspace.resolve("buck-out/gen/mkdir_another/another_directory/file")));
-    assertThat(Files.isDirectory(workspace.resolve("buck-out/gen/mkdir/directory")), equalTo(true));
+            workspace
+                .getGenPath(BuildTargetFactory.newInstance("//:mkdir_another"), "%s")
+                .resolve("another_directory/file")));
+    assertTrue(
+        Files.isDirectory(
+            workspace.getGenPath(BuildTargetFactory.newInstance("//:mkdir"), "%s/directory")));
   }
 
   @Test
@@ -255,7 +270,9 @@ public class GenruleIntegrationTest {
 
     workspace.getBuildLog().assertTargetBuiltLocally("//:write");
     assertTrue(
-        "write should be built", Files.isRegularFile(workspace.resolve("buck-out/gen/write/one")));
+        "write should be built",
+        Files.isRegularFile(
+            workspace.getGenPath(BuildTargetFactory.newInstance("//:write"), "%s/one")));
 
     workspace.copyFile("BUCK.2", "BUCK");
     workspace.runBuckCommand("build", "//:write").assertSuccess();
@@ -266,7 +283,8 @@ public class GenruleIntegrationTest {
         Files.isRegularFile(workspace.resolve("buck-out/gen/write/one")));
     assertTrue(
         "BUCK.2 should create its output",
-        Files.isRegularFile(workspace.resolve("buck-out/gen/write/two")));
+        Files.isRegularFile(
+            workspace.getGenPath(BuildTargetFactory.newInstance("//:write"), "%s/two")));
   }
 
   @Test
@@ -279,9 +297,12 @@ public class GenruleIntegrationTest {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:cpdir");
     buildResult.assertSuccess();
 
-    assertThat(Files.isDirectory(workspace.resolve("buck-out/gen/cpdir/copy")), equalTo(true));
-    assertThat(
-        Files.isRegularFile(workspace.resolve("buck-out/gen/cpdir/copy/hello")), equalTo(true));
+    assertTrue(
+        Files.isDirectory(
+            workspace.getGenPath(BuildTargetFactory.newInstance("//:cpdir"), "%s/copy")));
+    assertTrue(
+        Files.isRegularFile(
+            workspace.getGenPath(BuildTargetFactory.newInstance("//:cpdir"), "%s/copy/hello")));
   }
 
   @Test
