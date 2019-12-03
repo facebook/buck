@@ -15,14 +15,13 @@
  */
 package com.facebook.buck.core.model.impl;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import java.nio.file.Paths;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Test;
@@ -49,30 +48,32 @@ public class BuildPathsTest {
   @Test
   @Parameters(method = "getTargetsForTest")
   public void genPathFormat(BuildTarget target, ForwardRelativePath path) {
-    assertEquals(
-        Paths.get("buck-out/gen").resolve(path.toPathDefaultFileSystem()),
-        BuildPaths.getGenDir(filesystem, target));
+    assertTrue(BuildPaths.getGenDir(filesystem, target).startsWith("buck-out/gen"));
+    assertTrue(
+        BuildPaths.getGenDir(filesystem, target).endsWith(path.toPath(filesystem.getFileSystem())));
   }
 
   @Test
   @Parameters(method = "getTargetsForTest")
   public void annotationPathFormat(BuildTarget target, ForwardRelativePath path) {
-    assertEquals(
-        Paths.get("buck-out/annotation/").resolve(path.toPathDefaultFileSystem()),
-        BuildPaths.getAnnotationDir(filesystem, target));
+    assertTrue(BuildPaths.getAnnotationDir(filesystem, target).startsWith("buck-out/annotation"));
+    assertTrue(
+        BuildPaths.getAnnotationDir(filesystem, target)
+            .endsWith(path.toPath(filesystem.getFileSystem())));
   }
 
   @Test
   @Parameters(method = "getTargetsForTest")
   public void scratchPathFormat(BuildTarget target, ForwardRelativePath path) {
-    assertEquals(
-        Paths.get("buck-out/bin").resolve(path.toPathDefaultFileSystem()),
-        BuildPaths.getScratchDir(filesystem, target));
+    assertTrue(BuildPaths.getScratchDir(filesystem, target).startsWith("buck-out/bin"));
+    assertTrue(
+        BuildPaths.getScratchDir(filesystem, target)
+            .endsWith(path.toPath(filesystem.getFileSystem())));
   }
 
   @Test
   @Parameters(method = "getTargetsForTest")
   public void basePathFormat(BuildTarget target, ForwardRelativePath path) {
-    assertEquals(path, BuildPaths.getBaseDir(target));
+    assertTrue(BuildPaths.getBaseDir(target).endsWith(path));
   }
 }
