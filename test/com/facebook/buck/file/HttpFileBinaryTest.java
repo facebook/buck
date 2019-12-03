@@ -18,6 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -31,7 +32,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.net.URI;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,7 +67,7 @@ public class HttpFileBinaryTest {
 
     Path expectedPath =
         filesysten.resolve(
-            filesysten.getBuckPaths().getGenDir().resolve(Paths.get("foo", "bar", "foo.exe")));
+            BuildTargetPaths.getGenPath(filesysten, target, "%s").resolve("foo.exe"));
 
     Assert.assertEquals(
         ImmutableList.of(expectedPath.toString()),
