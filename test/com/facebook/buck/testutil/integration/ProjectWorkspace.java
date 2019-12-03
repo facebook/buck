@@ -143,8 +143,6 @@ public class ProjectWorkspace extends AbstractWorkspace {
     "config", "third-party",
   };
 
-  private static final String CONFIG_HASH_PLACEHOLDER_WITH_TRAILING_SLASH = "<CONFIG_HASH>/";
-
   private boolean isSetUp = false;
   private final Path templatePath;
   private final boolean addBuckRepoCell;
@@ -864,14 +862,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
     // buck-out dir contains a config hash that can't be hardcoded to expected files.
     observedFileContent =
-        observedFileContent.replaceAll(
-            "(?<=buck-out/(gen|bin|annotation)/)[a-f0-9]{32}/",
-            CONFIG_HASH_PLACEHOLDER_WITH_TRAILING_SLASH);
+        BuckOutConfigHashPlaceholder.replaceHashByPlaceholder(observedFileContent);
+
     // TODO(gabrielrc): Remove this after we land the new config hash changes
-    observedFileContent =
-        observedFileContent.replaceAll(CONFIG_HASH_PLACEHOLDER_WITH_TRAILING_SLASH, "");
-    expectedFileContent =
-        expectedFileContent.replaceAll(CONFIG_HASH_PLACEHOLDER_WITH_TRAILING_SLASH, "");
+    observedFileContent = BuckOutConfigHashPlaceholder.removePlaceholder(observedFileContent);
+    expectedFileContent = BuckOutConfigHashPlaceholder.removePlaceholder(expectedFileContent);
 
     assertEquals(
         String.format(
