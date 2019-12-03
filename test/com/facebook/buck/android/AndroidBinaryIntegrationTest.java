@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.testutil.RegexMatcher.containsPattern;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
+import static com.facebook.buck.testutil.integration.BuckOutConfigHashPlaceholder.removePlaceholder;
+import static com.facebook.buck.testutil.integration.BuckOutConfigHashPlaceholder.replaceHashByPlaceholder;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -632,8 +634,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     // Check that the proguard command line references the native lib proguard config.
     assertTrue(workspace.getFileContents(proguardCommandLine).contains(generatedConfig.toString()));
     assertEquals(
-        workspace.getFileContents("native/proguard_gen/expected-16.pro"),
-        workspace.getFileContents(generatedConfig));
+        removePlaceholder(workspace.getFileContents("native/proguard_gen/expected-16.pro")),
+        replaceHashByPlaceholder(workspace.getFileContents(generatedConfig)));
   }
 
   @Test
@@ -660,8 +662,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     // Check that the proguard command line references the native lib proguard config.
     assertTrue(workspace.getFileContents(proguardCommandLine).contains(generatedConfig.toString()));
     assertEquals(
-        workspace.getFileContents("native/proguard_gen/expected-17.pro"),
-        workspace.getFileContents(generatedConfig));
+        removePlaceholder(workspace.getFileContents("native/proguard_gen/expected-17.pro")),
+        replaceHashByPlaceholder(workspace.getFileContents(generatedConfig)));
   }
 
   @Test
@@ -687,8 +689,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     // Check that the proguard command line references the native lib proguard config.
     assertTrue(workspace.getFileContents(proguardCommandLine).contains(generatedConfig.toString()));
     assertEquals(
-        workspace.getFileContents("native/proguard_gen/expected.pro"),
-        workspace.getFileContents(generatedConfig));
+        removePlaceholder(workspace.getFileContents("native/proguard_gen/expected.pro")),
+        replaceHashByPlaceholder(workspace.getFileContents(generatedConfig)));
   }
 
   @Test
@@ -707,17 +709,22 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         androidSdk != null && !androidSdk.isEmpty());
     assertEquals(workspace.getDestPath().toString(), userData.get("PWD"));
 
+    Path genPath = workspace.getGenPath(BuildTargetFactory.newInstance(APP_REDEX_TARGET), "%s");
+
     assertTrue(userData.get("config").toString().endsWith("apps/sample/redex-config.json"));
-    assertEquals("buck-out/gen/apps/sample/app_redex/proguard/seeds.txt", userData.get("keep"));
+    assertTrue(genPath.resolve("proguard/seeds.txt").endsWith((String) userData.get("keep")));
     assertEquals("my_alias", userData.get("keyalias"));
     assertEquals("android", userData.get("keypass"));
     assertEquals(
         workspace.resolve("keystores/debug.keystore").toString(), userData.get("keystore"));
-    assertEquals(
-        "buck-out/gen/apps/sample/app_redex__redex/app_redex.redex.apk", userData.get("out"));
-    assertEquals("buck-out/gen/apps/sample/app_redex/proguard/command-line.txt", userData.get("P"));
-    assertEquals(
-        "buck-out/gen/apps/sample/app_redex/proguard/mapping.txt", userData.get("proguard-map"));
+    assertTrue(
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance(APP_REDEX_TARGET), "%s__redex")
+            .resolve("app_redex.redex.apk")
+            .endsWith((String) userData.get("out")));
+    assertTrue(genPath.resolve("proguard/command-line.txt").endsWith((String) userData.get("P")));
+    assertTrue(
+        genPath.resolve("proguard/mapping.txt").endsWith((String) userData.get("proguard-map")));
     assertTrue((Boolean) userData.get("sign"));
     assertEquals("my_param_name={\"foo\": true}", userData.get("J"));
     assertTrue(
