@@ -22,8 +22,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -34,9 +32,9 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
-import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
-import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.impl.PathReferenceRule;
+import com.facebook.buck.core.rules.impl.PathReferenceRuleWithMultipleOutputs;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -50,14 +48,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.SortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -489,64 +484,5 @@ public class SourcePathResolverTest {
             new FakeProjectFilesystem(), Paths.get("cheese").toAbsolutePath().toString());
 
     pathResolver.getRelativePath(path);
-  }
-
-  private static class PathReferenceRule extends AbstractBuildRule {
-
-    private final Path source;
-
-    protected PathReferenceRule(
-        BuildTarget buildTarget, ProjectFilesystem projectFilesystem, Path source) {
-      super(buildTarget, projectFilesystem);
-      this.source = source;
-    }
-
-    @Override
-    public SortedSet<BuildRule> getBuildDeps() {
-      return ImmutableSortedSet.of();
-    }
-
-    @Override
-    public ImmutableList<Step> getBuildSteps(
-        BuildContext context, BuildableContext buildableContext) {
-      return ImmutableList.of();
-    }
-
-    @Override
-    public SourcePath getSourcePathToOutput() {
-      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), source);
-    }
-  }
-
-  private static class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
-      implements HasMultipleOutputs {
-    private final ImmutableMap<OutputLabel, Path> outputLabelToSource;
-
-    protected PathReferenceRuleWithMultipleOutputs(
-        BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem,
-        Path source,
-        ImmutableMap<OutputLabel, Path> outputLabelToSource) {
-      super(buildTarget, projectFilesystem, source);
-      this.outputLabelToSource = outputLabelToSource;
-    }
-
-    @Override
-    public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
-      if (!outputLabel.getLabel().isPresent()) {
-        return ImmutableSortedSet.of(getSourcePathToOutput());
-      }
-      Path path = outputLabelToSource.get(outputLabel);
-      if (path == null) {
-        return ImmutableSortedSet.of();
-      }
-      return ImmutableSortedSet.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), path));
-    }
-
-    @Override
-    public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>>
-        getSourcePathsByOutputsLabels() {
-      return null;
-    }
   }
 }
