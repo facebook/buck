@@ -267,6 +267,26 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
     return true;
   }
 
+  /**
+   * This path ends with given path.
+   *
+   * <p>{@code ab/cd} ends with {@code ab/cd}, {@code cd}, but not {@code b/cd}.
+   */
+  public boolean endsWith(ForwardRelativePath path) {
+    if (this.segments.length < path.segments.length) {
+      return false;
+    }
+
+    for (int i = 0; i != path.segments.length; ++i) {
+      if (!this.segments[this.segments.length - path.segments.length + i].equals(
+          path.segments[i])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   public ImmutableList<String> segments() {
     return ImmutableList.copyOf(segments);
   }

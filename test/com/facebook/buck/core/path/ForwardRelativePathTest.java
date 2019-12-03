@@ -202,6 +202,21 @@ public class ForwardRelativePathTest {
   }
 
   @Test
+  public void endsWith() {
+    assertTrue(ForwardRelativePath.of("").endsWith(ForwardRelativePath.of("")));
+    assertTrue(ForwardRelativePath.of("ab").endsWith(ForwardRelativePath.of("")));
+    assertTrue(ForwardRelativePath.of("ab/cd").endsWith(ForwardRelativePath.of("")));
+    assertTrue(ForwardRelativePath.of("ab/cd").endsWith(ForwardRelativePath.of("cd")));
+    assertTrue(ForwardRelativePath.of("ab/cd").endsWith(ForwardRelativePath.of("ab/cd")));
+
+    assertFalse(ForwardRelativePath.of("").endsWith(ForwardRelativePath.of("ab")));
+    assertFalse(ForwardRelativePath.of("").endsWith(ForwardRelativePath.of("ab/cd")));
+    assertFalse(ForwardRelativePath.of("cd").endsWith(ForwardRelativePath.of("ab/cd")));
+
+    assertFalse(ForwardRelativePath.of("ab").endsWith(ForwardRelativePath.of("b")));
+  }
+
+  @Test
   public void resolve() {
     String[] paths = new String[] {"", "foo", "bar/baz"};
     for (String p1 : paths) {
