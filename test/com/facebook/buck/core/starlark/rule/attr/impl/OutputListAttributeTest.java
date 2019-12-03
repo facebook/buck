@@ -27,6 +27,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -180,8 +181,15 @@ public class OutputListAttributeTest {
     }
     assertEquals(
         ImmutableList.of(
-            Paths.get("foo", "bar__", "subdir", "other.cpp").toString(),
-            Paths.get("foo", "bar__", "main.cpp").toString()),
+            BuildTargetPaths.getBasePath(target, "%s__")
+                .toPath(filesystem.getFileSystem())
+                .resolve("subdir")
+                .resolve("other.cpp")
+                .toString(),
+            BuildTargetPaths.getBasePath(target, "%s__")
+                .toPath(filesystem.getFileSystem())
+                .resolve("main.cpp")
+                .toString()),
         artifacts.stream().map(Artifact::getShortPath).collect(ImmutableList.toImmutableList()));
   }
 
