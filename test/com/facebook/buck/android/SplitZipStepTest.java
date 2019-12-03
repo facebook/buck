@@ -74,7 +74,11 @@ public class SplitZipStepTest {
     try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
       ImmutableSet<APKModule> requires = ImmutableSet.of();
       SplitZipStep.writeMetaList(
-          writer, SplitZipStep.SECONDARY_DEX_ID, requires, ImmutableList.of(outJar), DexStore.JAR);
+          writer,
+          APKModule.of(SplitZipStep.SECONDARY_DEX_ID, false),
+          requires,
+          ImmutableList.of(outJar),
+          DexStore.JAR);
     }
     List<String> lines = CharStreams.readLines(new StringReader(stringWriter.toString()));
     assertEquals(1, lines.size());
@@ -110,7 +114,7 @@ public class SplitZipStepTest {
     try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
       ImmutableSet<APKModule> requires = ImmutableSet.of(APKModule.of("dependency", false));
       SplitZipStep.writeMetaList(
-          writer, "module", requires, ImmutableList.of(outJar), DexStore.JAR);
+          writer, APKModule.of("module", false), requires, ImmutableList.of(outJar), DexStore.JAR);
     }
     List<String> lines = CharStreams.readLines(new StringReader(stringWriter.toString()));
     assertEquals(3, lines.size());

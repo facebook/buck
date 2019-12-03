@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -396,7 +397,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
     return getBuildable().desugarDeps;
   }
 
-  public SourcePath getSourcePathToDex() {
+  BuildTargetSourcePath getSourcePathToDex() {
     return getSourcePath(getPathToDex());
   }
 

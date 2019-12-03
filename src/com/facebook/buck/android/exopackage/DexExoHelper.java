@@ -63,7 +63,8 @@ public class DexExoHelper {
     // the metadata file to have hash-like names.
     return com.google.common.io.Files.toString(
             pathResolver.getAbsolutePath(dexInfo.getMetadata()).toFile(), Charsets.UTF_8)
-        .replaceAll("secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ", "secondary-$2.dex.jar $2 ");
+        .replaceAll(
+            "secondary-([\\d_]+)\\.dex\\.jar (\\p{XDigit}{40}) ", "secondary-$2.dex.jar $2 ");
   }
 
   private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {

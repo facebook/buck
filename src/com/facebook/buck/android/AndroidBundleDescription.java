@@ -223,6 +223,7 @@ public class AndroidBundleDescription
         dexSplitStrategy,
         args.getDexCompression().orElse(defaultDexStore),
         args.getLinearAllocHardLimit(),
+        args.getDexGroupLibLimit(),
         args.getPrimaryDexPatterns(),
         args.getPrimaryDexClassesFile(),
         args.getPrimaryDexScenarioFile(),
@@ -311,6 +312,11 @@ public class AndroidBundleDescription
     @Value.Default
     long getLinearAllocHardLimit() {
       return DexSplitMode.DEFAULT_LINEAR_ALLOC_HARD_LIMIT;
+    }
+
+    @Value.Default
+    int getDexGroupLibLimit() {
+      return DexSplitMode.DEFAULT_DEX_GROUP_LIB_LIMIT;
     }
 
     abstract List<String> getResourceFilter();

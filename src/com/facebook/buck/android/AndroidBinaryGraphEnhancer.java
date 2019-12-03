@@ -70,12 +70,14 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -706,6 +708,55 @@ public class AndroidBinaryGraphEnhancer {
     return result.build();
   }
 
+  PreDexSplitDexGroup createPreDexGroupRule(
+      APKModule apkModule,
+      Collection<DexProducedFromJavaLibrary> dexes,
+      Flavor flavor,
+      OptionalInt group) {
+    return new PreDexSplitDexGroup(
+        originalBuildTarget.withFlavors(flavor),
+        projectFilesystem,
+        buildRuleParams.withDeclaredDeps(ImmutableSortedSet.copyOf(dexes)),
+        androidPlatformTarget,
+        dexTool,
+        dexSplitMode,
+        apkModuleGraph,
+        apkModule,
+        dexes,
+        dxExecutorService,
+        xzCompressionLevel,
+        dxConfig.getDxMaxHeapSize(),
+        group);
+  }
+
+  /**
+   * Group DexProducedFromJavaLibrary rules by module, into partitions of at most
+   * dex_group_lib_limit. Create a single partition per APK module if dex_group_lib_limit is 0
+   */
+  private ImmutableMultimap<APKModule, List<DexProducedFromJavaLibrary>> groupDexes(
+      ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> dexFilesToMerge) {
+    ImmutableMultimap.Builder<APKModule, List<DexProducedFromJavaLibrary>> resultBuilder =
+        ImmutableMultimap.builder();
+
+    // Dex group partitioning is currently limited to JAR compression mode.
+    // XZS (and possibly XZ) aggregate dexes in a way that is not compatible with dex group merging
+    // RAW expects dex files to have a single sequential index, and could break on some API levels
+    // if more than 100 total dex files are produced, which is more likely to happen with dex
+    // groups.
+    int limit = dexSplitMode.getDexStore() == DexStore.JAR ? dexSplitMode.getDexGroupLibLimit() : 0;
+    for (APKModule module : dexFilesToMerge.keySet()) {
+      List<DexProducedFromJavaLibrary> currentDexContents = null;
+      for (DexProducedFromJavaLibrary dexWithClasses : dexFilesToMerge.get(module)) {
+        if (currentDexContents == null || (limit != 0 && currentDexContents.size() + 1 > limit)) {
+          currentDexContents = new ArrayList<>();
+          resultBuilder.put(module, currentDexContents);
+        }
+        currentDexContents.add(dexWithClasses);
+      }
+    }
+    return resultBuilder.build();
+  }
+
   /**
    * Creates/finds the set of build rules that correspond to pre-dex'd artifacts that should be
    * merged to create the final classes.dex for the APK.
@@ -714,33 +765,62 @@ public class AndroidBinaryGraphEnhancer {
    */
   @VisibleForTesting
   PreDexSplitDexMerge createPreDexMergeSplitDexRule(
-      ImmutableList<DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJava,
+      ImmutableList<DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJavaList,
       ImmutableCollection<DexProducedFromJavaLibrary> dexUberRDotJavaParts) {
     ImmutableMultimap.Builder<APKModule, DexProducedFromJavaLibrary> preDexedLibrariesBuilder =
         ImmutableMultimap.builder();
-    for (DexProducedFromJavaLibrary dex : preDexedLibrariesExceptRDotJava) {
+    for (DexProducedFromJavaLibrary dex : preDexedLibrariesExceptRDotJavaList) {
       preDexedLibrariesBuilder.put(
           apkModuleGraph.findModuleForTarget(dex.getJavaLibraryBuildTarget()), dex);
     }
     preDexedLibrariesBuilder.putAll(apkModuleGraph.getRootAPKModule(), dexUberRDotJavaParts);
-    ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> allPreDexDeps =
+
+    ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibraries =
         preDexedLibrariesBuilder.build();
 
-    PreDexSplitDexMerge preDexMerge =
+    ImmutableMultimap<APKModule, List<DexProducedFromJavaLibrary>> dexGroupMap =
+        groupDexes(preDexedLibraries);
+
+    ImmutableList.Builder<PreDexSplitDexGroup> rulesBuilder = ImmutableList.builder();
+    for (APKModule module : dexGroupMap.keySet()) {
+      int i = 1;
+      int numGroups = dexGroupMap.get(module).size();
+      String moduleName = module.isRootModule() ? "secondary" : module.getName();
+      String ruleNameFormat = moduleName + "_dexes_%d";
+      for (List<DexProducedFromJavaLibrary> dexes : dexGroupMap.get(module)) {
+        OptionalInt groupNum = numGroups > 1 ? OptionalInt.of(i) : OptionalInt.empty();
+        rulesBuilder.add(
+            createPreDexGroupRule(
+                module, dexes, InternalFlavor.of(String.format(ruleNameFormat, i)), groupNum));
+        i += 1;
+      }
+    }
+
+    ImmutableList<PreDexSplitDexGroup> partialDexRules = rulesBuilder.build();
+
+    for (PreDexSplitDexGroup rule : partialDexRules) {
+      graphBuilder.addToIndex(rule);
+    }
+
+    PreDexSplitDexMerge superDexMergeRule =
         new PreDexSplitDexMerge(
-            originalBuildTarget.withAppendedFlavors(DEX_MERGE_SPLIT_FLAVOR, getDexFlavor(dexTool)),
+            originalBuildTarget.withAppendedFlavors(
+                DEX_MERGE_SPLIT_FLAVOR,
+                getDexFlavor(dexTool),
+                InternalFlavor.of("split_dex_merge")),
             projectFilesystem,
-            buildRuleParams.withDeclaredDeps(ImmutableSortedSet.copyOf(allPreDexDeps.values())),
+            buildRuleParams.withDeclaredDeps(ImmutableSortedSet.copyOf(partialDexRules)),
             androidPlatformTarget,
             dexTool,
             dexSplitMode,
             apkModuleGraph,
-            allPreDexDeps,
+            partialDexRules,
             dxExecutorService,
             xzCompressionLevel,
             dxConfig.getDxMaxHeapSize());
-    graphBuilder.addToIndex(preDexMerge);
-    return preDexMerge;
+    graphBuilder.addToIndex(superDexMergeRule);
+
+    return superDexMergeRule;
   }
 
   /**

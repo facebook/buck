@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableSet;
@@ -29,6 +30,8 @@ import javax.annotation.Nullable;
  * as well as its estimated dex weight.
  */
 public interface DexWithClasses {
+  @Nullable
+  BuildTarget getSourceBuildTarget();
 
   /** @return path from the project root where the {@code .dex.jar} file can be found. */
   SourcePath getSourcePathToDexFile();
@@ -63,6 +66,11 @@ public interface DexWithClasses {
                   Hashing.combineOrdered(preDex.getClassNamesToHashes().values()));
           int weightEstimate = preDex.getWeightEstimate();
           return new DexWithClasses() {
+            @Override
+            public BuildTarget getSourceBuildTarget() {
+              return preDex.getBuildTarget();
+            }
+
             @Override
             public SourcePath getSourcePathToDexFile() {
               return sourcePathToDex;

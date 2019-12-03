@@ -33,14 +33,59 @@ android_binary(
     dex_compression = "xzs",
     keystore = "//keystores:debug",
     linear_alloc_hard_limit = 3600,
-    manifest = "AndroidManifest.xml",
+    manifest = "SimpleManifest.xml",
     primary_dex_patterns = [],
     use_split_dex = True,
     deps = [
-        "//java/com/sample/app:app",
-        "//java/com/sample/lib:lib",
-        "//java/com/sample2:lib",
-        "//java/com/sample3:lib",
+        ":many_libs",
+    ],
+)
+
+def gen_src(count):
+    for i in range(1, count):
+        data = "".join(["%d" % x for x in range(1,10000)]),
+        genrule(
+            name = "generated_class_%d" % i,
+            out = "Class%d.java" % i,
+            bash = "echo -e 'package gen;\npublic class Class%d { static String data = \"%s\"; }' > $OUT" % (i, data)
+        )
+        android_library(
+            name = "generated_lib_%d" % i,
+            srcs = [":generated_class_%d" % i]
+        )
+
+    return [":generated_lib_%d" % x for x in range(1, count)]
+
+android_library(
+    name = "many_libs",
+    deps = gen_src(120),
+)
+
+android_binary(
+    name = "dex_groups",
+    dex_compression = "jar",
+    dex_group_lib_limit = 1,
+    keystore = "//keystores:debug",
+    linear_alloc_hard_limit = 350,
+    manifest = "SimpleManifest.xml",
+    primary_dex_patterns = [],
+    use_split_dex = True,
+    deps = [
+        ":many_libs",
+    ],
+)
+
+android_binary(
+    name = "raw_dex_over_100",
+    dex_compression = "raw",
+    dex_group_lib_limit = 1,
+    keystore = "//keystores:debug",
+    linear_alloc_hard_limit = 350,
+    manifest = "SimpleManifest.xml",
+    primary_dex_patterns = [],
+    use_split_dex = True,
+    deps = [
+        ":many_libs",
     ],
 )
 
@@ -77,6 +122,25 @@ android_binary(
     primary_dex_patterns = [
         "/MyApplication^",
     ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_modular_debug_dex_groups",
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
+    dex_compression = "jar",
+    dex_group_lib_limit = 1,
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_type = "debug",
     use_split_dex = True,
     deps = [
         "//java/com/sample/app:app",

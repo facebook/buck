@@ -120,6 +120,7 @@ RULES_SRCS = [
     "PreDexMerge.java",
     "PreDexSingleDexMerge.java",
     "PreDexSplitDexMerge.java",
+    "PreDexSplitDexGroup.java",
     "PreDexedFilesSorter.java",
     "PrebuiltNativeLibrary.java",
     "PrebuiltNativeLibraryDescription.java",
@@ -305,6 +306,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/android/dalvik:dalvik",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",

@@ -281,6 +281,21 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   }
 
   @Test
+  public void testMultidexModularDexGroups() throws IOException {
+    String target = "//apps/multidex:app_modular_debug_dex_groups";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    Path apkPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    String module = "small_with_no_resource_deps";
+    zipInspector.assertFileExists("assets/" + module + "/" + module + "-1.dex.jar");
+    zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1_1.dex.jar");
+    zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-2_1.dex.jar");
+  }
+
+  @Test
   public void testSharedModular() throws IOException {
     String target = "//apps/multidex:app_modular_manifest_debug_with_shared";
     workspace.runBuckCommand("build", target).assertSuccess();

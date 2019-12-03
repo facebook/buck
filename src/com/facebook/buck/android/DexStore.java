@@ -16,7 +16,9 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.apkmodule.APKModule;
 import java.nio.file.Path;
+import java.util.OptionalInt;
 
 /** Specifies how secondary .dex files should be stored in the .apk. */
 enum DexStore {
@@ -45,7 +47,7 @@ enum DexStore {
     }
 
     @Override
-    public String fileNameForSecondary(String prefix, String index) {
+    String fileNameForSecondary(String prefix, String index) {
       return String.format("%s%s%s", prefix, index, suffix());
     }
   },
@@ -93,37 +95,34 @@ enum DexStore {
     return String.format("%d", index + 1);
   }
 
-  /**
-   * @param index The index of a given secondary dex file, starting from 0.
-   * @return The appropriate name for the secondary dex file at {@code index}.
-   */
-  public String fileNameForSecondary(int index) {
-    return fileNameForSecondary(prefix(), index(index));
+  public String index(OptionalInt groupIndex, int index) {
+    if (groupIndex.isPresent()) {
+      return String.format("%d_%s", groupIndex.getAsInt(), index(index));
+    } else {
+      return index(index);
+    }
   }
 
   /**
-   * @param index The index of a given secondary dex file
-   * @return The appropriate name for the secondary dex file at {@code index}.
-   */
-  public String fileNameForSecondary(String index) {
-    return fileNameForSecondary(prefix(), index);
-  }
-
-  /**
-   * @param prefix The prefix to use to name the file according to what store it is in
+   * @param module The apk module the file belongs to
    * @param index The index of a given secondary dex file, starting from 0.
    * @return The appropriate name for the dex file at {@code index}.
    */
-  public String fileNameForSecondary(String prefix, int index) {
-    return fileNameForSecondary(prefix, index(index));
+  public String fileNameForSecondary(APKModule module, int index) {
+    return fileNameForSecondary(module, index(index));
   }
 
   /**
-   * @param prefix The prefix to use to name the file according to what store it is in
+   * @param module The apk module the file belongs to
    * @param index The index of a given secondary dex file
    * @return The appropriate name for the dex file at {@code index}.
    */
-  public String fileNameForSecondary(String prefix, String index) {
+  public String fileNameForSecondary(APKModule module, String index) {
+    String prefix = module.isRootModule() ? prefix() : module.getName();
+    return fileNameForSecondary(prefix, index);
+  }
+
+  String fileNameForSecondary(String prefix, String index) {
     return String.format("%s-%s%s", prefix, index, suffix());
   }
 

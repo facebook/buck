@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -95,11 +96,11 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
     // It would be better if we could call getExopackageInfo on the app rule.
     Path secondaryDir =
         workspace.resolve(
-            BuildTargetPaths.getScratchPath(
-                filesystem,
-                BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET)
-                    .withFlavors(InternalFlavor.of("d8"), InternalFlavor.of("split_dex_merge")),
-                "%s_output/secondary/jarfiles/assets/secondary-program-dex-jars"));
+            BuildPaths.getScratchDir(
+                    filesystem,
+                    BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET)
+                        .withFlavors(InternalFlavor.of("d8"), InternalFlavor.of("split_dex_merge")))
+                .resolve("secondary/jarfiles/assets/secondary-program-dex-jars"));
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(secondaryDir)) {
       List<Path> files = Lists.newArrayList(stream);

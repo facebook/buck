@@ -55,6 +55,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -68,6 +69,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
@@ -312,7 +314,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     List<String> metadata =
         zipInspector.getFileContentsLines("assets/secondary-program-dex-jars/metadata.txt");
     List<DexTestUtils.DexMetadata> moduleMetadata = DexTestUtils.moduleMetadata(metadata);
-    assertEquals(moduleMetadata.size(), 2);
+    assertTrue(moduleMetadata.size() > 100);
 
     // Checks that the metadata is ordered
     DexTestUtils.validateMetadata(apkPath);
@@ -370,6 +372,22 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Matcher matcher = META_FILE_PATTERN.matcher(metaContents);
     matcher.matches();
     return new Integer(matcher.group(1));
+  }
+
+  @Test(expected = AssertionError.class)
+  public void testRawDexTooManyDexes() {
+    workspace.buildAndReturnOutput("//apps/multidex:raw_dex_over_100");
+  }
+
+  @Test
+  public void testDexGroups() throws IOException {
+    Path apkPath = workspace.buildAndReturnOutput("//apps/multidex:dex_groups");
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.getDirectoryContents(Paths.get("assets"));
+    zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1_1.dex.jar");
+    zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-100_1.dex.jar");
+    DexTestUtils.validateMetadata(apkPath, ImmutableSet.of(), false);
   }
 
   @Test

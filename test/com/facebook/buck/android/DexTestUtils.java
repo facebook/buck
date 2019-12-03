@@ -35,10 +35,15 @@ import java.util.Set;
 public class DexTestUtils {
 
   public static void validateMetadata(Path apkPath) throws IOException {
-    validateMetadata(apkPath, ImmutableSet.of());
+    validateMetadata(apkPath, ImmutableSet.of(), true);
   }
 
   public static void validateMetadata(Path apkPath, Set<String> modulePaths) throws IOException {
+    validateMetadata(apkPath, modulePaths, true);
+  }
+
+  public static void validateMetadata(
+      Path apkPath, Set<String> modulePaths, boolean checkCanaryNameFormat) throws IOException {
     Set<String> moduleDirs =
         ImmutableSet.<String>builder()
             .add("secondary-program-dex-jars")
@@ -62,6 +67,12 @@ public class DexTestUtils {
       // Check that dexes are sorted, redex unpacks XZS files in order listed in metadata, so the
       // ordering has to be consistent
       assertTrue(Ordering.natural().isOrdered(moduleMetadata));
+      if (checkCanaryNameFormat) {
+        // Check that canary index matches pattern expected by redex
+        assertTrue(
+            "Invalid canary name " + moduleMetadata.get(0).canaryName,
+            moduleMetadata.get(0).canaryName.matches("[^.]*.dex01.Canary"));
+      }
 
       Set<String> canaryNames = new HashSet<>();
       for (DexMetadata dexMetadata : moduleMetadata) {
@@ -110,7 +121,7 @@ public class DexTestUtils {
 
     @Override
     public int compareTo(DexMetadata other) {
-      return canaryName.compareTo(other.canaryName);
+      return dexFile.compareTo(other.dexFile);
     }
   }
 }

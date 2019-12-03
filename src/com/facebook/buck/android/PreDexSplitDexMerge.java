@@ -22,69 +22,59 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Path;
-import java.util.AbstractMap;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
- * Buildable that is responsible for:
+ * This is the top level rule responsible for producing multiple dexes for an apk from predexed
+ * library rules.
  *
- * <ul>
- *   <li>Bucketing pre-dexed jars into lists for primary and secondary dex files (if the app is
- *       split-dex).
- *   <li>Merging the pre-dexed jars into primary and secondary dex files.
- *   <li>Writing the split-dex "metadata.txt".
- * </ul>
- *
- * <p>Clients of this Buildable may need to know:
- *
- * <ul>
- *   <li>The locations of the zip files directories containing secondary dex files and metadata.
- * </ul>
- *
- * This uses a separate implementation from addDexingSteps. The differences in the splitting logic
- * are too significant to make it worth merging them.
+ * <p>This rule depends on 1 or more PreDexSplitDexGroup rules, which produce merged secondary dexes
+ * and copies of the predexed rules to be merged into the primary dex. This rule merges the primary
+ * dex, copies the merged secondary dexes from the PreDexSplitDexGroup(s), and merges the secondary
+ * dex metadata.
  */
 public class PreDexSplitDexMerge extends PreDexMerge {
 
   @AddToRuleKey private final DexSplitMode dexSplitMode;
 
   private final APKModuleGraph apkModuleGraph;
-  private final ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexDeps;
+  private final ImmutableCollection<PreDexSplitDexGroup> preDexDeps;
   private final ListeningExecutorService dxExecutorService;
   private final int xzCompressionLevel;
   private final Optional<String> dxMaxHeapSize;
@@ -97,7 +87,7 @@ public class PreDexSplitDexMerge extends PreDexMerge {
       String dexTool,
       DexSplitMode dexSplitMode,
       APKModuleGraph apkModuleGraph,
-      ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexDeps,
+      ImmutableCollection<PreDexSplitDexGroup> preDexDeps,
       ListeningExecutorService dxExecutorService,
       int xzCompressionLevel,
       Optional<String> dxMaxHeapSize) {
@@ -110,42 +100,29 @@ public class PreDexSplitDexMerge extends PreDexMerge {
     this.dxMaxHeapSize = dxMaxHeapSize;
   }
 
+  private ImmutableMap<Path, Sha1HashCode> resolvePrimaryDexInputHashPaths() {
+    ImmutableMap.Builder<Path, Sha1HashCode> dexInputHashesBuilder = ImmutableMap.builder();
+    for (PreDexSplitDexGroup rule : preDexDeps) {
+      for (Map.Entry<String, Sha1HashCode> entry : rule.getPrimaryDexInputHashes().entrySet()) {
+        dexInputHashesBuilder.put(
+            rule.getPrimaryDexRoot().resolve(entry.getKey()), entry.getValue());
+      }
+    }
+    return dexInputHashesBuilder.build();
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+    SplitDexPaths paths = new SplitDexPaths();
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), getPrimaryDexRoot())));
 
-    // Collect all of the DexWithClasses objects to use for merging.
-    ImmutableMultimap.Builder<APKModule, DexWithClasses> dexFilesToMergeBuilder =
-        ImmutableMultimap.builder();
-    dexFilesToMergeBuilder.putAll(
-        FluentIterable.from(preDexDeps.entries())
-            .transform(
-                input ->
-                    new AbstractMap.SimpleEntry<>(
-                        input.getKey(), DexWithClasses.TO_DEX_WITH_CLASSES.apply(input.getValue())))
-            .filter(input -> input.getValue() != null)
-            .toSet());
-
-    SplitDexPaths paths = new SplitDexPaths();
-
-    // Do not clear existing directory which might contain secondary dex files that are not
-    // re-merged (since their contents did not change).
-    steps.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), paths.jarfilesSubdir)));
-    steps.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                paths.additionalJarfilesSubdir)));
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -155,11 +132,16 @@ public class PreDexSplitDexMerge extends PreDexMerge {
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), paths.metadataSubdir)));
-
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), paths.scratchDir)));
+                context.getBuildCellRootPath(), getProjectFilesystem(), paths.jarfilesSubdir)));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                paths.additionalJarfilesSubdir)));
 
     buildableContext.recordArtifact(getPrimaryDexRoot());
     buildableContext.recordArtifact(paths.jarfilesSubdir);
@@ -167,83 +149,17 @@ public class PreDexSplitDexMerge extends PreDexMerge {
     buildableContext.recordArtifact(paths.successDir);
     buildableContext.recordArtifact(paths.additionalJarfilesSubdir);
 
-    final ImmutableSet<String> primaryDexPatterns;
-    if (dexSplitMode.isAllowRDotJavaInSecondaryDex()) {
-      primaryDexPatterns = dexSplitMode.getPrimaryDexPatterns();
-    } else {
-      primaryDexPatterns =
-          ImmutableSet.<String>builder()
-              .addAll(dexSplitMode.getPrimaryDexPatterns())
-              .add(
-                  "/R^",
-                  "/R$",
-                  // Pin this to the primary for test apps with no primary dex classes.
-                  // The exact match makes it fairly efficient.
-                  "^com/facebook/buck_generated/AppWithoutResourcesStub^")
-              .build();
-    }
-    PreDexedFilesSorter preDexedFilesSorter =
-        new PreDexedFilesSorter(
-            dexFilesToMergeBuilder.build(),
-            primaryDexPatterns,
-            apkModuleGraph,
-            paths.scratchDir,
-            // We kind of overload the "getLinearAllocHardLimit" parameter
-            // to set the dex weight limit during pre-dex merging.
-            dexSplitMode.getLinearAllocHardLimit(),
-            dexSplitMode.getDexStore(),
-            paths.jarfilesSubdir,
-            paths.additionalJarfilesSubdir);
-    ImmutableMap<String, PreDexedFilesSorter.Result> sortResults =
-        preDexedFilesSorter.sortIntoPrimaryAndSecondaryDexes(getProjectFilesystem(), steps);
-
-    PreDexedFilesSorter.Result rootApkModuleResult =
-        sortResults.get(APKModuleGraph.ROOT_APKMODULE_NAME);
-    if (rootApkModuleResult == null) {
-      throw new HumanReadableException("No classes found in primary or secondary dexes");
-    }
-
-    SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
-    ImmutableMultimap.Builder<Path, SourcePath> aggregatedOutputToInputs =
-        ImmutableMultimap.builder();
-    aggregatedOutputToInputs.orderKeysBy(Ordering.natural());
-    ImmutableMap.Builder<Path, Sha1HashCode> dexInputHashesBuilder = ImmutableMap.builder();
-    for (PreDexedFilesSorter.Result result : sortResults.values()) {
-      if (!result.apkModule.equals(apkModuleGraph.getRootAPKModule())) {
-        Path dexOutputPath = paths.additionalJarfilesSubdir.resolve(result.apkModule.getName());
-        steps.add(
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), dexOutputPath)));
-      }
-      aggregatedOutputToInputs.putAll(result.secondaryOutputToInputs);
-      addResolvedPathsToBuilder(
-          sourcePathResolverAdapter, dexInputHashesBuilder, result.dexInputHashes);
-    }
-    ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesBuilder.build();
-
     Path primaryDexPath = getPrimaryDexPath();
     steps.add(
         new SmartDexingStep(
             androidPlatformTarget,
             context,
             getProjectFilesystem(),
-            primaryDexPath,
-            Suppliers.ofInstance(
-                rootApkModuleResult.primaryDexInputs.stream()
-                    .map(
-                        path ->
-                            sourcePathResolverAdapter.getRelativePath(getProjectFilesystem(), path))
-                    .collect(ImmutableSet.toImmutableSet())),
-            Optional.of(paths.jarfilesSubdir),
-            Optional.of(
-                Suppliers.ofInstance(
-                    Multimaps.transformValues(
-                        aggregatedOutputToInputs.build(),
-                        path ->
-                            sourcePathResolverAdapter.getRelativePath(
-                                getProjectFilesystem(), path)))),
-            () -> dexInputHashes,
+            Optional.of(primaryDexPath),
+            Optional.of(this::getPrimaryDexInputs),
+            Optional.empty(),
+            Optional.empty(),
+            this::resolvePrimaryDexInputHashPaths,
             paths.successDir,
             DX_MERGE_OPTIONS,
             dxExecutorService,
@@ -256,20 +172,87 @@ public class PreDexSplitDexMerge extends PreDexMerge {
             getBuildTarget(),
             Optional.empty() /* minSdkVersion */));
 
-    for (PreDexedFilesSorter.Result result : sortResults.values()) {
-      if (!result.apkModule.equals(apkModuleGraph.getRootAPKModule())) {
-        Path dexMetadataOutputPath =
-            paths
-                .additionalJarfilesSubdir
-                .resolve(result.apkModule.getName())
-                .resolve("metadata.txt");
+    ImmutableSet.Builder<APKModule> modulesWithDexesBuilder = ImmutableSet.builder();
+    for (PreDexSplitDexGroup partialDex : preDexDeps) {
+      modulesWithDexesBuilder.add(partialDex.apkModule);
+    }
+    ImmutableSet<APKModule> modulesWithDexes = modulesWithDexesBuilder.build();
 
-        addMetadataWriteStep(result, steps, dexMetadataOutputPath);
-      }
+    for (APKModule apkModule : modulesWithDexes) {
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  paths.getSecondaryDexPathForModule(apkModule))));
     }
 
-    addMetadataWriteStep(rootApkModuleResult, steps, paths.metadataFile);
+    for (PreDexSplitDexGroup partialDex : preDexDeps) {
+      steps.add(
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              partialDex.getSecondaryDexRoot(),
+              paths.getSecondaryDexPathForModule(partialDex.apkModule),
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
+    }
+
+    steps.add(
+        new AbstractExecutionStep("merge_metadata") {
+          @Override
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            // Read metadata from all groups, combine into one metadata.txt per APK module
+            ImmutableMultimap.Builder<APKModule, String> mergedDexEntriesBuilder =
+                ImmutableMultimap.builder();
+            mergedDexEntriesBuilder.orderValuesBy(Ordering.natural());
+            for (PreDexSplitDexGroup partialDex : preDexDeps) {
+              for (String line :
+                  getProjectFilesystem().readLines(partialDex.getMetadataTxtPath())) {
+                mergedDexEntriesBuilder.put(partialDex.apkModule, line);
+              }
+            }
+            ImmutableMultimap<APKModule, String> mergedDexEntries = mergedDexEntriesBuilder.build();
+
+            for (APKModule apkModule : modulesWithDexes) {
+              Collection<String> dexEntries = mergedDexEntries.get(apkModule);
+              List<String> lines = Lists.newArrayListWithCapacity(dexEntries.size());
+
+              lines.add(".id " + apkModule.getName());
+              if (apkModule.isRootModule()) {
+                if (dexSplitMode.getDexStore() == DexStore.RAW) {
+                  lines.add(".root_relative");
+                }
+              } else {
+                for (APKModule dependency :
+                    apkModuleGraph.getGraph().getOutgoingNodesFor(apkModule)) {
+                  lines.add(".requires " + dependency.getName());
+                }
+              }
+              lines.addAll(dexEntries);
+              getProjectFilesystem()
+                  .writeLinesToPath(lines, paths.getMetadataTxtPathForModule(apkModule));
+            }
+            return StepExecutionResults.SUCCESS;
+          }
+        });
+
     return steps.build();
+  }
+
+  private Set<Path> getPrimaryDexInputs() {
+    return RichStream.from(preDexDeps)
+        .flatMap(
+            rule -> {
+              try {
+                return getProjectFilesystem().asView()
+                    .getFilesUnderPath(
+                        rule.getPrimaryDexRoot(), EnumSet.noneOf(FileVisitOption.class))
+                    .stream();
+              } catch (IOException e) {
+                e.printStackTrace();
+              }
+              return Stream.empty();
+            })
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -285,7 +268,6 @@ public class PreDexSplitDexMerge extends PreDexMerge {
   private final class SplitDexPaths {
     private final Path metadataDir;
     private final Path jarfilesDir;
-    private final Path scratchDir;
     private final Path successDir;
     private final Path metadataSubdir;
     private final Path jarfilesSubdir;
@@ -298,7 +280,6 @@ public class PreDexSplitDexMerge extends PreDexMerge {
 
       metadataDir = workDir.resolve("metadata");
       jarfilesDir = workDir.resolve("jarfiles");
-      scratchDir = workDir.resolve("scratch");
       successDir = workDir.resolve("success");
       // These directories must use SECONDARY_DEX_SUBDIR because that mirrors the paths that
       // they will appear at in the APK.
@@ -308,11 +289,22 @@ public class PreDexSplitDexMerge extends PreDexMerge {
       additionalJarfilesSubdir = additionalJarfilesDir.resolve("assets");
       metadataFile = metadataSubdir.resolve("metadata.txt");
     }
+
+    Path getSecondaryDexPathForModule(APKModule module) {
+      return module.isRootModule()
+          ? jarfilesSubdir
+          : additionalJarfilesSubdir.resolve(module.getName());
+    }
+
+    Path getMetadataTxtPathForModule(APKModule module) {
+      return module.isRootModule()
+          ? metadataFile
+          : additionalJarfilesSubdir.resolve(module.getName()).resolve("metadata.txt");
+    }
   }
 
   private Path getSecondaryDexRoot() {
-    return BuildTargetPaths.getScratchPath(
-        getProjectFilesystem(), getBuildTarget(), "%s_output/secondary");
+    return BuildPaths.getScratchDir(getProjectFilesystem(), getBuildTarget()).resolve("secondary");
   }
 
   ImmutableSortedSet<SourcePath> getSecondaryDexSourcePaths() {
@@ -349,66 +341,10 @@ public class PreDexSplitDexMerge extends PreDexMerge {
       mapOfModuleToSecondaryDexSourcePaths.put(
           apkModule.getName(),
           ExplicitBuildTargetSourcePath.of(
-              getBuildTarget(), paths.additionalJarfilesSubdir.resolve(apkModule.getName())));
+              getBuildTarget(), paths.getSecondaryDexPathForModule(apkModule)));
     }
 
     return mapOfModuleToSecondaryDexSourcePaths.build();
-  }
-
-  private void addResolvedPathsToBuilder(
-      SourcePathResolverAdapter sourcePathResolverAdapter,
-      ImmutableMap.Builder<Path, Sha1HashCode> builder,
-      ImmutableMap<SourcePath, Sha1HashCode> dexInputHashes) {
-    for (Map.Entry<SourcePath, Sha1HashCode> entry : dexInputHashes.entrySet()) {
-      builder.put(
-          sourcePathResolverAdapter.getRelativePath(getProjectFilesystem(), entry.getKey()),
-          entry.getValue());
-    }
-  }
-
-  private void addMetadataWriteStep(
-      PreDexedFilesSorter.Result result, ImmutableList.Builder<Step> steps, Path metadataFilePath) {
-    StringBuilder nameBuilder = new StringBuilder(30);
-    boolean isRootModule = result.apkModule.equals(apkModuleGraph.getRootAPKModule());
-    String storeId = result.apkModule.getName();
-    nameBuilder.append("write_");
-    if (!isRootModule) {
-      nameBuilder.append(storeId);
-      nameBuilder.append("_");
-    }
-    nameBuilder.append("metadata_txt");
-    steps.add(
-        new AbstractExecutionStep(nameBuilder.toString()) {
-          @Override
-          public StepExecutionResult execute(ExecutionContext executionContext) throws IOException {
-            Map<Path, DexWithClasses> metadataTxtEntries = result.metadataTxtDexEntries;
-            List<String> lines = Lists.newArrayListWithCapacity(metadataTxtEntries.size());
-
-            lines.add(".id " + storeId);
-            if (isRootModule) {
-              if (dexSplitMode.getDexStore() == DexStore.RAW) {
-                lines.add(".root_relative");
-              }
-            } else {
-              for (APKModule dependency :
-                  apkModuleGraph.getGraph().getOutgoingNodesFor(result.apkModule)) {
-                lines.add(".requires " + dependency.getName());
-              }
-            }
-
-            for (Map.Entry<Path, DexWithClasses> entry : metadataTxtEntries.entrySet()) {
-              Path pathToSecondaryDex = entry.getKey();
-              String containedClass = Iterables.get(entry.getValue().getClassNames(), 0);
-              containedClass = containedClass.replace('/', '.');
-              Sha1HashCode hash = getProjectFilesystem().computeSha1(pathToSecondaryDex);
-              lines.add(
-                  String.format(
-                      "%s %s %s", pathToSecondaryDex.getFileName(), hash, containedClass));
-            }
-            getProjectFilesystem().writeLinesToPath(lines, metadataFilePath);
-            return StepExecutionResults.SUCCESS;
-          }
-        });
   }
 
   public Path getMetadataTxtPath() {
@@ -428,11 +364,15 @@ public class PreDexSplitDexMerge extends PreDexMerge {
   }
 
   public SourcePath getMetadataTxtSourcePath() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getMetadataTxtPath());
+    return ExplicitBuildTargetSourcePath.of(
+        getBuildTarget(),
+        new SplitDexPaths().getMetadataTxtPathForModule(apkModuleGraph.getRootAPKModule()));
   }
 
   public SourcePath getDexDirectorySourcePath() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getDexDirectory());
+    return ExplicitBuildTargetSourcePath.of(
+        getBuildTarget(),
+        new SplitDexPaths().getSecondaryDexPathForModule(apkModuleGraph.getRootAPKModule()));
   }
 
   /**

@@ -121,8 +121,8 @@ public class SmartDexingStep implements Step {
       AndroidPlatformTarget androidPlatformTarget,
       BuildContext buildContext,
       ProjectFilesystem filesystem,
-      Path primaryOutputPath,
-      Supplier<Set<Path>> primaryInputsToDex,
+      Optional<Path> primaryOutputPath,
+      Optional<Supplier<Set<Path>>> primaryInputsToDex,
       Optional<Path> secondaryOutputDir,
       Optional<Supplier<Multimap<Path, Path>>> secondaryInputsToDex,
       DexInputHashesProvider dexInputHashesProvider,
@@ -145,7 +145,9 @@ public class SmartDexingStep implements Step {
         MoreSuppliers.memoize(
             () -> {
               Builder<Path, Path> map = ImmutableMultimap.builder();
-              map.putAll(primaryOutputPath, primaryInputsToDex.get());
+              if (primaryInputsToDex.isPresent()) {
+                map.putAll(primaryOutputPath.get(), primaryInputsToDex.get().get());
+              }
               if (secondaryInputsToDex.isPresent()) {
                 map.putAll(secondaryInputsToDex.get().get());
               }
