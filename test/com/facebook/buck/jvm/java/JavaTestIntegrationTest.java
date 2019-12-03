@@ -27,6 +27,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
@@ -352,10 +354,26 @@ public class JavaTestIntegrationTest {
             .toSortedSet(Ordering.natural());
     ImmutableSortedSet<Path> expectedPaths =
         ImmutableSortedSet.of(
-            Paths.get("buck-out/gen/lib__top__output/top.jar"),
-            Paths.get("buck-out/gen/lib__direct_dep__output/direct_dep.jar"),
-            Paths.get("buck-out/gen/lib__mid_test#testsjar__output/mid_test#testsjar.jar"),
-            Paths.get("buck-out/gen/lib__transitive_lib__output/transitive_lib.jar"));
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:top"),
+                    "lib__%s__output")
+                .resolve("top.jar"),
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:direct_dep"),
+                    "lib__%s__output")
+                .resolve("direct_dep.jar"),
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:mid_test#testsjar"),
+                    "lib__%s__output")
+                .resolve("mid_test#testsjar.jar"),
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:transitive_lib"),
+                    "lib__%s__output")
+                .resolve("transitive_lib.jar"));
     assertEquals(expectedPaths, actualPaths);
   }
 
@@ -392,12 +410,14 @@ public class JavaTestIntegrationTest {
     MoreAsserts.assertContainsOne(
         requiredPaths,
         workspace
-            .getPath(Paths.get("buck-out/gen/lib__transitive_lib__output/transitive_lib.jar"))
+            .getGenPath(BuildTargetFactory.newInstance("//:transitive_lib"), "lib__%s__output")
+            .resolve("transitive_lib.jar")
             .toString());
     MoreAsserts.assertContainsOne(
         requiredPaths,
         workspace
-            .getPath(Paths.get("buck-out/gen/lib__mid_test#testsjar__output/mid_test#testsjar.jar"))
+            .getGenPath(BuildTargetFactory.newInstance("//:mid_test#testsjar"), "lib__%s__output")
+            .resolve("mid_test#testsjar.jar")
             .toString());
   }
 
