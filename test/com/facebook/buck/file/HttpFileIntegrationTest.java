@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
@@ -35,7 +36,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -94,11 +94,10 @@ public class HttpFileIntegrationTest {
 
     Path outputPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("echo_executable.sh")
+            .getGenPath(BuildTargetFactory.newInstance("//:echo_executable.sh"), "%s")
             .resolve("echo_executable.sh");
-    Path scratchPath = workspace.getBuckPaths().getScratchDir().resolve("echo_executable.sh");
+    Path scratchPath =
+        workspace.getScratchPath(BuildTargetFactory.newInstance("//:echo_executable.sh"), "%s");
 
     workspace.runBuckCommand("fetch", "//:echo_executable.sh").assertSuccess();
 
@@ -119,11 +118,10 @@ public class HttpFileIntegrationTest {
 
     Path outputPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("echo_nonexecutable.sh")
+            .getGenPath(BuildTargetFactory.newInstance("//:echo_nonexecutable.sh"), "%s")
             .resolve("echo_nonexecutable.sh");
-    Path scratchPath = workspace.getBuckPaths().getScratchDir().resolve("echo_nonexecutable.sh");
+    Path scratchPath =
+        workspace.getScratchPath(BuildTargetFactory.newInstance("//:echo_nonexecutable.sh"), "%s");
 
     workspace.runBuckCommand("fetch", "//:echo_nonexecutable.sh").assertSuccess();
 
@@ -142,11 +140,10 @@ public class HttpFileIntegrationTest {
 
     Path outputPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("echo_bad_urls.sh")
+            .getGenPath(BuildTargetFactory.newInstance("//:echo_bad_urls.sh"), "%s")
             .resolve("echo_bad_urls.sh");
-    Path scratchPath = workspace.getBuckPaths().getScratchDir().resolve("echo_bad_urls.sh");
+    Path scratchPath =
+        workspace.getScratchPath(BuildTargetFactory.newInstance("//:echo_bad_urls.sh"), "%s");
 
     ProcessResult result = workspace.runBuckCommand("fetch", "//:echo_bad_urls.sh");
 
@@ -171,11 +168,10 @@ public class HttpFileIntegrationTest {
 
     Path outputPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("echo_bad_hash.sh")
+            .getGenPath(BuildTargetFactory.newInstance("//:echo_bad_hash.sh"), "%s")
             .resolve("echo_bad_hash.sh");
-    Path scratchPath = workspace.getBuckPaths().getScratchDir().resolve("echo_bad_hash.sh");
+    Path scratchPath =
+        workspace.getScratchPath(BuildTargetFactory.newInstance("//:echo_bad_hash.sh"), "%s");
 
     ProcessResult result = workspace.runBuckCommand("fetch", "//:echo_bad_hash.sh");
 
@@ -198,8 +194,9 @@ public class HttpFileIntegrationTest {
     workspace.setUp();
     rewriteBuckFileTemplate();
 
-    Path outputPath = workspace.getBuckPaths().getGenDir().resolve("echo.sh").resolve("echo.sh");
-    Path scratchPath = workspace.getBuckPaths().getScratchDir().resolve("echo.sh");
+    Path outputPath =
+        workspace.getGenPath(BuildTargetFactory.newInstance("//:echo.sh"), "%s").resolve("echo.sh");
+    Path scratchPath = workspace.getScratchPath(BuildTargetFactory.newInstance("//:echo.sh"), "%s");
 
     workspace.runBuckCommand("fetch", "//:echo.sh").assertSuccess();
 
@@ -215,9 +212,12 @@ public class HttpFileIntegrationTest {
     workspace.setUp();
     rewriteBuckFileTemplate();
 
-    Path relativeOutputPath = Paths.get("echo_with_out.sh", "some_file.sh");
-    Path outputPath = workspace.getBuckPaths().getGenDir().resolve(relativeOutputPath);
-    Path scratchPath = workspace.getBuckPaths().getScratchDir().resolve("echo_with_out.sh");
+    Path outputPath =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:echo_with_out.sh"), "%s")
+            .resolve("some_file.sh");
+    Path scratchPath =
+        workspace.getScratchPath(BuildTargetFactory.newInstance("//:echo_with_out.sh"), "%s");
 
     workspace.runBuckCommand("fetch", "//:echo_with_out.sh").assertSuccess();
 
@@ -237,11 +237,10 @@ public class HttpFileIntegrationTest {
 
     Path outputPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("echo_from_maven.sh")
+            .getGenPath(BuildTargetFactory.newInstance("//:echo_from_maven.sh"), "%s")
             .resolve("echo_from_maven.sh");
-    Path scratchPath = workspace.getBuckPaths().getScratchDir().resolve("echo_from_maven.sh");
+    Path scratchPath =
+        workspace.getScratchPath(BuildTargetFactory.newInstance("//:echo_from_maven.sh"), "%s");
 
     workspace.runBuckCommand("fetch", "//:echo_from_maven.sh").assertSuccess();
 
