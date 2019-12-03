@@ -227,7 +227,7 @@ public class ProjectIntegrationTest {
   public void testGeneratingProjectWithTargetUsingGenruleSourceBuildsGenrule() throws IOException {
     ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_source");
 
-    workspace.runBuckCommand("project", "//lib:lib");
+    workspace.runBuckCommand("project", "//lib:lib", "--experimental");
 
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//lib:gen");
@@ -238,7 +238,7 @@ public class ProjectIntegrationTest {
   public void testGeneratingProjectWithGenruleResourceBuildsGenrule() throws IOException {
     ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_resource");
 
-    workspace.runBuckCommand("project", "//app:TestApp");
+    workspace.runBuckCommand("project", "//app:TestApp", "--experimental");
 
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//app:GenResource");
@@ -317,7 +317,7 @@ public class ProjectIntegrationTest {
   public void testGeneratingProjectMetadataWithGenrule() throws IOException {
     ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_source");
 
-    workspace.runBuckCommand("project", "//lib:lib");
+    workspace.runBuckCommand("project", "//lib:lib", "--experimental");
     workspace.verify();
   }
 
@@ -341,7 +341,8 @@ public class ProjectIntegrationTest {
   public void testBuckProjectShowsFullOutput() throws Exception {
     ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_source");
 
-    ProcessResult result = workspace.runBuckCommand("project", "--show-full-output", "//lib:lib");
+    ProcessResult result =
+        workspace.runBuckCommand("project", "--show-full-output", "//lib:lib", "--experimental");
     workspace.verify();
 
     assertEquals(
@@ -355,7 +356,8 @@ public class ProjectIntegrationTest {
   public void testBuckProjectShowsOutput() throws IOException {
     ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_source");
 
-    ProcessResult result = workspace.runBuckCommand("project", "--show-output", "//lib:lib");
+    ProcessResult result =
+        workspace.runBuckCommand("project", "--show-output", "//lib:lib", "--experimental");
     workspace.verify();
 
     assertEquals(

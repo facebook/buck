@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.features.apple.project;
+package com.facebook.buck.features.apple.common;
 
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import java.nio.file.Path;

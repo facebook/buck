@@ -46,13 +46,14 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.features.apple.common.CopyInXcode;
 import com.facebook.buck.features.apple.common.SchemeActionType;
+import com.facebook.buck.features.apple.common.WorkspaceMetadataWriter;
 import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
-import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -392,24 +393,14 @@ public class WorkspaceAndProjectGenerator {
       throws IOException {
     Path path =
         combinedProject ? outputDirectory : outputDirectory.resolve(workspaceName + ".xcworkspace");
-    rootCell.getFilesystem().mkdirs(path);
-    ImmutableList<String> requiredTargetsStrings =
-        getRequiredBuildTargets().stream()
-            .map(Object::toString)
-            .sorted()
-            .collect(ImmutableList.toImmutableList());
-    ImmutableMap<String, Object> data =
-        ImmutableMap.of(
-            "required-targets",
-            requiredTargetsStrings,
-            "xcconfig-paths",
+    WorkspaceMetadataWriter workspaceMetadataWriter =
+        new WorkspaceMetadataWriter(
+            "1",
+            getRequiredBuildTargets(),
             getXcconfigPaths(),
-            "copy-in-xcode",
-            getFilesToCopyInXcode());
-    String jsonString = ObjectMappers.WRITER.writeValueAsString(data);
-    rootCell
-        .getFilesystem()
-        .writeContentsToPath(jsonString, path.resolve("buck-project.meta.json"));
+            getFilesToCopyInXcode(),
+            rootCell.getFilesystem());
+    workspaceMetadataWriter.writeToWorkspaceAtPath(path);
   }
 
   private void generateProjects(
