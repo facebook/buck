@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli.endtoend;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
 import com.facebook.buck.testutil.endtoend.EndToEndRunner;
@@ -69,23 +71,25 @@ public class BaseDirEndToEndTest {
     Path output =
         workspace
             .getDestPath()
+            .resolve(Paths.get("mybase-buck-out", "gen"))
             .resolve(
-                Paths.get(
-                    "mybase-buck-out",
-                    "gen",
-                    "simple_successful_helloworld",
-                    "simple_successful_helloworld"));
+                BuildTargetPaths.getBasePath(
+                        BuildTargetFactory.newInstance(
+                            "//simple_successful_helloworld:simple_successful_helloworld"),
+                        "%s")
+                    .toPath(workspace.getDestPath().getFileSystem()));
     Assert.assertTrue(Files.exists(output));
 
     Path usualOutput =
         workspace
             .getDestPath()
+            .resolve(Paths.get("buck-out", "gen"))
             .resolve(
-                Paths.get(
-                    "buck-out",
-                    "gen",
-                    "simple_successful_helloworld",
-                    "simple_successful_helloworld"));
+                BuildTargetPaths.getBasePath(
+                        BuildTargetFactory.newInstance(
+                            "//simple_successful_helloworld:simple_successful_helloworld"),
+                        "%s")
+                    .toPath(workspace.getDestPath().getFileSystem()));
     Assert.assertFalse(Files.exists(usualOutput));
 
     workspace.deleteRecursivelyIfExists(output.toString());
@@ -95,26 +99,7 @@ public class BaseDirEndToEndTest {
             "build", "//simple_successful_helloworld:simple_successful_helloworld");
     result.assertSuccess();
 
-    output =
-        workspace
-            .getDestPath()
-            .resolve(
-                Paths.get(
-                    "mybase-buck-out",
-                    "gen",
-                    "simple_successful_helloworld",
-                    "simple_successful_helloworld"));
     Assert.assertFalse(Files.exists(output));
-
-    usualOutput =
-        workspace
-            .getDestPath()
-            .resolve(
-                Paths.get(
-                    "buck-out",
-                    "gen",
-                    "simple_successful_helloworld",
-                    "simple_successful_helloworld"));
     Assert.assertTrue(Files.exists(usualOutput));
   }
 }

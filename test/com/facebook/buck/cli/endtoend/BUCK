@@ -20,6 +20,7 @@ java_test(
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/string:string",
         "//test/com/facebook/buck/cli:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/features/python:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
