@@ -291,7 +291,8 @@ public class Machos {
     return (header.getIs64Bit() || filesize <= Integer.MAX_VALUE);
   }
 
-  private static MachoHeader getHeader(MappedByteBuffer map) throws MachoException {
+  /** Returns the Mach-O header provided the file is Mach-O, otherwise throws an exception. */
+  protected static MachoHeader getHeader(MappedByteBuffer map) throws MachoException {
     byte[] magic = ObjectFileScrubbers.getBytes(map, MH_MAGIC.length);
     boolean is64bit;
     if (Arrays.equals(MH_MAGIC, magic) || Arrays.equals(MH_CIGAM, magic)) {
