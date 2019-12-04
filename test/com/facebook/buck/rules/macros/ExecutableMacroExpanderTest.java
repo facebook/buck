@@ -25,6 +25,7 @@ import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -89,11 +90,7 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        filesystem
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("java/com/facebook/util/ManifestGenerator.jar")
-            .toAbsolutePath();
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar").toAbsolutePath();
     String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
@@ -112,11 +109,7 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        filesystem
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("java/com/facebook/util/ManifestGenerator.jar")
-            .toAbsolutePath();
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar").toAbsolutePath();
     String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
@@ -136,11 +129,7 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        filesystem
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("java/com/facebook/util/ManifestGenerator.jar")
-            .toAbsolutePath();
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar").toAbsolutePath();
     String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
