@@ -33,6 +33,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -626,7 +627,11 @@ public class DefaultIjModuleFactoryTest {
   public void testAndroidPrebuiltAar() {
     SourcePath androidSupportBinaryPath =
         FakeSourcePath.of(
-            "buck-out/bin/third_party/java/support/__unpack_support#aar_unzip__/classes.jar");
+            "buck-out/bin/"
+                + BuildTargetPaths.getBasePath(
+                    BuildTargetFactory.newInstance("//third_party/java/support:support#aar_unzip"),
+                    "__unpack_%s__")
+                + "/classes.jar");
     Path androidSupportSourcesPath = Paths.get("third_party/java/support/support-sources.jar");
     String androidSupportJavadocUrl = "file:///support/docs";
     TargetNode<?> androidPrebuiltAar =
