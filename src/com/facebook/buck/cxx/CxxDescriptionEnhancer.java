@@ -119,6 +119,7 @@ public class CxxDescriptionEnhancer {
   public static final Flavor STATIC_FLAVOR = InternalFlavor.of("static");
   public static final Flavor STATIC_PIC_FLAVOR = InternalFlavor.of("static-pic");
   public static final Flavor SHARED_FLAVOR = InternalFlavor.of("shared");
+  public static final Flavor SHARED_INTERFACE_FLAVOR = InternalFlavor.of("shared-interface");
   public static final Flavor MACH_O_BUNDLE_FLAVOR = InternalFlavor.of("mach-o-bundle");
   public static final Flavor SHARED_LIBRARY_SYMLINK_TREE_FLAVOR =
       InternalFlavor.of("shared-library-symlink-tree");

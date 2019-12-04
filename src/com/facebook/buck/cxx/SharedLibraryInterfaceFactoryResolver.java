@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
+import com.facebook.buck.cxx.toolchain.MachoDylibStubParams;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 
@@ -28,6 +29,9 @@ class SharedLibraryInterfaceFactoryResolver {
       case ELF:
         ElfSharedLibraryInterfaceParams elfParams = (ElfSharedLibraryInterfaceParams) params;
         return ElfSharedLibraryInterfaceFactory.from(elfParams);
+      case MACHO:
+        MachoDylibStubParams dylibParams = (MachoDylibStubParams) params;
+        return MachoDylibStubRuleFactory.from(dylibParams);
       default:
         throw new HumanReadableException("Unknown shared library type: " + params.getKind());
     }

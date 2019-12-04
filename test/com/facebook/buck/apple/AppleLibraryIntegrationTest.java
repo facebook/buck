@@ -20,6 +20,7 @@ import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -508,6 +509,70 @@ public class AppleLibraryIntegrationTest {
 
     Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
+  }
+
+  @Test
+  public void testAppleBinaryLinksAgainstSharedInterface() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_library_shared_interface", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "shlib_interfaces", "enabled");
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Libraries/TestLibrary:Binary")
+            .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"));
+
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    assertThat(Files.exists(outputPath), is(true));
+  }
+
+  @Test
+  public void testAppleSharedInterfaceProducesTheSameStubsForSameABI() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_library_shared_interface", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "shlib_interfaces", "enabled");
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    byte[] aDylibStub =
+        buildDylibStub(workspace, filesystem, "//Libraries/TestLibrary:A", "Hello.dylib");
+    byte[] bDylibStub =
+        buildDylibStub(workspace, filesystem, "//Libraries/TestLibrary:B", "Hello.dylib");
+    assertThat(aDylibStub, equalTo(bDylibStub));
+  }
+
+  private byte[] buildDylibStub(
+      ProjectWorkspace workspace, ProjectFilesystem filesystem, String targetName, String libName)
+      throws IOException {
+    BuildTarget aLibTarget =
+        BuildTargetFactory.newInstance(targetName)
+            .withAppendedFlavors(
+                InternalFlavor.of("macosx-x86_64"), CxxDescriptionEnhancer.SHARED_INTERFACE_FLAVOR);
+
+    ProcessResult result = workspace.runBuckCommand("build", aLibTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path aLibOutputPath =
+        workspace
+            .getPath(BuildTargetPaths.getGenPath(filesystem, aLibTarget, "%s"))
+            .resolve(libName);
+    assertThat(Files.exists(aLibOutputPath), is(true));
+
+    return Files.readAllBytes(aLibOutputPath);
   }
 
   @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,37 +13,34 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
+import org.immutables.value.Value;
 
-public interface SharedLibraryInterfaceParams {
+/** Represents the params needed to create scrubbed dylib stubs. */
+@Value.Immutable
+@BuckStyleTuple
+abstract class AbstractMachoDylibStubParams implements SharedLibraryInterfaceParams {
 
-  Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration);
+  abstract Tool getStrip();
 
-  Kind getKind();
-
-  /** @return additional flags to pass to the linker when linking interfaces. */
-  ImmutableList<String> getLdflags();
-
-  /** The configured mode for shared library interfaces. */
-  enum Type {
-
-    /** Do not use shared library interfaces. */
-    DISABLED,
-
-    /** Use shared library interfaces for linking. */
-    ENABLED,
-
-    /** Strip undefined symbols from shared library interfaces, and use them for linking */
-    DEFINED_ONLY,
+  @Override
+  public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
+    return ImmutableList.of();
   }
 
-  enum Kind {
-    ELF,
-    MACHO,
+  @Override
+  public Kind getKind() {
+    return Kind.MACHO;
+  }
+
+  @Override
+  public ImmutableList<String> getLdflags() {
+    return ImmutableList.of();
   }
 }

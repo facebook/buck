@@ -34,6 +34,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
+import com.facebook.buck.cxx.toolchain.MachoDylibStubParams;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
@@ -72,7 +73,7 @@ public class CxxPlatforms {
   private CxxPlatforms() {}
 
   private static Optional<SharedLibraryInterfaceParams> getSharedLibraryInterfaceParams(
-      CxxBuckConfig config, Platform platform) {
+      CxxBuckConfig config, Platform platform, Optional<Tool> stripTool) {
     Optional<SharedLibraryInterfaceParams> sharedLibraryInterfaceParams = Optional.empty();
     Optional<SharedLibraryInterfaceParams.Type> type = config.getSharedLibraryInterfaces();
     if (!type.isPresent()) {
@@ -89,6 +90,14 @@ public class CxxPlatforms {
                       config.getIndependentShlibInterfacesLdflags().orElse(ImmutableList.of()),
                       type.get() == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
           break;
+
+        case MACOS:
+          if (!stripTool.isPresent()) {
+            break;
+          }
+          sharedLibraryInterfaceParams = Optional.of(MachoDylibStubParams.of(stripTool.get()));
+          break;
+
           // $CASES-OMITTED$
         default:
       }
@@ -143,6 +152,8 @@ public class CxxPlatforms {
       }
     }
 
+    Tool stripTool = config.getStrip().orElse(strip);
+
     builder
         .setFlavor(flavor)
         .setAs(config.getAs().orElse(as))
@@ -162,7 +173,7 @@ public class CxxPlatforms {
         .setRuntimeLdflags(runtimeLdflags)
         .setAr(config.getArchiverProvider(platform).orElse(ar))
         .setRanlib(config.getRanlib().isPresent() ? config.getRanlib() : ranlib)
-        .setStrip(config.getStrip().orElse(strip))
+        .setStrip(stripTool)
         .setBinaryExtension(binaryExtension)
         .setSharedLibraryExtension(
             config.getSharedLibraryExtension().orElse(sharedLibraryExtension))
@@ -189,7 +200,7 @@ public class CxxPlatforms {
     builder.setArchiveContents(config.getArchiveContents().orElse(archiveContents));
 
     Optional<SharedLibraryInterfaceParams> sharedLibParams =
-        getSharedLibraryInterfaceParams(config, platform);
+        getSharedLibraryInterfaceParams(config, platform, Optional.of(stripTool));
     builder.setSharedLibraryInterfaceParams(
         sharedLibParams.isPresent() ? sharedLibParams : defaultSharedLibraryInterfaceParams);
 
