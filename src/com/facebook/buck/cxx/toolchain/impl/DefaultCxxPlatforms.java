@@ -268,6 +268,7 @@ public class DefaultCxxPlatforms {
         sharedLibraryVersionedExtensionFormat,
         staticLibraryExtension,
         objectFileExtension,
+        Optional.empty(),
         compilerSanitizer,
         ImmutableMap.of(),
         binaryExtension,

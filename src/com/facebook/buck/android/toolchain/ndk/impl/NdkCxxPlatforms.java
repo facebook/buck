@@ -563,6 +563,19 @@ public class NdkCxxPlatforms {
             true);
     PreprocessorProvider cxxpp = new PreprocessorProvider(cxxTool, type, ToolType.CXXPP, true);
 
+    Optional<SharedLibraryInterfaceParams.Type> sharedLibType = config.getSharedLibraryInterfaces();
+    Optional<SharedLibraryInterfaceParams> sharedLibParams = Optional.empty();
+    if (sharedLibType.isPresent()
+        && sharedLibType.get() != SharedLibraryInterfaceParams.Type.DISABLED) {
+      sharedLibParams =
+          Optional.of(
+              ElfSharedLibraryInterfaceParams.of(
+                  new ConstantToolProvider(
+                      getGccTool(toolchainPaths, "objcopy", version, executableFinder)),
+                  ImmutableList.of(),
+                  sharedLibType.get() == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
+    }
+
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder();
     ImmutableBiMap<Path, String> sanitizePaths = sanitizePathsBuilder.build();
     PrefixMapDebugPathSanitizer compilerDebugPathSanitizer =
@@ -612,16 +625,7 @@ public class NdkCxxPlatforms {
         .setSharedLibraryVersionedExtensionFormat("so.%s")
         .setStaticLibraryExtension("a")
         .setObjectFileExtension("o")
-        .setSharedLibraryInterfaceParams(
-            config.getSharedLibraryInterfaces() != SharedLibraryInterfaceParams.Type.DISABLED
-                ? Optional.of(
-                    ElfSharedLibraryInterfaceParams.of(
-                        new ConstantToolProvider(
-                            getGccTool(toolchainPaths, "objcopy", version, executableFinder)),
-                        ImmutableList.of(),
-                        config.getSharedLibraryInterfaces()
-                            == SharedLibraryInterfaceParams.Type.DEFINED_ONLY))
-                : Optional.empty())
+        .setSharedLibraryInterfaceParams(sharedLibParams)
         .setPublicHeadersSymlinksEnabled(config.getPublicHeadersSymlinksEnabled())
         .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled())
         .setFilepathLengthLimited(config.getFilepathLengthLimited());

@@ -74,8 +74,12 @@ public class CxxPlatforms {
   private static Optional<SharedLibraryInterfaceParams> getSharedLibraryInterfaceParams(
       CxxBuckConfig config, Platform platform) {
     Optional<SharedLibraryInterfaceParams> sharedLibraryInterfaceParams = Optional.empty();
-    SharedLibraryInterfaceParams.Type type = config.getSharedLibraryInterfaces();
-    if (type != SharedLibraryInterfaceParams.Type.DISABLED) {
+    Optional<SharedLibraryInterfaceParams.Type> type = config.getSharedLibraryInterfaces();
+    if (!type.isPresent()) {
+      return Optional.empty();
+    }
+
+    if (type.get() != SharedLibraryInterfaceParams.Type.DISABLED) {
       switch (platform) {
         case LINUX:
           sharedLibraryInterfaceParams =
@@ -83,7 +87,7 @@ public class CxxPlatforms {
                   ElfSharedLibraryInterfaceParams.of(
                       config.getObjcopy().get(),
                       config.getIndependentShlibInterfacesLdflags().orElse(ImmutableList.of()),
-                      type == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
+                      type.get() == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
           break;
           // $CASES-OMITTED$
         default:
@@ -120,6 +124,7 @@ public class CxxPlatforms {
       String sharedLibraryVersionedExtensionFormat,
       String staticLibraryExtension,
       String objectFileExtension,
+      Optional<SharedLibraryInterfaceParams> defaultSharedLibraryInterfaceParams,
       DebugPathSanitizer compilerDebugPathSanitizer,
       ImmutableMap<String, String> flagMacros,
       Optional<String> binaryExtension,
@@ -183,7 +188,10 @@ public class CxxPlatforms {
 
     builder.setArchiveContents(config.getArchiveContents().orElse(archiveContents));
 
-    builder.setSharedLibraryInterfaceParams(getSharedLibraryInterfaceParams(config, platform));
+    Optional<SharedLibraryInterfaceParams> sharedLibParams =
+        getSharedLibraryInterfaceParams(config, platform);
+    builder.setSharedLibraryInterfaceParams(
+        sharedLibParams.isPresent() ? sharedLibParams : defaultSharedLibraryInterfaceParams);
 
     builder.addAllCflags(cflags);
     builder.addAllCxxflags(cxxflags);
@@ -229,6 +237,7 @@ public class CxxPlatforms {
         defaultPlatform.getSharedLibraryVersionedExtensionFormat(),
         defaultPlatform.getStaticLibraryExtension(),
         defaultPlatform.getObjectFileExtension(),
+        defaultPlatform.getSharedLibraryInterfaceParams(),
         defaultPlatform.getCompilerDebugPathSanitizer(),
         defaultPlatform.getFlagMacros(),
         defaultPlatform.getBinaryExtension(),

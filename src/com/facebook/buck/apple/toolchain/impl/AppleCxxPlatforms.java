@@ -455,6 +455,7 @@ public class AppleCxxPlatforms {
             "%s.dylib",
             "a",
             "o",
+            Optional.empty(),
             compilerDebugPathSanitizer,
             macros,
             Optional.empty(),
