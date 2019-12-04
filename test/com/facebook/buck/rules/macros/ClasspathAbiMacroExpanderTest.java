@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -67,7 +68,9 @@ public class ClasspathAbiMacroExpanderTest {
         String.format(
             "%s" + File.separator + "%s",
             filesystem.getRootPath(),
-            new File("buck-out/gen/cheese/cake#class-abi/cake-abi.jar").toPath()));
+            BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance("//cheese:cake#class-abi"), "%s")
+                .resolve("cake-abi.jar")));
   }
 
   @Test
@@ -92,9 +95,13 @@ public class ClasspathAbiMacroExpanderTest {
         String.format(
             "%s" + File.separator + "%s" + File.pathSeparatorChar + "%s" + File.separator + "%s",
             filesystem.getRootPath(),
-            new File("buck-out/gen/exciting/dep#class-abi/dep-abi.jar").toPath(),
+            BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance("//exciting:dep#class-abi"), "%s")
+                .resolve("dep-abi.jar"),
             filesystem.getRootPath(),
-            new File("buck-out/gen/exciting/target#class-abi/target-abi.jar").toPath()));
+            BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance("//exciting:target#class-abi"), "%s")
+                .resolve("target-abi.jar")));
   }
 
   private JavaLibraryBuilder getLibraryBuilder(String target) {
