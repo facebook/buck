@@ -43,7 +43,7 @@ import java.util.function.Supplier;
 
 /** kotlinc implemented as a separate binary. */
 public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
-
+  @AddToRuleKey private final String kotlinCompilerVersion;
   private static final KotlincVersion DEFAULT_VERSION = KotlincVersion.of("unknown version");
 
   private final Path pathToKotlinc;
@@ -73,11 +73,11 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
                 return KotlincVersion.of(output);
               }
             });
+    this.kotlinCompilerVersion = getKotlinCompilerVersion();
   }
 
   /** Returns the Kotlin version, or the path if version is unknown */
-  @AddToRuleKey
-  public String getKotlinCompilerVersion() {
+  private String getKotlinCompilerVersion() {
     if (DEFAULT_VERSION.equals(getVersion())) {
       // What we really want to do here is use a VersionedTool, however, this will suffice for now.
       return getShortName();
