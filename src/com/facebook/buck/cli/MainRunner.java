@@ -884,7 +884,8 @@ public final class MainRunner {
         // non-buckd read-write command. (We don't bother waiting
         // for it to complete; the thread is a daemon thread which
         // will just be terminated at shutdown time.)
-        TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
+        TRASH_CLEANER.startCleaningDirectory(
+            filesystem.resolve(filesystem.getBuckPaths().getTrashDir()));
       }
 
       ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
