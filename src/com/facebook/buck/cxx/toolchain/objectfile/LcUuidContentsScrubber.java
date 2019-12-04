@@ -37,11 +37,7 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
     long size = file.size();
     MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, size);
 
-    try {
-      Machos.setUuidIfPresent(map, ZERO_UUID);
-    } catch (Machos.MachoException e) {
-      throw new ScrubException(e.getMessage());
-    }
+    resetUuidIfPresent(map);
     map.rewind();
 
     Hasher hasher = Hashing.sha1().newHasher();
@@ -52,6 +48,15 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
     map.rewind();
     try {
       Machos.setUuidIfPresent(map, Arrays.copyOf(hasher.hash().asBytes(), 16));
+    } catch (Machos.MachoException e) {
+      throw new ScrubException(e.getMessage());
+    }
+  }
+
+  /** Sets the LC_UUID to all zeroes if it's part of the Mach-O file. */
+  protected static void resetUuidIfPresent(MappedByteBuffer map) throws ScrubException {
+    try {
+      Machos.setUuidIfPresent(map, ZERO_UUID);
     } catch (Machos.MachoException e) {
       throw new ScrubException(e.getMessage());
     }
