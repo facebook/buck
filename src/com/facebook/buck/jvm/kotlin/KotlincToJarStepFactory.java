@@ -149,22 +149,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     Path outputDirectory = parameters.getOutputPaths().getClassesDir();
     Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
 
-    Path stubsOutput =
-        BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_stubs__");
-    Path sourcesOutput =
-        BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_sources__");
-    Path classesOutput =
-        BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_classes__");
-    Path kaptGeneratedOutput =
-        BuildTargetPaths.getAnnotationPath(
-            projectFilesystem, invokingRule, "__%s_kapt_generated__");
-    Path tmpFolder =
-        BuildTargetPaths.getScratchPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
-    Path genOutputFolder =
-        BuildTargetPaths.getGenPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
-    Path genOutput =
-        BuildTargetPaths.getGenPath(
-            projectFilesystem, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
     boolean generatingCode = !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
     boolean hasKotlinSources =
         sourceFilePaths.stream().anyMatch(KOTLIN_PATH_MATCHER::matches)
@@ -173,9 +157,24 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     ImmutableSortedSet.Builder<Path> sourceBuilder =
         ImmutableSortedSet.<Path>naturalOrder().addAll(sourceFilePaths);
 
+    // Only invoke kotlinc if we have kotlin or src zip files.
     if (hasKotlinSources) {
-      ImmutableSortedSet<Path> sourcePaths =
-          ImmutableSortedSet.<Path>naturalOrder().add(genOutput).addAll(sourceFilePaths).build();
+      Path stubsOutput =
+          BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_stubs__");
+      Path sourcesOutput =
+          BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_sources__");
+      Path classesOutput =
+          BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_classes__");
+      Path kaptGeneratedOutput =
+          BuildTargetPaths.getAnnotationPath(
+              projectFilesystem, invokingRule, "__%s_kapt_generated__");
+      Path tmpFolder =
+          BuildTargetPaths.getScratchPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
+      Path genOutputFolder =
+          BuildTargetPaths.getGenPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
+      Path genOutput =
+          BuildTargetPaths.getGenPath(
+              projectFilesystem, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
 
       // Javac requires that the root directory for generated sources already exist.
       addCreateFolderStep(steps, projectFilesystem, buildContext, stubsOutput);
@@ -198,53 +197,84 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       String friendPathsArg = getFriendsPath(resolver, friendPaths);
       String moduleName = getModuleName(invokingRule);
 
+      ImmutableList.Builder<String> annotationProcessingOptionsBuilder = ImmutableList.builder();
+      Builder<Step> postKotlinCompilationSteps = ImmutableList.builder();
+
       if (generatingCode && annotationProcessingTool.equals(AnnotationProcessingTool.KAPT)) {
-        addKaptGenFolderStep(
-            invokingRule,
-            steps,
-            outputDirectory,
-            projectFilesystem,
-            sourceFilePaths,
-            pathToSrcsList,
-            allClasspaths,
-            extraKotlincArguments,
-            friendPathsArg,
-            moduleName,
-            kaptApOptions,
-            kaptGeneratedOutput,
-            stubsOutput,
-            classesOutput,
-            sourcesOutput,
-            parameters.getOutputPaths().getWorkingDirectory(),
-            resolver);
+        ImmutableList<String> annotationProcessors =
+            ImmutableList.copyOf(
+                javacOptions.getJavaAnnotationProcessorParams().getPluginProperties().stream()
+                    .map(
+                        resolvedJavacPluginProperties ->
+                            resolvedJavacPluginProperties.getJavacPluginJsr199Fields(
+                                buildContext.getSourcePathResolver(), projectFilesystem))
+                    .map(JavacPluginJsr199Fields::getClasspath)
+                    .flatMap(List::stream)
+                    .map(url -> AP_CLASSPATH_ARG + urlToFile(url))
+                    .collect(Collectors.toList()));
+
+        ImmutableList<String> kaptPluginOptions =
+            ImmutableList.<String>builder()
+                .add(
+                    AP_CLASSPATH_ARG
+                        + kotlinc.getAnnotationProcessorPath(buildContext.getSourcePathResolver()))
+                .add(AP_CLASSPATH_ARG + kotlinc.getStdlibPath(buildContext.getSourcePathResolver()))
+                .addAll(annotationProcessors)
+                .add(SOURCES_ARG + projectFilesystem.resolve(sourcesOutput))
+                .add(CLASSES_ARG + projectFilesystem.resolve(classesOutput))
+                .add(STUBS_ARG + projectFilesystem.resolve(stubsOutput))
+                .add(
+                    AP_OPTIONS
+                        + encodeKaptApOptions(
+                            kaptApOptions,
+                            projectFilesystem.resolve(kaptGeneratedOutput).toString()))
+                .add(JAVAC_ARG + encodeOptions(Collections.emptyMap()))
+                .add(LIGHT_ANALYSIS + "true") // TODO: Provide value as argument
+                .add(CORRECT_ERROR_TYPES + "false") // TODO: Provide value as argument
+                .add(VERBOSE_ARG + "true") // TODO: Provide value as argument
+                .build();
+
+        annotationProcessingOptionsBuilder
+            .add(
+                X_PLUGIN_ARG
+                    + kotlinc.getAnnotationProcessorPath(buildContext.getSourcePathResolver()))
+            .add(PLUGIN)
+            .add(KAPT3_PLUGIN + APT_MODE + "compile," + Joiner.on(",").join(kaptPluginOptions));
+
+        postKotlinCompilationSteps.add(
+            CopyStep.forDirectory(
+                projectFilesystem, sourcesOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
+        postKotlinCompilationSteps.add(
+            CopyStep.forDirectory(
+                projectFilesystem, classesOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
+        postKotlinCompilationSteps.add(
+            CopyStep.forDirectory(
+                projectFilesystem, kaptGeneratedOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
+
+        postKotlinCompilationSteps.add(
+            new ZipStep(
+                projectFilesystem,
+                genOutput,
+                ImmutableSet.of(),
+                false,
+                ZipCompressionLevel.DEFAULT,
+                tmpFolder));
+
+        // Generated classes should be part of the output. This way generated files
+        // such as META-INF dirs will also be added to the final jar.
+        postKotlinCompilationSteps.add(
+            CopyStep.forDirectory(
+                projectFilesystem, classesOutput, outputDirectory, DirectoryMode.CONTENTS_ONLY));
 
         sourceBuilder.add(genOutput);
       }
-
-      steps.add(
-          CopyStep.forDirectory(
-              projectFilesystem, sourcesOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
-      steps.add(
-          CopyStep.forDirectory(
-              projectFilesystem, classesOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
-      steps.add(
-          CopyStep.forDirectory(
-              projectFilesystem, kaptGeneratedOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
-
-      steps.add(
-          new ZipStep(
-              projectFilesystem,
-              genOutput,
-              ImmutableSet.of(),
-              false,
-              ZipCompressionLevel.DEFAULT,
-              tmpFolder));
 
       ImmutableList.Builder<String> extraArguments =
           ImmutableList.<String>builder()
               .addAll(extraKotlincArguments)
               .add(friendPathsArg)
               .addAll(getKotlincPluginsArgs(resolver))
+              .addAll(annotationProcessingOptionsBuilder.build())
               .add(MODULE_NAME)
               .add(moduleName)
               .add(NO_STDLIB)
@@ -262,7 +292,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
           new KotlincStep(
               invokingRule,
               outputDirectory,
-              sourcePaths,
+              sourceFilePaths,
               pathToSrcsList,
               allClasspaths,
               kotlinc,
@@ -271,11 +301,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               projectFilesystem,
               Optional.of(parameters.getOutputPaths().getWorkingDirectory())));
 
-      // Generated classes should be part of the output. This way generated files
-      // such as META-INF dirs will also be added to the final jar.
-      steps.add(
-          CopyStep.forDirectory(
-              projectFilesystem, classesOutput, outputDirectory, DirectoryMode.CONTENTS_ONLY));
+      steps.addAll(postKotlinCompilationSteps.build());
     }
 
     final JavacOptions finalJavacOptions;
@@ -298,12 +324,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             "Unexpected annotationProcessingTool " + annotationProcessingTool);
     }
 
-    ImmutableSortedSet<Path> sources = sourceBuilder.build();
-
     // Note that this filters out only .kt files, so this keeps both .java and .src.zip files.
     ImmutableSortedSet<Path> javaSourceFiles =
         ImmutableSortedSet.copyOf(
-            sources.stream()
+            sourceBuilder.build().stream()
                 .filter(input -> !KOTLIN_PATH_MATCHER.matches(input))
                 .collect(Collectors.toSet()));
 
@@ -342,112 +366,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       // In case of error, fall back to the original implementation.
       return url.getFile();
     }
-  }
-
-  private void addKaptGenFolderStep(
-      BuildTarget invokingRule,
-      ImmutableList.Builder<Step> steps,
-      Path outputDirectory,
-      ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> sourceFilePaths,
-      Path pathToSrcsList,
-      Iterable<? extends Path> declaredClasspathEntries,
-      ImmutableList<String> extraKotlincArguments,
-      String friendPathsArg,
-      String moduleName,
-      ImmutableMap<String, String> kaptApOptions,
-      Path kaptGenerated,
-      Path stubsOutput,
-      Path classesOutput,
-      Path sourcesOutput,
-      Path workingDirectory,
-      SourcePathResolverAdapter resolver) {
-
-    ImmutableList<String> annotationProcessors =
-        ImmutableList.copyOf(
-            javacOptions.getJavaAnnotationProcessorParams().getPluginProperties().stream()
-                .map(
-                    resolvedJavacPluginProperties ->
-                        resolvedJavacPluginProperties.getJavacPluginJsr199Fields(
-                            resolver, filesystem))
-                .map(JavacPluginJsr199Fields::getClasspath)
-                .flatMap(List::stream)
-                .map(url -> AP_CLASSPATH_ARG + urlToFile(url))
-                .collect(Collectors.toList()));
-
-    ImmutableList<String> kaptPluginOptions =
-        ImmutableList.<String>builder()
-            .add(AP_CLASSPATH_ARG + kotlinc.getAnnotationProcessorPath(resolver))
-            .add(AP_CLASSPATH_ARG + kotlinc.getStdlibPath(resolver))
-            .addAll(annotationProcessors)
-            .add(SOURCES_ARG + filesystem.resolve(sourcesOutput))
-            .add(CLASSES_ARG + filesystem.resolve(classesOutput))
-            .add(STUBS_ARG + filesystem.resolve(stubsOutput))
-            .add(
-                AP_OPTIONS
-                    + encodeKaptApOptions(
-                        kaptApOptions, filesystem.resolve(kaptGenerated).toString()))
-            .add(JAVAC_ARG + encodeOptions(Collections.emptyMap()))
-            .add(LIGHT_ANALYSIS + "true") // TODO: Provide value as argument
-            .add(CORRECT_ERROR_TYPES + "false") // TODO: Provide value as argument
-            .build();
-    String join = Joiner.on(",").join(kaptPluginOptions);
-
-    // First generate java stubs
-    steps.add(
-        new KotlincStep(
-            invokingRule,
-            outputDirectory,
-            sourceFilePaths,
-            pathToSrcsList,
-            ImmutableSortedSet.<Path>naturalOrder()
-                .add(kotlinc.getStdlibPath(resolver))
-                .addAll(
-                    Optional.ofNullable(extraClassPath.getExtraClasspath())
-                        .orElse(ImmutableList.of()))
-                .addAll(declaredClasspathEntries)
-                .build(),
-            kotlinc,
-            ImmutableList.<String>builder()
-                .addAll(extraKotlincArguments)
-                .add(friendPathsArg)
-                .add(MODULE_NAME)
-                .add(moduleName)
-                .add(PLUGIN)
-                .add(KAPT3_PLUGIN + APT_MODE + "stubs," + join)
-                .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath(resolver))
-                .build(),
-            ImmutableList.of(PLUGIN, VERBOSE_ARG + "true", VERBOSE),
-            filesystem,
-            Optional.of(workingDirectory)));
-
-    // Then run the annotation processor
-    steps.add(
-        new KotlincStep(
-            invokingRule,
-            outputDirectory,
-            sourceFilePaths,
-            pathToSrcsList,
-            ImmutableSortedSet.<Path>naturalOrder()
-                .add(kotlinc.getStdlibPath(resolver))
-                .addAll(
-                    Optional.ofNullable(extraClassPath.getExtraClasspath())
-                        .orElse(ImmutableList.of()))
-                .addAll(declaredClasspathEntries)
-                .build(),
-            kotlinc,
-            ImmutableList.<String>builder()
-                .addAll(extraKotlincArguments)
-                .add(friendPathsArg)
-                .add(MODULE_NAME)
-                .add(moduleName)
-                .add(PLUGIN)
-                .add(KAPT3_PLUGIN + APT_MODE + "apt," + join)
-                .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath(resolver))
-                .build(),
-            ImmutableList.of(PLUGIN, VERBOSE_ARG + "true", VERBOSE),
-            filesystem,
-            Optional.of(workingDirectory)));
   }
 
   @Override
