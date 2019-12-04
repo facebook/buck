@@ -43,11 +43,12 @@ import java.util.function.Supplier;
 
 /** kotlinc implemented as a separate binary. */
 public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
-  @AddToRuleKey private final String kotlinCompilerVersion;
+
   private static final KotlincVersion DEFAULT_VERSION = KotlincVersion.of("unknown version");
 
   private final Path pathToKotlinc;
   private final Supplier<KotlincVersion> version;
+  @AddToRuleKey private final String kotlinCompilerVersion;
 
   public ExternalKotlinc(Path pathToKotlinc) {
     this.pathToKotlinc = pathToKotlinc;
