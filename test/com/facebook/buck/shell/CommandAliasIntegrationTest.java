@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.function.Function;
 import org.junit.Rule;
@@ -76,9 +77,14 @@ public class CommandAliasIntegrationTest {
             .map(Enum::name)
             .map(String::toLowerCase)
             .collect(ImmutableSet.toImmutableSet());
-    String[] files = genDir.list((dir, name) -> platforms.contains(name));
-    assertEquals(
-        ImmutableList.of(Platform.detect().name().toLowerCase()), ImmutableList.copyOf(files));
+    ImmutableList<String> files =
+        Files.walk(genDir.toPath())
+            .filter(p -> Files.isDirectory(p))
+            .map(p -> p.getFileName().toString())
+            .filter(platforms::contains)
+            .collect(ImmutableList.toImmutableList());
+
+    assertEquals(ImmutableList.of(Platform.detect().name().toLowerCase()), files);
   }
 
   @Test
