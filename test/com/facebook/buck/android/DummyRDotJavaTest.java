@@ -113,7 +113,8 @@ public class DummyRDotJavaTest {
                 "%s/%s.jar",
                 rDotJavaOutputFolder,
                 dummyRDotJava.getBuildTarget().getShortNameAndFlavorPostfix()));
-    String genFolder = Paths.get("buck-out/gen/java/base/").toString();
+    String genFolder =
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").getParent().toString();
 
     List<String> sortedSymbolsFiles =
         Stream.of(resourceRule1, resourceRule2)
