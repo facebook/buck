@@ -71,6 +71,17 @@ public class MostFilesTest {
     MostFiles.deleteRecursivelyIfExists(fakeTmpDir.resolve("nonexistent"));
   }
 
+  @Test
+  public void deleteRecursivelyNonExistentDeleteContentsIgnoreNoSuchFile() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path fakeTmpDir = vfs.getPath("/tmp/fake-tmp-dir");
+    MostFiles.deleteRecursivelyWithOptions(
+        fakeTmpDir.resolve("nonexistent"),
+        EnumSet.of(
+            MostFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY,
+            MostFiles.DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION));
+  }
+
   @Test(expected = IOException.class)
   public void deleteRecursivelyIfExistsShouldFailOnFileIfDeletingOnlyContents() throws IOException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());

@@ -34,6 +34,7 @@ import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -177,6 +178,11 @@ public final class MostFiles {
       Path path, EnumSet<DeleteRecursivelyOptions> options) throws IOException {
     try {
       if (!Files.isDirectory(path)) {
+        if (options.contains(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION)) {
+          if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            return;
+          }
+        }
         if (options.contains(DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY)) {
           throw new IOException(String.format("Can't delete contents of regular file %s.", path));
         }
