@@ -19,8 +19,6 @@ package com.facebook.buck.core.sourcepath.resolver.impl;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -424,18 +422,15 @@ public class SourcePathResolverTest {
     PathSourcePath pathSourcePath1 = FakeSourcePath.of(projectFilesystem, "same_name");
     PathSourcePath pathSourcePath2 = FakeSourcePath.of(projectFilesystem, "same_name");
 
+    exception.expect(HumanReadableException.class);
+    exception.expectMessage("duplicate entries");
+
     // Try to resolve these source paths, with the same name, together and verify that an
     // exception is thrown.
-    try {
-      SourcePathResolverAdapter resolver =
-          new SourcePathResolverAdapter(
-              DefaultSourcePathResolver.from(new TestActionGraphBuilder()));
-      resolver.getSourcePathNames(
-          target, parameter, ImmutableList.of(pathSourcePath1, pathSourcePath2));
-      fail("expected to throw");
-    } catch (HumanReadableException e) {
-      assertTrue(e.getMessage().contains("duplicate entries"));
-    }
+    SourcePathResolverAdapter resolver =
+        new SourcePathResolverAdapter(DefaultSourcePathResolver.from(new TestActionGraphBuilder()));
+    resolver.getSourcePathNames(
+        target, parameter, ImmutableList.of(pathSourcePath1, pathSourcePath2));
   }
 
   @Test
