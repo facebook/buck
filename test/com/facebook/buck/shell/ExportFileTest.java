@@ -93,12 +93,13 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "rm -f -r " + Paths.get("buck-out/gen/example.html"),
-            "mkdir -p " + Paths.get("buck-out/gen/example.html"),
+            "rm -f -r " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
+            "mkdir -p " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
             "cp "
                 + projectFilesystem.resolve("example.html")
                 + " "
-                + Paths.get("buck-out/gen/example.html/example.html")),
+                + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")
+                    .resolve("example.html")),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
@@ -122,12 +123,12 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "rm -f -r " + Paths.get("buck-out/gen/example.html"),
-            "mkdir -p " + Paths.get("buck-out/gen/example.html"),
+            "rm -f -r " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
+            "mkdir -p " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
             "cp "
                 + projectFilesystem.resolve("example.html")
                 + " "
-                + Paths.get("buck-out/gen/example.html/fish")),
+                + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve("fish")),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
@@ -154,12 +155,12 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "rm -f -r " + Paths.get("buck-out/gen/example.html"),
-            "mkdir -p " + Paths.get("buck-out/gen/example.html"),
+            "rm -f -r " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
+            "mkdir -p " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
             "cp "
                 + projectFilesystem.resolve("chips")
                 + " "
-                + Paths.get("buck-out/gen/example.html/fish")),
+                + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve("fish")),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
