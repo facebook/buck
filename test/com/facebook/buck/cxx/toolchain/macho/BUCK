@@ -5,6 +5,8 @@ standard_java_test(
     with_test_data = True,
     deps = [
         "//src/com/facebook/buck/cxx/toolchain/objectfile:objectfile",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
         "//third-party/java/immutables:immutables",

@@ -41,7 +41,7 @@ public class Machos {
   // Map segment load command
   static final int LC_SEGMENT = 0x1;
   // Symbol table load command
-  static final int LC_SYMTAB = 0x2;
+  public static final int LC_SYMTAB = 0x2;
   // UUID load command
   static final int LC_UUID = 0x1B;
   // Map 64 bit segment load command
