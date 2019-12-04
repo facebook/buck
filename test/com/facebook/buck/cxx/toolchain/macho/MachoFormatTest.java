@@ -19,6 +19,8 @@ import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.toolchain.objectfile.MachoDyldInfoCommand;
+import com.facebook.buck.cxx.toolchain.objectfile.MachoDyldInfoCommandReader;
 import com.facebook.buck.cxx.toolchain.objectfile.MachoSymTabCommand;
 import com.facebook.buck.cxx.toolchain.objectfile.MachoSymTabCommandReader;
 import com.facebook.buck.cxx.toolchain.objectfile.Machos;
@@ -67,5 +69,27 @@ public class MachoFormatTest {
     assertThat(symTabCommand.getNumberOfSymbolTableEntries(), equalTo(16));
     assertThat(symTabCommand.getStringTableOffset(), equalTo(8560));
     assertThat(symTabCommand.getStringTableSize(), equalTo(280));
+  }
+
+  @Test
+  public void testDyldInfoCommand() throws IOException {
+    MappedByteBuffer dylibBuffer = helloLibDylibByteBufferReadOnly();
+    Optional<MachoDyldInfoCommand> maybeDyldInfoCommand =
+        MachoDyldInfoCommandReader.read(dylibBuffer);
+    assertTrue(maybeDyldInfoCommand.isPresent());
+
+    MachoDyldInfoCommand dyldInfoCommand = maybeDyldInfoCommand.get();
+    assertThat(dyldInfoCommand.getCommand(), equalTo(Machos.LC_DYLD_INFO_ONLY));
+    assertThat(dyldInfoCommand.getCommandSize(), equalTo(48));
+    assertThat(dyldInfoCommand.getRebaseInfoOffset(), equalTo(8192));
+    assertThat(dyldInfoCommand.getRebaseInfoSize(), equalTo(8));
+    assertThat(dyldInfoCommand.getBindInfoOffset(), equalTo(8200));
+    assertThat(dyldInfoCommand.getBindInfoSize(), equalTo(24));
+    assertThat(dyldInfoCommand.getWeakBindInfoOffset(), equalTo(0));
+    assertThat(dyldInfoCommand.getWeakBindInfoSize(), equalTo(0));
+    assertThat(dyldInfoCommand.getLazyBindInfoOffset(), equalTo(8224));
+    assertThat(dyldInfoCommand.getLazyBindInfoSize(), equalTo(16));
+    assertThat(dyldInfoCommand.getExportInfoOffset(), equalTo(8240));
+    assertThat(dyldInfoCommand.getExportInfoSize(), equalTo(40));
   }
 }

@@ -47,6 +47,10 @@ public class Machos {
   // Map 64 bit segment load command
   static final int LC_SEGMENT_64 = 0x19;
 
+  static final int LC_REQ_DYLD = 0x80000000;
+  static final int LC_DYLD_INFO = 0x22;
+  public static final int LC_DYLD_INFO_ONLY = (0x22 | LC_REQ_DYLD);
+
   // http://www.opensource.apple.com/source/xnu/xnu-1699.32.7/EXTERNAL_HEADERS/mach-o/stab.h
   // Description of object file STAB entries
   static final short N_OSO = (short) 0x66;
