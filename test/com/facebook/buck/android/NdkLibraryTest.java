@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -96,18 +97,13 @@ public class NdkLibraryTest {
 
     assertTrue(ndkLibrary.isAsset());
     assertEquals(
-        projectFilesystem.getBuckPaths().getGenDir().resolve(basePath).resolve("__libbase"),
+        BuildTargetPaths.getGenPath(projectFilesystem, target, "__lib%s"),
         ndkLibrary.getLibraryPath());
 
     List<Step> steps = ndkLibrary.getBuildSteps(context, new FakeBuildableContext());
 
     String libbase =
-        projectFilesystem
-            .getBuckPaths()
-            .getScratchDir()
-            .resolve(basePath)
-            .resolve("__libbase")
-            .toString();
+        BuildTargetPaths.getScratchPath(projectFilesystem, target, "__lib%s").toString();
     MoreAsserts.assertShellCommands(
         "ndk_library() should invoke ndk-build on the given path with some -j value",
         ImmutableList.of(
