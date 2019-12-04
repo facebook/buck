@@ -36,11 +36,17 @@ public class MachoExportTrieReader {
 
     Optional<MachoExportTrieNode.ExportInfo> exportInfo = Optional.empty();
     if (exportInfoSize > 0) {
+      int startPosition = byteBuffer.position();
       exportInfo = Optional.of(readExportInfo(byteBuffer));
+      int bytesRead = byteBuffer.position() - startPosition;
+      if (bytesRead != exportInfoSize) {
+        throw new IllegalStateException(
+            "Mismatch between expected export info size and actual bytes read");
+      }
     }
 
     int numberOfChildren = byteBuffer.get() & 0xFF;
-    int nextChildEdgePosition = (int) (byteBuffer.position() + exportInfoSize);
+    int nextChildEdgePosition = byteBuffer.position();
 
     ArrayList<MachoExportTrieEdge> edges = new ArrayList<>();
 

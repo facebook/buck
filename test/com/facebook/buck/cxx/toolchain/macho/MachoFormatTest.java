@@ -53,6 +53,10 @@ public class MachoFormatTest {
     return testDataDir.resolve("samples").resolve("libHelloLib.dylib");
   }
 
+  private Path getGlogDylibPath() {
+    return testDataDir.resolve("samples").resolve("libglog-stripped.dylib");
+  }
+
   private FileChannel openHelloLibDylibReadOnly() throws IOException {
     Path dylibFilePath = getHelloLibDylibPath();
     return FileChannel.open(dylibFilePath, StandardOpenOption.READ);
@@ -60,6 +64,12 @@ public class MachoFormatTest {
 
   private MappedByteBuffer helloLibDylibByteBufferReadOnly() throws IOException {
     FileChannel dylibFileChannel = openHelloLibDylibReadOnly();
+    return dylibFileChannel.map(FileChannel.MapMode.READ_ONLY, 0, dylibFileChannel.size());
+  }
+
+  private MappedByteBuffer glogDylibByteBufferReadOnly() throws IOException {
+    Path dylibFilePath = getGlogDylibPath();
+    FileChannel dylibFileChannel = FileChannel.open(dylibFilePath, StandardOpenOption.READ);
     return dylibFileChannel.map(FileChannel.MapMode.READ_ONLY, 0, dylibFileChannel.size());
   }
 
@@ -102,7 +112,10 @@ public class MachoFormatTest {
 
   @Nonnull
   protected Optional<MachoExportTrieNode> readExportTrieFromHelloLib() throws IOException {
-    MappedByteBuffer dylibBuffer = helloLibDylibByteBufferReadOnly();
+    return readExportTrieFromBuffer(helloLibDylibByteBufferReadOnly());
+  }
+
+  private Optional<MachoExportTrieNode> readExportTrieFromBuffer(MappedByteBuffer dylibBuffer) {
     Optional<MachoDyldInfoCommand> maybeDyldInfoCommand =
         MachoDyldInfoCommandReader.read(dylibBuffer);
     assertTrue(maybeDyldInfoCommand.isPresent());
@@ -134,6 +147,17 @@ public class MachoFormatTest {
     MachoExportTrieNode secondExportedSymbol = nodesWithExportInfo.get(1);
     assertTrue(secondExportedSymbol.getExportInfo().isPresent());
     assertThat(secondExportedSymbol.getExportInfo().get().address, equalTo(0xF50L));
+  }
+
+  @Test
+  public void testGlogExportTrieReader() throws IOException {
+    Optional<MachoExportTrieNode> maybeRoot =
+        readExportTrieFromBuffer(glogDylibByteBufferReadOnly());
+    assertTrue(maybeRoot.isPresent());
+
+    // Verify that the glog dylib contains 213 exports
+    List<MachoExportTrieNode> nodesWithExportInfo = maybeRoot.get().collectNodesWithExportInfo();
+    assertThat(nodesWithExportInfo.size(), equalTo(213));
   }
 
   @Test
