@@ -18,8 +18,6 @@ with different version of those libraries in //third-party/java/android
 5) Fine-tuned the compression ratio so that the compression step does not take too long just to achieve
    a tiny bit of reduction in the size of the compressed file.
    Applied patch from SignedJarBuilder.patch.
-6) Applied patch KotlinCoroutines.patch to fix https://github.com/facebook/buck/issues/2289
-
 
 == How to build apksig.jar
 1) Download source code from Google Open Source https://android.googlesource.com/platform/tools/apksig/+/master/src/main/java/com/android/apksig
