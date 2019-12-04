@@ -17,20 +17,27 @@ package com.facebook.buck.cxx.toolchain.macho;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.toolchain.objectfile.MachoDyldInfoCommand;
 import com.facebook.buck.cxx.toolchain.objectfile.MachoDyldInfoCommandReader;
+import com.facebook.buck.cxx.toolchain.objectfile.MachoExportTrieNode;
+import com.facebook.buck.cxx.toolchain.objectfile.MachoExportTrieReader;
+import com.facebook.buck.cxx.toolchain.objectfile.MachoExportTrieWriter;
 import com.facebook.buck.cxx.toolchain.objectfile.MachoSymTabCommand;
 import com.facebook.buck.cxx.toolchain.objectfile.MachoSymTabCommandReader;
 import com.facebook.buck.cxx.toolchain.objectfile.Machos;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -91,5 +98,72 @@ public class MachoFormatTest {
     assertThat(dyldInfoCommand.getLazyBindInfoSize(), equalTo(16));
     assertThat(dyldInfoCommand.getExportInfoOffset(), equalTo(8240));
     assertThat(dyldInfoCommand.getExportInfoSize(), equalTo(40));
+  }
+
+  @Nonnull
+  protected Optional<MachoExportTrieNode> readExportTrieFromHelloLib() throws IOException {
+    MappedByteBuffer dylibBuffer = helloLibDylibByteBufferReadOnly();
+    Optional<MachoDyldInfoCommand> maybeDyldInfoCommand =
+        MachoDyldInfoCommandReader.read(dylibBuffer);
+    assertTrue(maybeDyldInfoCommand.isPresent());
+
+    MachoDyldInfoCommand dyldInfoCommand = maybeDyldInfoCommand.get();
+
+    dylibBuffer.position(dyldInfoCommand.getExportInfoOffset());
+    ByteBuffer exportTrieByteBuffer = dylibBuffer.slice();
+    exportTrieByteBuffer.limit(dyldInfoCommand.getExportInfoSize());
+
+    return MachoExportTrieReader.read(exportTrieByteBuffer);
+  }
+
+  @Test
+  public void testExportTrieReader() throws IOException {
+    Optional<MachoExportTrieNode> maybeRoot = readExportTrieFromHelloLib();
+    assertTrue(maybeRoot.isPresent());
+
+    // The dylib contains two exported symbols at the following addresses:
+    // - _hello: 0x00000F20
+    // - _goodbye: 0x00000F50
+    List<MachoExportTrieNode> nodesWithExportInfo = maybeRoot.get().collectNodesWithExportInfo();
+    assertThat(nodesWithExportInfo.size(), equalTo(2));
+
+    MachoExportTrieNode firstExportedSymbol = nodesWithExportInfo.get(0);
+    assertTrue(firstExportedSymbol.getExportInfo().isPresent());
+    assertThat(firstExportedSymbol.getExportInfo().get().address, equalTo(0xF20L));
+
+    MachoExportTrieNode secondExportedSymbol = nodesWithExportInfo.get(1);
+    assertTrue(secondExportedSymbol.getExportInfo().isPresent());
+    assertThat(secondExportedSymbol.getExportInfo().get().address, equalTo(0xF50L));
+  }
+
+  @Test
+  public void testExportTrieWriter() throws IOException {
+    Optional<MachoExportTrieNode> maybeRoot = readExportTrieFromHelloLib();
+    assertTrue(maybeRoot.isPresent());
+
+    List<MachoExportTrieNode> nodesWithExportInfo = maybeRoot.get().collectNodesWithExportInfo();
+    assertThat(nodesWithExportInfo.size(), equalTo(2));
+    nodesWithExportInfo.get(0).getExportInfo().get().address = 0xDEADBEEFL;
+    nodesWithExportInfo.get(1).getExportInfo().get().address = 0xFEEDFACEL;
+
+    ByteBuffer writeBuffer = ByteBuffer.allocate(256);
+    MachoExportTrieWriter.write(maybeRoot.get(), writeBuffer);
+    assertThat(writeBuffer.position(), not(equalTo(0)));
+
+    writeBuffer.rewind();
+    Optional<MachoExportTrieNode> maybeWrittenRoot = MachoExportTrieReader.read(writeBuffer);
+    assertTrue(maybeWrittenRoot.isPresent());
+
+    List<MachoExportTrieNode> writtenNodesWithExportInfo =
+        maybeWrittenRoot.get().collectNodesWithExportInfo();
+    assertThat(writtenNodesWithExportInfo.size(), equalTo(2));
+
+    MachoExportTrieNode firstExportedSymbol = nodesWithExportInfo.get(0);
+    assertTrue(firstExportedSymbol.getExportInfo().isPresent());
+    assertThat(firstExportedSymbol.getExportInfo().get().address, equalTo(0xDEADBEEFL));
+
+    MachoExportTrieNode secondExportedSymbol = nodesWithExportInfo.get(1);
+    assertTrue(secondExportedSymbol.getExportInfo().isPresent());
+    assertThat(secondExportedSymbol.getExportInfo().get().address, equalTo(0xFEEDFACEL));
   }
 }
