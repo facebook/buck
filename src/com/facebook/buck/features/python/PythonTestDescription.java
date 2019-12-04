@@ -27,7 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -451,9 +451,9 @@ public class PythonTestDescription
             ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert));
 
     // Additional CXX Targets used to generate CXX coverage.
-    ImmutableSet<UnflavoredBuildTargetView> additionalCoverageTargets =
+    ImmutableSet<UnflavoredBuildTarget> additionalCoverageTargets =
         RichStream.from(args.getAdditionalCoverageTargets())
-            .map(target -> target.getUnflavoredBuildTarget())
+            .map(BuildTarget::getUnflavoredBuildTarget)
             .collect(ImmutableSet.toImmutableSet());
     ImmutableSortedSet<SourcePath> additionalCoverageSourcePaths =
         additionalCoverageTargets.isEmpty()
@@ -462,7 +462,7 @@ public class PythonTestDescription
                 .getRuntimeDeps(graphBuilder)
                 .filter(
                     target -> additionalCoverageTargets.contains(target.getUnflavoredBuildTarget()))
-                .map(target -> DefaultBuildTargetSourcePath.of(target))
+                .map(DefaultBuildTargetSourcePath::of)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
     // Generate and return the python test rule, which depends on the python binary rule above.

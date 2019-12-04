@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.stream.Stream;
@@ -41,7 +41,7 @@ public class MergedTargetNodeTest {
                     .getUnconfiguredBuildTargetView()
                     .configure(ConfigurationBuildTargetFactoryForTests.newConfiguration("//:p")))
             .build();
-    ImmutableMap<UnflavoredBuildTargetView, MergedTargetNode> groups =
+    ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> groups =
         MergedTargetNode.group(ImmutableList.of(bar1, bar2, bar3, qux));
 
     assertEquals(

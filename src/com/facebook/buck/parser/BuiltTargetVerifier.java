@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -45,7 +45,7 @@ public class BuiltTargetVerifier {
       UnconfiguredBuildTargetView target,
       BaseDescription<?> description,
       Map<String, Object> rawNode) {
-    UnflavoredBuildTargetView unflavoredBuildTargetView = target.getUnflavoredBuildTargetView();
+    UnflavoredBuildTarget unflavoredBuildTargetView = target.getUnflavoredBuildTarget();
     if (target.isFlavored()) {
       if (description instanceof Flavored) {
         // TODO(nga): use proper target configuration
@@ -73,7 +73,7 @@ public class BuiltTargetVerifier {
       }
     }
 
-    UnflavoredBuildTargetView unflavoredBuildTargetViewFromRawData =
+    UnflavoredBuildTarget unflavoredBuildTargetViewFromRawData =
         UnflavoredBuildTargetFactory.createFromRawNode(
             cell.getRoot(), cell.getCanonicalName(), rawNode, buildFile);
     if (!unflavoredBuildTargetView.equals(unflavoredBuildTargetViewFromRawData)) {

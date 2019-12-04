@@ -35,7 +35,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -1224,7 +1224,7 @@ public class IncrementalActionGraphScenarioTest {
   private void assertBuildRulesSame(
       ActionGraphAndBuilder expectedActionGraph,
       ActionGraphAndBuilder actualActionGraph,
-      UnflavoredBuildTargetView unflavoredTarget) {
+      UnflavoredBuildTarget unflavoredTarget) {
     assertBuildRulesSame(
         filterRules(expectedActionGraph, unflavoredTarget),
         filterRules(actualActionGraph, unflavoredTarget));
@@ -1259,7 +1259,7 @@ public class IncrementalActionGraphScenarioTest {
   private void assertCommonBuildRulesNotSame(
       ActionGraphAndBuilder lastActionGraph,
       ActionGraphAndBuilder newActionGraph,
-      UnflavoredBuildTargetView unflavoredTarget) {
+      UnflavoredBuildTarget unflavoredTarget) {
     ImmutableMap<BuildRule, BuildRule> lastBuildRuleMap =
         buildBuildRuleMap(filterRules(lastActionGraph, unflavoredTarget));
     ImmutableMap<BuildRule, BuildRule> newBuildRuleMap =
@@ -1271,7 +1271,7 @@ public class IncrementalActionGraphScenarioTest {
   }
 
   private Iterable<BuildRule> filterRules(
-      ActionGraphAndBuilder actionGraph, UnflavoredBuildTargetView unflavoredTarget) {
+      ActionGraphAndBuilder actionGraph, UnflavoredBuildTarget unflavoredTarget) {
     return RichStream.from(actionGraph.getActionGraph().getNodes())
         .filter(
             x ->

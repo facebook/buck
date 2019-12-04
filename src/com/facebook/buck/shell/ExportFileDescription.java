@@ -21,7 +21,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -112,11 +112,11 @@ public class ExportFileDescription
   /** If the src field is absent, add the name field to the list of inputs. */
   @Override
   public ImmutableList<ForwardRelativePath> inferInputsFromConstructorArgs(
-      UnflavoredBuildTargetView buildTarget, ExportFileDescriptionArg constructorArg) {
+      UnflavoredBuildTarget buildTarget, ExportFileDescriptionArg constructorArg) {
     ImmutableList.Builder<ForwardRelativePath> inputs = ImmutableList.builder();
     if (!constructorArg.getSrc().isPresent()) {
       inputs.add(
-          buildTarget.getCellRelativeBasePath().getPath().resolve(buildTarget.getShortName()));
+          buildTarget.getCellRelativeBasePath().getPath().resolve(buildTarget.getLocalName()));
     }
     return inputs.build();
   }

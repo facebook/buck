@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.AbstractRuleType;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.Package;
@@ -124,7 +125,8 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                   UnconfiguredBuildTargetView target =
                       ImmutableUnconfiguredBuildTargetView.of(
                           UnflavoredBuildTargetFactory.createFromRawNode(
-                              cell.getRoot(), cell.getCanonicalName(), from, buildFile));
+                              cell.getRoot(), cell.getCanonicalName(), from, buildFile),
+                          UnconfiguredBuildTarget.NO_FLAVORS);
                   allNodeJobs.add(
                       cache.getJobWithCacheLookup(
                           cell,

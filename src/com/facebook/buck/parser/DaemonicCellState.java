@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
@@ -73,14 +73,13 @@ class DaemonicCellState {
      * build file that produced those build targets has changed.
      */
     @GuardedBy("cachesLock")
-    private final SetMultimap<UnflavoredBuildTargetView, K> targetsCornucopia =
-        HashMultimap.create();
+    private final SetMultimap<UnflavoredBuildTarget, K> targetsCornucopia = HashMultimap.create();
 
     Cache(CellCacheType<K, T> type) {
       this.type = type;
     }
 
-    private void invalidateFor(UnflavoredBuildTargetView target) {
+    private void invalidateFor(UnflavoredBuildTarget target) {
       Set<K> keys = targetsCornucopia.removeAll(target);
       allComputedNodes.invalidateAll(keys);
     }
@@ -144,18 +143,18 @@ class DaemonicCellState {
    * handle invalidations.
    */
   @GuardedBy("cachesLock")
-  private final Set<UnflavoredBuildTargetView> allRawNodeTargets;
+  private final Set<UnflavoredBuildTarget> allRawNodeTargets;
 
   /** Type-safe accessor to one of state caches */
   static class CellCacheType<K, T> {
     private final Function<DaemonicCellState, Cache<K, T>> getCache;
     private final Function<K, UnconfiguredBuildTargetView> keyToUnconfiguredBuildTargetView;
-    private final Function<K, UnflavoredBuildTargetView> keyToUnflavoredBuildTargetView;
+    private final Function<K, UnflavoredBuildTarget> keyToUnflavoredBuildTargetView;
 
     CellCacheType(
         Function<DaemonicCellState, Cache<K, T>> getCache,
         Function<K, UnconfiguredBuildTargetView> keyToUnconfiguredBuildTargetView,
-        Function<K, UnflavoredBuildTargetView> keyToUnflavoredBuildTargetView) {
+        Function<K, UnflavoredBuildTarget> keyToUnflavoredBuildTargetView) {
       this.getCache = getCache;
       this.keyToUnconfiguredBuildTargetView = keyToUnconfiguredBuildTargetView;
       this.keyToUnflavoredBuildTargetView = keyToUnflavoredBuildTargetView;
@@ -171,7 +170,7 @@ class DaemonicCellState {
           new CellCacheType<>(
               state -> state.rawTargetNodeCache,
               k -> k,
-              UnconfiguredBuildTargetView::getUnflavoredBuildTargetView);
+              UnconfiguredBuildTargetView::getUnflavoredBuildTarget);
   static final CellCacheType<BuildTarget, TargetNode<?>> TARGET_NODE_CACHE_TYPE =
       new CellCacheType<>(
           state -> state.targetNodeCache,
@@ -258,7 +257,7 @@ class DaemonicCellState {
         // Increment the counter
         invalidatedRawNodes = rawNodes.size();
         for (Map<String, Object> rawNode : rawNodes.values()) {
-          UnflavoredBuildTargetView target =
+          UnflavoredBuildTarget target =
               UnflavoredBuildTargetFactory.createFromRawNode(
                   cellRoot, cellCanonicalName, rawNode, path);
           LOG.debug("Invalidating target for path %s: %s", path, target);

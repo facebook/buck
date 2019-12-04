@@ -19,7 +19,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.MergedTargetGraph;
 import com.facebook.buck.core.model.targetgraph.MergedTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -441,7 +441,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     MergedTargetGraph mergedTargetGraph = MergedTargetGraph.merge(env.getTargetGraph());
 
     ImmutableSet<TargetNode<?>> nodesFromQueryTargets = env.getNodesFromQueryTargets(queryResult);
-    ImmutableSet<UnflavoredBuildTargetView> targetsFromQueryTargets =
+    ImmutableSet<UnflavoredBuildTarget> targetsFromQueryTargets =
         nodesFromQueryTargets.stream()
             .map(t -> t.getBuildTarget().getUnflavoredBuildTarget())
             .collect(ImmutableSet.toImmutableSet());
@@ -495,7 +495,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
           getAttributesWithRankMetadata(params, env, queryResult);
       printAttributesAsJson(attributesWithRanks, printStream);
     } else {
-      Map<UnflavoredBuildTargetView, Integer> ranks =
+      Map<UnflavoredBuildTarget, Integer> ranks =
           computeRanksByTarget(
               env.getTargetGraph(), env.getNodesFromQueryTargets(queryResult)::contains);
 
@@ -504,11 +504,11 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   }
 
   private void printRankOutputAsPlainText(
-      Map<UnflavoredBuildTargetView, Integer> ranks, PrintStream printStream) {
+      Map<UnflavoredBuildTarget, Integer> ranks, PrintStream printStream) {
     ranks.entrySet().stream()
         // sort by rank and target nodes to break ties in order to make output deterministic
         .sorted(
-            Comparator.comparing(Map.Entry<UnflavoredBuildTargetView, Integer>::getValue)
+            Comparator.comparing(Map.Entry<UnflavoredBuildTarget, Integer>::getValue)
                 .thenComparing(Map.Entry::getKey))
         .forEach(
             entry -> {
@@ -529,7 +529,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     MergedTargetGraph mergedTargetGraph = MergedTargetGraph.merge(targetGraph);
 
     ImmutableSet<TargetNode<?>> nodesFromQueryTargets = env.getNodesFromQueryTargets(queryResult);
-    ImmutableSet<UnflavoredBuildTargetView> targetsFromQueryTargets =
+    ImmutableSet<UnflavoredBuildTarget> targetsFromQueryTargets =
         nodesFromQueryTargets.stream()
             .map(n -> n.getBuildTarget().getUnflavoredBuildTarget())
             .collect(ImmutableSet.toImmutableSet());
@@ -674,7 +674,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
           CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryBuildTarget> queryResult)
           throws QueryException {
     ImmutableSet<TargetNode<?>> nodes = env.getNodesFromQueryTargets(queryResult);
-    Map<UnflavoredBuildTargetView, Integer> rankEntries =
+    Map<UnflavoredBuildTarget, Integer> rankEntries =
         computeRanksByTarget(env.getTargetGraph(), nodes::contains);
 
     ImmutableCollection<MergedTargetNode> mergedNodes = MergedTargetNode.group(nodes).values();
@@ -714,9 +714,9 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
         Comparator.<String>comparingInt(rankIndex::get).thenComparing(Comparator.naturalOrder()));
   }
 
-  private Map<UnflavoredBuildTargetView, Integer> computeRanksByTarget(
+  private Map<UnflavoredBuildTarget, Integer> computeRanksByTarget(
       DirectedAcyclicGraph<TargetNode<?>> graph, Predicate<TargetNode<?>> shouldContainNode) {
-    HashMap<UnflavoredBuildTargetView, Integer> ranks = new HashMap<>();
+    HashMap<UnflavoredBuildTarget, Integer> ranks = new HashMap<>();
     for (TargetNode<?> root : ImmutableSortedSet.copyOf(graph.getNodesWithNoIncomingEdges())) {
       ranks.put(root.getBuildTarget().getUnflavoredBuildTarget(), 0);
       new AbstractBreadthFirstTraversal<TargetNode<?>>(root) {
@@ -873,7 +873,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return toPresentationForm(node.getBuildTarget().getUnflavoredBuildTarget());
   }
 
-  private static String toPresentationForm(UnflavoredBuildTargetView unflavoredBuildTarget) {
+  private static String toPresentationForm(UnflavoredBuildTarget unflavoredBuildTarget) {
     return unflavoredBuildTarget.getFullyQualifiedName();
   }
 

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.description.attr;
 
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.google.common.collect.ImmutableList;
 
@@ -28,5 +28,5 @@ import com.google.common.collect.ImmutableList;
 public interface ImplicitInputsInferringDescription<T> {
 
   ImmutableList<ForwardRelativePath> inferInputsFromConstructorArgs(
-      UnflavoredBuildTargetView buildTarget, T constructorArg);
+      UnflavoredBuildTarget buildTarget, T constructorArg);
 }

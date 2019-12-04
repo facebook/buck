@@ -15,10 +15,9 @@
  */
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Joiner;
@@ -32,12 +31,11 @@ public class UnflavoredBuildTargetFactory {
 
   /**
    * @param cellRoot Absolute path to the root of the cell the rule is defined in.
-   * @param cellName
    * @param map the map of values that define the rule.
    * @param buildFilePath Absolute path to the build file the rule is defined in
    * @return the build target defined by the rule.
    */
-  public static UnflavoredBuildTargetView createFromRawNode(
+  public static UnflavoredBuildTarget createFromRawNode(
       Path cellRoot, CanonicalCellName cellName, Map<String, Object> map, Path buildFilePath) {
     @Nullable String basePath = (String) map.get(InternalTargetAttributeNames.BASE_PATH);
     @Nullable String name = (String) map.get("name");
@@ -54,7 +52,7 @@ public class UnflavoredBuildTargetFactory {
               "Raw data claims to come from [%s], but we tried rooting it at [%s].",
               basePath, otherBasePath));
     }
-    return ImmutableUnflavoredBuildTargetView.of(
-        cellName, BaseName.ofPath(ForwardRelativePath.of(basePath)), name);
+    return UnflavoredBuildTarget.of(
+        new ImmutableCellRelativePath(cellName, ForwardRelativePath.of(basePath)), name);
   }
 }

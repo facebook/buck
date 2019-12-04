@@ -60,26 +60,27 @@ public class UnconfiguredBuildTarget
   public static final ImmutableSortedSet<Flavor> NO_FLAVORS =
       ImmutableSortedSet.orderedBy(FLAVOR_ORDERING).build();
 
-  private final CellRelativePath cellRelativePath;
-  private final String name;
+  private final UnflavoredBuildTarget unflavoredBuildTarget;
   private final ImmutableSortedSet<Flavor> flavors;
   private final int hash;
 
   private UnconfiguredBuildTarget(
-      CellRelativePath cellRelativePath, String name, ImmutableSortedSet<Flavor> flavors) {
+      UnflavoredBuildTarget unflavoredBuildTarget, ImmutableSortedSet<Flavor> flavors) {
     Preconditions.checkArgument(flavors.comparator() == FLAVOR_ORDERING);
-    Preconditions.checkArgument(
-        !name.contains("#"), "Build target name cannot contain '#' but was: %s.", name);
-    this.cellRelativePath = cellRelativePath;
-    this.name = name;
+    this.unflavoredBuildTarget = unflavoredBuildTarget;
     this.flavors = flavors;
-    this.hash = Objects.hash(cellRelativePath, name, flavors);
+    this.hash = Objects.hash(unflavoredBuildTarget, flavors);
+  }
+
+  @JsonIgnore
+  public UnflavoredBuildTarget getUnflavoredBuildTarget() {
+    return unflavoredBuildTarget;
   }
 
   /** Name of the cell that current build target belongs to */
   @JsonProperty("cell")
   public CanonicalCellName getCell() {
-    return cellRelativePath.getCellName();
+    return getCellRelativeBasePath().getCellName();
   }
 
   /**
@@ -100,7 +101,7 @@ public class UnconfiguredBuildTarget
   /** Typed version of {@link #getBaseName()}. */
   @JsonIgnore
   public CellRelativePath getCellRelativeBasePath() {
-    return cellRelativePath;
+    return getUnflavoredBuildTarget().getCellRelativeBasePath();
   }
 
   /**
@@ -110,7 +111,7 @@ public class UnconfiguredBuildTarget
    */
   @JsonProperty("name")
   public String getName() {
-    return name;
+    return getUnflavoredBuildTarget().getLocalName();
   }
 
   /** Set of flavors used with that build target. */
@@ -125,7 +126,7 @@ public class UnconfiguredBuildTarget
    */
   @JsonIgnore
   public String getFullyQualifiedName() {
-    return cellRelativePath + ":" + name + getFlavorPostfix();
+    return getUnflavoredBuildTarget().getFullyQualifiedName() + getFlavorPostfix();
   }
 
   @JsonIgnore
@@ -161,8 +162,7 @@ public class UnconfiguredBuildTarget
     }
     UnconfiguredBuildTarget that = (UnconfiguredBuildTarget) o;
     return this.hash == that.hash
-        && this.cellRelativePath.equals(that.cellRelativePath)
-        && this.name.equals(that.name)
+        && this.unflavoredBuildTarget.equals(that.unflavoredBuildTarget)
         && this.flavors.equals(that.flavors);
   }
 
@@ -173,8 +173,7 @@ public class UnconfiguredBuildTarget
     }
 
     return ComparisonChain.start()
-        .compare(this.cellRelativePath, that.cellRelativePath)
-        .compare(this.name, that.name)
+        .compare(this.unflavoredBuildTarget, that.unflavoredBuildTarget)
         .compare(this.flavors, that.flavors, LEXICOGRAPHICAL_ORDERING)
         .result();
   }
@@ -194,8 +193,14 @@ public class UnconfiguredBuildTarget
 
   /** A constructor */
   public static UnconfiguredBuildTarget of(
+      UnflavoredBuildTarget unflavoredBuildTarget, ImmutableSortedSet<Flavor> flavors) {
+    return interner.intern(new UnconfiguredBuildTarget(unflavoredBuildTarget, flavors));
+  }
+
+  /** A constructor */
+  private static UnconfiguredBuildTarget of(
       CellRelativePath cellRelativePath, String name, ImmutableSortedSet<Flavor> flavors) {
-    return interner.intern(new UnconfiguredBuildTarget(cellRelativePath, name, flavors));
+    return of(UnflavoredBuildTarget.of(cellRelativePath, name), flavors);
   }
 
   /** A constructor */

@@ -24,13 +24,15 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import java.util.HashSet;
@@ -135,11 +137,16 @@ class BuildTargetParser {
       // Set the cell path correctly. Because the cellNames comes from the owning cell we can
       // be sure that if this doesn't throw an exception the target cell is visible to the
       // owning cell.
-      UnflavoredBuildTargetView unflavoredBuildTargetView =
-          ImmutableUnflavoredBuildTargetView.of(canonicalCellName, baseName, shortName);
+      UnflavoredBuildTarget unflavoredBuildTarget =
+          UnflavoredBuildTarget.of(canonicalCellName, baseName, shortName);
+      ImmutableSortedSet<Flavor> flavors =
+          RichStream.from(flavorNames)
+              .map(InternalFlavor::of)
+              .collect(
+                  ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING));
       return flavoredTargetCache.intern(
           ImmutableUnconfiguredBuildTargetView.of(
-              unflavoredBuildTargetView, RichStream.from(flavorNames).map(InternalFlavor::of)));
+              UnconfiguredBuildTarget.of(unflavoredBuildTarget, flavors)));
     } catch (HumanReadableException e) {
       throw new BuildTargetParseException(
           e,

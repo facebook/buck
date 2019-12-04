@@ -28,7 +28,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -376,7 +376,7 @@ public class JsLibraryDescription
       ProjectFilesystem projectFilesystem,
       SourcePathResolverAdapter sourcePathResolverAdapter,
       CellPathResolver cellPathResolver,
-      UnflavoredBuildTargetView target) {
+      UnflavoredBuildTarget target) {
     Path directoryOfBuildFile =
         cellPathResolver.resolveCellRelativePath(target.getCellRelativeBasePath());
     Path transplantTo = MorePaths.normalize(directoryOfBuildFile.resolve(basePath));

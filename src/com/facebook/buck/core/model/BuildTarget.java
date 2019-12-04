@@ -26,7 +26,7 @@ public interface BuildTarget extends Comparable<BuildTarget>, DependencyStack.El
 
   UnconfiguredBuildTargetView getUnconfiguredBuildTargetView();
 
-  UnflavoredBuildTargetView getUnflavoredBuildTarget();
+  UnflavoredBuildTarget getUnflavoredBuildTarget();
 
   ImmutableSortedSet<Flavor> getFlavors();
 
@@ -86,5 +86,5 @@ public interface BuildTarget extends Comparable<BuildTarget>, DependencyStack.El
 
   BuildTarget withAppendedFlavors(Flavor... flavors);
 
-  BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTargetView target);
+  BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target);
 }

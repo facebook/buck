@@ -17,7 +17,7 @@ package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -35,12 +35,11 @@ import java.util.stream.Collectors;
  * for anything else.
  */
 public class MergedTargetNode implements Comparable<MergedTargetNode> {
-  private final UnflavoredBuildTargetView buildTarget;
+  private final UnflavoredBuildTarget buildTarget;
   private final ImmutableList<TargetNode<?>> nodes;
   private final RuleType ruleType;
 
-  private MergedTargetNode(
-      UnflavoredBuildTargetView buildTarget, ImmutableList<TargetNode<?>> nodes) {
+  private MergedTargetNode(UnflavoredBuildTarget buildTarget, ImmutableList<TargetNode<?>> nodes) {
     Preconditions.checkArgument(!nodes.isEmpty());
 
     for (TargetNode<?> node : nodes) {
@@ -64,7 +63,7 @@ public class MergedTargetNode implements Comparable<MergedTargetNode> {
     return nodes.iterator().next();
   }
 
-  public UnflavoredBuildTargetView getBuildTarget() {
+  public UnflavoredBuildTarget getBuildTarget() {
     return buildTarget;
   }
 
@@ -73,14 +72,13 @@ public class MergedTargetNode implements Comparable<MergedTargetNode> {
   }
 
   /** Group targets by unflavored target. */
-  public static ImmutableMap<UnflavoredBuildTargetView, MergedTargetNode> group(
+  public static ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> group(
       Collection<TargetNode<?>> targetNodes) {
-    Map<UnflavoredBuildTargetView, List<TargetNode<?>>> collect =
+    Map<UnflavoredBuildTarget, List<TargetNode<?>>> collect =
         targetNodes.stream()
             .collect(Collectors.groupingBy(t -> t.getBuildTarget().getUnflavoredBuildTarget()));
-    ImmutableMap.Builder<UnflavoredBuildTargetView, MergedTargetNode> builder =
-        ImmutableMap.builder();
-    for (Map.Entry<UnflavoredBuildTargetView, List<TargetNode<?>>> entry : collect.entrySet()) {
+    ImmutableMap.Builder<UnflavoredBuildTarget, MergedTargetNode> builder = ImmutableMap.builder();
+    for (Map.Entry<UnflavoredBuildTarget, List<TargetNode<?>>> entry : collect.entrySet()) {
       // Sort nodes to make everything deterministic
       ImmutableList<TargetNode<?>> nodes =
           entry.getValue().stream().sorted().collect(ImmutableList.toImmutableList());

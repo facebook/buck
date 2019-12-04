@@ -80,7 +80,7 @@ public class BuildTargetMatcherParserTest {
     assertEquals(
         SingletonBuildTargetMatcher.of(
             BuildTargetFactory.newInstance("//test/com/facebook/buck/parser:parser")
-                .getUnflavoredBuildTarget()
+                .getUnconfiguredBuildTargetView()
                 .getData()),
         buildTargetPatternParser.parse(
             createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser"));
@@ -107,7 +107,7 @@ public class BuildTargetMatcherParserTest {
 
     assertEquals(
         SingletonBuildTargetMatcher.of(
-            BuildTargetFactory.newInstance("//:parser").getUnflavoredBuildTarget().getData()),
+            BuildTargetFactory.newInstance("//:parser").getUnconfiguredBuildTargetView().getData()),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//:parser"));
 
     assertEquals(
@@ -130,7 +130,7 @@ public class BuildTargetMatcherParserTest {
     assertEquals(
         SingletonBuildTargetMatcher.of(
             BuildTargetFactory.newInstance("other//:something")
-                .getUnflavoredBuildTarget()
+                .getUnconfiguredBuildTargetView()
                 .getData()),
         buildTargetPatternParser.parse(cellNames, "other//:something"));
     assertEquals(

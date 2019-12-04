@@ -24,7 +24,7 @@ import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -119,9 +119,12 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
 
   @Override
   public BuildTarget withoutFlavors() {
+    if (getFlavors().isEmpty()) {
+      return this;
+    }
+
     return ImmutableBuildTarget.of(
-        ImmutableUnconfiguredBuildTargetView.of(getUnflavoredBuildTarget()),
-        getTargetConfiguration());
+        getUnconfiguredBuildTargetView().withoutFlavors(), getTargetConfiguration());
   }
 
   @Override
@@ -146,7 +149,7 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
   }
 
   @Override
-  public BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTargetView target) {
+  public BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target) {
     return ImmutableBuildTarget.of(
         getUnconfiguredBuildTargetView().withUnflavoredBuildTarget(target),
         getTargetConfiguration());

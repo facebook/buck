@@ -19,9 +19,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
 import com.facebook.buck.core.util.log.Logger;
@@ -78,8 +76,8 @@ public class FocusedTargetMatcher {
   // found in the match target.
   private final Set<Pattern> regexPatterns = new HashSet<Pattern>();
 
-  private final Set<UnflavoredBuildTargetView> matchedTargets = new HashSet<>();
-  private final Set<UnflavoredBuildTargetView> unMatchedTargets = new HashSet<>();
+  private final Set<UnflavoredBuildTarget> matchedTargets = new HashSet<>();
+  private final Set<UnflavoredBuildTarget> unMatchedTargets = new HashSet<>();
 
   /**
    * Returns a matcher configured to match any Build Target Patterns or String Regular Expressions.
@@ -142,7 +140,7 @@ public class FocusedTargetMatcher {
    * @return Whether the entry is focused on.
    */
   @VisibleForTesting
-  boolean matches(UnflavoredBuildTargetView buildTarget) {
+  boolean matches(UnflavoredBuildTarget buildTarget) {
     if (!hasEntries) {
       return true;
     }
@@ -224,11 +222,9 @@ public class FocusedTargetMatcher {
         }
 
         this.matchedTargets.add(
-            ImmutableUnflavoredBuildTargetView.of(
-                UnconfiguredBuildTarget.of(
-                    buildTargetPattern.getCellRelativeBasePath(),
-                    buildTargetPattern.getLocalNameAndFlavors(),
-                    UnconfiguredBuildTarget.NO_FLAVORS)));
+            UnflavoredBuildTarget.of(
+                buildTargetPattern.getCellRelativeBasePath(),
+                buildTargetPattern.getLocalNameAndFlavors()));
         break;
       case PACKAGE:
         // Match //foo:

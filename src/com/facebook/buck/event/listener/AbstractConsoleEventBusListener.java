@@ -19,7 +19,7 @@ import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
@@ -108,7 +108,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   private final boolean showTextInAllCaps;
   private final int numberOfSlowRulesToShow;
   private final boolean showSlowRulesInConsole;
-  private final Map<UnflavoredBuildTargetView, Long> timeSpentMillisecondsInRules;
+  private final Map<UnflavoredBuildTarget, Long> timeSpentMillisecondsInRules;
 
   @Nullable protected volatile ProjectGenerationEvent.Started projectGenerationStarted;
   @Nullable protected volatile ProjectGenerationEvent.Finished projectGenerationFinished;
@@ -780,7 +780,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     if (numberOfSlowRulesToShow != 0) {
       synchronized (timeSpentMillisecondsInRules) {
-        UnflavoredBuildTargetView unflavoredTarget =
+        UnflavoredBuildTarget unflavoredTarget =
             finished.getBuildRule().getBuildTarget().getUnflavoredBuildTarget();
         Long value = timeSpentMillisecondsInRules.get(unflavoredTarget);
         if (value == null) {
@@ -862,7 +862,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       return;
     }
 
-    Comparator<UnflavoredBuildTargetView> comparator =
+    Comparator<UnflavoredBuildTarget> comparator =
         (target1, target2) -> {
           Long elapsedTime1 = Objects.requireNonNull(timeSpentMillisecondsInRules.get(target1));
           Long elapsedTime2 = Objects.requireNonNull(timeSpentMillisecondsInRules.get(target2));
@@ -877,7 +877,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
         slowRulesLogsBuilder.add("Top slow rules: Buck didn't spend time in rules.");
       } else {
         slowRulesLogsBuilder.add("Top slow rules");
-        Stream<UnflavoredBuildTargetView> keys =
+        Stream<UnflavoredBuildTarget> keys =
             timeSpentMillisecondsInRules.keySet().stream().sorted(comparator);
         keys.limit(numberOfSlowRulesToShow)
             .forEachOrdered(

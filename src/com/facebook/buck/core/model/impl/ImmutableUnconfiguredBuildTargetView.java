@@ -24,20 +24,17 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.log.views.JsonViews;
-import com.facebook.buck.util.stream.RichStream;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 /** An immutable implementation of {@link UnconfiguredBuildTargetView}. */
 @JsonAutoDetect(
@@ -47,39 +44,11 @@ import java.util.stream.Stream;
 public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTargetView {
 
   private final UnconfiguredBuildTarget data;
-  private final UnflavoredBuildTargetView unflavoredBuildTargetView;
   private final int hash;
-
-  private ImmutableUnconfiguredBuildTargetView(
-      UnflavoredBuildTargetView unflavoredBuildTargetView, ImmutableSortedSet<Flavor> flavors) {
-    if (flavors.size() == 0) {
-      this.data = unflavoredBuildTargetView.getData();
-    } else {
-      // If we have flavors for this view, add them by recreating UnconfiguredBuildTarget from
-      // unflavored view
-      UnconfiguredBuildTarget from = unflavoredBuildTargetView.getData();
-      this.data =
-          UnconfiguredBuildTarget.of(from.getCellRelativeBasePath(), from.getName(), flavors);
-    }
-    this.unflavoredBuildTargetView = unflavoredBuildTargetView;
-    this.hash = Objects.hash(this.data, this.unflavoredBuildTargetView);
-  }
 
   private ImmutableUnconfiguredBuildTargetView(UnconfiguredBuildTarget data) {
     this.data = data;
-    if (data.getFlavors().size() == 0) {
-      this.unflavoredBuildTargetView = ImmutableUnflavoredBuildTargetView.of(data);
-    } else {
-      // strip flavors for unflavored view
-      this.unflavoredBuildTargetView =
-          ImmutableUnflavoredBuildTargetView.of(
-              UnconfiguredBuildTarget.of(
-                  data.getCellRelativeBasePath(),
-                  data.getName(),
-                  UnconfiguredBuildTarget.NO_FLAVORS));
-    }
-
-    this.hash = Objects.hash(this.data, this.unflavoredBuildTargetView);
+    this.hash = Objects.hash(this.data);
   }
 
   /**
@@ -98,42 +67,9 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
    * @param flavors Flavors that apply to this build target
    */
   public static ImmutableUnconfiguredBuildTargetView of(
-      UnflavoredBuildTargetView unflavoredBuildTargetView, ImmutableSortedSet<Flavor> flavors) {
-    return new ImmutableUnconfiguredBuildTargetView(unflavoredBuildTargetView, flavors);
-  }
-
-  /**
-   * Create new immutable instance of {@link UnconfiguredBuildTargetView}
-   *
-   * @param unflavoredBuildTargetView Build target without flavors
-   * @param flavors Flavors that apply to this build target
-   */
-  public static ImmutableUnconfiguredBuildTargetView of(
-      UnflavoredBuildTargetView unflavoredBuildTargetView, RichStream<Flavor> flavors) {
-    return of(
-        unflavoredBuildTargetView,
-        flavors.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING));
-  }
-
-  /**
-   * Create new immutable instance of {@link UnconfiguredBuildTargetView}
-   *
-   * @param unflavoredBuildTargetView Build target without flavors
-   * @param flavors Flavors that apply to this build target
-   */
-  public static ImmutableUnconfiguredBuildTargetView of(
-      UnflavoredBuildTargetView unflavoredBuildTargetView, Stream<Flavor> flavors) {
-    return of(unflavoredBuildTargetView, RichStream.from(flavors));
-  }
-
-  /**
-   * Create new immutable instance of {@link UnconfiguredBuildTargetView} that has no flavors
-   *
-   * @param unflavoredBuildTargetView Build target without flavors
-   */
-  public static ImmutableUnconfiguredBuildTargetView of(
-      UnflavoredBuildTargetView unflavoredBuildTargetView) {
-    return of(unflavoredBuildTargetView, ImmutableSortedSet.of());
+      UnflavoredBuildTarget unflavoredBuildTargetView, ImmutableSortedSet<Flavor> flavors) {
+    return new ImmutableUnconfiguredBuildTargetView(
+        UnconfiguredBuildTarget.of(unflavoredBuildTargetView, flavors));
   }
 
   /** Helper for creating a build target in the root cell with no flavors. */
@@ -141,14 +77,13 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
     // TODO(buck_team): this is unsafe. It allows us to potentially create an inconsistent build
     // target where the cell name doesn't match the cell path.
     return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(
-            CanonicalCellName.unsafeRootCell(), baseName, shortName));
+        UnflavoredBuildTarget.of(CanonicalCellName.unsafeRootCell(), baseName, shortName),
+        UnconfiguredBuildTarget.NO_FLAVORS);
   }
 
-  @JsonIgnore
   @Override
-  public UnflavoredBuildTargetView getUnflavoredBuildTargetView() {
-    return unflavoredBuildTargetView;
+  public UnflavoredBuildTarget getUnflavoredBuildTarget() {
+    return data.getUnflavoredBuildTarget();
   }
 
   @JsonIgnore
@@ -178,7 +113,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   @JsonIgnore
   @Override
   public CellRelativePath getCellRelativeBasePath() {
-    return unflavoredBuildTargetView.getCellRelativeBasePath();
+    return data.getCellRelativeBasePath();
   }
 
   @JsonProperty("shortName")
@@ -234,9 +169,9 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   @Override
   public UnconfiguredBuildTargetView withShortName(String shortName) {
     return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(
-            getUnflavoredBuildTargetView().getCell(),
-            getUnflavoredBuildTargetView().getBaseName(),
+        UnflavoredBuildTarget.of(
+            getUnflavoredBuildTarget().getCell(),
+            getUnflavoredBuildTarget().getBaseName(),
             shortName),
         getFlavors());
   }
@@ -259,12 +194,20 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
       flavorsSet = ImmutableSortedSet.copyOf(UnconfiguredBuildTarget.FLAVOR_ORDERING, flavors);
     }
 
-    return ImmutableUnconfiguredBuildTargetView.of(unflavoredBuildTargetView, flavorsSet);
+    return ImmutableUnconfiguredBuildTargetView.of(
+        UnconfiguredBuildTarget.of(getUnflavoredBuildTarget(), flavorsSet));
   }
 
   @Override
-  public UnconfiguredBuildTargetView withUnflavoredBuildTarget(UnflavoredBuildTargetView target) {
-    return ImmutableUnconfiguredBuildTargetView.of(target, getFlavors());
+  public UnconfiguredBuildTargetView withoutFlavors() {
+    return ImmutableUnconfiguredBuildTargetView.of(
+        UnconfiguredBuildTarget.of(getUnflavoredBuildTarget(), UnconfiguredBuildTarget.NO_FLAVORS));
+  }
+
+  @Override
+  public UnconfiguredBuildTargetView withUnflavoredBuildTarget(UnflavoredBuildTarget target) {
+    return ImmutableUnconfiguredBuildTargetView.of(
+        UnconfiguredBuildTarget.of(target, getFlavors()));
   }
 
   @Override
@@ -297,8 +240,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
       return false;
     }
 
-    return data.equals(another.data)
-        && unflavoredBuildTargetView.equals(another.unflavoredBuildTargetView);
+    return data.equals(another.data);
   }
 
   @Override
@@ -318,9 +260,6 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
 
     ImmutableUnconfiguredBuildTargetView other = (ImmutableUnconfiguredBuildTargetView) o;
 
-    return ComparisonChain.start()
-        .compare(data, other.data)
-        .compare(unflavoredBuildTargetView, other.unflavoredBuildTargetView)
-        .result();
+    return this.data.compareTo(other.data);
   }
 }

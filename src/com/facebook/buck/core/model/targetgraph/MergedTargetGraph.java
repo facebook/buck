@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.model.targetgraph;
 
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.google.common.base.Preconditions;
@@ -24,29 +24,29 @@ import java.util.Map;
 
 /**
  * Target graph version where node is a set of all nodes with the same {@link
- * UnflavoredBuildTargetView}.
+ * com.facebook.buck.core.model.UnflavoredBuildTarget}.
  *
  * <p>This utility exists to support legacy configured {@code buck query}, and should not be used
  * for anything else.
  */
 public class MergedTargetGraph extends DirectedAcyclicGraph<MergedTargetNode> {
 
-  private final ImmutableMap<UnflavoredBuildTargetView, MergedTargetNode> index;
+  private final ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> index;
 
   private MergedTargetGraph(
       MutableDirectedGraph<MergedTargetNode> graph,
-      ImmutableMap<UnflavoredBuildTargetView, MergedTargetNode> index) {
+      ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> index) {
     super(graph);
     this.index = index;
   }
 
-  public ImmutableMap<UnflavoredBuildTargetView, MergedTargetNode> getIndex() {
+  public ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> getIndex() {
     return index;
   }
 
-  /** Group notes by {@link UnflavoredBuildTargetView}. */
+  /** Group notes by {@link UnflavoredBuildTarget}. */
   public static MergedTargetGraph merge(DirectedAcyclicGraph<TargetNode<?>> targetGraph) {
-    ImmutableMap<UnflavoredBuildTargetView, MergedTargetNode> index =
+    ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> index =
         MergedTargetNode.group(targetGraph.getNodes());
 
     MutableDirectedGraph<MergedTargetNode> graph = new MutableDirectedGraph<>();

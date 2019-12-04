@@ -35,7 +35,7 @@ public interface UnconfiguredBuildTargetView
     extends Comparable<UnconfiguredBuildTargetView>, DependencyStack.Element {
 
   /** A build target without flavors. */
-  UnflavoredBuildTargetView getUnflavoredBuildTargetView();
+  UnflavoredBuildTarget getUnflavoredBuildTarget();
 
   /** Set of flavors used with that build target. */
   ImmutableSortedSet<Flavor> getFlavors();
@@ -131,11 +131,13 @@ public interface UnconfiguredBuildTargetView
    */
   UnconfiguredBuildTargetView withFlavors(Iterable<? extends Flavor> flavors);
 
+  UnconfiguredBuildTargetView withoutFlavors();
+
   /**
-   * Creates a new build target by using the provided {@link UnflavoredBuildTargetView} and flavors
-   * from this build target.
+   * Creates a new build target by using the provided {@link UnflavoredBuildTarget} and flavors from
+   * this build target.
    */
-  UnconfiguredBuildTargetView withUnflavoredBuildTarget(UnflavoredBuildTargetView target);
+  UnconfiguredBuildTargetView withUnflavoredBuildTarget(UnflavoredBuildTarget target);
 
   /**
    * Creates {@link BuildTarget} by attaching {@link TargetConfiguration} to this unconfigured build

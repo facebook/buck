@@ -35,8 +35,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -407,7 +406,7 @@ public class XCodeProjectCommandHelper {
                       CanonicalCellName cellName = target.getCell();
 
                       return target.withUnflavoredBuildTarget(
-                          ImmutableUnflavoredBuildTargetView.of(
+                          UnflavoredBuildTarget.of(
                               cellName, target.getBaseName(), target.getShortName()));
                     } else {
                       return target;
@@ -547,7 +546,7 @@ public class XCodeProjectCommandHelper {
     }
     LOG.debug("Selected targets: %s", passedInTargetsSet.toString());
 
-    ImmutableSet<UnflavoredBuildTargetView> passedInUnflavoredTargetsSet =
+    ImmutableSet<UnflavoredBuildTarget> passedInUnflavoredTargetsSet =
         RichStream.from(passedInTargetsSet)
             .map(BuildTarget::getUnflavoredBuildTarget)
             .toImmutableSet();

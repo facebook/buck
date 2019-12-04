@@ -18,7 +18,7 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.stream.RichStream;
@@ -76,21 +76,20 @@ abstract class AbstractFlavorSearchTargetNodeFinder {
   // graph.  We sort the list of flavor sets from largest to smallest, so that look ups pick the
   // more flavored sets first.
   @Value.Derived
-  ImmutableMap<UnflavoredBuildTargetView, ImmutableSet<ImmutableSet<Flavor>>>
-      getBaseTargetFlavorMap() {
-    Map<UnflavoredBuildTargetView, List<ImmutableSet<Flavor>>> flavorMapRawBuilder =
+  ImmutableMap<UnflavoredBuildTarget, ImmutableSet<ImmutableSet<Flavor>>> getBaseTargetFlavorMap() {
+    Map<UnflavoredBuildTarget, List<ImmutableSet<Flavor>>> flavorMapRawBuilder =
         new LinkedHashMap<>();
     for (Map.Entry<BuildTarget, TargetNode> ent : getBaseTargetIndex().entrySet()) {
       BuildTarget baseTarget = ent.getKey();
-      UnflavoredBuildTargetView unflavoredTarget = baseTarget.getUnflavoredBuildTarget();
+      UnflavoredBuildTarget unflavoredTarget = baseTarget.getUnflavoredBuildTarget();
       if (!flavorMapRawBuilder.containsKey(unflavoredTarget)) {
         flavorMapRawBuilder.put(unflavoredTarget, new ArrayList<>());
       }
       flavorMapRawBuilder.get(unflavoredTarget).add(baseTarget.getFlavors());
     }
-    ImmutableMap.Builder<UnflavoredBuildTargetView, ImmutableSet<ImmutableSet<Flavor>>>
+    ImmutableMap.Builder<UnflavoredBuildTarget, ImmutableSet<ImmutableSet<Flavor>>>
         flavorMapBuilder = ImmutableMap.builder();
-    for (Map.Entry<UnflavoredBuildTargetView, List<ImmutableSet<Flavor>>> ent :
+    for (Map.Entry<UnflavoredBuildTarget, List<ImmutableSet<Flavor>>> ent :
         flavorMapRawBuilder.entrySet()) {
       ent.getValue().sort((o1, o2) -> Integer.compare(o2.size(), o1.size()));
       flavorMapBuilder.put(ent.getKey(), ImmutableSet.copyOf(ent.getValue()));

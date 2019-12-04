@@ -34,7 +34,7 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -175,7 +175,7 @@ public class WorkspaceAndProjectGenerator {
                     .getSrcTarget()
                     .map(
                         srcTarget ->
-                            ImmutableSet.<UnflavoredBuildTargetView>builder()
+                            ImmutableSet.<UnflavoredBuildTarget>builder()
                                 .addAll(inputs)
                                 .add(srcTarget.getUnflavoredBuildTarget())
                                 .build())

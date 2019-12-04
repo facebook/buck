@@ -17,12 +17,12 @@
 package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
@@ -51,31 +51,38 @@ public class UnconfiguredBuildTargetFactoryForTests {
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
       return ImmutableUnconfiguredBuildTargetView.of(
-          ImmutableUnflavoredBuildTargetView.of(cellName, BaseName.of(parts[0]), parts[1]));
+          UnflavoredBuildTarget.of(cellName, BaseName.of(parts[0]), parts[1]),
+          UnconfiguredBuildTarget.NO_FLAVORS);
     }
     String[] flavors = nameAndFlavor[1].split(",");
     return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(cellName, BaseName.of(parts[0]), nameAndFlavor[0]),
-        RichStream.from(flavors).map(InternalFlavor::of));
+        UnflavoredBuildTarget.of(cellName, BaseName.of(parts[0]), nameAndFlavor[0]),
+        RichStream.from(flavors)
+            .map(InternalFlavor::of)
+            .collect(
+                ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING)));
   }
 
   public static UnconfiguredBuildTargetView newInstance(String baseName, String shortName) {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(
+        UnflavoredBuildTarget.of(
             ImmutableCanonicalCellName.of(arg.getCellName()),
             BaseName.of(arg.getBasePath()),
-            shortName));
+            shortName),
+        UnconfiguredBuildTarget.NO_FLAVORS);
   }
 
   public static UnconfiguredBuildTargetView newInstance(
       String baseName, String shortName, Flavor... flavors) {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(
+        UnflavoredBuildTarget.of(
             ImmutableCanonicalCellName.of(arg.getCellName()),
             BaseName.of(arg.getBasePath()),
             shortName),
-        RichStream.from(flavors));
+        RichStream.from(flavors)
+            .collect(
+                ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING)));
   }
 }

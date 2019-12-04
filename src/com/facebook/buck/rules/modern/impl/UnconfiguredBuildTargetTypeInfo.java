@@ -21,10 +21,10 @@ import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.ImmutableCanonicalCellName;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
 import java.util.Comparator;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /** TypeInfo for BuildTarget values. */
 public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<UnconfiguredBuildTargetView> {
@@ -52,10 +51,10 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
   @Override
   public <E extends Exception> void visit(
       UnconfiguredBuildTargetView value, ValueVisitor<E> visitor) throws E {
-    UnflavoredBuildTargetView unflavored = value.getUnflavoredBuildTargetView();
+    UnflavoredBuildTarget unflavored = value.getUnflavoredBuildTarget();
     Holder.cellNameTypeInfo.visit(unflavored.getCell().getLegacyName(), visitor);
     visitor.visitString(unflavored.getBaseName().toString());
-    visitor.visitString(unflavored.getShortName());
+    visitor.visitString(unflavored.getLocalName());
     Holder.flavorsTypeInfo.visit(
         value.getFlavors().stream()
             .map(Flavor::getName)
@@ -70,9 +69,12 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
         ImmutableCanonicalCellName.of(Holder.cellNameTypeInfo.createNotNull(creator));
     String baseName = creator.createString();
     String shortName = creator.createString();
-    Stream<Flavor> flavors =
-        Holder.flavorsTypeInfo.createNotNull(creator).stream().map(InternalFlavor::of);
+    ImmutableSortedSet<Flavor> flavors =
+        Holder.flavorsTypeInfo.createNotNull(creator).stream()
+            .map(InternalFlavor::of)
+            .collect(
+                ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING));
     return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(cellName, BaseName.of(baseName), shortName), flavors);
+        UnflavoredBuildTarget.of(cellName, BaseName.of(baseName), shortName), flavors);
   }
 }
