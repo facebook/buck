@@ -51,6 +51,13 @@ public @interface ExcludeFromRuleKey {
   Class<? extends CustomFieldInputsTag> inputs();
 
   /**
+   * Indicates how deps should be derived from this field. For default deps derivation, use {@link
+   * DefaultFieldDeps}. If this field should not contribute to deps, use {@link IgnoredFieldDeps}.
+   * If you would like to provide custom logic, see {@link CustomFieldDeps}.
+   */
+  Class<? extends CustomFieldDepsTag> deps() default IgnoredFieldDeps.class;
+
+  /**
    * We really do think that using this annotation indicates a likely source of problems. By
    * default, the first time we encounter such an annotated field/method, we will log that
    * information to the buck log.

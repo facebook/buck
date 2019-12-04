@@ -28,6 +28,10 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
@@ -38,10 +42,12 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.CustomFieldDeps;
 import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.Test;
 
@@ -303,5 +309,86 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
     DefaultClassInfoFactory.forInstance(withCustomDeps)
         .visit(withCustomDeps, new DepsComputingVisitor(ruleResolver, depsBuilder::add));
     assertEquals(depsBuilder.build(), ImmutableList.of(otherRule));
+  }
+
+  private static class CustomFieldDepsReturningOtherRule implements CustomFieldDeps<Object> {
+    @Override
+    public void getDeps(Object value, Consumer<BuildRule> consumer) {
+      consumer.accept(otherRule);
+    }
+  }
+
+  private static class ExcludedFromRuleKeyCustomDeps implements AddsToRuleKey {
+    @ExcludeFromRuleKey(
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = CustomFieldDepsReturningOtherRule.class)
+    private final SourcePath sourcePath = FakeSourcePath.of("test");
+  }
+
+  private static class ExcludedFromRuleKeyDefaultDeps implements AddsToRuleKey {
+    @ExcludeFromRuleKey(
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final SourcePath sourcePath = FakeSourcePath.of("test");
+  }
+
+  private static class ExcludedFromRuleKeyIgnoredDeps implements AddsToRuleKey {
+    @ExcludeFromRuleKey(
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class
+        /*deps = IgnoredFieldDeps.class*/ ) // suppress warning by commenting out
+    private final SourcePath sourcePath = FakeSourcePath.of("test");
+  }
+
+  private void checkComputedDepsForObject(
+      AddsToRuleKey object,
+      Function<SourcePath, Optional<BuildRule>> ruleResolverFunction,
+      ImmutableList<BuildRule> expectedRules) {
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    InputRuleResolver ruleResolver =
+        new InputRuleResolver() {
+          @Override
+          public Optional<BuildRule> resolve(SourcePath path) {
+            return ruleResolverFunction.apply(path);
+          }
+
+          @Override
+          public UnsafeInternals unsafe() {
+            return () -> ruleFinder;
+          }
+        };
+    ImmutableList.Builder<BuildRule> depsBuilder = ImmutableList.builder();
+    DefaultClassInfoFactory.forInstance(object)
+        .visit(object, new DepsComputingVisitor(ruleResolver, depsBuilder::add));
+    assertEquals(depsBuilder.build(), expectedRules);
+  }
+
+  @Test
+  public void testExcludedFromRuleKeyCustomDepsField() {
+    // We're not returning any rules via the rule resolver,
+    // so if the code works properly, it must have called
+    // the custom override point defined by CustomFieldDeps<T>
+    checkComputedDepsForObject(
+        new ExcludedFromRuleKeyCustomDeps(),
+        (sourcePath -> Optional.empty()),
+        ImmutableList.of(otherRule));
+  }
+
+  @Test
+  public void testExcludedFromRuleKeyDefaultDepsField() {
+    checkComputedDepsForObject(
+        new ExcludedFromRuleKeyDefaultDeps(),
+        (sourcePath -> Optional.of(otherRule)),
+        ImmutableList.of(otherRule));
+  }
+
+  @Test
+  public void testExcludedFromRuleKeyIgnoredDepsField() {
+    checkComputedDepsForObject(
+        new ExcludedFromRuleKeyIgnoredDeps(),
+        (sourcePath -> Optional.of(otherRule)),
+        ImmutableList.of());
   }
 }

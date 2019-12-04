@@ -331,6 +331,7 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
         // later on we expect to have only one entry for each custom behavior.
         annotation == null
             ? extractCustomBehavior(behavior)
-            : ImmutableSet.of(annotation.inputs(), annotation.serialization()).asList());
+            : ImmutableSet.of(annotation.inputs(), annotation.serialization(), annotation.deps())
+                .asList());
   }
 }
