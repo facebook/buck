@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -210,8 +211,12 @@ public class DuplicateResourcesTest {
 
     List<Matcher<? super String>> expectedSubslice = new ArrayList<>();
     for (String path : paths) {
+      BuildTarget buildTarget = BuildTargetFactory.newInstance("//:" + path);
       expectedSubslice.add(Matchers.is("-S"));
-      expectedSubslice.add(Matchers.is("buck-out/gen/" + path + "/res#resources-symlink-tree/res"));
+      expectedSubslice.add(
+          Matchers.is(
+              BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+                  + "/res#resources-symlink-tree/res"));
     }
 
     assertThat(
