@@ -17,7 +17,6 @@ package com.facebook.buck.core.model;
 
 import com.google.common.base.Preconditions;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Type-safe wrapper for a target output label.
@@ -54,18 +53,20 @@ public class OutputLabel implements Comparable<OutputLabel> {
     label = "";
   }
 
+  // TODO(irenewchen): Hide this constructor and make a static factory method that takes
+  // Optional<String>
   public OutputLabel(String label) {
     Preconditions.checkArgument(!label.isEmpty());
     this.label = label;
   }
 
+  public boolean isDefault() {
+    return this == DEFAULT;
+  }
+
   @Override
   public String toString() {
     return label.isEmpty() ? "<default>" : label;
-  }
-
-  public Optional<String> getLabel() {
-    return label.isEmpty() ? Optional.empty() : Optional.of(label);
   }
 
   @Override

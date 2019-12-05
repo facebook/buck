@@ -69,7 +69,7 @@ public abstract class BuildTargetMatcherParser<T> {
 
     String wildcardSuffix = WILDCARD_SEPARATOR + WILDCARD_BUILD_RULE_SUFFIX;
     if (buildTargetPattern.contains(wildcardSuffix)) {
-      if (targetWithOutputLabel.getOutputLabel().getLabel().isPresent()) {
+      if (!targetWithOutputLabel.getOutputLabel().isDefault()) {
         throw createOutputLabelParseException(targetWithOutputLabel);
       }
       if (!buildTargetPattern.endsWith(wildcardSuffix)) {
@@ -83,7 +83,7 @@ public abstract class BuildTargetMatcherParser<T> {
         unconfiguredBuildTargetFactory.createWithWildcard(
             cellNames, targetWithOutputLabel.getTargetName());
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
-      if (targetWithOutputLabel.getOutputLabel().getLabel().isPresent()) {
+      if (!targetWithOutputLabel.getOutputLabel().isDefault()) {
         throw createOutputLabelParseException(targetWithOutputLabel);
       }
       return createForChildren(target.getCellRelativeBasePath());

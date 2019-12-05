@@ -45,7 +45,7 @@ public class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
 
   @Override
   public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
-    if (!outputLabel.getLabel().isPresent()) {
+    if (outputLabel.isDefault()) {
       return ImmutableSortedSet.of(getSourcePathToOutput());
     }
     Path path = outputLabelToSource.get(outputLabel);

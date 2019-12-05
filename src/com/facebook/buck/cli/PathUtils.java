@@ -51,7 +51,7 @@ public class PathUtils {
       if (!showOutputLabels && !outputLabel.equals(OutputLabel.DEFAULT)) {
         throw new HumanReadableException(
             "%s target %s[%s] should use --show-outputs",
-            rule.getType(), rule.getFullyQualifiedName(), outputLabel.getLabel().get());
+            rule.getType(), rule.getFullyQualifiedName(), outputLabel);
       }
       ImmutableSortedSet<SourcePath> sourcePaths =
           ((HasMultipleOutputs) rule).getSourcePathToOutput(outputLabel);
@@ -61,7 +61,7 @@ public class PathUtils {
               : Optional.of(pathResolver.getRelativePath(Iterables.getOnlyElement(sourcePaths)));
     } else {
       Preconditions.checkState(
-          outputLabel.equals(OutputLabel.DEFAULT),
+          outputLabel.isDefault(),
           "Multiple outputs not supported for %s target %s",
           rule.getType(),
           rule.getFullyQualifiedName());

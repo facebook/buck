@@ -63,9 +63,8 @@ public abstract class BuildTargetWithOutputs implements Comparable<BuildTargetWi
    */
   @Override
   public String toString() {
-    return getOutputLabel()
-        .getLabel()
-        .map(ol -> String.format("%s[%s]", getBuildTarget(), ol))
-        .orElse(getBuildTarget().getFullyQualifiedName());
+    return getOutputLabel().isDefault()
+        ? getBuildTarget().getFullyQualifiedName()
+        : String.format("%s[%s]", getBuildTarget(), getOutputLabel());
   }
 }
