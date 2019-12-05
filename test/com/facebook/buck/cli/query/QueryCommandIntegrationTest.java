@@ -37,6 +37,7 @@ import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
+import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -1290,13 +1291,12 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                "{\n"
-                    + "  \"//:genrule_with_select_in_srcs\" : {\n"
-                    + "    \"srcs\" : [ \":c\", \":a\" ]\n"
-                    + "  }\n"
-                    + "}\n")));
+        new JsonMatcher(
+            "{"
+                + "  \"//:genrule_with_select_in_srcs\" : {"
+                + "    \"srcs\" : [ \":c\", \":a\" ]"
+                + "  }"
+                + "}"));
   }
 
   @Test

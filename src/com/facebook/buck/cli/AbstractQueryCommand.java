@@ -41,6 +41,8 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Suppliers;
@@ -762,7 +764,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   private static <T extends SortedMap<String, Object>> void printAttributesAsJson(
       ImmutableSortedMap<String, T> result, PrintStream printStream) throws IOException {
     ObjectMappers.WRITER
-        .withDefaultPrettyPrinter()
+        .with(
+            new DefaultPrettyPrinter().withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE))
         // Jackson closes stream by default - we do not want it
         .without(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
         .writeValue(printStream, result);
