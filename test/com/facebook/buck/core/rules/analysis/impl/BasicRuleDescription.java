@@ -93,7 +93,8 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
         };
 
     ImmutableSortedSet.Builder<Artifact> inputsBuilder = ImmutableSortedSet.naturalOrder();
-    for (ProviderInfoCollection providerInfoCollection : context.deps().values()) {
+    for (ProviderInfoCollection providerInfoCollection :
+        context.resolveDeps(args.getDeps()).values()) {
       providerInfoCollection
           .get(DefaultInfo.PROVIDER)
           .ifPresent(info -> inputsBuilder.addAll(info.defaultOutputs()));
