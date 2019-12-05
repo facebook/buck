@@ -80,6 +80,7 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -723,13 +724,6 @@ public class AppleDescriptions {
     ImmutableSet<SourcePath> frameworks = frameworksBuilder.build();
 
     BuildTarget buildTargetWithoutBundleSpecificFlavors = stripBundleSpecificFlavors(buildTarget);
-    Sets.SetView<Flavor> buildTargetFlavors =
-        Sets.intersection(
-            appleCxxPlatforms.getFlavors(), buildTargetWithoutBundleSpecificFlavors.getFlavors());
-    if (buildTargetFlavors.isEmpty() && defaultPlatform.isPresent()) {
-      buildTargetWithoutBundleSpecificFlavors =
-          buildTargetWithoutBundleSpecificFlavors.withFlavors(defaultPlatform.get());
-    }
 
     Optional<AppleAssetCatalog> assetCatalog =
         createBuildRuleForTransitiveAssetCatalogDependencies(
@@ -778,6 +772,7 @@ public class AppleDescriptions {
             cxxPlatformsProvider,
             targetGraph,
             flavoredBinaryRuleFlavors,
+            defaultPlatform,
             graphBuilder,
             binaryTarget);
 
@@ -836,6 +831,7 @@ public class AppleDescriptions {
             cxxPlatformsProvider,
             targetGraph,
             flavoredBinaryRuleFlavors,
+            defaultPlatform,
             graphBuilder);
 
     BuildRuleParams bundleParamsWithFlavoredBinaryDep =
@@ -958,6 +954,7 @@ public class AppleDescriptions {
       CxxPlatformsProvider cxxPlatformsProvider,
       TargetGraph targetGraph,
       ImmutableSet<Flavor> flavors,
+      Optional<Flavor> defaultPlatform,
       ActionGraphBuilder graphBuilder,
       BuildTarget binary) {
 
@@ -982,9 +979,17 @@ public class AppleDescriptions {
                     AppleDescriptions.FRAMEWORK_FLAVOR, AppleBinaryDescription.APP_FLAVOR)));
     if (!cxxPlatformsProvider.getUnresolvedCxxPlatforms().containsAnyOf(flavors)) {
       flavors =
-          new ImmutableSet.Builder<Flavor>()
+          ImmutableSet.<Flavor>builder()
               .addAll(flavors)
-              .add(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor())
+              .add(
+                  (cxxPlatformsProvider
+                          .getUnresolvedCxxPlatforms()
+                          .getValue(
+                              defaultPlatform
+                                  .map(Collections::singleton)
+                                  .orElse(Collections.emptySet()))
+                          .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform()))
+                      .getFlavor())
               .build();
     }
 
@@ -1104,6 +1109,7 @@ public class AppleDescriptions {
       CxxPlatformsProvider cxxPlatformsProvider,
       TargetGraph targetGraph,
       ImmutableSet<Flavor> flavors,
+      Optional<Flavor> defaultPlatform,
       ActionGraphBuilder graphBuilder) {
     if (platformType != ApplePlatformType.MAC) {
       // Multiple binaries are only supported on macOS
@@ -1130,6 +1136,7 @@ public class AppleDescriptions {
               cxxPlatformsProvider,
               targetGraph,
               flavors,
+              defaultPlatform,
               graphBuilder,
               binaryDepNode.get().getBuildTarget());
 
