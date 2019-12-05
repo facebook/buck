@@ -33,9 +33,7 @@ import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.Iterables;
-import java.util.Objects;
 
 /**
  * A {@link TargetNodeToBuildRuleTransformer} that delegates to the {@link RuleAnalysisGraph} when
@@ -77,13 +75,6 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
           ((ActionWrapperData)
                   Iterables.getOnlyElement(result.getRegisteredActions().entrySet()).getValue())
               .getAction();
-
-      graphBuilder.requireAllRules(
-          RichStream.from(correspondingAction.getInputs())
-              .map(artifact -> artifact.asBound().asBuildArtifact())
-              .filter(Objects::nonNull)
-              .map(buildArtifact -> buildArtifact.getSourcePath().getTarget())
-              .toImmutableList());
 
       return new RuleAnalysisLegacyBuildRuleView(
           legacyRuleDescription.getConstructorArgType().getTypeName(),
