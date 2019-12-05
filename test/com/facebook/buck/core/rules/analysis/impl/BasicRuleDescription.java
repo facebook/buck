@@ -22,6 +22,8 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.ActionExecutionContext;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
@@ -49,6 +51,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -65,36 +68,56 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
             .declareArtifact(Paths.get(args.getOutname().orElse("output")), Location.BUILTIN);
 
     FakeAction.FakeActionExecuteLambda actionExecution =
-        (srcs, inputs, outputs, ctx) -> {
-          Artifact output = Iterables.getOnlyElement(outputs);
-          try (OutputStream outputStream = ctx.getArtifactFilesystem().getOutputStream(output)) {
-
-            Map<String, Object> data = new HashMap<>();
-            data.put("target", target.getShortName());
-            data.put("val", args.getVal());
-
-            data.put("srcs", Iterables.transform(srcs, src -> src.asBound().getShortPath()));
-
-            List<Object> deps = new ArrayList<>();
-            data.put("dep", deps);
-
-            for (Artifact inArtifact : inputs) {
-              try (Reader reader =
-                  new InputStreamReader(ctx.getArtifactFilesystem().getInputStream(inArtifact))) {
-                deps.add(
-                    ObjectMappers.createParser(CharStreams.toString(reader))
-                        .readValueAs(Map.class));
-              }
-            }
-            outputStream.write(
-                ObjectMappers.WRITER.writeValueAsString(data).getBytes(Charsets.UTF_8));
-
-          } catch (IOException e) {
-            return ImmutableActionExecutionFailure.of(
-                Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
+        new FakeAction.FakeActionExecuteLambda() {
+          @Override
+          public int hashCode() {
+            return Objects.hash(target, args);
           }
-          return ImmutableActionExecutionSuccess.of(
-              Optional.empty(), Optional.empty(), ImmutableList.of());
+
+          @Override
+          public boolean equals(Object other) {
+            if (other instanceof FakeAction.FakeActionExecuteLambda) {
+              return Objects.hash(other) == this.hashCode();
+            }
+            return false;
+          }
+
+          @Override
+          public ActionExecutionResult apply(
+              ImmutableSortedSet<Artifact> srcs,
+              ImmutableSortedSet<Artifact> inputs,
+              ImmutableSortedSet<Artifact> outputs,
+              ActionExecutionContext ctx) {
+            Artifact output = Iterables.getOnlyElement(outputs);
+            try (OutputStream outputStream = ctx.getArtifactFilesystem().getOutputStream(output)) {
+
+              Map<String, Object> data = new HashMap<>();
+              data.put("target", target.getShortName());
+              data.put("val", args.getVal());
+
+              data.put("srcs", Iterables.transform(srcs, src -> src.asBound().getShortPath()));
+
+              List<Object> deps = new ArrayList<>();
+              data.put("dep", deps);
+
+              for (Artifact inArtifact : inputs) {
+                try (Reader reader =
+                    new InputStreamReader(ctx.getArtifactFilesystem().getInputStream(inArtifact))) {
+                  deps.add(
+                      ObjectMappers.createParser(CharStreams.toString(reader))
+                          .readValueAs(Map.class));
+                }
+              }
+              outputStream.write(
+                  ObjectMappers.WRITER.writeValueAsString(data).getBytes(Charsets.UTF_8));
+
+            } catch (IOException e) {
+              return ImmutableActionExecutionFailure.of(
+                  Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
+            }
+            return ImmutableActionExecutionSuccess.of(
+                Optional.empty(), Optional.empty(), ImmutableList.of());
+          }
         };
 
     ImmutableSortedSet.Builder<Artifact> inputsBuilder = ImmutableSortedSet.naturalOrder();

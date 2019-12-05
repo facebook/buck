@@ -71,6 +71,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_deps", tmp);
 
     workspace.setUp();
+    workspace.enableDirCache();
 
     workspace.setKnownRuleTypesFactoryFactory(
         (executor,
@@ -138,8 +139,24 @@ public class RuleAnalysisRulesBuildIntegrationTest {
 
     JsonParser parser = ObjectMappers.createParser(resultPath);
     Map<String, Object> data = parser.readValueAs(Map.class);
+    parser.close();
 
     assertThat(data, ruleOutputToMatchers(output));
+
+    // clean
+    workspace.runBuckCommand("clean", "--keep-cache");
+
+    // rebuild should be same result and cached
+    resultPath = workspace.buildAndReturnOutput("//:bar");
+    parser = ObjectMappers.createParser(resultPath);
+    data = parser.readValueAs(Map.class);
+    parser.close();
+
+    assertThat(data, ruleOutputToMatchers(output));
+
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:bar");
+
+    // now make a change
 
     workspace.writeContentsToPath(
         "basic_rule(\n"
@@ -206,6 +223,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
 
     parser = ObjectMappers.createParser(resultPath);
     data = parser.readValueAs(Map.class);
+    parser.close();
 
     assertThat(data, ruleOutputToMatchers(output));
   }
@@ -284,6 +302,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
 
     JsonParser parser = ObjectMappers.createParser(resultPath);
     Map<String, Object> data = parser.readValueAs(Map.class);
+    parser.close();
 
     assertThat(data, ruleOutputToMatchers(output));
   }
@@ -294,6 +313,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_target_srcs", tmp);
 
     workspace.setUp();
+    workspace.enableDirCache();
 
     workspace.setKnownRuleTypesFactoryFactory(
         (executor,
@@ -331,8 +351,24 @@ public class RuleAnalysisRulesBuildIntegrationTest {
 
     JsonParser parser = ObjectMappers.createParser(resultPath);
     Map<String, Object> data = parser.readValueAs(Map.class);
+    parser.close();
 
     assertThat(data, ruleOutputToMatchers(output));
+
+    // clean
+    workspace.runBuckCommand("clean", "--keep-cache");
+
+    // rebuild should be same result and cached
+    resultPath = workspace.buildAndReturnOutput("//:bar");
+    parser = ObjectMappers.createParser(resultPath);
+    data = parser.readValueAs(Map.class);
+    parser.close();
+
+    assertThat(data, ruleOutputToMatchers(output));
+
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:bar");
+
+    // now make a change
 
     workspace.writeContentsToPath(
         "basic_rule(\n"
@@ -366,6 +402,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
 
     parser = ObjectMappers.createParser(resultPath);
     data = parser.readValueAs(Map.class);
+    parser.close();
 
     assertThat(data, ruleOutputToMatchers(output));
   }

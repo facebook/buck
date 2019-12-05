@@ -139,8 +139,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
 
   @Override
   public boolean isCacheable() {
-    // TODO(bobyf): figure out rulekeys and caching for new Actions
-    return false;
+    return true;
   }
 
   @Override
