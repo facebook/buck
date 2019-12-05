@@ -25,6 +25,8 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -62,7 +64,11 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.shell.GenruleDescriptionArg;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -90,7 +96,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
    * @return the output path for the given targetNode or Optional.empty() if we don't know how to
    *     resolve the given TargetNode type to an output path.
    */
-  private Optional<Path> getOutputPathForTargetNode(TargetNode<?> targetNode) {
+  private Optional<Path> getOutputPathForTargetNode(
+      TargetNode<?> targetNode, BuildTargetWithOutputs targetWithOutputs) {
     BaseDescription<?> description = targetNode.getDescription();
     BuildTarget buildTarget = targetNode.getBuildTarget();
     ProjectFilesystem filesystem = targetNode.getFilesystem();
@@ -99,7 +106,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       return getOutputPathForJarGenrule(buildTarget, filesystem);
     } else if (description instanceof AbstractGenruleDescription) {
       return getOutputPathForGenrule(
-          (GenruleDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
+          (GenruleDescriptionArg) targetNode.getConstructorArg(), filesystem, targetWithOutputs);
     } else if (description instanceof JavaBinaryDescription) {
       return getOutputPathForJavaBinary(buildTarget, filesystem);
     } else if (description instanceof AndroidBinaryDescription) {
@@ -163,7 +170,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       DefaultBuildTargetSourcePath targetSourcePath) {
     BuildTarget target = targetSourcePath.getTarget();
     TargetNode<?> targetNode = targetGraph.get(target);
-    Optional<Path> outputPath = getOutputPathForTargetNode(targetNode);
+    Optional<Path> outputPath =
+        getOutputPathForTargetNode(targetNode, targetSourcePath.getTargetWithOutputs());
     return ImmutableSortedSet.of(
         PathSourcePath.of(
             targetNode.getFilesystem(),
@@ -315,6 +323,31 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.apk"));
   }
 
+  /**
+   * Returns the output path for a Genrule from the information contained in the given constructor
+   * arg and output label, or empty if the output path cannot be calculated.
+   */
+  private Optional<Path> getOutputPathForGenrule(
+      GenruleDescriptionArg constructorArg,
+      ProjectFilesystem filesystem,
+      BuildTargetWithOutputs targetWithOutputs) {
+    BuildTarget buildTarget = targetWithOutputs.getBuildTarget();
+    if (constructorArg.getOut().isPresent()) {
+      return getGenPathForOutput(buildTarget, filesystem, constructorArg.getOut().get());
+    }
+    OutputLabel outputLabel = targetWithOutputs.getOutputLabel();
+    ImmutableMap<String, ImmutableList<String>> outputLabelToOutputs =
+        constructorArg.getOuts().get();
+    return Iterables.getOnlyElement(
+        outputLabelToOutputs.entrySet().stream()
+            .filter(e -> new OutputLabel(e.getKey()).equals(outputLabel))
+            .flatMap(
+                e ->
+                    e.getValue().stream()
+                        .map(out -> getGenPathForOutput(buildTarget, filesystem, out)))
+            .collect(ImmutableSet.toImmutableSet()));
+  }
+
   /** Calculate the output path for a JavaBinary based on its build target */
   private Optional<Path> getOutputPathForJavaBinary(
       BuildTarget buildTarget, ProjectFilesystem filesystem) {
@@ -327,17 +360,12 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
                 "%s/%s.jar", outputDirectory, buildTarget.getShortNameAndFlavorPostfix())));
   }
 
-  /**
-   * Calculate the output path for a Genrule from the information contained in its constructor Arg
-   */
-  private Optional<Path> getOutputPathForGenrule(
-      GenruleDescriptionArg constructorArg, BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return Optional.of(
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
-            .resolve(constructorArg.getOut()));
+  private Optional<Path> getGenPathForOutput(
+      BuildTarget buildTarget, ProjectFilesystem filesystem, String out) {
+    return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(out));
   }
 
-  /** Calculate the output path for a */
+  /** Calculate the output path for a zip file. */
   private Optional<Path> getOutputPathForZipfile(
       ZipFileDescriptionArg arg, BuildTarget buildTarget, ProjectFilesystem filesystem) {
     String filename = arg.getOut();

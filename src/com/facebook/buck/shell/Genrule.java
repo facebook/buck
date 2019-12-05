@@ -34,7 +34,9 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxProperties;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
@@ -107,7 +109,8 @@ public class Genrule extends ModernBuildRule<GenruleBuildable> implements HasOut
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
       Optional<String> type,
-      String out,
+      Optional<String> out,
+      Optional<ImmutableMap<String, ImmutableList<String>>> outs,
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
@@ -126,6 +129,7 @@ public class Genrule extends ModernBuildRule<GenruleBuildable> implements HasOut
             cmdExe,
             type,
             out,
+            outs,
             enableSandboxingInGenrule,
             isCacheable,
             environmentExpansionSeparator.orElse(" "),
@@ -148,10 +152,18 @@ public class Genrule extends ModernBuildRule<GenruleBuildable> implements HasOut
     return super.getType() + (getBuildable().type.map(typeStr -> "_" + typeStr).orElse(""));
   }
 
-  /** Get the output name of the generated file, as listed in the BUCK file. */
+  /**
+   * Get the output name of the generated file, as listed in the BUCK file. Should only be called if
+   * 'out' is specified in the BUCK file.
+   */
   @Override
   public String getOutputName() {
-    return getBuildable().out;
+    Optional<String> out = getBuildable().out;
+    Preconditions.checkState(
+        out.isPresent(),
+        "Unexpectedly cannot find output for %s.",
+        getBuildTarget().getFullyQualifiedName());
+    return out.get();
   }
 
   /** Get whether or not the output of this genrule can be cached. */

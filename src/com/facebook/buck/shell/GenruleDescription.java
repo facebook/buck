@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -28,6 +29,8 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.versions.VersionRoot;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -73,6 +76,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           cmdExe,
           args.getType(),
           args.getOut(),
+          args.getOuts(),
           sandboxConfig.isSandboxEnabledForCurrentPlatform()
               && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
           args.getCacheable().orElse(true),
@@ -90,6 +94,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           cmdExe,
           args.getType(),
           args.getOut(),
+          args.getOuts(),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
           getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()));
@@ -104,8 +109,20 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
-    String getOut();
+    // Only one of out or outs should be used. out will be deprecated and removed once outs becomes
+    // stable.
+    Optional<String> getOut();
+
+    Optional<ImmutableMap<String, ImmutableList<String>>> getOuts();
 
     Optional<Boolean> getExecutable();
+
+    @Value.Check
+    default void check() {
+      if (!(getOut().isPresent() ^ getOuts().isPresent())) {
+        throw new HumanReadableException(
+            "One and only one of 'out' or 'outs' must be present in genrule.");
+      }
+    }
   }
 }

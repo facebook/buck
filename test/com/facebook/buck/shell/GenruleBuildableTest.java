@@ -125,7 +125,7 @@ public class GenruleBuildableTest {
             .setFilesystem(filesystem)
             .setSrcs(ImmutableList.of(path1, path2))
             .setCmd("echo \"Hello, world\" >> $OUT")
-            .setOut("output.txt")
+            .setOut(Optional.of("output.txt"))
             .build()
             .toBuildable();
 
@@ -158,7 +158,7 @@ public class GenruleBuildableTest {
             .setFilesystem(filesystem)
             .setSrcs(ImmutableList.of(path1, path2))
             .setCmd("echo \"Hello, world\" >> $OUT")
-            .setOut("output.txt")
+            .setOut(Optional.of("output.txt"))
             .setEnvironmentExpansionSeparator("//")
             .build()
             .toBuildable();
@@ -219,7 +219,7 @@ public class GenruleBuildableTest {
             .setFilesystem(filesystem)
             .setAndroidTools(androidTools)
             .setBash("echo something > $OUT")
-            .setOut("file")
+            .setOut(Optional.of("file"))
             .build()
             .toBuildable();
 
@@ -255,7 +255,7 @@ public class GenruleBuildableTest {
             .setBuildTarget(target)
             .setFilesystem(filesystem)
             .setBash("echo somthing > $OUT")
-            .setOut("file")
+            .setOut(Optional.of("file"))
             .build()
             .toBuildable();
 
@@ -280,12 +280,12 @@ public class GenruleBuildableTest {
   public void shouldThrowIfOutPathIsEmpty() {
     humanReadableExceptionRule.expect(HumanReadableException.class);
     humanReadableExceptionRule.expectMessage(
-        "The 'out' parameter of genrule //example:genrule is '', which is not a valid file name.");
+        "The 'out' or 'outs' parameter of genrule //example:genrule is '', which is not a valid file name.");
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     GenruleBuildableBuilder.builder()
         .setBuildTarget(target)
         .setFilesystem(filesystem)
-        .setOut("")
+        .setOut(Optional.of(""))
         .build()
         .toBuildable();
   }
@@ -295,16 +295,18 @@ public class GenruleBuildableTest {
     humanReadableExceptionRule.expect(HumanReadableException.class);
     if (Platform.detect() == Platform.WINDOWS) {
       humanReadableExceptionRule.expectMessage(
-          "The 'out' parameter of genrule //example:genrule is 'C:\\opt\\src\\buck\\opt\\stuff', which is not a valid file name.");
+          "The 'out' or 'outs' parameter of genrule //example:genrule is 'C:\\opt\\src\\buck\\opt\\stuff', which is not a valid file name.");
     } else {
       humanReadableExceptionRule.expectMessage(
-          "The 'out' parameter of genrule //example:genrule is '/opt/src/buck/opt/stuff', which is not a valid file name.");
+          "The 'out' or 'outs' parameter of genrule //example:genrule is '/opt/src/buck/opt/stuff', which is not a valid file name.");
     }
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     GenruleBuildableBuilder.builder()
         .setBuildTarget(target)
         .setFilesystem(filesystem)
-        .setOut(filesystem.getPathForRelativePath(filesystem.getPath("opt", "stuff")).toString())
+        .setOut(
+            Optional.of(
+                filesystem.getPathForRelativePath(filesystem.getPath("opt", "stuff")).toString()))
         .build()
         .toBuildable();
   }
@@ -323,7 +325,7 @@ public class GenruleBuildableTest {
             .setBuildTarget(target)
             .setFilesystem(filesystem)
             .setBash("echo something > $OUT")
-            .setOut("output.zip")
+            .setOut(Optional.of("output.zip"))
             .build()
             .toBuildable();
 
@@ -360,7 +362,7 @@ public class GenruleBuildableTest {
             .setBuildTarget(target)
             .setFilesystem(filesystem)
             .setBash("echo something > $OUT")
-            .setOut("nested/file/out.cpp")
+            .setOut(Optional.of("nested/file/out.cpp"))
             .build()
             .toBuildable();
 
@@ -400,7 +402,7 @@ public class GenruleBuildableTest {
               .setBuildTarget(target)
               .setFilesystem(filesystem)
               .setBash("echo something > $OUT")
-              .setOut(out)
+              .setOut(Optional.of(out))
               .build()
               .toBuildable();
 

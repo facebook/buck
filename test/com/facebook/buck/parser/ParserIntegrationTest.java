@@ -210,10 +210,10 @@ public class ParserIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
-    result.assertExitCode("missing name should error", ExitCode.PARSE_ERROR);
-    assertThat(result.getStderr(), containsString("genrule"));
-    assertThat(result.getStderr(), containsString("gr"));
-    assertThat(result.getStderr(), containsString("out"));
+    result.assertExitCode("missing name should error", ExitCode.BUILD_ERROR);
+    assertThat(
+        result.getStderr(),
+        containsString("One and only one of 'out' or 'outs' must be present in genrule"));
   }
 
   @Test

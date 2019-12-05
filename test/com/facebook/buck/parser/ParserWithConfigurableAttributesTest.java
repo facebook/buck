@@ -2127,7 +2127,7 @@ public class ParserWithConfigurableAttributesTest {
                 GenruleDescriptionArg.class)
             .get();
 
-    assertThat(node.getConstructorArg().getOut(), is(equalTo("default.txt")));
+    assertThat(node.getConstructorArg().getOut().get(), is(equalTo("default.txt")));
   }
 
   @Test

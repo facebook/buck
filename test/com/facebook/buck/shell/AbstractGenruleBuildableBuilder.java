@@ -26,6 +26,7 @@ import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxProperties;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -59,8 +60,13 @@ abstract class AbstractGenruleBuildableBuilder {
   public abstract Optional<String> getType();
 
   @Value.Default
-  public String getOut() {
-    return "example-file";
+  public Optional<String> getOut() {
+    return Optional.of("example-file");
+  }
+
+  @Value.Default
+  public Optional<ImmutableMap<String, ImmutableList<String>>> getOuts() {
+    return Optional.empty();
   }
 
   @Value.Default
@@ -96,6 +102,7 @@ abstract class AbstractGenruleBuildableBuilder {
         getCmdExe().map(StringArg::of),
         getType(),
         getOut(),
+        getOuts(),
         getEnableSandboxingInGenrule(),
         isCacheable(),
         getEnvironmentExpansionSeparator(),

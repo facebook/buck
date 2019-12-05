@@ -33,6 +33,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.io.CharStreams;
@@ -110,7 +111,7 @@ public class GenruleIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            "The 'out' parameter of genrule //:genrule is '', which is not a valid file name."));
+            "The 'out' or 'outs' parameter of genrule //:genrule is '', which is not a valid file name."));
   }
 
   @Test
@@ -127,7 +128,7 @@ public class GenruleIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            "The 'out' parameter of genrule //:genrule is '/tmp/file', "
+            "The 'out' or 'outs' parameter of genrule //:genrule is '/tmp/file', "
                 + "which is not a valid file name."));
   }
 
@@ -477,6 +478,20 @@ public class GenruleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "genrule_srcs_map", temporaryFolder);
     workspace.setUp();
     workspace.runBuckBuild("//:gen").assertSuccess();
+  }
+
+  @Test
+  public void cannotHaveBothOutAndOuts() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_incompatible_attrs", temporaryFolder);
+    workspace.setUp();
+    ProcessResult processResult = workspace.runBuckBuild("//:binary");
+    processResult.assertExitCode(ExitCode.BUILD_ERROR);
+    assertTrue(
+        processResult
+            .getStderr()
+            .contains("One and only one of 'out' or 'outs' must be present in genrule."));
   }
 
   private Sha1HashCode buildAndGetRuleKey(String scenario, Path temporaryFolder, String target)

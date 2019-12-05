@@ -291,7 +291,15 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
     return createBuildRule(
-        buildTarget, projectFilesystem, graphBuilder, args, cmd, bash, cmdExe, args.getOut());
+        buildTarget,
+        projectFilesystem,
+        graphBuilder,
+        args,
+        cmd,
+        bash,
+        cmdExe,
+        Optional.of(args.getOut()),
+        Optional.empty()); // multiple outputs not supported yet for CxxGenRule
   }
 
   @Override
