@@ -18,6 +18,7 @@ package com.facebook.buck.features.rust;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -185,7 +186,11 @@ public class RustTestIntegrationTest {
 
     ProcessExecutor.Result result =
         workspace.runCommand(
-            workspace.resolve("buck-out/gen/env-test#binary,default,unittest/env_test").toString());
+            workspace
+                .getGenPath(
+                    BuildTargetFactory.newInstance("//:env-test#binary,default,unittest"), "%s")
+                .resolve("env_test")
+                .toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
@@ -204,7 +209,10 @@ public class RustTestIntegrationTest {
     ProcessExecutor.Result result =
         workspace.runCommand(
             workspace
-                .resolve("buck-out/gen/gen_submod-test#binary,default,unittest/gen_submod_test")
+                .getGenPath(
+                    BuildTargetFactory.newInstance("//:gen_submod-test#binary,default,unittest"),
+                    "%s")
+                .resolve("gen_submod_test")
                 .toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStderr().get(), Matchers.blankString());
@@ -224,7 +232,10 @@ public class RustTestIntegrationTest {
     ProcessExecutor.Result result =
         workspace.runCommand(
             workspace
-                .resolve("buck-out/gen/subdir/subbin-test#binary,default,unittest/subbin_test")
+                .getGenPath(
+                    BuildTargetFactory.newInstance("//subdir:subbin-test#binary,default,unittest"),
+                    "%s")
+                .resolve("subbin_test")
                 .toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStderr().get(), Matchers.blankString());
