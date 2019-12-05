@@ -109,7 +109,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     FakeActionAnalysisRegistry actionAnalysisRegistry = new FakeActionAnalysisRegistry();
 
     FakeAction.FakeActionExecuteLambda depActionFunction =
-        (ins, outs, ctx) ->
+        (srcs, ins, outs, ctx) ->
             ImmutableActionExecutionSuccess.of(
                 Optional.empty(), Optional.empty(), ImmutableList.of());
 
@@ -120,6 +120,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     new FakeAction(
         actionRegistry,
         ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(),
         ImmutableSortedSet.of(depArtifact),
         depActionFunction);
 
@@ -128,7 +129,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
 
     AtomicBoolean functionCalled = new AtomicBoolean();
     FakeAction.FakeActionExecuteLambda actionFunction =
-        (ins, outs, ctx) -> {
+        (srcs, ins, outs, ctx) -> {
           assertEquals(ImmutableSortedSet.of(depArtifact), ins);
           assertEquals(
               buildTarget,
@@ -148,6 +149,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
 
     new FakeAction(
         actionRegistry,
+        ImmutableSortedSet.of(),
         ImmutableSortedSet.of(depArtifact),
         ImmutableSortedSet.of(artifact),
         actionFunction);

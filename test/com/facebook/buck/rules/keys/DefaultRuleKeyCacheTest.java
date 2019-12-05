@@ -78,7 +78,8 @@ public class DefaultRuleKeyCacheTest {
             new ActionRegistryForTests(BuildTargetFactory.newInstance("//my:test")),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
-            (ignored1, ignored2, ignored3) ->
+            ImmutableSortedSet.of(),
+            (ignored, ignored1, ignored2, ignored3) ->
                 ImmutableActionExecutionSuccess.of(
                     Optional.empty(), Optional.empty(), ImmutableList.of()));
     cache.get(fakeAction, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()));

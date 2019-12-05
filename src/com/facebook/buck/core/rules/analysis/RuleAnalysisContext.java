@@ -21,8 +21,8 @@ import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.BuckEventBus;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
-import java.util.SortedSet;
 
 /**
  * A context that will be supplied to a {@link com.facebook.buck.core.description.Description}'s
@@ -56,7 +56,7 @@ public interface RuleAnalysisContext {
    * @return a list of the {@link Artifact} of the sources of the providers propagated by each of
    *     the source paths requested.
    */
-  SortedSet<Artifact> resolveSrcs(Iterable<SourcePath> srcs);
+  ImmutableSortedSet<Artifact> resolveSrcs(Iterable<SourcePath> srcs);
 
   /** same as {@link #resolveSrcs(Iterable)} but for one src */
   Artifact resolveSrc(SourcePath src);

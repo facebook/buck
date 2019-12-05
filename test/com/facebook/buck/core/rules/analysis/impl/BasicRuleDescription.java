@@ -19,6 +19,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.FakeAction;
@@ -59,16 +60,20 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
       throws ActionCreationException {
 
     Artifact artifact =
-        context.actionRegistry().declareArtifact(Paths.get("output"), Location.BUILTIN);
+        context
+            .actionRegistry()
+            .declareArtifact(Paths.get(args.getOutname().orElse("output")), Location.BUILTIN);
 
     FakeAction.FakeActionExecuteLambda actionExecution =
-        (inputs, outputs, ctx) -> {
+        (srcs, inputs, outputs, ctx) -> {
           Artifact output = Iterables.getOnlyElement(outputs);
           try (OutputStream outputStream = ctx.getArtifactFilesystem().getOutputStream(output)) {
 
             Map<String, Object> data = new HashMap<>();
             data.put("target", target.getShortName());
             data.put("val", args.getVal());
+
+            data.put("srcs", Iterables.transform(srcs, src -> src.asBound().getShortPath()));
 
             List<Object> deps = new ArrayList<>();
             data.put("dep", deps);
@@ -102,6 +107,7 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
 
     new FakeAction(
         context.actionRegistry(),
+        context.resolveSrcs(args.getSrcs()),
         inputsBuilder.build(),
         ImmutableSortedSet.of(artifact),
         actionExecution);
@@ -116,7 +122,9 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractBasicRuleDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
+  interface AbstractBasicRuleDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasSrcs {
     int getVal();
+
+    Optional<String> getOutname();
   }
 }

@@ -136,9 +136,10 @@ public class ContentAgnosticRuleKeyFactoryTest {
     Action action =
         new FakeAction(
             actionRegistry,
+            ImmutableSortedSet.of(),
             ImmutableSortedSet.of(ImmutableSourceArtifactImpl.of(sourcePath)),
             ImmutableSortedSet.of(artifact),
-            (ignored1, ignored2, ignored3) ->
+            (ignored, ignored1, ignored2, ignored3) ->
                 ImmutableActionExecutionSuccess.of(
                     Optional.empty(), Optional.empty(), ImmutableList.of()));
     BuildRule rule =

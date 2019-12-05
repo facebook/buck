@@ -89,7 +89,7 @@ public class RuleKeyBuilderTest {
 
   static {
     FakeAction.FakeActionExecuteLambda executeLambda =
-        (ignored1, ignored2, ignored3) ->
+        (ignored, ignored1, ignored2, ignored3) ->
             ImmutableActionExecutionSuccess.of(
                 Optional.empty(), Optional.empty(), ImmutableList.of());
 
@@ -98,11 +98,13 @@ public class RuleKeyBuilderTest {
         new FakeAction(
             actionRegistry,
             ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSortedSet.of(actionRegistry.declareArtifact("foo", Location.BUILTIN)),
             executeLambda);
     ACTION_2 =
         new FakeAction(
             actionRegistry,
+            ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(actionRegistry.declareArtifact("bar", Location.BUILTIN)),
             executeLambda);

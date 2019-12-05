@@ -18,6 +18,8 @@ package com.facebook.buck.core.rules.analysis.impl;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -26,9 +28,11 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.build.lib.events.Location;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import org.hamcrest.Matcher;
@@ -86,19 +90,23 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      * {
      * target: bar
      * val: 1
+     * srcs :{}
      * dep: {
      *    {
      *      target: baz
      *      val: 4
+     *      srcs :{}
      *      dep: {}
      *    },
      *    {
      *      target: foo
      *      val: 2
+     *      srcs :{}
      *      dep: {
      *        {
      *          target: baz
      *          val: 4
+     *          srcs :{}
      *          dep: {}
      *        }
      *      }
@@ -106,6 +114,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      *    {
      *      target: faz
      *      val: 0
+     *      srcs :{}
      *      dep: {}
      *    },
      *  }
@@ -116,11 +125,16 @@ public class RuleAnalysisRulesBuildIntegrationTest {
         new RuleOutput(
             "bar",
             1,
+            ImmutableList.of(),
             ImmutableList.of(
-                new RuleOutput("baz", 4, ImmutableList.of()),
+                new RuleOutput("baz", 4, ImmutableList.of(), ImmutableList.of()),
                 new RuleOutput(
-                    "foo", 2, ImmutableList.of(new RuleOutput("baz", 4, ImmutableList.of()))),
-                new RuleOutput("faz", 0, ImmutableList.of())));
+                    "foo",
+                    2,
+                    ImmutableList.of(),
+                    ImmutableList.of(
+                        new RuleOutput("baz", 4, ImmutableList.of(), ImmutableList.of()))),
+                new RuleOutput("faz", 0, ImmutableList.of(), ImmutableList.of())));
 
     JsonParser parser = ObjectMappers.createParser(resultPath);
     Map<String, Object> data = parser.readValueAs(Map.class);
@@ -144,19 +158,23 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      * {
      * target: bar
      * val: 1
+     * srcs :{}
      * dep: {
      *    {
      *      target: baz
      *      val: 4
+     *      srcs: {}
      *      dep: {}
      *    },
      *    {
      *      target: foo
      *      val: 2
+     *      srcs: {}
      *      dep: {
      *        {
      *          target: baz
      *          val: 4
+     *          srcs: {}
      *          dep: {}
      *        }
      *      }
@@ -164,6 +182,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      *    {
      *      target: faz
      *      val: 10
+     *      srcs: {}
      *      dep: {}
      *    },
      *  }
@@ -174,11 +193,16 @@ public class RuleAnalysisRulesBuildIntegrationTest {
         new RuleOutput(
             "bar",
             1,
+            ImmutableList.of(),
             ImmutableList.of(
-                new RuleOutput("baz", 4, ImmutableList.of()),
+                new RuleOutput("baz", 4, ImmutableList.of(), ImmutableList.of()),
                 new RuleOutput(
-                    "foo", 2, ImmutableList.of(new RuleOutput("baz", 4, ImmutableList.of()))),
-                new RuleOutput("faz", 10, ImmutableList.of())));
+                    "foo",
+                    2,
+                    ImmutableList.of(),
+                    ImmutableList.of(
+                        new RuleOutput("baz", 4, ImmutableList.of(), ImmutableList.of()))),
+                new RuleOutput("faz", 10, ImmutableList.of(), ImmutableList.of())));
 
     parser = ObjectMappers.createParser(resultPath);
     data = parser.readValueAs(Map.class);
@@ -212,19 +236,23 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      * {
      * target: bar
      * val: 1
+     * srcs :{}
      * dep: {
      *    {
      *      target: baz
      *      val: 4
+     *      srcs :{}
      *      dep: {}
      *    },
      *    {
      *      target: foo
      *      val: 2
+     *      srcs :{}
      *      dep: {
      *        {
      *          target: baz
      *          val: 4
+     *          srcs :{}
      *          dep: {}
      *        }
      *      }
@@ -232,6 +260,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      *    {
      *      target: faz
      *      val: 0
+     *      srcs :{}
      *      dep: {}
      *    },
      *  }
@@ -242,11 +271,16 @@ public class RuleAnalysisRulesBuildIntegrationTest {
         new RuleOutput(
             "bar",
             1,
+            ImmutableList.of(),
             ImmutableList.of(
-                new RuleOutput("baz", 4, ImmutableList.of()),
+                new RuleOutput("baz", 4, ImmutableList.of(), ImmutableList.of()),
                 new RuleOutput(
-                    "foo", 2, ImmutableList.of(new RuleOutput("baz", 4, ImmutableList.of()))),
-                new RuleOutput("faz", 0, ImmutableList.of())));
+                    "foo",
+                    2,
+                    ImmutableList.of(),
+                    ImmutableList.of(
+                        new RuleOutput("baz", 4, ImmutableList.of(), ImmutableList.of()))),
+                new RuleOutput("faz", 0, ImmutableList.of(), ImmutableList.of())));
 
     JsonParser parser = ObjectMappers.createParser(resultPath);
     Map<String, Object> data = parser.readValueAs(Map.class);
@@ -254,14 +288,98 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     assertThat(data, ruleOutputToMatchers(output));
   }
 
+  @Test
+  public void ruleAnalysisRuleWithTargetSrcsBuildsAndRebuildsOnChange() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_target_srcs", tmp);
+
+    workspace.setUp();
+
+    workspace.setKnownRuleTypesFactoryFactory(
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
+            cell ->
+                KnownNativeRuleTypes.of(
+                    ImmutableList.of(new BasicRuleDescription()), ImmutableList.of()));
+
+    Path resultPath = workspace.buildAndReturnOutput("//:bar");
+
+    BuildArtifactFactoryForTests artifactFactory =
+        new BuildArtifactFactoryForTests(
+            BuildTargetFactory.newInstance("//:foo"), workspace.getProjectFileSystem());
+
+    Path fooArtifact =
+        artifactFactory
+            .createBuildArtifact(Paths.get("output"), Location.BUILTIN)
+            .getSourcePath()
+            .getResolvedPath();
+
+    /**
+     * we should get something like
+     *
+     * <pre>
+     * {
+     * target: bar
+     * val: 1
+     * srcs: { foo }
+     * deps: {}
+     * }
+     */
+    RuleOutput output = new RuleOutput("bar", 1, ImmutableList.of(fooArtifact), ImmutableList.of());
+
+    JsonParser parser = ObjectMappers.createParser(resultPath);
+    Map<String, Object> data = parser.readValueAs(Map.class);
+
+    assertThat(data, ruleOutputToMatchers(output));
+
+    workspace.writeContentsToPath(
+        "basic_rule(\n"
+            + "    name = \"foo\",\n"
+            + "    val = 2,\n"
+            + "    visibility = [\"PUBLIC\"],\n"
+            + "    outname = \"foo_out\""
+            + ")",
+        "dir/BUCK");
+
+    resultPath = workspace.buildAndReturnOutput("//:bar");
+
+    Path fooArtifact2 =
+        artifactFactory
+            .createBuildArtifact(Paths.get("foo_out"), Location.BUILTIN)
+            .getSourcePath()
+            .getResolvedPath();
+
+    /**
+     * we should get something like
+     *
+     * <pre>
+     * {
+     * target: bar
+     * val: 1
+     * srcs: { foo_out }
+     * deps: {}
+     * }
+     */
+    output = new RuleOutput("bar", 1, ImmutableList.of(fooArtifact2), ImmutableList.of());
+
+    parser = ObjectMappers.createParser(resultPath);
+    data = parser.readValueAs(Map.class);
+
+    assertThat(data, ruleOutputToMatchers(output));
+  }
+
   private static class RuleOutput {
     final String target;
     final int val;
+    final List<Path> srcs;
     final List<RuleOutput> deps;
 
-    private RuleOutput(String target, int val, List<RuleOutput> deps) {
+    private RuleOutput(String target, int val, List<Path> srcs, List<RuleOutput> deps) {
       this.target = target;
       this.val = val;
+      this.srcs = srcs;
       this.deps = deps;
     }
   }

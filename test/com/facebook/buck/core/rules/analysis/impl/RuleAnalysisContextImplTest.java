@@ -201,11 +201,12 @@ public class RuleAnalysisContextImplTest {
     ImmutableSortedSet<Artifact> outputs =
         ImmutableSortedSet.of(context.actionRegistry().declareArtifact(Paths.get("output")));
     FakeAction.FakeActionExecuteLambda actionFunction =
-        (inputs1, outputs1, ctx) ->
+        (srcs, inputs1, outputs1, ctx) ->
             ImmutableActionExecutionSuccess.of(
                 Optional.empty(), Optional.empty(), ImmutableList.of());
 
-    new FakeAction(context.actionRegistry(), inputs, outputs, actionFunction);
+    new FakeAction(
+        context.actionRegistry(), ImmutableSortedSet.of(), inputs, outputs, actionFunction);
 
     BuildArtifact artifact =
         Objects.requireNonNull(Iterables.getOnlyElement(outputs).asBound().asBuildArtifact());

@@ -30,13 +30,13 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.SortedSet;
 
 /**
  * Implementation of {@link com.facebook.buck.core.rules.analysis.RuleAnalysisContext}. This context
@@ -89,7 +89,7 @@ public class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnaly
   }
 
   @Override
-  public SortedSet<Artifact> resolveSrcs(Iterable<SourcePath> srcs) {
+  public ImmutableSortedSet<Artifact> resolveSrcs(Iterable<SourcePath> srcs) {
     return SourceArtifactConverter.getArtifactsFromSrcs(srcs, depProviders);
   }
 

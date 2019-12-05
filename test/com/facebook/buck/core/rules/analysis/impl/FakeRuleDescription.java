@@ -49,7 +49,7 @@ public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionA
     Artifact artifact = context.actionRegistry().declareArtifact(Paths.get("output"));
 
     FakeAction.FakeActionExecuteLambda actionExecution =
-        (inputs, outputs, ctx) -> {
+        (srcs, inputs, outputs, ctx) -> {
           Artifact output = Iterables.getOnlyElement(outputs);
           try {
             try (OutputStream fileout = ctx.getArtifactFilesystem().getOutputStream(output)) {
@@ -65,6 +65,7 @@ public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionA
 
     new FakeAction(
         context.actionRegistry(),
+        ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
         ImmutableSortedSet.of(artifact),
         actionExecution);

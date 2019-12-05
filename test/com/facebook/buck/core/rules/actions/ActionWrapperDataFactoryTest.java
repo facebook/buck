@@ -73,11 +73,11 @@ public class ActionWrapperDataFactoryTest {
     ImmutableSortedSet<Artifact> outputs = ImmutableSortedSet.of(output);
 
     FakeAction.FakeActionExecuteLambda executeFunc =
-        (inputs1, outputs1, executionContext) ->
+        (srcs, inputs1, outputs1, executionContext) ->
             ImmutableActionExecutionSuccess.of(
                 Optional.empty(), Optional.empty(), ImmutableList.of());
 
-    new FakeAction(actionRegistry, inputs, outputs, executeFunc);
+    new FakeAction(actionRegistry, ImmutableSortedSet.of(), inputs, outputs, executeFunc);
 
     BuildArtifact buildArtifact = Objects.requireNonNull(output.asBound().asBuildArtifact());
 
@@ -101,7 +101,7 @@ public class ActionWrapperDataFactoryTest {
 
     assertSame(data.getKey(), buildArtifact.getActionDataKey());
 
-    assertSame(inputs, action.getInputs());
+    assertEquals(inputs, action.getInputs());
 
     assertSame(executeFunc, ((FakeAction) action).getExecuteFunction());
   }
@@ -119,11 +119,16 @@ public class ActionWrapperDataFactoryTest {
     Path expectedBasePath = BuildPaths.getGenDir(filesystem, target);
 
     FakeAction.FakeActionExecuteLambda executeFunc =
-        (inputs1, outputs1, executionContext) ->
+        (srcs, inputs1, outputs1, executionContext) ->
             ImmutableActionExecutionSuccess.of(
                 Optional.empty(), Optional.empty(), ImmutableList.of());
 
-    new FakeAction(actionRegistry, inputs, ImmutableSortedSet.of(output), executeFunc);
+    new FakeAction(
+        actionRegistry,
+        ImmutableSortedSet.of(),
+        inputs,
+        ImmutableSortedSet.of(output),
+        executeFunc);
 
     BuildArtifact builtArtifact = Objects.requireNonNull(output.asBound().asBuildArtifact());
     assertEquals(

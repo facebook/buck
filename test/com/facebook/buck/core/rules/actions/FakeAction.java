@@ -18,22 +18,26 @@ package com.facebook.buck.core.rules.actions;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.util.function.TriFunction;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 import java.util.Objects;
 
 public class FakeAction extends AbstractAction {
 
   private final HashableWrapper hasheableWrapper;
+  private final ImmutableSortedSet<Artifact> srcs;
+  private final ImmutableSortedSet<Artifact> deps;
 
   public FakeAction(
       ActionRegistry actionRegistry,
-      ImmutableSortedSet<Artifact> inputs,
+      ImmutableSortedSet<Artifact> srcs,
+      ImmutableSortedSet<Artifact> deps,
       ImmutableSortedSet<Artifact> outputs,
       FakeActionExecuteLambda executeFunction) {
-    super(actionRegistry, inputs, outputs);
+    super(actionRegistry, ImmutableSortedSet.copyOf(Sets.union(srcs, deps)), outputs);
     this.hasheableWrapper = new HashableWrapper(executeFunction);
+    this.srcs = srcs;
+    this.deps = deps;
   }
 
   @Override
@@ -43,7 +47,7 @@ public class FakeAction extends AbstractAction {
 
   @Override
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
-    return hasheableWrapper.executeFunction.apply(inputs, outputs, executionContext);
+    return hasheableWrapper.executeFunction.apply(srcs, deps, outputs, executionContext);
   }
 
   @Override
@@ -56,12 +60,13 @@ public class FakeAction extends AbstractAction {
   }
 
   @FunctionalInterface
-  public interface FakeActionExecuteLambda
-      extends TriFunction<
-          ImmutableSet<Artifact>,
-          ImmutableSet<Artifact>,
-          ActionExecutionContext,
-          ActionExecutionResult> {}
+  public interface FakeActionExecuteLambda {
+    ActionExecutionResult apply(
+        ImmutableSortedSet<Artifact> srcs,
+        ImmutableSortedSet<Artifact> deps,
+        ImmutableSortedSet<Artifact> outputs,
+        ActionExecutionContext context);
+  }
 
   /**
    * For testing purposes only, where we create a hacky wrapper around lambdas that lets it be

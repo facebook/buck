@@ -72,7 +72,7 @@ public class ActionExecutionStepTest {
     Path output = Paths.get("somepath");
 
     FakeAction.FakeActionExecuteLambda actionFunction =
-        (inputs, outputs, ctx) -> {
+        (srcs, inputs, outputs, ctx) -> {
           assertEquals(ImmutableSortedSet.of(), inputs);
           assertThat(outputs, Matchers.hasSize(1));
           assertEquals(
@@ -92,6 +92,7 @@ public class ActionExecutionStepTest {
     FakeAction action =
         new FakeAction(
             actionFactoryForTests,
+            ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(declaredArtifact),
             actionFunction);
@@ -151,8 +152,9 @@ public class ActionExecutionStepTest {
         new FakeAction(
             actionFactoryForTests,
             ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSortedSet.of(declaredArtifact),
-            (inputs, outputs, ctx) -> result);
+            (srcs, inputs, outputs, ctx) -> result);
 
     ActionExecutionStep step =
         new ActionExecutionStep(action, false, new ArtifactFilesystem(projectFilesystem));
@@ -203,8 +205,9 @@ public class ActionExecutionStepTest {
         new FakeAction(
             actionFactoryForTests,
             ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSortedSet.of(declaredArtifact),
-            (inputs, outputs, ctx) -> result);
+            (srcs, inputs, outputs, ctx) -> result);
 
     ActionExecutionStep step =
         new ActionExecutionStep(action, false, new ArtifactFilesystem(projectFilesystem));

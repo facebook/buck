@@ -168,12 +168,13 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                   Artifact artifact = actionRegistry.declareArtifact(Paths.get("foo"));
 
                   FakeAction.FakeActionExecuteLambda actionFunction =
-                      (ignored, ignored2, ignored3) ->
+                      (ignored, ignored1, ignored2, ignored3) ->
                           ImmutableActionExecutionSuccess.of(
                               Optional.empty(), Optional.empty(), ImmutableList.of());
 
                   new FakeAction(
                       actionRegistry,
+                      ImmutableSortedSet.of(),
                       ImmutableSortedSet.of(),
                       ImmutableSortedSet.of(artifact),
                       actionFunction);

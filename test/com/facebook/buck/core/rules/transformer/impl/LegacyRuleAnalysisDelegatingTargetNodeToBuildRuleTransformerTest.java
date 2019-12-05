@@ -173,8 +173,9 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     new FakeAction(
         actionRegistry,
         ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(),
         ImmutableSortedSet.of(artifact),
-        (ins, outs, ctx) ->
+        (srcs, ins, outs, ctx) ->
             ImmutableActionExecutionSuccess.of(
                 Optional.empty(), Optional.empty(), ImmutableList.of()));
 
