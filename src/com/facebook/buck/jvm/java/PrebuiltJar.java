@@ -275,15 +275,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    Stream<BuildTarget> transitiveRuntimeDeps = Stream.of();
-    for (JavaLibrary lib : getTransitiveClasspathDeps()) {
-      // Skip ourself to avoid infinite recursion.
-      if (lib == this) continue;
-
-      transitiveRuntimeDeps =
-          Stream.concat(transitiveRuntimeDeps, lib.getRuntimeDeps(buildRuleResolver));
-    }
-    return transitiveRuntimeDeps;
+    return Stream.of();
   }
 
   @Override
