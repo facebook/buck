@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -162,7 +163,9 @@ public class GoTestIntegrationTest {
     result1.assertSuccess();
 
     assertIsRegularCopy(
-        workspace.resolve("buck-out/gen/test-with-resources#test-main/testdata/input"),
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:test-with-resources#test-main"), "%s")
+            .resolve("testdata/input"),
         workspace.resolve("testdata/input"));
   }
 
@@ -177,7 +180,10 @@ public class GoTestIntegrationTest {
     result1.assertSuccess();
 
     assertIsRegularCopy(
-        workspace.resolve("buck-out/gen/test-with-resources-directory#test-main/testdata/input"),
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance("//:test-with-resources-directory#test-main"), "%s")
+            .resolve("testdata/input"),
         workspace.resolve("testdata/input"));
   }
 
@@ -192,8 +198,10 @@ public class GoTestIntegrationTest {
     result1.assertSuccess();
 
     assertIsRegularCopy(
-        workspace.resolve(
-            "buck-out/gen/test-with-resources-2directory#test-main/testdata/level2/input"),
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance("//:test-with-resources-2directory#test-main"), "%s")
+            .resolve("testdata/level2/input"),
         workspace.resolve("testdata/level2/input"));
   }
 
@@ -208,12 +216,20 @@ public class GoTestIntegrationTest {
     result1.assertSuccess();
 
     assertIsRegularCopy(
-        workspace.resolve(
-            "buck-out/gen/test-with-resources-2directory-2resources#test-main/testdata/level2/input"),
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance(
+                    "//:test-with-resources-2directory-2resources#test-main"),
+                "%s")
+            .resolve("testdata/level2/input"),
         workspace.resolve("testdata/level2/input"));
     assertIsRegularCopy(
-        workspace.resolve(
-            "buck-out/gen/test-with-resources-2directory-2resources#test-main/testdata/level2bis/input"),
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance(
+                    "//:test-with-resources-2directory-2resources#test-main"),
+                "%s")
+            .resolve("testdata/level2bis/input"),
         workspace.resolve("testdata/level2bis/input"));
   }
 
