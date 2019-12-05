@@ -21,7 +21,6 @@ import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.BuckEventBus;
-import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.SortedSet;
 
@@ -43,13 +42,6 @@ import java.util.SortedSet;
  * offer ways to register {@link com.facebook.buck.step.Step}s.
  */
 public interface RuleAnalysisContext {
-
-  /**
-   * @return a {@link ProviderInfoCollection} of the providers propagated for each dependency target
-   *     as a map with key of the {@link RuleAnalysisKey} that correspond to the {@link
-   *     ProviderInfoCollection}.
-   */
-  ImmutableMap<BuildTarget, ProviderInfoCollection> deps();
 
   /**
    * @return a map of the {@link ProviderInfoCollection} of the providers propagated by each of the

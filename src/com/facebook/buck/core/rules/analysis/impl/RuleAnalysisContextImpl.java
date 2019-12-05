@@ -63,11 +63,6 @@ public class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnaly
   }
 
   @Override
-  public ImmutableMap<BuildTarget, ProviderInfoCollection> deps() {
-    return depProviders;
-  }
-
-  @Override
   public Map<BuildTarget, ProviderInfoCollection> resolveDeps(Iterable<BuildTarget> deps) {
     if (deps instanceof Set) {
       Set<BuildTarget> buildTargets = (Set<BuildTarget>) deps;
