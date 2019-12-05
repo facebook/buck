@@ -31,23 +31,39 @@ public class RuleTypeFactory {
   public static RuleType create(Class<? extends BaseDescription<?>> cls) {
     String result = cls.getSimpleName();
     result = MoreStrings.stripPrefix(result, "Abstract").orElse(result);
-    result = MoreStrings.stripSuffix(result, "Description").orElse(result);
 
-    boolean isBuildRule =
-        DescriptionWithTargetGraph.class.isAssignableFrom(cls)
-            || RuleDescription.class.isAssignableFrom(cls);
+    boolean isBuildRule = DescriptionWithTargetGraph.class.isAssignableFrom(cls);
+    boolean isRuleAnalysisRule = RuleDescription.class.isAssignableFrom(cls);
     boolean isConfigurationRule = ConfigurationRuleDescription.class.isAssignableFrom(cls);
 
-    RuleType.Kind ruleKind;
-    if (isBuildRule && !isConfigurationRule) {
-      ruleKind = RuleType.Kind.BUILD;
-    } else if (isConfigurationRule && !isBuildRule) {
-      ruleKind = RuleType.Kind.CONFIGURATION;
-    } else if (isBuildRule) {
+    if (isBuildRule && isRuleAnalysisRule) {
       throw new IllegalStateException(
-          "rule cannot be both build and configuration: " + cls.getName());
+          String.format(
+              "rule cannot be both a normal build rule and a rule analysis build rule: %s",
+              cls.getName()));
+    }
+    if ((isBuildRule || isRuleAnalysisRule) && isConfigurationRule) {
+      throw new IllegalStateException(
+          String.format("rule cannot be both build and configuration: %s", cls.getName()));
+    }
+
+    if (isBuildRule || isConfigurationRule) {
+      result = MoreStrings.stripSuffix(result, "Description").orElse(result);
+    }
+    if (isRuleAnalysisRule) {
+      result = MoreStrings.stripSuffix(result, "RuleDescription").orElse(result);
+    }
+
+    RuleType.Kind ruleKind;
+    if (isBuildRule) {
+      ruleKind = RuleType.Kind.BUILD;
+    } else if (isRuleAnalysisRule) {
+      ruleKind = RuleType.Kind.BUILD;
+    } else if (isConfigurationRule) {
+      ruleKind = RuleType.Kind.CONFIGURATION;
     } else {
-      throw new IllegalStateException("cannot determine rule kind: " + cls.getName());
+      throw new IllegalStateException(
+          String.format("cannot determine rule kind: %s", cls.getName()));
     }
     return RuleType.of(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, result), ruleKind);
   }

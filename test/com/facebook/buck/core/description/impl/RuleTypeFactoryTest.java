@@ -23,9 +23,14 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
+import com.facebook.buck.core.rules.analysis.impl.BasicRuleRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -40,18 +45,20 @@ public class RuleTypeFactoryTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private static class SampleBuildDescription implements RuleDescription<BuildRuleArg> {
-
-    @Override
-    public ProviderInfoCollection ruleImpl(
-        RuleAnalysisContext context, BuildTarget target, BuildRuleArg args)
-        throws ActionCreationException, RuleAnalysisException {
-      throw new AssertionError();
-    }
+  private static class SampleBuildDescription implements DescriptionWithTargetGraph<BuildRuleArg> {
 
     @Override
     public Class<BuildRuleArg> getConstructorArgType() {
       return BuildRuleArg.class;
+    }
+
+    @Override
+    public BuildRule createBuildRule(
+        BuildRuleCreationContextWithTargetGraph context,
+        BuildTarget buildTarget,
+        BuildRuleParams params,
+        BuildRuleArg args) {
+      return null;
     }
   }
 
@@ -81,6 +88,12 @@ public class RuleTypeFactoryTest {
     public Class<ConfigurationRuleArg> getConstructorArgType() {
       return ConfigurationRuleArg.class;
     }
+  }
+
+  @Test
+  public void ruleAnalysisRule() {
+    RuleType ruleType = RuleTypeFactory.create(BasicRuleRuleDescription.class);
+    Assert.assertEquals(RuleType.of("basic_rule", AbstractRuleType.Kind.BUILD), ruleType);
   }
 
   @Test

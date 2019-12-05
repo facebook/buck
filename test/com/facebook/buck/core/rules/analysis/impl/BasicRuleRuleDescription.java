@@ -55,7 +55,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptionArg> {
+public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescriptionArg> {
 
   @Override
   public ProviderInfoCollection ruleImpl(

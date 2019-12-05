@@ -258,7 +258,8 @@ public class TargetCompatibilityCheckerTest {
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
     KnownNativeRuleTypes knownRuleTypes =
-        KnownNativeRuleTypes.of(ImmutableList.of(new TestRuleDescription()), ImmutableList.of());
+        KnownNativeRuleTypes.of(
+            ImmutableList.of(new TestRuleRuleDescription()), ImmutableList.of());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
 
@@ -281,7 +282,7 @@ public class TargetCompatibilityCheckerTest {
         ImmutableMap.<String, Object>builder().putAll(rawNode).put("name", "target").build());
   }
 
-  static class TestRuleDescription implements RuleDescription<AbstractTestDescriptionArg> {
+  static class TestRuleRuleDescription implements RuleDescription<AbstractTestDescriptionArg> {
 
     @Override
     public boolean producesCacheableSubgraph() {

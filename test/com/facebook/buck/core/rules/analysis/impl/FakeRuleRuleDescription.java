@@ -39,7 +39,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionArg> {
+public class FakeRuleRuleDescription implements RuleDescription<FakeRuleDescriptionArg> {
 
   @Override
   public ProviderInfoCollection ruleImpl(
