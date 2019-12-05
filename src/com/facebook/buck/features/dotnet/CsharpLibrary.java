@@ -24,6 +24,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -41,6 +42,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
@@ -126,11 +128,24 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       if (ref.isLeft()) {
         // TODO(simons): Do this in the constructor? Or the Description?
         BuildRule rule = ref.getLeft();
-        Preconditions.checkArgument(
-            rule instanceof CsharpLibrary || rule instanceof PrebuiltDotnetLibrary);
+        if (rule instanceof RuleAnalysisLegacyBuildRuleView) {
+          Optional<DotnetLibraryProviderInfo> dotnet =
+              ((RuleAnalysisLegacyBuildRuleView) rule)
+                  .getProviderInfos()
+                  .get(DotnetLibraryProviderInfo.PROVIDER);
+          Preconditions.checkArgument(dotnet.isPresent());
 
-        SourcePath outputPath = Objects.requireNonNull(rule.getSourcePathToOutput());
-        resolved.add(Either.ofLeft(pathResolver.getAbsolutePath(outputPath)));
+          resolved.add(
+              Either.ofLeft(
+                  pathResolver.getAbsolutePath(dotnet.get().dll().asBound().getSourcePath())));
+        } else {
+          Preconditions.checkArgument(
+              rule instanceof CsharpLibrary || rule instanceof PrebuiltDotnetLibrary);
+
+          SourcePath outputPath = Objects.requireNonNull(rule.getSourcePathToOutput());
+          resolved.add(Either.ofLeft(pathResolver.getAbsolutePath(outputPath)));
+        }
+
       } else {
         resolved.add(Either.ofRight(ref.getRight()));
       }
