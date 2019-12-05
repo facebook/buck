@@ -38,7 +38,7 @@ import org.junit.Test;
 
 public class WriteActionTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
-  ProjectFilesystem projectFilesystem;
+  private ProjectFilesystem projectFilesystem;
   private TestActionExecutionRunner runner;
 
   @Before
