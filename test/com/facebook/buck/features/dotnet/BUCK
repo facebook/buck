@@ -4,6 +4,7 @@ standard_java_test(
     name = "dotnet",
     with_test_data = True,
     deps = [
+        "//src/com/facebook/buck/core/rules/analysis/config:config",
         "//src/com/facebook/buck/features/dotnet:dotnet",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",

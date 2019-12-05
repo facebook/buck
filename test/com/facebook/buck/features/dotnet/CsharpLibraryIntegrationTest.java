@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.rules.analysis.config.RuleAnalysisComputationMode;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.ProcessResult;
@@ -57,13 +58,19 @@ public class CsharpLibraryIntegrationTest {
 
   private ImmutableMap<String, String> env;
 
-  @Parameterized.Parameters(name = "configure_csc={0}")
+  @Parameterized.Parameters(name = "configure_csc={0}, rule_analysis_rules={1}")
   public static Collection<Object[]> data() {
-    return ParameterizedTests.getPermutations(ImmutableList.of(false, true));
+    return ParameterizedTests.getPermutations(
+        ImmutableList.of(false, true),
+        ImmutableList.of(
+            RuleAnalysisComputationMode.DISABLED, RuleAnalysisComputationMode.PROVIDER_COMPATIBLE));
   }
 
   @Parameterized.Parameter(value = 0)
   public boolean configureCsc;
+
+  @Parameterized.Parameter(value = 1)
+  public RuleAnalysisComputationMode ruleAnalysisComputationMode;
 
   @Before
   public void setUp() throws IOException {
@@ -75,6 +82,10 @@ public class CsharpLibraryIntegrationTest {
       TestDataHelper.overrideBuckconfig(
           workspace, ImmutableMap.of("dotnet", ImmutableMap.of("csc", CSC_EXE)));
     }
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of(
+            "rule_analysis", ImmutableMap.of("mode", ruleAnalysisComputationMode.name())));
     env = getEnv();
   }
 
