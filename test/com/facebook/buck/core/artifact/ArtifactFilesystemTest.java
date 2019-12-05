@@ -66,15 +66,17 @@ public class ArtifactFilesystemTest {
   @Test
   public void outputStreamOfArtifact() throws IOException {
     ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
+    BuildArtifact artifact =
+        artifactFactory.createBuildArtifact(Paths.get("bar"), Location.BUILTIN);
 
-    OutputStream outputStream =
-        artifactFilesystem.getOutputStream(
-            ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("bar"))));
+    OutputStream outputStream = artifactFilesystem.getOutputStream(artifact);
 
     outputStream.write("foo".getBytes(Charsets.UTF_8));
     outputStream.close();
 
-    assertEquals("foo", Iterables.getOnlyElement(filesystem.readLines(Paths.get("bar"))));
+    assertEquals(
+        "foo",
+        Iterables.getOnlyElement(filesystem.readLines(artifact.getSourcePath().getResolvedPath())));
   }
 
   @Test
@@ -82,25 +84,29 @@ public class ArtifactFilesystemTest {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
-    ImmutableSourceArtifactImpl artifact =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("bar")));
+    BuildArtifact artifact =
+        artifactFactory.createBuildArtifact(Paths.get("bar"), Location.BUILTIN);
 
     artifactFilesystem.writeContentsToPath("foobar", artifact);
     artifactFilesystem.makeExecutable(artifact);
 
-    assertEquals("foobar", Iterables.getOnlyElement(filesystem.readLines(Paths.get("bar"))));
-    assertTrue(filesystem.isExecutable(artifact.getSourcePath().getRelativePath()));
+    assertEquals(
+        "foobar",
+        Iterables.getOnlyElement(filesystem.readLines(artifact.getSourcePath().getResolvedPath())));
+    assertTrue(filesystem.isExecutable(artifact.getSourcePath().getResolvedPath()));
   }
 
   @Test
   public void writeContents() throws IOException {
     ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
-    ImmutableSourceArtifactImpl artifact =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("bar")));
+    BuildArtifact artifact =
+        artifactFactory.createBuildArtifact(Paths.get("bar"), Location.BUILTIN);
 
     artifactFilesystem.writeContentsToPath("foobar", artifact);
 
-    assertEquals("foobar", Iterables.getOnlyElement(filesystem.readLines(Paths.get("bar"))));
+    assertEquals(
+        "foobar",
+        Iterables.getOnlyElement(filesystem.readLines(artifact.getSourcePath().getResolvedPath())));
   }
 
   @Test

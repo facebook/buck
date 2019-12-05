@@ -55,6 +55,7 @@ public class ArtifactFilesystem {
    */
   public OutputStream getOutputStream(Artifact artifact, FileAttribute<?>... attrs)
       throws IOException {
+    Preconditions.checkState(!artifact.isSource(), "Write destination should be a Build Artifact");
     Path path = resolveToPath(artifact);
     filesystem.createParentDirs(path);
     return filesystem.newFileOutputStream(path, attrs);
@@ -79,6 +80,7 @@ public class ArtifactFilesystem {
    * @throws IOException The file could not be written
    */
   public void writeContentsToPath(String contents, Artifact artifact) throws IOException {
+    Preconditions.checkState(!artifact.isSource(), "Write destination should be a Build Artifact");
     Path path = resolveToPath(artifact);
     filesystem.createParentDirs(path);
     filesystem.writeContentsToPath(contents, path);
@@ -100,7 +102,7 @@ public class ArtifactFilesystem {
    * behaviour as specified by the {@link CopySourceMode}.
    */
   public void copy(Artifact toCopy, Artifact dest, CopySourceMode mode) throws IOException {
-    Preconditions.checkState(!dest.isSource(), "Copy destination should not be a Source Artifact");
+    Preconditions.checkState(!dest.isSource(), "Copy destination should be a Build Artifact");
     filesystem.copy(resolveToPath(toCopy), resolveToPath(dest), mode);
   }
 
