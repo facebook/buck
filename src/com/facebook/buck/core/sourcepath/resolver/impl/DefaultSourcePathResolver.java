@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
@@ -99,7 +100,9 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
           path = rule.getProjectFilesystem().getBuckPaths().getGenDir().relativize(path);
         }
         Path basePath =
-            rule.getBuildTarget().getCellRelativeBasePath().getPath().toPath(path.getFileSystem());
+            BuildTargetPaths.getBasePathForBaseName(rule.getBuildTarget())
+                .toPath(path.getFileSystem());
+        rule.getBuildTarget().getCellRelativeBasePath().getPath().toPath(path.getFileSystem());
         if (path.startsWith(basePath)) {
           return basePath.relativize(path).toString();
         }
