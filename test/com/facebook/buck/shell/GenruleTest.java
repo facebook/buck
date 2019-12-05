@@ -33,6 +33,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -163,20 +164,15 @@ public class GenruleTest {
 
     // Verify all of the observers of the Genrule.
     assertEquals(
-        filesystem
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve("AndroidManifest.xml"),
         pathResolver.getRelativePath(genrule.getSourcePathToOutput()));
 
     SourcePath outputSourcePath = genrule.getSourcePathToOutput();
     Path manifestPath = graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertEquals(
         filesystem.resolve(
-            filesystem
-                .getBuckPaths()
-                .getGenDir()
-                .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml")),
+            BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+                .resolve("AndroidManifest.xml")),
         manifestPath);
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
@@ -213,10 +209,8 @@ public class GenruleTest {
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(),
                     filesystem,
-                    filesystem
-                        .getBuckPaths()
-                        .getGenDir()
-                        .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml")))
+                    BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+                        .resolve("AndroidManifest.xml")))
             .withRecursive(true),
         steps.get(0));
 
@@ -225,10 +219,7 @@ public class GenruleTest {
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(),
                     filesystem,
-                    filesystem
-                        .getBuckPaths()
-                        .getGenDir()
-                        .resolve("src/com/facebook/katana/katana_manifest__")))
+                    BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s__")))
             .withRecursive(true),
         steps.get(1));
     assertEquals(
@@ -236,10 +227,7 @@ public class GenruleTest {
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(),
                 filesystem,
-                filesystem
-                    .getBuckPaths()
-                    .getGenDir()
-                    .resolve("src/com/facebook/katana/katana_manifest__"))),
+                BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s__"))),
         steps.get(2));
 
     assertEquals(
@@ -247,10 +235,7 @@ public class GenruleTest {
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(),
                     filesystem,
-                    filesystem
-                        .getBuckPaths()
-                        .getScratchDir()
-                        .resolve("src/com/facebook/katana/katana_manifest__")))
+                    BuildTargetPaths.getScratchPath(filesystem, buildTarget, "%s__")))
             .withRecursive(true),
         steps.get(3));
     assertEquals(
@@ -258,14 +243,10 @@ public class GenruleTest {
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(),
                 filesystem,
-                filesystem
-                    .getBuckPaths()
-                    .getScratchDir()
-                    .resolve("src/com/facebook/katana/katana_manifest__"))),
+                BuildTargetPaths.getScratchPath(filesystem, buildTarget, "%s__"))),
         steps.get(4));
 
-    Path pathToOutDir =
-        filesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/katana/katana_manifest");
+    Path pathToOutDir = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
     assertEquals(
         RmStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
@@ -278,11 +259,7 @@ public class GenruleTest {
                 buildContext.getBuildCellRootPath(), filesystem, pathToOutDir)),
         steps.get(6));
 
-    Path pathToSrcDir =
-        filesystem
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("src/com/facebook/katana/katana_manifest__srcs");
+    Path pathToSrcDir = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s__srcs");
     assertEquals(
         RmStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
@@ -317,10 +294,8 @@ public class GenruleTest {
                 "OUT",
                 filesystem
                     .resolve(
-                        filesystem
-                            .getBuckPaths()
-                            .getGenDir()
-                            .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml"))
+                        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+                            .resolve("AndroidManifest.xml"))
                     .toString())
             .build(),
         genruleCommand.getEnvironmentVariables(executionContext));
@@ -419,8 +394,9 @@ public class GenruleTest {
         Matchers.hasEntry(
             "OUT",
             filesystem
-                .resolve(filesystem.getBuckPaths().getGenDir())
-                .resolve("genrule_with_worker/output.txt")
+                .resolve(
+                    BuildTargetPaths.getGenPath(filesystem, genrule.getBuildTarget(), "%s")
+                        .resolve("output.txt"))
                 .toString()));
   }
 
