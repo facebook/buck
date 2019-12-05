@@ -15,11 +15,15 @@
  */
 package com.facebook.buck.core.rules.analysis;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
+import java.util.SortedSet;
 
 /**
  * A context that will be supplied to a {@link com.facebook.buck.core.description.Description}'s
@@ -46,6 +50,24 @@ public interface RuleAnalysisContext {
    *     ProviderInfoCollection}.
    */
   ImmutableMap<BuildTarget, ProviderInfoCollection> deps();
+
+  /**
+   * @return a map of the {@link ProviderInfoCollection} of the providers propagated by each of the
+   *     dependencies requested.
+   */
+  Map<BuildTarget, ProviderInfoCollection> resolveDeps(Iterable<BuildTarget> deps);
+
+  /** same as {@link #resolveDeps(Iterable)} but for one dep */
+  ProviderInfoCollection resolveDep(BuildTarget dep);
+
+  /**
+   * @return a list of the {@link Artifact} of the sources of the providers propagated by each of
+   *     the source paths requested.
+   */
+  SortedSet<Artifact> resolveSrcs(Iterable<SourcePath> srcs);
+
+  /** same as {@link #resolveSrcs(Iterable)} but for one src */
+  Artifact resolveSrc(SourcePath src);
 
   /**
    * @return the factory for creating {@link com.facebook.buck.core.artifact.Artifact}s and

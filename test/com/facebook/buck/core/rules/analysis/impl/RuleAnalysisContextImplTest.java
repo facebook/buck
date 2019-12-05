@@ -22,9 +22,12 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BuildArtifact;
+import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
 import com.facebook.buck.core.rules.actions.FakeAction;
@@ -34,6 +37,8 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -41,8 +46,11 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
@@ -59,16 +67,38 @@ public class RuleAnalysisContextImplTest {
   private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
   @Test
-  public void getDepsReturnCorrectDeps() {
+  public void resolveDepsReturnCorrectDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
-    ImmutableMap<BuildTarget, ProviderInfoCollection> deps = ImmutableMap.of();
-    assertSame(deps, new RuleAnalysisContextImpl(target, deps, fakeFilesystem, eventBus).deps());
-
-    deps =
+    ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
         ImmutableMap.of(
             BuildTargetFactory.newInstance("//my:foo"),
             TestProviderInfoCollectionImpl.builder().build());
-    assertSame(deps, new RuleAnalysisContextImpl(target, deps, fakeFilesystem, eventBus).deps());
+    assertEquals(
+        deps,
+        new RuleAnalysisContextImpl(target, deps, fakeFilesystem, eventBus)
+            .resolveDeps(ImmutableSet.of(target)));
+  }
+
+  @Test
+  public void getSrcsReturnCorrectSrcs() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    BuildArtifactFactoryForTests artifactFactory =
+        new BuildArtifactFactoryForTests(target, fakeFilesystem);
+    BuildArtifact output =
+        artifactFactory.createBuildArtifact(Paths.get("output"), Location.BUILTIN);
+    ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
+        ImmutableMap.of(
+            BuildTargetFactory.newInstance("//my:foo"),
+            TestProviderInfoCollectionImpl.builder()
+                .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(output))));
+
+    assertEquals(
+        ImmutableSortedSet.of(output),
+        new RuleAnalysisContextImpl(target, deps, fakeFilesystem, eventBus)
+            .resolveSrcs(
+                ImmutableSet.of(
+                    DefaultBuildTargetSourcePath.of(
+                        ImmutableBuildTargetWithOutputs.of(target, OutputLabel.DEFAULT)))));
   }
 
   @Test
