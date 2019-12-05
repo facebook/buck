@@ -115,14 +115,21 @@ public class BuildTargetPaths {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
 
+    return getBasePathForBaseName(target)
+        .resolve(formatLastSegment(format, target.getShortNameAndFlavorPostfix()));
+  }
+
+  /** Return a relative path for all targets in a package of a {@link BuildTarget}. */
+  public static ForwardRelativePath getBasePathForBaseName(BuildTarget target) {
+    return target.getCellRelativeBasePath().getPath();
+  }
+
+  private static String formatLastSegment(String format, String arg) {
     if (Platform.detect() == Platform.WINDOWS) {
       // TODO(nga): prohibit backslashes in format
       format = format.replace('\\', '/');
     }
 
-    return target
-        .getCellRelativeBasePath()
-        .getPath()
-        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
+    return String.format(format, arg);
   }
 }
