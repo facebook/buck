@@ -31,7 +31,7 @@ import org.immutables.value.Value;
  * {@link com.facebook.buck.core.rules.BuildRule} referred to by its target.
  */
 @BuckStyleTuple
-@Value.Immutable(prehash = true)
+@Value.Immutable(prehash = true, builder = false)
 public abstract class AbstractExplicitBuildTargetSourcePath implements BuildTargetSourcePath {
 
   @Override
