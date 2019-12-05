@@ -144,7 +144,7 @@ public class RuleAnalysisGraphImplTest {
               RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args) {
             // here we use the deps
             assertEquals(buildTarget, target);
-            return context.deps().get(buildTarget2);
+            return context.resolveDep(buildTarget2);
           }
 
           @Override
@@ -228,7 +228,7 @@ public class RuleAnalysisGraphImplTest {
               RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args) {
             // here we use the deps
             assertEquals(buildTarget, target);
-            return context.deps().get(buildTarget2);
+            return context.resolveDep(buildTarget2);
           }
 
           @Override
