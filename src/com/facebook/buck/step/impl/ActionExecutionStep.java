@@ -75,7 +75,10 @@ public class ActionExecutionStep implements Step {
       return stepExecutionResultBuilder.setExitCode(StepExecutionResults.SUCCESS_EXIT_CODE).build();
     }
     if (result instanceof ActionExecutionResult.ActionExecutionFailure) {
-      return stepExecutionResultBuilder.setExitCode(-1).build();
+      return stepExecutionResultBuilder
+          .setExitCode(-1)
+          .setCause(((ActionExecutionResult.ActionExecutionFailure) result).getException())
+          .build();
     }
     throw new IllegalStateException("Unknown action execution result " + result);
   }

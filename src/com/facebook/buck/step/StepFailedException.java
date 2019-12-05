@@ -63,7 +63,10 @@ public class StepFailedException extends Exception implements WrapsException, Ex
 
     StepFailedException ret =
         new StepFailedException(
-            new HumanReadableException(messageBuilder.toString()),
+            executionResult
+                .getCause()
+                .map(cause -> new HumanReadableException(cause, messageBuilder.toString()))
+                .orElse(new HumanReadableException(messageBuilder.toString())),
             step,
             descriptionForStep(step, context),
             OptionalInt.of(exitCode));

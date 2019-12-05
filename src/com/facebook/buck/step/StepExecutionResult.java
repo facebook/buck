@@ -33,6 +33,8 @@ public interface StepExecutionResult {
 
   Optional<String> getStderr();
 
+  Optional<Exception> getCause();
+
   default boolean isSuccess() {
     return getExitCode() == StepExecutionResults.SUCCESS_EXIT_CODE;
   }
