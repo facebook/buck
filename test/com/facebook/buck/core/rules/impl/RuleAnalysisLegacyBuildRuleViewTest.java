@@ -179,7 +179,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         new RuleAnalysisLegacyBuildRuleView(
             "my_type",
             ruleAnalysisResult.getBuildTarget(),
-            actionWrapperData.getAction(),
+            Optional.of(actionWrapperData.getAction()),
             actionGraphBuilder,
             projectFilesystem,
             providerInfoCollection);

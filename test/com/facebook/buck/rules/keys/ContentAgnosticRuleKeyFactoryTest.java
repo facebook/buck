@@ -146,7 +146,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
         new RuleAnalysisLegacyBuildRuleView(
             "rule",
             buildTarget,
-            action,
+            Optional.of(action),
             graphBuilder,
             fileSystem,
             LegacyProviderInfoCollectionImpl.of());

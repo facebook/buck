@@ -50,7 +50,6 @@ import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResul
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
-import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
@@ -309,7 +308,5 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     assertSame(target, rule.getBuildTarget());
     assertNull(rule.getSourcePathToOutput());
     assertEquals(ImmutableSortedSet.of(), rule.getBuildDeps());
-
-    assertThat(rule, Matchers.instanceOf(NoopBuildRule.class));
   }
 }

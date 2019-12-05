@@ -34,8 +34,10 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.impl.ActionExecutionStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -49,10 +51,9 @@ import javax.annotation.Nullable;
  */
 public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
     implements SupportsInputBasedRuleKey {
-  // TODO(bobyf) figure out rulekeys and caching for new Actions
 
   private final String type;
-  @AddToRuleKey private final Action action;
+  @AddToRuleKey private final Optional<Action> action;
   private Supplier<SortedSet<BuildRule>> buildDepsSupplier;
   private BuildRuleResolver ruleResolver;
   private final ProviderInfoCollection providerInfoCollection;
@@ -68,7 +69,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   public RuleAnalysisLegacyBuildRuleView(
       String type,
       BuildTarget buildTarget,
-      Action action,
+      Optional<Action> action, // TODO change this to iterable once we allow multiple outputs
       BuildRuleResolver ruleResolver,
       ProjectFilesystem projectFilesystem,
       ProviderInfoCollection providerInfoCollection) {
@@ -91,13 +92,17 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   }
 
   private SortedSet<BuildRule> getBuildDepsSupplier() {
-    return ruleResolver.getAllRules(
-        action.getInputs().stream()
-            .map(Artifact::asBound)
-            .map(BoundArtifact::asBuildArtifact)
-            .filter(Objects::nonNull)
-            .map(artifact -> artifact.getSourcePath().getTarget())
-            .collect(ImmutableList.toImmutableList()));
+    return action
+        .map(
+            a ->
+                ruleResolver.getAllRules(
+                    a.getInputs().stream()
+                        .map(Artifact::asBound)
+                        .map(BoundArtifact::asBuildArtifact)
+                        .filter(Objects::nonNull)
+                        .map(artifact -> artifact.getSourcePath().getTarget())
+                        .collect(ImmutableList.toImmutableList())))
+        .orElse(ImmutableSortedSet.of());
   }
 
   @Override
@@ -105,7 +110,12 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
       BuildContext context, BuildableContext buildableContext) {
     // TODO(bobyf): refactor build engine and build rules to not require getBuildSteps but runs
     // actions
-    for (Artifact artifact : action.getOutputs()) {
+
+    if (!action.isPresent()) {
+      return ImmutableList.of();
+    }
+
+    for (Artifact artifact : action.get().getOutputs()) {
       buildableContext.recordArtifact(
           Objects.requireNonNull(artifact.asBound().asBuildArtifact())
               .getSourcePath()
@@ -113,7 +123,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
     }
     return ImmutableList.of(
         new ActionExecutionStep(
-            action,
+            action.get(),
             context.getShouldDeleteTemporaries(),
             new ArtifactFilesystem(getProjectFilesystem())));
   }
@@ -121,7 +131,10 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    return Iterables.getOnlyElement(action.getOutputs()).asBound().getSourcePath();
+    // TODO: support multiple outputs
+    return action
+        .map(a -> Iterables.getOnlyElement(a.getOutputs()).asBound().getSourcePath())
+        .orElse(null);
   }
 
   @Override

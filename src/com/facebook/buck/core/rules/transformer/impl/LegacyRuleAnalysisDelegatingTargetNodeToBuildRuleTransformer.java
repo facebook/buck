@@ -26,14 +26,16 @@ import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
-import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.Iterables;
+import java.util.Optional;
 
 /**
  * A {@link TargetNodeToBuildRuleTransformer} that delegates to the {@link RuleAnalysisGraph} when
@@ -67,14 +69,15 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
           ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(targetNode.getBuildTarget()));
 
       // TODO(bobyf): add support for multiple actions from a rule
-      if (result.getRegisteredActions().isEmpty()) {
-        return new NoopBuildRule(result.getBuildTarget(), targetNode.getFilesystem());
-      }
+      ImmutableCollection<ActionAnalysisData> actions = result.getRegisteredActions().values();
 
-      Action correspondingAction =
-          ((ActionWrapperData)
-                  Iterables.getOnlyElement(result.getRegisteredActions().entrySet()).getValue())
-              .getAction();
+      Optional<Action> correspondingAction;
+      if (actions.isEmpty()) {
+        correspondingAction = Optional.empty();
+      } else {
+        correspondingAction =
+            Optional.of(((ActionWrapperData) Iterables.getOnlyElement(actions)).getAction());
+      }
 
       return new RuleAnalysisLegacyBuildRuleView(
           legacyRuleDescription.getConstructorArgType().getTypeName(),
