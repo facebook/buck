@@ -17,7 +17,7 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.rules.actions.ActionRegistry;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
@@ -27,8 +27,8 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 
 /** Represents a single dependency. This is exposed to users as a {@link ProviderInfoCollection} */
@@ -61,17 +61,16 @@ public abstract class DepAttribute extends Attribute<BuildTarget> {
   public abstract ImmutableList<Provider<?>> getProviders();
 
   @Override
-  public PostCoercionTransform<ImmutableMap<BuildTarget, ProviderInfoCollection>, SkylarkDependency>
-      getPostCoercionTransform() {
+  public PostCoercionTransform<RuleAnalysisContext, SkylarkDependency> getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
-  @SuppressWarnings("unused")
-  private SkylarkDependency postCoercionTransform(
-      Object dep, ActionRegistry registry, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
-    SkylarkDependency dependency =
-        SkylarkDependencyResolver.getDependencyForTargetFromDeps(dep, deps);
-    validateProvidersPresent(getProviders(), (BuildTarget) dep, dependency.getProviderInfos());
-    return dependency;
+  private SkylarkDependency postCoercionTransform(Object dep, RuleAnalysisContext analysisContext) {
+    Verify.verify(dep instanceof BuildTarget, "%s must be a BuildTarget", dep);
+    BuildTarget target = (BuildTarget) dep;
+
+    ProviderInfoCollection providers = analysisContext.resolveDep(target);
+    validateProvidersPresent(getProviders(), target, providers);
+    return new SkylarkDependency(target, providers);
   }
 }

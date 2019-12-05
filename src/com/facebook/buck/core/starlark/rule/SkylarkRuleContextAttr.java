@@ -16,8 +16,7 @@
 package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.actions.ActionRegistry;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.google.common.base.Preconditions;
@@ -25,7 +24,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
@@ -48,16 +46,15 @@ public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
    * @param methodName the name of the implementation method in the extension file
    * @param methodParameters a mapping of field names to values for a given rule
    * @param attributes a mapping of field names to attributes for a given rule
-   * @param registry the registry that may be used to declare {@link
    *     com.facebook.buck.core.artifact.Artifact}s
-   * @param deps mapping of build targets to {@link ProviderInfoCollection} for rules that this rule
+   * @param context mapping of build targets to {@link ProviderInfoCollection} for rules that this
+   *     rule
    */
   private SkylarkRuleContextAttr(
       String methodName,
       Map<String, Object> methodParameters,
       Map<String, Attribute<?>> attributes,
-      ActionRegistry registry,
-      ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+      RuleAnalysisContext context) {
     this.methodName = methodName;
     this.attributes = attributes;
     this.postCoercionTransformValues =
@@ -70,7 +67,7 @@ public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
                         Preconditions.checkNotNull(methodParameters.get(paramName));
                     return Preconditions.checkNotNull(attributes.get(paramName))
                         .getPostCoercionTransform()
-                        .postCoercionTransform(coercedValue, registry, deps);
+                        .postCoercionTransform(coercedValue, context);
                   }
                 });
   }
@@ -79,13 +76,12 @@ public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
       String methodName,
       Map<String, Object> methodParameters,
       Map<String, Attribute<?>> attributes,
-      ActionRegistry registry,
-      ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+      RuleAnalysisContext context) {
     Preconditions.checkState(
         attributes.keySet().equals(methodParameters.keySet()),
         "Coerced attr values should have the same keys as rule attrs");
 
-    return new SkylarkRuleContextAttr(methodName, methodParameters, attributes, registry, deps);
+    return new SkylarkRuleContextAttr(methodName, methodParameters, attributes, context);
   }
 
   @Nullable

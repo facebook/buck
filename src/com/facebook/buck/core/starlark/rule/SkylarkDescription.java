@@ -69,7 +69,7 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
           new SkylarkRuleContext(
               context,
               Label.parseAbsolute(target.getFullyQualifiedName(), ImmutableMap.of()),
-              args.getCoercedAttrValues(context.actionRegistry(), context.deps()));
+              args.getCoercedAttrValues(context));
 
       Environment env =
           Environment.builder(mutability)

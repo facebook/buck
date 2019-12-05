@@ -28,6 +28,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
+import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisContextImpl;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
@@ -143,7 +144,7 @@ public class DepListAttributeTest {
     thrown.expect(VerifyException.class);
 
     attr.getPostCoercionTransform()
-        .postCoercionTransform("invalid", runner.getRegistry(), ImmutableMap.of());
+        .postCoercionTransform("invalid", new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
@@ -153,7 +154,7 @@ public class DepListAttributeTest {
 
     attr.getPostCoercionTransform()
         .postCoercionTransform(
-            ImmutableList.of("invalid"), runner.getRegistry(), ImmutableMap.of());
+            ImmutableList.of("invalid"), new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
@@ -170,7 +171,7 @@ public class DepListAttributeTest {
 
     thrown.expect(NullPointerException.class);
     attr.getPostCoercionTransform()
-        .postCoercionTransform(coerced, runner.getRegistry(), ImmutableMap.of());
+        .postCoercionTransform(coerced, new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
@@ -196,10 +197,10 @@ public class DepListAttributeTest {
     attr.getPostCoercionTransform()
         .postCoercionTransform(
             coerced,
-            runner.getRegistry(),
-            ImmutableMap.of(
-                BuildTargetFactory.newInstance("//foo:bar"),
-                TestProviderInfoCollectionImpl.builder().put(info).build()));
+            new FakeRuleAnalysisContextImpl(
+                ImmutableMap.of(
+                    BuildTargetFactory.newInstance("//foo:bar"),
+                    TestProviderInfoCollectionImpl.builder().put(info).build())));
   }
 
   @Test
@@ -239,7 +240,8 @@ public class DepListAttributeTest {
             ImmutableList.of("//foo:bar", "//foo:baz"));
 
     List<SkylarkDependency> transformed =
-        attr.getPostCoercionTransform().postCoercionTransform(coerced, runner.getRegistry(), deps);
+        attr.getPostCoercionTransform()
+            .postCoercionTransform(coerced, new FakeRuleAnalysisContextImpl(deps));
 
     assertEquals(2, transformed.size());
     assertEquals(

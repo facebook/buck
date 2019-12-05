@@ -18,8 +18,7 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.rules.actions.ActionRegistry;
-import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.starlark.rule.data.SkylarkDependency;
@@ -30,7 +29,7 @@ import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
 import java.util.Optional;
@@ -75,24 +74,31 @@ public abstract class UnconfiguredOptionalDepAttribute
   }
 
   @Override
-  public PostCoercionTransform<
-          ImmutableMap<BuildTarget, ProviderInfoCollection>, List<SkylarkDependency>>
+  public PostCoercionTransform<RuleAnalysisContext, List<SkylarkDependency>>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
   @SuppressWarnings("unused")
   private ImmutableList<SkylarkDependency> postCoercionTransform(
-      Object coercedValue,
-      ActionRegistry registry,
-      ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+      Object coercedValue, RuleAnalysisContext analysisContext) {
     Verify.verify(coercedValue instanceof List<?>, "Value %s must be a list", coercedValue);
     List<?> listValue = (List<?>) coercedValue;
     ImmutableList.Builder<SkylarkDependency> builder =
         ImmutableList.builderWithExpectedSize(listValue.size());
-    for (Object target : listValue) {
-      builder.add(SkylarkDependencyResolver.getDependencyForTargetFromDeps(target, deps));
-    }
-    return builder.build();
+
+    return analysisContext
+        .resolveDeps(
+            Iterables.transform(
+                listValue,
+                target -> {
+                  Verify.verify(target instanceof BuildTarget, "%s must be a BuildTarget", target);
+                  return (BuildTarget) target;
+                }))
+        .entrySet().stream()
+        .map(
+            targetAndProviders ->
+                new SkylarkDependency(targetAndProviders.getKey(), targetAndProviders.getValue()))
+        .collect(ImmutableList.toImmutableList());
   }
 }

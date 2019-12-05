@@ -27,6 +27,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
+import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisContextImpl;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
@@ -111,7 +112,7 @@ public class DepAttributeTest {
     thrown.expect(VerifyException.class);
 
     attr.getPostCoercionTransform()
-        .postCoercionTransform(1, runner.getRegistry(), ImmutableMap.of());
+        .postCoercionTransform(1, new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
@@ -120,7 +121,7 @@ public class DepAttributeTest {
     thrown.expect(VerifyException.class);
 
     attr.getPostCoercionTransform()
-        .postCoercionTransform("invalid", runner.getRegistry(), ImmutableMap.of());
+        .postCoercionTransform("invalid", new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
@@ -137,7 +138,7 @@ public class DepAttributeTest {
 
     thrown.expect(NullPointerException.class);
     attr.getPostCoercionTransform()
-        .postCoercionTransform(coerced, runner.getRegistry(), ImmutableMap.of());
+        .postCoercionTransform(coerced, new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
@@ -162,10 +163,10 @@ public class DepAttributeTest {
     attr.getPostCoercionTransform()
         .postCoercionTransform(
             coerced,
-            runner.getRegistry(),
-            ImmutableMap.of(
-                BuildTargetFactory.newInstance("//foo:bar"),
-                TestProviderInfoCollectionImpl.builder().put(info).build()));
+            new FakeRuleAnalysisContextImpl(
+                ImmutableMap.of(
+                    BuildTargetFactory.newInstance("//foo:bar"),
+                    TestProviderInfoCollectionImpl.builder().put(info).build())));
   }
 
   @Test
@@ -189,7 +190,8 @@ public class DepAttributeTest {
             "//foo:bar");
 
     SkylarkDependency dependency =
-        attr.getPostCoercionTransform().postCoercionTransform(coerced, runner.getRegistry(), deps);
+        attr.getPostCoercionTransform()
+            .postCoercionTransform(coerced, new FakeRuleAnalysisContextImpl(deps));
 
     assertEquals(
         buildArtifact,

@@ -23,6 +23,8 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisContextImpl;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
@@ -79,12 +81,11 @@ public class SkylarkRuleContextAttrTest {
     }
 
     @Override
-    public PostCoercionTransform<
-            ImmutableMap<BuildTarget, ProviderInfoCollection>, Pair<Artifact, BuildTarget>>
+    public PostCoercionTransform<RuleAnalysisContext, Pair<Artifact, BuildTarget>>
         getPostCoercionTransform() {
-      return (coercedValue, registry, deps) ->
+      return (coercedValue, analysisContext) ->
           new Pair<>(
-              registry.declareArtifact(Paths.get("out.txt")),
+              analysisContext.actionRegistry().declareArtifact(Paths.get("out.txt")),
               BuildTargetFactory.newInstance((String) coercedValue));
     }
   }
@@ -105,8 +106,7 @@ public class SkylarkRuleContextAttrTest {
             "some_method",
             ImmutableMap.of("foo", "foo_value"),
             ImmutableMap.of("foo", placeholderStringAttr),
-            runner.getRegistry(),
-            ImmutableMap.of());
+            new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
 
     assertEquals("foo_value", attr.getValue("foo"));
     assertNull(attr.getValue("bar"));
@@ -119,8 +119,7 @@ public class SkylarkRuleContextAttrTest {
             "some_method",
             ImmutableMap.of("foo", "foo_value", "bar", "bar_value"),
             ImmutableMap.of("foo", placeholderStringAttr, "bar", placeholderStringAttr),
-            runner.getRegistry(),
-            ImmutableMap.of());
+            new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
 
     assertEquals(ImmutableSet.of("bar", "foo"), attr.getFieldNames());
   }
@@ -135,8 +134,7 @@ public class SkylarkRuleContextAttrTest {
             "some_method",
             ImmutableMap.of("foo", "foo_value", "bar", "//foo:bar"),
             ImmutableMap.of("foo", placeholderStringAttr, "bar", attr),
-            runner.getRegistry(),
-            ImmutableMap.of(target, providerInfos));
+            new FakeRuleAnalysisContextImpl(ImmutableMap.of(target, providerInfos)));
 
     assertEquals("foo_value", ctxAttr.getValue("foo"));
     assertEquals(target, ((Pair) ctxAttr.getValue("bar")).getSecond());

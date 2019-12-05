@@ -16,15 +16,12 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.actions.ActionRegistry;
-import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.StringTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 
 /**
@@ -58,16 +55,12 @@ public abstract class OutputAttribute extends Attribute<String> {
   }
 
   @Override
-  public PostCoercionTransform<ImmutableMap<BuildTarget, ProviderInfoCollection>, ?>
-      getPostCoercionTransform() {
+  public PostCoercionTransform<RuleAnalysisContext, ?> getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
-  @SuppressWarnings("unused")
-  Artifact postCoercionTransform(
-      Object coercedValue,
-      ActionRegistry registry,
-      ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
-    return OutputAttributeValidator.validateAndRegisterArtifact(coercedValue, registry);
+  Artifact postCoercionTransform(Object coercedValue, RuleAnalysisContext analysisContext) {
+    return OutputAttributeValidator.validateAndRegisterArtifact(
+        coercedValue, analysisContext.actionRegistry());
   }
 }

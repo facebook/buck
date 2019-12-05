@@ -16,9 +16,7 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.actions.ActionRegistry;
-import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -27,7 +25,6 @@ import com.facebook.buck.rules.coercer.ListTypeCoercer;
 import com.facebook.buck.rules.coercer.StringTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
 
@@ -73,16 +70,12 @@ public abstract class OutputListAttribute extends Attribute<ImmutableList<String
   }
 
   @Override
-  public PostCoercionTransform<ImmutableMap<BuildTarget, ProviderInfoCollection>, ?>
-      getPostCoercionTransform() {
+  public PostCoercionTransform<RuleAnalysisContext, ?> getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
-  @SuppressWarnings("unused")
   ImmutableList<Artifact> postCoercionTransform(
-      Object coercedValue,
-      ActionRegistry registry,
-      ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+      Object coercedValue, RuleAnalysisContext analysisContext) {
     if (!(coercedValue instanceof List<?>)) {
       throw new IllegalArgumentException(String.format("Value %s must be a list", coercedValue));
     }
@@ -90,7 +83,9 @@ public abstract class OutputListAttribute extends Attribute<ImmutableList<String
     ImmutableList.Builder<Artifact> builder =
         ImmutableList.builderWithExpectedSize(listValue.size());
     for (Object output : listValue) {
-      builder.add(OutputAttributeValidator.validateAndRegisterArtifact(output, registry));
+      builder.add(
+          OutputAttributeValidator.validateAndRegisterArtifact(
+              output, analysisContext.actionRegistry()));
     }
     return builder.build();
   }

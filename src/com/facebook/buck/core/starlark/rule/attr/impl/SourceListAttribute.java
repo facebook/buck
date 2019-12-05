@@ -16,11 +16,8 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.converter.SourceArtifactConverter;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.rules.actions.ActionRegistry;
-import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
@@ -34,7 +31,6 @@ import com.facebook.buck.rules.coercer.SourcePathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
@@ -87,23 +83,19 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
   }
 
   @Override
-  public PostCoercionTransform<ImmutableMap<BuildTarget, ProviderInfoCollection>, List<Artifact>>
-      getPostCoercionTransform() {
+  public PostCoercionTransform<RuleAnalysisContext, List<Artifact>> getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
-  @SuppressWarnings("unused")
   private ImmutableList<Artifact> postCoercionTransform(
-      Object coercedValue,
-      ActionRegistry registry,
-      ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+      Object coercedValue, RuleAnalysisContext analysisContext) {
     if (!(coercedValue instanceof List<?>)) {
       throw new IllegalArgumentException(String.format("Value %s must be a list", coercedValue));
     }
     List<?> listValue = (List<?>) coercedValue;
 
     return ImmutableList.copyOf(
-        SourceArtifactConverter.getArtifactsFromSrcs(
+        analysisContext.resolveSrcs(
             Iterables.transform(
                 listValue,
                 src -> {
@@ -113,7 +105,6 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
                   } else {
                     return (SourcePath) src;
                   }
-                }),
-            deps));
+                })));
   }
 }

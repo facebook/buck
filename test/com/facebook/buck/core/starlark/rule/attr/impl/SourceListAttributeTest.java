@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisContextImpl;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
@@ -159,7 +160,7 @@ public class SourceListAttributeTest {
     thrown.expect(IllegalArgumentException.class);
 
     attr.getPostCoercionTransform()
-        .postCoercionTransform("invalid", runner.getRegistry(), ImmutableMap.of());
+        .postCoercionTransform("invalid", new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
@@ -168,7 +169,7 @@ public class SourceListAttributeTest {
 
     attr.getPostCoercionTransform()
         .postCoercionTransform(
-            ImmutableList.of("invalid"), runner.getRegistry(), ImmutableMap.of());
+            ImmutableList.of("invalid"), new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
@@ -184,7 +185,7 @@ public class SourceListAttributeTest {
 
     thrown.expect(IllegalStateException.class);
     attr.getPostCoercionTransform()
-        .postCoercionTransform(coerced, runner.getRegistry(), ImmutableMap.of());
+        .postCoercionTransform(coerced, new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
@@ -202,10 +203,10 @@ public class SourceListAttributeTest {
     attr.getPostCoercionTransform()
         .postCoercionTransform(
             coerced,
-            runner.getRegistry(),
-            ImmutableMap.of(
-                BuildTargetFactory.newInstance("//foo:bar"),
-                LegacyProviderInfoCollectionImpl.of()));
+            new FakeRuleAnalysisContextImpl(
+                ImmutableMap.of(
+                    BuildTargetFactory.newInstance("//foo:bar"),
+                    LegacyProviderInfoCollectionImpl.of())));
   }
 
   @Test
@@ -233,7 +234,8 @@ public class SourceListAttributeTest {
     ImmutableList<Artifact> expected = ImmutableList.of(buildArtifact1, sourceArtifact);
 
     Object transformed =
-        attr.getPostCoercionTransform().postCoercionTransform(coerced, runner.getRegistry(), deps);
+        attr.getPostCoercionTransform()
+            .postCoercionTransform(coerced, new FakeRuleAnalysisContextImpl(deps));
 
     assertEquals(expected, transformed);
   }

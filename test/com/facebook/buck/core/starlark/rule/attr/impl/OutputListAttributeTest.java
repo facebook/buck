@@ -29,11 +29,9 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisContextImpl;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -47,11 +45,6 @@ public class OutputListAttributeTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
-  private final TestActionExecutionRunner runner =
-      new TestActionExecutionRunner(
-          new FakeProjectFilesystemFactory(),
-          filesystem,
-          BuildTargetFactory.newInstance("//some:rule"));
 
   private final OutputListAttribute attr =
       new ImmutableOutputListAttribute(ImmutableList.of(), "", true, true);
@@ -103,7 +96,7 @@ public class OutputListAttributeTest {
     thrown.expect(IllegalArgumentException.class);
 
     attr.getPostCoercionTransform()
-        .postCoercionTransform(1, runner.getRegistry(), ImmutableMap.of());
+        .postCoercionTransform(1, new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
@@ -119,7 +112,7 @@ public class OutputListAttributeTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("foo/baz.cpp", "foo/bar\0"));
     attr.getPostCoercionTransform()
-        .postCoercionTransform(value, runner.getRegistry(), ImmutableMap.of());
+        .postCoercionTransform(value, new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
@@ -135,7 +128,7 @@ public class OutputListAttributeTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("foo/baz.cpp", Paths.get("").toAbsolutePath().toString()));
     attr.getPostCoercionTransform()
-        .postCoercionTransform(value, runner.getRegistry(), ImmutableMap.of());
+        .postCoercionTransform(value, new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
@@ -151,13 +144,12 @@ public class OutputListAttributeTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("foo/baz.cpp", "../foo.txt"));
     attr.getPostCoercionTransform()
-        .postCoercionTransform(value, runner.getRegistry(), ImmutableMap.of());
+        .postCoercionTransform(value, new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
   public void transformsToArtifact() throws CoerceFailedException {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
 
     ImmutableList<String> outputPaths =
         attr.getValue(
@@ -169,7 +161,8 @@ public class OutputListAttributeTest {
             ImmutableList.of("subdir/other.cpp", "main.cpp"));
     Object coerced =
         attr.getPostCoercionTransform()
-            .postCoercionTransform(outputPaths, registry, ImmutableMap.of());
+            .postCoercionTransform(
+                outputPaths, new FakeRuleAnalysisContextImpl(target, ImmutableMap.of()));
 
     assertThat(coerced, Matchers.instanceOf(ImmutableList.class));
     ImmutableList<Artifact> artifacts = (ImmutableList<Artifact>) coerced;

@@ -19,7 +19,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.core.rules.actions.ActionRegistry;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
@@ -28,7 +28,6 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.base.Joiner;
 import com.google.common.base.Verify;
-import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -37,12 +36,8 @@ import org.immutables.value.Value;
 /** Representation of a parameter of a user defined rule */
 public abstract class Attribute<CoercedType> implements AttributeHolder {
 
-  private static final PostCoercionTransform<
-          ImmutableMap<BuildTarget, ProviderInfoCollection>, Object>
-      IDENTITY =
-          (Object object,
-              ActionRegistry registry,
-              ImmutableMap<BuildTarget, ProviderInfoCollection> additionalData) -> object;
+  private static final PostCoercionTransform<RuleAnalysisContext, Object> IDENTITY =
+      (Object object, RuleAnalysisContext analysisContext) -> object;
 
   @Override
   public Attribute<?> getAttribute() {
@@ -119,8 +114,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * @return a method that transforms a coerced value into something more useful to users, taking
    *     into account the rule's dependencies
    */
-  public PostCoercionTransform<ImmutableMap<BuildTarget, ProviderInfoCollection>, ?>
-      getPostCoercionTransform() {
+  public PostCoercionTransform<RuleAnalysisContext, ?> getPostCoercionTransform() {
     return IDENTITY;
   }
 
