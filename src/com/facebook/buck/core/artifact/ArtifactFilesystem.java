@@ -17,8 +17,10 @@ package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.stream.RichStream;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.InputStream;
@@ -91,6 +93,15 @@ public class ArtifactFilesystem {
   public void makeExecutable(Artifact artifact) throws IOException {
     Path path = resolveToPath(artifact);
     MostFiles.makeExecutable(filesystem.resolve(path));
+  }
+
+  /**
+   * Makes a copy of the given {@link Artifact} to the given destination {@link Artifact}, with copy
+   * behaviour as specified by the {@link CopySourceMode}.
+   */
+  public void copy(Artifact toCopy, Artifact dest, CopySourceMode mode) throws IOException {
+    Preconditions.checkState(!dest.isSource(), "Copy destination should not be a Source Artifact");
+    filesystem.copy(resolveToPath(toCopy), resolveToPath(dest), mode);
   }
 
   /**

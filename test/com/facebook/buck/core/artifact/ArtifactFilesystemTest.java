@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -47,6 +48,8 @@ import org.junit.Test;
 public class ArtifactFilesystemTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final BuildArtifactFactoryForTests artifactFactory =
+      new BuildArtifactFactoryForTests(BuildTargetFactory.newInstance("//test:foo"), filesystem);
 
   @Test
   public void inputStreamOfArtifact() throws IOException {
@@ -98,6 +101,22 @@ public class ArtifactFilesystemTest {
     artifactFilesystem.writeContentsToPath("foobar", artifact);
 
     assertEquals("foobar", Iterables.getOnlyElement(filesystem.readLines(Paths.get("bar"))));
+  }
+
+  @Test
+  public void copiesArtifacts() throws IOException {
+    ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
+    ImmutableSourceArtifactImpl artifact =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("bar")));
+    filesystem.writeContentsToPath("some contents", Paths.get("bar"));
+
+    BuildArtifact dest = artifactFactory.createBuildArtifact(Paths.get("out"), Location.BUILTIN);
+
+    artifactFilesystem.copy(artifact, dest, CopySourceMode.FILE);
+
+    assertEquals(
+        "some contents",
+        filesystem.readFileIfItExists(dest.getSourcePath().getResolvedPath()).get());
   }
 
   @Test
