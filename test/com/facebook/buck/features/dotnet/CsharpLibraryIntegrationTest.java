@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.ParameterizedTests;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -35,6 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -78,52 +80,83 @@ public class CsharpLibraryIntegrationTest {
 
   @Test
   public void shouldCompileLibraryWithSystemProvidedDeps() throws IOException {
-    workspace.runBuckCommand(env, "build", "//src:simple").assertSuccess();
-    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/simple/simple.dll")));
+    ProcessResult result = workspace.runBuckCommand(env, "build", "//src:simple", "--show-output");
+    result.assertSuccess();
+    Path output =
+        Paths.get(
+            Objects.requireNonNull(
+                workspace.parseShowOutputStdoutAsStrings(result.getStdout()).get("//src:simple")));
+    assertTrue(Files.exists(workspace.resolve(output)));
     workspace.runBuckCommand(env, "clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand(env, "build", "//src:simple").assertSuccess();
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//src:simple");
-    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/simple/simple.dll")));
+    assertTrue(Files.exists(workspace.resolve(output)));
   }
 
   @Test
   public void shouldCompileLibraryWithAPrebuiltDependency() throws IOException {
-    workspace.runBuckCommand(env, "build", "//src:prebuilt").assertSuccess();
-    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/prebuilt/prebuilt.dll")));
+    ProcessResult result =
+        workspace.runBuckCommand(env, "build", "//src:prebuilt", "--show-output");
+    result.assertSuccess();
+    Path output =
+        Paths.get(
+            Objects.requireNonNull(
+                workspace
+                    .parseShowOutputStdoutAsStrings(result.getStdout())
+                    .get("//src:prebuilt")));
+    assertTrue(Files.exists(workspace.resolve(output)));
     workspace.runBuckCommand(env, "clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand(env, "build", "//src:prebuilt").assertSuccess();
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//src:prebuilt");
-    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/prebuilt/prebuilt.dll")));
+    assertTrue(Files.exists(workspace.resolve(output)));
   }
 
   @Test
   public void shouldBeAbleToEmbedResourcesIntoTheBuiltDll() throws IOException {
-    workspace.runBuckCommand(env, "build", "//src:embed").assertSuccess();
-    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/embed/embed.dll")));
+    ProcessResult result = workspace.runBuckCommand(env, "build", "//src:embed", "--show-output");
+    result.assertSuccess();
+    Path output =
+        Paths.get(
+            Objects.requireNonNull(
+                workspace.parseShowOutputStdoutAsStrings(result.getStdout()).get("//src:embed")));
+    assertTrue(Files.exists(workspace.resolve(output)));
     workspace.runBuckCommand(env, "clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand(env, "build", "//src:embed").assertSuccess();
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//src:embed");
-    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/embed/embed.dll")));
+    assertTrue(Files.exists(workspace.resolve(output)));
   }
 
   @Test
   public void shouldBeAbleToDependOnAnotherCsharpLibrary() throws IOException {
-    workspace.runBuckCommand(env, "build", "//src:dependent").assertSuccess();
-    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/dependent/dependent.dll")));
+    ProcessResult result =
+        workspace.runBuckCommand(env, "build", "//src:dependent", "--show-output");
+    result.assertSuccess();
+    Path output =
+        Paths.get(
+            Objects.requireNonNull(
+                workspace
+                    .parseShowOutputStdoutAsStrings(result.getStdout())
+                    .get("//src:dependent")));
+    assertTrue(Files.exists(workspace.resolve(output)));
     workspace.runBuckCommand(env, "clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand(env, "build", "//src:dependent").assertSuccess();
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//src:dependent");
-    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/dependent/dependent.dll")));
+    assertTrue(Files.exists(workspace.resolve(output)));
   }
 
   @Test
   public void shouldCachePrebuiltCsharpLibrary() throws IOException {
-    workspace.runBuckCommand(env, "build", "//lib:log4net").assertSuccess();
-    assertTrue(Files.exists(workspace.resolve("buck-out/gen/lib/log4net/log4net.dll")));
+    ProcessResult result = workspace.runBuckCommand(env, "build", "//lib:log4net", "--show-output");
+    result.assertSuccess();
+    Path output =
+        Paths.get(
+            Objects.requireNonNull(
+                workspace.parseShowOutputStdoutAsStrings(result.getStdout()).get("//lib:log4net")));
+    assertTrue(Files.exists(workspace.resolve(output)));
     workspace.runBuckCommand(env, "clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand(env, "build", "//lib:log4net").assertSuccess();
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//lib:log4net");
-    assertTrue(Files.exists(workspace.resolve("buck-out/gen/lib/log4net/log4net.dll")));
+    assertTrue(Files.exists(workspace.resolve(output)));
   }
 
   @Test
