@@ -315,6 +315,10 @@ java_test(
         STANDARD_TEST_SRCS,
         exclude = APPLE_INTEGRATION_TEST_SRCS,
     ),
+    env = {
+        "JACOCO_AGENT_JAR": "$(location //third-party/java/jacoco:agent)",
+        "REPORT_GENERATOR_JAR": "$(location //src/com/facebook/buck/jvm/java/coverage:report-generator)",
+    },
     has_immutable_types = True,
     labels = ["long_running"],
     resources = glob(

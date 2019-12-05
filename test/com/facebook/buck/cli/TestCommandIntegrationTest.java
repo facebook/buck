@@ -25,6 +25,8 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.PropertySaver;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,24 +47,21 @@ public class TestCommandIntegrationTest {
   private ProjectWorkspace workspace;
 
   private static Map<String, String> getCodeCoverageProperties() {
-    Path genDir = Paths.get("buck-out", "gen").toAbsolutePath();
+
     Path jacocoJar =
-        genDir.resolve(Paths.get("third-party", "java", "jacoco", "__agent__", "jacocoagent.jar"));
+        Paths.get(
+                Preconditions.checkNotNull(
+                    EnvVariablesProvider.getSystemEnv().get("JACOCO_AGENT_JAR")))
+            .toAbsolutePath();
     Path reportGenJar =
-        genDir.resolve(
-            Paths.get(
-                "src",
-                "com",
-                "facebook",
-                "buck",
-                "jvm",
-                "java",
-                "coverage",
-                "report-generator.jar"));
+        Paths.get(
+                Preconditions.checkNotNull(
+                    EnvVariablesProvider.getSystemEnv().get("REPORT_GENERATOR_JAR")))
+            .toAbsolutePath();
 
     return ImmutableMap.of(
-        "buck.jacoco_agent_jar", genDir.resolve(jacocoJar).toString(),
-        "buck.report_generator_jar", genDir.resolve(reportGenJar).toString());
+        "buck.jacoco_agent_jar", jacocoJar.toString(),
+        "buck.report_generator_jar", reportGenJar.toString());
   }
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
