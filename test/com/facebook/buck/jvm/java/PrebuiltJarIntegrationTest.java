@@ -54,10 +54,9 @@ public class PrebuiltJarIntegrationTest {
 
     Path localPath =
         BuildTargetPaths.getGenPath(
-                workspace.asCell().getFilesystem(),
-                BuildTargetFactory.newInstance("//:jar_from_gen"),
-                "%s")
-            .getParent();
+            workspace.asCell().getFilesystem(),
+            BuildTargetFactory.newInstance("//:jar_from_gen"),
+            "");
     Path expectedRoot = workspace.resolve(localPath);
 
     assertTrue(output.startsWith(expectedRoot));
