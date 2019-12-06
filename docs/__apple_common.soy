@@ -100,6 +100,20 @@ Library/Header2.h -> Lib/Header2.h
 {/template}
 
 /***/
+{template .target_sdk_version}
+{call buck.arg}
+  {param name : 'target_sdk_version' /}
+  {param default : 'None' /}
+  {param desc}
+  The minimum OS version that the library target should support, overriding the minimum set in
+  <code>.buckconfig</code>. When set, Buck will automatically add flags to both Objective-C and
+  Swift compilation that will allow the use of the new APIs without guarding code inside availability
+  checks.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .info_plist_arg}
 {call buck.arg}
   {param name: 'info_plist' /}

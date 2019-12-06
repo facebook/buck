@@ -538,8 +538,14 @@ public class AppleBinaryDescription
           } else {
             CxxBinaryDescriptionArg.Builder delegateArg =
                 CxxBinaryDescriptionArg.builder().from(args);
+            Optional<AppleCxxPlatform> appleCxxPlatform =
+                getAppleCxxPlatformFromParams(appleCxxPlatformsFlavorDomain, buildTarget);
             AppleDescriptions.populateCxxBinaryDescriptionArg(
-                graphBuilder.getSourcePathResolver(), delegateArg, args, buildTarget);
+                graphBuilder.getSourcePathResolver(),
+                delegateArg,
+                appleCxxPlatform,
+                args,
+                buildTarget);
 
             Optional<ApplePlatform> applePlatform =
                 getApplePlatformForTarget(
@@ -644,8 +650,11 @@ public class AppleBinaryDescription
       Class<U> metadataClass) {
     if (!metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       CxxBinaryDescriptionArg.Builder delegateArg = CxxBinaryDescriptionArg.builder().from(args);
+      Optional<AppleCxxPlatform> appleCxxPlatform =
+          getAppleCxxPlatformFromParams(
+              getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()), buildTarget);
       AppleDescriptions.populateCxxBinaryDescriptionArg(
-          graphBuilder.getSourcePathResolver(), delegateArg, args, buildTarget);
+          graphBuilder.getSourcePathResolver(), delegateArg, appleCxxPlatform, args, buildTarget);
       return cxxBinaryMetadataFactory.createMetadata(
           buildTarget, graphBuilder, delegateArg.build().getDeps(), metadataClass);
     }

@@ -277,13 +277,15 @@ public class AppleDescriptions {
     return builder.build();
   }
 
-  public static void populateCxxConstructorArg(
+  private static void populateCxxConstructorArg(
       SourcePathResolverAdapter resolver,
+      Optional<AppleCxxPlatform> appleCxxPlatform,
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget,
       Consumer<ImmutableSortedSet<SourceWithFlags>> setSrcs,
       Consumer<SourceSortedSet> setHeaders,
-      Consumer<String> setHeaderNamespace) {
+      Consumer<String> setHeaderNamespace,
+      Consumer<StringWithMacros> addCompilerFlags) {
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(arg, buildTarget);
     // The resulting cxx constructor arg will have no exported headers and both headers and exported
     // headers specified in the apple arg will be available with both public and private include
@@ -317,20 +319,37 @@ public class AppleDescriptions {
     // This is intentionally an empty string; we put all prefixes into
     // the header map itself.
     setHeaderNamespace.accept("");
+
+    if (appleCxxPlatform.isPresent()) {
+      String platformVersion = appleCxxPlatform.get().getMinVersion();
+      Optional<String> targetVersion = arg.getTargetSdkVersion();
+
+      // If the target has a different target SDK version from the overall platform, we add
+      // a compiler flag to override that base version with the per-target version.
+      if (targetVersion.isPresent() && platformVersion != targetVersion.get()) {
+        String versionFlag =
+            appleCxxPlatform.get().getAppleSdk().getApplePlatform().getMinVersionFlagPrefix()
+                + targetVersion.get();
+        addCompilerFlags.accept(StringWithMacros.of(ImmutableList.of(Either.ofLeft(versionFlag))));
+      }
+    }
   }
 
   public static void populateCxxBinaryDescriptionArg(
       SourcePathResolverAdapter resolver,
       CxxBinaryDescriptionArg.Builder output,
+      Optional<AppleCxxPlatform> appleCxxPlatform,
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget) {
     populateCxxConstructorArg(
         resolver,
+        appleCxxPlatform,
         arg,
         buildTarget,
         output::setSrcs,
         output::setHeaders,
-        output::setHeaderNamespace);
+        output::setHeaderNamespace,
+        output::addCompilerFlags);
     output.setDefaultPlatform(arg.getDefaultPlatform());
   }
 
@@ -342,11 +361,13 @@ public class AppleDescriptions {
       BuildTarget buildTarget) {
     populateCxxConstructorArg(
         resolver,
+        appleCxxPlatform,
         arg,
         buildTarget,
         output::setSrcs,
         output::setHeaders,
-        output::setHeaderNamespace);
+        output::setHeaderNamespace,
+        output::addCompilerFlags);
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(arg, buildTarget);
     output.setHeaders(
         SourceSortedSet.ofNamedSources(
@@ -360,20 +381,6 @@ public class AppleDescriptions {
       output.addCompilerFlags(
           StringWithMacros.ofConstantString(
               "-fmodule-name=" + arg.getHeaderPathPrefix().orElse(buildTarget.getShortName())));
-    }
-
-    if (appleCxxPlatform.isPresent()) {
-      String platformVersion = appleCxxPlatform.get().getMinVersion();
-      Optional<String> targetVersion = arg.getTargetSdkVersion();
-
-      // If the target has a different target SDK version from the overall platform, we add
-      // a compiler flag to override that base version with the per-target version.
-      if (targetVersion.isPresent() && platformVersion != targetVersion.get()) {
-        String versionFlag =
-            appleCxxPlatform.get().getAppleSdk().getApplePlatform().getMinVersionFlagPrefix()
-                + targetVersion.get();
-        output.addCompilerFlags(StringWithMacros.of(ImmutableList.of(Either.ofLeft(versionFlag))));
-      }
     }
   }
 

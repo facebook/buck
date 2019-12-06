@@ -28,6 +28,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -48,6 +49,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -1049,11 +1051,19 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testTargetSDKVersion() throws Exception {
-    testModularScenario("target_sdk_version", "Test");
+    testModularScenario("target_sdk_version", "Binary");
+    testModularScenario("target_sdk_version", "Library");
+    testModularScenarioWithFlavor("target_sdk_version", "Test", Optional.empty());
   }
 
   private ProjectWorkspace testModularScenario(String scenario, String targetName)
       throws Exception {
+    return testModularScenarioWithFlavor(
+        scenario, targetName, Optional.of(CxxDescriptionEnhancer.SHARED_FLAVOR));
+  }
+
+  private ProjectWorkspace testModularScenarioWithFlavor(
+      String scenario, String targetName, Optional<Flavor> flavor) throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -1062,11 +1072,14 @@ public class AppleLibraryIntegrationTest {
     workspace.setUp();
     workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
     workspace.addBuckConfigLocalOption("cxx", "cflags", "-fmodules");
-    BuildTarget dylibTarget =
-        workspace
-            .newBuildTarget(String.format("//:%s#iphonesimulator-x86_64", targetName))
-            .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
-    ProcessResult result = workspace.runBuckCommand("build", dylibTarget.getFullyQualifiedName());
+    BuildTarget target =
+        workspace.newBuildTarget(String.format("//:%s#iphonesimulator-x86_64", targetName));
+
+    if (flavor.isPresent()) {
+      target = target.withAppendedFlavors(flavor.get());
+    }
+
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
     return workspace;
   }
