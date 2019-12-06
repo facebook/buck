@@ -21,6 +21,7 @@ apple_library(
 apple_binary(
     name = "Binary",
     srcs = [
+        "Test.swift",
         "main.m",
     ],
     compiler_flags = ["-Werror=unguarded-availability"],

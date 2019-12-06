@@ -633,7 +633,8 @@ public class AppleLibraryDescription
     Optional<BuildRule> swiftCompanionBuildRule =
         swiftDelegate.flatMap(
             swift ->
-                swift.createCompanionBuildRule(context, buildTarget, params, graphBuilder, args));
+                swift.createCompanionBuildRule(
+                    context, buildTarget, params, graphBuilder, args, args.getTargetSdkVersion()));
     if (swiftCompanionBuildRule.isPresent() && isSwiftTarget(buildTarget)) {
       // when creating a swift target, there is no need to proceed with apple library rules
       return swiftCompanionBuildRule.get();

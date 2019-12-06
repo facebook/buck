@@ -300,7 +300,14 @@ public class SwiftLibraryDescription
           cxxPlatform,
           swiftBuckConfig,
           buildTarget,
-          swiftPlatform.get().getSwiftTarget(),
+          args.getTargetSdkVersion()
+              .map(
+                  version ->
+                      SwiftTargetTriple.builder()
+                          .from(swiftPlatform.get().getSwiftTarget())
+                          .setTargetSdkVersion(version)
+                          .build())
+              .orElse(swiftPlatform.get().getSwiftTarget()),
           projectFilesystem,
           params.copyAppendingExtraDeps(
               () ->
@@ -418,7 +425,8 @@ public class SwiftLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      CxxLibraryDescription.CommonArg args) {
+      CxxLibraryDescription.CommonArg args,
+      Optional<String> targetSdkVersion) {
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource =
           !SwiftDescriptions.filterSwiftSources(
@@ -437,6 +445,7 @@ public class SwiftLibraryDescription
         delegateArgsBuilder,
         args,
         buildTarget);
+    delegateArgsBuilder.setTargetSdkVersion(targetSdkVersion);
     SwiftLibraryDescriptionArg delegateArgs = delegateArgsBuilder.build();
     if (!delegateArgs.getSrcs().isEmpty()) {
       return Optional.of(
@@ -530,5 +539,11 @@ public class SwiftLibraryDescription
     Optional<SourcePath> getBridgingHeader();
 
     Optional<NativeLinkableGroup.Linkage> getPreferredLinkage();
+
+    /**
+     * The minimum OS version for which this target should be built. If set, this will override the
+     * config-level option.
+     */
+    Optional<String> getTargetSdkVersion();
   }
 }

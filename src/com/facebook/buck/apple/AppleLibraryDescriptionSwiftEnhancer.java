@@ -65,6 +65,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
         swiftBuckConfig, graphBuilder.getSourcePathResolver(), delegateArgsBuilder, args, target);
+    delegateArgsBuilder.setTargetSdkVersion(args.getTargetSdkVersion());
     SwiftLibraryDescriptionArg swiftArgs = delegateArgsBuilder.build();
 
     Preprocessor preprocessor =
