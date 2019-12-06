@@ -49,6 +49,7 @@ import com.facebook.buck.rules.modern.Serializer;
 import com.facebook.buck.rules.modern.Serializer.Delegate;
 import com.facebook.buck.rules.modern.impl.InputsMapBuilder;
 import com.facebook.buck.rules.modern.impl.InputsMapBuilder.Data;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Memoizer;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Scope;
@@ -109,6 +110,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
   private static final String pluginResources = System.getProperty("buck.module.resources");
   private static final String pluginRoot = System.getProperty("pf4j.pluginsDir");
+  // necessary for isolated buck to work correctly
+  private static final String baseBuckOutDir = BuckConstant.getBuckOutputPath().toString();
   public static final Path TRAMPOLINE_PATH = Paths.get("__trampoline__.sh");
   public static final Path METADATA_PATH = Paths.get(".buck.metadata");
   private static final String FILE_HASH_VERIFICATION = "hash.verify";
@@ -632,26 +635,28 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     return builder.toString().getBytes(Charsets.UTF_8);
   }
 
+  private String relativizePathString(Path cellPrefixRoot, String s) {
+    if (s == null || s.length() == 0) {
+      return "";
+    }
+
+    Path path = Paths.get(s);
+    return path.isAbsolute() ? cellPrefixRoot.relativize(path).toString() : path.toString();
+  }
+
   private ImmutableSortedMap<String, String> getBuilderEnvironmentOverrides(
       ImmutableList<Path> bootstrapClasspath, Iterable<Path> classpath, Path cellPrefixRoot) {
 
     // TODO(shivanker): Pass all user environment overrides to remote workers.
-    String relativePluginRoot = "";
-    if (pluginRoot != null) {
-      Path rootPath = Paths.get(pluginRoot);
-      relativePluginRoot =
-          (rootPath.isAbsolute() ? cellPrefixRoot.relativize(Paths.get(pluginRoot)) : pluginRoot)
-              .toString();
-    }
-    String relativePluginResources =
-        pluginResources == null
-            ? ""
-            : cellPrefixRoot.relativize(Paths.get(pluginResources)).toString();
+    String relativePluginRoot = relativizePathString(cellPrefixRoot, pluginRoot);
+    String relativeBaseBuckOut = relativizePathString(cellPrefixRoot, baseBuckOutDir);
+    String relativePluginResources = relativizePathString(cellPrefixRoot, pluginResources);
     return ImmutableSortedMap.<String, String>naturalOrder()
         .put("CLASSPATH", classpathArg(bootstrapClasspath))
         .put("BUCK_CLASSPATH", classpathArg(classpath))
         .put("BUCK_JAVA_VERSION", String.valueOf(JavaVersion.getMajorVersion()))
         .put("BUCK_PLUGIN_ROOT", relativePluginRoot)
+        .put("BASE_BUCK_OUT_DIR", relativeBaseBuckOut)
         .put("BUCK_PLUGIN_RESOURCES", relativePluginResources)
         // TODO(cjhopman): This shouldn't be done here, it's not a Buck thing.
         .put("BUCK_DISTCC", "0")

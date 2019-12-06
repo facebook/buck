@@ -140,7 +140,8 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     }
   }
 
-  private static Optional<String> getConfiguredBuckOut(BuckPaths defaultBuckPaths, Config config) {
+  private static Path getConfiguredBuckOut(
+      Optional<String> configuredBuckOut, Path buckOutPath, Path rootPath) {
     // You currently cannot truly configure the BuckOut directory today.
     // The use of ConfiguredBuckOut and project.buck_out here is IMHO
     // confusingly "partial" support for this feature.
@@ -150,38 +151,40 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     // us to ensure any ConfiguredBuckOut is a relative path underneath our
     // top-level BuckOut (which happily enough, FBCode already does for their current
     // use: "buck-out/dev"). We enforce that relativity here in a disgusting way.
-    Optional<String> configuredBuckOut = config.get("project", "buck_out");
+    String buckOut = buckOutPath.toString();
     if (configuredBuckOut.isPresent()) {
       String value = configuredBuckOut.get();
-      String buckOut = defaultBuckPaths.getBuckOut().toString();
       if (value.startsWith(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME)
           && buckOut != BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME) {
-        configuredBuckOut =
-            Optional.of(value.replace(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME, buckOut));
+        value = value.replace(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME, buckOut);
       }
+
+      return rootPath.getFileSystem().getPath(value);
     }
 
-    return configuredBuckOut;
+    return buckOutPath;
   }
 
   private static BuckPaths getConfiguredBuckPaths(
       Path rootPath, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
     BuckPaths buckPaths = BuckPaths.createDefaultBuckPaths(rootPath);
-    if (embeddedCellBuckOutInfo.isPresent()) {
-      Path cellBuckOut = embeddedCellBuckOutInfo.get().getCellBuckOut();
-      buckPaths =
-          buckPaths
-              .withConfiguredBuckOut(rootPath.relativize(cellBuckOut))
-              .withBuckOut(rootPath.relativize(cellBuckOut));
-    } else {
-      Optional<String> configuredBuckOut = getConfiguredBuckOut(buckPaths, config);
-      if (configuredBuckOut.isPresent()) {
-        buckPaths =
-            buckPaths.withConfiguredBuckOut(
-                rootPath.getFileSystem().getPath(configuredBuckOut.get()));
-      }
+    Path buckOut =
+        (embeddedCellBuckOutInfo.isPresent())
+            ? embeddedCellBuckOutInfo.get().getCellBuckOut()
+            : buckPaths.getBuckOut();
+    Optional<String> configuredProjectBuckOut = config.get("project", "buck_out");
+
+    Path configuredBuckOut = getConfiguredBuckOut(configuredProjectBuckOut, buckOut, rootPath);
+
+    if (configuredBuckOut.isAbsolute()) {
+      configuredBuckOut = rootPath.relativize(configuredBuckOut);
     }
-    return buckPaths;
+
+    if (buckOut.isAbsolute()) {
+      buckOut = rootPath.relativize(buckOut);
+    }
+
+    return buckPaths.withConfiguredBuckOut(configuredBuckOut).withBuckOut(buckOut);
   }
 
   /** Returns a root-relative path to the main cell's buck-out when using embedded cell buck out */

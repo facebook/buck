@@ -43,6 +43,8 @@ export BUCK_ISOLATED_ROOT=$PWD
 
 export BUCK_PLUGIN_RESOURCES=$(resolve $BUCK_PLUGIN_RESOURCES)
 export BUCK_PLUGIN_ROOT=$(resolve $BUCK_PLUGIN_ROOT)
+# necessary for "isolated buck" invocations to work correctly
+export BASE_BUCK_OUT_DIR=$BASE_BUCK_OUT_DIR
 # this env variable is used in some rules to check if build is running using BUCK
 export BUCK_BUILD_ID="RE_buck_build_id"
 
@@ -54,6 +56,7 @@ $JAVA_PATH -cp $CLASSPATH \
   -Xverify:none -XX:+TieredCompilation -XX:TieredStopAtLevel=1 \
   -Dpf4j.pluginsDir=$BUCK_PLUGIN_ROOT \
   -Dbuck.module.resources=$BUCK_PLUGIN_RESOURCES \
+  -Dbuck.base_buck_out_dir=$BASE_BUCK_OUT_DIR \
   com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper \
   com.facebook.buck.rules.modern.builders.OutOfProcessIsolatedBuilder \
   $BUCK_ISOLATED_ROOT "$@"
