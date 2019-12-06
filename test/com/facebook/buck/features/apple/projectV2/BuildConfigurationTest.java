@@ -25,6 +25,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -184,7 +185,9 @@ public class BuildConfigurationTest {
     Path xcconfigPath =
         BuildConfiguration.getXcconfigPath(
             projectFilesystem, fooBuildTarget, BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertEquals(Paths.get("buck-out/gen/bar/foo-Debug.xcconfig"), xcconfigPath);
+    assertEquals(
+        BuildTargetPaths.getGenPath(projectFilesystem, fooBuildTarget, "%s-Debug.xcconfig"),
+        xcconfigPath);
   }
 
   @Test
