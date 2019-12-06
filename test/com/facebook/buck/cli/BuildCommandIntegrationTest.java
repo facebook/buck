@@ -52,6 +52,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.MoreFiles;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -230,11 +231,10 @@ public class BuildCommandIntegrationTest {
     workspace.setUp();
 
     Path outputDir = tmp.newFolder("into-output");
-    assertEquals(0, outputDir.toFile().listFiles().length);
-    workspace.runBuckBuild("//:example", "--out", outputDir.toString());
+    assertEquals(0, MoreFiles.listFiles(outputDir).size());
+    workspace.runBuckBuild("//:example", "--out", outputDir.toString()).assertSuccess();
     assertTrue(outputDir.toFile().isDirectory());
-    File[] files = outputDir.toFile().listFiles();
-    assertEquals(1, files.length);
+    assertEquals(1, MoreFiles.listFiles(outputDir).size());
     assertTrue(Files.isRegularFile(outputDir.resolve("example.jar")));
   }
 
@@ -253,6 +253,23 @@ public class BuildCommandIntegrationTest {
         result.getStderr(),
         Matchers.containsString(
             "//:example_py does not have an output that is compatible with `buck build --out`"));
+  }
+
+  @Test
+  public void buckBuildAndCopyOutputDirectoryIntoDirectoryWithBuildTargetThatSupportsIt()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
+    workspace.setUp();
+
+    Path outputDir = tmp.newFolder("into-output");
+    assertEquals(0, MoreFiles.listFiles(outputDir).size());
+    workspace.runBuckBuild("//:example_dir", "--out", outputDir.toString()).assertSuccess();
+    assertTrue(Files.isDirectory(outputDir));
+    File[] files = outputDir.toFile().listFiles();
+    assertEquals(2, MoreFiles.listFiles(outputDir).size());
+    assertTrue(Files.isRegularFile(outputDir.resolve("example.jar")));
+    assertTrue(Files.isRegularFile(outputDir.resolve("example-2.jar")));
   }
 
   @Test

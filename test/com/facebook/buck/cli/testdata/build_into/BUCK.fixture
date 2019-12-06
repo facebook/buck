@@ -11,3 +11,18 @@ python_library(
         "example.py",
     ],
 )
+
+genrule(
+    name = "example_dir",
+    out = "example_dir",
+    bash = " && ".join([
+        "mkdir $OUT",
+        "cp $(location :example) $OUT/example.jar",
+        "cp $(location :example) $OUT/example-2.jar",
+    ]),
+    cmd_exe = " && ".join([
+        "mkdir $OUT",
+        "copy /Y $(location :example) $OUT\\example.jar",
+        "copy /Y $(location :example) $OUT\\example-2.jar",
+    ]),
+)

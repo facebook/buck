@@ -589,16 +589,31 @@ public class BuildCommand extends AbstractCommand {
         SourcePathResolverAdapter pathResolver =
             graphs.getActionGraphAndBuilder().getActionGraphBuilder().getSourcePathResolver();
 
-        Path outputPath;
-        if (Files.isDirectory(outputPathForSingleBuildTarget)) {
-          Path outputDir = outputPathForSingleBuildTarget.normalize();
-          Path outputFilename = pathResolver.getAbsolutePath(output).getFileName();
-          outputPath = outputDir.resolve(outputFilename);
+        Path outputAbsPath = pathResolver.getAbsolutePath(output);
+        if (projectFilesystem.isDirectory(outputAbsPath)) {
+          if (projectFilesystem.isFile(outputPathForSingleBuildTarget)) {
+            params
+                .getConsole()
+                .printErrorText(
+                    "buck --out for targets outputting directory must be either nonexistent or a directory!");
+            return ExitCode.BUILD_ERROR;
+          }
+          projectFilesystem.mkdirs(outputPathForSingleBuildTarget);
+          projectFilesystem.mergeChildren(
+              outputAbsPath,
+              outputPathForSingleBuildTarget,
+              java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         } else {
-          outputPath = outputPathForSingleBuildTarget;
+          Path outputPath;
+          if (Files.isDirectory(outputPathForSingleBuildTarget)) {
+            Path outputDir = outputPathForSingleBuildTarget.normalize();
+            Path outputFilename = outputAbsPath.getFileName();
+            outputPath = outputDir.resolve(outputFilename);
+          } else {
+            outputPath = outputPathForSingleBuildTarget;
+          }
+          projectFilesystem.copyFile(outputAbsPath, outputPath);
         }
-
-        projectFilesystem.copyFile(pathResolver.getAbsolutePath(output), outputPath);
       }
     }
     return ExitCode.SUCCESS;
