@@ -99,8 +99,7 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
 
     if (staticLibDeps.size() > 0) {
       Path argsFile =
-          BuildTargetPaths.getScratchPath(
-              getProjectFilesystem(), getBuildTarget(), "%s_argsfile.tmp");
+          BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "argsfile.tmp");
       String output =
           staticLibDeps.stream()
               .map(t -> context.getSourcePathResolver().getRelativePath(t).toString())
