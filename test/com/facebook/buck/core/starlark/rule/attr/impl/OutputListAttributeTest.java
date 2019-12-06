@@ -174,12 +174,12 @@ public class OutputListAttributeTest {
     }
     assertEquals(
         ImmutableList.of(
-            BuildTargetPaths.getBasePath(target, "%s__")
+            BuildTargetPaths.getBasePath(filesystem, target, "%s__")
                 .toPath(filesystem.getFileSystem())
                 .resolve("subdir")
                 .resolve("other.cpp")
                 .toString(),
-            BuildTargetPaths.getBasePath(target, "%s__")
+            BuildTargetPaths.getBasePath(filesystem, target, "%s__")
                 .toPath(filesystem.getFileSystem())
                 .resolve("main.cpp")
                 .toString()),

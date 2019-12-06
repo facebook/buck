@@ -32,6 +32,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.google.common.collect.ImmutableSet;
@@ -82,18 +83,19 @@ public class DefaultIjLibraryFactoryTest {
             .addDep(guava.getBuildTarget())
             .build();
 
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     androidSupportBinaryJarPath =
         FakeSourcePath.of(
-            "buck-out/bin/"
-                + BuildTargetPaths.getBasePath(
-                    androidSupportTarget.withAppendedFlavors(InternalFlavor.of("aar")),
-                    "__unpack_%s_unzip__/classes.jar"));
+            BuildTargetPaths.getScratchPath(
+                filesystem,
+                androidSupportTarget.withAppendedFlavors(InternalFlavor.of("aar")),
+                "__unpack_%s_unzip__/classes.jar"));
     androidSupportResClassPath =
         FakeSourcePath.of(
-            "buck-out/bin/"
-                + BuildTargetPaths.getBasePath(
-                    androidSupportTarget.withAppendedFlavors(InternalFlavor.of("aar")),
-                    "__unpack_%s_unzip__/res"));
+            BuildTargetPaths.getScratchPath(
+                filesystem,
+                androidSupportTarget.withAppendedFlavors(InternalFlavor.of("aar")),
+                "__unpack_%s_unzip__/res"));
     baseOutputPath = FakeSourcePath.of("buck-out/base.jar");
 
     libraryFactoryResolver =

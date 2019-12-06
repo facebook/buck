@@ -166,7 +166,7 @@ public class OutputAttributeTest {
     assertFalse(artifact.isBound());
     assertFalse(artifact.isSource());
     assertEquals(
-        BuildTargetPaths.getBasePath(target, "%s__")
+        BuildTargetPaths.getBasePath(filesystem, target, "%s__")
             .toPath(filesystem.getFileSystem())
             .resolve("subdir")
             .resolve("main.cpp")

@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -122,9 +123,13 @@ public class BuildReportIntegrationTest {
 
     assertTrue(Files.exists(buildReport));
     JsonNode reportRoot = ObjectMappers.READER.readTree(ObjectMappers.createParser(buildReport));
+
     assertEquals(
         "buck-out/cells/cell2/gen/"
-            + BuildTargetPaths.getBasePath(BuildTargetFactory.newInstance("cell2//:bar"), "%s")
+            + BuildTargetPaths.getBasePath(
+                    new FakeProjectFilesystem(),
+                    BuildTargetFactory.newInstance("cell2//:bar"),
+                    "%s")
                 .resolve("bar.txt"),
         reportRoot.get("results").get("cell2//:bar").get("output").textValue());
   }

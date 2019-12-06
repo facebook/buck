@@ -40,10 +40,11 @@ public class DefaultIjLibraryFactoryResolverTest {
   private TargetNode<JavaLibraryDescriptionArg> withSrc;
   private DefaultIjLibraryFactoryResolver libraryFactoryResolver;
   private Set<BuildTarget> targetsToBuild;
+  private FakeProjectFilesystem filesystem;
 
   @Before
   public void setUp() throws Exception {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem = new FakeProjectFilesystem();
     noSrc = JavaLibraryBuilder.createBuilder("//java:foo").build(filesystem);
     withSrc =
         JavaLibraryBuilder.createBuilder("//java:foo")
@@ -70,10 +71,7 @@ public class DefaultIjLibraryFactoryResolverTest {
         Optional.of(
             ExplicitBuildTargetSourcePath.of(
                 t,
-                Paths.get("buck-out/gen")
-                    .resolve(
-                        BuildTargetPaths.getBasePath(t, "lib__%s__output/foo.jar")
-                            .toPathDefaultFileSystem()))),
+                BuildTargetPaths.getGenPath(filesystem, t, "lib__%s__output").resolve("foo.jar"))),
         libraryFactoryResolver.getPathIfJavaLibrary(withSrc));
     assertEquals(1, targetsToBuild.size());
   }

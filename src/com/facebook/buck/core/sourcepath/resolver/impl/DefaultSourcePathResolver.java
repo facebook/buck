@@ -100,7 +100,8 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
           path = rule.getProjectFilesystem().getBuckPaths().getGenDir().relativize(path);
         }
         Path basePath =
-            BuildTargetPaths.getBasePathForBaseName(rule.getBuildTarget())
+            BuildTargetPaths.getBasePathForBaseName(
+                    rule.getProjectFilesystem(), rule.getBuildTarget())
                 .toPath(path.getFileSystem());
         rule.getBuildTarget().getCellRelativeBasePath().getPath().toPath(path.getFileSystem());
         if (path.startsWith(basePath)) {

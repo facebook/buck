@@ -26,7 +26,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -92,7 +92,7 @@ public class ModernBuildRuleTest {
                         .getBuckPaths()
                         .getGenDir()
                         .resolve(
-                            BuildTargetPaths.getBasePath(target, "%s__")
+                            BuildPaths.getBaseDir(filesystem, target)
                                 .toPath(filesystem.getFileSystem()))))
             .withRecursive(true),
         steps.get(0));
@@ -106,7 +106,7 @@ public class ModernBuildRuleTest {
                     .getBuckPaths()
                     .getGenDir()
                     .resolve(
-                        BuildTargetPaths.getBasePath(target, "%s__")
+                        BuildPaths.getBaseDir(filesystem, target)
                             .toPath(filesystem.getFileSystem())))),
         steps.get(1));
 
@@ -119,7 +119,7 @@ public class ModernBuildRuleTest {
                         .getBuckPaths()
                         .getScratchDir()
                         .resolve(
-                            BuildTargetPaths.getBasePath(target, "%s__")
+                            BuildPaths.getBaseDir(filesystem, target)
                                 .toPath(filesystem.getFileSystem()))))
             .withRecursive(true),
         steps.get(2));
@@ -133,7 +133,7 @@ public class ModernBuildRuleTest {
                     .getBuckPaths()
                     .getScratchDir()
                     .resolve(
-                        BuildTargetPaths.getBasePath(target, "%s__")
+                        BuildPaths.getBaseDir(filesystem, target)
                             .toPath(filesystem.getFileSystem())))),
         steps.get(3));
   }

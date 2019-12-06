@@ -41,6 +41,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.ProcessResult;
@@ -131,14 +132,18 @@ public class BuildCommandIntegrationTest {
     ProcessResult runBuckResult =
         workspace.runBuckBuild("--show-json-output", "//:foo", "//:bar", "//:ex ample");
     runBuckResult.assertSuccess();
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     assertThat(
         runBuckResult.getStdout(),
         Matchers.containsString(
             String.format(
-                "\"//:bar\" : \"buck-out/gen/%s/bar\",\n  \"//:ex ample\" : \"buck-out/gen/%s/example\",\n  \"//:foo\" : \"buck-out/gen/%s/foo\"\n}",
-                BuildTargetPaths.getBasePath(BuildTargetFactory.newInstance("//:bar"), "%s"),
-                BuildTargetPaths.getBasePath(BuildTargetFactory.newInstance("//:ex ample"), "%s"),
-                BuildTargetPaths.getBasePath(BuildTargetFactory.newInstance("//:foo"), "%s"))));
+                "\"//:bar\" : \"%s/bar\",\n  \"//:ex ample\" : \"%s/example\",\n  \"//:foo\" : \"%s/foo\"\n}",
+                BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance("//:bar"), "%s"),
+                BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance("//:ex ample"), "%s"),
+                BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance("//:foo"), "%s"))));
   }
 
   @Test

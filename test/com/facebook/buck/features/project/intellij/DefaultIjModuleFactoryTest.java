@@ -627,11 +627,11 @@ public class DefaultIjModuleFactoryTest {
   public void testAndroidPrebuiltAar() {
     SourcePath androidSupportBinaryPath =
         FakeSourcePath.of(
-            "buck-out/bin/"
-                + BuildTargetPaths.getBasePath(
+            BuildTargetPaths.getScratchPath(
+                    new FakeProjectFilesystem(),
                     BuildTargetFactory.newInstance("//third_party/java/support:support#aar_unzip"),
                     "__unpack_%s__")
-                + "/classes.jar");
+                .resolve("classes.jar"));
     Path androidSupportSourcesPath = Paths.get("third_party/java/support/support-sources.jar");
     String androidSupportJavadocUrl = "file:///support/docs";
     TargetNode<?> androidPrebuiltAar =

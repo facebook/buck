@@ -43,7 +43,7 @@ public class BuildArtifactFactory {
   protected BuildArtifactFactory(BuildTarget target, ProjectFilesystem filesystem) {
     this.target = target;
     this.genDir = filesystem.getBuckPaths().getGenDir();
-    this.basePath = BuildPaths.getBaseDir(target).toPath(filesystem.getFileSystem());
+    this.basePath = BuildPaths.getBaseDir(filesystem, target).toPath(filesystem.getFileSystem());
     this.declaredArtifacts = new HashSet<>();
   }
 

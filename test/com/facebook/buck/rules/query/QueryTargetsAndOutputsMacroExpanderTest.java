@@ -202,11 +202,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
 
   private String absolutify(BuildTarget buildTarget, String format, String last) {
     return filesystem
-        .resolve("buck-out/gen")
-        .resolve(
-            BuildTargetPaths.getBasePath(buildTarget, format)
-                .resolve(last)
-                .toPath(filesystem.getFileSystem()))
+        .resolve(BuildTargetPaths.getGenPath(filesystem, buildTarget, format).resolve(last))
         .toString();
   }
 }

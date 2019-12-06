@@ -441,11 +441,7 @@ public class CxxPreprocessAndCompileTest {
             .add("-O3")
             .add(
                 "-o",
-                Paths.get("buck-out/gen")
-                    .resolve(
-                        BuildTargetPaths.getBasePath(target, "%s__/test.o")
-                            .toPathDefaultFileSystem())
-                    .toString())
+                BuildTargetPaths.getGenPath(projectFilesystem, target, "%s__/test.o").toString())
             .add("-c")
             .add(input.toString())
             .build();
@@ -670,7 +666,7 @@ public class CxxPreprocessAndCompileTest {
                 "-o",
                 "buck-out/gen/"
                     + BuildTargetPaths.getBasePath(
-                        BuildTargetFactory.newInstance("//foo:bar"), "%s__")
+                        projectFilesystem, BuildTargetFactory.newInstance("//foo:bar"), "%s__")
                     + "/baz/test.o")
             .add("-c")
             .add(PathFormatter.pathWithUnixSeparators(input.toString()))

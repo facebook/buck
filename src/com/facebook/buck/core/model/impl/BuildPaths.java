@@ -73,8 +73,8 @@ public class BuildPaths {
    * @param target The {@link BuildTarget} to scope this path to.
    * @return A {@link java.nio.file.Path} scoped to the base path to {@code target}.
    */
-  public static ForwardRelativePath getBaseDir(BuildTarget target) {
-    return BuildTargetPaths.getBasePath(target, getFormat(target));
+  public static ForwardRelativePath getBaseDir(ProjectFilesystem filesystem, BuildTarget target) {
+    return BuildTargetPaths.getBasePath(filesystem, target, getFormat(target));
   }
 
   private static String getFormat(BuildTarget target) {

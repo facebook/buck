@@ -32,7 +32,7 @@ public class BuildArtifactFactoryForTests {
   public BuildArtifactFactoryForTests(BuildTarget target, ProjectFilesystem filesystem) {
     this.target = target;
     this.genDir = filesystem.getBuckPaths().getGenDir();
-    this.basePath = BuildPaths.getBaseDir(target).toPath(filesystem.getFileSystem());
+    this.basePath = BuildPaths.getBaseDir(filesystem, target).toPath(filesystem.getFileSystem());
   }
 
   public DeclaredArtifact createDeclaredArtifact(Path output, Location location)

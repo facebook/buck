@@ -55,7 +55,7 @@ public class BuildTargetPaths {
     return filesystem
         .getBuckPaths()
         .getScratchDir()
-        .resolve(getBasePath(target, format).toPath(filesystem.getFileSystem()));
+        .resolve(getBasePath(filesystem, target, format).toPath(filesystem.getFileSystem()));
   }
 
   /**
@@ -76,7 +76,7 @@ public class BuildTargetPaths {
     return filesystem
         .getBuckPaths()
         .getAnnotationDir()
-        .resolve(getBasePath(target, format).toPath(filesystem.getFileSystem()));
+        .resolve(getBasePath(filesystem, target, format).toPath(filesystem.getFileSystem()));
   }
 
   /**
@@ -93,10 +93,11 @@ public class BuildTargetPaths {
   public static Path getGenPath(ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
+
     return filesystem
         .getBuckPaths()
         .getGenDir()
-        .resolve(getBasePath(target, format).toPath(filesystem.getFileSystem()));
+        .resolve(getBasePath(filesystem, target, format).toPath(filesystem.getFileSystem()));
   }
 
   /**
@@ -111,16 +112,19 @@ public class BuildTargetPaths {
    *     will be filled in with the rule's short name. It should not start with a slash.
    * @return A {@link java.nio.file.Path} scoped to the base path of {@code target}.
    */
-  public static ForwardRelativePath getBasePath(BuildTarget target, String format) {
+  public static ForwardRelativePath getBasePath(
+      ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
 
-    return getBasePathForBaseName(target)
+    return getBasePathForBaseName(filesystem, target)
         .resolve(formatLastSegment(format, target.getShortNameAndFlavorPostfix()));
   }
 
   /** Return a relative path for all targets in a package of a {@link BuildTarget}. */
-  public static ForwardRelativePath getBasePathForBaseName(BuildTarget target) {
+  @SuppressWarnings("unused")
+  public static ForwardRelativePath getBasePathForBaseName(
+      ProjectFilesystem filesystem, BuildTarget target) {
     return target.getCellRelativeBasePath().getPath();
   }
 

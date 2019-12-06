@@ -74,6 +74,6 @@ public class BuildPathsTest {
   @Test
   @Parameters(method = "getTargetsForTest")
   public void basePathFormat(BuildTarget target, ForwardRelativePath path) {
-    assertTrue(BuildPaths.getBaseDir(target).endsWith(path));
+    assertTrue(BuildPaths.getBaseDir(filesystem, target).endsWith(path));
   }
 }
