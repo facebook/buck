@@ -140,8 +140,8 @@ public class ApkGenruleTest {
     // Verify all of the observers of the Genrule.
     Path expectedApkOutput =
         projectFilesystem.resolve(
-            projectFilesystem.getBuckPaths().getGenDir()
-                + "/src/com/facebook/sign_fb4a/sign_fb4a.apk");
+            BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s")
+                .resolve("sign_fb4a.apk"));
     assertEquals(expectedApkOutput, apkGenrule.getAbsoluteOutputFilePath());
     assertEquals(
         "The apk that this rule is modifying must have the apk in its deps.",
@@ -174,10 +174,7 @@ public class ApkGenruleTest {
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(),
                     projectFilesystem,
-                    projectFilesystem
-                        .getBuckPaths()
-                        .getGenDir()
-                        .resolve("src/com/facebook/sign_fb4a")))
+                    BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s")))
             .withRecursive(true),
         steps.get(0));
     assertEquals(
@@ -185,10 +182,7 @@ public class ApkGenruleTest {
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(),
                 projectFilesystem,
-                projectFilesystem
-                    .getBuckPaths()
-                    .getGenDir()
-                    .resolve("src/com/facebook/sign_fb4a"))),
+                BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"))),
         steps.get(1));
 
     assertEquals(
@@ -196,10 +190,7 @@ public class ApkGenruleTest {
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(),
                     projectFilesystem,
-                    projectFilesystem
-                        .getBuckPaths()
-                        .getGenDir()
-                        .resolve("src/com/facebook/sign_fb4a__tmp")))
+                    BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s__tmp")))
             .withRecursive(true),
         steps.get(2));
     assertEquals(
@@ -207,14 +198,11 @@ public class ApkGenruleTest {
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(),
                 projectFilesystem,
-                projectFilesystem
-                    .getBuckPaths()
-                    .getGenDir()
-                    .resolve("src/com/facebook/sign_fb4a__tmp"))),
+                BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s__tmp"))),
         steps.get(3));
 
     Path relativePathToSrcDir =
-        projectFilesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/sign_fb4a__srcs");
+        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s__srcs");
     assertEquals(
         RmStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
