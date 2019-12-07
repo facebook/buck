@@ -1780,10 +1780,13 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckBuild("//:bin#incremental-thinlto");
 
     Path indexResult =
-        tmp.getRoot().resolve("buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices/");
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance("//:bin#incremental-thinlto,thinindex"), "%s")
+            .resolve("thinlto.indices");
 
-    assertThat(Files.exists(indexResult.resolve("main.cpp.o.thinlto.bc")), Matchers.equalTo(true));
-    assertThat(Files.exists(indexResult.resolve("main.cpp.o.imports")), Matchers.equalTo(true));
+    assertTrue(Files.exists(indexResult.resolve("main.cpp.o.thinlto.bc")));
+    assertTrue(Files.exists(indexResult.resolve("main.cpp.o.imports")));
 
     String indexContents =
         new String(
@@ -1795,7 +1798,12 @@ public class CxxBinaryIntegrationTest {
       assertThat(
           indexContents,
           containsString(
-              "-Xlinker -thinlto_new_prefix -Xlinker buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices"));
+              "-Xlinker -thinlto_new_prefix -Xlinker "
+                  + BuildTargetPaths.getGenPath(
+                          workspace.getProjectFileSystem(),
+                          BuildTargetFactory.newInstance("//:bin#incremental-thinlto,thinindex"),
+                          "%s")
+                      .resolve("thinlto.indices")));
     } else if (Platform.detect() == Platform.LINUX) {
       assertThat(
           indexContents, containsString("-Wl,-plugin-opt,thinlto-index-only=thinlto.objects"));
@@ -1810,8 +1818,10 @@ public class CxxBinaryIntegrationTest {
     // -fthinlto-index
     // parameter is populated correctly.
     Path optResult =
-        tmp.getRoot()
-            .resolve("buck-out/bin/bin#default,incremental-thinlto,optimize-main.cpp.o.o55eba575/");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance(
+                "//:bin#default,incremental-thinlto,optimize-main.cpp.o.o55eba575"),
+            "%s");
     String optContents =
         new String(
             Files.readAllBytes(optResult.resolve("ppandcompile.argsfile")), StandardCharsets.UTF_8);
@@ -1819,7 +1829,18 @@ public class CxxBinaryIntegrationTest {
     assertThat(
         optContents,
         containsString(
-            "-fthinlto-index=buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices/buck-out/gen/bin#compile-main.cpp.oa5b6a1ba,default,incremental-thinlto/main.cpp.o.thinlto.bc"));
+            "-fthinlto-index="
+                + BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:bin#incremental-thinlto,thinindex"),
+                    "%s")
+                + "/thinlto.indices/"
+                + BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance(
+                        "//:bin#compile-main.cpp.oa5b6a1ba,default,incremental-thinlto"),
+                    "%s")
+                + "/main.cpp.o.thinlto.bc"));
   }
 
   @Test

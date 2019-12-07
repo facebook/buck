@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """A fake ld that can emit extra output."""
 
+from __future__ import print_function
+
 import argparse
 import sys
 
@@ -16,17 +18,30 @@ def main():
         else:
             expanded_args.append(arg)
 
+    expanded_expanded_args = [
+        line.replace("'", "") for arg in expanded_args for line in arg.split(" ")
+    ]
+
+    # Find the indices path arg, something like
+    # `buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices`
+    thinlto_args = [
+        line.replace("thinlto-prefix-replace=;", "")
+        for line in expanded_expanded_args
+        if line.endswith("/thinlto.indices")
+    ]
+
+    if len(thinlto_args) != 1:
+        raise Exception(
+            "cannot find thinlto.indices arg: {}".format(expanded_expanded_args)
+        )
+
+    indices, = thinlto_args
+
     # write the args to the expected files manually
-    with open(
-        "buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices/main.cpp.o.thinlto.bc",
-        "w",
-    ) as f:
+    with open(indices + "/main.cpp.o.thinlto.bc", "w") as f:
         f.writelines(expanded_args)
 
-    with open(
-        "buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices/main.cpp.o.imports",
-        "w",
-    ) as f:
+    with open(indices + "/main.cpp.o.imports", "w") as f:
         f.writelines(expanded_args)
 
 
