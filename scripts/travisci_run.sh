@@ -22,7 +22,7 @@ export TERM=dumb
 # Things messing with PYTHONPATH in ./bin/buck mess with
 # pkg_resources. Instead just use the real buck pex.
 # It's what we really want anyways.
-BUCK_PEX_LOCATION="./buck.pex"
+BUCK_PEX_LOCATION="./new_buck.pex"
 pyenv install -s 3.6.2
 pyenv global 3.6.2 system
 export PATH="$(pyenv root)/shims:$PATH"
