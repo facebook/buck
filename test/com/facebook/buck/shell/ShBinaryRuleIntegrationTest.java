@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -75,7 +76,10 @@ public class ShBinaryRuleIntegrationTest {
     buildResult.assertSuccess();
 
     // Make sure the sh_binary output is executable to begin with.
-    String outputPath = "buck-out/gen/__example_sh__/example_sh.sh";
+    Path outputPath =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:example_sh"), "__%s__")
+            .resolve("example_sh.sh");
     Path output = workspace.getPath(outputPath);
     assertTrue("Output file should be written to '" + outputPath + "'.", Files.exists(output));
     assertTrue("Output file must be executable.", Files.isExecutable(output));
