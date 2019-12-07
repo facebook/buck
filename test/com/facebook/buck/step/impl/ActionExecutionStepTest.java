@@ -80,7 +80,6 @@ public class ActionExecutionStepTest {
                   buildTarget,
                   BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(output)),
               Iterables.getOnlyElement(outputs).asBound().getSourcePath());
-          assertFalse(ctx.getShouldDeleteTemporaries());
           ctx.logError(new RuntimeException("message"), "my error %s", 1);
           ctx.postEvent(ConsoleEvent.info("my test info"));
           return ImmutableActionExecutionSuccess.of(
@@ -98,7 +97,7 @@ public class ActionExecutionStepTest {
             actionFunction);
 
     ActionExecutionStep step =
-        new ActionExecutionStep(action, false, new ArtifactFilesystem(projectFilesystem));
+        new ActionExecutionStep(action, new ArtifactFilesystem(projectFilesystem));
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
     BuckEventBusForTests.CapturingConsoleEventListener consoleEventListener =
         new CapturingConsoleEventListener();
@@ -157,7 +156,7 @@ public class ActionExecutionStepTest {
             (srcs, inputs, outputs, ctx) -> result);
 
     ActionExecutionStep step =
-        new ActionExecutionStep(action, false, new ArtifactFilesystem(projectFilesystem));
+        new ActionExecutionStep(action, new ArtifactFilesystem(projectFilesystem));
 
     Path packagePath = BuildPaths.getGenDir(projectFilesystem, buildTarget);
 
@@ -210,7 +209,7 @@ public class ActionExecutionStepTest {
             (srcs, inputs, outputs, ctx) -> result);
 
     ActionExecutionStep step =
-        new ActionExecutionStep(action, false, new ArtifactFilesystem(projectFilesystem));
+        new ActionExecutionStep(action, new ArtifactFilesystem(projectFilesystem));
 
     Path expectedPath = BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(output);
 

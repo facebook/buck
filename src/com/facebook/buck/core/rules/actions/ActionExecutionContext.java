@@ -36,10 +36,6 @@ public abstract class ActionExecutionContext {
   @Value.Parameter
   protected abstract BuckEventBus getBuckEventBus();
 
-  /** @return The value of the {@code shouldDeleteTemporaries} attribute */
-  @Value.Parameter
-  public abstract boolean getShouldDeleteTemporaries();
-
   /**
    * @return an {@link ArtifactFilesystem} the {@link Action} can access for it's execution. This is
    *     a filesystem that operates on {@link com.facebook.buck.core.artifact.Artifact}s without

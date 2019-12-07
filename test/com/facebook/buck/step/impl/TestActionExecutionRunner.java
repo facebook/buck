@@ -90,7 +90,7 @@ public class TestActionExecutionRunner {
       throws ActionCreationException, IOException {
 
     ActionExecutionStep step =
-        new ActionExecutionStep(action, false, new ArtifactFilesystem(projectFilesystem));
+        new ActionExecutionStep(action, new ArtifactFilesystem(projectFilesystem));
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
     BuckEventBusForTests.CapturingConsoleEventListener consoleEventListener =
         new BuckEventBusForTests.CapturingConsoleEventListener();

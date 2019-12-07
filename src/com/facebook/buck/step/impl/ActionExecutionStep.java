@@ -34,13 +34,10 @@ import java.io.IOException;
  */
 public class ActionExecutionStep implements Step {
   private final Action action;
-  private final boolean shouldDeleteTemporaries;
   private final ArtifactFilesystem artifactFilesystem;
 
-  public ActionExecutionStep(
-      Action action, boolean shouldDeleteTemporaries, ArtifactFilesystem artifactFilesystem) {
+  public ActionExecutionStep(Action action, ArtifactFilesystem artifactFilesystem) {
     this.action = action;
-    this.shouldDeleteTemporaries = shouldDeleteTemporaries;
     this.artifactFilesystem = artifactFilesystem;
   }
 
@@ -50,7 +47,6 @@ public class ActionExecutionStep implements Step {
     ActionExecutionContext executionContext =
         ImmutableActionExecutionContext.of(
             context.getBuckEventBus(),
-            shouldDeleteTemporaries,
             artifactFilesystem,
             context.getProcessExecutor(),
             context.getEnvironment(),

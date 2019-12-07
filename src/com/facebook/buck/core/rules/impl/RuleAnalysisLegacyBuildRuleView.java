@@ -122,10 +122,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
               .getResolvedPath());
     }
     return ImmutableList.of(
-        new ActionExecutionStep(
-            action.get(),
-            context.getShouldDeleteTemporaries(),
-            new ArtifactFilesystem(getProjectFilesystem())));
+        new ActionExecutionStep(action.get(), new ArtifactFilesystem(getProjectFilesystem())));
   }
 
   @Nullable
