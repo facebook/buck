@@ -123,7 +123,9 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
   @Test
   public void testNativeExopackageHasNoNativeLibraries() throws IOException {
     ZipInspector zipInspector =
-        new ZipInspector(workspace.getPath("buck-out/gen/apps/multidex/app-native-exo.apk"));
+        new ZipInspector(
+            workspace.getGenPath(
+                BuildTargetFactory.newInstance(NATIVE_EXOPACKAGE_TARGET), "%s.apk"));
 
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
 
@@ -226,7 +228,8 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
 
     workspace.getBuildLog().assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
     zipInspector =
-        new ZipInspector(workspace.getPath("buck-out/gen/apps/multidex/app-dex-exo.apk"));
+        new ZipInspector(
+            workspace.getGenPath(BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET), "%s.apk"));
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileDoesNotExist("assets/lib/armeabi-v7a/libnative_cxx_lib.so");
 
@@ -239,7 +242,8 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
 
     workspace.getBuildLog().assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
     zipInspector =
-        new ZipInspector(workspace.getPath("buck-out/gen/apps/multidex/app-dex-exo.apk"));
+        new ZipInspector(
+            workspace.getGenPath(BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET), "%s.apk"));
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("assets/lib/armeabi-v7a/libnative_cxx_lib.so");
 
