@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -143,6 +144,9 @@ public abstract class AbstractValueVisitorTest {
 
   @Test
   public abstract void nonHashableSourcePathContainer() throws Exception;
+
+  @Test
+  public abstract void outputLabel() throws Exception;
 
   @Test
   public abstract void map() throws Exception;
@@ -296,6 +300,10 @@ public abstract class AbstractValueVisitorTest {
     @AddToRuleKey
     final NonHashableSourcePathContainer container =
         new NonHashableSourcePathContainer(FakeSourcePath.of(rootFilesystem, "some/path"));
+  }
+
+  public static class WithOutputLabel implements FakeBuildable {
+    @AddToRuleKey final OutputLabel label = new OutputLabel("test_label");
   }
 
   public static class WithSet implements FakeBuildable {

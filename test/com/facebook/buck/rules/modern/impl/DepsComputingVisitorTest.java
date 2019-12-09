@@ -122,6 +122,12 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
+  public void outputLabel() throws Exception {
+    apply(new WithOutputLabel());
+  }
+
+  @Override
+  @Test
   public void map() {
     WithMap value = new WithMap();
     expect(inputRuleResolver.resolve(anyObject())).andReturn(Optional.empty()).times(2);

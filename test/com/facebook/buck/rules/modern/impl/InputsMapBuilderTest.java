@@ -110,6 +110,12 @@ public class InputsMapBuilderTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
+  public void outputLabel() throws Exception {
+    apply(new WithOutputLabel());
+  }
+
+  @Override
+  @Test
   public void map() {
     inputsConsumer.accept(anyObject());
     expectLastCall().times(2);

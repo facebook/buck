@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.google.common.base.Preconditions;
 import java.util.Objects;
 
@@ -33,7 +35,7 @@ import java.util.Objects;
  * label in a build target. For example, "//foo:bar" would be associated with the default output
  * label, whereas "//foo:bar[baz] would be associated with the named label "baz".
  */
-public class OutputLabel implements Comparable<OutputLabel> {
+public class OutputLabel implements Comparable<OutputLabel>, AddsToRuleKey {
 
   /**
    * Label denoting the default output group rather than a named output group.
@@ -47,7 +49,7 @@ public class OutputLabel implements Comparable<OutputLabel> {
    */
   public static final OutputLabel DEFAULT = new OutputLabel();
 
-  private final String label;
+  @AddToRuleKey private final String label;
 
   private OutputLabel() {
     label = "";
@@ -62,6 +64,10 @@ public class OutputLabel implements Comparable<OutputLabel> {
 
   public boolean isDefault() {
     return this == DEFAULT;
+  }
+
+  private String getLabel() {
+    return label;
   }
 
   @Override
@@ -89,5 +95,21 @@ public class OutputLabel implements Comparable<OutputLabel> {
   @Override
   public int compareTo(OutputLabel o) {
     return this.label.compareTo(o.label);
+  }
+
+  public static OutputLabel.Internals internals() {
+    return Internals.INSTANCE;
+  }
+
+  /**
+   * Provides access to internal implementation details of OutputLabels. Using this should be
+   * avoided.
+   */
+  public static class Internals {
+    private static final OutputLabel.Internals INSTANCE = new OutputLabel.Internals();
+
+    public String getLabel(OutputLabel outputLabel) {
+      return outputLabel.getLabel();
+    }
   }
 }

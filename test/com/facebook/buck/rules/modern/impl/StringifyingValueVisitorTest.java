@@ -272,6 +272,14 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
+  public void outputLabel() {
+    assertEquals(
+        "label:com.facebook.buck.core.model.OutputLabel<\n" + "  label:string(test_label)\n" + ">",
+        stringify(new WithOutputLabel()));
+  }
+
+  @Override
+  @Test
   public void map() {
     assertEquals(
         "emptyMap:Map<\n"

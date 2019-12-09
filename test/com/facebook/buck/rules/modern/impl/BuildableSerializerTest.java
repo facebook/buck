@@ -305,6 +305,12 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
+  public void outputLabel() throws Exception {
+    test(new WithOutputLabel());
+  }
+
+  @Override
+  @Test
   public void map() throws Exception {
     test(new WithMap());
   }
