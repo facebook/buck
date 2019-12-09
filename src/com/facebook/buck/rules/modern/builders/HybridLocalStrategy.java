@@ -23,6 +23,7 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.util.Scope;
@@ -68,6 +69,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
   private final Semaphore localSemaphore;
   private final Semaphore localDelegateSemaphore;
   private final Semaphore delegateSemaphore;
+  private BuckEventBus eventBus;
 
   private final DelegateJobTracker tracker = new DelegateJobTracker();
 
@@ -91,7 +93,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     }
 
     @Nullable
-    ListenableFuture<?> stealFromDelegate() {
+    ListenableFuture<?> stealFromDelegate(BuckEventBus eventBus) {
       while (true) {
         Job job = delegateJobs.pollLast();
         if (job == null) {
@@ -101,6 +103,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
           ListenableFuture<?> listenableFuture =
               job.rescheduleLocally(new CancellationException("Job is being stolen."));
           if (listenableFuture != null) {
+            eventBus.post(HybridLocalEvent.createStolen(job.rule.getBuildTarget()));
             return listenableFuture;
           }
         } catch (Exception e) {
@@ -124,7 +127,8 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
       BuildRuleStrategy delegate,
       WorkerRequirementsProvider workerRequirementsProvider,
       Optional<WorkerRequirements.WorkerSize> maxWorkerSizeToStealFrom,
-      String auxiliaryBuildTag) {
+      String auxiliaryBuildTag,
+      BuckEventBus eventBus) {
     this.delegate = delegate;
     this.workerRequirementsProvider = workerRequirementsProvider;
     this.maxWorkerSizeToStealFrom = maxWorkerSizeToStealFrom;
@@ -132,6 +136,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     this.localSemaphore = new Semaphore(numLocalJobs);
     this.localDelegateSemaphore = new Semaphore(numLocalDelegateJobs);
     this.delegateSemaphore = new Semaphore(numDelegateJobs);
+    this.eventBus = eventBus;
     this.pendingLocalQueue = new ConcurrentLinkedQueue<>();
     this.pendingDelegateOrLocalQueue = new ConcurrentLinkedQueue<>();
     this.pendingDelegateOnlyQueue = new ConcurrentLinkedQueue<>();
@@ -363,7 +368,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
                 if (job != null) {
                   future = job.scheduleLocally();
                 } else {
-                  future = tracker.stealFromDelegate();
+                  future = tracker.stealFromDelegate(eventBus);
                 }
                 if (future != null) {
                   SettableFuture<Object> semaphoreFuture = SettableFuture.create();

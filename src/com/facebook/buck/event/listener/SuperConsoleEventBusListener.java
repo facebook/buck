@@ -35,8 +35,8 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.event.listener.util.EventInterval;
-import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
+import com.facebook.buck.rules.modern.builders.HybridLocalEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -69,6 +69,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.logging.Level;
+import javax.annotation.concurrent.GuardedBy;
 
 /** Console that provides rich, updating ansi output about the current build. */
 public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListener {
@@ -88,8 +89,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final Function<Long, String> formatTimeFunction;
 
   private final ConcurrentMap<Long, ConcurrentLinkedDeque<LeafEvent>> threadsToRunningStep;
+
+  @GuardedBy("this")
   private final ConcurrentMap<BuildTarget, RemoteExecutionActionEvent.Started> eventsByTargets;
-  private final Set<String> stolenTargets;
+
+  @GuardedBy("this")
+  private final Set<BuildTarget> stolenTargets;
 
   private final ConcurrentMap<Long, Optional<? extends TestSummaryEvent>>
       threadsToRunningTestSummaryEvent;
@@ -395,8 +400,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               outputMaxColumns,
               buildRuleMinimumDurationMillis,
               maxConcurrentReExecutions,
-              ImmutableList.copyOf(eventsByTargets.values()),
-              ImmutableSet.copyOf(stolenTargets)),
+              ImmutableList.copyOf(eventsByTargets.values())),
           lines,
           maxThreadLines);
     }
@@ -844,8 +848,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
-  public void onActionEventStarted(RemoteExecutionActionEvent.Started event) {
-    eventsByTargets.put(event.getBuildTarget(), event);
+  public synchronized void onActionEventStarted(RemoteExecutionActionEvent.Started event) {
+    if (!stolenTargets.contains(event.getBuildTarget())) {
+      eventsByTargets.put(event.getBuildTarget(), event);
+    }
   }
 
   @Subscribe
@@ -854,8 +860,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
-  public void onLocalFallbackEventStarted(LocalFallbackEvent.Started event) {
+  public synchronized void onActionEventStolen(HybridLocalEvent.Stolen event) {
     stolenTargets.add(event.getBuildTarget());
+    eventsByTargets.remove(event.getBuildTarget());
   }
 
   @Override

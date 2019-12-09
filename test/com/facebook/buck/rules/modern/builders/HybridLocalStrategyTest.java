@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.remoteexecution.NoOpWorkerRequirementsProvider;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -68,7 +69,8 @@ public class HybridLocalStrategyTest {
               delegate,
               new NoOpWorkerRequirementsProvider(),
               Optional.empty(),
-              NO_AUXILIARY_BUILD_TAG)) {
+              NO_AUXILIARY_BUILD_TAG,
+              BuckEventBusForTests.newInstance())) {
         List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);
@@ -121,7 +123,8 @@ public class HybridLocalStrategyTest {
               delegate,
               new NoOpWorkerRequirementsProvider(),
               Optional.empty(),
-              NO_AUXILIARY_BUILD_TAG)) {
+              NO_AUXILIARY_BUILD_TAG,
+              BuckEventBusForTests.newInstance())) {
         List<ListenableFuture<Optional<BuildResult>>> delegateResults = new ArrayList<>();
         List<ListenableFuture<Optional<BuildResult>>> localResults = new ArrayList<>();
 
@@ -177,7 +180,8 @@ public class HybridLocalStrategyTest {
               delegate,
               new NoOpWorkerRequirementsProvider(),
               Optional.empty(),
-              NO_AUXILIARY_BUILD_TAG)) {
+              NO_AUXILIARY_BUILD_TAG,
+              BuckEventBusForTests.newInstance())) {
         List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);
@@ -233,7 +237,8 @@ public class HybridLocalStrategyTest {
               delegate,
               new NoOpWorkerRequirementsProvider(),
               Optional.empty(),
-              NO_AUXILIARY_BUILD_TAG)) {
+              NO_AUXILIARY_BUILD_TAG,
+              BuckEventBusForTests.newInstance())) {
         List<ListenableFuture<Optional<BuildResult>>> delegateResults = new ArrayList<>();
         List<ListenableFuture<Optional<BuildResult>>> localResults = new ArrayList<>();
 
@@ -314,7 +319,8 @@ public class HybridLocalStrategyTest {
               delegate,
               new NoOpWorkerRequirementsProvider(),
               Optional.empty(),
-              NO_AUXILIARY_BUILD_TAG)) {
+              NO_AUXILIARY_BUILD_TAG,
+              BuckEventBusForTests.newInstance())) {
         List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);
@@ -393,7 +399,8 @@ public class HybridLocalStrategyTest {
               delegate,
               new NoOpWorkerRequirementsProvider(),
               Optional.empty(),
-              NO_AUXILIARY_BUILD_TAG)) {
+              NO_AUXILIARY_BUILD_TAG,
+              BuckEventBusForTests.newInstance())) {
         List<ListenableFuture<?>> futures = new ArrayList<>();
         // We don't want any local jobs to finish before we've scheduled everything (if they did,
         // it's possible that some hybrid implementation could just chew through them without really
@@ -495,7 +502,8 @@ public class HybridLocalStrategyTest {
               delegate,
               new NoOpWorkerRequirementsProvider(),
               Optional.empty(),
-              NO_AUXILIARY_BUILD_TAG)) {
+              NO_AUXILIARY_BUILD_TAG,
+              BuckEventBusForTests.newInstance())) {
         List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);

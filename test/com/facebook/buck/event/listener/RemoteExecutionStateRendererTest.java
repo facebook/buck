@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.util.Ansi;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.Locale;
 import java.util.function.Function;
 import org.easymock.EasyMock;
@@ -46,19 +45,19 @@ public class RemoteExecutionStateRendererTest {
 
   @Test
   public void testGetSortedIds_NonEmptyTargets() {
-    testRenderer = createTestRenderer(getEvents(createBuildTargets(4)), ImmutableSet.of());
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(4)));
     assertEquals(ImmutableList.of(0L, 1L, 2L, 3L), testRenderer.getSortedIds(/* unused= */ false));
   }
 
   @Test
   public void testGetSortedIds_EmptyTargets() {
-    testRenderer = createTestRenderer(getEvents(createBuildTargets(0)), ImmutableSet.of());
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(0)));
     assertEquals(ImmutableList.of(), testRenderer.getSortedIds(/* unused= */ false));
   }
 
   @Test
   public void testTargetsGetFilteredByElapsedTime() {
-    testRenderer = createTestRenderer(getEvents(createBuildTargets(9)), ImmutableSet.of());
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(9)));
     // Timestamps are 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900; last three should be
     // filtered out
     assertEquals(
@@ -68,7 +67,7 @@ public class RemoteExecutionStateRendererTest {
   @Test
   public void testRenderStatusLine() {
     int numTargets = 4;
-    testRenderer = createTestRenderer(getEvents(createBuildTargets(numTargets)), ImmutableSet.of());
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(numTargets)));
 
     for (int i = 0; i < numTargets; i++) {
       // e.g. [RE]  - //:target0... 0.9s
@@ -79,34 +78,10 @@ public class RemoteExecutionStateRendererTest {
   }
 
   @Test
-  public void testRenderStatusLine_DoesNotAppendRePrefixToStolenTargets() {
-    int numTargets = 4;
-    ImmutableList<BuildTargetWrapper> targets = createBuildTargets(numTargets);
-    ImmutableSet.Builder<String> stolenTargets = new ImmutableSet.Builder<>();
-    for (int i = 1; i < numTargets; i += 2) {
-      stolenTargets.add(targets.get(i).target.getFullyQualifiedName());
-    }
-    testRenderer = createTestRenderer(getEvents(targets), stolenTargets.build());
-
-    for (int i = 0; i < numTargets; i++) {
-      if (i % 2 == 0) {
-        // e.g. [RE]  - //:target0... 0.9s
-        assertEquals(
-            "[RE]  - //:target" + i + "... 0." + (9 - i) + "s",
-            testRenderer.renderStatusLine(Long.valueOf(i)));
-      } else {
-        assertEquals(
-            " - //:target" + i + "... 0." + (9 - i) + "s",
-            testRenderer.renderStatusLine(Long.valueOf(i)));
-      }
-    }
-  }
-
-  @Test
   public void testRenderStatusLine_ThrowsExceptionIfGivenIdIsInvalid() {
     expectedException.expect(IllegalArgumentException.class);
     expectedException.expectMessage("Received invalid targetId.");
-    testRenderer = createTestRenderer(getEvents(createBuildTargets(4)), ImmutableSet.of());
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(4)));
 
     testRenderer.renderStatusLine(4L);
   }
@@ -115,7 +90,7 @@ public class RemoteExecutionStateRendererTest {
   public void testRenderShortStatus_ThrowsExceptionIfGivenIdIsInvalid() {
     expectedException.expect(IllegalArgumentException.class);
     expectedException.expectMessage("Received invalid targetId.");
-    testRenderer = createTestRenderer(getEvents(createBuildTargets(4)), ImmutableSet.of());
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(4)));
 
     testRenderer.renderStatusLine(-1L);
   }
@@ -123,7 +98,7 @@ public class RemoteExecutionStateRendererTest {
   @Test
   public void testRenderShortStatus() {
     int numTargets = 4;
-    testRenderer = createTestRenderer(getEvents(createBuildTargets(numTargets)), ImmutableSet.of());
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(numTargets)));
 
     for (int i = 0; i < numTargets; i++) {
       assertEquals("[RE] [.]", testRenderer.renderShortStatus(Long.valueOf(i)));
@@ -149,8 +124,7 @@ public class RemoteExecutionStateRendererTest {
   }
 
   private RemoteExecutionStateRenderer createTestRenderer(
-      ImmutableList<RemoteExecutionActionEvent.Started> buildTargets,
-      ImmutableSet<String> stolenTargets) {
+      ImmutableList<RemoteExecutionActionEvent.Started> buildTargets) {
     return new RemoteExecutionStateRenderer(
         ANSI,
         FORMAT_TIME_FUNCTION,
@@ -158,8 +132,7 @@ public class RemoteExecutionStateRendererTest {
         OUTPUT_MAX_COLUMNS,
         MINIMUM_DURATION_MILLIS,
         MAX_CONCURRENT_EXECUTIONS,
-        buildTargets,
-        stolenTargets);
+        buildTargets);
   }
 
   private ImmutableList<RemoteExecutionActionEvent.Started> getEvents(

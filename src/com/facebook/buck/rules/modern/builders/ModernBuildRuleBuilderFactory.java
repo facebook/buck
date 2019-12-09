@@ -141,7 +141,8 @@ public class ModernBuildRuleBuilderFactory {
         delegate,
         workerRequirementsProvider,
         remoteExecutionConfig.getMaxWorkerSizeToStealFrom(),
-        remoteExecutionConfig.getAuxiliaryBuildTag());
+        remoteExecutionConfig.getAuxiliaryBuildTag(),
+        eventBus);
   }
 
   /** The passthrough strategy just forwards to executorRunner.runWithDefaultExecutor. */
