@@ -28,8 +28,8 @@ import java.util.Optional;
 /** Just a Fake do nothing Action for rulekey tests */
 class SomeAction extends AbstractAction {
 
-  private int i;
-  private String a;
+  private final int i;
+  private final String a;
 
   protected SomeAction(ActionRegistry actionRegistry, int i, String a) {
     super(actionRegistry, ImmutableSortedSet.of(), ImmutableSortedSet.of());
