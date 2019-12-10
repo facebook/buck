@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.google.common.collect.ImmutableSortedSet;
 import javax.annotation.concurrent.ThreadSafe;

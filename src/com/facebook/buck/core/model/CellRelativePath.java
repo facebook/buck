@@ -15,13 +15,13 @@
  */
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.google.common.collect.ComparisonChain;
 import org.immutables.value.Value;
 
 /**
- * A pair of {@link com.facebook.buck.core.model.CanonicalCellName} and {@link ForwardRelativePath}
- * relative the the cell.
+ * A pair of {@link CanonicalCellName} and {@link ForwardRelativePath} relative the the cell.
  *
  * <p>This object can identify a buck package or a buck file.
  */

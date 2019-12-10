@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.name.ImmutableCanonicalCellName;
 import com.facebook.buck.core.model.BaseName;
-import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.ImmutableCanonicalCellName;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;

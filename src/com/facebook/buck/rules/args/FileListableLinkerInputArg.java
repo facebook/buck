@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.rules.args;
 
-import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;

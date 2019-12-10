@@ -16,8 +16,8 @@
 
 package com.facebook.buck.multitenant.runner
 
+import com.facebook.buck.core.cell.name.CanonicalCellName
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver
-import com.facebook.buck.core.model.CanonicalCellName
 import com.facebook.buck.core.path.ForwardRelativePath
 import com.facebook.buck.multitenant.query.MultitenantQueryEnvironment
 import com.facebook.buck.multitenant.service.DefaultFsToBuildPackageChangeTranslator

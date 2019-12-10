@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.core.cell;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.CanonicalCellName;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

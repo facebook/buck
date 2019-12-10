@@ -16,7 +16,7 @@
 package com.facebook.buck.core.cell.nameresolver;
 
 import com.facebook.buck.core.cell.exception.UnknownCellException;
-import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
@@ -38,7 +38,7 @@ public interface CellNameResolver {
   Optional<CanonicalCellName> getNameIfResolvable(Optional<String> localName);
 
   /**
-   * Resolves the local name to the {@link com.facebook.buck.core.model.CanonicalCellName}.
+   * Resolves the local name to the {@link CanonicalCellName}.
    *
    * @throws UnknownCellException if the alias is not resolvable.
    */

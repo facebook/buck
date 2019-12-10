@@ -17,6 +17,7 @@ package com.facebook.buck.core.model;
 
 import static org.junit.Assert.*;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import java.util.Optional;
 import org.junit.Test;

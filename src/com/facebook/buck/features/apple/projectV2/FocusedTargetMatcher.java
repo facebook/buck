@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.features.apple.projectV2;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;

@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.parser.detector;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;

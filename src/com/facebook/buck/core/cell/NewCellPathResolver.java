@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.cell;
 
-import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import java.nio.file.Path;
 import java.util.Optional;
 

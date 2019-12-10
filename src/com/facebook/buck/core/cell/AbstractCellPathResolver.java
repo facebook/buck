@@ -17,7 +17,7 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.exception.UnknownCellException;
-import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;

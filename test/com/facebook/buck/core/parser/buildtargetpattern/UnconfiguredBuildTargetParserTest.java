@@ -17,10 +17,10 @@ package com.facebook.buck.core.parser.buildtargetpattern;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.name.ImmutableCanonicalCellName;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BaseName;
-import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.ImmutableCanonicalCellName;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.collect.ImmutableSortedSet;

@@ -19,11 +19,11 @@ import static com.facebook.buck.core.cell.impl.DefaultCellPathResolver.REPOSITOR
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.name.ImmutableCanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.ImmutableCanonicalCellName;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;

@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.core.cell.nameresolver;
 
-import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.ImmutableCanonicalCellName;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.name.ImmutableCanonicalCellName;
 import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.Optional;

@@ -17,8 +17,8 @@ package com.facebook.buck.core.parser;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
-import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
