@@ -18,6 +18,7 @@ package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -33,6 +34,11 @@ abstract class AbstractBuckPaths {
   /** The relative path to the directory where Buck will generate its files. */
   @Value.Parameter
   public abstract Path getBuckOut();
+
+  @Value.Check
+  protected void checkBuckOut() {
+    Preconditions.checkArgument(!getBuckOut().isAbsolute());
+  }
 
   /**
    * The relative path to the directory where Buck will generate its files. This is used when
