@@ -1335,7 +1335,7 @@ public class ProjectGenerator {
             buildTargetName,
             Paths.get(String.format(productOutputFormat, buildTargetName)));
 
-    boolean isModularAppleLibrary = isModularAppleLibrary(targetNode) && isFocusedOnTarget;
+    boolean isModularAppleLibrary = isModularAppleLibrary(targetNode);
     mutator.setFrameworkHeadersEnabled(isModularAppleLibrary);
 
     ImmutableMap.Builder<String, String> swiftDepsSettingsBuilder = ImmutableMap.builder();
