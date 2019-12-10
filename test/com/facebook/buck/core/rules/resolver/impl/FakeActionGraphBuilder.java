@@ -28,8 +28,12 @@ public class FakeActionGraphBuilder extends TestActionGraphBuilder {
   private final Map<BuildTarget, BuildRule> ruleMap;
 
   public FakeActionGraphBuilder(Map<BuildTarget, BuildRule> ruleMap) {
+    this(TargetGraph.EMPTY, ruleMap);
+  }
+
+  public FakeActionGraphBuilder(TargetGraph targetGraph, Map<BuildTarget, BuildRule> ruleMap) {
     super(
-        TargetGraph.EMPTY,
+        targetGraph,
         new DefaultTargetNodeToBuildRuleTransformer(),
         new TestCellBuilder().build().getCellProvider());
     this.ruleMap = ruleMap;
@@ -37,6 +41,11 @@ public class FakeActionGraphBuilder extends TestActionGraphBuilder {
 
   @Override
   public BuildRule getRule(BuildTarget target) {
+    return Objects.requireNonNull(ruleMap.get(target), "No rule for target: " + target);
+  }
+
+  @Override
+  public BuildRule requireRule(BuildTarget target) {
     return Objects.requireNonNull(ruleMap.get(target), "No rule for target: " + target);
   }
 }

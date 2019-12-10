@@ -623,16 +623,15 @@ public class BuildCommand extends AbstractCommand {
       SourcePathResolverAdapter pathResolver,
       BuckConfig buckConfig,
       Path lastOutputDirPath,
-      BuildRule rule)
+      BuildRule rule,
+      OutputLabel outputLabel)
       throws IOException {
-    // TODO(irenewchen): This shouldn't use default output label after GraphsAndBuildTargets knows
-    // about output labels
     Optional<Path> outputPath =
         PathUtils.getUserFacingOutputPath(
             pathResolver,
             rule,
             buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink(),
-            OutputLabel.DEFAULT,
+            outputLabel,
             showOutputs);
     if (outputPath.isPresent()) {
       Path absolutePath = outputPath.get();
@@ -668,18 +667,28 @@ public class BuildCommand extends AbstractCommand {
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
-    for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
-      BuildRule rule = graphBuilder.requireRule(buildTarget);
+    for (ImmutableBuildTargetWithOutputs targetWithOutputs :
+        graphsAndBuildTargets.getBuildTargetWithOutputs()) {
+      BuildRule rule = graphBuilder.requireRule(targetWithOutputs.getBuildTarget());
       // If it's an apple bundle, we'd like to also link the dSYM file over here.
       if (rule instanceof AppleBundle) {
         AppleBundle bundle = (AppleBundle) rule;
         Optional<AppleDsym> dsym = bundle.getAppleDsym();
         if (dsym.isPresent()) {
           symLinkBuildRuleResult(
-              pathResolver, params.getBuckConfig(), lastOutputDirPath, dsym.get());
+              pathResolver,
+              params.getBuckConfig(),
+              lastOutputDirPath,
+              dsym.get(),
+              targetWithOutputs.getOutputLabel());
         }
       }
-      symLinkBuildRuleResult(pathResolver, params.getBuckConfig(), lastOutputDirPath, rule);
+      symLinkBuildRuleResult(
+          pathResolver,
+          params.getBuckConfig(),
+          lastOutputDirPath,
+          rule,
+          targetWithOutputs.getOutputLabel());
     }
   }
 
@@ -703,16 +712,15 @@ public class BuildCommand extends AbstractCommand {
                   ruleKeyCacheScope.getCache(),
                   Optional.empty()));
     }
-    for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
-      BuildRule rule = graphBuilder.requireRule(buildTarget);
-      // TODO(irenewchen): This shouldn't use default output label after GraphsAndBuildTargets knows
-      // about output labels
+    for (ImmutableBuildTargetWithOutputs targetWithOutputs :
+        graphsAndBuildTargets.getBuildTargetWithOutputs()) {
+      BuildRule rule = graphBuilder.requireRule(targetWithOutputs.getBuildTarget());
       Optional<Path> outputPath =
           PathUtils.getUserFacingOutputPath(
                   graphBuilder.getSourcePathResolver(),
                   rule,
                   params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
-                  OutputLabel.DEFAULT,
+                  targetWithOutputs.getOutputLabel(),
                   showOutputs)
               .map(
                   path ->
@@ -730,8 +738,9 @@ public class BuildCommand extends AbstractCommand {
             .getStdOut()
             .printf(
                 "%s%s%s\n",
-                rule.getFullyQualifiedName(),
+                targetWithOutputs,
                 showRuleKey ? " " + ruleKeyFactory.get().build(rule) : "",
+                // TODO(irenewchen): Don't print extra space if outputPath isn't present
                 showOutput || showOutputs || showFullOutput
                     ? " " + outputPath.map(Object::toString).orElse("")
                     : "");

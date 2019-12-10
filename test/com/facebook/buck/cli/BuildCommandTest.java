@@ -20,6 +20,7 @@ import static com.facebook.buck.core.build.engine.BuildRuleSuccessType.BUILT_LOC
 import static com.facebook.buck.core.build.engine.BuildRuleSuccessType.FETCHED_FROM_CACHE;
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
@@ -34,6 +35,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -44,21 +46,31 @@ import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.actiongraph.ActionGraph;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
+import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
+import com.facebook.buck.core.model.targetgraph.FakeTargetNodeArg;
+import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.impl.PathReferenceRule;
+import com.facebook.buck.core.rules.impl.PathReferenceRuleWithMultipleOutputs;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.resolver.impl.FakeActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.DaemonicParserState;
@@ -73,35 +85,51 @@ import com.facebook.buck.parser.spec.BuildFileSpec;
 import com.facebook.buck.parser.spec.BuildTargetSpec;
 import com.facebook.buck.parser.spec.ImmutableTargetNodePredicateSpec;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
+import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.keys.RuleKeyCacheScope;
+import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.kohsuke.args4j.CmdLineException;
 import org.pf4j.PluginManager;
 
 public class BuildCommandTest {
+  @Rule public final ExpectedException exception = ExpectedException.none();
 
   private BuildExecutionResult buildExecutionResult;
   private SourcePathResolverAdapter resolver;
   private Cell rootCell;
+  private TestConsole console;
+  private ProjectFilesystem projectFilesystem;
+  private RuleKeyCacheScope ruleKeyCacheScope;
 
   @Before
   public void setUp() {
@@ -140,6 +168,20 @@ public class BuildCommandTest {
             .setResults(ruleToResult)
             .setFailures(ImmutableSet.of(rule2Failure))
             .build();
+
+    console = new TestConsole();
+    projectFilesystem = new FakeProjectFilesystem();
+    ruleKeyCacheScope =
+        new RuleKeyCacheScope() {
+          @Override
+          public TrackedRuleKeyCache getCache() {
+            return new TrackedRuleKeyCache(
+                new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker());
+          }
+
+          @Override
+          public void close() {}
+        };
   }
 
   @Test
@@ -339,7 +381,7 @@ public class BuildCommandTest {
             ImmutableTargetNodePredicateSpec.of(
                 BuildFileSpec.fromUnconfiguredBuildTarget(
                     UnconfiguredBuildTargetFactoryForTests.newInstance(
-                        new FakeProjectFilesystem(), buildTargetName))));
+                        projectFilesystem, buildTargetName))));
     BuildCommand buildCommand =
         new BuildCommand() {
           @Override
@@ -367,11 +409,252 @@ public class BuildCommandTest {
                 BuildTargetFactory.newInstance(buildTargetName), OutputLabel.DEFAULT)));
   }
 
+  @Test
+  public void showOutputWithoutOutputLabelForRuleThatSupportsMultipleOutputs() throws Exception {
+    Path expected = Paths.get("path, timefordinner");
+    String buildTargetName = "//foo:foo";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, "")),
+            expected,
+            ImmutableMap.of(buildTargetName, ImmutableMap.of()),
+            true);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
+  }
+
+  @Test
+  public void showOutputWithoutOutputLabelForRuleThatDoesNotSupportMultipleOutputs()
+      throws Exception {
+    Path expected = Paths.get("path, timefordinner");
+    String buildTargetName = "//foo:foo";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, "")),
+            expected,
+            ImmutableMap.of(
+                buildTargetName, ImmutableMap.of(OutputLabel.DEFAULT, Paths.get("unused"))),
+            false);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
+  }
+
+  @Test
+  public void showOutputWithOutputLabel() throws Exception {
+    Path expected = Paths.get("path, timeforlunch");
+    String buildTargetName = "//foo:foo";
+    String label = "label";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, label)),
+            Paths.get("path, wrongpath"),
+            ImmutableMap.of(buildTargetName, ImmutableMap.of(new OutputLabel(label), expected)),
+            true);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo[label]", expected))));
+  }
+
+  @Test
+  public void showOutputsWithOutputLabel() throws Exception {
+    Path expected = Paths.get("path, timeforlunch");
+    String buildTargetName = "//foo:foo";
+    String label = "label";
+    Path expected2 = Paths.get("path, timeforsnacc");
+    String buildTargetName2 = "//bar:bar";
+    String label2 = "label2";
+
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, label), new Pair(buildTargetName2, label2)),
+            Paths.get("path, wrongpath"),
+            ImmutableMap.of(
+                buildTargetName,
+                ImmutableMap.of(new OutputLabel(label), expected),
+                buildTargetName2,
+                ImmutableMap.of(new OutputLabel(label2), expected2)),
+            true);
+    CommandRunnerParams params =
+        createTestParams(ImmutableSet.of(buildTargetName, buildTargetName2));
+
+    BuildCommand command = getCommand("--show-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(
+            getExpectedShowOutputsLog(
+                ImmutableMap.of("//foo:foo[label]", expected, "//bar:bar[label2]", expected2))));
+  }
+
+  @Test
+  public void showDefaultOutputsIfRuleHasMultipleOutputsAndNoLabelSpecified() throws Exception {
+    Path expected = Paths.get("path, defaultpath");
+    String buildTargetName = "//foo:foo";
+    String label = "label";
+    String label2 = "label2";
+    String buildTargetName2 = "//bar:bar";
+    String label3 = "label3";
+
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, "")),
+            expected,
+            ImmutableMap.of(
+                buildTargetName,
+                ImmutableMap.of(
+                    new OutputLabel(label),
+                    Paths.get("path, timeforlunch"),
+                    new OutputLabel(label2),
+                    Paths.get("path, timeforsnacc")),
+                buildTargetName2,
+                ImmutableMap.of(new OutputLabel(label3), Paths.get("path, timefornoms"))),
+            true);
+    CommandRunnerParams params =
+        createTestParams(ImmutableSet.of(buildTargetName, buildTargetName2));
+
+    BuildCommand command = getCommand("--show-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
+  }
+
+  @Test
+  public void failsIfShowOutputsFlagNotUsedForOutputLabel() throws Exception {
+    exception.expect(HumanReadableException.class);
+    exception.expectMessage(
+        containsString(
+            "path_reference_rule_with_multiple_outputs target //foo:foo[label] should use --show-outputs"));
+
+    String buildTargetName = "//foo:foo";
+    String label = "label";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, label)),
+            Paths.get("path, wrongpath"),
+            ImmutableMap.of(
+                buildTargetName,
+                ImmutableMap.of(new OutputLabel(label), Paths.get("path, timeforlunch"))),
+            true);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-output");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+  }
+
+  @Test
+  public void defaultPathUsedForMultipleOutputRuleWithoutShowOutputs() throws Exception {
+    Path expected = Paths.get("path, correctPath");
+    String buildTargetName = "//foo:foo";
+    String label = "label";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, "")),
+            Paths.get("path, correctPath"),
+            ImmutableMap.of(
+                buildTargetName,
+                ImmutableMap.of(new OutputLabel(label), Paths.get("path, timeforlunch"))),
+            true);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-output");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
+  }
+
+  @Test
+  public void onlyShowOutputForRequestedLabel() throws Exception {
+    Path expected = Paths.get("path, timeforlunch");
+    String buildTargetName = "//foo:foo";
+    String label = "label";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, label)),
+            Paths.get("path, wrongpath"),
+            ImmutableMap.of(
+                buildTargetName,
+                ImmutableMap.of(
+                    new OutputLabel("unrequestedLabel"),
+                    Paths.get("path, nottimeforlunch"),
+                    new OutputLabel(label),
+                    expected)),
+            true);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo[label]", expected))));
+  }
+
+  @Test
+  public void shouldThrowIfRequestOutputWithNonDefaultLabelOnRuleThatDoesNotSupportMultipleOutputs()
+      throws Exception {
+    exception.expect(IllegalStateException.class);
+    exception.expectMessage(
+        "Multiple outputs not supported for path_reference_rule target //foo:foo");
+    String buildTargetName = "//foo:foo";
+    String label = "label";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, label)),
+            Paths.get("path, wrongpath"),
+            ImmutableMap.of(
+                buildTargetName,
+                ImmutableMap.of(new OutputLabel(label), Paths.get("path, timeforlunch"))),
+            false);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-output");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+  }
+
+  @Test
+  public void doesNotDieIfCannotFindOutputPath() throws Exception {
+    String buildTargetName = "//foo:foo";
+    String label = "label";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, label)),
+            Paths.get("path, wrongpath"),
+            ImmutableMap.of(buildTargetName, ImmutableMap.of()),
+            true);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(console.getTextWrittenToStdOut(), Matchers.equalTo("//foo:foo[label] \n"));
+  }
+
+  private String getExpectedShowOutputsLog(ImmutableMap<String, Path> expectedTargetNamesToPaths) {
+    StringBuilder sb = new StringBuilder();
+    for (Map.Entry<String, Path> expected : expectedTargetNamesToPaths.entrySet()) {
+      sb.append(String.format("%s %s\n", expected.getKey(), expected.getValue()));
+    }
+    return sb.toString();
+  }
+
   private CommandRunnerParams createTestParams(ImmutableSet<String> buildTargetNames) {
-    TestConsole console = new TestConsole();
     CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
         CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
-    Cell cell = new TestCellBuilder().setFilesystem(new FakeProjectFilesystem()).build();
+    Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -403,9 +686,101 @@ public class BuildCommandTest {
   private BuildTargetSpec getBuildTargetSpec(String buildTargetName, String label) {
     return BuildTargetSpec.from(
         ImmutableUnconfiguredBuildTargetWithOutputs.of(
-            UnconfiguredBuildTargetFactoryForTests.newInstance(
-                new FakeProjectFilesystem(), buildTargetName),
+            UnconfiguredBuildTargetFactoryForTests.newInstance(projectFilesystem, buildTargetName),
             new OutputLabel(label)));
+  }
+
+  private TargetNode<FakeTargetNodeArg> getTargetNode(BuildTarget target) {
+    return FakeTargetNodeBuilder.newBuilder(new FakeTargetNodeBuilder.FakeDescription(), target)
+        .build();
+  }
+
+  private TargetGraph getTargetGraph(Collection<BuildTarget> targets) {
+    return TargetGraphFactory.newInstance(
+        targets.stream().map(this::getTargetNode).collect(ImmutableSet.toImmutableSet()));
+  }
+
+  private ActionAndTargetGraphs getActionAndTargetGraphs(
+      TargetGraph targetGraph,
+      ImmutableSet<ImmutableBuildTargetWithOutputs> buildTargetsWithOutputs,
+      Path defaultPath,
+      ImmutableMap<String, ImmutableMap<OutputLabel, Path>> pathsByLabelsForTargets,
+      boolean useMultipleOutputsRule) {
+    TargetGraphCreationResult targetGraphCreationResult =
+        new ImmutableTargetGraphCreationResult(
+            targetGraph,
+            buildTargetsWithOutputs.stream()
+                .map(ImmutableBuildTargetWithOutputs::getBuildTarget)
+                .collect(ImmutableSet.toImmutableSet()));
+    ActionGraphAndBuilder actionGraphAndBuilder =
+        createActionGraph(
+            targetGraph, defaultPath, pathsByLabelsForTargets, useMultipleOutputsRule);
+    return ActionAndTargetGraphs.builder()
+        .setUnversionedTargetGraph(targetGraphCreationResult)
+        .setVersionedTargetGraph(targetGraphCreationResult)
+        .setActionGraphAndBuilder(actionGraphAndBuilder)
+        .build();
+  }
+
+  private BuildCommand.GraphsAndBuildTargets getGraphsAndBuildTargets(
+      ImmutableSet<Pair<String, String>> targetNamesWithLabels,
+      Path defaultPath,
+      ImmutableMap<String, ImmutableMap<OutputLabel, Path>> pathsByLabelsForTargets,
+      boolean useMultipleOutputsRule) {
+    ImmutableMap.Builder<ImmutableBuildTargetWithOutputs, BuildTarget> builder =
+        new ImmutableMap.Builder<>();
+    for (Pair<String, String> targetNameWithLabel : targetNamesWithLabels) {
+      BuildTarget target = BuildTargetFactory.newInstance(targetNameWithLabel.getFirst());
+      builder.put(
+          ImmutableBuildTargetWithOutputs.of(
+              target,
+              targetNameWithLabel.getSecond().isEmpty()
+                  ? OutputLabel.DEFAULT
+                  : new OutputLabel(targetNameWithLabel.getSecond())),
+          target);
+    }
+
+    ImmutableMap<ImmutableBuildTargetWithOutputs, BuildTarget> targetsByTargetsWithOutputs =
+        builder.build();
+    TargetGraph targetGraph =
+        getTargetGraph(ImmutableSet.copyOf(targetsByTargetsWithOutputs.values()));
+    ActionAndTargetGraphs actionAndTargetGraphs =
+        getActionAndTargetGraphs(
+            targetGraph,
+            targetsByTargetsWithOutputs.keySet(),
+            defaultPath,
+            pathsByLabelsForTargets,
+            useMultipleOutputsRule);
+    return ImmutableGraphsAndBuildTargets.of(
+        actionAndTargetGraphs, targetsByTargetsWithOutputs.keySet());
+  }
+
+  private ActionGraphAndBuilder createActionGraph(
+      TargetGraph targetGraph,
+      Path defaultPath,
+      ImmutableMap<String, ImmutableMap<OutputLabel, Path>> pathsByLabelsForTargets,
+      boolean useMultipleOutputsRule) {
+    ImmutableMap.Builder<BuildTarget, BuildRule> builder = new ImmutableMap.Builder<>();
+    for (String targetName : pathsByLabelsForTargets.keySet()) {
+      BuildTarget target = BuildTargetFactory.newInstance(targetName);
+      builder.put(
+          target,
+          useMultipleOutputsRule
+              ? new PathReferenceRuleWithMultipleOutputs(
+                  target, projectFilesystem, defaultPath, pathsByLabelsForTargets.get(targetName))
+              : new PathReferenceRule(target, projectFilesystem, defaultPath));
+    }
+    ActionGraphBuilder actionGraphBuilder =
+        new FakeActionGraphBuilder(targetGraph, builder.build());
+    ActionGraphAndBuilder actionGraphAndBuilder =
+        ActionGraphAndBuilder.of(new ActionGraph(ImmutableSet.of()), actionGraphBuilder);
+    return actionGraphAndBuilder;
+  }
+
+  private BuildCommand getCommand(String... args) throws CmdLineException {
+    BuildCommand command = new BuildCommand();
+    CmdLineParserFactory.create(command).parseArgument(args);
+    return command;
   }
 
   /**

@@ -24,6 +24,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Map;
 
 /**
  * A {@link PathReferenceRule} that supports multiple outputs. Returns specific sets of {@link
@@ -33,6 +34,7 @@ import java.nio.file.Path;
 public class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
     implements HasMultipleOutputs {
   private final ImmutableMap<OutputLabel, Path> outputLabelToSource;
+  private final ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> outputLabelsToSourcePaths;
 
   public PathReferenceRuleWithMultipleOutputs(
       BuildTarget buildTarget,
@@ -41,12 +43,28 @@ public class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
       ImmutableMap<OutputLabel, Path> outputLabelToSource) {
     super(buildTarget, projectFilesystem, source);
     this.outputLabelToSource = outputLabelToSource;
+    ImmutableMap.Builder<OutputLabel, ImmutableSortedSet<SourcePath>> builder =
+        ImmutableMap.builderWithExpectedSize(1 + outputLabelToSource.size());
+    builder.put(
+        OutputLabel.DEFAULT,
+        source == null ? ImmutableSortedSet.of() : ImmutableSortedSet.of(getSourcePathToOutput()));
+    for (Map.Entry<OutputLabel, Path> entry : outputLabelToSource.entrySet()) {
+      builder.put(
+          entry.getKey(),
+          ImmutableSortedSet.of(
+              ExplicitBuildTargetSourcePath.of(getBuildTarget(), entry.getValue())));
+    }
+    outputLabelsToSourcePaths = builder.build();
   }
 
   @Override
   public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
     if (outputLabel.isDefault()) {
-      return ImmutableSortedSet.of(getSourcePathToOutput());
+      SourcePath sourcePath = getSourcePathToOutput();
+      if (sourcePath == null) {
+        return ImmutableSortedSet.of();
+      }
+      return ImmutableSortedSet.of(sourcePath);
     }
     Path path = outputLabelToSource.get(outputLabel);
     if (path == null) {
@@ -57,6 +75,6 @@ public class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
 
   @Override
   public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels() {
-    return null;
+    return outputLabelsToSourcePaths;
   }
 }

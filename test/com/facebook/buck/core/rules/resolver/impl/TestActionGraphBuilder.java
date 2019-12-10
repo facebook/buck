@@ -27,6 +27,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.concurrent.Executors;
 
+/**
+ * An action graph builder used for tests. See also {@link
+ * com.facebook.buck.core.rules.resolver.impl.FakeActionGraphBuilder}.
+ */
 public class TestActionGraphBuilder extends MultiThreadedActionGraphBuilder {
 
   public TestActionGraphBuilder(
