@@ -107,4 +107,9 @@ public abstract class AbstractCliConfig implements ConfigView<BuckConfig> {
     return getDelegate()
         .getBooleanValue(UI_SECTION, "relativize_targets_to_working_directory", true);
   }
+
+  @Value.Lazy
+  public boolean getEnableShowOutputWarning() {
+    return getDelegate().getBooleanValue(UI_SECTION, "enable_show_output_warning", false);
+  }
 }

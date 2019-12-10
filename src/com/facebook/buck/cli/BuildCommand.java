@@ -44,6 +44,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.FileSerializationOutputRuleDepsListener;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -60,6 +61,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.support.cli.config.AliasConfig;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ListeningProcessExecutor;
@@ -344,6 +346,15 @@ public class BuildCommand extends AbstractCommand {
       Function<ImmutableList<TargetNodeSpec>, ImmutableList<TargetNodeSpec>> targetNodeSpecEnhancer,
       ImmutableSet<String> additionalTargets)
       throws Exception {
+    if (showOutput
+        && params.getConsole().getAnsi().isAnsiTerminal()
+        && params.getBuckConfig().getView(CliConfig.class).getEnableShowOutputWarning()) {
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.warning(
+                  "--show-output is being deprecated. Use --show-outputs instead. Note that with --show-outputs, multiple files may be printed for each individual build target."));
+    }
     if (!additionalTargets.isEmpty()) {
       this.arguments.addAll(additionalTargets);
     }
