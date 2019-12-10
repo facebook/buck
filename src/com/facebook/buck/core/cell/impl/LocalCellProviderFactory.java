@@ -141,7 +141,7 @@ public class LocalCellProviderFactory {
                           EmbeddedCellBuckOutInfo.of(
                               rootFilesystem.resolve(rootFilesystem.getRootPath()),
                               rootFilesystem.getBuckPaths(),
-                              canonicalCellName.getName()));
+                              canonicalCellName));
                 }
                 ProjectFilesystem cellFilesystem =
                     projectFilesystemFactory.createProjectFilesystem(
