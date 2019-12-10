@@ -33,6 +33,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -43,7 +44,9 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -88,13 +91,18 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.hamcrest.Matchers;
+import org.hamcrest.junit.ExpectedException;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class GenruleTest {
+  @Rule public ExpectedException expectedThrownException = ExpectedException.none();
 
   private ProjectFilesystem filesystem;
 
@@ -971,5 +979,125 @@ public class GenruleTest {
             ImmutableSet.of());
 
     assertFalse(mbrHelper.supportsRemoteExecution(genrule));
+  }
+
+  @Test
+  public void throwsIfDefaultOutputGroupNotSingleElement() {
+    expectedThrownException.expect(HumanReadableException.class);
+    expectedThrownException.expectMessage(
+        "Genrule target //:test_genrule doesn't support multiple default outputs yet. Use named outputs.");
+
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:test_genrule"))
+            .setCmd("echo hello >> $OUT")
+            .setOuts(
+                ImmutableMap.of(
+                    "label1",
+                    ImmutableList.of("output1a", "output1b"),
+                    "label2",
+                    ImmutableList.of("output2a")))
+            .build(graphBuilder, new FakeProjectFilesystem());
+
+    genrule.getSourcePathToOutput(OutputLabel.DEFAULT);
+  }
+
+  @Test
+  public void doesNotThrowIfDefaultOutputGroupIsSingleElement() {
+    ProjectFilesystem fakeFileSystem = new FakeProjectFilesystem();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    BuildTarget target = BuildTargetFactory.newInstance("//:test_genrule");
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(target)
+            .setCmd("echo hello >> $OUT")
+            .setOuts(ImmutableMap.of("label2", ImmutableList.of("output2a")))
+            .build(graphBuilder, new FakeProjectFilesystem());
+
+    ImmutableSet<Path> actual =
+        convertSourcePathsToPaths(
+            sourcePathResolver, genrule.getSourcePathToOutput(OutputLabel.DEFAULT));
+    assertThat(
+        actual, Matchers.containsInAnyOrder(getExpectedPath(fakeFileSystem, target, "output2a")));
+  }
+
+  @Test
+  public void canGetMultipleOutputsForNamedGroups() {
+    ProjectFilesystem fakeFileSystem = new FakeProjectFilesystem();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    BuildTarget target = BuildTargetFactory.newInstance("//:test_genrule");
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(target)
+            .setCmd("echo hello >> $OUT")
+            .setOuts(
+                ImmutableMap.of(
+                    "label1",
+                    ImmutableList.of("output1a", "output1b"),
+                    "label2",
+                    ImmutableList.of("output2a")))
+            .build(graphBuilder, new FakeProjectFilesystem());
+
+    ImmutableSet<Path> actual =
+        convertSourcePathsToPaths(
+            sourcePathResolver, genrule.getSourcePathToOutput(new OutputLabel("label1")));
+    assertThat(
+        actual,
+        Matchers.containsInAnyOrder(
+            getExpectedPath(fakeFileSystem, target, "output1a"),
+            getExpectedPath(fakeFileSystem, target, "output1b")));
+  }
+
+  @Test
+  public void canGetSourcePathsByOutputLabel() {
+    ProjectFilesystem fakeFileSystem = new FakeProjectFilesystem();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    BuildTarget target = BuildTargetFactory.newInstance("//:test_genrule");
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(target)
+            .setCmd("echo hello >> $OUT")
+            .setOuts(
+                ImmutableMap.of(
+                    "label1",
+                    ImmutableList.of("output1a", "output1b"),
+                    "label2",
+                    ImmutableList.of("output2a")))
+            .build(graphBuilder, new FakeProjectFilesystem());
+
+    ImmutableMap<OutputLabel, ImmutableSet<Path>> actual =
+        genrule.getSourcePathsByOutputsLabels().entrySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    Map.Entry::getKey,
+                    e -> convertSourcePathsToPaths(sourcePathResolver, e.getValue())));
+
+    assertThat(actual.entrySet(), Matchers.hasSize(3));
+    assertThat(
+        actual.get(new OutputLabel("label1")),
+        Matchers.containsInAnyOrder(
+            getExpectedPath(fakeFileSystem, target, "output1a"),
+            getExpectedPath(fakeFileSystem, target, "output1b")));
+    assertThat(
+        actual.get(new OutputLabel("label2")),
+        Matchers.containsInAnyOrder(getExpectedPath(fakeFileSystem, target, "output2a")));
+    assertThat(
+        actual.get(OutputLabel.DEFAULT),
+        Matchers.containsInAnyOrder(
+            getExpectedPath(fakeFileSystem, target, "output1a"),
+            getExpectedPath(fakeFileSystem, target, "output1b"),
+            getExpectedPath(fakeFileSystem, target, "output2a")));
+  }
+
+  private Path getExpectedPath(ProjectFilesystem filesystem, BuildTarget target, String path) {
+    return BuildTargetPaths.getGenPath(filesystem, target, "%s__").resolve(path);
+  }
+
+  private ImmutableSet<Path> convertSourcePathsToPaths(
+      SourcePathResolver sourcePathResolver, ImmutableSet<SourcePath> sourcePaths) {
+    return sourcePaths.stream()
+        .map(sourcePathResolver::getRelativePath)
+        .flatMap(Set::stream)
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

@@ -17,12 +17,15 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -37,8 +40,10 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -98,7 +103,8 @@ import java.util.stream.Collectors;
  *
  * <p>Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
-public class Genrule extends ModernBuildRule<GenruleBuildable> implements HasOutputName {
+public class Genrule extends ModernBuildRule<GenruleBuildable>
+    implements HasOutputName, HasMultipleOutputs {
   protected Genrule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -145,6 +151,26 @@ public class Genrule extends ModernBuildRule<GenruleBuildable> implements HasOut
   @Override
   public SourcePath getSourcePathToOutput() {
     return getSourcePath(getBuildable().getOutput());
+  }
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
+    ImmutableSortedSet<SourcePath> sourcePaths =
+        getSourcePaths(getBuildable().getOutputs(outputLabel));
+    if (outputLabel.isDefault() && sourcePaths.size() > 1) {
+      // This will fail anyway even without this exception being thrown here, but throwing the
+      // exception here gives a genrule-specific error rather than a more generic framework error.
+      throw new HumanReadableException(
+          "Genrule target %s doesn't support multiple default outputs yet. Use named outputs.",
+          getBuildTarget().getFullyQualifiedName());
+    }
+    return sourcePaths;
+  }
+
+  @Override
+  public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels() {
+    return getBuildable().getOutputMap().entrySet().stream()
+        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> getSourcePaths(e.getValue())));
   }
 
   @Override

@@ -61,7 +61,7 @@ abstract class AbstractGenruleBuildableBuilder {
 
   @Value.Default
   public Optional<String> getOut() {
-    return Optional.of("example-file");
+    return Optional.empty();
   }
 
   @Value.Default

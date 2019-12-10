@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -28,6 +29,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -54,16 +56,20 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Optional;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class GenruleBuildableTest {
+  @Rule public ExpectedException expectedThrownException = ExpectedException.none();
+
   private ProjectFilesystem filesystem;
 
   @Before
@@ -86,6 +92,7 @@ public class GenruleBuildableTest {
             .addSrcs(PathSourcePath.of(filesystem, filesystem.getPath("in-dir.txt")))
             .addSrcs(PathSourcePath.of(filesystem, filesystem.getPath("foo/bar.html")))
             .addSrcs(PathSourcePath.of(filesystem, filesystem.getPath("other/place.txt")))
+            .setOut(Optional.of("example-file"))
             .build()
             .toBuildable();
 
@@ -410,5 +417,172 @@ public class GenruleBuildableTest {
       Path outputPath = outputPathResolver.resolvePath(buildable.getOutput());
       assertEquals(outputPath, outputPath.normalize());
     }
+  }
+
+  @Test
+  public void canGetSingleNamedOutput() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    OutputPathResolver outputPathResolver =
+        new DefaultOutputPathResolver(new FakeProjectFilesystem(), target);
+    Path rootPath = outputPathResolver.getRootPath();
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setBash("echo something")
+            .setOuts(
+                Optional.of(
+                    ImmutableMap.of(
+                        "label1",
+                        ImmutableList.of("output1a", "output1b"),
+                        "label2",
+                        ImmutableList.of("output2a"))))
+            .build()
+            .toBuildable();
+
+    ImmutableSet<Path> actual =
+        buildable.getOutputs(new OutputLabel("label2")).stream()
+            .map(p -> outputPathResolver.resolvePath(p))
+            .collect(ImmutableSet.toImmutableSet());
+
+    assertThat(actual, Matchers.containsInAnyOrder(rootPath.resolve("output2a")));
+  }
+
+  @Test
+  public void canGetMultipleNamedOutputs() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    OutputPathResolver outputPathResolver =
+        new DefaultOutputPathResolver(new FakeProjectFilesystem(), target);
+    Path rootPath = outputPathResolver.getRootPath();
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setBash("echo something")
+            .setOuts(
+                Optional.of(
+                    ImmutableMap.of(
+                        "label1",
+                        ImmutableList.of("output1a", "output1b"),
+                        "label2",
+                        ImmutableList.of("output2a"))))
+            .build()
+            .toBuildable();
+
+    ImmutableSet<Path> actual =
+        buildable.getOutputs(new OutputLabel("label1")).stream()
+            .map(p -> outputPathResolver.resolvePath(p))
+            .collect(ImmutableSet.toImmutableSet());
+
+    assertThat(
+        actual,
+        Matchers.containsInAnyOrder(rootPath.resolve("output1a"), rootPath.resolve("output1b")));
+  }
+
+  @Test
+  public void defaultGroupReturnsAllNamedOutputs() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    OutputPathResolver outputPathResolver =
+        new DefaultOutputPathResolver(new FakeProjectFilesystem(), target);
+    Path rootPath = outputPathResolver.getRootPath();
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setBash("echo something")
+            .setOuts(
+                Optional.of(
+                    ImmutableMap.of(
+                        "label1",
+                        ImmutableList.of("output1a", "output1b"),
+                        "label2",
+                        ImmutableList.of("output2a"))))
+            .build()
+            .toBuildable();
+
+    ImmutableSet<Path> actual =
+        buildable.getOutputs(OutputLabel.DEFAULT).stream()
+            .map(p -> outputPathResolver.resolvePath(p))
+            .collect(ImmutableSet.toImmutableSet());
+
+    assertThat(
+        actual,
+        Matchers.containsInAnyOrder(
+            rootPath.resolve("output1a"),
+            rootPath.resolve("output1b"),
+            rootPath.resolve("output2a")));
+  }
+
+  @Test
+  public void throwsIfGetNonExistentLabel() {
+    expectedThrownException.expect(HumanReadableException.class);
+    expectedThrownException.expectMessage(
+        "Cannot find output label [nonexistent] for target //example:genrule");
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//example:genrule"))
+            .setFilesystem(new FakeProjectFilesystem())
+            .setBash("echo something")
+            .setOuts(
+                Optional.of(
+                    ImmutableMap.of(
+                        "label1",
+                        ImmutableList.of("output1a", "output1b"),
+                        "label2",
+                        ImmutableList.of("output2a"))))
+            .build()
+            .toBuildable();
+
+    buildable.getOutputs(new OutputLabel("nonexistent"));
+  }
+
+  @Test
+  public void throwsIfGetOutputsIsCalledWhenNoMultipleOutputs() {
+    expectedThrownException.expect(IllegalArgumentException.class);
+    expectedThrownException.expectMessage(
+        "Unexpected output label [harro] for target //example:genrule. Use 'outs' instead of 'out' to use output labels");
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//example:genrule"))
+            .setFilesystem(new FakeProjectFilesystem())
+            .setBash("echo something")
+            .setOut(Optional.of("output.txt"))
+            .build()
+            .toBuildable();
+
+    buildable.getOutputs(new OutputLabel("harro"));
+  }
+
+  @Test
+  public void canGetDefaultOutputWithNoMultipleOutputs() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    OutputPathResolver outputPathResolver =
+        new DefaultOutputPathResolver(new FakeProjectFilesystem(), target);
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setBash("echo something")
+            .setOut(Optional.of("output.txt"))
+            .build()
+            .toBuildable();
+
+    ImmutableSet<Path> actual =
+        buildable.getOutputs(OutputLabel.DEFAULT).stream()
+            .map(p -> outputPathResolver.resolvePath(p))
+            .collect(ImmutableSet.toImmutableSet());
+
+    // "out" uses the legacy path that isn't suffixed with "__"
+    assertThat(
+        actual,
+        Matchers.containsInAnyOrder(
+            BuildTargetPaths.getGenPath(new FakeProjectFilesystem(), target, "%s")
+                .resolve("output.txt")));
   }
 }

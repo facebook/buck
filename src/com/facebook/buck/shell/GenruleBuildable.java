@@ -19,6 +19,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
@@ -136,14 +137,10 @@ public class GenruleBuildable implements Buildable {
    * target is named "foo", the output paths in this map would be relative to buck-out/gen/foo__.
    * Note that {@link #outputPath} places the output in buck-out/gen/foo.
    *
-   * <p>The output label is stored as a String rather than {@link
-   * com.facebook.buck.core.model.OutputLabel} to make it parseable as a {@link
-   * com.facebook.buck.rules.modern.ValueTypeInfo}.
-   *
    * <p>One and only one of {@link #outputPath} and {@link #outputPaths} must be present.
    */
   @AddToRuleKey
-  protected final Optional<ImmutableMap<String, ImmutableSet<OutputPath>>> outputPaths;
+  protected final Optional<ImmutableMap<OutputLabel, ImmutableSet<OutputPath>>> outputPaths;
 
   /**
    * Whether or not this genrule can be cached. This is not used within this class, but is required
@@ -232,11 +229,11 @@ public class GenruleBuildable implements Buildable {
         out.isPresent() ^ outs.isPresent(), "Genrule unexpectedly has both 'out' and 'outs'.");
     if (outs.isPresent()) {
       ImmutableMap<String, ImmutableList<String>> outputs = outs.get();
-      ImmutableMap.Builder<String, ImmutableSet<OutputPath>> mapBuilder =
+      ImmutableMap.Builder<OutputLabel, ImmutableSet<OutputPath>> mapBuilder =
           ImmutableMap.builderWithExpectedSize(outputs.size());
       for (Map.Entry<String, ImmutableList<String>> outputLabelToOutputs : outputs.entrySet()) {
         mapBuilder.put(
-            outputLabelToOutputs.getKey(),
+            new OutputLabel(outputLabelToOutputs.getKey()),
             outputLabelToOutputs.getValue().stream()
                 .map(
                     p -> {
@@ -276,6 +273,59 @@ public class GenruleBuildable implements Buildable {
         "Unexpectedly cannot find output for %s",
         buildTarget.getFullyQualifiedName());
     return outputPath.get();
+  }
+
+  /**
+   * Returns the set of {@link OutputPath} instances associated with the given {@link OutputLabel}.
+   *
+   * <p>If multiple outputs are available, returns either the default or named output group. The
+   * default output group is the set of all named outputs.
+   *
+   * <p>If multiple outputs are not available, returns a set containing the single output.
+   */
+  public ImmutableSet<OutputPath> getOutputs(OutputLabel outputLabel) {
+    return outputPaths
+        .map(
+            paths -> {
+              if (outputLabel.isDefault()) {
+                return getAllOutputPaths(paths);
+              }
+              ImmutableSet<OutputPath> pathsforLabel = paths.get(outputLabel);
+              if (pathsforLabel == null) {
+                throw new HumanReadableException(
+                    "Cannot find output label [%s] for target %s",
+                    outputLabel, buildTarget.getFullyQualifiedName());
+              }
+              return pathsforLabel;
+            })
+        .orElseGet(
+            () -> {
+              Preconditions.checkArgument(
+                  outputLabel.isDefault(),
+                  "Unexpected output label [%s] for target %s. Use 'outs' instead of 'out' to use output labels",
+                  outputLabel,
+                  buildTarget.getFullyQualifiedName());
+              return ImmutableSet.of(getOutput());
+            });
+  }
+
+  /** Returns a map of output labels to its associated {@link OutputPath} instances. */
+  public ImmutableMap<OutputLabel, ImmutableSet<OutputPath>> getOutputMap() {
+    Preconditions.checkState(
+        outputPaths.isPresent(),
+        "Unexpectedly cannot find output map for %s.",
+        buildTarget.getFullyQualifiedName());
+    ImmutableMap<OutputLabel, ImmutableSet<OutputPath>> paths = outputPaths.get();
+    return ImmutableMap.<OutputLabel, ImmutableSet<OutputPath>>builderWithExpectedSize(
+            paths.size() + 1)
+        .putAll(paths)
+        .put(OutputLabel.DEFAULT, getAllOutputPaths(paths))
+        .build();
+  }
+
+  private ImmutableSet<OutputPath> getAllOutputPaths(
+      ImmutableMap<OutputLabel, ImmutableSet<OutputPath>> paths) {
+    return paths.values().stream().flatMap(Set::stream).collect(ImmutableSet.toImmutableSet());
   }
 
   @Override

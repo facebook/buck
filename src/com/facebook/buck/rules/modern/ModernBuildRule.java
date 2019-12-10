@@ -45,7 +45,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -239,6 +241,17 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     // TODO(cjhopman): enforce that the outputPath is actually from this target somehow.
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(), outputPathResolver.resolvePath(outputPath));
+  }
+
+  /**
+   * Same as {@link #getSourcePath}, but takes multiple {@link OutputPath} instances and returns
+   * multiple {@link SourcePath} instances.
+   */
+  protected final ImmutableSortedSet<SourcePath> getSourcePaths(
+      Collection<OutputPath> outputPaths) {
+    return outputPaths.stream()
+        .map(this::getSourcePath)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
