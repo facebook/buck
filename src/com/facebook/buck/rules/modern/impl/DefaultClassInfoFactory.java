@@ -51,7 +51,7 @@ public class DefaultClassInfoFactory {
           "%s is not assignable to AddsToRuleKey.",
           clazz.getName());
       Class<?> superClazz = clazz.getSuperclass();
-      if (isIgnoredBaseClass(superClazz)) {
+      if (!isIgnoredBaseClass(superClazz)) {
         // This ensures that classesInfo holds an entry for the super class and computeClassInfo
         // can get it without having to modify the map.
         LOG.verbose(
@@ -84,7 +84,7 @@ public class DefaultClassInfoFactory {
 
     Optional<ClassInfo<? super T>> superInfo = Optional.empty();
     Class<?> superClazz = clazz.getSuperclass();
-    if (isIgnoredBaseClass(superClazz)) {
+    if (!isIgnoredBaseClass(superClazz)) {
       // It's guaranteed that the superclass's info is already computed.
       @SuppressWarnings("unchecked")
       ClassInfo<? super T> superClazzInfo = (ClassInfo<? super T>) classesInfo.get(superClazz);
@@ -94,6 +94,6 @@ public class DefaultClassInfoFactory {
   }
 
   private static boolean isIgnoredBaseClass(Class<?> superClazz) {
-    return !superClazz.equals(Object.class) && !superClazz.equals(ModernBuildRule.class);
+    return superClazz.equals(Object.class) || superClazz.equals(ModernBuildRule.class);
   }
 }
