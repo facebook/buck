@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -94,5 +95,14 @@ public class FlavorsTest {
     } catch (HumanReadableException e) {
       assertTrue(e.getMessage().contains("already has flavor"));
     }
+  }
+
+  @Test
+  public void testPlatformFlavorsDetection() {
+    assertTrue(Flavors.isPlatformFlavor(InternalFlavor.of("iphoneos-armv7")));
+    assertFalse(Flavors.isPlatformFlavor(InternalFlavor.of("iphoneos-armv7abc")));
+    assertFalse(Flavors.isPlatformFlavor(InternalFlavor.of("abciphoneos-armv7")));
+    assertFalse(Flavors.isPlatformFlavor(InternalFlavor.of("iphoneosarmv7")));
+    assertTrue(Flavors.isPlatformFlavor(InternalFlavor.of("macosx11.1-x86_64")));
   }
 }

@@ -188,7 +188,7 @@ public class AppleBinaryDescription
       return true;
     }
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
-        generateThinDelegateFlavors(delegateFlavors, toolchainTargetConfiguration);
+        generateThinDelegateFlavors(delegateFlavors);
     if (thinFlavorSets.size() > 0) {
       return Iterables.all(
           thinFlavorSets,
@@ -199,10 +199,8 @@ public class AppleBinaryDescription
   }
 
   private ImmutableList<ImmutableSortedSet<Flavor>> generateThinDelegateFlavors(
-      ImmutableSet<Flavor> delegateFlavors, TargetConfiguration toolchainTargetConfiguration) {
-    return MultiarchFileInfos.generateThinFlavors(
-        getAppleCxxPlatformsFlavorDomain(toolchainTargetConfiguration).getFlavors(),
-        ImmutableSortedSet.copyOf(delegateFlavors));
+      ImmutableSet<Flavor> delegateFlavors) {
+    return MultiarchFileInfos.generateThinFlavors(ImmutableSortedSet.copyOf(delegateFlavors));
   }
 
   @Override
@@ -711,7 +709,7 @@ public class AppleBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
-        generateThinDelegateFlavors(buildTarget.getFlavors(), buildTarget.getTargetConfiguration());
+        generateThinDelegateFlavors(buildTarget.getFlavors());
     CxxPlatformsProvider cxxPlatformsProvider =
         getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
     if (thinFlavorSets.size() > 0) {

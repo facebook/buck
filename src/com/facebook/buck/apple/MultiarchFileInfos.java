@@ -44,6 +44,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.stream.Collectors;
 
 public class MultiarchFileInfos {
 
@@ -59,7 +60,7 @@ public class MultiarchFileInfos {
   public static Optional<MultiarchFileInfo> create(
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms, BuildTarget target) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
-        generateThinFlavors(appleCxxPlatforms.getFlavors(), target.getFlavors());
+        generateThinFlavors(target.getFlavors());
     if (thinFlavorSets.size() <= 1) { // Actually a thin binary
       return Optional.empty();
     }
@@ -94,10 +95,10 @@ public class MultiarchFileInfos {
     return Optional.of(builder.build());
   }
 
-  public static void checkTargetSupportsMultiarch(
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatforms, BuildTarget target) {
+  /** Assert that target supports multiple architectures. */
+  public static void checkTargetSupportsMultiarch(BuildTarget target) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
-        generateThinFlavors(appleCxxPlatforms.getFlavors(), target.getFlavors());
+        generateThinFlavors(target.getFlavors());
     if (thinFlavorSets.size() <= 1) { // Actually a thin binary
       return;
     }
@@ -120,11 +121,14 @@ public class MultiarchFileInfos {
    * <p>This does not actually check that the particular flavor set is valid.
    */
   public static ImmutableList<ImmutableSortedSet<Flavor>> generateThinFlavors(
-      Set<Flavor> platformFlavors, SortedSet<Flavor> flavors) {
-    Set<Flavor> platformFreeFlavors = Sets.difference(flavors, platformFlavors);
+      SortedSet<Flavor> flavors) {
+    Set<Flavor> platformFreeFlavors =
+        flavors.stream()
+            .filter(flavor -> !Flavors.isPlatformFlavor(flavor))
+            .collect(Collectors.toSet());
     ImmutableList.Builder<ImmutableSortedSet<Flavor>> thinTargetsBuilder = ImmutableList.builder();
     for (Flavor flavor : flavors) {
-      if (platformFlavors.contains(flavor)) {
+      if (Flavors.isPlatformFlavor(flavor)) {
         thinTargetsBuilder.add(
             ImmutableSortedSet.<Flavor>naturalOrder()
                 .addAll(platformFreeFlavors)

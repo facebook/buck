@@ -992,8 +992,7 @@ public class AppleLibraryDescription
       AbstractAppleLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    MultiarchFileInfos.checkTargetSupportsMultiarch(
-        getAppleCxxPlatformDomain(buildTarget.getTargetConfiguration()), buildTarget);
+    MultiarchFileInfos.checkTargetSupportsMultiarch(buildTarget);
     targetGraphOnlyDepsBuilder.addAll(
         cxxLibraryFactory.getPlatformParseTimeDeps(buildTarget.getTargetConfiguration()));
   }
