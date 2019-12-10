@@ -244,11 +244,12 @@ public class AppleBundleDescription
 
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
         getAppleCxxPlatformFlavorDomain(buildTarget.getTargetConfiguration());
-    Optional<MultiarchFileInfo> fatBinaryInfo =
-        MultiarchFileInfos.create(appleCxxPlatformsFlavorDomain, buildTarget);
+    Optional<MultiarchFileInfo> fatBinaryInfo = MultiarchFileInfos.create(buildTarget);
     UnresolvedCxxPlatform cxxPlatform;
     if (fatBinaryInfo.isPresent()) {
-      AppleCxxPlatform appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
+      AppleCxxPlatform appleCxxPlatform =
+          appleCxxPlatformsFlavorDomain.getValue(
+              fatBinaryInfo.get().getRepresentativePlatformFlavor());
       cxxPlatform = new StaticUnresolvedCxxPlatform(appleCxxPlatform.getCxxPlatform());
     } else {
       cxxPlatform =
@@ -319,11 +320,12 @@ public class AppleBundleDescription
             LinkerMapMode.FLAVOR_DOMAIN, buildTarget, depsExcludingBinary);
 
     if (fatBinaryInfo.isPresent()) {
+      AppleCxxPlatform appleCxxPlatform =
+          appleCxxPlatformsFlavorDomain.getValue(
+              fatBinaryInfo.get().getRepresentativePlatformFlavor());
       depsExcludingBinary =
           depsExcludingBinary.append(
-              fatBinaryInfo
-                  .get()
-                  .getRepresentativePlatform()
+              appleCxxPlatform
                   .getCodesignProvider()
                   .getParseTimeDeps(buildTarget.getTargetConfiguration()));
     } else {
@@ -364,7 +366,7 @@ public class AppleBundleDescription
             appleCxxPlatforms,
             buildTarget,
             args.getDefaultPlatform(),
-            MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
+            MultiarchFileInfos.create(buildTarget));
     BuildTarget binaryTarget =
         AppleDescriptions.getTargetPlatformBinary(
             args.getBinary(), args.getPlatformBinary(), appleCxxPlatform.getFlavor());

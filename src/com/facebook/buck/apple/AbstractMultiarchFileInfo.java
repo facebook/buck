@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
@@ -35,11 +35,11 @@ abstract class AbstractMultiarchFileInfo {
   public abstract ImmutableList<BuildTarget> getThinTargets();
 
   /**
-   * Returns a representative platform for use in retrieving architecture agnostic tools.
+   * Returns a representative platform flavor for use in retrieving architecture agnostic tools.
    *
    * <p>Platforms are architecture specific, but some tools are architecture agnostic. Since there
    * isn't a concept of target architecture agnostic tools, this simply returns one of the
    * platforms, trusting the caller to only use the architecture agnostic tools.
    */
-  public abstract AppleCxxPlatform getRepresentativePlatform();
+  public abstract Flavor getRepresentativePlatformFlavor();
 }

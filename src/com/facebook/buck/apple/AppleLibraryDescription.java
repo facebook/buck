@@ -563,9 +563,7 @@ public class AppleLibraryDescription
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSortedSet<BuildTarget> extraCxxDeps,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInput) {
-    Optional<MultiarchFileInfo> multiarchFileInfo =
-        MultiarchFileInfos.create(
-            getAppleCxxPlatformDomain(buildTarget.getTargetConfiguration()), buildTarget);
+    Optional<MultiarchFileInfo> multiarchFileInfo = MultiarchFileInfos.create(buildTarget);
     if (multiarchFileInfo.isPresent()) {
       ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
       for (BuildTarget thinTarget : multiarchFileInfo.get().getThinTargets()) {
@@ -593,7 +591,8 @@ public class AppleLibraryDescription
           graphBuilder,
           multiarchFileInfo.get(),
           thinRules.build(),
-          cxxBuckConfig);
+          cxxBuckConfig,
+          getAppleCxxPlatformDomain(buildTarget.getTargetConfiguration()));
     } else {
       return requireSingleArchUnstrippedBuildRule(
           context,

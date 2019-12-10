@@ -248,8 +248,7 @@ public class AppleTestDescription
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain =
         getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
 
-    Optional<MultiarchFileInfo> multiarchFileInfo =
-        MultiarchFileInfos.create(appleCxxPlatformFlavorDomain, buildTarget);
+    Optional<MultiarchFileInfo> multiarchFileInfo = MultiarchFileInfos.create(buildTarget);
     AppleCxxPlatform appleCxxPlatform;
     ImmutableList<CxxPlatform> cxxPlatforms;
     TargetConfiguration targetConfiguration = buildTarget.getTargetConfiguration();
@@ -265,7 +264,9 @@ public class AppleTestDescription
                 .resolve(graphBuilder, targetConfiguration));
       }
       cxxPlatforms = cxxPlatformBuilder.build();
-      appleCxxPlatform = multiarchFileInfo.get().getRepresentativePlatform();
+      appleCxxPlatform =
+          appleCxxPlatformFlavorDomain.getValue(
+              multiarchFileInfo.get().getRepresentativePlatformFlavor());
     } else {
       CxxPlatform cxxPlatform =
           ApplePlatforms.getCxxPlatformForBuildTarget(

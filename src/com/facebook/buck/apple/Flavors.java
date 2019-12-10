@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -140,5 +141,16 @@ public class Flavors {
    */
   public static boolean isPlatformFlavor(Flavor flavor) {
     return PLATFORM_FLAVOR_PATTERN.matcher(flavor.getName()).matches();
+  }
+
+  /**
+   * @param flavor to check
+   * @return name of Apple SDK extracted from this flavor or Optional.empty()
+   */
+  public static Optional<String> findAppleSdkName(Flavor flavor) {
+    if (!isPlatformFlavor(flavor)) {
+      return Optional.empty();
+    }
+    return Optional.of(flavor.getName().split("-", 2)[0]);
   }
 }

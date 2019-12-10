@@ -58,7 +58,9 @@ public class ApplePlatforms {
       Optional<MultiarchFileInfo> fatBinaryInfo) {
     AppleCxxPlatform appleCxxPlatform;
     if (fatBinaryInfo.isPresent()) {
-      appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
+      appleCxxPlatform =
+          appleCxxPlatformFlavorDomain.getValue(
+              fatBinaryInfo.get().getRepresentativePlatformFlavor());
     } else {
       CxxPlatform cxxPlatform =
           getCxxPlatformForBuildTarget(cxxPlatformsProvider, target, defaultPlatform)
