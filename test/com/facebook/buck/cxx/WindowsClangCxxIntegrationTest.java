@@ -163,6 +163,8 @@ public class WindowsClangCxxIntegrationTest {
 
   @Test
   public void testLibIsHermetic() throws IOException {
+    assumeTrue("Reenable once t56496808 is done.", false);
+
     ProcessResult buildResult = workspace.runBuckCommand("build", "//lib:lib-out");
     buildResult.assertSuccess();
     Path outputPath = workspace.resolve("buck-out/gen/lib/lib-out/lib.lib");
@@ -199,6 +201,8 @@ public class WindowsClangCxxIntegrationTest {
 
   @Test
   public void testXLibIsHermetic() throws IOException {
+    assumeTrue("Reenable once t56496808 is done.", false);
+
     ProcessResult buildResult = workspace.runBuckCommand("build", "x//lib:out");
     buildResult.assertSuccess();
     Path outputPath = workspace.resolve("xplat/buck-out/gen/lib/out/lib.lib");
@@ -299,7 +303,9 @@ public class WindowsClangCxxIntegrationTest {
     Assert.assertThat(
         result.getStderr(),
         Matchers.containsString(
-            "header_check\\untracked_header.cpp: included an untracked header \"header_check\\untracked_header.h\""));
+            String.format(
+                "header_check\\untracked_header.cpp: included an untracked header: %n"
+                    + "header_check\\untracked_header.h")));
   }
 
   @Test
@@ -311,13 +317,17 @@ public class WindowsClangCxxIntegrationTest {
             "cxx.untracked_headers=error",
             "-c",
             "cxx.untracked_headers_whitelist=/usr/include/stdc-predef\\.h",
+            "-c",
+            "cxx#windows-x86_64.detailed_untracked_header_messages=true",
             "//header_check:nested_untracked_header#windows-x86_64");
     result.assertFailure();
     Assert.assertThat(
         result.getStderr(),
         Matchers.containsString(
-            "header_check\\nested_untracked_header.cpp: included an untracked header \"header_check\\untracked_header.h\", which is included by:\n"
-                + "\t\"header_check\\untracked_header_includer.h\", which is included by:\n"
-                + "\t\"header_check\\parent_header.h\""));
+            String.format(
+                "header_check\\nested_untracked_header.cpp: included an untracked header: %n"
+                    + "header_check\\untracked_header.h, which is included by: %n"
+                    + "header_check\\untracked_header_includer.h, which is included by: %n"
+                    + "header_check\\parent_header.h")));
   }
 }
