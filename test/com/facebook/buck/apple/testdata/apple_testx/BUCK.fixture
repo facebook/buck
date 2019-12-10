@@ -1,0 +1,32 @@
+apple_test(
+    name = "some_test",
+    srcs = ["FooXCTest.m"],
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    info_plist = "Test.plist",
+    runner = ":runner",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
+            },
+        ],
+        "cmd": "$(abs_output testbin) $(abs_output apple_configs) $(abs_output test_bundle)",
+    },
+)
+
+external_test_runner(
+    name = "runner",
+    binary = ":binary",
+)
+
+sh_binary(
+    name = "binary",
+    main = "script.sh",
+)

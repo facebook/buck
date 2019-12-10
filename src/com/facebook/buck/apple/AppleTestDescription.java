@@ -33,6 +33,7 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.exceptions.UserVerify;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -53,6 +54,9 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.test.rule.HasTestRunner;
+import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
+import com.facebook.buck.core.test.rule.impl.ExternalTestRunner;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
@@ -75,6 +79,9 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -365,6 +372,53 @@ public class AppleTestDescription
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);
+
+    if (args.getSpecs().isPresent()) {
+      UserVerify.verify(
+          args.getRunner().isPresent(),
+          "runner should be specified for rules implementing test protocol");
+      BuildRule runnerRule = graphBuilder.requireRule(args.getRunner().get());
+      UserVerify.verify(
+          runnerRule instanceof ExternalTestRunner,
+          "runner should be an external_test_runner for apple_test");
+
+      ExternalTestRunner runner = (ExternalTestRunner) runnerRule;
+
+      StringWithMacrosConverter macrosConverter =
+          StringWithMacrosConverter.builder()
+              .setBuildTarget(buildTarget)
+              .setCellPathResolver(context.getCellPathResolver())
+              .setActionGraphBuilder(graphBuilder)
+              .setExpanders(
+                  ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander()))
+              .build();
+
+      return new AppleTestX(
+          runner.getBinary(),
+          TestRunnerSpecCoercer.coerce(args.getSpecs().get(), macrosConverter),
+          xctool,
+          appleConfig.getXctoolStutterTimeoutMs(),
+          appleCxxPlatform.getXctest(),
+          appleConfig.getXctestPlatformNames().contains(platformName),
+          platformName,
+          appleConfig.getXctoolDefaultDestinationSpecifier(),
+          buildTarget,
+          projectFilesystem,
+          params.withDeclaredDeps(ImmutableSortedSet.of(bundle)).withoutExtraDeps(),
+          bundle,
+          testHostWithTargetApp.map(TestHostInfo::getTestHostApp),
+          testHostWithTargetApp.flatMap(TestHostInfo::getUiTestTargetApp),
+          args.getContacts(),
+          args.getLabels(),
+          toolchainProvider.getByName(
+              AppleDeveloperDirectoryForTestsProvider.DEFAULT_NAME,
+              targetConfiguration,
+              AppleDeveloperDirectoryForTestsProvider.class),
+          args.getIsUiTest(),
+          args.getSnapshotReferenceImagesPath(),
+          appleConfig.useIdb(),
+          appleConfig.getIdbPath());
+    }
 
     return new AppleTest(
         xctool,
@@ -866,7 +920,8 @@ public class AppleTestDescription
           HasAppleCodesignFields,
           HasContacts,
           HasEntitlementsFile,
-          HasTestTimeout {
+          HasTestTimeout,
+          HasTestRunner {
     @Value.Default
     default boolean getRunTestSeparately() {
       return false;

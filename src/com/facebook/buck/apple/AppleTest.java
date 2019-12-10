@@ -456,7 +456,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return new Pair<>(steps.build(), externalSpec.build());
   }
 
-  private Optional<Path> extractBundlePathForBundle(
+  static Optional<Path> extractBundlePathForBundle(
       Optional<AppleBundle> bundle, SourcePathResolverAdapter sourcePathResolverAdapter) {
     if (!bundle.isPresent()) {
       return Optional.empty();

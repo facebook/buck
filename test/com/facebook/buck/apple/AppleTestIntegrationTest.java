@@ -38,9 +38,16 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -49,6 +56,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,6 +75,66 @@ public class AppleTestIntegrationTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+  }
+
+  @Test
+  public void testProtocolAppleTestShouldWorkAndGenerateSpec()
+      throws IOException, InterruptedException {
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_testx", tmp);
+    workspace.setUp();
+
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    ProcessResult result = workspace.runBuckCommand("test", "//:some_test");
+    result.assertSuccess();
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0).get("specs");
+
+    assertEquals("spec", spec.get("my").textValue());
+
+    JsonNode other = spec.get("other");
+    assertTrue(other.isArray());
+    assertTrue(other.has(0));
+    assertEquals("stuff", other.get(0).get("complicated").textValue());
+    assertEquals(1, other.get(0).get("integer").intValue());
+    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
+    assertTrue(other.get(0).get("boolean").booleanValue());
+
+    String cmd = spec.get("cmd").textValue();
+    DefaultProcessExecutor processExecutor =
+        new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.Result processResult =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
+    assertEquals(0, processResult.getExitCode());
+
+    String stdout = processResult.getStdout().get();
+    String[] parts = stdout.split("\\\n");
+
+    assertThat(
+        Iterables.getOnlyElement(Files.readAllLines(Paths.get(parts[0]))),
+        Matchers.allOf(
+            containsString("\"use_xctest\":false"),
+            containsString("\"use_idb\":false"),
+            containsString("\"is_ui_test\":false"),
+            containsString("\"xctool_path\":null"),
+            containsString("\"xctest_cmd\""),
+            containsString("\"xctest_env\":{}"),
+            containsString("\"idb_path\""),
+            containsString("\"stutter_timeout\":null"),
+            containsString("\"platform\":\"iphonesimulator\""),
+            containsString("\"default_destination\":\"\""),
+            containsString("\"developer_directory_for_tests\""),
+            containsString("\"snapshot_reference_img_path\":\"\""),
+            containsString("\"ui_test_target_app\":null"),
+            containsString("\"test_host_app\":null")));
+    assertTrue(Files.exists(Paths.get(parts[1])));
   }
 
   @Test
