@@ -26,6 +26,7 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -810,10 +811,14 @@ public class AppleDescriptions {
           getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)
               .getBuildTarget()
               .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
+      ProjectFilesystem binaryBuildTargetFilesystem =
+          targetGraph
+              .get(binaryBuildTarget, DependencyStack.top(binaryBuildTarget))
+              .getFilesystem();
       AppleDebuggableBinary debuggableBinary =
           createAppleDebuggableBinary(
               binaryBuildTarget,
-              projectFilesystem,
+              binaryBuildTargetFilesystem,
               graphBuilder,
               getBinaryFromBuildRuleWithBinary(flavoredBinaryRule),
               (HasAppleDebugSymbolDeps) unstrippedBinaryRule,
