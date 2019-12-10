@@ -22,8 +22,12 @@ import com.facebook.buck.android.AndroidPrebuiltAarDescriptionArg;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.android.DummyRDotJava;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -181,8 +185,26 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   @Override
   public Optional<Path> getCompilerOutputPath(TargetNode<? extends JvmLibraryArg> targetNode) {
     BuildTarget buildTarget = targetNode.getBuildTarget();
-    Path compilerOutputPath = CompilerOutputPaths.getOutputJarPath(buildTarget, projectFilesystem);
+
+    // TODO(nga): when resolving target path, we use wrong cell filesystem:
+    //    either explain why we do it, or fix it.
+    BuildTarget buildTargetPatchedCell =
+        buildTargetPatchCell(buildTarget, projectFilesystem.getBuckPaths().getCellName());
+
+    Path compilerOutputPath =
+        CompilerOutputPaths.getOutputJarPath(buildTargetPatchedCell, projectFilesystem);
     return Optional.of(compilerOutputPath);
+  }
+
+  private static BuildTarget buildTargetPatchCell(
+      BuildTarget buildTarget, CanonicalCellName cellName) {
+    return ImmutableUnconfiguredBuildTargetView.of(
+            UnflavoredBuildTarget.of(
+                new ImmutableCellRelativePath(
+                    cellName, buildTarget.getCellRelativeBasePath().getPath()),
+                buildTarget.getShortName()),
+            buildTarget.getFlavors())
+        .configure(buildTarget.getTargetConfiguration());
   }
 
   private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
