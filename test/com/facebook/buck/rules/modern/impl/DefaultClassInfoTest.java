@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -70,7 +71,8 @@ public class DefaultClassInfoTest {
   @SuppressWarnings("unchecked")
   private Consumer<OutputPath> outputConsumer = createStrictMock(Consumer.class);
 
-  private ProjectFilesystem filesystem = new FakeProjectFilesystem(Paths.get("/project/root"));
+  private ProjectFilesystem filesystem =
+      new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("/project/root"));
 
   static class NoOpBuildable implements Buildable {
     @Override

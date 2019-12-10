@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern.impl;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
@@ -76,10 +77,12 @@ public abstract class AbstractValueVisitorTest {
   private static final Path absoluteRoot = Paths.get(".").toAbsolutePath();
 
   protected static final ProjectFilesystem rootFilesystem =
-      new FakeProjectFilesystem(absoluteRoot.resolve(Paths.get("project/root")));
+      new FakeProjectFilesystem(
+          CanonicalCellName.rootCell(), absoluteRoot.resolve(Paths.get("project/root")));
 
   protected static final ProjectFilesystem otherFilesystem =
-      new FakeProjectFilesystem(absoluteRoot.resolve(Paths.get("project/other")));
+      new FakeProjectFilesystem(
+          CanonicalCellName.rootCell(), absoluteRoot.resolve(Paths.get("project/other")));
   private static final TargetConfiguration TARGET_CONFIGURATION =
       ImmutableRuleBasedTargetConfiguration.of(
           ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform"));

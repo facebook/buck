@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -73,7 +74,7 @@ public class ModernBuildRuleRemoteExecutionHelperTest {
           }
         };
 
-    filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     Cell root = new TestCellBuilder().setFilesystem(filesystem).build();
     mbrHelper =
         new ModernBuildRuleRemoteExecutionHelper(

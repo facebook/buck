@@ -24,6 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.CopySourceMode;
@@ -670,8 +671,11 @@ public class DefaultProjectFilesystemTest {
     ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
     assertThat(
         "Two ProjectFilesystems with same glob in ignore should be equal",
-        projectFilesystemFactory.createProjectFilesystem(rootPath, config),
-        equalTo(projectFilesystemFactory.createProjectFilesystem(rootPath, config)));
+        projectFilesystemFactory.createProjectFilesystem(
+            CanonicalCellName.rootCell(), rootPath, config),
+        equalTo(
+            projectFilesystemFactory.createProjectFilesystem(
+                CanonicalCellName.rootCell(), rootPath, config)));
   }
 
   @Test
@@ -680,7 +684,8 @@ public class DefaultProjectFilesystemTest {
     Path root = vfs.getPath("/root");
     Files.createDirectories(root);
     ProjectFilesystem projectFilesystem =
-        new DefaultProjectFilesystemFactory().createProjectFilesystem(root);
+        new DefaultProjectFilesystemFactory()
+            .createProjectFilesystem(CanonicalCellName.rootCell(), root);
     assertEquals(vfs, projectFilesystem.getPath("bar").getFileSystem());
     assertEquals(vfs.getPath("bar"), projectFilesystem.getPath("bar"));
   }

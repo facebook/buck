@@ -18,6 +18,7 @@ package com.facebook.buck.features.project.intellij;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.features.project.intellij.lang.java.ParsingJavaPackageFinder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -51,6 +52,7 @@ public class ParsingJavaPackageFinderTest {
     fakeProjectFilesystem =
         new FakeProjectFilesystem(
             FakeClock.doNotCare(),
+            CanonicalCellName.rootCell(),
             Paths.get(".").toAbsolutePath(),
             ImmutableSet.of(matchPath, mismatchPath, placeholderPath));
     fakeProjectFilesystem.writeContentsToPath(

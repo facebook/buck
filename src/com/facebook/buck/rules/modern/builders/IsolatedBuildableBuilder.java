@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -138,7 +139,8 @@ public abstract class IsolatedBuildableBuilder {
 
     // Root filesystemCell doesn't require embedded buck-out info.
     ProjectFilesystem filesystem =
-        projectFilesystemFactory.createProjectFilesystem(canonicalProjectRoot, config);
+        projectFilesystemFactory.createProjectFilesystem(
+            CanonicalCellName.rootCell(), canonicalProjectRoot, config);
 
     Architecture architecture = Architecture.detect();
     Platform platform = Platform.detect();

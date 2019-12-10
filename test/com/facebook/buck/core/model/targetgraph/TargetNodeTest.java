@@ -240,7 +240,7 @@ public class TargetNodeTest {
       ImmutableMap<String, Object> rawNode,
       Set<Path> files)
       throws NoSuchBuildTargetException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(files);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(buildTarget.getCell(), files);
 
     ExampleDescription description = new ExampleDescription();
 

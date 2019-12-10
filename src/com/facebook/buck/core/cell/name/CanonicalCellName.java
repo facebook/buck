@@ -36,10 +36,20 @@ public abstract class CanonicalCellName implements Comparable<CanonicalCellName>
   private static class Holder {
     public static final CanonicalCellName ROOT_CELL =
         ImmutableCanonicalCellName.of(Optional.empty());
+    public static final CanonicalCellName NOT_A_CELL =
+        ImmutableCanonicalCellName.of(Optional.of("not-a-cell"));
   }
 
   public static CanonicalCellName rootCell() {
     return Holder.ROOT_CELL;
+  }
+
+  /**
+   * This cell object is used when there's no cell, but {@link CanonicalCellName} object is needed.
+   * This cell name is never resolved successfully to a cell.
+   */
+  public static CanonicalCellName unsafeNotACell() {
+    return Holder.NOT_A_CELL;
   }
 
   /**

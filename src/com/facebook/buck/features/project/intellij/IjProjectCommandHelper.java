@@ -224,7 +224,8 @@ public class IjProjectCommandHelper {
     if (outputDir != null) {
       Path outputPath = Paths.get(outputDir).toAbsolutePath();
       Files.createDirectories(outputPath);
-      return new DefaultProjectFilesystemFactory().createProjectFilesystem(outputPath);
+      return new DefaultProjectFilesystemFactory()
+          .createProjectFilesystem(cell.getCanonicalName(), outputPath);
     } else {
       return cell.getFilesystem();
     }

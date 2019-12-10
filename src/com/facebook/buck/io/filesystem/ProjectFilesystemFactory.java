@@ -16,17 +16,21 @@
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.util.config.Config;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public interface ProjectFilesystemFactory {
   ProjectFilesystem createProjectFilesystem(
-      Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo);
+      CanonicalCellName cellName,
+      Path root,
+      Config config,
+      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo);
 
-  ProjectFilesystem createProjectFilesystem(Path root, Config config);
+  ProjectFilesystem createProjectFilesystem(CanonicalCellName cellName, Path root, Config config);
 
-  ProjectFilesystem createProjectFilesystem(Path root);
+  ProjectFilesystem createProjectFilesystem(CanonicalCellName cellName, Path root);
 
-  ProjectFilesystem createOrThrow(Path path);
+  ProjectFilesystem createOrThrow(CanonicalCellName cellName, Path path);
 }

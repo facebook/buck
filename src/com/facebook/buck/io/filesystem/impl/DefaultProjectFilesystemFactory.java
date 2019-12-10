@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.filesystem.impl;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
@@ -57,8 +58,11 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
   @Override
   public DefaultProjectFilesystem createProjectFilesystem(
-      Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
-    BuckPaths buckPaths = getConfiguredBuckPaths(root, config, embeddedCellBuckOutInfo);
+      CanonicalCellName cellName,
+      Path root,
+      Config config,
+      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
+    BuckPaths buckPaths = getConfiguredBuckPaths(cellName, root, config, embeddedCellBuckOutInfo);
     return new DefaultProjectFilesystem(
         root,
         extractIgnorePaths(root, config, buckPaths, embeddedCellBuckOutInfo),
@@ -68,13 +72,14 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   @Override
-  public DefaultProjectFilesystem createProjectFilesystem(Path root, Config config) {
-    return createProjectFilesystem(root, config, Optional.empty());
+  public DefaultProjectFilesystem createProjectFilesystem(
+      CanonicalCellName cellName, Path root, Config config) {
+    return createProjectFilesystem(cellName, root, config, Optional.empty());
   }
 
   @Override
-  public DefaultProjectFilesystem createProjectFilesystem(Path root) {
-    return createProjectFilesystem(root, new Config());
+  public DefaultProjectFilesystem createProjectFilesystem(CanonicalCellName cellName, Path root) {
+    return createProjectFilesystem(cellName, root, new Config());
   }
 
   private static ImmutableSet<PathMatcher> extractIgnorePaths(
@@ -166,8 +171,11 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   private static BuckPaths getConfiguredBuckPaths(
-      Path rootPath, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
-    BuckPaths buckPaths = BuckPaths.createDefaultBuckPaths(rootPath);
+      CanonicalCellName cellName,
+      Path rootPath,
+      Config config,
+      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
+    BuckPaths buckPaths = BuckPaths.createDefaultBuckPaths(cellName, rootPath);
     Path buckOut =
         (embeddedCellBuckOutInfo.isPresent())
             ? embeddedCellBuckOutInfo.get().getCellBuckOut()
@@ -205,11 +213,11 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   @Override
-  public DefaultProjectFilesystem createOrThrow(Path path) {
+  public DefaultProjectFilesystem createOrThrow(CanonicalCellName cellName, Path path) {
     try {
       // toRealPath() is necessary to resolve symlinks, allowing us to later
       // check whether files are inside or outside of the project without issue.
-      return createProjectFilesystem(path.toRealPath().normalize());
+      return createProjectFilesystem(cellName, path.toRealPath().normalize());
     } catch (IOException e) {
       throw new HumanReadableException(
           String.format(

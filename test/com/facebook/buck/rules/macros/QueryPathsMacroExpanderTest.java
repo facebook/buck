@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -55,7 +56,7 @@ public class QueryPathsMacroExpanderTest {
 
   @Before
   public void setUp() {
-    filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
   }
 

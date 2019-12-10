@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -35,6 +36,7 @@ import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -127,7 +129,7 @@ public class BuildReportIntegrationTest {
     assertEquals(
         "buck-out/cells/cell2/gen/"
             + BuildTargetPaths.getBasePath(
-                    new FakeProjectFilesystem(),
+                    new FakeProjectFilesystem(CanonicalCellName.unsafeOf(Optional.of("cell2"))),
                     BuildTargetFactory.newInstance("cell2//:bar"),
                     "%s")
                 .resolve("bar.txt"),

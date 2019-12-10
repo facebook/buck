@@ -31,6 +31,7 @@ import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.core.model.BuildId;
@@ -213,6 +214,7 @@ public class ServedCacheIntegrationTest {
   public void testExceptionDuringTheRead() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
+            CanonicalCellName.rootCell(),
             tmpDir.getRoot(),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
             DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
@@ -251,6 +253,7 @@ public class ServedCacheIntegrationTest {
   public void testExceptionDuringTheReadRetryingFail() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
+            CanonicalCellName.rootCell(),
             tmpDir.getRoot(),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
             DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
@@ -284,6 +287,7 @@ public class ServedCacheIntegrationTest {
   public void testExceptionDuringTheReadRetryingSuccess() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
+            CanonicalCellName.rootCell(),
             tmpDir.getRoot(),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
             DefaultProjectFilesystemFactory.getWindowsFSInstance()) {

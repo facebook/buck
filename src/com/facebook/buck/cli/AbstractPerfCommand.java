@@ -17,6 +17,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -242,27 +243,32 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                     new ProjectFilesystemFactory() {
                       @Override
                       public ProjectFilesystem createProjectFilesystem(
+                          CanonicalCellName cellName,
                           Path root,
                           Config config,
                           Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
                         return createHashFakingFilesystem(
                             new DefaultProjectFilesystemFactory()
-                                .createProjectFilesystem(root, config, embeddedCellBuckOutInfo));
+                                .createProjectFilesystem(
+                                    cellName, root, config, embeddedCellBuckOutInfo));
                       }
 
                       @Override
-                      public ProjectFilesystem createProjectFilesystem(Path root, Config config) {
-                        return createProjectFilesystem(root, config, Optional.empty());
+                      public ProjectFilesystem createProjectFilesystem(
+                          CanonicalCellName cellName, Path root, Config config) {
+                        return createProjectFilesystem(cellName, root, config, Optional.empty());
                       }
 
                       @Override
-                      public ProjectFilesystem createProjectFilesystem(Path root) {
-                        return createProjectFilesystem(root, new Config());
+                      public ProjectFilesystem createProjectFilesystem(
+                          CanonicalCellName cellName, Path root) {
+                        return createProjectFilesystem(cellName, root, new Config());
                       }
 
                       @Override
-                      public ProjectFilesystem createOrThrow(Path path) {
-                        return createProjectFilesystem(path);
+                      public ProjectFilesystem createOrThrow(
+                          CanonicalCellName cellName, Path path) {
+                        return createProjectFilesystem(cellName, path);
                       }
                     },
                     cacheMode))

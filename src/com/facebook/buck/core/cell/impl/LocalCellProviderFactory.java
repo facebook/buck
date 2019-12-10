@@ -145,7 +145,7 @@ public class LocalCellProviderFactory {
                 }
                 ProjectFilesystem cellFilesystem =
                     projectFilesystemFactory.createProjectFilesystem(
-                        normalizedCellPath, config, embeddedCellBuckOutInfo);
+                        canonicalCellName, normalizedCellPath, config, embeddedCellBuckOutInfo);
 
                 BuckConfig buckConfig =
                     new BuckConfig(

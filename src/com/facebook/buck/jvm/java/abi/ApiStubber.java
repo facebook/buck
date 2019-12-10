@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -34,7 +35,8 @@ public class ApiStubber {
     new StubJar(source)
         .writeTo(
             new DefaultProjectFilesystemFactory()
-                .createProjectFilesystem(Paths.get("").toAbsolutePath()),
+                .createProjectFilesystem(
+                    CanonicalCellName.unsafeNotACell(), Paths.get("").toAbsolutePath()),
             destination);
   }
 }

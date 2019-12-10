@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
@@ -26,10 +27,13 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractBuckPaths {
 
-  public static BuckPaths createDefaultBuckPaths(Path rootPath) {
-    return BuckPaths.of(
-        rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString()));
+  public static BuckPaths createDefaultBuckPaths(CanonicalCellName cellName, Path rootPath) {
+    Path buckOut = rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString());
+    return BuckPaths.of(cellName, buckOut, buckOut);
   }
+
+  @Value.Parameter
+  public abstract CanonicalCellName getCellName();
 
   /** The relative path to the directory where Buck will generate its files. */
   @Value.Parameter
@@ -46,10 +50,8 @@ abstract class AbstractBuckPaths {
    * support configuring all output paths. However, for now, only certain paths below will use this
    * path.
    */
-  @Value.Default
-  public Path getConfiguredBuckOut() {
-    return getBuckOut();
-  }
+  @Value.Parameter
+  public abstract Path getConfiguredBuckOut();
 
   /** The version the buck output directory was created for */
   @Value.Derived

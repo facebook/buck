@@ -33,6 +33,7 @@ import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.InvalidCellOverrideException;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
@@ -717,7 +718,9 @@ public final class MainRunner {
         UIMessagesFormatter.reusedConfigWarning(configDiff).ifPresent(this::printWarnMessage);
       } else {
         config = currentConfig;
-        filesystem = projectFilesystemFactory.createProjectFilesystem(canonicalRootPath, config);
+        filesystem =
+            projectFilesystemFactory.createProjectFilesystem(
+                CanonicalCellName.rootCell(), canonicalRootPath, config);
         cellPathResolver = DefaultCellPathResolver.create(filesystem.getRootPath(), config);
         buckConfig =
             new BuckConfig(
@@ -901,7 +904,8 @@ public final class MainRunner {
       // ImmutableSet<PathMatcher> and BuckPaths for the ProjectFilesystem, whereas this one
       // uses the defaults.
       ProjectFilesystem rootCellProjectFilesystem =
-          projectFilesystemFactory.createOrThrow(rootCell.getFilesystem().getRootPath());
+          projectFilesystemFactory.createOrThrow(
+              CanonicalCellName.rootCell(), rootCell.getFilesystem().getRootPath());
       BuildBuckConfig buildBuckConfig = rootCell.getBuckConfig().getView(BuildBuckConfig.class);
       allCaches.addAll(buckGlobalState.getFileHashCaches());
 

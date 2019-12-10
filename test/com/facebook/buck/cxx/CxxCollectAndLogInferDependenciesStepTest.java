@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -54,10 +55,11 @@ import org.junit.Test;
 
 public class CxxCollectAndLogInferDependenciesStepTest {
 
-  private static ProjectFilesystem createFakeFilesystem(String fakeRoot) {
+  private static ProjectFilesystem createFakeFilesystem(
+      CanonicalCellName cellName, String fakeRoot) {
     Path fakeRootPath = Paths.get(fakeRoot);
     Preconditions.checkArgument(fakeRootPath.isAbsolute(), "fakeRoot must be an absolute path");
-    return new FakeProjectFilesystem(fakeRootPath);
+    return new FakeProjectFilesystem(cellName, fakeRootPath);
   }
 
   private CxxInferCapture createCaptureRule(
@@ -104,7 +106,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
   public void testStepWritesNoCellTokenInFileWhenCellIsAbsent() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    ProjectFilesystem filesystem = createFakeFilesystem("/Users/user/src");
+    ProjectFilesystem filesystem =
+        createFakeFilesystem(CanonicalCellName.rootCell(), "/Users/user/src");
 
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance("//target:short")
@@ -135,7 +138,9 @@ public class CxxCollectAndLogInferDependenciesStepTest {
   public void testStepWritesSingleCellTokenInFile() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    ProjectFilesystem filesystem = createFakeFilesystem("/Users/user/src");
+    ProjectFilesystem filesystem =
+        createFakeFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("cellname")), "/Users/user/src");
 
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance("cellname//target:short")
@@ -167,13 +172,17 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     // filesystem, buildTarget and buildRuleParams for first cell (analysis)
-    ProjectFilesystem filesystem1 = createFakeFilesystem("/Users/user/cell_one");
+    ProjectFilesystem filesystem1 =
+        createFakeFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("cell1")), "/Users/user/cell_one");
     BuildTarget buildTarget1 =
         BuildTargetFactory.newInstance("cell1//target/in_cell_one:short")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     // filesystem, buildTarget and buildRuleParams for second cell (capture)
-    ProjectFilesystem filesystem2 = createFakeFilesystem("/Users/user/cell_two");
+    ProjectFilesystem filesystem2 =
+        createFakeFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("cell2")), "/Users/user/cell_two");
     BuildTarget buildTarget2 =
         BuildTargetFactory.newInstance("cell2//target/in_cell_two:short2")
             .withFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR);
@@ -211,13 +220,16 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     // filesystem, buildTarget and buildRuleParams for first, unnamed cell (analysis)
-    ProjectFilesystem filesystem1 = createFakeFilesystem("/Users/user/default_cell");
+    ProjectFilesystem filesystem1 =
+        createFakeFilesystem(CanonicalCellName.rootCell(), "/Users/user/default_cell");
     BuildTarget buildTarget1 =
         BuildTargetFactory.newInstance("//target/in_default_cell:short")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     // filesystem, buildTarget and buildRuleParams for second cell (capture)
-    ProjectFilesystem filesystem2 = createFakeFilesystem("/Users/user/cell_two");
+    ProjectFilesystem filesystem2 =
+        createFakeFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("cell2")), "/Users/user/cell_two");
     BuildTarget buildTarget2 =
         BuildTargetFactory.newInstance("cell2//target/in_cell_two:short2")
             .withFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR);

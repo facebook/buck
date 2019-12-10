@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -498,7 +499,7 @@ public class JarDirectoryStepTest {
     Path output = folder.newFile("output.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new FakeProjectFilesystem(folder.getRoot()),
+            new FakeProjectFilesystem(CanonicalCellName.rootCell(), folder.getRoot()),
             JarParameters.builder()
                 .setJarPath(output)
                 .setEntriesToJar(ImmutableSortedSet.of(dir, inputJar))

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -51,7 +52,9 @@ public class GenerateManifestStepTest {
   public void testManifestGeneration() throws Exception {
     ExecutionContext context = TestExecutionContext.newInstance();
     ProjectFilesystem filesystem =
-        context.getProjectFilesystemFactory().createProjectFilesystem(tmpFolder.getRoot());
+        context
+            .getProjectFilesystemFactory()
+            .createProjectFilesystem(CanonicalCellName.rootCell(), tmpFolder.getRoot());
 
     Path expectedOutputPath = Paths.get("AndroidManifest.expected.xml");
     Path skeletonPath = Paths.get("AndroidManifestSkeleton.xml");
@@ -90,7 +93,9 @@ public class GenerateManifestStepTest {
   public void testManifestGenerationWithModule() throws Exception {
     ExecutionContext context = TestExecutionContext.newInstance();
     ProjectFilesystem filesystem =
-        context.getProjectFilesystemFactory().createProjectFilesystem(tmpFolder.getRoot());
+        context
+            .getProjectFilesystemFactory()
+            .createProjectFilesystem(CanonicalCellName.rootCell(), tmpFolder.getRoot());
 
     Path expectedOutputPath = Paths.get("ModuleManifest.expected.xml");
     Path skeletonPath = Paths.get("ModuleManifestSkeleton.xml");

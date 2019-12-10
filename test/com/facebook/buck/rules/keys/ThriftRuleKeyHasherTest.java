@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
@@ -322,8 +323,10 @@ public class ThriftRuleKeyHasherTest {
   @Test
   public void canHandleForwardingBuildTargetSourcePathsWithDifferentFilesystems()
       throws TException {
-    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(Paths.get("first", "root"));
-    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(Paths.get("other", "root"));
+    ProjectFilesystem filesystem1 =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("first", "root"));
+    ProjectFilesystem filesystem2 =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("other", "root"));
     Path relativePath = Paths.get("arbitrary", "path");
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 

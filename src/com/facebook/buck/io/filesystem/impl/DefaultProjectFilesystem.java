@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.filesystem.impl;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
@@ -119,13 +120,14 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
 
   @VisibleForTesting
   protected DefaultProjectFilesystem(
+      CanonicalCellName cellName,
       Path root,
       ProjectFilesystemDelegate projectFilesystemDelegate,
       @Nullable WindowsFS winFSInstance) {
     this(
         root,
         ImmutableSet.of(),
-        BuckPaths.createDefaultBuckPaths(root),
+        BuckPaths.createDefaultBuckPaths(cellName, root),
         projectFilesystemDelegate,
         winFSInstance);
   }

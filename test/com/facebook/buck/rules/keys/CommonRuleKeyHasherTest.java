@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -226,8 +227,10 @@ public final class CommonRuleKeyHasherTest {
 
     @BeforeClass
     public static void setupFileSystems() {
-      filesystem1 = new FakeProjectFilesystem(Paths.get("first", "root"));
-      filesystem2 = new FakeProjectFilesystem(Paths.get("other", "root"));
+      filesystem1 =
+          new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("first", "root"));
+      filesystem2 =
+          new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("other", "root"));
     }
 
     @Test

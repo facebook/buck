@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -66,7 +67,8 @@ public class CxxCompilationDatabaseTest {
 
     String root = "/Users/user/src";
     Path fakeRoot = Paths.get(root);
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(fakeRoot);
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), fakeRoot);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 

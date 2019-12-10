@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.cache.impl;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -175,7 +176,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         continue;
       }
 
-      ProjectFilesystem projectFilesystem = projectFilesystemFactory.createOrThrow(root);
+      ProjectFilesystem projectFilesystem =
+          projectFilesystemFactory.createOrThrow(CanonicalCellName.unsafeNotACell(), root);
       // A cache which caches hashes of absolute paths which my be accessed by certain
       // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
       // multiple times in a single run.

@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -57,7 +58,11 @@ public class PythonBuckConfigTest {
     Path projectDir = Files.createTempDirectory("project");
     Path pexExecuter = Paths.get("pex-executer");
     ProjectFilesystem projectFilesystem =
-        new FakeProjectFilesystem(FakeClock.doNotCare(), projectDir, ImmutableSet.of(pexExecuter));
+        new FakeProjectFilesystem(
+            FakeClock.doNotCare(),
+            CanonicalCellName.rootCell(),
+            projectDir,
+            ImmutableSet.of(pexExecuter));
     Files.createFile(projectFilesystem.resolve(pexExecuter));
     assertTrue(
         "Should be able to set file executable",

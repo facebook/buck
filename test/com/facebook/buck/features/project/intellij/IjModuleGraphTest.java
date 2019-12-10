@@ -28,6 +28,7 @@ import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -627,9 +628,12 @@ public class IjModuleGraphTest {
 
   @Test
   public void testMultiCellModule() {
-    ProjectFilesystem depFileSystem = new FakeProjectFilesystem(Paths.get("dep").toAbsolutePath());
+    ProjectFilesystem depFileSystem =
+        new FakeProjectFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("dep")), Paths.get("dep").toAbsolutePath());
     ProjectFilesystem mainFileSystem =
-        new FakeProjectFilesystem(Paths.get("main").toAbsolutePath());
+        new FakeProjectFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("main")), Paths.get("main").toAbsolutePath());
 
     TargetNode<?> depTargetNode =
         JavaLibraryBuilder.createBuilder(

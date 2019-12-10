@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.io.file.MorePathsForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -108,7 +109,8 @@ public class BuckConfigTest {
 
   private BuckConfig createFromText(String... lines) throws IOException {
     ProjectFilesystem projectFilesystem =
-        new FakeProjectFilesystem(MorePathsForTests.rootRelativePath("project/root"));
+        new FakeProjectFilesystem(
+            CanonicalCellName.rootCell(), MorePathsForTests.rootRelativePath("project/root"));
     StringReader reader = new StringReader(Joiner.on('\n').join(lines));
     return BuckConfigTestUtils.createFromReader(
         reader,

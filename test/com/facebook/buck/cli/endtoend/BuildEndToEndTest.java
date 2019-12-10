@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.doctor.config.BuildLogEntry;
@@ -285,7 +286,7 @@ public class BuildEndToEndTest {
     ImmutableList<BuildLogEntry> helper =
         new BuildLogHelper(
                 new DefaultProjectFilesystemFactory()
-                    .createProjectFilesystem(workspace.getDestPath()))
+                    .createProjectFilesystem(CanonicalCellName.rootCell(), workspace.getDestPath()))
             .getBuildLogs();
 
     assertEquals(2, helper.size());

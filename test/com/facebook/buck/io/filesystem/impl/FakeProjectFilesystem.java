@@ -18,6 +18,7 @@ package com.facebook.buck.io.filesystem.impl;
 
 import static com.facebook.buck.util.string.MoreStrings.withoutSuffix;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.io.file.FakeFileAttributes;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
@@ -222,7 +223,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
                     // Swallow. At least we tried, right?
                   }
                 }));
-    return new FakeProjectFilesystem(tempDir);
+    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), tempDir);
   }
 
   public static ProjectFilesystem createJavaOnlyFilesystem() {
@@ -246,6 +247,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     }
 
     return new DefaultProjectFilesystem(
+        CanonicalCellName.rootCell(),
         root,
         new DefaultProjectFilesystemDelegate(root),
         DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
@@ -258,25 +260,35 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   }
 
   public FakeProjectFilesystem() {
-    this(DEFAULT_ROOT);
+    this(CanonicalCellName.rootCell(), DEFAULT_ROOT);
   }
 
-  public FakeProjectFilesystem(Path root) {
-    this(FakeClock.doNotCare(), root, ImmutableSet.of());
+  public FakeProjectFilesystem(CanonicalCellName cellName) {
+    this(cellName, DEFAULT_ROOT);
+  }
+
+  public FakeProjectFilesystem(CanonicalCellName cellName, Path root) {
+    this(FakeClock.doNotCare(), cellName, root, ImmutableSet.of());
   }
 
   public FakeProjectFilesystem(Clock clock) {
-    this(clock, DEFAULT_ROOT, ImmutableSet.of());
+    this(clock, CanonicalCellName.rootCell(), DEFAULT_ROOT, ImmutableSet.of());
   }
 
   public FakeProjectFilesystem(Set<Path> files) {
-    this(FakeClock.doNotCare(), DEFAULT_ROOT, files);
+    this(CanonicalCellName.rootCell(), files);
   }
 
-  public FakeProjectFilesystem(Clock clock, Path root, Set<Path> files) {
+  public FakeProjectFilesystem(CanonicalCellName cellName, Set<Path> files) {
+    this(FakeClock.doNotCare(), cellName, DEFAULT_ROOT, files);
+  }
+
+  public FakeProjectFilesystem(
+      Clock clock, CanonicalCellName cellName, Path root, Set<Path> files) {
     // For testing, we always use a DefaultProjectFilesystemDelegate so that the logic being
     // exercised is always the same, even if a test using FakeProjectFilesystem is used on EdenFS.
     super(
+        cellName,
         root,
         new DefaultProjectFilesystemDelegate(root),
         DefaultProjectFilesystemFactory.getWindowsFSInstance());

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -67,7 +68,7 @@ public class QueryTargetsMacroExpanderTest {
   public void setUp() {
     cache = new HashMapWithStats<>();
     expander = new QueryTargetsMacroExpander(Optional.empty());
-    filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);
     TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(

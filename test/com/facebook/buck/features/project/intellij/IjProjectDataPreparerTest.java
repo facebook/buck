@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -145,9 +146,12 @@ public class IjProjectDataPreparerTest {
 
   private void testWriteModuleWithMultiCellModulesEnabledHelper(@Nullable String packageName)
       throws Exception {
-    ProjectFilesystem depFileSystem = new FakeProjectFilesystem(Paths.get("dep").toAbsolutePath());
+    ProjectFilesystem depFileSystem =
+        new FakeProjectFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("dep")), Paths.get("dep").toAbsolutePath());
     ProjectFilesystem mainFileSystem =
-        new FakeProjectFilesystem(Paths.get("main").toAbsolutePath());
+        new FakeProjectFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("main")), Paths.get("main").toAbsolutePath());
 
     Path depPath = Paths.get("java/com/example/Dep.java");
     TargetNode<?> depTargetNode =
@@ -460,9 +464,12 @@ public class IjProjectDataPreparerTest {
 
   @Test
   public void testModuleIndexWithMultiCellModulesEnabled() {
-    ProjectFilesystem depFileSystem = new FakeProjectFilesystem(Paths.get("dep").toAbsolutePath());
+    ProjectFilesystem depFileSystem =
+        new FakeProjectFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("dep")), Paths.get("dep").toAbsolutePath());
     ProjectFilesystem mainFileSystem =
-        new FakeProjectFilesystem(Paths.get("main").toAbsolutePath());
+        new FakeProjectFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("main")), Paths.get("main").toAbsolutePath());
 
     TargetNode<?> depTargetNode =
         JavaLibraryBuilder.createBuilder(
@@ -533,7 +540,11 @@ public class IjProjectDataPreparerTest {
             Paths.get("lib/guava.jar"));
 
     FakeProjectFilesystem filesystemForExcludesTest =
-        new FakeProjectFilesystem(FakeClock.doNotCare(), Paths.get(".").toAbsolutePath(), paths);
+        new FakeProjectFilesystem(
+            FakeClock.doNotCare(),
+            CanonicalCellName.rootCell(),
+            Paths.get(".").toAbsolutePath(),
+            paths);
 
     TargetNode<?> guavaTargetNode =
         PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//lib:guava"))

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -98,7 +99,8 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricContainsAllResourceDependenciesInResVmArg() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), temporaryFolder.getRoot());
 
     ImmutableList.Builder<HasAndroidResourceDeps> resDepsBuilder = ImmutableList.builder();
     for (int i = 0; i < 10; i++) {
@@ -137,7 +139,8 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricContainsAllResourceDependenciesInResVmArgAsFile() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), temporaryFolder.getRoot());
 
     ImmutableList.Builder<HasAndroidResourceDeps> resDepsBuilder = ImmutableList.builder();
     for (int i = 0; i < 10; i++) {
@@ -181,7 +184,8 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricContainsAllResourceDependenciesInAssetVmArgAsFile() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), temporaryFolder.getRoot());
 
     ImmutableList.Builder<HasAndroidResourceDeps> resDepsBuilder = ImmutableList.builder();
     for (int i = 0; i < 10; i++) {
@@ -227,7 +231,8 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricResourceDependenciesVmArgHasCorrectFormat() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), temporaryFolder.getRoot());
     filesystem.mkdirs(Paths.get("res1/values"));
     filesystem.mkdirs(Paths.get("res2/values"));
     filesystem.mkdirs(Paths.get("res3/values"));
@@ -279,7 +284,8 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricThrowsIfResourceDirNotThere() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), temporaryFolder.getRoot());
 
     BuildTarget robolectricBuildTarget =
         BuildTargetFactory.newInstance(
@@ -309,7 +315,8 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricAssetsDependenciesVmArgHasCorrectFormat() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), temporaryFolder.getRoot());
     filesystem.mkdirs(Paths.get("assets1/svg"));
     filesystem.mkdirs(Paths.get("assets2/xml"));
     filesystem.mkdirs(Paths.get("assets3_to_ignore"));
@@ -356,7 +363,8 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricThrowsIfAssetsDirNotThere() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), temporaryFolder.getRoot());
 
     BuildTarget robolectricBuildTarget =
         BuildTargetFactory.newInstance(
@@ -387,7 +395,8 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void runtimeDepsIncludeTransitiveResourcesAndDummyR() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), temporaryFolder.getRoot());
 
     BuildTarget resGenRuleTarget = BuildTargetFactory.newInstance("//:res-gen");
     TargetNode<?> resGenRuleNode =

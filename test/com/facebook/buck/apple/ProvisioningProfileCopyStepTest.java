@@ -34,6 +34,7 @@ import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
@@ -80,7 +81,7 @@ public class ProvisioningProfileCopyStepTest {
   @Before
   public void setUp() throws IOException {
     testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
-    projectFilesystem = new FakeProjectFilesystem(testdataDir);
+    projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), testdataDir);
     Files.walkFileTree(
         testdataDir,
         new SimpleFileVisitor<Path>() {

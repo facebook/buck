@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -64,7 +65,8 @@ public class WatchmanGlobberTest {
 
   @Before
   public void setUp() throws Exception {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem projectFilesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
     root = fileSystem.getPath(tmp.getRoot().toString());
     WatchmanFactory watchmanFactory = new WatchmanFactory();
