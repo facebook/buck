@@ -51,16 +51,19 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
   private final BuckEventBus eventBus;
   private final boolean localFallbackEnabled;
   private final boolean localFallbackDisabledOnCorruptedArtifacts;
+  private final boolean localFallbackEnabledForCompletedAction;
 
   public LocalFallbackStrategy(
       BuildRuleStrategy mainBuildRuleStrategy,
       BuckEventBus eventBus,
       boolean localFallbackEnabled,
-      boolean localFallbackDisabledOnCorruptedArtifacts) {
+      boolean localFallbackDisabledOnCorruptedArtifacts,
+      boolean localFallbackEnabledForCompletedAction) {
     this.mainBuildRuleStrategy = mainBuildRuleStrategy;
     this.eventBus = eventBus;
     this.localFallbackEnabled = localFallbackEnabled;
     this.localFallbackDisabledOnCorruptedArtifacts = localFallbackDisabledOnCorruptedArtifacts;
+    this.localFallbackEnabledForCompletedAction = localFallbackEnabledForCompletedAction;
   }
 
   @Override
@@ -76,7 +79,8 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
         strategyContext,
         eventBus,
         localFallbackEnabled,
-        localFallbackDisabledOnCorruptedArtifacts);
+        localFallbackDisabledOnCorruptedArtifacts,
+        localFallbackEnabledForCompletedAction);
   }
 
   @Override
@@ -111,6 +115,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     private final Stopwatch remoteExecutionTimer;
     private final boolean localFallbackEnabled;
     private final boolean localFallbackDisabledOnCorruptedArtifacts;
+    private final boolean localFallbackEnabledForCompletedAction;
 
     private Optional<ListenableFuture<Optional<BuildResult>>> localStrategyBuildResult;
     private boolean hasCancellationBeenRequested;
@@ -126,7 +131,8 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
         BuildStrategyContext strategyContext,
         BuckEventBus eventBus,
         boolean localFallbackEnabled,
-        boolean localFallbackDisabledOnCorruptedArtifacts) {
+        boolean localFallbackDisabledOnCorruptedArtifacts,
+        boolean localFallbackEnabledForCompletedAction) {
       this.lock = new Object();
       this.localStrategyBuildResult = Optional.empty();
       this.buildTarget = buildTarget;
@@ -141,6 +147,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       this.remoteBuildErrorMessage = Optional.empty();
       this.localFallbackEnabled = localFallbackEnabled;
       this.localFallbackDisabledOnCorruptedArtifacts = localFallbackDisabledOnCorruptedArtifacts;
+      this.localFallbackEnabledForCompletedAction = localFallbackEnabledForCompletedAction;
       this.remoteGrpcStatus = Status.fromCode(Status.Code.OK);
       this.lastNonTerminalState = State.WAITING;
       this.exitCode = OptionalInt.empty();
@@ -231,8 +238,6 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     }
 
     private void handleRemoteBuildFailedWithException(Throwable t) {
-      LOG.warn(
-          t, "Remote build failed for a build rule so trying locally now for [%s].", buildTarget);
       remoteBuildResult =
           Optional.of(t instanceof InterruptedException ? Result.INTERRUPTED : Result.EXCEPTION);
       exitCode =
@@ -250,10 +255,15 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       }
 
       remoteBuildErrorMessage = Optional.of(t.toString());
-      if (localFallbackEnabled
+      boolean fallbackEnabledForCurrentResult =
+          localFallbackEnabled
+              && (localFallbackEnabledForCompletedAction || remoteGrpcStatus != Status.OK);
+      if (fallbackEnabledForCurrentResult
           && (!localFallbackDisabledOnCorruptedArtifacts
               || !(MultiThreadedBlobUploader.CorruptArtifactException.isCause(
                   ThrowableCauseIterable.of(t))))) {
+        LOG.warn(
+            t, "Remote build failed for a build rule so trying locally now for [%s].", buildTarget);
         fallbackBuildToLocalStrategy();
       } else {
         completeCombinedFutureWithException(t, remoteBuildResult.get(), Result.NOT_RUN);

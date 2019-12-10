@@ -164,7 +164,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             remoteExecutionConfig.getAuxiliaryBuildTag()),
         eventBus,
         strategyConfig.isLocalFallbackEnabled(),
-        strategyConfig.isLocalFallbackDisabledOnCorruptedArtifacts());
+        strategyConfig.isLocalFallbackDisabledOnCorruptedArtifacts(),
+        strategyConfig.isLocalFallbackEnabledForCompletedAction());
   }
 
   @Override

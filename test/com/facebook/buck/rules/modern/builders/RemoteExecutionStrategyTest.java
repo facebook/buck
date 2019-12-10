@@ -296,6 +296,11 @@ public class RemoteExecutionStrategyTest {
     }
 
     @Override
+    public boolean isLocalFallbackEnabledForCompletedAction() {
+      return true;
+    }
+
+    @Override
     public boolean tryLargerWorkerOnOom() {
       return false;
     }

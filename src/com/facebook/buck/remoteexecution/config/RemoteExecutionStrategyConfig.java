@@ -37,6 +37,8 @@ public interface RemoteExecutionStrategyConfig {
 
   boolean isLocalFallbackDisabledOnCorruptedArtifacts();
 
+  boolean isLocalFallbackEnabledForCompletedAction();
+
   OptionalLong maxInputSizeBytes();
 
   String getWorkerRequirementsFilename();

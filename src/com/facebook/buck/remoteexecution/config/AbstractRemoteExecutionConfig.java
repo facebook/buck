@@ -64,6 +64,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final int DEFAULT_REMOTE_OUTPUT_MATERIALIZATION_THREADS = 4;
   public static final boolean DEFAULT_IS_LOCAL_FALLBACK_ENABLED = false;
   public static final boolean DEFAULT_IS_LOCAL_FALLBACK_DISABLED_ON_CORRUPT_ARTIFACTS = false;
+  public static final boolean DEFAULT_IS_LOCAL_FALLBACK_ENABLED_FOR_COMPLETED_ACTION = true;
 
   private static final String CONFIG_CERT = "cert";
   private static final String CONFIG_KEY = "key";
@@ -125,8 +126,12 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   /** Worker requirements filename */
   public static final String WORKER_REQUIREMENTS_FILENAME = "worker_requirements_filename";
 
-  // Should ree try to reschedule OOMed action on a larger worker
+  // Should retry to reschedule OOMed action on a larger worker
   public static final String TRY_LARGER_WORKER_ON_OOM = "try_larger_worker_on_oom";
+
+  // Should retry actions locally if action exit code is returned and is not 0.
+  public static final String IS_LOCAL_FALLBACK_ENABLED_FOR_COMPLETED_ACTION_KEY =
+      "is_local_fallback_for_completed_actions";
 
   public static final String AUTO_RE_BUILD_PROJECTS_WHITELIST_KEY =
       "auto_re_build_projects_whitelist";
@@ -342,6 +347,13 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
                 IS_LOCAL_FALLBACK_DISABLED_ON_CORRUPT_ARTIFACTS_KEY,
                 DEFAULT_IS_LOCAL_FALLBACK_DISABLED_ON_CORRUPT_ARTIFACTS);
 
+    boolean isLocalFallbackEnabledForCompletedAction =
+        getDelegate()
+            .getBooleanValue(
+                SECTION,
+                IS_LOCAL_FALLBACK_ENABLED_FOR_COMPLETED_ACTION_KEY,
+                DEFAULT_IS_LOCAL_FALLBACK_ENABLED_FOR_COMPLETED_ACTION);
+
     OptionalLong maxInputSizeBytes =
         getDelegate()
             .getValue(SECTION, MAX_INPUT_SIZE_BYTES)
@@ -431,6 +443,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       @Override
       public boolean isLocalFallbackDisabledOnCorruptedArtifacts() {
         return isLocalFallbackDisabledOnCorruptedArtifacts;
+      }
+
+      @Override
+      public boolean isLocalFallbackEnabledForCompletedAction() {
+        return isLocalFallbackEnabledForCompletedAction;
       }
 
       @Override
