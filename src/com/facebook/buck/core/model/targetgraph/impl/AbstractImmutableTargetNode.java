@@ -31,6 +31,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.visibility.VisibilityChecker;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.versions.Version;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,6 +50,15 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 @Value.Immutable(builder = false, prehash = true)
 abstract class AbstractImmutableTargetNode<T extends ConstructorArg> implements TargetNode<T> {
+
+  @Value.Check
+  protected void check() {
+    Preconditions.checkArgument(
+        getFilesystem().getBuckPaths().getCellName().equals(getBuildTarget().getCell()),
+        "filesystem cell '%s' must match target cell: %s",
+        getFilesystem().getBuckPaths().getCellName(),
+        getBuildTarget());
+  }
 
   @Value.Parameter
   @Override
