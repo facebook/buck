@@ -1,0 +1,14 @@
+java_library(
+    name = "lib",
+    srcs = [
+        "A.java",
+    ],
+)
+
+java_binary(
+    name = "binary",
+    main_class = "test.pkg.A",
+    deps = [
+        ":lib",
+    ],
+)

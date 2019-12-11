@@ -34,6 +34,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.impl.TargetConfigurationHasher;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -515,5 +516,24 @@ public class BuildCommandIntegrationTest {
     MatcherAssert.assertThat(result.getStderr(), Matchers.containsString("test test test"));
     MatcherAssert.assertThat(
         result.getStderr(), Matchers.not(Matchers.containsString("Exception")));
+  }
+
+  @Test
+  public void includeTargetConfigHashInBuckOutWhenBuckConfigIsSet() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "buck_out_config_target_hash", tmp);
+    workspace.setUp();
+
+    ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:binary");
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary");
+    runBuckResult.assertSuccess();
+    String expected =
+        BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s").toString()
+            + ".jar";
+    assertThat(
+        expected,
+        Matchers.matchesPattern(
+            ".*" + TargetConfigurationHasher.hash(target.getTargetConfiguration()) + ".*"));
+    assertEquals(runBuckResult.getStdout().trim(), "//:binary " + expected);
   }
 }

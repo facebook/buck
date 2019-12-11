@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.io.file.FakeFileAttributes;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -257,6 +258,16 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         return resolve(path.toString());
       }
     };
+  }
+
+  public static ProjectFilesystem createFilesystemWithTargetConfigHashInBuckPaths() {
+    Path root = DEFAULT_ROOT;
+    return new DefaultProjectFilesystem(
+        root,
+        ImmutableSet.of(),
+        BuckPaths.createDefaultBuckPaths(CanonicalCellName.rootCell(), root, true),
+        new DefaultProjectFilesystemDelegate(root),
+        DefaultProjectFilesystemFactory.getWindowsFSInstance());
   }
 
   public FakeProjectFilesystem() {

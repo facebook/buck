@@ -122,10 +122,16 @@ public class BuildTargetPaths {
   }
 
   /** Return a relative path for all targets in a package of a {@link BuildTarget}. */
-  @SuppressWarnings("unused")
   public static ForwardRelativePath getBasePathForBaseName(
       ProjectFilesystem filesystem, BuildTarget target) {
-    return target.getCellRelativeBasePath().getPath();
+    boolean includeTargetConfigHash = filesystem.getBuckPaths().shouldIncludeTargetConfigHash();
+    ForwardRelativePath configHashPath =
+        ForwardRelativePath.of(
+            includeTargetConfigHash
+                ? TargetConfigurationHasher.hash(target.getTargetConfiguration())
+                : "");
+
+    return configHashPath.resolve(target.getCellRelativeBasePath().getPath());
   }
 
   private static String formatLastSegment(String format, String arg) {

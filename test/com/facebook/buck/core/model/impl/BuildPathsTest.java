@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.model.impl;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
@@ -75,5 +76,15 @@ public class BuildPathsTest {
   @Parameters(method = "getTargetsForTest")
   public void basePathFormat(BuildTarget target, ForwardRelativePath path) {
     assertTrue(BuildPaths.getBaseDir(filesystem, target).endsWith(path));
+  }
+
+  @Test
+  @Parameters(method = "getTargetsForTest")
+  public void basePathFormatWithTargetConfigHash(BuildTarget target, ForwardRelativePath path) {
+    ProjectFilesystem filesystem =
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths();
+    String hash = TargetConfigurationHasher.hash(target.getTargetConfiguration());
+    assertEquals(
+        BuildPaths.getBaseDir(filesystem, target), ForwardRelativePath.of(hash).resolve(path));
   }
 }

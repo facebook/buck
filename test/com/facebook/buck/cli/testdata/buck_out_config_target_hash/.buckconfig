@@ -1,0 +1,2 @@
+[project]
+  buck_out_include_target_config_hash=true
