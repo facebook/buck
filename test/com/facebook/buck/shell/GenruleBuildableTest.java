@@ -585,4 +585,68 @@ public class GenruleBuildableTest {
             BuildTargetPaths.getGenPath(new FakeProjectFilesystem(), target, "%s")
                 .resolve("output.txt")));
   }
+
+  @Test
+  public void outputPathsSetsOutToUnderscoresSuffixedOutputsDirectory() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
+    OutputPathResolver outputPathResolver =
+        new DefaultOutputPathResolver(fakeProjectFileSystem, target);
+    Path srcPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__srcs");
+    Path tmpPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__tmp");
+
+    ImmutableMap.Builder<String, String> envVarsBuilder = ImmutableMap.builder();
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(fakeProjectFileSystem)
+            .setBash("echo something")
+            .setOuts(Optional.of(ImmutableMap.of("named", ImmutableList.of("output.txt"))))
+            .build()
+            .toBuildable();
+
+    buildable.addEnvironmentVariables(
+        pathResolver, outputPathResolver, fakeProjectFileSystem, srcPath, tmpPath, envVarsBuilder);
+
+    assertThat(
+        envVarsBuilder.build().get("OUT"),
+        Matchers.equalTo(
+            fakeProjectFileSystem.resolve(outputPathResolver.getRootPath()).toString()));
+  }
+
+  @Test
+  public void outputPathSetsOutToOutFile() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
+    OutputPathResolver outputPathResolver =
+        new DefaultOutputPathResolver(fakeProjectFileSystem, target);
+    Path srcPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__srcs");
+    Path tmpPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__tmp");
+
+    ImmutableMap.Builder<String, String> envVarsBuilder = ImmutableMap.builder();
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(fakeProjectFileSystem)
+            .setBash("echo something")
+            .setOut(Optional.of("output.txt"))
+            .build()
+            .toBuildable();
+
+    buildable.addEnvironmentVariables(
+        pathResolver, outputPathResolver, fakeProjectFileSystem, srcPath, tmpPath, envVarsBuilder);
+    assertThat(
+        envVarsBuilder.build().get("OUT"),
+        Matchers.equalTo(
+            fakeProjectFileSystem
+                .getRootPath()
+                .resolve(
+                    BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s")
+                        .resolve("output.txt"))
+                .toString()));
+  }
 }

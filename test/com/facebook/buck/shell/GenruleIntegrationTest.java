@@ -41,14 +41,26 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class GenruleIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
+
+  @Parameterized.Parameters(name = "{0}")
+  public static Collection<Object> data() {
+    return Arrays.asList(new Object[] {"", "_outs"});
+  }
+
+  @Parameterized.Parameter() public String targetSuffix;
 
   // When these tests fail, the failures contain buck output that is easy to confuse with the output
   // of the instance of buck that's running the test. This prepends each line with "> ".
@@ -492,6 +504,21 @@ public class GenruleIntegrationTest {
         processResult
             .getStderr()
             .contains("One and only one of 'out' or 'outs' must be present in genrule."));
+  }
+
+  @Test
+  public void writingInWorkingDirWritesInSrcsDir() throws IOException {
+    String targetName = "//:working_dir" + targetSuffix;
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_working_dir", temporaryFolder);
+    workspace.setUp();
+    workspace.runBuckBuild(targetName).assertSuccess();
+    assertTrue(
+        Files.exists(
+            workspace
+                .getGenPath(BuildTargetFactory.newInstance(targetName), "%s__srcs")
+                .resolve("hello.txt")));
   }
 
   private Sha1HashCode buildAndGetRuleKey(String scenario, Path temporaryFolder, String target)

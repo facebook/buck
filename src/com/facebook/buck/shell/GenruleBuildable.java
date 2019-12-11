@@ -606,10 +606,9 @@ public class GenruleBuildable implements Buildable {
             environmentVariablesBuilder.put(
                 "OUT", filesystem.resolve(outputPathResolver.resolvePath(path)).toString()));
     outputPaths.ifPresent(
-        paths -> {
-          // TODO(irenewchen): $OUT will be `buck-out/gen/<target_name>__`. See outputPaths
-          throw new HumanReadableException("'outs' syntax not supported yet in genrule.");
-        });
+        paths ->
+            environmentVariablesBuilder.put(
+                "OUT", filesystem.resolve(outputPathResolver.getRootPath()).toString()));
     environmentVariablesBuilder.put(
         "SRCS",
         srcs.getPaths().stream()
