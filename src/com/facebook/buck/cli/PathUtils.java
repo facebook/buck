@@ -48,7 +48,7 @@ public class PathUtils {
       boolean showOutputLabels) {
     Optional<Path> outputPathOptional;
     if (rule instanceof HasMultipleOutputs) {
-      if (!showOutputLabels && !outputLabel.equals(OutputLabel.DEFAULT)) {
+      if (!showOutputLabels && !outputLabel.isDefault()) {
         throw new HumanReadableException(
             "%s target %s[%s] should use --show-outputs",
             rule.getType(), rule.getFullyQualifiedName(), outputLabel);

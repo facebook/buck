@@ -47,7 +47,7 @@ public class OutputLabel implements Comparable<OutputLabel>, AddsToRuleKey {
    * <p>With the old action graph, this would be rule-dependent depending on how the rule implements
    * {@link com.facebook.buck.core.rules.attr.HasMultipleOutputs#getSourcePathToOutput()}.
    */
-  public static final OutputLabel DEFAULT = new OutputLabel();
+  private static final OutputLabel DEFAULT = new OutputLabel();
 
   @AddToRuleKey private final String label;
 
@@ -55,11 +55,24 @@ public class OutputLabel implements Comparable<OutputLabel>, AddsToRuleKey {
     label = "";
   }
 
-  // TODO(irenewchen): Hide this constructor and make a static factory method that takes
-  // Optional<String>
-  public OutputLabel(String label) {
+  private OutputLabel(String label) {
     Preconditions.checkArgument(!label.isEmpty());
     this.label = label;
+  }
+
+  /**
+   * Returns an output label wrapping the given String. Use {@link #defaultLabel()} to get the
+   * default empty output label.
+   *
+   * @throws IllegalArgumentException if the given {@code label} is an empty string
+   */
+  public static OutputLabel of(String label) {
+    return new OutputLabel(label);
+  }
+
+  /** Returns the output label for default outputs. */
+  public static OutputLabel defaultLabel() {
+    return DEFAULT;
   }
 
   public boolean isDefault() {

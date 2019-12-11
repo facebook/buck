@@ -46,7 +46,7 @@ public abstract class AbstractDefaultBuildTargetSourcePath implements BuildTarge
    */
   public static DefaultBuildTargetSourcePath of(BuildTarget target) {
     return DefaultBuildTargetSourcePath.of(
-        ImmutableBuildTargetWithOutputs.of(target, OutputLabel.DEFAULT));
+        ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
   }
 
   @Override

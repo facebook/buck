@@ -177,7 +177,7 @@ public class ThriftRuleKeyHasherTest {
           public BuildTargetWithOutputs getTargetWithOutputs() {
             return ImmutableBuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance("//base_name_2", "rule_name_2"),
-                OutputLabel.DEFAULT);
+                OutputLabel.defaultLabel());
           }
 
           @Override
@@ -272,7 +272,7 @@ public class ThriftRuleKeyHasherTest {
                     new TargetPath(
                         ImmutableBuildTargetWithOutputs.of(
                                 BuildTargetFactory.newInstance("//base_name_2:rule_name_2"),
-                                OutputLabel.DEFAULT)
+                                OutputLabel.defaultLabel())
                             .toString())))
             .put(
                 ".list_value",

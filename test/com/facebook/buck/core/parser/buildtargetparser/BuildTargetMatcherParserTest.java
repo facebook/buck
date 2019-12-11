@@ -246,14 +246,14 @@ public class BuildTargetMatcherParserTest {
     assertEquals(
         BuildTargetSpec.from(
             ImmutableUnconfiguredBuildTargetWithOutputs.of(
-                unconfiguredBuildTargetView, new OutputLabel("label"))),
+                unconfiguredBuildTargetView, OutputLabel.of("label"))),
         buildTargetPatternParser.parse(
             createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser[label]"));
 
     assertEquals(
         BuildTargetSpec.from(
             ImmutableUnconfiguredBuildTargetWithOutputs.of(
-                unconfiguredBuildTargetView, OutputLabel.DEFAULT)),
+                unconfiguredBuildTargetView, OutputLabel.defaultLabel())),
         buildTargetPatternParser.parse(
             createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser"));
   }

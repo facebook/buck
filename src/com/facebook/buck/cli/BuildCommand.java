@@ -459,7 +459,7 @@ public class BuildCommand extends AbstractCommand {
       // A target may not map to an output label if the build command wasn't invoked with a build
       // pattern that specifies a specific target
       if (!mappedTarget) {
-        builder.add(ImmutableBuildTargetWithOutputs.of(target, OutputLabel.DEFAULT));
+        builder.add(ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
       }
     }
     return builder.build();

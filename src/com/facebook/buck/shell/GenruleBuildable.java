@@ -233,7 +233,7 @@ public class GenruleBuildable implements Buildable {
           ImmutableMap.builderWithExpectedSize(outputs.size());
       for (Map.Entry<String, ImmutableList<String>> outputLabelToOutputs : outputs.entrySet()) {
         mapBuilder.put(
-            new OutputLabel(outputLabelToOutputs.getKey()),
+            OutputLabel.of(outputLabelToOutputs.getKey()),
             outputLabelToOutputs.getValue().stream()
                 .map(
                     p -> {
@@ -319,7 +319,7 @@ public class GenruleBuildable implements Buildable {
     return ImmutableMap.<OutputLabel, ImmutableSet<OutputPath>>builderWithExpectedSize(
             paths.size() + 1)
         .putAll(paths)
-        .put(OutputLabel.DEFAULT, getAllOutputPaths(paths))
+        .put(OutputLabel.defaultLabel(), getAllOutputPaths(paths))
         .build();
   }
 

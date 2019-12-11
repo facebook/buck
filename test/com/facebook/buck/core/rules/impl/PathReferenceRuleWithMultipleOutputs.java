@@ -46,7 +46,7 @@ public class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
     ImmutableMap.Builder<OutputLabel, ImmutableSortedSet<SourcePath>> builder =
         ImmutableMap.builderWithExpectedSize(1 + outputLabelToSource.size());
     builder.put(
-        OutputLabel.DEFAULT,
+        OutputLabel.defaultLabel(),
         source == null ? ImmutableSortedSet.of() : ImmutableSortedSet.of(getSourcePathToOutput()));
     for (Map.Entry<OutputLabel, Path> entry : outputLabelToSource.entrySet()) {
       builder.put(

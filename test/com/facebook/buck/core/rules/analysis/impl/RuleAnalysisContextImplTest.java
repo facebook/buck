@@ -98,7 +98,7 @@ public class RuleAnalysisContextImplTest {
             .resolveSrcs(
                 ImmutableSet.of(
                     DefaultBuildTargetSourcePath.of(
-                        ImmutableBuildTargetWithOutputs.of(target, OutputLabel.DEFAULT)))));
+                        ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel())))));
   }
 
   @Test

@@ -306,7 +306,7 @@ public abstract class AbstractValueVisitorTest {
   }
 
   public static class WithOutputLabel implements FakeBuildable {
-    @AddToRuleKey final OutputLabel label = new OutputLabel("test_label");
+    @AddToRuleKey final OutputLabel label = OutputLabel.of("test_label");
   }
 
   public static class WithSet implements FakeBuildable {

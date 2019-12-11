@@ -42,7 +42,7 @@ public interface HasMultipleOutputs extends BuildRule {
   @Nullable
   @Override
   default SourcePath getSourcePathToOutput() {
-    ImmutableSortedSet<SourcePath> sourcePaths = getSourcePathToOutput(OutputLabel.DEFAULT);
+    ImmutableSortedSet<SourcePath> sourcePaths = getSourcePathToOutput(OutputLabel.defaultLabel());
     return sourcePaths == null || sourcePaths.isEmpty()
         ? null
         : Iterables.getOnlyElement(sourcePaths);

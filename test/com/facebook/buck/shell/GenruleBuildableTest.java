@@ -442,7 +442,7 @@ public class GenruleBuildableTest {
             .toBuildable();
 
     ImmutableSet<Path> actual =
-        buildable.getOutputs(new OutputLabel("label2")).stream()
+        buildable.getOutputs(OutputLabel.of("label2")).stream()
             .map(p -> outputPathResolver.resolvePath(p))
             .collect(ImmutableSet.toImmutableSet());
 
@@ -472,7 +472,7 @@ public class GenruleBuildableTest {
             .toBuildable();
 
     ImmutableSet<Path> actual =
-        buildable.getOutputs(new OutputLabel("label1")).stream()
+        buildable.getOutputs(OutputLabel.of("label1")).stream()
             .map(p -> outputPathResolver.resolvePath(p))
             .collect(ImmutableSet.toImmutableSet());
 
@@ -504,7 +504,7 @@ public class GenruleBuildableTest {
             .toBuildable();
 
     ImmutableSet<Path> actual =
-        buildable.getOutputs(OutputLabel.DEFAULT).stream()
+        buildable.getOutputs(OutputLabel.defaultLabel()).stream()
             .map(p -> outputPathResolver.resolvePath(p))
             .collect(ImmutableSet.toImmutableSet());
 
@@ -537,7 +537,7 @@ public class GenruleBuildableTest {
             .build()
             .toBuildable();
 
-    buildable.getOutputs(new OutputLabel("nonexistent"));
+    buildable.getOutputs(OutputLabel.of("nonexistent"));
   }
 
   @Test
@@ -555,7 +555,7 @@ public class GenruleBuildableTest {
             .build()
             .toBuildable();
 
-    buildable.getOutputs(new OutputLabel("harro"));
+    buildable.getOutputs(OutputLabel.of("harro"));
   }
 
   @Test
@@ -574,7 +574,7 @@ public class GenruleBuildableTest {
             .toBuildable();
 
     ImmutableSet<Path> actual =
-        buildable.getOutputs(OutputLabel.DEFAULT).stream()
+        buildable.getOutputs(OutputLabel.defaultLabel()).stream()
             .map(p -> outputPathResolver.resolvePath(p))
             .collect(ImmutableSet.toImmutableSet());
 

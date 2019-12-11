@@ -291,7 +291,7 @@ public class BuildCommandTest {
         result,
         Matchers.contains(
             ImmutableBuildTargetWithOutputs.of(
-                BuildTargetFactory.newInstance(buildTargetName), new OutputLabel("label"))));
+                BuildTargetFactory.newInstance(buildTargetName), OutputLabel.of("label"))));
   }
 
   @Test
@@ -327,7 +327,7 @@ public class BuildCommandTest {
         result,
         Matchers.contains(
             ImmutableBuildTargetWithOutputs.of(
-                BuildTargetFactory.newInstance(buildTargetName), new OutputLabel("label1"))));
+                BuildTargetFactory.newInstance(buildTargetName), OutputLabel.of("label1"))));
   }
 
   @Test
@@ -366,9 +366,9 @@ public class BuildCommandTest {
         result,
         Matchers.contains(
             ImmutableBuildTargetWithOutputs.of(
-                BuildTargetFactory.newInstance(buildTargetName1), new OutputLabel("label1")),
+                BuildTargetFactory.newInstance(buildTargetName1), OutputLabel.of("label1")),
             ImmutableBuildTargetWithOutputs.of(
-                BuildTargetFactory.newInstance(buildTargetName2), new OutputLabel("label2"))));
+                BuildTargetFactory.newInstance(buildTargetName2), OutputLabel.of("label2"))));
   }
 
   @Test
@@ -406,7 +406,7 @@ public class BuildCommandTest {
         result,
         Matchers.contains(
             ImmutableBuildTargetWithOutputs.of(
-                BuildTargetFactory.newInstance(buildTargetName), OutputLabel.DEFAULT)));
+                BuildTargetFactory.newInstance(buildTargetName), OutputLabel.defaultLabel())));
   }
 
   @Test
@@ -438,7 +438,7 @@ public class BuildCommandTest {
             ImmutableSet.of(new Pair(buildTargetName, "")),
             expected,
             ImmutableMap.of(
-                buildTargetName, ImmutableMap.of(OutputLabel.DEFAULT, Paths.get("unused"))),
+                buildTargetName, ImmutableMap.of(OutputLabel.defaultLabel(), Paths.get("unused"))),
             false);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
@@ -458,7 +458,7 @@ public class BuildCommandTest {
         getGraphsAndBuildTargets(
             ImmutableSet.of(new Pair(buildTargetName, label)),
             Paths.get("path, wrongpath"),
-            ImmutableMap.of(buildTargetName, ImmutableMap.of(new OutputLabel(label), expected)),
+            ImmutableMap.of(buildTargetName, ImmutableMap.of(OutputLabel.of(label), expected)),
             true);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
@@ -484,9 +484,9 @@ public class BuildCommandTest {
             Paths.get("path, wrongpath"),
             ImmutableMap.of(
                 buildTargetName,
-                ImmutableMap.of(new OutputLabel(label), expected),
+                ImmutableMap.of(OutputLabel.of(label), expected),
                 buildTargetName2,
-                ImmutableMap.of(new OutputLabel(label2), expected2)),
+                ImmutableMap.of(OutputLabel.of(label2), expected2)),
             true);
     CommandRunnerParams params =
         createTestParams(ImmutableSet.of(buildTargetName, buildTargetName2));
@@ -516,12 +516,12 @@ public class BuildCommandTest {
             ImmutableMap.of(
                 buildTargetName,
                 ImmutableMap.of(
-                    new OutputLabel(label),
+                    OutputLabel.of(label),
                     Paths.get("path, timeforlunch"),
-                    new OutputLabel(label2),
+                    OutputLabel.of(label2),
                     Paths.get("path, timeforsnacc")),
                 buildTargetName2,
-                ImmutableMap.of(new OutputLabel(label3), Paths.get("path, timefornoms"))),
+                ImmutableMap.of(OutputLabel.of(label3), Paths.get("path, timefornoms"))),
             true);
     CommandRunnerParams params =
         createTestParams(ImmutableSet.of(buildTargetName, buildTargetName2));
@@ -548,7 +548,7 @@ public class BuildCommandTest {
             Paths.get("path, wrongpath"),
             ImmutableMap.of(
                 buildTargetName,
-                ImmutableMap.of(new OutputLabel(label), Paths.get("path, timeforlunch"))),
+                ImmutableMap.of(OutputLabel.of(label), Paths.get("path, timeforlunch"))),
             true);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
@@ -567,7 +567,7 @@ public class BuildCommandTest {
             Paths.get("path, correctPath"),
             ImmutableMap.of(
                 buildTargetName,
-                ImmutableMap.of(new OutputLabel(label), Paths.get("path, timeforlunch"))),
+                ImmutableMap.of(OutputLabel.of(label), Paths.get("path, timeforlunch"))),
             true);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
@@ -590,9 +590,9 @@ public class BuildCommandTest {
             ImmutableMap.of(
                 buildTargetName,
                 ImmutableMap.of(
-                    new OutputLabel("unrequestedLabel"),
+                    OutputLabel.of("unrequestedLabel"),
                     Paths.get("path, nottimeforlunch"),
-                    new OutputLabel(label),
+                    OutputLabel.of(label),
                     expected)),
             true);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
@@ -618,7 +618,7 @@ public class BuildCommandTest {
             Paths.get("path, wrongpath"),
             ImmutableMap.of(
                 buildTargetName,
-                ImmutableMap.of(new OutputLabel(label), Paths.get("path, timeforlunch"))),
+                ImmutableMap.of(OutputLabel.of(label), Paths.get("path, timeforlunch"))),
             false);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
@@ -687,7 +687,7 @@ public class BuildCommandTest {
     return BuildTargetSpec.from(
         ImmutableUnconfiguredBuildTargetWithOutputs.of(
             UnconfiguredBuildTargetFactoryForTests.newInstance(projectFilesystem, buildTargetName),
-            new OutputLabel(label)));
+            OutputLabel.of(label)));
   }
 
   private TargetNode<FakeTargetNodeArg> getTargetNode(BuildTarget target) {
@@ -735,8 +735,8 @@ public class BuildCommandTest {
           ImmutableBuildTargetWithOutputs.of(
               target,
               targetNameWithLabel.getSecond().isEmpty()
-                  ? OutputLabel.DEFAULT
-                  : new OutputLabel(targetNameWithLabel.getSecond())),
+                  ? OutputLabel.defaultLabel()
+                  : OutputLabel.of(targetNameWithLabel.getSecond())),
           target);
     }
 

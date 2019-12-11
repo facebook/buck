@@ -90,7 +90,7 @@ public class TargetWithOutputsTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar");
 
-    assertEquals(expected.apply("//foo:bar", OutputLabel.DEFAULT), seen);
+    assertEquals(expected.apply("//foo:bar", OutputLabel.defaultLabel()), seen);
   }
 
   @Test
@@ -104,7 +104,7 @@ public class TargetWithOutputsTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar[whee]");
 
-    assertEquals(expected.apply("//foo:bar", new OutputLabel("whee")), seen);
+    assertEquals(expected.apply("//foo:bar", OutputLabel.of("whee")), seen);
   }
 
   @Test
@@ -132,7 +132,7 @@ public class TargetWithOutputsTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar#src[whee]");
 
-    assertEquals(expected.apply("//foo:bar#src", new OutputLabel("whee")), seen);
+    assertEquals(expected.apply("//foo:bar#src", OutputLabel.of("whee")), seen);
   }
 
   @Test
@@ -146,7 +146,7 @@ public class TargetWithOutputsTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar#flavor1,flavor2[whee]");
 
-    assertEquals(expected.apply("//foo:bar#flavor1,flavor2", new OutputLabel("whee")), seen);
+    assertEquals(expected.apply("//foo:bar#flavor1,flavor2", OutputLabel.of("whee")), seen);
   }
 
   @Test
@@ -174,7 +174,7 @@ public class TargetWithOutputsTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             "//foo:bar#flavor1,flavor2");
 
-    assertEquals(expected.apply("//foo:bar#flavor1,flavor2", OutputLabel.DEFAULT), seen);
+    assertEquals(expected.apply("//foo:bar#flavor1,flavor2", OutputLabel.defaultLabel()), seen);
   }
 
   @Test
@@ -189,7 +189,8 @@ public class TargetWithOutputsTypeCoercerTest {
             ":hangry");
 
     assertEquals(
-        expected.apply("//java/com/facebook/buck/example:hangry", OutputLabel.DEFAULT), seen);
+        expected.apply("//java/com/facebook/buck/example:hangry", OutputLabel.defaultLabel()),
+        seen);
   }
 
   @Test
@@ -204,7 +205,7 @@ public class TargetWithOutputsTypeCoercerTest {
             ":bar[whee]");
 
     assertEquals(
-        expected.apply("//java/com/facebook/buck/example:bar", new OutputLabel("whee")), seen);
+        expected.apply("//java/com/facebook/buck/example:bar", OutputLabel.of("whee")), seen);
   }
 
   @Test
@@ -219,6 +220,6 @@ public class TargetWithOutputsTypeCoercerTest {
             ":bar#yum[whee]");
 
     assertEquals(
-        expected.apply("//java/com/facebook/buck/example:bar#yum", new OutputLabel("whee")), seen);
+        expected.apply("//java/com/facebook/buck/example:bar#yum", OutputLabel.of("whee")), seen);
   }
 }

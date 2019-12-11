@@ -31,6 +31,6 @@ public class OutputLabelValueTypeInfo implements ValueTypeInfo<OutputLabel> {
 
   @Override
   public <E extends Exception> OutputLabel create(ValueCreator<E> creator) throws E {
-    return new OutputLabel(creator.createString());
+    return OutputLabel.of(creator.createString());
   }
 }

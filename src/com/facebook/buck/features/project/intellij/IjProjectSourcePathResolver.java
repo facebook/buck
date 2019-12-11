@@ -340,7 +340,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
         constructorArg.getOuts().get();
     return Iterables.getOnlyElement(
         outputLabelToOutputs.entrySet().stream()
-            .filter(e -> new OutputLabel(e.getKey()).equals(outputLabel))
+            .filter(e -> OutputLabel.of(e.getKey()).equals(outputLabel))
             .flatMap(
                 e ->
                     e.getValue().stream()

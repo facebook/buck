@@ -999,7 +999,7 @@ public class GenruleTest {
                     ImmutableList.of("output2a")))
             .build(graphBuilder, new FakeProjectFilesystem());
 
-    genrule.getSourcePathToOutput(OutputLabel.DEFAULT);
+    genrule.getSourcePathToOutput(OutputLabel.defaultLabel());
   }
 
   @Test
@@ -1016,7 +1016,7 @@ public class GenruleTest {
 
     ImmutableSet<Path> actual =
         convertSourcePathsToPaths(
-            sourcePathResolver, genrule.getSourcePathToOutput(OutputLabel.DEFAULT));
+            sourcePathResolver, genrule.getSourcePathToOutput(OutputLabel.defaultLabel()));
     assertThat(
         actual, Matchers.containsInAnyOrder(getExpectedPath(fakeFileSystem, target, "output2a")));
   }
@@ -1040,7 +1040,7 @@ public class GenruleTest {
 
     ImmutableSet<Path> actual =
         convertSourcePathsToPaths(
-            sourcePathResolver, genrule.getSourcePathToOutput(new OutputLabel("label1")));
+            sourcePathResolver, genrule.getSourcePathToOutput(OutputLabel.of("label1")));
     assertThat(
         actual,
         Matchers.containsInAnyOrder(
@@ -1074,15 +1074,15 @@ public class GenruleTest {
 
     assertThat(actual.entrySet(), Matchers.hasSize(3));
     assertThat(
-        actual.get(new OutputLabel("label1")),
+        actual.get(OutputLabel.of("label1")),
         Matchers.containsInAnyOrder(
             getExpectedPath(fakeFileSystem, target, "output1a"),
             getExpectedPath(fakeFileSystem, target, "output1b")));
     assertThat(
-        actual.get(new OutputLabel("label2")),
+        actual.get(OutputLabel.of("label2")),
         Matchers.containsInAnyOrder(getExpectedPath(fakeFileSystem, target, "output2a")));
     assertThat(
-        actual.get(OutputLabel.DEFAULT),
+        actual.get(OutputLabel.defaultLabel()),
         Matchers.containsInAnyOrder(
             getExpectedPath(fakeFileSystem, target, "output1a"),
             getExpectedPath(fakeFileSystem, target, "output1b"),

@@ -109,7 +109,7 @@ public class SourcePathTypeCoercerTest {
     assertEquals(
         DefaultBuildTargetSourcePath.of(
             ImmutableBuildTargetWithOutputs.of(
-                BuildTargetFactory.newInstance("//:hello"), new OutputLabel("label"))),
+                BuildTargetFactory.newInstance("//:hello"), OutputLabel.of("label"))),
         sourcePath);
   }
 
@@ -142,7 +142,7 @@ public class SourcePathTypeCoercerTest {
     assertEquals(
         DefaultBuildTargetSourcePath.of(
             ImmutableBuildTargetWithOutputs.of(
-                BuildTargetFactory.newInstance("//:hello"), new OutputLabel("label"))),
+                BuildTargetFactory.newInstance("//:hello"), OutputLabel.of("label"))),
         sourcePath);
   }
 

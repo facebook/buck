@@ -49,7 +49,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
       UnconfiguredBuildTargetView unconfiguredBuildTargetView, BuildFileSpec buildFileSpec) {
     return ImmutableBuildTargetSpec.of(
         ImmutableUnconfiguredBuildTargetWithOutputs.of(
-            unconfiguredBuildTargetView, OutputLabel.DEFAULT),
+            unconfiguredBuildTargetView, OutputLabel.defaultLabel()),
         buildFileSpec);
   }
 

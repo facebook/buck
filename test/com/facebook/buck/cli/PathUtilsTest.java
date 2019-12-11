@@ -60,7 +60,8 @@ public class PathUtilsTest {
     Path expected = fileSystem.resolve(fileSystem.getBuckPaths().getBuckOut()).resolve("foo");
 
     assertThat(
-        PathUtils.getUserFacingOutputPath(pathResolver, rule, true, OutputLabel.DEFAULT, true)
+        PathUtils.getUserFacingOutputPath(
+                pathResolver, rule, true, OutputLabel.defaultLabel(), true)
             .get(),
         Matchers.equalTo(expected));
   }
@@ -73,7 +74,8 @@ public class PathUtilsTest {
     Path expected = fileSystem.getRootPath().resolve("foo");
 
     assertThat(
-        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.DEFAULT, true)
+        PathUtils.getUserFacingOutputPath(
+                pathResolver, rule, false, OutputLabel.defaultLabel(), true)
             .get(),
         Matchers.equalTo(expected));
   }
@@ -87,17 +89,17 @@ public class PathUtilsTest {
             new FakeProjectFilesystem(),
             null,
             ImmutableMap.of(
-                new OutputLabel("baz"),
+                OutputLabel.of("baz"),
                 Paths.get("baz"),
-                new OutputLabel("bar"),
+                OutputLabel.of("bar"),
                 Paths.get("bar"),
-                new OutputLabel("qux"),
+                OutputLabel.of("qux"),
                 Paths.get(("qux"))));
     graphBuilder.addToIndex(rule);
     Path expected = fileSystem.getRootPath().resolve("bar");
 
     assertThat(
-        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, new OutputLabel("bar"), true)
+        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("bar"), true)
             .get(),
         Matchers.equalTo(expected));
   }
@@ -111,16 +113,16 @@ public class PathUtilsTest {
             new FakeProjectFilesystem(),
             null,
             ImmutableMap.of(
-                new OutputLabel("baz"),
+                OutputLabel.of("baz"),
                 Paths.get("baz"),
-                new OutputLabel("bar"),
+                OutputLabel.of("bar"),
                 Paths.get("bar"),
-                new OutputLabel("qux"),
+                OutputLabel.of("qux"),
                 Paths.get(("qux"))));
     graphBuilder.addToIndex(rule);
 
     assertFalse(
-        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, new OutputLabel("dne"), true)
+        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("dne"), true)
             .isPresent());
   }
 
@@ -134,7 +136,7 @@ public class PathUtilsTest {
     BuildRule rule = new PathReferenceRule(buildTarget, fileSystem, Paths.get("foo"));
     graphBuilder.addToIndex(rule);
 
-    PathUtils.getUserFacingOutputPath(pathResolver, rule, false, new OutputLabel("label"), true);
+    PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("label"), true);
   }
 
   @Test
@@ -150,10 +152,10 @@ public class PathUtilsTest {
             buildTarget,
             fileSystem,
             Paths.get("foo"),
-            ImmutableMap.of(new OutputLabel("foo"), Paths.get("foo")));
+            ImmutableMap.of(OutputLabel.of("foo"), Paths.get("foo")));
     graphBuilder.addToIndex(rule);
 
-    PathUtils.getUserFacingOutputPath(pathResolver, rule, false, new OutputLabel("label"), false)
+    PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("label"), false)
         .get();
   }
 
@@ -167,7 +169,8 @@ public class PathUtilsTest {
     Path expected = fileSystem.getRootPath().resolve("bar");
 
     assertThat(
-        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.DEFAULT, false)
+        PathUtils.getUserFacingOutputPath(
+                pathResolver, rule, false, OutputLabel.defaultLabel(), false)
             .get(),
         Matchers.equalTo(expected));
   }

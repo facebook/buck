@@ -54,29 +54,29 @@ public class BuildTargetWithOutputsTest {
   @Test
   public void sameTargetsWithoutOutputLabelsAreEqual() {
     assertEquals(
-        targetGenerator.apply("//:sometarget", OutputLabel.DEFAULT),
-        targetGenerator.apply("//:sometarget", OutputLabel.DEFAULT));
+        targetGenerator.apply("//:sometarget", OutputLabel.defaultLabel()),
+        targetGenerator.apply("//:sometarget", OutputLabel.defaultLabel()));
   }
 
   @Test
   public void sameTargetsWithSameOutputLabelsAreEqual() {
     assertEquals(
-        targetGenerator.apply("//:sometarget", new OutputLabel("label")),
-        targetGenerator.apply("//:sometarget", new OutputLabel("label")));
+        targetGenerator.apply("//:sometarget", OutputLabel.of("label")),
+        targetGenerator.apply("//:sometarget", OutputLabel.of("label")));
   }
 
   @Test
   public void differentTargetsAreWithoutOutputLabelAreNotEqual() {
     assertNotEquals(
-        targetGenerator.apply("//:sometarget", OutputLabel.DEFAULT),
-        targetGenerator.apply("//:other", OutputLabel.DEFAULT));
+        targetGenerator.apply("//:sometarget", OutputLabel.defaultLabel()),
+        targetGenerator.apply("//:other", OutputLabel.defaultLabel()));
   }
 
   @Test
   public void targetWithOutputLabelIsGreaterThanNoOutputLabel() {
     assertThat(
-        targetGenerator.apply("//:sometarget", new OutputLabel("label")),
-        Matchers.greaterThan(targetGenerator.apply("//:sometarget", OutputLabel.DEFAULT)));
+        targetGenerator.apply("//:sometarget", OutputLabel.of("label")),
+        Matchers.greaterThan(targetGenerator.apply("//:sometarget", OutputLabel.defaultLabel())));
   }
 
   @Test
@@ -84,20 +84,21 @@ public class BuildTargetWithOutputsTest {
     assertEquals(
         "label".compareTo("other"),
         targetGenerator
-            .apply("//:sometarget", new OutputLabel("label"))
-            .compareTo(targetGenerator.apply("//:sometarget", new OutputLabel("other"))));
+            .apply("//:sometarget", OutputLabel.of("label"))
+            .compareTo(targetGenerator.apply("//:sometarget", OutputLabel.of("other"))));
   }
 
   @Test
   public void toStringPrintsBracketsIfNonEmptyOutputLabel() {
     assertEquals(
         "//:sometarget[label]",
-        targetGenerator.apply("//:sometarget", new OutputLabel("label")).toString());
+        targetGenerator.apply("//:sometarget", OutputLabel.of("label")).toString());
   }
 
   @Test
   public void toStringOmitsBracketsIfEmptyOutputLabel() {
     assertEquals(
-        "//:sometarget", targetGenerator.apply("//:sometarget", OutputLabel.DEFAULT).toString());
+        "//:sometarget",
+        targetGenerator.apply("//:sometarget", OutputLabel.defaultLabel()).toString());
   }
 }

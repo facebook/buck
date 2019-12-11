@@ -96,10 +96,10 @@ public class SourcePathResolverTest {
             buildTarget,
             new FakeProjectFilesystem(),
             null,
-            ImmutableMap.of(new OutputLabel("bar"), expectedPath));
+            ImmutableMap.of(OutputLabel.of("bar"), expectedPath));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
-        ImmutableBuildTargetWithOutputs.of(buildTarget, new OutputLabel("bar"));
+        ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
     assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
@@ -118,15 +118,15 @@ public class SourcePathResolverTest {
             new FakeProjectFilesystem(),
             null,
             ImmutableMap.of(
-                new OutputLabel("baz"),
+                OutputLabel.of("baz"),
                 Paths.get("foo").resolve("baz"),
-                new OutputLabel("bar"),
+                OutputLabel.of("bar"),
                 expectedPath,
-                new OutputLabel("qux"),
+                OutputLabel.of("qux"),
                 Paths.get("foo").resolve("qux")));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
-        ImmutableBuildTargetWithOutputs.of(buildTarget, new OutputLabel("bar"));
+        ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
     assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
@@ -147,10 +147,10 @@ public class SourcePathResolverTest {
             buildTarget,
             new FakeProjectFilesystem(),
             path,
-            ImmutableMap.of(new OutputLabel("bar"), path));
+            ImmutableMap.of(OutputLabel.of("bar"), path));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
-        ImmutableBuildTargetWithOutputs.of(buildTarget, new OutputLabel("baz"));
+        ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.of("baz"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
     pathResolver.getRelativePath(sourcePath);
@@ -171,7 +171,7 @@ public class SourcePathResolverTest {
         new PathReferenceRule(buildTarget, new FakeProjectFilesystem(), Paths.get("foo"));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
-        ImmutableBuildTargetWithOutputs.of(buildTarget, new OutputLabel("bar"));
+        ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
     pathResolver.getRelativePath(sourcePath);

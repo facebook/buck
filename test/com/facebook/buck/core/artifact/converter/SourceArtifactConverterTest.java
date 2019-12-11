@@ -62,7 +62,7 @@ public class SourceArtifactConverterTest {
     PathSourcePath pathSourcePath = PathSourcePath.of(filesystem, Paths.get("source"));
     DefaultBuildTargetSourcePath buildTargetSourcePath =
         DefaultBuildTargetSourcePath.of(
-            ImmutableBuildTargetWithOutputs.of(target, OutputLabel.DEFAULT));
+            ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
 
     ImmutableSet<SourcePath> sources = ImmutableSet.of(pathSourcePath, buildTargetSourcePath);
 
