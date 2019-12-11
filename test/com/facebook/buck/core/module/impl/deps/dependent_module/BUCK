@@ -5,7 +5,7 @@ buck_module(
     srcs = glob(["*.java"]),
     provided_deps = [
         "//test/com/facebook/buck/core/module/impl:test_extension",
-        "//test/com/facebook/buck/core/module/impl/modulewithexternaldeps/test_module:test_module",
+        "//test/com/facebook/buck/core/module/impl/deps/test_module:test_module",
     ],
     visibility = ["PUBLIC"],
 )

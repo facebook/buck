@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.module.impl.modulewithexternaldeps;
+package com.facebook.buck.core.module.impl.deps;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -30,7 +30,7 @@ import java.io.Serializable;
 import java.util.List;
 import org.pf4j.PluginManager;
 
-public class ModuleWithExternalDependenciesTest {
+public class ModuleWithDependenciesTest {
 
   private static final String HASH = "some content that never changes";
 

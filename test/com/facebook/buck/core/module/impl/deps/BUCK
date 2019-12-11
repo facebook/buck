@@ -1,5 +1,5 @@
 java_library(
-    name = "modulewithdeps",
+    name = "deps",
     srcs = glob(["*.java"]),
     deps = [
         "//src/com/facebook/buck/core/module/impl:impl",
@@ -12,10 +12,10 @@ java_library(
 )
 
 java_binary(
-    name = "modulewithdeps-jar",
-    main_class = "com.facebook.buck.core.module.impl.modulewithdeps.ModuleWithDependenciesTest",
+    name = "deps-jar",
+    main_class = "com.facebook.buck.core.module.impl.deps.ModuleWithDependenciesTest",
     deps = [
-        ":modulewithdeps",
+        ":deps",
         "//third-party/java/slf4j:slf4j",
     ],
 )
@@ -43,7 +43,7 @@ zip_file(
         ":meta-inf",
     ],
     zip_srcs = [
-        "//test/com/facebook/buck/core/module/impl/modulewithdeps/test_module:test_module-module",
+        "//test/com/facebook/buck/core/module/impl/deps/test_module:test_module-module",
     ],
 )
 
@@ -54,7 +54,7 @@ zip_file(
         ":meta-inf",
     ],
     zip_srcs = [
-        "//test/com/facebook/buck/core/module/impl/modulewithdeps/dependent_module:dependent_module-module",
+        "//test/com/facebook/buck/core/module/impl/deps/dependent_module:dependent_module-module",
     ],
 )
 
@@ -68,11 +68,11 @@ genrule(
 
 # Running tests as a shell script to reconstruct the layout of modules and how they are loaded
 python_test(
-    name = "modulewithdeps-test",
+    name = "deps-test",
     srcs = [
         "//test/com/facebook/buck/core/module/impl:test_app.py",
     ],
     env = {
-        "CMD": "java -Dpf4j.pluginsDir=$(location :copy-modules) -jar $(location :modulewithdeps-jar)",
+        "CMD": "java -Dpf4j.pluginsDir=$(location :copy-modules) -jar $(location :deps-jar)",
     },
 )

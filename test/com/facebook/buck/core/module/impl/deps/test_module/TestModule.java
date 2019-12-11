@@ -14,10 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.core.module.impl.modulewithdeps.dependent_module;
+package com.facebook.buck.core.module.impl.deps.test_module;
 
-import com.facebook.buck.core.module.impl.TestExtension;
-import org.pf4j.Extension;
+import com.facebook.buck.core.module.BuckModule;
 
-@Extension
-public class TestModuleExtension implements TestExtension {}
+@BuckModule
+public class TestModule {}

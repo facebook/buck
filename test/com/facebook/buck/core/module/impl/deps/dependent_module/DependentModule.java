@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.core.module.impl.modulewithdeps.test_module;
+package com.facebook.buck.core.module.impl.deps.dependent_module;
 
 import com.facebook.buck.core.module.BuckModule;
+import com.facebook.buck.core.module.impl.deps.test_module.TestModule;
 
-@BuckModule
-public class TestModule {}
+@BuckModule(dependencies = {TestModule.class})
+public class DependentModule {}

@@ -14,11 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.core.module.impl.modulewithexternaldeps.test_module;
+package com.facebook.buck.core.module.impl.externdeps.dependent_module;
 
-import com.facebook.buck.core.module.impl.TestExtension;
-import java.io.Serializable;
-import org.pf4j.Extension;
+import com.facebook.buck.core.module.BuckModule;
+import com.facebook.buck.core.module.impl.externdeps.test_module.TestModule;
 
-@Extension
-public class TestModuleExtension implements TestExtension, Serializable {}
+@BuckModule(dependencies = {TestModule.class})
+public class DependentModule {}

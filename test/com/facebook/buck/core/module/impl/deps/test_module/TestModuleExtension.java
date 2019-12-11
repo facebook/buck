@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,9 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.core.module.impl.modulewithexternaldeps.test_module;
+package com.facebook.buck.core.module.impl.deps.test_module;
 
-import com.facebook.buck.core.module.BuckModule;
+import com.facebook.buck.core.module.impl.TestExtension;
+import java.io.Serializable;
+import org.pf4j.Extension;
 
-@BuckModule
-public class TestModule {}
+@Extension
+public class TestModuleExtension implements TestExtension, Serializable {}

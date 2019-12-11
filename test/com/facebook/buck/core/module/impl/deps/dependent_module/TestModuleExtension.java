@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.module.impl.modulewithexternaldeps.dependent_module;
+package com.facebook.buck.core.module.impl.deps.dependent_module;
 
 import com.facebook.buck.core.module.impl.TestExtension;
 import org.pf4j.Extension;
