@@ -4,7 +4,7 @@ load(
     "convert_modules_to_resources",
     "get_module_binary",
 )
-load("@bazel_skylib//lib:dicts.bzl", "dicts")
+load("@buck_bazel_skylib//lib:dicts.bzl", "dicts")
 load("//tools/build_rules:python_rules.bzl", "interpreter_override_args")
 load(":defs.bzl", "get_gen_buck_info_command")
 

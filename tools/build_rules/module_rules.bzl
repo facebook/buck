@@ -14,7 +14,7 @@
 
 """Contains build rules for Buck modules"""
 
-load("@bazel_skylib//lib:collections.bzl", "collections")
+load("@buck_bazel_skylib//lib:collections.bzl", "collections")
 load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 load("//tools/build_rules:module_rules_for_tests.bzl", "convert_module_deps_to_test")
 

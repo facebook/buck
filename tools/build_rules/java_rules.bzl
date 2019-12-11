@@ -14,7 +14,7 @@
 
 """Module containing java macros."""
 
-load("@bazel_skylib//lib:collections.bzl", "collections")
+load("@buck_bazel_skylib//lib:collections.bzl", "collections")
 load("//tools/build_rules:module_rules_for_tests.bzl", "convert_module_deps_to_test")
 
 def _append_and_get_uniq_deps(kwargs, key, new_deps):

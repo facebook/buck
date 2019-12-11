@@ -86,7 +86,7 @@ Example:
   `checkstyle/BUILD`:
 
   ```python
-  load("@bazel_skylib//:skylark_library.bzl", "skylark_library")
+  load("@buck_bazel_skylib//:skylark_library.bzl", "skylark_library")
 
   skylark_library(
       name = "checkstyle-rules",
@@ -97,7 +97,7 @@ Example:
   `lua/BUILD`:
 
   ```python
-  load("@bazel_skylib//:skylark_library.bzl", "skylark_library")
+  load("@buck_bazel_skylib//:skylark_library.bzl", "skylark_library")
 
   skylark_library(
       name = "lua-rules",
