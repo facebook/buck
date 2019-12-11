@@ -127,7 +127,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     this(
         root,
         ImmutableSet.of(),
-        BuckPaths.createDefaultBuckPaths(cellName, root),
+        BuckPaths.createDefaultBuckPaths(cellName, root, false),
         projectFilesystemDelegate,
         winFSInstance);
   }

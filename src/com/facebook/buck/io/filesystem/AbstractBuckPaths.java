@@ -27,9 +27,10 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractBuckPaths {
 
-  public static BuckPaths createDefaultBuckPaths(CanonicalCellName cellName, Path rootPath) {
+  public static BuckPaths createDefaultBuckPaths(
+      CanonicalCellName cellName, Path rootPath, boolean buckOutIncludeTargetConfigHash) {
     Path buckOut = rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString());
-    return BuckPaths.of(cellName, buckOut, buckOut);
+    return BuckPaths.of(cellName, buckOut, buckOut, buckOutIncludeTargetConfigHash);
   }
 
   @Value.Parameter
@@ -52,6 +53,10 @@ abstract class AbstractBuckPaths {
    */
   @Value.Parameter
   public abstract Path getConfiguredBuckOut();
+
+  /** Whether to include the target configuration hash on buck-out. */
+  @Value.Parameter
+  public abstract boolean shouldIncludeTargetConfigHash();
 
   /** The version the buck output directory was created for */
   @Value.Derived
