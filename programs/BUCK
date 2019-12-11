@@ -23,6 +23,7 @@ python_library(
     name = "buck_version",
     srcs = [
         "buck_version.py",
+        "buck_version_mercurial.py",
     ],
     deps = [
         ":subprocutils",

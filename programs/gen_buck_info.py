@@ -19,7 +19,14 @@ import os
 import sys
 import time
 
-from programs import buck_version, java_version
+import buck_version
+import buck_version_mercurial
+import java_version
+
+SUPPORTED_VCS = {
+    '.git': buck_version,
+    '.hg': buck_version_mercurial,
+    }
 
 
 def main(argv):
@@ -44,23 +51,36 @@ def main(argv):
     # Locate the root of the buck repo.  We'll need to be there to
     # generate the buck version UID.
     path = os.getcwd()
-    while not os.path.exists(os.path.join(path, ".buckconfig")):
-        path = os.path.dirname(path)
+    candidate_paths = []
+    vcs_module = None
+    while vcs_module is None and os.path.dirname(path) != path:
+        while not os.path.exists(os.path.join(path, ".buckconfig")):
+            path = os.path.dirname(path)
+        for vcs_dir, module in SUPPORTED_VCS.items():
+            if os.path.exists(os.path.join(path, vcs_dir)):
+                vcs_module = module
+                break
+        else:
+            candidate_paths.append(path)
+            path = os.path.dirname(path)
+
+    if vcs_module is None:
+        path = candidate_paths[0]
 
     if args.release_version:
         version = args.release_version
         timestamp = args.release_timestamp
         dirty = False
-    elif os.path.exists(os.path.join(path, ".git")):
+    elif vcs_module is not None:
         # Attempt to create a "clean" version, but fall back to a "dirty"
         # one if need be.
-        version = buck_version.get_clean_buck_version(path)
+        version = vcs_module.get_clean_buck_version(path)
         timestamp = -1
         if version is None:
-            version = buck_version.get_dirty_buck_version(path)
+            version = vcs_module.get_dirty_buck_version(path)
         else:
-            timestamp = buck_version.get_git_revision_timestamp(path)
-        dirty = buck_version.is_dirty(path)
+            timestamp = vcs_module.get_vcs_revision_timestamp(path)
+        dirty = vcs_module.is_dirty(path)
     else:
         # We're building outside a git repo. Check for the special
         # .buckrelease file created by the release process.
