@@ -149,9 +149,11 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputHashDir)));
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
+    // Do not clear existing directory which might contain secondary dex files that are not
+    // re-merged (since their contents did not change).
+    steps.add(
+        MkdirStep.of(
+          BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), secondaryDexDir)));
     steps.addAll(
         MakeCleanDirectoryStep.of(
