@@ -41,7 +41,9 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -65,6 +67,8 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final ImmutableList<SourcePath> dependencyResourceApks;
   @AddToRuleKey private final Tool aapt2Tool;
   @AddToRuleKey private final ImmutableList<String> additionalAaptParams;
+  @AddToRuleKey private final boolean filterLocales;
+  @AddToRuleKey private final ImmutableSet<String> locales;
   private final Path androidJar;
   private final BuildableSupport.DepsSupplier depsSupplier;
 
@@ -87,7 +91,9 @@ public class Aapt2Link extends AbstractBuildRule {
       boolean noResourceRemoval,
       Tool aapt2Tool,
       ImmutableList<String> additionalAaptParams,
-      Path androidJar) {
+      Path androidJar,
+      boolean filterLocales,
+      ImmutableSet<String> locales) {
     super(buildTarget, projectFilesystem);
     this.compileRules = compileRules;
     this.manifest = manifest;
@@ -104,6 +110,8 @@ public class Aapt2Link extends AbstractBuildRule {
     this.aapt2Tool = aapt2Tool;
     this.additionalAaptParams = additionalAaptParams;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
+    this.filterLocales = filterLocales;
+    this.locales = locales;
   }
 
   @Override
@@ -273,6 +281,14 @@ public class Aapt2Link extends AbstractBuildRule {
 
       if (packageIdOffset != 0) {
         builder.add("--package-id", String.format("0x%x", BASE_PACKAGE_ID + packageIdOffset));
+      }
+
+      if (filterLocales && !locales.isEmpty()) {
+        // "NONE" means "en", update the list of locales
+        ImmutableSet<String> updatedLocales =
+            ImmutableSet.copyOf(
+                Collections2.transform(locales, (String i) -> "NONE".equals(i) ? "en" : i));
+        builder.add("-c", Joiner.on(',').join(updatedLocales));
       }
 
       builder.add("--proguard", getProguardConfigPath().toString());

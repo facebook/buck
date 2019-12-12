@@ -318,8 +318,7 @@ public class AndroidBinaryRDotJavaIntegrationTest {
   }
 
   private Path buildApk(String target) throws IOException {
-    ImmutableMap<String, Path> outputs =
-        workspace.buildMultipleAndReturnOutputs("//apps/sample:app_with_aapt2");
+    ImmutableMap<String, Path> outputs = workspace.buildMultipleAndReturnOutputs(target);
     return outputs.get(target);
   }
 
@@ -396,5 +395,30 @@ public class AndroidBinaryRDotJavaIntegrationTest {
         "Expected binary files " + firstFlataFile + " and " + secondFlataFile + " to be identical",
         firstFlataBytes,
         secondFlataBytes);
+  }
+
+  // TODO(bduff): find a better place for this and other aapt2 tests
+  @Test
+  public void aapt2FilteringWithAapt1Fails() throws IOException {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+
+    workspace.runBuckBuild("//apps/sample_wrong_aapt:sample_wrong_aapt").assertFailure();
+  }
+
+  @Test
+  public void aapt2FilteringStripsLocales() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+
+    // Disable resource removal.
+    workspace.addBuckConfigLocalOption("android", "aapt_no_resource_removal", "true");
+
+    // First check that we include the pt locale in non-filtered builds.
+    Path apk = buildApk("//apps/sample:app_with_aapt2");
+    assertHasResource(apk, "(pt)");
+
+    // Now build the filtered version, and check that it doesn't contain the pt locale
+    apk = buildApk("//apps/sample:app_with_aapt2_locale_filtering");
+
+    assertDoesNotHaveResource(apk, "(pt)");
   }
 }

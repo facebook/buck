@@ -101,6 +101,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final APKModuleGraph apkModuleGraph;
   private final boolean useProtoFormat;
   private final boolean failOnLegacyAapt2Errors;
+  private final boolean useAapt2LocaleFiltering;
 
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
@@ -132,7 +133,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean noResourceRemoval,
       APKModuleGraph apkModuleGraph,
       boolean useProtoFormat,
-      boolean failOnLegacyAapt2Errors) {
+      boolean failOnLegacyAapt2Errors,
+      boolean useAapt2LocaleFiltering) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
@@ -163,6 +165,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.useProtoFormat = useProtoFormat;
     this.failOnLegacyAapt2Errors = failOnLegacyAapt2Errors;
     this.noResourceRemoval = noResourceRemoval;
+    this.useAapt2LocaleFiltering = useAapt2LocaleFiltering;
   }
 
   @Value.Immutable
@@ -189,11 +192,22 @@ class AndroidBinaryResourcesGraphEnhancer {
   AndroidBinaryResourcesGraphEnhancementResult enhance(
       AndroidPackageableCollection packageableCollection) {
 
+    boolean needsToFilterForLocales = !locales.isEmpty();
+    // If we're using aapt2 locale filtering, then we do filtering later when we invoke aapt2,
+    // so we can skip creating the resource filter tree.
+    if (useAapt2LocaleFiltering) {
+      if (aaptMode != AaptMode.AAPT2) {
+        throw new HumanReadableException(
+            "use_aapt2_locale_filtering=True is incompatible with aapt_mode=" + aaptMode);
+      }
+      needsToFilterForLocales = false;
+    }
+
     boolean needsResourceFiltering =
         resourceFilter.isEnabled()
             || postFilterResourcesCmd.isPresent()
             || resourceCompressionMode.isStoreStringsAsAssets()
-            || !locales.isEmpty();
+            || needsToFilterForLocales;
 
     int packageIdOffset = 0;
     ImmutableSet.Builder<SourcePath> pathToRDotTxtFiles = ImmutableSet.builder();
@@ -564,7 +578,9 @@ class AndroidBinaryResourcesGraphEnhancer {
         noResourceRemoval,
         aapt2ToolProvider.resolve(graphBuilder, aaptLinkBuildTarget.getTargetConfiguration()),
         additionalAaptParams,
-        androidPlatformTarget.getAndroidJar());
+        androidPlatformTarget.getAndroidJar(),
+        useAapt2LocaleFiltering,
+        locales);
   }
 
   public static ImmutableList<Aapt2Compile> createAapt2CompileablesForResourceProvider(

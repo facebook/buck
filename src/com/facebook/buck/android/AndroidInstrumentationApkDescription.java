@@ -263,7 +263,8 @@ public class AndroidInstrumentationApkDescription
                 apkUnderTest.getRulesToExcludeFromDex(), apkUnderTestTransitiveClasspathDeps),
             false,
             new NoopAndroidNativeTargetConfigurationMatcher(),
-            androidBuckConfig.getFailOnLegacyAaptErrors());
+            androidBuckConfig.getFailOnLegacyAaptErrors(),
+            false /* useAapt2LocaleFiltering */);
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
     AndroidBinaryFilesInfo filesInfo =

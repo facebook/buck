@@ -130,6 +130,12 @@ public interface AndroidGraphEnhancerArgs
 
   ImmutableSet<String> getLocales();
 
+  /** Whether to filter locales using aapt2. */
+  @Value.Default
+  default boolean isAapt2LocaleFiltering() {
+    return false;
+  }
+
   Optional<String> getLocalizedStringFileName();
 
   @Value.Default
