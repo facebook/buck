@@ -635,13 +635,13 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     return builder.toString().getBytes(Charsets.UTF_8);
   }
 
-  private String relativizePathString(Path cellPrefixRoot, String s) {
+  private String relativizePathString(Path prefixRoot, String s) {
     if (s == null || s.length() == 0) {
       return "";
     }
 
     Path path = Paths.get(s);
-    return path.isAbsolute() ? cellPrefixRoot.relativize(path).toString() : path.toString();
+    return path.isAbsolute() ? prefixRoot.relativize(path).toString() : path.toString();
   }
 
   private ImmutableSortedMap<String, String> getBuilderEnvironmentOverrides(
@@ -649,7 +649,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
     // TODO(shivanker): Pass all user environment overrides to remote workers.
     String relativePluginRoot = relativizePathString(cellPrefixRoot, pluginRoot);
-    String relativeBaseBuckOut = relativizePathString(cellPrefixRoot, baseBuckOutDir);
+    String relativeBaseBuckOut = baseBuckOutDir;
     String relativePluginResources = relativizePathString(cellPrefixRoot, pluginResources);
     return ImmutableSortedMap.<String, String>naturalOrder()
         .put("CLASSPATH", classpathArg(bootstrapClasspath))

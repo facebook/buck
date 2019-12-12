@@ -179,23 +179,21 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
         config.getBooleanValue("project", "buck_out_include_target_config_hash", false);
     BuckPaths buckPaths =
         BuckPaths.createDefaultBuckPaths(cellName, rootPath, buckOutIncludeTargetConfigHash);
-    Path buckOut =
-        (embeddedCellBuckOutInfo.isPresent())
-            ? embeddedCellBuckOutInfo.get().getCellBuckOut()
-            : buckPaths.getBuckOut();
     Optional<String> configuredProjectBuckOut = config.get("project", "buck_out");
 
-    Path configuredBuckOut = getConfiguredBuckOut(configuredProjectBuckOut, buckOut, rootPath);
-
-    if (configuredBuckOut.isAbsolute()) {
-      configuredBuckOut = rootPath.relativize(configuredBuckOut);
-    }
-
-    if (buckOut.isAbsolute()) {
+    if (embeddedCellBuckOutInfo.isPresent()) {
+      Path buckOut = embeddedCellBuckOutInfo.get().getCellBuckOut();
       buckOut = rootPath.relativize(buckOut);
+      buckPaths = buckPaths.withConfiguredBuckOut(buckOut).withBuckOut(buckOut);
+    } else {
+      Path buckOut = buckPaths.getBuckOut();
+      if (configuredProjectBuckOut.isPresent()) {
+        buckOut = getConfiguredBuckOut(configuredProjectBuckOut, buckOut, rootPath);
+        buckPaths = buckPaths.withConfiguredBuckOut(buckOut);
+      }
     }
 
-    return buckPaths.withConfiguredBuckOut(configuredBuckOut).withBuckOut(buckOut);
+    return buckPaths;
   }
 
   /** Returns a root-relative path to the main cell's buck-out when using embedded cell buck out */
