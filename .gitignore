@@ -59,6 +59,9 @@
 # Vim editing-state session files
 Session.vim
 
+# VSCode stuff
+/.lsp*
+
 # Emacs backup files
 *~
 \#*
