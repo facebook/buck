@@ -23,8 +23,8 @@ import com.google.common.collect.ImmutableList;
 @BuckStyleValue
 public abstract class PackageMetadata {
 
-  /** A default instance with no visibility/within_view entries. */
-  public static final ImmutablePackageMetadata SINGLETON =
+  /** A singleton instance with no visibility/within_view entries. */
+  public static final ImmutablePackageMetadata EMPTY_SINGLETON =
       new ImmutablePackageMetadata(ImmutableList.of(), ImmutableList.of());
 
   /** @return the visibility defined in the package. */

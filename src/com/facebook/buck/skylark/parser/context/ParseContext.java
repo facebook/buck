@@ -106,7 +106,7 @@ public class ParseContext {
   /** @return The package in the parsed package file if defined. */
   public ImmutablePackageMetadata getPackage() {
     if (pkg == null) {
-      return PackageMetadata.SINGLETON;
+      return PackageMetadata.EMPTY_SINGLETON;
     }
     return pkg;
   }

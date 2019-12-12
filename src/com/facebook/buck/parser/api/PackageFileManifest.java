@@ -29,6 +29,16 @@ import org.immutables.value.Value;
  */
 @Value.Immutable(builder = false, copy = false)
 public abstract class PackageFileManifest implements ComputeResult, FileManifest {
+
+  /** A singleton instance of a manifest with an empty package metadata. */
+  public static final ImmutablePackageFileManifest EMPTY_SINGLETON =
+      ImmutablePackageFileManifest.of(
+          PackageMetadata.EMPTY_SINGLETON,
+          ImmutableSortedSet.of(),
+          ImmutableMap.of(),
+          Optional.empty(),
+          ImmutableList.of());
+
   /** Contains the package defined in the build file. */
   @Value.Parameter
   public abstract ImmutablePackageMetadata getPackage();

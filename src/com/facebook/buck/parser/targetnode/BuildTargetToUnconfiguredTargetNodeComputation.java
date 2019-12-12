@@ -102,7 +102,7 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
     Path buildFile =
         cell.getBuckConfigView(ParserConfig.class)
             .getAbsolutePathToBuildFile(cell, unconfiguredBuildTargetView);
-    Package stubPackage = PackageFactory.create(cell, buildFile, PackageMetadata.SINGLETON);
+    Package stubPackage = PackageFactory.create(cell, buildFile, PackageMetadata.EMPTY_SINGLETON);
 
     return unconfiguredTargetNodeFactory.create(
         cell,

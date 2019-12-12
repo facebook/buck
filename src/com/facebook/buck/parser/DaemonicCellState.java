@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
@@ -110,15 +111,20 @@ class DaemonicCellState {
   private final AtomicReference<Cell> cell;
 
   /**
-   * A mapping of a file path (usually explicit or implicit include) to a set of build file paths
-   * that depend on the key file path. In the case of includes it indicates that build files in the
-   * value include the file key file.
-   *
-   * <p>The purpose of this set is to invalidate build file manifests produced from the build files
-   * that include changes files.
+   * A mapping from dependent files (typically .bzl or PACKAGE files) to all build files which
+   * include that dependent file explicitly or transitively. This allows us to track which build
+   * files to invalidate when a dependent file changes.
    */
   @GuardedBy("cachesLock")
   private final SetMultimap<Path, Path> buildFileDependents;
+
+  /**
+   * A mapping from dependent files (typically .bzl files) to all PACKAGE files which include that
+   * dependent file explicitly or transitively. This allows us to track which PACKAGE files to
+   * invalidate when a dependent file changes.
+   */
+  @GuardedBy("cachesLock")
+  private final SetMultimap<Path, Path> packageFileDependents;
 
   /**
    * Contains environment variables used during parsing of a particular build file.
@@ -133,6 +139,10 @@ class DaemonicCellState {
   /** Used as an unbounded cache to stored build file manifests by build file path. */
   @GuardedBy("cachesLock")
   private final ConcurrentMapCache<Path, BuildFileManifest> allBuildFileManifests;
+
+  /** Used as an unbounded cache to stored package file manifests by package file path. */
+  @GuardedBy("cachesLock")
+  private final ConcurrentMapCache<Path, PackageFileManifest> allPackageFileManifests;
 
   /**
    * Contains all the unflavored build targets that were collected from all processed build file
@@ -195,8 +205,10 @@ class DaemonicCellState {
     this.cellRoot = cell.getRoot();
     this.cellCanonicalName = cell.getCanonicalName();
     this.buildFileDependents = HashMultimap.create();
+    this.packageFileDependents = HashMultimap.create();
     this.buildFileEnv = new HashMap<>();
     this.allBuildFileManifests = new ConcurrentMapCache<>(parsingThreads);
+    this.allPackageFileManifests = new ConcurrentMapCache<>(parsingThreads);
     this.allRawNodeTargets = new HashSet<>();
     this.cachesLock = new AutoCloseableReadWriteUpdateLock();
     this.targetNodeCache = new Cache<>(TARGET_NODE_CACHE_TYPE);
@@ -247,6 +259,32 @@ class DaemonicCellState {
     }
   }
 
+  Optional<PackageFileManifest> lookupPackageFileManifest(Path packageFile) {
+    try (AutoCloseableLock readLock = cachesLock.readLock()) {
+      return Optional.ofNullable(allPackageFileManifests.getIfPresent(packageFile));
+    }
+  }
+
+  PackageFileManifest putPackageFileManifestIfNotPresent(
+      Path packageFile,
+      PackageFileManifest packageFileManifest,
+      ImmutableSet<Path> packageDependents,
+      ImmutableMap<String, Optional<String>> env) {
+    try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
+      PackageFileManifest updated =
+          allPackageFileManifests.putIfAbsentAndGet(packageFile, packageFileManifest);
+      buildFileEnv.put(packageFile, env);
+      if (updated == packageFileManifest) {
+        // The package file will depend on all dependents and we keep a reverse mapping to know
+        // which package files to invalidate if a dependent changes.
+        for (Path dependent : packageDependents) {
+          this.packageFileDependents.put(dependent, packageFile);
+        }
+      }
+      return updated;
+    }
+  }
+
   int invalidatePath(Path path) {
     try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
       int invalidatedRawNodes = 0;
@@ -268,6 +306,7 @@ class DaemonicCellState {
         }
         allBuildFileManifests.invalidate(path);
       }
+      allPackageFileManifests.invalidate(path);
 
       // We may have been given a file that other build files depend on. Iteratively remove those.
       Iterable<Path> dependents = buildFileDependents.get(path);
@@ -280,6 +319,17 @@ class DaemonicCellState {
       }
       buildFileDependents.removeAll(path);
       buildFileEnv.remove(path);
+
+      // We may have been given a file that package files depends on. Iteratively invalidate those
+      // package files.
+      dependents = packageFileDependents.get(path);
+      for (Path dependent : dependents) {
+        if (dependent.equals(path)) {
+          continue;
+        }
+        invalidatedRawNodes += invalidatePath(dependent);
+      }
+      packageFileDependents.removeAll(path);
 
       return invalidatedRawNodes;
     }

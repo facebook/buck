@@ -35,6 +35,7 @@ import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -191,8 +192,6 @@ public class DaemonicParserState {
      * entries from the raw nodes (these are intended for the cache as they contain information
      * about what other files to invalidate entries on).
      *
-     * @param cell cell
-     * @param buildFile build file
      * @return previous nodes for the file if the cache contained it, new ones otherwise.
      */
     @Override
@@ -220,6 +219,49 @@ public class DaemonicParserState {
               buildFile,
               manifest,
               dependentsOfEveryNode.build(),
+              manifest.getEnv().orElse(ImmutableMap.of()));
+    }
+  }
+
+  /** Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}. */
+  private class DaemonicPackageCache implements PipelineNodeCache.Cache<Path, PackageFileManifest> {
+
+    @Override
+    public Optional<PackageFileManifest> lookupComputedNode(
+        Cell cell, Path packageFile, BuckEventBus eventBus) throws BuildTargetException {
+      Preconditions.checkState(packageFile.isAbsolute());
+      invalidateIfProjectBuildFileParserStateChanged(cell);
+      invalidateIfBuckConfigOrEnvHasChanged(cell, packageFile, eventBus);
+
+      DaemonicCellState state = getCellState(cell);
+      if (state == null) {
+        return Optional.empty();
+      }
+      return state.lookupPackageFileManifest(packageFile);
+    }
+
+    /**
+     * Insert item into the cache if it was not already there.
+     *
+     * @return previous manifest for the file if the cache contained it, new ones otherwise.
+     */
+    @Override
+    public PackageFileManifest putComputedNodeIfNotPresent(
+        Cell cell,
+        Path packageFile,
+        PackageFileManifest manifest,
+        boolean targetIsConfiguration,
+        BuckEventBus eventBus)
+        throws BuildTargetException {
+      ImmutableSet.Builder<Path> packageDependents = ImmutableSet.builder();
+
+      addAllIncludes(packageDependents, manifest.getIncludes(), cell);
+
+      return getOrCreateCellState(cell)
+          .putPackageFileManifestIfNotPresent(
+              packageFile,
+              manifest,
+              packageDependents.build(),
               manifest.getEnv().orElse(ImmutableMap.of()));
     }
   }
@@ -298,6 +340,10 @@ public class DaemonicParserState {
 
   private final DaemonicRawCacheView rawNodeCache;
 
+  // TODO: Integrate package pipeline using cache
+  @SuppressWarnings("unused")
+  private final DaemonicPackageCache packageFileCache;
+
   private final int parsingThreads;
 
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
@@ -352,6 +398,7 @@ public class DaemonicParserState {
         new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, parsingThreads);
 
     this.rawNodeCache = new DaemonicRawCacheView();
+    this.packageFileCache = new DaemonicPackageCache();
 
     this.cachedStateLock = new AutoCloseableReadWriteLock();
     this.cellStateLock = new AutoCloseableReadWriteLock();

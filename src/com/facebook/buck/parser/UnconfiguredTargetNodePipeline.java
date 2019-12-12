@@ -105,7 +105,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
       return cachedFuture;
     }
 
-    Package stubPackage = PackageFactory.create(cell, buildFile, PackageMetadata.SINGLETON);
+    Package stubPackage = PackageFactory.create(cell, buildFile, PackageMetadata.EMPTY_SINGLETON);
 
     try {
       ListenableFuture<List<UnconfiguredTargetNode>> allNodesListJob =
@@ -154,7 +154,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
 
     Path buildFile =
         cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, buildTarget);
-    Package stubPackage = PackageFactory.create(cell, buildFile, PackageMetadata.SINGLETON);
+    Package stubPackage = PackageFactory.create(cell, buildFile, PackageMetadata.EMPTY_SINGLETON);
 
     return cache.getJobWithCacheLookup(
         cell,

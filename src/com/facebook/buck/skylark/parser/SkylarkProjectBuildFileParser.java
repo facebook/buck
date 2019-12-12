@@ -117,7 +117,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     }
     LOG.verbose("Parsed %d rules from %s", rules.size(), parseFile);
     return ParseResult.of(
-        ImmutablePackageMetadata.SINGLETON,
+        ImmutablePackageMetadata.EMPTY_SINGLETON,
         rules,
         loadedPaths,
         context.getAccessedConfigurationOptions(),
