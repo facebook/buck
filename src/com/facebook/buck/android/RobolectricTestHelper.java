@@ -31,7 +31,6 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
@@ -154,14 +153,12 @@ class RobolectricTestHelper {
   /** Amend jvm args, adding manifest and dependency paths */
   void amendVmArgs(
       ImmutableList.Builder<String> vmArgsBuilder, SourcePathResolverAdapter pathResolver) {
-    Preconditions.checkState(
-        optionalDummyRDotJava.isPresent(), "DummyRDotJava must have been created!");
-    vmArgsBuilder.add(
-        getRobolectricResourceDirectoriesArg(
-            pathResolver, optionalDummyRDotJava.get().getAndroidResourceDeps()));
-    vmArgsBuilder.add(
-        getRobolectricAssetsDirectories(
-            pathResolver, optionalDummyRDotJava.get().getAndroidResourceDeps()));
+    if (optionalDummyRDotJava.isPresent()) {
+      ImmutableList<HasAndroidResourceDeps> resourceDeps =
+          optionalDummyRDotJava.get().getAndroidResourceDeps();
+      vmArgsBuilder.add(getRobolectricResourceDirectoriesArg(pathResolver, resourceDeps));
+      vmArgsBuilder.add(getRobolectricAssetsDirectories(pathResolver, resourceDeps));
+    }
 
     // Force robolectric to only use local dependency resolution.
     vmArgsBuilder.add("-Drobolectric.offline=true");

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -33,6 +34,7 @@ import com.facebook.buck.core.test.rule.HasTestRunner;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
@@ -56,6 +58,7 @@ import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.DependencyMode;
@@ -72,6 +75,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -200,17 +205,122 @@ public class RobolectricTestDescription
             graphBuilder, /* createBuildableIfEmpty */ true);
     RobolectricTestDescriptionArg testLibraryArgs = args;
 
+    AndroidPlatformTarget androidPlatformTarget =
+        toolchainProvider.getByName(
+            AndroidPlatformTarget.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidPlatformTarget.class);
+
+    Optional<UnitTestOptions> unitTestOptions = Optional.empty();
     if (dummyRDotJava.isPresent()) {
+      DummyRDotJava actualDummyRDotJava = dummyRDotJava.get();
       ImmutableSortedSet<BuildRule> newDeclaredDeps =
           ImmutableSortedSet.<BuildRule>naturalOrder()
               .addAll(params.getDeclaredDeps().get())
-              .add(dummyRDotJava.get())
+              .add(actualDummyRDotJava)
               .build();
-      params = params.withDeclaredDeps(newDeclaredDeps);
-      testLibraryArgs =
-          testLibraryArgs.withDeps(
-              Iterables.concat(
-                  args.getDeps(), Collections.singletonList(dummyRDotJava.get().getBuildTarget())));
+      if (!args.isUseBinaryResources()) {
+        params = params.withDeclaredDeps(newDeclaredDeps);
+        testLibraryArgs =
+            testLibraryArgs.withDeps(
+                Iterables.concat(
+                    args.getDeps(),
+                    Collections.singletonList(actualDummyRDotJava.getBuildTarget())));
+      } else {
+        Optional<SourcePath> maybeRoboManifest = args.getRobolectricManifest();
+        Preconditions.checkArgument(
+            maybeRoboManifest.isPresent(),
+            "You must specify a manifest to use binary resources mode.");
+        SourcePath robolectricManifest = maybeRoboManifest.get();
+
+        FilteredResourcesProvider resourcesProvider =
+            new IdentityResourcesProvider(
+                actualDummyRDotJava.getAndroidResourceDeps().stream()
+                    .map(HasAndroidResourceDeps::getRes)
+                    .collect(ImmutableList.toImmutableList()));
+
+        ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
+
+        ImmutableList<Aapt2Compile> compileables =
+            AndroidBinaryResourcesGraphEnhancer.createAapt2CompileablesForResourceProvider(
+                projectFilesystem,
+                graphBuilder,
+                aapt2ToolProvider,
+                resourcesProvider,
+                buildTarget,
+                true,
+                false);
+
+        BuildTarget aapt2LinkBuildTarget =
+            buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_link"));
+        Aapt2Link aapt2Link =
+            new Aapt2Link(
+                aapt2LinkBuildTarget,
+                projectFilesystem,
+                graphBuilder,
+                compileables,
+                robolectricManifest,
+                ManifestEntries.builder().build(),
+                0,
+                ImmutableList.of(),
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                aapt2ToolProvider.resolve(
+                    graphBuilder, aapt2LinkBuildTarget.getTargetConfiguration()),
+                ImmutableList.of(),
+                androidPlatformTarget.getAndroidJar());
+
+        graphBuilder.addToIndex(aapt2Link);
+        AaptOutputInfo aaptOutputInfo = aapt2Link.getAaptOutputInfo();
+
+        unitTestOptions =
+            Optional.of(
+                new UnitTestOptions(
+                    buildTarget.withAppendedFlavors(InternalFlavor.of("unit_test_options")),
+                    projectFilesystem,
+                    graphBuilder,
+                    ImmutableMap.of(
+                        "android_resource_apk",
+                        graphBuilder
+                            .getSourcePathResolver()
+                            .getAbsolutePath(aaptOutputInfo.getPrimaryResourcesApkPath())
+                            .toString())));
+
+        graphBuilder.addToIndex(unitTestOptions.get());
+
+        GenerateRDotJava generateRDotJava =
+            new GenerateRDotJava(
+                buildTarget.withAppendedFlavors(InternalFlavor.of("generate_rdot_java")),
+                projectFilesystem,
+                graphBuilder,
+                EnumSet.noneOf(RDotTxtEntry.RType.class),
+                Optional.empty(),
+                ImmutableList.of(aaptOutputInfo.getPathToRDotTxt()),
+                args.getResourceUnionPackage(),
+                actualDummyRDotJava.getAndroidResourceDeps().stream()
+                    .map(HasAndroidResourceDeps::getBuildTarget)
+                    .map(graphBuilder::requireRule)
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),
+                ImmutableList.of(resourcesProvider));
+
+        graphBuilder.addToIndex(generateRDotJava);
+
+        params =
+            params.copyAppendingExtraDeps(
+                ImmutableSortedSet.of(generateRDotJava, unitTestOptions.get()));
+
+        ImmutableSortedSet<SourcePath> updatedSrcs =
+            ImmutableSortedSet.<SourcePath>naturalOrder()
+                .addAll(testLibraryArgs.getSrcs())
+                .add(generateRDotJava.getSourcePathToRZip())
+                .build();
+
+        testLibraryArgs = testLibraryArgs.withSrcs(updatedSrcs);
+      }
     }
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
@@ -246,11 +356,6 @@ public class RobolectricTestDescription
                 .build()
                 .buildLibrary());
     params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(testsLibrary));
-    AndroidPlatformTarget androidPlatformTarget =
-        toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME,
-            buildTarget.getTargetConfiguration(),
-            AndroidPlatformTarget.class);
 
     Optional<BuildTarget> runner = args.getRunner();
     Optional<TestRunnerSpec> runnerSpecs = args.getSpecs();
@@ -329,7 +434,8 @@ public class RobolectricTestDescription
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
-        dummyRDotJava,
+        args.isUseBinaryResources() ? Optional.empty() : dummyRDotJava,
+        unitTestOptions,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
             .orElse(
@@ -392,6 +498,11 @@ public class RobolectricTestDescription
     @Value.Default
     default boolean isForceFinalResourceIds() {
       return true;
+    }
+
+    @Value.Default
+    default boolean isUseBinaryResources() {
+      return false;
     }
 
   }

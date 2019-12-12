@@ -64,6 +64,7 @@ public class RobolectricTest extends JavaTest {
       List<Arg> vmArgs,
       Map<String, String> nativeLibsEnvironment,
       Optional<DummyRDotJava> optionalDummyRDotJava,
+      Optional<UnitTestOptions> unitTestOptions,
       Optional<Long> testRuleTimeoutMs,
       Optional<Long> testCaseTimeoutMs,
       ImmutableMap<String, Arg> env,
@@ -82,13 +83,16 @@ public class RobolectricTest extends JavaTest {
         buildRuleParams,
         compiledTestsLibrary,
         Optional.of(
-            resolver ->
-                optionalDummyRDotJava
-                    .map(
-                        dummyRDotJava ->
-                            ImmutableList.of(
-                                resolver.getAbsolutePath(dummyRDotJava.getSourcePathToOutput())))
-                    .orElseGet(ImmutableList::of)),
+            resolver -> {
+              ImmutableList.Builder<Path> builder = ImmutableList.builder();
+              optionalDummyRDotJava.ifPresent(
+                  dummyRDotJava ->
+                      builder.add(resolver.getAbsolutePath(dummyRDotJava.getSourcePathToOutput())));
+              unitTestOptions.ifPresent(
+                  options ->
+                      builder.add(resolver.getAbsolutePath(options.getSourcePathToOutput())));
+              return builder.build();
+            }),
         labels,
         contacts,
         testType,

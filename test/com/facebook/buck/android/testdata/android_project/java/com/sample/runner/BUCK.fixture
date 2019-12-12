@@ -91,3 +91,19 @@ robolectric_test(
         "//res/com/sample/top:top",
     ],
 )
+
+robolectric_test(
+    name = "robolectric_with_binary_resources",
+    srcs = [
+        "TestWithRunner.java",
+    ],
+    runner = ":test_runner",
+    use_binary_resources = True,
+    deps = [
+        "buck//third-party/java/junit:junit",
+        "buck//third-party/java/robolectric:robolectric",
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
+)

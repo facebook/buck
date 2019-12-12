@@ -95,6 +95,15 @@ public class RobolectricTestRuleIntegrationTest {
   }
 
   @Test
+  public void robolectricTestBuildsWithBinaryResources() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
+    workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    workspace.runBuckTest("//java/com/sample/lib:test_binary_resources").assertSuccess();
+  }
+
+  @Test
   public void robolectricTestXWithExternalRunner() throws Exception {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);

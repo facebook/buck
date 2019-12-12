@@ -57,6 +57,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   static final Flavor MANIFEST_MERGE_FLAVOR = InternalFlavor.of("manifest_merge");
   static final Flavor RESOURCES_FILTER_FLAVOR = InternalFlavor.of("resources_filter");
   static final Flavor AAPT_PACKAGE_FLAVOR = InternalFlavor.of("aapt_package");
+  static final String AAPT2_COMPILE_FLAVOR_PREFIX = "aapt2_compile_";
   static final Flavor AAPT2_LINK_FLAVOR = InternalFlavor.of("aapt2_link");
   static final Flavor PACKAGE_STRING_ASSETS_FLAVOR = InternalFlavor.of("package_string_assets");
   private static final Flavor MERGE_ASSETS_FLAVOR = InternalFlavor.of("merge_assets");
@@ -523,24 +524,15 @@ class AndroidBinaryResourcesGraphEnhancer {
     ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
     ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
     if (filteredResourcesProvider.isPresent()) {
-
-      int index = 0;
-      for (SourcePath resDir : filteredResourcesProvider.get().getResDirectories()) {
-        BuildTarget aapt2BuildTarget =
-            buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_compile_" + index), flavor);
-        Aapt2Compile compileRule =
-            new Aapt2Compile(
-                aapt2BuildTarget,
-                projectFilesystem,
-                graphBuilder,
-                aapt2ToolProvider.resolve(graphBuilder, aapt2BuildTarget.getTargetConfiguration()),
-                resDir,
-                skipCrunchPngs,
-                failOnLegacyAapt2Errors);
-        graphBuilder.addToIndex(compileRule);
-        compileListBuilder.add(compileRule);
-        index++;
-      }
+      compileListBuilder.addAll(
+          createAapt2CompileablesForResourceProvider(
+              projectFilesystem,
+              graphBuilder,
+              aapt2ToolProvider,
+              filteredResourcesProvider.get(),
+              buildTarget,
+              skipCrunchPngs,
+              failOnLegacyAapt2Errors));
     } else {
       for (BuildTarget resTarget : resourceDetails.getResourcesWithNonEmptyResDir()) {
         compileListBuilder.add(
@@ -573,6 +565,34 @@ class AndroidBinaryResourcesGraphEnhancer {
         aapt2ToolProvider.resolve(graphBuilder, aaptLinkBuildTarget.getTargetConfiguration()),
         additionalAaptParams,
         androidPlatformTarget.getAndroidJar());
+  }
+
+  public static ImmutableList<Aapt2Compile> createAapt2CompileablesForResourceProvider(
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder actionGraphBuilder,
+      ToolProvider toolProvider,
+      FilteredResourcesProvider provider,
+      BuildTarget buildTarget,
+      boolean skipCrunchPngs,
+      boolean failOnLegacyErrors) {
+    int index = 0;
+    ImmutableList.Builder<Aapt2Compile> builder = ImmutableList.builder();
+    for (SourcePath resDir : provider.getResDirectories()) {
+      BuildTarget target =
+          buildTarget.withAppendedFlavors(InternalFlavor.of(AAPT2_COMPILE_FLAVOR_PREFIX + index++));
+      Aapt2Compile rule =
+          new Aapt2Compile(
+              target,
+              projectFilesystem,
+              actionGraphBuilder,
+              toolProvider.resolve(actionGraphBuilder, target.getTargetConfiguration()),
+              resDir,
+              skipCrunchPngs,
+              failOnLegacyErrors);
+      actionGraphBuilder.addToIndex(rule);
+      builder.add(rule);
+    }
+    return builder.build();
   }
 
   private GenerateRDotJava createGenerateRDotJava(
