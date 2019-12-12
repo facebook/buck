@@ -1,14 +1,18 @@
-# Copyright 2016 Facebook. All Rights Reserved.
-#
-# To refresh the protocol, make sure you have public version of Thrift installed:
-#   brew install thrift
-# and run the following command:
-#   /usr/local/bin/thrift --gen java:generated_annotations=undated  -out src-gen/ src/com/facebook/buck/artifact_cache/thrift/buckcache.thrift
-#
-# This .thrift file contains the protocol required by the buck client to
-# communicate with the buck-cache server.
-# This protocol is under active development and
-# will likely be changed in non-compatible ways
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 namespace java com.facebook.buck.artifact_cache.thrift
 
