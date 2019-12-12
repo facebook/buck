@@ -692,7 +692,7 @@ class HeaderSearchPaths {
 
     Path basePath;
     if (shouldCreateHeadersSymlinks) {
-      basePath = getCellPathForTarget(targetNode.getBuildTarget()).resolve(headerSymlinkTreeRoot);
+      basePath = projectFilesystem.getRootPath().resolve(headerSymlinkTreeRoot);
     } else {
       basePath = projectFilesystem.getRootPath();
     }
@@ -713,10 +713,6 @@ class HeaderSearchPaths {
     for (Map.Entry<Path, Path> entry : swiftHeaderMapEntries.entrySet()) {
       headerMapBuilder.add(entry.getKey().toString(), entry.getValue());
     }
-  }
-
-  private Path getCellPathForTarget(BuildTarget buildTarget) {
-    return projectCell.getNewCellPathResolver().getCellPath(buildTarget.getCell());
   }
 
   private void writeUmbrellaHeaderIfNeeded(
