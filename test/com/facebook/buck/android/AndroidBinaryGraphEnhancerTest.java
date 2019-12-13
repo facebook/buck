@@ -921,7 +921,8 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableSortedSet::of,
         /* useProtoFormat */ false,
         new NoopAndroidNativeTargetConfigurationMatcher(),
-        /* failOnLegacyAapt2Errors */ false);
+        /* failOnLegacyAapt2Errors */ false,
+        false);
   }
 
   private NonPredexedDexBuildableArgs defaultNonPredexedArgs() {

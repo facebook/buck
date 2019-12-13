@@ -407,7 +407,7 @@ public class AndroidBinaryRDotJavaIntegrationTest {
 
   @Test
   public void aapt2FilteringStripsLocales() throws Exception {
-    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeBuildToolsVersionIsAtLeast("29");
 
     // Disable resource removal.
     workspace.addBuckConfigLocalOption("android", "aapt_no_resource_removal", "true");

@@ -272,7 +272,9 @@ public class RobolectricTestDescription
                 aapt2ToolProvider.resolve(
                     graphBuilder, aapt2LinkBuildTarget.getTargetConfiguration()),
                 ImmutableList.of(),
-                androidPlatformTarget.getAndroidJar());
+                androidPlatformTarget.getAndroidJar(),
+                false,
+                ImmutableSet.of());
 
         graphBuilder.addToIndex(aapt2Link);
         AaptOutputInfo aaptOutputInfo = aapt2Link.getAaptOutputInfo();
