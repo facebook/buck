@@ -43,7 +43,6 @@ import com.facebook.buck.parser.spec.BuildTargetSpec;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.FileSystem;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.hamcrest.Matchers;
@@ -55,14 +54,12 @@ import org.junit.rules.ExpectedException;
 public class BuildTargetMatcherParserTest {
 
   private ProjectFilesystem filesystem;
-  private FileSystem vfs;
 
   @Rule public ExpectedException exception = ExpectedException.none();
 
   @Before
   public void setUp() {
     filesystem = new FakeProjectFilesystem();
-    vfs = filesystem.getRootPath().getFileSystem();
   }
 
   @Test
@@ -257,6 +254,15 @@ public class BuildTargetMatcherParserTest {
                 unconfiguredBuildTargetView, OutputLabel.defaultLabel())),
         buildTargetPatternParser.parse(
             createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser"));
+  }
+
+  @Test
+  public void outputLabelCannotBeEmpty() {
+    exception.expect(IllegalArgumentException.class);
+    exception.expectMessage("Output label cannot be empty");
+
+    new BuildTargetMatcherTargetNodeParser()
+        .parse(createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser[]");
   }
 
   @Test

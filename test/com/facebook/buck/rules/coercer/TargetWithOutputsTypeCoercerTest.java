@@ -109,6 +109,20 @@ public class TargetWithOutputsTypeCoercerTest {
   }
 
   @Test
+  public void throwsIfOutputLabelIsEmpty() throws CoerceFailedException {
+    thrown.expect(CoerceFailedException.class);
+    thrown.expectMessage(containsString("Output label cannot be empty"));
+
+    testCoercer.coerce(
+        createCellRoots(FILESYSTEM),
+        FILESYSTEM,
+        BASE_PATH,
+        UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
+        "//foo:bar[]");
+  }
+
+  @Test
   public void invalidAliasSyntaxThrowException() throws CoerceFailedException {
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage(containsString("Could not parse output label for //foo:bar[whee"));

@@ -57,7 +57,7 @@ public class OutputLabel implements Comparable<OutputLabel>, AddsToRuleKey {
   }
 
   private OutputLabel(String label) {
-    Preconditions.checkArgument(!label.isEmpty());
+    Preconditions.checkArgument(!label.isEmpty(), "Output label cannot be empty");
     this.label = label;
   }
 
