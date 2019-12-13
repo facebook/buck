@@ -58,7 +58,10 @@ public class FakeBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public FakeBuildRule(BuildTarget buildTarget) {
-    this(buildTarget, new FakeProjectFilesystem(), TestBuildRuleParams.create());
+    this(
+        buildTarget,
+        new FakeProjectFilesystem(buildTarget.getCell()),
+        TestBuildRuleParams.create());
   }
 
   public FakeBuildRule(BuildTarget target, ProjectFilesystem filesystem, BuildRule... deps) {
