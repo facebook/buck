@@ -114,6 +114,7 @@ class NewNativeTargetProjectMutator {
   private boolean frameworkHeadersEnabled = false;
   private ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
       ImmutableMap.of();
+  private ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags = ImmutableMap.of();
   private ImmutableList<String> targetGroupPath = ImmutableList.of();
   private ImmutableSet<SourceWithFlags> sourcesWithFlags = ImmutableSet.of();
   private ImmutableSet<SourcePath> extraXcodeSources = ImmutableSet.of();
@@ -169,6 +170,12 @@ class NewNativeTargetProjectMutator {
   public NewNativeTargetProjectMutator setLangPreprocessorFlags(
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
     this.langPreprocessorFlags = langPreprocessorFlags;
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setLangCompilerFlags(
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags) {
+    this.langCompilerFlags = langCompilerFlags;
     return this;
   }
 
@@ -456,9 +463,21 @@ class NewNativeTargetProjectMutator {
       customLangPreprocessorFlags = langPreprocessorFlags.get(sourceType.get());
     }
 
+    ImmutableList<String> customLangCompilerFlags = ImmutableList.of();
+    if (sourceType.isPresent()) {
+      Optional<CxxSource.Type> sourceProcessedLanguage =
+          CxxSource.Type.fromLanguage(sourceType.get().getPreprocessedLanguage());
+
+      if (sourceProcessedLanguage.isPresent()
+          && langCompilerFlags.containsKey(sourceProcessedLanguage.get())) {
+        customLangCompilerFlags = langCompilerFlags.get(sourceProcessedLanguage.get());
+      }
+    }
+
     ImmutableList<String> customFlags =
         ImmutableList.copyOf(
-            Iterables.concat(customLangPreprocessorFlags, sourceWithFlags.getFlags()));
+            Iterables.concat(
+                customLangPreprocessorFlags, customLangCompilerFlags, sourceWithFlags.getFlags()));
     if (!customFlags.isEmpty()) {
       NSDictionary settings = new NSDictionary();
       settings.put("COMPILER_FLAGS", Joiner.on(' ').join(customFlags));

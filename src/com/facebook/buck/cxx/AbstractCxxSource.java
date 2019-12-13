@@ -103,6 +103,21 @@ public abstract class AbstractCxxSource { // NOPMD
       return Optional.empty();
     }
 
+    /**
+     * Returns existing type based on the language string
+     *
+     * @param language the language string used to look up the Type
+     * @return Type if any type matches with the input string. Otherwise empty
+     */
+    public static Optional<Type> fromLanguage(String language) {
+      for (Type type : values()) {
+        if (type.language.equals(language)) {
+          return Optional.of(type);
+        }
+      }
+      return Optional.empty();
+    }
+
     public String getLanguage() {
       return language;
     }

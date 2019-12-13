@@ -5342,6 +5342,56 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void cxxCompilerFlagsPropagatedToConfig() throws IOException {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    TargetNode<?> node =
+        AppleLibraryBuilder.createBuilder(buildTarget)
+            .setLangCompilerFlags(
+                ImmutableMap.of(
+                    CxxSource.Type.C_CPP_OUTPUT,
+                    ImmutableList.of("-std=gnu11"),
+                    CxxSource.Type.OBJC_CPP_OUTPUT,
+                    ImmutableList.of("-std=gnu11", "-fobjc-arc"),
+                    CxxSource.Type.CXX_CPP_OUTPUT,
+                    ImmutableList.of("-std=c++11", "-stdlib=libc++"),
+                    CxxSource.Type.OBJCXX_CPP_OUTPUT,
+                    ImmutableList.of("-std=c++11", "-stdlib=libc++", "-fobjc-arc")))
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("foo1.m")),
+                    SourceWithFlags.of(FakeSourcePath.of("foo2.mm")),
+                    SourceWithFlags.of(FakeSourcePath.of("foo3.c")),
+                    SourceWithFlags.of(FakeSourcePath.of("foo4.cc"))))
+            .build();
+
+    ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+
+    PBXSourcesBuildPhase sourcesBuildPhase =
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXSourcesBuildPhase.class);
+
+    ImmutableMap<String, String> expected =
+        ImmutableMap.of(
+            "foo1.m", "-std=gnu11 -fobjc-arc",
+            "foo2.mm", "-std=c++11 -stdlib=libc++ -fobjc-arc",
+            "foo3.c", "-std=gnu11",
+            "foo4.cc", "-std=c++11 -stdlib=libc++");
+
+    for (PBXBuildFile file : sourcesBuildPhase.getFiles()) {
+      String fileName = file.getFileRef().getName();
+      NSDictionary buildFileSettings = file.getSettings().get();
+      NSString compilerFlags = (NSString) buildFileSettings.get("COMPILER_FLAGS");
+      assertNotNull("Build file settings should have COMPILER_FLAGS entry", compilerFlags);
+      assertEquals(compilerFlags.toString(), expected.get(fileName));
+    }
+  }
+
+  @Test
   public void testConfiglessAppleTargetGetsDefaultBuildConfigurations() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =

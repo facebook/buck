@@ -1320,6 +1320,8 @@ public class ProjectGenerator {
     ImmutableSet<SourcePath> headers = headersBuilder.build();
     ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langPreprocessorFlags =
         targetNode.getConstructorArg().getLangPreprocessorFlags();
+    ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langCompilerFlags =
+        targetNode.getConstructorArg().getLangCompilerFlags();
     boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
 
     Optional<String> swiftVersion = getSwiftVersionForTargetNode(targetNode);
@@ -1401,6 +1403,10 @@ public class ProjectGenerator {
                 ImmutableMap.copyOf(
                     Maps.transformValues(
                         langPreprocessorFlags, f -> convertStringWithMacros(targetNode, f))))
+            .setLangCompilerFlags(
+                ImmutableMap.copyOf(
+                    Maps.transformValues(
+                        langCompilerFlags, f -> convertStringWithMacros(targetNode, f))))
             .setPublicHeaders(exportedHeaders)
             .setPrefixHeader(getPrefixHeaderSourcePath(arg))
             .setSourcesWithFlags(ImmutableSet.copyOf(allSrcs))

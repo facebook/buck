@@ -67,6 +67,16 @@ public class AppleLibraryBuilder
     return this;
   }
 
+  public AppleLibraryBuilder setLangCompilerFlags(
+      ImmutableMap<AbstractCxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
+    getArgForPopulating()
+        .setLangCompilerFlags(
+            Maps.transformValues(
+                langPreprocessorFlags,
+                f -> RichStream.from(f).map(StringWithMacrosUtils::format).toImmutableList()));
+    return this;
+  }
+
   public AppleLibraryBuilder setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
     getArgForPopulating()
         .setPreprocessorFlags(
