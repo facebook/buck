@@ -751,10 +751,7 @@ public class BuildCommand extends AbstractCommand {
                 "%s%s%s\n",
                 targetWithOutputs,
                 showRuleKey ? " " + ruleKeyFactory.get().build(rule) : "",
-                // TODO(irenewchen): Don't print extra space if outputPath isn't present
-                showOutput || showOutputs || showFullOutput
-                    ? " " + outputPath.map(Object::toString).orElse("")
-                    : "");
+                showOutput || showOutputs || showFullOutput ? getOutputPathToShow(outputPath) : "");
       }
     }
 
@@ -765,6 +762,10 @@ public class BuildCommand extends AbstractCommand {
       String output = stringWriter.getBuffer().toString();
       params.getConsole().getStdOut().println(output);
     }
+  }
+
+  private String getOutputPathToShow(Optional<Path> path) {
+    return path.map(p -> p.toString().isEmpty() ? "" : " " + p.toString()).orElse("");
   }
 
   private TargetGraphCreationResult createUnversionedTargetGraph(

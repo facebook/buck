@@ -640,7 +640,24 @@ public class BuildCommandTest {
 
     BuildCommand command = getCommand("--show-outputs");
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
-    assertThat(console.getTextWrittenToStdOut(), Matchers.equalTo("//foo:foo[label] \n"));
+    assertThat(console.getTextWrittenToStdOut(), Matchers.equalTo("//foo:foo[label]\n"));
+  }
+
+  @Test
+  public void doesNotPrintExtraSpaceIfOutputPathIsEmpty() throws Exception {
+    String buildTargetName = "//foo:foo";
+
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, "")),
+            Paths.get(""),
+            ImmutableMap.of(buildTargetName, ImmutableMap.of()),
+            false);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-output");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(console.getTextWrittenToStdOut(), Matchers.equalTo("//foo:foo\n"));
   }
 
   private String getExpectedShowOutputsLog(ImmutableMap<String, Path> expectedTargetNamesToPaths) {
