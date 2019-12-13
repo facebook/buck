@@ -144,6 +144,13 @@ public class CalculateSourceAbi
   }
 
   @Override
+  public String getType() {
+    return JavaAbis.isSourceOnlyAbiTarget(getBuildTarget())
+        ? "calculate_source_only_abi"
+        : "calculate_source_abi";
+  }
+
+  @Override
   public void invalidateInitializeFromDiskState() {
     javaAbiInfo.invalidate();
   }
