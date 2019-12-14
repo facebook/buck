@@ -28,7 +28,9 @@ import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import javax.annotation.Nullable;
 
 /**
  * Implementation of {@link BuckConfig} with no data, or only the data specified by {@link
@@ -47,7 +49,7 @@ public class FakeBuckConfig {
   }
 
   public static class Builder {
-    private ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    @Nullable private ProjectFilesystem filesystem = null;
     private ImmutableMap<String, String> environment = EnvVariablesProvider.getSystemEnv();
     private RawConfig sections = RawConfig.of();
     private Architecture architecture = Architecture.detect();
@@ -65,6 +67,7 @@ public class FakeBuckConfig {
     }
 
     public Builder setFilesystem(ProjectFilesystem filesystem) {
+      Preconditions.checkNotNull(filesystem);
       this.filesystem = filesystem;
       return this;
     }
@@ -90,6 +93,9 @@ public class FakeBuckConfig {
     }
 
     public BuckConfig build() {
+      ProjectFilesystem filesystem =
+          this.filesystem != null ? this.filesystem : new FakeProjectFilesystem();
+
       Config config = new Config(sections);
       CellPathResolver cellPathResolver =
           DefaultCellPathResolver.create(filesystem.getRootPath(), config);

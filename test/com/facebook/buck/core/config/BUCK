@@ -77,5 +77,6 @@ java_library(
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/util/config:testutil",
         "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
     ],
 )
