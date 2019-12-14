@@ -41,14 +41,13 @@ import org.pf4j.PluginManager;
 
 public class TestCellBuilder {
 
-  private ProjectFilesystem filesystem;
+  @Nullable private ProjectFilesystem filesystem;
   private BuckConfig buckConfig;
   private CellConfig cellConfig;
   private Map<String, String> environment = new HashMap<>();
   @Nullable private ToolchainProvider toolchainProvider = null;
 
   public TestCellBuilder() {
-    filesystem = new FakeProjectFilesystem();
     cellConfig = CellConfig.of();
   }
 
@@ -78,6 +77,9 @@ public class TestCellBuilder {
   }
 
   public Cell build() {
+    ProjectFilesystem filesystem =
+        this.filesystem != null ? this.filesystem : new FakeProjectFilesystem();
+
     BuckConfig config =
         buckConfig == null
             ? FakeBuckConfig.builder().setFilesystem(filesystem).build()
@@ -93,7 +95,7 @@ public class TestCellBuilder {
         toolchainProvider == null
             ? new DefaultToolchainProviderFactory(
                 pluginManager, environmentCopy, processExecutor, executableFinder)
-            : (buckConfig, filesystem, ruleKeyConfiguration) -> toolchainProvider;
+            : (buckConfig, filesystemIgnore, ruleKeyConfiguration) -> toolchainProvider;
 
     DefaultCellPathResolver rootCellCellPathResolver =
         DefaultCellPathResolver.create(filesystem.getRootPath(), config.getConfig());
