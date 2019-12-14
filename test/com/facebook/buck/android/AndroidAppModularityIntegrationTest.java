@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
@@ -67,9 +68,11 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
     Assert.assertEquals(expected, actual);
     Path jar =
         workspace
-            .getDestPath()
-            .resolve(
-                "buck-out/gen/java/com/sample/small/lib__small_with_no_resource_deps__output/small_with_no_resource_deps.jar");
+            .getGenPath(
+                BuildTargetFactory.newInstance(
+                    "//java/com/sample/small:small_with_no_resource_deps"),
+                "lib__%s__output")
+            .resolve("small_with_no_resource_deps.jar");
     Assert.assertTrue(Files.exists(jar));
   }
 
