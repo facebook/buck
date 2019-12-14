@@ -173,7 +173,6 @@ public class ProjectGeneratorTest {
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
   private Cell projectCell;
-  private FakeProjectFilesystem fakeProjectFilesystem;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
   private AppleConfig appleConfig;
@@ -186,20 +185,18 @@ public class ProjectGeneratorTest {
   public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     clock = SettableFakeClock.DO_NOT_CARE;
-    fakeProjectFilesystem = new FakeProjectFilesystem(clock);
-    projectCell = (new TestCellBuilder()).setFilesystem(fakeProjectFilesystem).build();
-    projectFilesystem = projectCell.getFilesystem();
-    assertSame(projectFilesystem, fakeProjectFilesystem);
+    projectFilesystem = new FakeProjectFilesystem(clock);
+    projectCell = (new TestCellBuilder()).setFilesystem(projectFilesystem).build();
     rootPath = projectFilesystem.getRootPath();
 
     // Add files and directories used to test resources.
     projectFilesystem.createParentDirs(Paths.get("foodir", "foo.png"));
     projectFilesystem.writeContentsToPath("", Paths.get("foodir", "foo.png"));
     projectFilesystem.writeContentsToPath("", Paths.get("bar.png"));
-    fakeProjectFilesystem.touch(Paths.get("Base.lproj", "Bar.storyboard"));
-    halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(fakeProjectFilesystem);
+    projectFilesystem.touch(Paths.get("Base.lproj", "Bar.storyboard"));
+    halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
 
-    Path buildSystemPath = AppleProjectHelper.getBuildScriptPath(fakeProjectFilesystem);
+    Path buildSystemPath = AppleProjectHelper.getBuildScriptPath(projectFilesystem);
 
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of(
@@ -224,7 +221,7 @@ public class ProjectGeneratorTest {
             "swift",
             ImmutableMap.of("version", "1.23"));
     BuckConfig config =
-        FakeBuckConfig.builder().setFilesystem(fakeProjectFilesystem).setSections(sections).build();
+        FakeBuckConfig.builder().setFilesystem(projectFilesystem).setSections(sections).build();
     cxxBuckConfig = new CxxBuckConfig(config);
     appleConfig = config.getView(AppleConfig.class);
     swiftBuckConfig = new SwiftBuckConfig(config);
@@ -3421,7 +3418,7 @@ public class ProjectGeneratorTest {
             .build();
 
     Path currentVersionPath = dataModelRootPath.resolve(".xccurrentversion");
-    fakeProjectFilesystem.writeContentsToPath(
+    projectFilesystem.writeContentsToPath(
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             + "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
             + "<plist version=\"1.0\">\n"
@@ -3434,8 +3431,8 @@ public class ProjectGeneratorTest {
 
     String currentVersionFileName = "foov1.1.0.xcdatamodel";
     Path versionFilePath = dataModelRootPath.resolve(currentVersionFileName);
-    fakeProjectFilesystem.mkdirs(versionFilePath);
-    fakeProjectFilesystem.writeContentsToPath("", versionFilePath.resolve("contents"));
+    projectFilesystem.mkdirs(versionFilePath);
+    projectFilesystem.writeContentsToPath("", versionFilePath.resolve("contents"));
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(
@@ -5114,7 +5111,7 @@ public class ProjectGeneratorTest {
         buildTargetPattern
             .getCellRelativeBasePath()
             .getPath()
-            .toPath(fakeProjectFilesystem.getFileSystem())) {
+            .toPath(projectFilesystem.getFileSystem())) {
       configsGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(configsGroup, component.toString());
     }
 
