@@ -23,6 +23,7 @@ import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.io.file.MorePaths;
@@ -117,7 +118,8 @@ public class AndroidInstrumentationTestTest {
 
     String outputPath =
         MorePaths.pathWithPlatformSeparators(
-            Paths.get("buck-out", "bin", "__instrumentation_test__exopackage_dir__")
+            BuildTargetPaths.getScratchPath(
+                    fakeFilesystem, apk.getBuildTarget(), "__%s__exopackage_dir__")
                 .toAbsolutePath());
     String jsonEncodedCwd = ObjectMappers.WRITER.writeValueAsString(fakeFilesystem.getRootPath());
     String jsonEncodedValue = ObjectMappers.WRITER.writeValueAsString(outputPath);
