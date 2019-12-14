@@ -32,6 +32,8 @@ import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -81,8 +83,16 @@ public class CxxLibraryBuilder
   public CxxLibraryBuilder(
       BuildTarget target,
       CxxBuckConfig cxxBuckConfig,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms,
+      ProjectFilesystem projectFilesystem) {
+    super(createCxxLibraryDescription(cxxBuckConfig, cxxPlatforms), target, projectFilesystem);
+  }
+
+  public CxxLibraryBuilder(
+      BuildTarget target,
+      CxxBuckConfig cxxBuckConfig,
       FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
-    super(createCxxLibraryDescription(cxxBuckConfig, cxxPlatforms), target);
+    this(target, cxxBuckConfig, cxxPlatforms, new FakeProjectFilesystem());
   }
 
   public CxxLibraryBuilder(BuildTarget target, CxxBuckConfig cxxBuckConfig) {
@@ -90,10 +100,15 @@ public class CxxLibraryBuilder
   }
 
   public CxxLibraryBuilder(BuildTarget target) {
+    this(target, new FakeProjectFilesystem());
+  }
+
+  public CxxLibraryBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
     this(
         target,
-        new CxxBuckConfig(FakeBuckConfig.builder().build()),
-        CxxTestUtils.createDefaultPlatforms());
+        new CxxBuckConfig(FakeBuckConfig.builder().setFilesystem(projectFilesystem).build()),
+        CxxTestUtils.createDefaultPlatforms(),
+        projectFilesystem);
   }
 
   public CxxLibraryBuilder setExportedHeaders(ImmutableSortedSet<SourcePath> headers) {

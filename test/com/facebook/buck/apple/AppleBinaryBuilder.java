@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -44,8 +45,17 @@ public class AppleBinaryBuilder
     super(FakeAppleRuleDescriptions.BINARY_DESCRIPTION, target);
   }
 
+  protected AppleBinaryBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
+    super(FakeAppleRuleDescriptions.BINARY_DESCRIPTION, target, projectFilesystem);
+  }
+
   public static AppleBinaryBuilder createBuilder(BuildTarget target) {
     return new AppleBinaryBuilder(target);
+  }
+
+  public static AppleBinaryBuilder createBuilder(
+      BuildTarget target, ProjectFilesystem projectFilesystem) {
+    return new AppleBinaryBuilder(target, projectFilesystem);
   }
 
   public AppleBinaryBuilder setConfigs(

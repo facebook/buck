@@ -21,6 +21,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -32,6 +33,13 @@ public class ExportFileBuilder
         ExportFile> {
   public ExportFileBuilder(BuildTarget target) {
     super(new ExportFileDescription(FakeBuckConfig.builder().build()), target);
+  }
+
+  public ExportFileBuilder(BuildTarget target, ProjectFilesystem filesystem) {
+    super(
+        new ExportFileDescription(FakeBuckConfig.builder().setFilesystem(filesystem).build()),
+        target,
+        filesystem);
   }
 
   public ExportFileBuilder(BuckConfig buckConfig, BuildTarget target) {

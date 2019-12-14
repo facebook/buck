@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -35,8 +36,17 @@ public class AppleBundleBuilder
     super(FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION, target);
   }
 
+  protected AppleBundleBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
+    super(FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION, target, projectFilesystem);
+  }
+
   public static AppleBundleBuilder createBuilder(BuildTarget target) {
     return new AppleBundleBuilder(target);
+  }
+
+  public static AppleBundleBuilder createBuilder(
+      BuildTarget target, ProjectFilesystem projectFilesystem) {
+    return new AppleBundleBuilder(target, projectFilesystem);
   }
 
   public AppleBundleBuilder setExtension(Either<AppleBundleExtension, String> extension) {

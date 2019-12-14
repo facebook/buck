@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
 public class CxxPrecompiledHeaderBuilder
     extends AbstractNodeBuilder<
@@ -31,8 +32,17 @@ public class CxxPrecompiledHeaderBuilder
     super(new CxxPrecompiledHeaderDescription(), target);
   }
 
+  protected CxxPrecompiledHeaderBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
+    super(new CxxPrecompiledHeaderDescription(), target, projectFilesystem);
+  }
+
   public static CxxPrecompiledHeaderBuilder createBuilder(BuildTarget target) {
     return new CxxPrecompiledHeaderBuilder(target);
+  }
+
+  public static CxxPrecompiledHeaderBuilder createBuilder(
+      BuildTarget target, ProjectFilesystem projectFilesystem) {
+    return new CxxPrecompiledHeaderBuilder(target, projectFilesystem);
   }
 
   public CxxPrecompiledHeaderBuilder setSrc(SourcePath sourcePath) {

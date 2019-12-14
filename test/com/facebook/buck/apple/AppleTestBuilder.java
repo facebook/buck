@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -38,8 +39,17 @@ public final class AppleTestBuilder
     super(createDescription(), target);
   }
 
+  protected AppleTestBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
+    super(createDescription(), target, projectFilesystem);
+  }
+
   public static AppleTestBuilder createBuilder(BuildTarget target) {
     return new AppleTestBuilder(target);
+  }
+
+  public static AppleTestBuilder createBuilder(
+      BuildTarget target, ProjectFilesystem projectFilesystem) {
+    return new AppleTestBuilder(target, projectFilesystem);
   }
 
   public AppleTestBuilder setContacts(ImmutableSortedSet<String> contacts) {

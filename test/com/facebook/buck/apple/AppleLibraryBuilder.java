@@ -23,6 +23,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.AbstractCxxSource;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -47,8 +48,17 @@ public class AppleLibraryBuilder
     super(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION, target);
   }
 
+  protected AppleLibraryBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
+    super(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION, target, projectFilesystem);
+  }
+
   public static AppleLibraryBuilder createBuilder(BuildTarget target) {
     return new AppleLibraryBuilder(target);
+  }
+
+  public static AppleLibraryBuilder createBuilder(
+      BuildTarget target, ProjectFilesystem projectFilesystem) {
+    return new AppleLibraryBuilder(target, projectFilesystem);
   }
 
   public AppleLibraryBuilder setModular(boolean modular) {

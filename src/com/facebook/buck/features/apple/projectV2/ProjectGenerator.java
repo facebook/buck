@@ -1203,6 +1203,7 @@ public class ProjectGenerator {
     ProductType productType = targetAttributes.productType().get();
 
     BuildTarget buildTarget = buildTargetNode.getBuildTarget();
+    ProjectFilesystem buildTargetFilesystem = buildTargetNode.getFilesystem();
     boolean containsSwiftCode = projGenerationStateCache.targetContainsSwiftSourceCode(targetNode);
 
     xcodeNativeTargetAttributesBuilder.setTarget(Optional.of(buildTarget));
@@ -1650,7 +1651,7 @@ public class ProjectGenerator {
         extraSettingsBuilder.build(),
         defaultSettingsBuilder.build(),
         appendedConfig,
-        projectFilesystem,
+        buildTargetFilesystem,
         options.shouldGenerateReadOnlyFiles(),
         targetConfigNamesBuilder,
         xcconfigPathsBuilder);
