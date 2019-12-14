@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -44,7 +46,13 @@ public class MergeAssetsIntegrationTest {
   public void testNoRelativePathsInOutputWithoutEmbeddedCells() throws Exception {
     workspace.runBuckCommand(workspace.getPath("home"), "build", ":list_outputs").assertSuccess();
     String unzipOutput =
-        workspace.getFileContents("home/buck-out/gen/list_outputs/list_of_outputs.txt");
+        workspace.getFileContents(
+            "home/"
+                + BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:list_outputs"),
+                    "%s")
+                + "/list_of_outputs.txt");
     for (String line : unzipOutput.split("\n")) {
       assertFalse(line.contains(".."));
     }
@@ -61,7 +69,13 @@ public class MergeAssetsIntegrationTest {
             "project.embedded_cell_buck_out_enabled=true")
         .assertSuccess();
     String unzipOutput =
-        workspace.getFileContents("home/buck-out/gen/list_outputs/list_of_outputs.txt");
+        workspace.getFileContents(
+            "home/"
+                + BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:list_outputs"),
+                    "%s")
+                + "/list_of_outputs.txt");
     for (String line : unzipOutput.split("\n")) {
       assertFalse(
           String.format(
