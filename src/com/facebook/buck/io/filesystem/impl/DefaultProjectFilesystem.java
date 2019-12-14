@@ -118,6 +118,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     return true;
   }
 
+  /** This function should be only used in tests, because it ignores hashes-in-path buckconfig. */
   @VisibleForTesting
   protected DefaultProjectFilesystem(
       CanonicalCellName cellName,
@@ -127,7 +128,11 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     this(
         root,
         ImmutableSet.of(),
-        BuckPaths.createDefaultBuckPaths(cellName, root, false),
+        BuckPaths.createDefaultBuckPaths(
+            cellName,
+            root,
+            // This function is only used in tests, so it's OK to not query buckconfig here
+            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_COFIG_HASH),
         projectFilesystemDelegate,
         winFSInstance);
   }

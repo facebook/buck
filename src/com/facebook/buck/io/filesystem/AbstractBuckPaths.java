@@ -27,6 +27,11 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractBuckPaths {
 
+  /**
+   * Default value for {@link #shouldIncludeTargetConfigHash()} when it is not specified by user.
+   */
+  public static final boolean DEFAULT_BUCK_OUT_INCLUDE_TARGET_COFIG_HASH = false;
+
   public static BuckPaths createDefaultBuckPaths(
       CanonicalCellName cellName, Path rootPath, boolean buckOutIncludeTargetConfigHash) {
     Path buckOut = rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString());

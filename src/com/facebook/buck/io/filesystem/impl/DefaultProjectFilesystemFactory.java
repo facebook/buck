@@ -176,7 +176,10 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       Config config,
       Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
     boolean buckOutIncludeTargetConfigHash =
-        config.getBooleanValue("project", "buck_out_include_target_config_hash", false);
+        config.getBooleanValue(
+            "project",
+            "buck_out_include_target_config_hash",
+            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_COFIG_HASH);
     BuckPaths buckPaths =
         BuckPaths.createDefaultBuckPaths(cellName, rootPath, buckOutIncludeTargetConfigHash);
     Optional<String> configuredProjectBuckOut = config.get("project", "buck_out");
