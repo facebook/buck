@@ -88,7 +88,6 @@ import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -113,7 +112,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
-import com.facebook.buck.rules.keys.EmptyFakeBuildRule;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -155,16 +153,8 @@ import org.junit.rules.ExpectedException;
 
 public class ProjectGeneratorTest {
 
-  private static final BuildTarget TARGET_1 = BuildTargetFactory.newInstance("//example/base:one");
-
-  private static final BuildRule RULE_1 = new EmptyFakeBuildRule(TARGET_1);
   private static final Path OUTPUT_DIRECTORY = Paths.get("_gen");
   private static final String PROJECT_NAME = "GeneratedProject";
-  private static final String PROJECT_CONTAINER = PROJECT_NAME + ".xcodeproj";
-  private static final Path OUTPUT_PROJECT_BUNDLE_PATH =
-      OUTPUT_DIRECTORY.resolve(PROJECT_CONTAINER);
-  private static final Path OUTPUT_PROJECT_FILE_PATH =
-      OUTPUT_PROJECT_BUNDLE_PATH.resolve("project.pbxproj");
   private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
   private static final Flavor DEFAULT_FLAVOR = InternalFlavor.of("default");
   private static final String WATCH_EXTENSION_PRODUCT_TYPE =
