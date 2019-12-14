@@ -189,6 +189,7 @@ public class ProjectGeneratorTest {
     fakeProjectFilesystem = new FakeProjectFilesystem(clock);
     projectCell = (new TestCellBuilder()).setFilesystem(fakeProjectFilesystem).build();
     projectFilesystem = projectCell.getFilesystem();
+    assertSame(projectFilesystem, fakeProjectFilesystem);
     rootPath = projectFilesystem.getRootPath();
 
     // Add files and directories used to test resources.
