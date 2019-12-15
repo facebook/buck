@@ -111,7 +111,7 @@ public abstract class Unarchiver {
       Path archiveFile,
       Path destination,
       ExistingFileMode existingFileMode)
-      throws InterruptedException, IOException {
+      throws IOException {
     return extractArchive(
         projectFilesystemFactory,
         archiveFile,

@@ -185,7 +185,7 @@ public class PexStep extends ShellStep {
 
   private ImmutableMap<Path, Path> getExpandedSourcePaths(
       ProjectFilesystemFactory projectFilesystemFactory, ImmutableMap<Path, Path> paths)
-      throws InterruptedException, IOException {
+      throws IOException {
     ImmutableMap.Builder<Path, Path> sources = ImmutableMap.builder();
 
     for (ImmutableMap.Entry<Path, Path> ent : paths.entrySet()) {
