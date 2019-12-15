@@ -57,6 +57,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -91,7 +92,7 @@ public class PythonUtil {
         .toImmutableList();
   }
 
-  public static ImmutableMap<Path, SourcePath> getModules(
+  public static ImmutableSortedMap<Path, SourcePath> getModules(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       PythonPlatform pythonPlatform,
@@ -102,7 +103,7 @@ public class PythonUtil {
       PatternMatchedCollection<SourceSortedSet> platformItems,
       Optional<VersionMatchedCollection<SourceSortedSet>> versionItems,
       Optional<ImmutableMap<BuildTarget, Version>> versions) {
-    return ImmutableMap.<Path, SourcePath>builder()
+    return ImmutableSortedMap.<Path, SourcePath>naturalOrder()
         .putAll(
             PythonUtil.toModuleMap(
                 target, graphBuilder, cxxPlatform, parameter, baseModule, ImmutableList.of(items)))
