@@ -23,7 +23,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.Omnibus;
@@ -103,41 +102,37 @@ public class PythonUtil {
       PatternMatchedCollection<SourceSortedSet> platformItems,
       Optional<VersionMatchedCollection<SourceSortedSet>> versionItems,
       Optional<ImmutableMap<BuildTarget, Version>> versions) {
-    return CxxGenruleDescription.fixupSourcePaths(
-        graphBuilder,
-        cxxPlatform,
-        ImmutableMap.<Path, SourcePath>builder()
-            .putAll(
-                PythonUtil.toModuleMap(
-                    target,
-                    graphBuilder.getSourcePathResolver(),
-                    parameter,
-                    baseModule,
-                    ImmutableList.of(items)))
-            .putAll(
-                PythonUtil.toModuleMap(
-                    target,
-                    graphBuilder.getSourcePathResolver(),
-                    "platform" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
-                    baseModule,
-                    Iterables.concat(
-                        platformItems.getMatchingValues(pythonPlatform.getFlavor().toString()),
-                        platformItems.getMatchingValues(cxxPlatform.getFlavor().toString()))))
-            .putAll(
-                PythonUtil.toModuleMap(
-                    target,
-                    graphBuilder.getSourcePathResolver(),
-                    "versioned" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
-                    baseModule,
-                    versions.isPresent() && versionItems.isPresent()
-                        ? versionItems.get().getMatchingValues(versions.get())
-                        : ImmutableList.of()))
-            .build());
+    return ImmutableMap.<Path, SourcePath>builder()
+        .putAll(
+            PythonUtil.toModuleMap(
+                target, graphBuilder, cxxPlatform, parameter, baseModule, ImmutableList.of(items)))
+        .putAll(
+            PythonUtil.toModuleMap(
+                target,
+                graphBuilder,
+                cxxPlatform,
+                "platform" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
+                baseModule,
+                Iterables.concat(
+                    platformItems.getMatchingValues(pythonPlatform.getFlavor().toString()),
+                    platformItems.getMatchingValues(cxxPlatform.getFlavor().toString()))))
+        .putAll(
+            PythonUtil.toModuleMap(
+                target,
+                graphBuilder,
+                cxxPlatform,
+                "versioned" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
+                baseModule,
+                versions.isPresent() && versionItems.isPresent()
+                    ? versionItems.get().getMatchingValues(versions.get())
+                    : ImmutableList.of()))
+        .build();
   }
 
   static ImmutableMap<Path, SourcePath> toModuleMap(
       BuildTarget target,
-      SourcePathResolverAdapter resolver,
+      ActionGraphBuilder actionGraphBuilder,
+      CxxPlatform cxxPlatform,
       String parameter,
       Path baseModule,
       Iterable<SourceSortedSet> inputs) {
@@ -148,12 +143,17 @@ public class PythonUtil {
       ImmutableMap<String, SourcePath> namesAndSourcePaths;
       if (input.getUnnamedSources().isPresent()) {
         namesAndSourcePaths =
-            resolver.getSourcePathNames(target, parameter, input.getUnnamedSources().get());
+            actionGraphBuilder
+                .getSourcePathResolver()
+                .getSourcePathNames(target, parameter, input.getUnnamedSources().get());
       } else {
         namesAndSourcePaths = input.getNamedSources().get();
       }
       for (ImmutableMap.Entry<String, SourcePath> entry : namesAndSourcePaths.entrySet()) {
-        moduleNamesAndSourcePaths.put(baseModule.resolve(entry.getKey()), entry.getValue());
+        moduleNamesAndSourcePaths.put(
+            baseModule.resolve(entry.getKey()),
+            CxxGenruleDescription.fixupSourcePath(
+                actionGraphBuilder, cxxPlatform, entry.getValue()));
       }
     }
 
