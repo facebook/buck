@@ -26,8 +26,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -43,14 +42,14 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(Paths.get("test"), FakeSourcePath.of("sourceA")),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableMultimap.of(),
+            ImmutableSet.of(),
             Optional.of(true));
     PythonPackageComponents compB =
         PythonPackageComponents.of(
             ImmutableMap.of(Paths.get("test2"), FakeSourcePath.of("sourceB")),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableMultimap.of(),
+            ImmutableSet.of(),
             Optional.of(false));
 
     BuildTarget me = BuildTargetFactory.newInstance("//:me");
@@ -86,14 +85,14 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(dest, FakeSourcePath.of("sourceA")),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableMultimap.of(),
+            ImmutableSet.of(),
             Optional.empty());
     PythonPackageComponents compB =
         PythonPackageComponents.of(
             ImmutableMap.of(dest, FakeSourcePath.of("sourceB")),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableMultimap.of(),
+            ImmutableSet.of(),
             Optional.empty());
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
     builder.addComponent(compA, them);
@@ -116,14 +115,14 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(dest, path),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableMultimap.of(),
+            ImmutableSet.of(),
             Optional.empty());
     PythonPackageComponents compB =
         PythonPackageComponents.of(
             ImmutableMap.of(dest, path),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableMultimap.of(),
+            ImmutableSet.of(),
             Optional.empty());
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
     builder.addComponent(compA, them);
@@ -153,11 +152,8 @@ public class PythonPackageableComponentsTest {
                 FakeSourcePath.of("nativeA"),
                 Paths.get("nativeB.so"),
                 FakeSourcePath.of("nativeB")),
-            ImmutableSetMultimap.of(
-                Paths.get(""),
-                FakeSourcePath.of("extractedA.whl"),
-                Paths.get(""),
-                FakeSourcePath.of("extractedB.whl")),
+            ImmutableSet.of(
+                FakeSourcePath.of("extractedA.whl"), FakeSourcePath.of("extractedB.whl")),
             Optional.empty());
 
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
@@ -165,15 +161,13 @@ public class PythonPackageableComponentsTest {
     builder.addResources(ImmutableMap.of(Paths.get("barA"), FakeSourcePath.of("resA")), them);
     builder.addNativeLibraries(
         ImmutableMap.of(Paths.get("nativeA.so"), FakeSourcePath.of("nativeA")), them);
-    builder.addModuleDirs(
-        ImmutableSetMultimap.of(Paths.get(""), FakeSourcePath.of("extractedA.whl")));
+    builder.addModuleDirs(ImmutableSet.of(FakeSourcePath.of("extractedA.whl")));
 
     builder.addModule(Paths.get("fooB"), FakeSourcePath.of("sourceB"), them);
     builder.addResources(ImmutableMap.of(Paths.get("barB"), FakeSourcePath.of("resB")), them);
     builder.addNativeLibraries(
         ImmutableMap.of(Paths.get("nativeB.so"), FakeSourcePath.of("nativeB")), them);
-    builder.addModuleDirs(
-        ImmutableSetMultimap.of(Paths.get(""), FakeSourcePath.of("extractedB.whl")));
+    builder.addModuleDirs(ImmutableSet.of(FakeSourcePath.of("extractedB.whl")));
 
     Assert.assertEquals(expected, builder.build());
   }

@@ -55,7 +55,6 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -294,7 +293,7 @@ public class PythonBinaryDescription
             modules.build(),
             /* resources */ ImmutableMap.of(),
             /* nativeLibraries */ ImmutableMap.of(),
-            /* moduleDirs */ ImmutableMultimap.of(),
+            /* moduleDirs */ ImmutableSet.of(),
             /* zipSafe */ args.getZipSafe());
 
     FlavorDomain<PythonPlatform> pythonPlatforms =

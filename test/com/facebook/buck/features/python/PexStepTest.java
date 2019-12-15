@@ -34,7 +34,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -63,12 +62,8 @@ public class PexStepTest {
   private static final ImmutableMap<Path, Path> NATIVE_LIBRARIES =
       ImmutableMap.of(Paths.get("n.so"), Paths.get("/src/n.so"));
   private static final ImmutableSortedSet<String> PRELOAD_LIBRARIES = ImmutableSortedSet.of();
-  private static final ImmutableSetMultimap<Path, Path> MODULE_DIRS =
-      ImmutableSetMultimap.of(
-          Paths.get(""),
-          Paths.get("/tmp/dir1.whl"),
-          Paths.get("subdir"),
-          Paths.get("/tmp/dir2.whl"));
+  private static final ImmutableSortedSet<Path> MODULE_DIRS =
+      ImmutableSortedSet.of(Paths.get("/tmp/dir1.whl"), Paths.get("/tmp/dir2.whl"));
 
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
 
@@ -130,16 +125,16 @@ public class PexStepTest {
     Path realDir1 = tmpDir.getRoot().resolve("dir1.whl");
     Path realDir2 = tmpDir.getRoot().resolve("dir2.whl");
     Path file1 = realDir1.resolve("file1.py");
-    Path file2 = realDir2.resolve("file2.py");
+    Path file2 = realDir2.resolve("subdir").resolve("file2.py");
     Path childFile = realDir1.resolve("some_dir").resolve("child.py");
 
-    ImmutableSetMultimap<Path, Path> moduleDirs =
-        ImmutableSetMultimap.of(Paths.get(""), realDir1, Paths.get("subdir"), realDir2);
+    ImmutableSortedSet<Path> moduleDirs = ImmutableSortedSet.of(realDir1, realDir2);
 
     Files.createDirectories(realDir1);
     Files.createDirectories(realDir2);
     Files.createDirectories(childFile.getParent());
     Files.write(file1, "print(\"file1\")".getBytes(Charsets.UTF_8));
+    Files.createDirectories(file2.getParent());
     Files.write(file2, "print(\"file2\")".getBytes(Charsets.UTF_8));
     Files.write(childFile, "print(\"child\")".getBytes(Charsets.UTF_8));
 

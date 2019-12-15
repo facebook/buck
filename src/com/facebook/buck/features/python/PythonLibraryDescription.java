@@ -44,7 +44,7 @@ import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
@@ -148,7 +148,7 @@ public class PythonLibraryDescription
                       args.getVersionedResources(),
                       selectedVersions),
                   ImmutableMap.of(),
-                  ImmutableMultimap.of(),
+                  ImmutableSet.of(),
                   args.getZipSafe());
 
           return Optional.of(components).map(metadataClass::cast);

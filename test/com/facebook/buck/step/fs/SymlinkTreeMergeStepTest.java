@@ -17,6 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -26,8 +27,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -92,11 +92,10 @@ public class SymlinkTreeMergeStepTest {
 
   @Test
   public void mergesFromDirectoriesProperly() throws IOException {
-    ImmutableMultimap<Path, Path> dirs =
-        ImmutableSetMultimap.of(
-            Paths.get(""), filesystem.resolve(Paths.get("example_py")),
-            Paths.get(""), filesystem.resolve(Paths.get("example_2_py")),
-            Paths.get("subdir"), filesystem.resolve(Paths.get("example_3_py")));
+    ImmutableSortedSet<Path> dirs =
+        ImmutableSortedSet.of(
+            filesystem.resolve(Paths.get("example_py")),
+            filesystem.resolve(Paths.get("example_2_py")));
 
     SymlinkTreeMergeStep step =
         new SymlinkTreeMergeStep("binary", filesystem, linkPath, dirs, deleteExistingLinkPredicate);
@@ -104,7 +103,6 @@ public class SymlinkTreeMergeStepTest {
 
     assertEquals(StepExecutionResults.SUCCESS, result);
     Assert.assertTrue(filesystem.isDirectory(linkPath.resolve("common_dir")));
-    Assert.assertTrue(filesystem.isDirectory(linkPath.resolve("subdir").resolve("common_dir")));
 
     if (Platform.detect() != Platform.WINDOWS) {
       Assert.assertTrue(filesystem.isSymLink(linkPath.resolve(Paths.get("example_py.py"))));
@@ -118,14 +116,6 @@ public class SymlinkTreeMergeStepTest {
           filesystem.isSymLink(linkPath.resolve(Paths.get("example_2_py-1.0", "DESCRIPTION.rst"))));
       Assert.assertTrue(
           filesystem.isSymLink(linkPath.resolve(Paths.get("common_dir", "sibling.py"))));
-
-      Assert.assertTrue(
-          filesystem.isSymLink(linkPath.resolve(Paths.get("subdir", "example_3_py.py"))));
-      Assert.assertTrue(
-          filesystem.isSymLink(
-              linkPath.resolve(Paths.get("subdir", "example_3_py-1.0", "DESCRIPTION.rst"))));
-      Assert.assertTrue(
-          filesystem.isSymLink(linkPath.resolve(Paths.get("subdir", "common_dir", "sibling.py"))));
     }
 
     Assert.assertTrue(
@@ -154,20 +144,6 @@ public class SymlinkTreeMergeStepTest {
         Files.isSameFile(
             filesystem.resolve(Paths.get("example_2_py", "common_dir", "sibling.py")),
             filesystem.resolve(linkPath.resolve(Paths.get("common_dir", "sibling.py")))));
-
-    Assert.assertTrue(
-        Files.isSameFile(
-            filesystem.resolve(Paths.get("example_3_py", "example_3_py.py")),
-            filesystem.resolve(linkPath.resolve(Paths.get("subdir", "example_3_py.py")))));
-    Assert.assertTrue(
-        Files.isSameFile(
-            filesystem.resolve(Paths.get("example_3_py", "example_3_py-1.0", "DESCRIPTION.rst")),
-            filesystem.resolve(
-                linkPath.resolve(Paths.get("subdir", "example_3_py-1.0", "DESCRIPTION.rst")))));
-    Assert.assertTrue(
-        Files.isSameFile(
-            filesystem.resolve(Paths.get("example_3_py", "common_dir", "sibling.py")),
-            filesystem.resolve(linkPath.resolve(Paths.get("subdir", "common_dir", "sibling.py")))));
   }
 
   @Test
@@ -186,7 +162,7 @@ public class SymlinkTreeMergeStepTest {
             "binary",
             filesystem,
             linkPath,
-            ImmutableSetMultimap.of(Paths.get(""), examplePySource.getParent()),
+            ImmutableSortedSet.of(examplePySource.getParent()),
             deleteExistingLinkPredicate);
     step.execute(TestExecutionContext.newInstance());
   }
@@ -201,7 +177,7 @@ public class SymlinkTreeMergeStepTest {
     String expectedMessage =
         String.format(
             "Tried to link %s to %s, but %s already links to %s",
-            examplePyDest, otherPySource, examplePyDest, examplePySource);
+            examplePyDest, examplePySource, examplePyDest, otherPySource);
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(expectedMessage);
@@ -211,11 +187,7 @@ public class SymlinkTreeMergeStepTest {
             "binary",
             filesystem,
             linkPath,
-            ImmutableSetMultimap.of(
-                Paths.get(""),
-                examplePySource.getParent(),
-                Paths.get(""),
-                otherPySource.getParent()),
+            ImmutableSortedSet.of(examplePySource.getParent(), otherPySource.getParent()),
             deleteExistingLinkPredicate);
     step.execute(TestExecutionContext.newInstance());
   }
@@ -233,14 +205,11 @@ public class SymlinkTreeMergeStepTest {
             "binary",
             filesystem,
             linkPath,
-            ImmutableSetMultimap.of(
-                Paths.get(""),
-                examplePySource.getParent(),
-                Paths.get(""),
-                otherPySource.getParent()),
+            ImmutableSortedSet.of(examplePySource.getParent(), otherPySource.getParent()),
             (fs, existingTarget) -> true);
     step.execute(TestExecutionContext.newInstance());
 
-    assertEquals(otherPySource, filesystem.readSymLink(examplePyDest));
+    assertThat(
+        filesystem.readSymLink(examplePyDest), Matchers.oneOf(examplePySource, otherPySource));
   }
 }

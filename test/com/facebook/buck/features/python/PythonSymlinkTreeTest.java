@@ -57,10 +57,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -127,7 +124,7 @@ public class PythonSymlinkTreeTest {
             projectFilesystem,
             outputPath,
             links,
-            ImmutableMultimap.of(),
+            ImmutableSortedSet.of(),
             graphBuilder);
   }
 
@@ -153,7 +150,7 @@ public class PythonSymlinkTreeTest {
                     "link_tree",
                     projectFilesystem,
                     outputPath,
-                    ImmutableMultimap.of(),
+                    ImmutableSortedSet.of(),
                     (fs, existingTarget) -> false))
             .build();
     ImmutableList<Step> actualBuildSteps =
@@ -196,7 +193,7 @@ public class PythonSymlinkTreeTest {
                 Paths.get("file"),
                 PathSourcePath.of(
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file1))),
-            ImmutableSetMultimap.of(Paths.get(""), exportFile1.getSourcePathToOutput()),
+            ImmutableSortedSet.of(exportFile1.getSourcePathToOutput()),
             graphBuilder);
 
     PythonSymlinkTree secondSymLinkTreeBuildRule =
@@ -209,20 +206,7 @@ public class PythonSymlinkTreeTest {
                 Paths.get("file"),
                 PathSourcePath.of(
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file1))),
-            ImmutableSetMultimap.of(Paths.get(""), exportFile2.getSourcePathToOutput()),
-            graphBuilder);
-
-    PythonSymlinkTree thirdSymLinkTreeBuildRule =
-        new PythonSymlinkTree(
-            "link_tree",
-            buildTarget,
-            projectFilesystem,
-            outputPath,
-            ImmutableMap.of(
-                Paths.get("file"),
-                PathSourcePath.of(
-                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file1))),
-            ImmutableSetMultimap.of(Paths.get("other_subdir"), exportFile2.getSourcePathToOutput()),
+            ImmutableSortedSet.of(exportFile2.getSourcePathToOutput()),
             graphBuilder);
 
     // Calculate their rule keys and verify they're different.
@@ -235,100 +219,8 @@ public class PythonSymlinkTreeTest {
         new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(firstSymLinkTreeBuildRule);
     RuleKey key2 =
         new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(secondSymLinkTreeBuildRule);
-    RuleKey key3 =
-        new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(thirdSymLinkTreeBuildRule);
 
     assertNotEquals(key1, key2);
-    assertNotEquals(key1, key3);
-    assertNotEquals(key2, key3);
-  }
-
-  @Test
-  public void testSymlinkTreeRuleKeyAreEqualIfMergeDirectoriesAreEquivalent() throws Exception {
-    // Create a BuildRule wrapping the stock SymlinkTree buildable.
-    // BuildRule rule1 = symlinkTreeBuildable;
-
-    Path file1 = tmpDir.newFile();
-    Files.write(file1, "hello world".getBytes(Charsets.UTF_8));
-
-    BuildTarget exportFileTarget1 = BuildTargetFactory.newInstance("//test:dir1");
-    BuildTarget exportFileTarget2 = BuildTargetFactory.newInstance("//test:dir2");
-
-    Genrule exportFile1 =
-        GenruleBuilder.newGenruleBuilder(exportFileTarget1).setOut("dir1").build(graphBuilder);
-    Genrule exportFile2 =
-        GenruleBuilder.newGenruleBuilder(exportFileTarget2).setOut("dir1").build(graphBuilder);
-
-    projectFilesystem.mkdirs(Paths.get("test", "dir1"));
-    projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir1", "file1"));
-    projectFilesystem.mkdirs(Paths.get("test", "dir2"));
-    projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir2", "file2"));
-    graphBuilder.computeIfAbsent(exportFileTarget1, target -> exportFile1);
-    graphBuilder.computeIfAbsent(exportFileTarget2, target -> exportFile2);
-
-    ImmutableListMultimap<Path, SourcePath> firstMergeDirectories =
-        ImmutableListMultimap.of(
-            Paths.get(""),
-            exportFile2.getSourcePathToOutput(),
-            Paths.get(""),
-            exportFile1.getSourcePathToOutput(),
-            Paths.get("subdir"),
-            exportFile2.getSourcePathToOutput(),
-            Paths.get("subdir"),
-            exportFile1.getSourcePathToOutput());
-
-    ImmutableListMultimap<Path, SourcePath> secondMergeDirectories =
-        ImmutableListMultimap.of(
-            Paths.get("subdir"),
-            exportFile1.getSourcePathToOutput(),
-            Paths.get("subdir"),
-            exportFile2.getSourcePathToOutput(),
-            Paths.get(""),
-            exportFile1.getSourcePathToOutput(),
-            Paths.get(""),
-            exportFile2.getSourcePathToOutput());
-
-    // Create three link tree objects. One will change the dependencies, and one just changes
-    // destination subdirs to make sure that's taken into account
-    PythonSymlinkTree firstSymLinkTreeBuildRule =
-        new PythonSymlinkTree(
-            "link_tree",
-            buildTarget,
-            projectFilesystem,
-            outputPath,
-            ImmutableMap.of(
-                Paths.get("file"),
-                PathSourcePath.of(
-                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file1))),
-            firstMergeDirectories,
-            graphBuilder);
-
-    PythonSymlinkTree secondSymLinkTreeBuildRule =
-        new PythonSymlinkTree(
-            "link_tree",
-            buildTarget,
-            projectFilesystem,
-            outputPath,
-            ImmutableMap.of(
-                Paths.get("file"),
-                PathSourcePath.of(
-                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file1))),
-            secondMergeDirectories,
-            graphBuilder);
-
-    // Calculate their rule keys and verify they're different.
-    DefaultFileHashCache hashCache =
-        DefaultFileHashCache.createDefaultFileHashCache(
-            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
-            FileHashCacheMode.DEFAULT);
-    FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
-    RuleKey key1 =
-        new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(firstSymLinkTreeBuildRule);
-    RuleKey key2 =
-        new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(secondSymLinkTreeBuildRule);
-
-    assertNotEquals(firstMergeDirectories, secondMergeDirectories);
-    assertEquals(key1, key2);
   }
 
   @Test
@@ -375,7 +267,7 @@ public class PythonSymlinkTreeTest {
             .build(graphBuilder);
     Genrule exportFile2 =
         GenruleBuilder.newGenruleBuilder(exportFileTarget2, projectFilesystem)
-            .setOut("dir2")
+            .setOut("subdir/dir2")
             .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, dir2file)))
             .setCmd("mkdir -p $OUT && cp $SRCS $OUT")
             .setCmdExe("mkdir $OUT && copy $SRCS $OUT")
@@ -391,11 +283,8 @@ public class PythonSymlinkTreeTest {
             projectFilesystem,
             outputPath,
             links,
-            ImmutableMultimap.of(
-                Paths.get(""),
-                exportFile1.getSourcePathToOutput(),
-                Paths.get("subdir"),
-                exportFile2.getSourcePathToOutput()),
+            ImmutableSortedSet.of(
+                exportFile1.getSourcePathToOutput(), exportFile2.getSourcePathToOutput()),
             graphBuilder);
 
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
@@ -418,16 +307,11 @@ public class PythonSymlinkTreeTest {
         ImmutableSortedSet.of(exportFile1, exportFile2), symlinkTreeBuildRule.getBuildDeps());
     if (Platform.detect() != Platform.WINDOWS) {
       assertTrue(projectFilesystem.isSymLink(outputPath.resolve("file1")));
-      assertTrue(projectFilesystem.isSymLink(outputPath.resolve("subdir").resolve("file2")));
     }
     assertTrue(
         Files.isSameFile(
             pathResolver.getAbsolutePath(exportFile1.getSourcePathToOutput()).resolve("file1"),
             projectFilesystem.resolve(outputPath.resolve("file1"))));
-    assertTrue(
-        Files.isSameFile(
-            pathResolver.getAbsolutePath(exportFile2.getSourcePathToOutput()).resolve("file2"),
-            projectFilesystem.resolve(outputPath.resolve("subdir").resolve("file2"))));
   }
 
   @Test
@@ -471,11 +355,8 @@ public class PythonSymlinkTreeTest {
             projectFilesystem,
             outputPath,
             links,
-            ImmutableMultimap.of(
-                Paths.get(""),
-                exportFile1.getSourcePathToOutput(),
-                Paths.get(""),
-                exportFile2.getSourcePathToOutput()),
+            ImmutableSortedSet.of(
+                exportFile1.getSourcePathToOutput(), exportFile2.getSourcePathToOutput()),
             graphBuilder);
 
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
@@ -522,7 +403,7 @@ public class PythonSymlinkTreeTest {
             projectFilesystem,
             outputPath,
             links,
-            ImmutableMultimap.of(Paths.get(""), exportFile1.getSourcePathToOutput()),
+            ImmutableSortedSet.of(exportFile1.getSourcePathToOutput()),
             graphBuilder);
 
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
@@ -554,7 +435,7 @@ public class PythonSymlinkTreeTest {
             projectFilesystem,
             outputPath,
             links,
-            ImmutableMultimap.of(Paths.get(""), exportFile.getSourcePathToOutput()),
+            ImmutableSortedSet.of(exportFile.getSourcePathToOutput()),
             graphBuilder);
 
     assertEquals(ImmutableSortedSet.of(exportFile), symlinkTreeBuildRule.getBuildDeps());

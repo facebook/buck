@@ -28,7 +28,6 @@ import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -71,7 +70,7 @@ public class PexStep extends ShellStep {
   // The list of native libraries to preload into the interpreter.
   private final ImmutableSet<String> preloadLibraries;
 
-  private final ImmutableMultimap<Path, Path> moduleDirs;
+  private final ImmutableSet<Path> moduleDirs;
   private final boolean zipSafe;
 
   public PexStep(
@@ -86,7 +85,7 @@ public class PexStep extends ShellStep {
       ImmutableMap<Path, Path> modules,
       ImmutableMap<Path, Path> resources,
       ImmutableMap<Path, Path> nativeLibraries,
-      ImmutableMultimap<Path, Path> moduleDirs,
+      ImmutableSet<Path> moduleDirs,
       ImmutableSet<String> preloadLibraries,
       boolean zipSafe) {
     super(filesystem.getRootPath());
@@ -221,30 +220,26 @@ public class PexStep extends ShellStep {
 
   /** Add a mapping of location in the python root -> location on the filesystem of moduleDirs */
   private void addResolvedModuleDirsSources(ImmutableMap.Builder<String, String> pathBuilder) {
-    moduleDirs
-        .entries()
-        .forEach(
-            entry -> {
-              Path originalDirPath = entry.getValue();
-              try {
-                filesystem.walkFileTree(
-                    originalDirPath,
-                    new SimpleFileVisitor<Path>() {
-                      @Override
-                      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                        Path relativeToRealRoot = originalDirPath.relativize(file);
-                        pathBuilder.put(
-                            entry.getKey().resolve(relativeToRealRoot).toString(), file.toString());
-                        return FileVisitResult.CONTINUE;
-                      }
-                    });
-              } catch (IOException e) {
-                throw new HumanReadableException(
-                    e,
-                    "Could not traverse %s to build python package: %s",
-                    originalDirPath,
-                    e.getMessage());
-              }
-            });
+    moduleDirs.forEach(
+        originalDirPath -> {
+          try {
+            filesystem.walkFileTree(
+                originalDirPath,
+                new SimpleFileVisitor<Path>() {
+                  @Override
+                  public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                    Path relativeToRealRoot = originalDirPath.relativize(file);
+                    pathBuilder.put(relativeToRealRoot.toString(), file.toString());
+                    return FileVisitResult.CONTINUE;
+                  }
+                });
+          } catch (IOException e) {
+            throw new HumanReadableException(
+                e,
+                "Could not traverse %s to build python package: %s",
+                originalDirPath,
+                e.getMessage());
+          }
+        });
   }
 }

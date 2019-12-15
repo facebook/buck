@@ -41,10 +41,8 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Map.Entry;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -155,10 +153,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
             resolver.getMappedPaths(getComponents().getModules()),
             resolver.getMappedPaths(getComponents().getResources()),
             resolver.getMappedPaths(getComponents().getNativeLibraries()),
-            getComponents().getModuleDirs().entries().stream()
-                .collect(
-                    ImmutableSetMultimap.toImmutableSetMultimap(
-                        Entry::getKey, e -> resolver.getAbsolutePath(e.getValue()))),
+            resolver.getAllAbsolutePaths(getComponents().getModuleDirs()),
             preloadLibraries,
             getComponents().isZipSafe().orElse(true)));
 

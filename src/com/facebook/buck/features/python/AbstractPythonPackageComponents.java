@@ -26,19 +26,18 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.util.MoreMaps;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.SetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, singleton = true)
@@ -80,7 +79,8 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
   // directories instead of archives. The key of this map is where to link the contents
   // of the directory within the archive relative to its root
   @Value.Parameter
-  public abstract ImmutableMultimap<Path, SourcePath> getModuleDirs();
+  @Value.NaturalOrder
+  public abstract ImmutableSortedSet<SourcePath> getModuleDirs();
 
   @Value.Parameter
   public abstract Optional<Boolean> isZipSafe();
@@ -100,7 +100,7 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
     deps.addAll(ruleFinder.filterBuildRuleInputs(getModules().values()));
     deps.addAll(ruleFinder.filterBuildRuleInputs(getResources().values()));
     deps.addAll(ruleFinder.filterBuildRuleInputs(getNativeLibraries().values()));
-    deps.addAll(ruleFinder.filterBuildRuleInputs(getModuleDirs().values()));
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getModuleDirs()));
 
     return deps.build();
   }
@@ -118,7 +118,7 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
     private final Map<Path, SourcePath> modules = new HashMap<>();
     private final Map<Path, SourcePath> resources = new HashMap<>();
     private final Map<Path, SourcePath> nativeLibraries = new HashMap<>();
-    private final SetMultimap<Path, SourcePath> moduleDirs = HashMultimap.create();
+    private final Set<SourcePath> moduleDirs = new HashSet<>();
     private Optional<Boolean> zipSafe = Optional.empty();
 
     // Bookkeeping used to for error handling in the presence of duplicate
@@ -188,8 +188,8 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
       return add("native library", nativeLibraries, nativeLibrarySources, sources, from);
     }
 
-    public Builder addModuleDirs(Multimap<Path, SourcePath> moduleDirs) {
-      this.moduleDirs.putAll(moduleDirs);
+    public Builder addModuleDirs(Set<SourcePath> moduleDirs) {
+      this.moduleDirs.addAll(moduleDirs);
       return this;
     }
 
@@ -216,7 +216,7 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
           ImmutableSortedMap.copyOf(modules),
           ImmutableSortedMap.copyOf(resources),
           ImmutableSortedMap.copyOf(nativeLibraries),
-          ImmutableSetMultimap.copyOf(moduleDirs),
+          ImmutableSet.copyOf(moduleDirs),
           zipSafe);
     }
   }

@@ -30,27 +30,18 @@ import com.facebook.buck.step.fs.SymlinkTreeMergeStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /** Creates a tree of symlinks inside of a given directory */
 public class PythonSymlinkTree extends SymlinkTree {
   private static final Path INIT_PY = Paths.get("__init__.py");
 
-  @AddToRuleKey
-  private final Supplier<ImmutableSortedMap<String, ImmutableList<SourcePath>>>
-      directoriesToMergeForRuleKey = this::directoriesToMergeForRuleKey;
-
-  private final ImmutableMultimap<Path, SourcePath> directoriesToMerge;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> directoriesToMerge;
   private final ImmutableSortedSet<BuildRule> buildDeps;
 
   /**
@@ -73,13 +64,13 @@ public class PythonSymlinkTree extends SymlinkTree {
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
-      ImmutableMultimap<Path, SourcePath> directoriesToMerge,
+      ImmutableSortedSet<SourcePath> directoriesToMerge,
       SourcePathRuleFinder ruleFinder) {
     super(category, target, filesystem, root, links);
 
     this.directoriesToMerge = directoriesToMerge;
     this.buildDeps =
-        directoriesToMerge.values().stream()
+        directoriesToMerge.stream()
             .map(ruleFinder::getRule)
             .filter(Optional::isPresent)
             .map(Optional::get)
@@ -87,18 +78,6 @@ public class PythonSymlinkTree extends SymlinkTree {
 
     Preconditions.checkState(
         !root.isAbsolute(), "Expected symlink tree root to be relative: %s", root);
-  }
-
-  // Turn our multimap into something properly ordered by path with the multimap values sorted
-  // TODO(cjhopman): We should just hold the sorted version of this list and then an unsorted
-  // keylist to tell us what order to process them in.
-  private ImmutableSortedMap<String, ImmutableList<SourcePath>> directoriesToMergeForRuleKey() {
-    return directoriesToMerge.keySet().stream()
-        .collect(
-            ImmutableSortedMap.toImmutableSortedMap(
-                String::compareTo,
-                Path::toString,
-                k -> ImmutableList.sortedCopyOf(directoriesToMerge.get(k))));
   }
 
   /**
@@ -124,12 +103,7 @@ public class PythonSymlinkTree extends SymlinkTree {
                 category,
                 getProjectFilesystem(),
                 root,
-                directoriesToMerge.entries().stream()
-                    .collect(
-                        ImmutableSetMultimap.toImmutableSetMultimap(
-                            Entry::getKey,
-                            entry ->
-                                context.getSourcePathResolver().getAbsolutePath(entry.getValue()))),
+                context.getSourcePathResolver().getAllAbsolutePaths(directoriesToMerge),
                 PythonSymlinkTree::shouldDeleteExistingSymlink))
         .build();
   }

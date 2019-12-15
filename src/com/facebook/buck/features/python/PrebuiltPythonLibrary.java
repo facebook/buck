@@ -37,9 +37,8 @@ import com.facebook.buck.unarchive.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -79,7 +78,7 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
         ImmutableMap.of(),
         ImmutableMap.of(),
         ImmutableMap.of(),
-        ImmutableSetMultimap.of(Paths.get(""), Objects.requireNonNull(getSourcePathToOutput())),
+        ImmutableSet.of(Objects.requireNonNull(getSourcePathToOutput())),
         Optional.empty());
   }
 

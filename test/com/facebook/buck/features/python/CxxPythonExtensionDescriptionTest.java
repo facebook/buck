@@ -62,7 +62,6 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
@@ -250,7 +249,7 @@ public class CxxPythonExtensionDescriptionTest {
                 rule.getSourcePathToOutput()),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableMultimap.of(),
+            ImmutableSet.of(),
             Optional.of(false));
     assertEquals(expectedComponents, actualComponent);
   }

@@ -23,14 +23,13 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Map.Entry;
 import java.util.function.BiFunction;
 
 /** A step to merge the contents of provided directories into a symlink tree */
@@ -39,7 +38,7 @@ public class SymlinkTreeMergeStep implements Step {
   private final String name;
   private final ProjectFilesystem filesystem;
   private final Path root;
-  private final ImmutableMultimap<Path, Path> links;
+  private final ImmutableSet<Path> links;
   private final BiFunction<ProjectFilesystem, Path, Boolean> deleteExistingLinkPredicate;
 
   /**
@@ -63,7 +62,7 @@ public class SymlinkTreeMergeStep implements Step {
       String category,
       ProjectFilesystem filesystem,
       Path root,
-      ImmutableMultimap<Path, Path> links,
+      ImmutableSet<Path> links,
       BiFunction<ProjectFilesystem, Path, Boolean> deleteExistingLinkPredicate) {
     this.name = category + "_link_merge_dir";
     this.filesystem = filesystem;
@@ -85,17 +84,13 @@ public class SymlinkTreeMergeStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
 
-    for (Entry<Path, Path> sourceToRelative : links.entries()) {
-      merge(sourceToRelative.getKey(), sourceToRelative.getValue());
+    for (Path sourceToRelative : links) {
+      merge(sourceToRelative);
     }
     return StepExecutionResults.SUCCESS;
   }
 
-  private void merge(Path relativeDestination, Path dirPath) throws IOException {
-    Path destination = root.resolve(relativeDestination);
-    if (destination != dirPath) {
-      filesystem.mkdirs(destination);
-    }
+  private void merge(Path dirPath) throws IOException {
     filesystem.walkFileTree(
         dirPath,
         new SimpleFileVisitor<Path>() {
@@ -103,7 +98,7 @@ public class SymlinkTreeMergeStep implements Step {
           public FileVisitResult preVisitDirectory(Path childPath, BasicFileAttributes attrs)
               throws IOException {
             Path relativePath = dirPath.relativize(childPath);
-            Path destPath = destination.resolve(relativePath);
+            Path destPath = root.resolve(relativePath);
             filesystem.mkdirs(destPath);
             return FileVisitResult.CONTINUE;
           }
@@ -118,7 +113,7 @@ public class SymlinkTreeMergeStep implements Step {
               Path childPath, BasicFileAttributes attrs, boolean allowDeletingExistingSymlink)
               throws IOException {
             Path relativePath = dirPath.relativize(childPath);
-            Path destPath = destination.resolve(relativePath);
+            Path destPath = root.resolve(relativePath);
             try {
               filesystem.createSymLink(filesystem.resolve(destPath), childPath, false);
             } catch (FileAlreadyExistsException e) {
