@@ -36,16 +36,18 @@ public class PythonUtilTest {
   @Test
   public void toModuleMapWithExplicitMap() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    ImmutableMap<Path, SourcePath> srcs =
-        PythonUtil.toModuleMap(
-            target,
-            new TestActionGraphBuilder(),
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            "srcs",
-            target.getCellRelativeBasePath().getPath().toPathDefaultFileSystem(),
-            ImmutableList.of(
-                SourceSortedSet.ofNamedSources(
-                    ImmutableSortedMap.of("hello.py", FakeSourcePath.of("goodbye.py")))));
+    ImmutableMap.Builder<Path, SourcePath> srcsBuilder = ImmutableMap.builder();
+    PythonUtil.forEachModule(
+        target,
+        new TestActionGraphBuilder(),
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        "srcs",
+        target.getCellRelativeBasePath().getPath().toPathDefaultFileSystem(),
+        ImmutableList.of(
+            SourceSortedSet.ofNamedSources(
+                ImmutableSortedMap.of("hello.py", FakeSourcePath.of("goodbye.py")))),
+        srcsBuilder::put);
+    ImmutableMap<Path, SourcePath> srcs = srcsBuilder.build();
     assertEquals(
         ImmutableMap.<Path, SourcePath>of(
             target

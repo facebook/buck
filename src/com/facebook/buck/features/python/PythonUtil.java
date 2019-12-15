@@ -69,6 +69,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
 public class PythonUtil {
 
@@ -103,42 +104,46 @@ public class PythonUtil {
       PatternMatchedCollection<SourceSortedSet> platformItems,
       Optional<VersionMatchedCollection<SourceSortedSet>> versionItems,
       Optional<ImmutableMap<BuildTarget, Version>> versions) {
-    return ImmutableSortedMap.<Path, SourcePath>naturalOrder()
-        .putAll(
-            PythonUtil.toModuleMap(
-                target, graphBuilder, cxxPlatform, parameter, baseModule, ImmutableList.of(items)))
-        .putAll(
-            PythonUtil.toModuleMap(
-                target,
-                graphBuilder,
-                cxxPlatform,
-                "platform" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
-                baseModule,
-                Iterables.concat(
-                    platformItems.getMatchingValues(pythonPlatform.getFlavor().toString()),
-                    platformItems.getMatchingValues(cxxPlatform.getFlavor().toString()))))
-        .putAll(
-            PythonUtil.toModuleMap(
-                target,
-                graphBuilder,
-                cxxPlatform,
-                "versioned" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
-                baseModule,
-                versions.isPresent() && versionItems.isPresent()
-                    ? versionItems.get().getMatchingValues(versions.get())
-                    : ImmutableList.of()))
-        .build();
+    ImmutableSortedMap.Builder<Path, SourcePath> builder = ImmutableSortedMap.naturalOrder();
+    forEachModule(
+        target,
+        graphBuilder,
+        cxxPlatform,
+        parameter,
+        baseModule,
+        ImmutableList.of(items),
+        builder::put);
+    forEachModule(
+        target,
+        graphBuilder,
+        cxxPlatform,
+        "platform" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
+        baseModule,
+        Iterables.concat(
+            platformItems.getMatchingValues(pythonPlatform.getFlavor().toString()),
+            platformItems.getMatchingValues(cxxPlatform.getFlavor().toString())),
+        builder::put);
+    forEachModule(
+        target,
+        graphBuilder,
+        cxxPlatform,
+        "versioned" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
+        baseModule,
+        versions.isPresent() && versionItems.isPresent()
+            ? versionItems.get().getMatchingValues(versions.get())
+            : ImmutableList.of(),
+        builder::put);
+    return builder.build();
   }
 
-  static ImmutableMap<Path, SourcePath> toModuleMap(
+  static void forEachModule(
       BuildTarget target,
       ActionGraphBuilder actionGraphBuilder,
       CxxPlatform cxxPlatform,
       String parameter,
       Path baseModule,
-      Iterable<SourceSortedSet> inputs) {
-
-    ImmutableMap.Builder<Path, SourcePath> moduleNamesAndSourcePaths = ImmutableMap.builder();
+      Iterable<SourceSortedSet> inputs,
+      BiConsumer<Path, SourcePath> consumer) {
 
     for (SourceSortedSet input : inputs) {
       ImmutableMap<String, SourcePath> namesAndSourcePaths;
@@ -151,14 +156,12 @@ public class PythonUtil {
         namesAndSourcePaths = input.getNamedSources().get();
       }
       for (ImmutableMap.Entry<String, SourcePath> entry : namesAndSourcePaths.entrySet()) {
-        moduleNamesAndSourcePaths.put(
+        consumer.accept(
             baseModule.resolve(entry.getKey()),
             CxxGenruleDescription.fixupSourcePath(
                 actionGraphBuilder, cxxPlatform, entry.getValue()));
       }
     }
-
-    return moduleNamesAndSourcePaths.build();
   }
 
   /** Convert a path to a module to it's module name as referenced in import statements. */
