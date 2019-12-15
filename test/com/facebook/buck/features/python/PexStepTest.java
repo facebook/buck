@@ -51,7 +51,6 @@ public class PexStepTest {
   private static final PythonVersion PYTHON_VERSION = PythonVersion.of("CPython", "2.6");
   private static final ImmutableMap<String, String> PEX_ENVIRONMENT = ImmutableMap.of();
   private static final ImmutableList<String> PEX_COMMAND = ImmutableList.of();
-  private static final Path TEMP_PATH = Paths.get("/tmp/");
   private static final Path DEST_PATH = Paths.get("/dest");
   private static final String ENTRY_POINT = "entry_point.main";
 
@@ -76,7 +75,6 @@ public class PexStepTest {
             PEX_COMMAND,
             PYTHON_PATH,
             PYTHON_VERSION,
-            TEMP_PATH,
             DEST_PATH,
             ENTRY_POINT,
             MODULES,
@@ -104,7 +102,6 @@ public class PexStepTest {
             PEX_COMMAND,
             PYTHON_PATH,
             PYTHON_VERSION,
-            TEMP_PATH,
             DEST_PATH,
             ENTRY_POINT,
             MODULES,
@@ -145,7 +142,6 @@ public class PexStepTest {
             PEX_COMMAND,
             PYTHON_PATH,
             PYTHON_VERSION,
-            TEMP_PATH,
             DEST_PATH,
             ENTRY_POINT,
             MODULES,
@@ -190,7 +186,6 @@ public class PexStepTest {
             ImmutableList.<String>builder().add("build").add("--some", "--args").build(),
             PYTHON_PATH,
             PYTHON_VERSION,
-            TEMP_PATH,
             DEST_PATH,
             ENTRY_POINT,
             MODULES,

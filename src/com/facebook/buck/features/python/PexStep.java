@@ -20,25 +20,20 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.facebook.buck.util.unarchive.ArchiveFormat;
-import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 
 public class PexStep extends ShellStep {
-  private static final String SRC_ZIP = ".src.zip";
 
   private final ProjectFilesystem filesystem;
 
@@ -62,7 +57,6 @@ public class PexStep extends ShellStep {
   private final ImmutableMap<Path, Path> resources;
   private final PythonVersion pythonVersion;
   private final Path pythonPath;
-  private final Path tempDir;
 
   // The map of native libraries to include in the PEX.
   private final ImmutableMap<Path, Path> nativeLibraries;
@@ -79,7 +73,6 @@ public class PexStep extends ShellStep {
       ImmutableList<String> commandPrefix,
       Path pythonPath,
       PythonVersion pythonVersion,
-      Path tempDir,
       Path destination,
       String entry,
       ImmutableMap<Path, Path> modules,
@@ -95,7 +88,6 @@ public class PexStep extends ShellStep {
     this.commandPrefix = commandPrefix;
     this.pythonPath = pythonPath;
     this.pythonVersion = pythonVersion;
-    this.tempDir = tempDir;
     this.destination = destination;
     this.entry = entry;
     this.modules = modules;
@@ -118,16 +110,10 @@ public class PexStep extends ShellStep {
    * occasionally get extremely large, and surpass exec/shell limits on arguments.
    */
   @Override
-  protected Optional<String> getStdin(ExecutionContext context) throws InterruptedException {
+  protected Optional<String> getStdin(ExecutionContext context) {
     // Convert the map of paths to a map of strings before converting to JSON.
-    ImmutableMap<Path, Path> resolvedModules;
-    try {
-      resolvedModules = getExpandedSourcePaths(context.getProjectFilesystemFactory(), modules);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
     ImmutableMap.Builder<String, String> modulesBuilder = ImmutableMap.builder();
-    for (ImmutableMap.Entry<Path, Path> ent : resolvedModules.entrySet()) {
+    for (ImmutableMap.Entry<Path, Path> ent : modules.entrySet()) {
       modulesBuilder.put(ent.getKey().toString(), ent.getValue().toString());
     }
     addResolvedModuleDirsSources(modulesBuilder);
@@ -181,36 +167,6 @@ public class PexStep extends ShellStep {
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     return environment;
-  }
-
-  private ImmutableMap<Path, Path> getExpandedSourcePaths(
-      ProjectFilesystemFactory projectFilesystemFactory, ImmutableMap<Path, Path> paths)
-      throws IOException {
-    ImmutableMap.Builder<Path, Path> sources = ImmutableMap.builder();
-
-    for (ImmutableMap.Entry<Path, Path> ent : paths.entrySet()) {
-      if (ent.getValue().toString().endsWith(SRC_ZIP)) {
-        Path destinationDirectory = filesystem.resolve(tempDir.resolve(ent.getKey()));
-        Files.createDirectories(destinationDirectory);
-
-        ImmutableList<Path> zipPaths =
-            ArchiveFormat.ZIP
-                .getUnarchiver()
-                .extractArchive(
-                    projectFilesystemFactory,
-                    filesystem.resolve(ent.getValue()),
-                    destinationDirectory,
-                    ExistingFileMode.OVERWRITE);
-        for (Path path : zipPaths) {
-          Path modulePath = destinationDirectory.relativize(path);
-          sources.put(modulePath, path);
-        }
-      } else {
-        sources.put(ent.getKey(), ent.getValue());
-      }
-    }
-
-    return sources.build();
   }
 
   @VisibleForTesting

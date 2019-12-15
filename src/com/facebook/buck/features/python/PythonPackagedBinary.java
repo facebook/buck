@@ -19,7 +19,6 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -35,7 +34,6 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.stream.RichStream;
@@ -125,15 +123,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
                     context.getBuildCellRootPath(), getProjectFilesystem(), binPath))
             .withRecursive(true));
 
-    Path workingDirectory =
-        BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), getBuildTarget(), "__%s__working_directory");
-
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory)));
-
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
     // Generate and return the PEX build step.
@@ -147,7 +136,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
                 .build(),
             pythonEnvironment.getPythonPath(),
             pythonEnvironment.getPythonVersion(),
-            workingDirectory,
             binPath,
             mainModule,
             resolver.getMappedPaths(getComponents().getModules()),
