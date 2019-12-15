@@ -58,7 +58,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.features.python.CxxPythonExtension;
 import com.facebook.buck.features.python.PythonBinaryDescription;
 import com.facebook.buck.features.python.PythonPackagable;
-import com.facebook.buck.features.python.PythonUtil;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.io.file.MorePaths;
@@ -336,7 +335,8 @@ public class LuaBinaryDescription
               packageable.getPythonModules(pythonPlatform, cxxPlatform, graphBuilder);
           builder.putAllPythonModules(MoreMaps.transformKeys(modules, Object::toString));
           deps = packageable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
-          if (PythonUtil.hasNativeCode(cxxPlatform, modules)) {
+          if (packageable.doesPythonPackageDisallowOmnibus(
+              pythonPlatform, cxxPlatform, graphBuilder)) {
             for (BuildRule dep : deps) {
               if (dep instanceof NativeLinkableGroup) {
                 NativeLinkable linkable =

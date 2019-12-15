@@ -73,6 +73,8 @@ import java.util.function.BiConsumer;
 
 public class PythonUtil {
 
+  static final String NATIVE_EXTENSION_EXT = "so";
+
   static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
       ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander());
 
@@ -234,8 +236,8 @@ public class PythonUtil {
               rule.getBuildTarget());
           allComponents.addModuleDirs(packagable.getPythonModuleDirs());
           allComponents.addZipSafe(packagable.isPythonZipSafe());
-          if (packagable.doesPythonPackageDisallowOmnibus()
-              || hasNativeCode(cxxPlatform, modules)) {
+          if (packagable.doesPythonPackageDisallowOmnibus(
+              pythonPlatform, cxxPlatform, graphBuilder)) {
             for (BuildRule dep :
                 packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder)) {
               if (dep instanceof NativeLinkableGroup) {
@@ -351,17 +353,6 @@ public class PythonUtil {
     return override.isPresent()
         ? Paths.get(override.get().replace('.', '/'))
         : target.getCellRelativeBasePath().getPath().toPathDefaultFileSystem();
-  }
-
-  /** @return whether there are any native libraries included in these components. */
-  public static boolean hasNativeCode(
-      CxxPlatform cxxPlatform, ImmutableMap<Path, SourcePath> modules) {
-    for (Path module : modules.keySet()) {
-      if (module.toString().endsWith(cxxPlatform.getSharedLibraryExtension())) {
-        return true;
-      }
-    }
-    return false;
   }
 
   static ImmutableSet<String> getPreloadNames(

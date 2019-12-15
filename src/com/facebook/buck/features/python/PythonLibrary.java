@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -112,7 +113,20 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public boolean doesPythonPackageDisallowOmnibus() {
-    return excludeDepsFromOmnibus;
+  public boolean doesPythonPackageDisallowOmnibus(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    if (excludeDepsFromOmnibus) {
+      return true;
+    }
+
+    // In some cases, Python library rules package prebuilt native extensions, in which case, we
+    // can't support library merging (since we can't re-link these extensions).
+    for (Path module : getPythonModules(pythonPlatform, cxxPlatform, graphBuilder).keySet()) {
+      if (MorePaths.getFileExtension(module).equals(PythonUtil.NATIVE_EXTENSION_EXT)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

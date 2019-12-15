@@ -102,7 +102,8 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   @Override
-  public boolean doesPythonPackageDisallowOmnibus() {
+  public boolean doesPythonPackageDisallowOmnibus(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return excludeDepsFromOmnibus;
   }
 }

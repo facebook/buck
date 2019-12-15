@@ -104,7 +104,10 @@ public interface PythonPackagable {
   // TODO(agallagher): I think if made sure to model prebuilt python native extensions in a separate
   //  e.g. `prebuilt_python_extension()` rule, then we'd could forbid users from specifying them via
   //  `python_library(srcs=["extension.so"])` and no longer need this opt-out.
-  default boolean doesPythonPackageDisallowOmnibus() {
+  default boolean doesPythonPackageDisallowOmnibus(
+      @SuppressWarnings("unused") PythonPlatform pythonPlatform,
+      @SuppressWarnings("unused") CxxPlatform cxxPlatform,
+      @SuppressWarnings("unused") ActionGraphBuilder graphBuilder) {
     return false;
   }
 }
