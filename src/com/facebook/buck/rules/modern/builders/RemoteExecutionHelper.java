@@ -21,7 +21,7 @@ import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 
 /**
  * RemoteExecutionHelper is used to create remote execution actions for a {@link ModernBuildRule}.
@@ -39,7 +39,7 @@ public interface RemoteExecutionHelper {
    */
   RemoteExecutionActionInfo prepareRemoteExecution(
       ModernBuildRule<?> rule,
-      Predicate<Digest> requiredDataPredicate,
+      BiPredicate<Digest, String> requiredDataPredicate,
       WorkerRequirements workerRequirements)
       throws IOException;
 

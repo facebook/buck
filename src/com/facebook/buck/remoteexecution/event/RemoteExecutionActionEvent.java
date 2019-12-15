@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import io.grpc.Status;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -115,10 +116,57 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     eventBus.post(new Scheduled(buildRule));
   }
 
+  /** Sending the InputsUploaded event */
+  public static void sendInputsUploadedEventIfNeed(
+      BuckEventBus eventBus, BuildRule buildRule, List<InputsUploaded.LargeBlob> largeBlobs) {
+    if (largeBlobs.isEmpty()) {
+      return;
+    }
+
+    eventBus.post(new InputsUploaded(buildRule, largeBlobs));
+  }
+
   public static boolean isTerminalState(State state) {
     return state == State.ACTION_FAILED
         || state == State.ACTION_SUCCEEDED
         || state == State.ACTION_CANCELLED;
+  }
+
+  /** Describes the event which occurs right after inputs were uploaded to the CAS. */
+  public static class InputsUploaded extends RemoteExecutionActionEvent {
+    private final BuildRule rule;
+    private final List<LargeBlob> largeBlobs;
+
+    protected InputsUploaded(BuildRule rule, List<LargeBlob> largeBlobs) {
+      super(EventKey.unique());
+
+      this.rule = rule;
+      this.largeBlobs = largeBlobs;
+    }
+
+    @Override
+    protected String getValueString() {
+      return "INPUTS_UPLOADED";
+    }
+
+    public List<LargeBlob> getLargeBlobs() {
+      return largeBlobs;
+    }
+
+    public BuildRule getBuildRule() {
+      return rule;
+    }
+
+    /** Large blob definition */
+    public static class LargeBlob {
+      public final String fileName;
+      public final Digest digest;
+
+      public LargeBlob(String fileName, Digest digest) {
+        this.fileName = fileName;
+        this.digest = digest;
+      }
+    }
   }
 
   /** Sends a one off terminal event for a Remote Execution Action. */

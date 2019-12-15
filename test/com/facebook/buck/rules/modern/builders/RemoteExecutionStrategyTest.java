@@ -72,7 +72,7 @@ import java.util.OptionalLong;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -123,7 +123,7 @@ public class RemoteExecutionStrategyTest {
           @Override
           public RemoteExecutionActionInfo prepareRemoteExecution(
               ModernBuildRule<?> rule1,
-              Predicate<Digest> requiredDataPredicate,
+              BiPredicate<Digest, String> requiredDataPredicate,
               WorkerRequirements workerRequirements) {
             return actionInfo;
           }
@@ -288,6 +288,11 @@ public class RemoteExecutionStrategyTest {
 
     @Override
     public OptionalLong maxInputSizeBytes() {
+      return OptionalLong.empty();
+    }
+
+    @Override
+    public OptionalLong largeBlobSizeBytes() {
       return OptionalLong.empty();
     }
 

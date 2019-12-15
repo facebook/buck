@@ -177,7 +177,7 @@ public class PerfMbrPrepareRemoteExecutionCommand
                           try {
                             return helper.prepareRemoteExecution(
                                 (ModernBuildRule<?>) buildRule,
-                                digest -> !containedHashes.contains(digest),
+                                (digest, ignored) -> !containedHashes.contains(digest),
                                 FileBasedWorkerRequirementsProvider.DONT_RETRY_ON_OOM_DEFAULT);
                           } catch (Exception e) {
                             // Ignore. Hopefully this is just a serialization failure. In normal

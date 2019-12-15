@@ -42,6 +42,8 @@ public interface RemoteExecutionStrategyConfig {
 
   OptionalLong maxInputSizeBytes();
 
+  OptionalLong largeBlobSizeBytes();
+
   String getWorkerRequirementsFilename();
 
   boolean tryLargerWorkerOnOom();

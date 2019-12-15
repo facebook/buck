@@ -85,8 +85,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -377,7 +377,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   @Override
   public RemoteExecutionActionInfo prepareRemoteExecution(
       ModernBuildRule<?> rule,
-      Predicate<Digest> requiredDataPredicate,
+      BiPredicate<Digest, String> requiredDataPredicate,
       WorkerRequirements workerRequirements)
       throws IOException {
     Set<Path> outputs;
@@ -428,7 +428,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       nodeCache.forAllData(
           mergedMerkleTree,
           childData -> {
-            if (requiredDataPredicate.test(childData.getDigest())) {
+            if (requiredDataPredicate.test(
+                childData.getDigest(), childData.getDirectory().toString())) {
               requiredDataBuilder.add(
                   UploadDataSupplier.of(
                       childData.getDirectory().toString(),
@@ -462,11 +463,11 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
   private void getFileInputs(
       MerkleTreeNode inputsMerkleTree,
-      Predicate<Digest> requiredDataPredicate,
+      BiPredicate<Digest, String> requiredDataPredicate,
       Consumer<UploadDataSupplier> dataConsumer) {
     inputsMerkleTree.forAllFiles(
         (path, fileNode) -> {
-          if (requiredDataPredicate.test(fileNode.getDigest())) {
+          if (requiredDataPredicate.test(fileNode.getDigest(), path.toString())) {
             dataConsumer.accept(
                 new UploadDataSupplier() {
                   @Override
@@ -517,12 +518,14 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
         });
   }
 
-  private Stream<UploadDataSupplier> getSharedFilesData(Predicate<Digest> requiredDataPredicate)
-      throws IOException {
+  private Stream<UploadDataSupplier> getSharedFilesData(
+      BiPredicate<Digest, String> requiredDataPredicate) throws IOException {
     ImmutableList<RequiredFile> requiredFiles = sharedRequiredFiles.get();
     return requiredFiles.stream()
         .map(requiredFile -> requiredFile.dataSupplier)
-        .filter(dataSupplier -> requiredDataPredicate.test(dataSupplier.getDigest()));
+        .filter(
+            dataSupplier ->
+                requiredDataPredicate.test(dataSupplier.getDigest(), dataSupplier.describe()));
   }
 
   private final ConcurrentHashMap<Data, MerkleTreeNode> resolvedInputsCache =
@@ -730,7 +733,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
   private MerkleTreeNode getSerializationTreeAndInputs(
       HashCode hash,
-      Predicate<Digest> requiredDataPredicate,
+      BiPredicate<Digest, String> requiredDataPredicate,
       Consumer<UploadDataSupplier> dataBuilder)
       throws IOException {
     Map<Path, FileNode> fileNodes = new HashMap<>();
@@ -740,7 +743,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
         Path valuePath = root.resolve(node.hash).resolve(fileName);
         Digest digest = protocol.newDigest(node.hash, node.dataLength);
         fileNodes.put(valuePath, protocol.newFileNode(digest, fileName, false));
-        if (!requiredDataPredicate.test(digest)) {
+        if (!requiredDataPredicate.test(digest, node.instance.getClass().getName())) {
           node.dropData();
         } else {
           byte[] data = node.acquireData(serializer, hasher);

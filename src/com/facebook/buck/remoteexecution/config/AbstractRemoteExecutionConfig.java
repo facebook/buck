@@ -92,6 +92,8 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       "is_local_fallback_disabled_on_corrupt_artifacts";
   /** The maximum size of inputs allowed on remote execution, if unset, no maximum. */
   public static final String MAX_INPUT_SIZE_BYTES = "max_input_size_bytes";
+  /** The large blob size bytes threshold, if unset, no threshold. */
+  public static final String LARGE_BLOB_SIZE_BYTES = "large_blob_size_bytes";
   /**
    * Number of threads for the strategy to do its work. This doesn't need to be a lot, but should
    * probably be greater than concurrent_result_handling below.
@@ -360,6 +362,12 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
             .map(size -> OptionalLong.of(Long.parseLong(size)))
             .orElseGet(OptionalLong::empty);
 
+    OptionalLong largeBlobSizeBytes =
+        getDelegate()
+            .getValue(SECTION, LARGE_BLOB_SIZE_BYTES)
+            .map(size -> OptionalLong.of(Long.parseLong(size)))
+            .orElseGet(OptionalLong::empty);
+
     String workerRequirementsFilename =
         getDelegate()
             .getValue(SECTION, WORKER_REQUIREMENTS_FILENAME)
@@ -453,6 +461,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       @Override
       public OptionalLong maxInputSizeBytes() {
         return maxInputSizeBytes;
+      }
+
+      @Override
+      public OptionalLong largeBlobSizeBytes() {
+        return largeBlobSizeBytes;
       }
 
       @Override

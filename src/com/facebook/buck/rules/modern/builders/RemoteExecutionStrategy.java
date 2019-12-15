@@ -59,6 +59,7 @@ import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -100,6 +101,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final JobLimiter executionLimiter;
   private final JobLimiter handleResultLimiter;
   private final OptionalLong maxInputSizeBytes;
+  private final OptionalLong largeBlobSizeBytes;
   private final WorkerRequirementsProvider requirementsProvider;
   private final MetadataProvider metadataProvider;
   private final String auxiliaryBuildTag;
@@ -121,6 +123,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.executionLimiter = new JobLimiter(strategyConfig.getMaxConcurrentExecutions());
     this.handleResultLimiter = new JobLimiter(strategyConfig.getMaxConcurrentResultHandling());
     this.maxInputSizeBytes = strategyConfig.maxInputSizeBytes();
+    this.largeBlobSizeBytes = strategyConfig.largeBlobSizeBytes();
     this.eventBus = eventBus;
     this.metadataProvider = metadataProvider;
     this.mbrHelper = mbrHelper;
@@ -359,6 +362,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               + " bytes, max allowed: "
               + maxInputSizeBytes.getAsLong());
     }
+
     Digest actionDigest = actionInfo.getActionDigest();
     Scope uploadingInputsScope =
         guardContext.enterState(State.UPLOADING_INPUTS, Optional.of(actionDigest));
@@ -413,13 +417,22 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     try (Scope ignored = strategyContext.buildRuleScope()) {
       RemoteExecutionActionInfo actionInfo;
 
+      List<RemoteExecutionActionEvent.InputsUploaded.LargeBlob> largeBlobs = Lists.newArrayList();
+      long largeBlobSizeThreshold = largeBlobSizeBytes.orElse(-1L);
       try (Scope ignored1 = guardContext.enterState(State.COMPUTING_ACTION, Optional.empty())) {
         actionInfo =
             mbrHelper.prepareRemoteExecution(
                 (ModernBuildRule<?>) rule,
-                digest -> !executionClients.getContentAddressedStorage().containsDigest(digest),
+                (digest, path) -> {
+                  if (largeBlobSizeThreshold > 0 && digest.getSize() >= largeBlobSizeThreshold) {
+                    largeBlobs.add(
+                        new RemoteExecutionActionEvent.InputsUploaded.LargeBlob(path, digest));
+                  }
+                  return !executionClients.getContentAddressedStorage().containsDigest(digest);
+                },
                 requirementsProvider.resolveRequirements(rule.getBuildTarget(), auxiliaryBuildTag));
       }
+      RemoteExecutionActionEvent.sendInputsUploadedEventIfNeed(eventBus, rule, largeBlobs);
       return actionInfo;
     }
   }
