@@ -34,9 +34,12 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -71,5 +74,28 @@ public class PythonMappedComponentsTest {
     List<SourcePath> inputs = new ArrayList<>();
     components.forEachInput(inputs::add);
     assertThat(inputs, Matchers.contains(input1, input2));
+  }
+
+  @Test
+  public void resolvePythonComponents() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    SourcePath input1 = PathSourcePath.of(filesystem, filesystem.getPath("src1"));
+    SourcePath input2 = PathSourcePath.of(filesystem, filesystem.getPath("src2"));
+    PythonComponents components =
+        PythonMappedComponents.of(
+            ImmutableSortedMap.of(
+                filesystem.getPath("key1"), input1, filesystem.getPath("key2"), input2));
+    Map<Path, Path> resolved = new HashMap<>();
+    components
+        .resolvePythonComponents(new TestActionGraphBuilder().getSourcePathResolver())
+        .forEachPythonComponent(resolved::put);
+    assertThat(
+        resolved,
+        Matchers.equalTo(
+            ImmutableMap.of(
+                filesystem.getPath("key1"),
+                filesystem.resolve("src1"),
+                filesystem.getPath("key2"),
+                filesystem.resolve("src2"))));
   }
 }

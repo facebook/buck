@@ -19,6 +19,9 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 
 /**
@@ -30,4 +33,38 @@ public interface PythonComponents extends AddsToRuleKey {
 
   /** Run {@code consumer} on all {@link SourcePath}s contained in this object. */
   void forEachInput(Consumer<SourcePath> consumer);
+
+  /**
+   * Convert this {@link PythonComponents} to a {@link Resolved}, where all {@link
+   * com.facebook.buck.core.sourcepath.SourcePath}s have been resolved to {@link Path}s for use with
+   * {@link com.facebook.buck.step.Step}s.
+   */
+  Resolved resolvePythonComponents(SourcePathResolverAdapter resolver);
+
+  /**
+   * Resolve this {@link PythonComponents} into a class usable by {@link
+   * com.facebook.buck.step.Step}s.
+   */
+  interface Resolved {
+
+    /**
+     * Called by executing {@link com.facebook.buck.step.Step}s to iterate over the components owned
+     * by this {@link PythonComponents}.
+     */
+    void forEachPythonComponent(ComponentConsumer consumer) throws IOException;
+
+    /**
+     * A {@link java.util.function.BiConsumer} which throws a {@link IOException} for use by
+     * executing {@link com.facebook.buck.step.Step}s to process the {@link Path}s to the components
+     * from this object.
+     */
+    interface ComponentConsumer {
+
+      /**
+       * @param destination this components location in the Python package.
+       * @param source this components source location on disk.
+       */
+      void accept(Path destination, Path source) throws IOException;
+    }
+  }
 }

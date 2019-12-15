@@ -18,7 +18,14 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.function.Consumer;
 import org.immutables.value.Value;
 
@@ -41,5 +48,37 @@ abstract class AbstractPythonModuleDirComponents implements PythonComponents {
   @Override
   public void forEachInput(Consumer<SourcePath> consumer) {
     consumer.accept(getDirectory());
+  }
+
+  @Override
+  public Resolved resolvePythonComponents(SourcePathResolverAdapter resolver) {
+    return new Resolved(resolver.getAbsolutePath(getDirectory()));
+  }
+
+  /**
+   * An implementation of {@link com.facebook.buck.features.python.PythonComponents.Resolved} for
+   * {@link PythonModuleDirComponents} with {@link SourcePath}s resolved to {@link Path}s for use
+   * with {@link com.facebook.buck.step.Step}.
+   */
+  static class Resolved implements PythonComponents.Resolved {
+    private final Path directory;
+
+    public Resolved(Path directory) {
+      this.directory = directory;
+    }
+
+    @Override
+    public void forEachPythonComponent(ComponentConsumer consumer) throws IOException {
+      Files.walkFileTree(
+          directory,
+          new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws IOException {
+              consumer.accept(directory.relativize(file), file);
+              return super.visitFile(file, attrs);
+            }
+          });
+    }
   }
 }

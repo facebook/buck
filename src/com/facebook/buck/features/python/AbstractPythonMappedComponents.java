@@ -18,10 +18,14 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.MoreMaps;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
@@ -53,5 +57,31 @@ abstract class AbstractPythonMappedComponents implements PythonComponents {
   @Override
   public void forEachInput(Consumer<SourcePath> consumer) {
     getComponents().values().forEach(consumer);
+  }
+
+  @Override
+  public Resolved resolvePythonComponents(SourcePathResolverAdapter resolver) {
+    return new Resolved(resolver.getMappedPaths(getComponents()));
+  }
+
+  /**
+   * An implementation of {@link com.facebook.buck.features.python.PythonComponents.Resolved} for
+   * {@link PythonMappedComponents} with {@link SourcePath}s resolved to {@link Path}s for use with
+   * {@link com.facebook.buck.step.Step}.
+   */
+  public static class Resolved implements PythonComponents.Resolved {
+
+    private final ImmutableMap<Path, Path> resolved;
+
+    public Resolved(ImmutableMap<Path, Path> resolved) {
+      this.resolved = resolved;
+    }
+
+    @Override
+    public void forEachPythonComponent(ComponentConsumer consumer) throws IOException {
+      for (Map.Entry<Path, Path> ent : resolved.entrySet()) {
+        consumer.accept(ent.getKey(), ent.getValue());
+      }
+    }
   }
 }
