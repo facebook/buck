@@ -37,7 +37,7 @@ public class PythonUtilTest {
   public void toModuleMapWithExplicitMap() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ImmutableMap.Builder<Path, SourcePath> srcsBuilder = ImmutableMap.builder();
-    PythonUtil.forEachModule(
+    PythonUtil.forEachModuleParam(
         target,
         new TestActionGraphBuilder(),
         CxxPlatformUtils.DEFAULT_PLATFORM,

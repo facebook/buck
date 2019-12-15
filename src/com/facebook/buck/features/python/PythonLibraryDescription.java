@@ -123,38 +123,30 @@ public class PythonLibraryDescription
       case MODULES:
         {
           return Optional.of(
-                  PythonUtil.getModules(
+                  PythonUtil.parseSrcs(
                       baseTarget,
                       graphBuilder,
                       pythonPlatform.getValue(),
                       cxxPlatform
                           .getValue()
                           .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-                      "srcs",
-                      PythonUtil.getBasePath(baseTarget, args.getBaseModule()),
-                      args.getSrcs(),
-                      args.getPlatformSrcs(),
-                      args.getVersionedSrcs(),
-                      selectedVersions))
+                      selectedVersions,
+                      args))
               .map(metadataClass::cast);
         }
 
       case RESOURCES:
         {
           return Optional.of(
-                  PythonUtil.getModules(
+                  PythonUtil.parseResources(
                       baseTarget,
                       graphBuilder,
                       pythonPlatform.getValue(),
                       cxxPlatform
                           .getValue()
                           .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-                      "resources",
-                      PythonUtil.getBasePath(baseTarget, args.getBaseModule()),
-                      args.getResources(),
-                      args.getPlatformResources(),
-                      args.getVersionedResources(),
-                      selectedVersions))
+                      selectedVersions,
+                      args))
               .map(metadataClass::cast);
         }
 

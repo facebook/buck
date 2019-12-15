@@ -95,7 +95,7 @@ public class PythonUtil {
         .toImmutableList();
   }
 
-  public static ImmutableSortedMap<Path, SourcePath> getModules(
+  public static void forEachModule(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       PythonPlatform pythonPlatform,
@@ -105,17 +105,17 @@ public class PythonUtil {
       SourceSortedSet items,
       PatternMatchedCollection<SourceSortedSet> platformItems,
       Optional<VersionMatchedCollection<SourceSortedSet>> versionItems,
-      Optional<ImmutableMap<BuildTarget, Version>> versions) {
-    ImmutableSortedMap.Builder<Path, SourcePath> builder = ImmutableSortedMap.naturalOrder();
-    forEachModule(
+      Optional<ImmutableMap<BuildTarget, Version>> versions,
+      BiConsumer<Path, SourcePath> consumer) {
+    forEachModuleParam(
         target,
         graphBuilder,
         cxxPlatform,
         parameter,
         baseModule,
         ImmutableList.of(items),
-        builder::put);
-    forEachModule(
+        consumer);
+    forEachModuleParam(
         target,
         graphBuilder,
         cxxPlatform,
@@ -124,8 +124,8 @@ public class PythonUtil {
         Iterables.concat(
             platformItems.getMatchingValues(pythonPlatform.getFlavor().toString()),
             platformItems.getMatchingValues(cxxPlatform.getFlavor().toString())),
-        builder::put);
-    forEachModule(
+        consumer);
+    forEachModuleParam(
         target,
         graphBuilder,
         cxxPlatform,
@@ -134,11 +134,56 @@ public class PythonUtil {
         versions.isPresent() && versionItems.isPresent()
             ? versionItems.get().getMatchingValues(versions.get())
             : ImmutableList.of(),
+        consumer);
+  }
+
+  public static ImmutableSortedMap<Path, SourcePath> parseSrcs(
+      BuildTarget target,
+      ActionGraphBuilder graphBuilder,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> versions,
+      PythonLibraryDescription.CoreArg args) {
+    ImmutableSortedMap.Builder<Path, SourcePath> builder = ImmutableSortedMap.naturalOrder();
+    forEachModule(
+        target,
+        graphBuilder,
+        pythonPlatform,
+        cxxPlatform,
+        "srcs",
+        PythonUtil.getBasePath(target, args.getBaseModule()),
+        args.getSrcs(),
+        args.getPlatformSrcs(),
+        args.getVersionedSrcs(),
+        versions,
         builder::put);
     return builder.build();
   }
 
-  static void forEachModule(
+  public static ImmutableSortedMap<Path, SourcePath> parseResources(
+      BuildTarget target,
+      ActionGraphBuilder graphBuilder,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> versions,
+      PythonLibraryDescription.CoreArg args) {
+    ImmutableSortedMap.Builder<Path, SourcePath> builder = ImmutableSortedMap.naturalOrder();
+    forEachModule(
+        target,
+        graphBuilder,
+        pythonPlatform,
+        cxxPlatform,
+        "resources",
+        PythonUtil.getBasePath(target, args.getBaseModule()),
+        args.getResources(),
+        args.getPlatformResources(),
+        args.getVersionedResources(),
+        versions,
+        builder::put);
+    return builder.build();
+  }
+
+  static void forEachModuleParam(
       BuildTarget target,
       ActionGraphBuilder actionGraphBuilder,
       CxxPlatform cxxPlatform,

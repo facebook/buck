@@ -263,35 +263,16 @@ public class PythonTestDescription
     CxxPlatform cxxPlatform =
         getCxxPlatform(buildTarget, args)
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
-    Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
         context.getTargetGraph().get(buildTarget).getSelectedVersions();
 
     ImmutableMap<Path, SourcePath> srcs =
-        PythonUtil.getModules(
-            buildTarget,
-            graphBuilder,
-            pythonPlatform,
-            cxxPlatform,
-            "srcs",
-            baseModule,
-            args.getSrcs(),
-            args.getPlatformSrcs(),
-            args.getVersionedSrcs(),
-            selectedVersions);
+        PythonUtil.parseSrcs(
+            buildTarget, graphBuilder, pythonPlatform, cxxPlatform, selectedVersions, args);
 
     ImmutableMap<Path, SourcePath> resources =
-        PythonUtil.getModules(
-            buildTarget,
-            graphBuilder,
-            pythonPlatform,
-            cxxPlatform,
-            "resources",
-            baseModule,
-            args.getResources(),
-            args.getPlatformResources(),
-            args.getVersionedResources(),
-            selectedVersions);
+        PythonUtil.parseResources(
+            buildTarget, graphBuilder, pythonPlatform, cxxPlatform, selectedVersions, args);
 
     // Convert the passed in module paths into test module names.
     ImmutableSet.Builder<String> testModulesBuilder = ImmutableSet.builder();
