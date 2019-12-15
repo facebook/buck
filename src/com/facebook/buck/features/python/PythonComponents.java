@@ -18,10 +18,16 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import java.util.function.Consumer;
 
 /**
  * Interface representing the modules, resources, etc. that dependencies contribute to Python
  * binaries, used to model how these components should be handled by {@link BuildRule}s (e.g. how
  * they're hashed into rule keys).
  */
-public interface PythonComponents extends AddsToRuleKey {}
+public interface PythonComponents extends AddsToRuleKey {
+
+  /** Run {@code consumer} on all {@link SourcePath}s contained in this object. */
+  void forEachInput(Consumer<SourcePath> consumer);
+}

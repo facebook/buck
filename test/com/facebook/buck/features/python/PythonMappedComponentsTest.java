@@ -16,9 +16,15 @@
 
 package com.facebook.buck.features.python;
 
+import static org.junit.Assert.assertThat;
+
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
@@ -29,6 +35,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class PythonMappedComponentsTest {
@@ -48,5 +57,19 @@ public class PythonMappedComponentsTest {
     RuleKeyBuilder builder = factory.newBuilderForTesting(new FakeBuildRule("//:fake"));
     AlterRuleKeys.amendKey(
         builder, PythonMappedComponents.of(ImmutableSortedMap.of(dst, FakeSourcePath.of(src))));
+  }
+
+  @Test
+  public void forEachInput() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    SourcePath input1 = PathSourcePath.of(filesystem, filesystem.getPath("src"));
+    SourcePath input2 = DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//:rule"));
+    PythonComponents components =
+        PythonMappedComponents.of(
+            ImmutableSortedMap.of(
+                filesystem.getPath("key1"), input1, filesystem.getPath("key2"), input2));
+    List<SourcePath> inputs = new ArrayList<>();
+    components.forEachInput(inputs::add);
+    assertThat(inputs, Matchers.contains(input1, input2));
   }
 }

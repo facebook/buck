@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import java.util.function.Consumer;
 import org.immutables.value.Value;
 
 /**
@@ -36,4 +37,9 @@ abstract class AbstractPythonModuleDirComponents implements PythonComponents {
   //  via rule key hashing to avoid unnecessary rebuilds.
   @AddToRuleKey
   abstract SourcePath getDirectory();
+
+  @Override
+  public void forEachInput(Consumer<SourcePath> consumer) {
+    consumer.accept(getDirectory());
+  }
 }

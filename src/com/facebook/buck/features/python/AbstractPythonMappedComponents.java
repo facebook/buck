@@ -22,6 +22,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Path;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
 
@@ -47,5 +48,10 @@ abstract class AbstractPythonMappedComponents implements PythonComponents {
   @Value.Auxiliary
   public Supplier<ImmutableSortedMap<String, SourcePath>> getComponentsRuleKey() {
     return () -> MoreMaps.transformKeysAndSort(getComponents(), Path::toString);
+  }
+
+  @Override
+  public void forEachInput(Consumer<SourcePath> consumer) {
+    getComponents().values().forEach(consumer);
   }
 }
