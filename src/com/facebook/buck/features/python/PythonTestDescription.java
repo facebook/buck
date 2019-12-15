@@ -302,23 +302,18 @@ public class PythonTestDescription
                 args.getMainModule()
                     .orElseGet(
                         () -> PythonUtil.toModuleName(buildTarget, testMainName.toString())));
-    // Build up the list of everything going into the python test.
-    PythonPackageComponents testComponents =
-        PythonPackageComponents.of(
-            ImmutableMap.<Path, SourcePath>builder()
-                .put(getTestModulesListName(), testModulesBuildRule.getSourcePathToOutput())
-                .put(
-                    testMainName,
-                    testRunner
-                        .map(runner -> runner.getSrc())
-                        .orElseGet(
-                            () -> requireTestMain(buildTarget, projectFilesystem, graphBuilder)))
-                .putAll(srcs)
-                .build(),
-            resources,
-            ImmutableMap.of(),
-            ImmutableSet.of(),
-            args.getZipSafe());
+
+    ImmutableMap<Path, SourcePath> modules =
+        ImmutableMap.<Path, SourcePath>builder()
+            .put(getTestModulesListName(), testModulesBuildRule.getSourcePathToOutput())
+            .put(
+                testMainName,
+                testRunner
+                    .map(runner -> runner.getSrc())
+                    .orElseGet(() -> requireTestMain(buildTarget, projectFilesystem, graphBuilder)))
+            .putAll(srcs)
+            .build();
+
     ImmutableList<BuildRule> deps =
         RichStream.from(
                 PythonUtil.getDeps(
@@ -326,6 +321,16 @@ public class PythonTestDescription
             .concat(args.getNeededCoverage().stream().map(NeededCoverageSpec::getBuildTarget))
             .map(graphBuilder::getRule)
             .collect(ImmutableList.toImmutableList());
+
+    // Build up the list of everything going into the python test.
+    PythonPackagable root =
+        PythonBinaryPackagable.builder()
+            .setBuildTarget(buildTarget)
+            .addAllPythonPackageDeps(deps)
+            .putAllPythonModules(modules)
+            .putAllPythonResources(resources)
+            .setPythonZipSafe(args.getZipSafe())
+            .build();
 
     CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =
@@ -342,8 +347,7 @@ public class PythonTestDescription
             projectFilesystem,
             params,
             graphBuilder,
-            deps,
-            testComponents,
+            root,
             pythonPlatform,
             cxxBuckConfig,
             cxxPlatform,

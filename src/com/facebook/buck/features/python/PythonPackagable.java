@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.python;
 
+import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -26,7 +27,10 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public interface PythonPackagable {
+/**
+ * Represents a {@link BuildRule} which contributes components to a top-level Python binary or test.
+ */
+public interface PythonPackagable extends HasBuildTarget {
 
   Iterable<BuildRule> getPythonPackageDeps(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);

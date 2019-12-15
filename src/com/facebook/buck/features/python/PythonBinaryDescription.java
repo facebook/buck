@@ -270,31 +270,24 @@ public class PythonBinaryDescription
     }
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
 
-    String mainModule;
-    ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
 
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.
+    String mainModule;
+    ImmutableMap.Builder<Path, SourcePath> modulesBuilder = ImmutableMap.builder();
     if (args.getMain().isPresent()) {
       LOG.info(
           "%s: parameter `main` is deprecated, please use `main_module` instead.", buildTarget);
       String mainName =
           graphBuilder.getSourcePathResolver().getSourcePathName(buildTarget, args.getMain().get());
       Path main = baseModule.resolve(mainName);
-      modules.put(baseModule.resolve(mainName), args.getMain().get());
+      modulesBuilder.put(baseModule.resolve(mainName), args.getMain().get());
       mainModule = PythonUtil.toModuleName(buildTarget, main.toString());
     } else {
       mainModule = args.getMainModule().get();
     }
-    // Build up the list of all components going into the python binary.
-    PythonPackageComponents binaryPackageComponents =
-        PythonPackageComponents.of(
-            modules.build(),
-            /* resources */ ImmutableMap.of(),
-            /* nativeLibraries */ ImmutableMap.of(),
-            /* moduleDirs */ ImmutableSet.of(),
-            /* zipSafe */ args.getZipSafe());
+    ImmutableMap<Path, SourcePath> modules = modulesBuilder.build();
 
     FlavorDomain<PythonPlatform> pythonPlatforms =
         toolchainProvider
@@ -317,6 +310,21 @@ public class PythonBinaryDescription
     CxxPlatform cxxPlatform =
         getCxxPlatform(buildTarget, args)
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
+
+    // Build up the list of all components going into the python binary.
+    PythonPackagable root =
+        PythonBinaryPackagable.builder()
+            .setBuildTarget(buildTarget)
+            .setPythonPackageDeps(
+                PythonUtil.getDeps(
+                        pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
+                    .stream()
+                    .map(graphBuilder::getRule)
+                    .collect(ImmutableList.toImmutableList()))
+            .putAllPythonModules(modules)
+            .setPythonZipSafe(args.getZipSafe())
+            .build();
+
     CellPathResolver cellRoots = context.getCellPathResolver();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     StringWithMacrosConverter macrosConverter =
@@ -333,11 +341,7 @@ public class PythonBinaryDescription
             projectFilesystem,
             params,
             graphBuilder,
-            PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
-                .stream()
-                .map(graphBuilder::getRule)
-                .collect(ImmutableList.toImmutableList()),
-            binaryPackageComponents,
+            root,
             pythonPlatform,
             cxxBuckConfig,
             cxxPlatform,

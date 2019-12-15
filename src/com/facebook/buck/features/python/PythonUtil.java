@@ -227,8 +227,7 @@ public class PythonUtil {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      Iterable<BuildRule> deps,
-      PythonPackageComponents packageComponents,
+      PythonPackagable binary,
       PythonPlatform pythonPlatform,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
@@ -244,23 +243,20 @@ public class PythonUtil {
 
     OmnibusRoots.Builder omnibusRoots = OmnibusRoots.builder(preloadDeps, graphBuilder);
 
-    // Add the top-level components.
-    allComponents.addComponent(packageComponents, buildTarget);
-
     // Walk all our transitive deps to build our complete package that we'll
     // turn into an executable.
-    new AbstractBreadthFirstTraversal<BuildRule>(
-        Iterables.concat(deps, graphBuilder.getAllRules(preloadDeps))) {
+    new AbstractBreadthFirstTraversal<Object>(
+        Iterables.concat(ImmutableList.of(binary), graphBuilder.getAllRules(preloadDeps))) {
       private final ImmutableList<BuildRule> empty = ImmutableList.of();
 
       @Override
-      public Iterable<BuildRule> visit(BuildRule rule) {
-        Iterable<BuildRule> deps = empty;
-        if (rule instanceof CxxPythonExtension) {
-          CxxPythonExtension extension = (CxxPythonExtension) rule;
+      public Iterable<?> visit(Object node) {
+        Iterable<?> deps = empty;
+
+        if (node instanceof CxxPythonExtension) {
+          CxxPythonExtension extension = (CxxPythonExtension) node;
           NativeLinkTarget target =
-              ((CxxPythonExtension) rule)
-                  .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder);
+              extension.getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder);
           extensions.put(target.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(target);
           List<BuildRule> cxxpydeps = new ArrayList<>();
@@ -271,14 +267,14 @@ public class PythonUtil {
             }
           }
           deps = cxxpydeps;
-        } else if (rule instanceof PythonPackagable) {
-          PythonPackagable packagable = (PythonPackagable) rule;
+        } else if (node instanceof PythonPackagable) {
+          PythonPackagable packagable = (PythonPackagable) node;
           ImmutableMap<Path, SourcePath> modules =
               packagable.getPythonModules(pythonPlatform, cxxPlatform, graphBuilder);
-          allComponents.addModules(modules, rule.getBuildTarget());
+          allComponents.addModules(modules, packagable.getBuildTarget());
           allComponents.addResources(
               packagable.getPythonResources(pythonPlatform, cxxPlatform, graphBuilder),
-              rule.getBuildTarget());
+              packagable.getBuildTarget());
           allComponents.addModuleDirs(packagable.getPythonModuleDirs());
           allComponents.addZipSafe(packagable.isPythonZipSafe());
           if (packagable.doesPythonPackageDisallowOmnibus(
@@ -294,9 +290,9 @@ public class PythonUtil {
             }
           }
           deps = packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
-        } else if (rule instanceof NativeLinkableGroup) {
+        } else if (node instanceof NativeLinkableGroup) {
           NativeLinkable linkable =
-              ((NativeLinkableGroup) rule).getNativeLinkable(cxxPlatform, graphBuilder);
+              ((NativeLinkableGroup) node).getNativeLinkable(cxxPlatform, graphBuilder);
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
           omnibusRoots.addPotentialRoot(linkable);
         }
