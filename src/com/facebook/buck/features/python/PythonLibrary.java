@@ -23,52 +23,87 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements PythonPackagable, HasRuntimeDeps {
 
+  private Optional<Boolean> zipSafe;
   private boolean excludeDepsFromOmnibus;
 
   PythonLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
+      Optional<Boolean> zipSafe,
       boolean excludeDepsFromOmnibus) {
     super(buildTarget, projectFilesystem, params);
+    this.zipSafe = zipSafe;
     this.excludeDepsFromOmnibus = excludeDepsFromOmnibus;
+  }
+
+  private <T> T getMetadata(
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      ActionGraphBuilder graphBuilder,
+      PythonLibraryDescription.MetadataType type,
+      Class<T> clazz) {
+    return graphBuilder
+        .requireMetadata(
+            getBuildTarget()
+                .withAppendedFlavors(
+                    type.getFlavor(), pythonPlatform.getFlavor(), cxxPlatform.getFlavor()),
+            clazz)
+        .orElseThrow(IllegalStateException::new);
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public Iterable<BuildRule> getPythonPackageDeps(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return graphBuilder
-        .requireMetadata(
-            getBuildTarget()
-                .withAppendedFlavors(
-                    PythonLibraryDescription.MetadataType.PACKAGE_DEPS.getFlavor(),
-                    pythonPlatform.getFlavor(),
-                    cxxPlatform.getFlavor()),
-            Iterable.class)
-        .orElseThrow(IllegalStateException::new);
+    return getMetadata(
+        pythonPlatform,
+        cxxPlatform,
+        graphBuilder,
+        PythonLibraryDescription.MetadataType.PACKAGE_DEPS,
+        ImmutableSortedSet.class);
   }
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents(
+  @SuppressWarnings("unchecked")
+  public ImmutableSortedMap<Path, SourcePath> getPythonModules(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return graphBuilder
-        .requireMetadata(
-            getBuildTarget()
-                .withAppendedFlavors(
-                    PythonLibraryDescription.MetadataType.PACKAGE_COMPONENTS.getFlavor(),
-                    pythonPlatform.getFlavor(),
-                    cxxPlatform.getFlavor()),
-            PythonPackageComponents.class)
-        .orElseThrow(IllegalStateException::new);
+    return getMetadata(
+        pythonPlatform,
+        cxxPlatform,
+        graphBuilder,
+        PythonLibraryDescription.MetadataType.MODULES,
+        ImmutableSortedMap.class);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public ImmutableSortedMap<Path, SourcePath> getPythonResources(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return getMetadata(
+        pythonPlatform,
+        cxxPlatform,
+        graphBuilder,
+        PythonLibraryDescription.MetadataType.RESOURCES,
+        ImmutableSortedMap.class);
+  }
+
+  @Override
+  public Optional<Boolean> isPythonZipSafe() {
+    return zipSafe;
   }
 
   @Override

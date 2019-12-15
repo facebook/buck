@@ -58,7 +58,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.features.python.CxxPythonExtension;
 import com.facebook.buck.features.python.PythonBinaryDescription;
 import com.facebook.buck.features.python.PythonPackagable;
-import com.facebook.buck.features.python.PythonPackageComponents;
+import com.facebook.buck.features.python.PythonUtil;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.io.file.MorePaths;
@@ -332,14 +332,11 @@ public class LuaBinaryDescription
           omnibusRoots.addIncludedRoot(target);
         } else if (rule instanceof PythonPackagable) {
           PythonPackagable packageable = (PythonPackagable) rule;
-          PythonPackageComponents components =
-              packageable.getPythonPackageComponents(pythonPlatform, cxxPlatform, graphBuilder);
-          builder.putAllPythonModules(
-              MoreMaps.transformKeys(components.getModules(), Object::toString));
-          builder.putAllNativeLibraries(
-              MoreMaps.transformKeys(components.getNativeLibraries(), Object::toString));
+          ImmutableMap<Path, SourcePath> modules =
+              packageable.getPythonModules(pythonPlatform, cxxPlatform, graphBuilder);
+          builder.putAllPythonModules(MoreMaps.transformKeys(modules, Object::toString));
           deps = packageable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
-          if (components.hasNativeCode(cxxPlatform)) {
+          if (PythonUtil.hasNativeCode(cxxPlatform, modules)) {
             for (BuildRule dep : deps) {
               if (dep instanceof NativeLinkableGroup) {
                 NativeLinkable linkable =
@@ -474,12 +471,10 @@ public class LuaBinaryDescription
       // For regular linking, add all extensions via the package components interface and their
       // python-platform specific deps to the native linkables.
       for (Map.Entry<BuildTarget, CxxPythonExtension> entry : pythonExtensions.entrySet()) {
-        PythonPackageComponents components =
-            entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform, graphBuilder);
         builder.putAllPythonModules(
-            MoreMaps.transformKeys(components.getModules(), Object::toString));
-        builder.putAllNativeLibraries(
-            MoreMaps.transformKeys(components.getNativeLibraries(), Object::toString));
+            MoreMaps.transformKeys(
+                entry.getValue().getPythonModules(pythonPlatform, cxxPlatform, graphBuilder),
+                Object::toString));
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
                 entry

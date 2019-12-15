@@ -94,10 +94,8 @@ public class PythonLibraryDescriptionTest {
                 .toPath(filesystem.getFileSystem())
                 .resolve(sourceName),
             source),
-        normal
-            .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .getModules());
+        normal.getPythonModules(
+            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder));
 
     // Run *with* a base module set and verify it gets used to build the main module path.
     String baseModule = "blah";
@@ -112,10 +110,8 @@ public class PythonLibraryDescriptionTest {
         withBaseModuleBuilder.build(graphBuilder, filesystem, withBaseModuleTargetGraph);
     assertEquals(
         ImmutableMap.of(Paths.get(baseModule).resolve(sourceName), source),
-        withBaseModule
-            .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .getModules());
+        withBaseModule.getPythonModules(
+            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder));
   }
 
   @Test
@@ -146,9 +142,8 @@ public class PythonLibraryDescriptionTest {
     PythonLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         library
-            .getPythonPackageComponents(
+            .getPythonModules(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .getModules()
             .values(),
         Matchers.contains(pyPlatformMatchedSource, cxxPlatformMatchedSource));
   }
@@ -181,9 +176,8 @@ public class PythonLibraryDescriptionTest {
     PythonLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         library
-            .getPythonPackageComponents(
+            .getPythonResources(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .getResources()
             .values(),
         Matchers.contains(pyPlatformMatchedSource, cxxPlatformMatchedSource));
   }
@@ -231,9 +225,8 @@ public class PythonLibraryDescriptionTest {
     PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(builder.getTarget());
     assertThat(
         library
-            .getPythonPackageComponents(
+            .getPythonModules(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .getModules()
             .values(),
         Matchers.contains(matchedSource));
   }
@@ -281,9 +274,8 @@ public class PythonLibraryDescriptionTest {
     PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(builder.getTarget());
     assertThat(
         library
-            .getPythonPackageComponents(
+            .getPythonResources(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .getResources()
             .values(),
         Matchers.contains(matchedSource));
   }
@@ -303,11 +295,11 @@ public class PythonLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxGenrule src = (CxxGenrule) graphBuilder.requireRule(srcBuilder.getTarget());
     PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(libraryBuilder.getTarget());
-    PythonPackageComponents components =
-        library.getPythonPackageComponents(
-            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     assertThat(
-        components.getModules().values(),
+        library
+            .getPythonModules(
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .values(),
         Matchers.contains(src.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)));
   }
 

@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -84,16 +83,6 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
 
   @Value.Parameter
   public abstract Optional<Boolean> isZipSafe();
-
-  /** @return whether there are any native libraries included in these components. */
-  public boolean hasNativeCode(CxxPlatform cxxPlatform) {
-    for (Path module : getModules().keySet()) {
-      if (module.toString().endsWith(cxxPlatform.getSharedLibraryExtension())) {
-        return true;
-      }
-    }
-    return false;
-  }
 
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();

@@ -78,6 +78,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
@@ -485,16 +486,11 @@ public class CxxPythonExtensionDescription
       }
 
       @Override
-      public PythonPackageComponents getPythonPackageComponents(
+      public ImmutableSortedMap<Path, SourcePath> getPythonModules(
           PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         BuildRule extension = getExtension(pythonPlatform, cxxPlatform, graphBuilder);
         SourcePath output = extension.getSourcePathToOutput();
-        return PythonPackageComponents.of(
-            ImmutableMap.of(module, output),
-            ImmutableMap.of(),
-            ImmutableMap.of(),
-            ImmutableSet.of(),
-            Optional.of(false));
+        return ImmutableSortedMap.of(module, output);
       }
 
       @Override

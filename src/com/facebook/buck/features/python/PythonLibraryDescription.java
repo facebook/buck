@@ -44,9 +44,7 @@ import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -78,7 +76,11 @@ public class PythonLibraryDescription
       BuildRuleParams params,
       PythonLibraryDescriptionArg args) {
     return new PythonLibrary(
-        buildTarget, context.getProjectFilesystem(), params, args.isExcludeDepsFromMergedLinking());
+        buildTarget,
+        context.getProjectFilesystem(),
+        params,
+        args.getZipSafe(),
+        args.isExcludeDepsFromMergedLinking());
   }
 
   @Override
@@ -104,23 +106,23 @@ public class PythonLibraryDescription
                 CxxPlatformsProvider.class)
             .getUnresolvedCxxPlatforms();
 
+    // Extract type.
     Map.Entry<Flavor, MetadataType> type = optionalType.get();
-
     BuildTarget baseTarget = buildTarget.withoutFlavors(type.getKey());
-    switch (type.getValue()) {
-      case PACKAGE_COMPONENTS:
-        {
-          Map.Entry<Flavor, PythonPlatform> pythonPlatform =
-              getPythonPlatforms(buildTarget.getTargetConfiguration())
-                  .getFlavorAndValue(baseTarget)
-                  .orElseThrow(IllegalArgumentException::new);
-          Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
-              cxxPlatforms.getFlavorAndValue(baseTarget).orElseThrow(IllegalArgumentException::new);
-          baseTarget = buildTarget.withoutFlavors(pythonPlatform.getKey(), cxxPlatform.getKey());
 
-          Path baseModule = PythonUtil.getBasePath(baseTarget, args.getBaseModule());
-          PythonPackageComponents components =
-              PythonPackageComponents.of(
+    // Extract Python and C++ platforms.
+    Map.Entry<Flavor, PythonPlatform> pythonPlatform =
+        getPythonPlatforms(buildTarget.getTargetConfiguration())
+            .getFlavorAndValue(baseTarget)
+            .orElseThrow(IllegalArgumentException::new);
+    Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
+        cxxPlatforms.getFlavorAndValue(baseTarget).orElseThrow(IllegalArgumentException::new);
+    baseTarget = buildTarget.withoutFlavors(pythonPlatform.getKey(), cxxPlatform.getKey());
+
+    switch (type.getValue()) {
+      case MODULES:
+        {
+          return Optional.of(
                   PythonUtil.getModules(
                       baseTarget,
                       graphBuilder,
@@ -129,11 +131,17 @@ public class PythonLibraryDescription
                           .getValue()
                           .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                       "srcs",
-                      baseModule,
+                      PythonUtil.getBasePath(baseTarget, args.getBaseModule()),
                       args.getSrcs(),
                       args.getPlatformSrcs(),
                       args.getVersionedSrcs(),
-                      selectedVersions),
+                      selectedVersions))
+              .map(metadataClass::cast);
+        }
+
+      case RESOURCES:
+        {
+          return Optional.of(
                   PythonUtil.getModules(
                       baseTarget,
                       graphBuilder,
@@ -142,26 +150,16 @@ public class PythonLibraryDescription
                           .getValue()
                           .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                       "resources",
-                      baseModule,
+                      PythonUtil.getBasePath(baseTarget, args.getBaseModule()),
                       args.getResources(),
                       args.getPlatformResources(),
                       args.getVersionedResources(),
-                      selectedVersions),
-                  ImmutableMap.of(),
-                  ImmutableSet.of(),
-                  args.getZipSafe());
-
-          return Optional.of(components).map(metadataClass::cast);
+                      selectedVersions))
+              .map(metadataClass::cast);
         }
 
       case PACKAGE_DEPS:
         {
-          Map.Entry<Flavor, PythonPlatform> pythonPlatform =
-              getPythonPlatforms(buildTarget.getTargetConfiguration())
-                  .getFlavorAndValue(baseTarget)
-                  .orElseThrow(IllegalArgumentException::new);
-          Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
-              cxxPlatforms.getFlavorAndValue(baseTarget).orElseThrow(IllegalArgumentException::new);
           ImmutableList<BuildTarget> depTargets =
               PythonUtil.getDeps(
                   pythonPlatform.getValue(),
@@ -193,7 +191,8 @@ public class PythonLibraryDescription
   }
 
   enum MetadataType implements FlavorConvertible {
-    PACKAGE_COMPONENTS(InternalFlavor.of("package-components")),
+    RESOURCES(InternalFlavor.of("resources")),
+    MODULES(InternalFlavor.of("modules")),
     PACKAGE_DEPS(InternalFlavor.of("package-deps")),
     ;
 

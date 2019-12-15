@@ -36,8 +36,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -70,16 +69,10 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+  public ImmutableSortedSet<SourcePath> getPythonModuleDirs() {
     // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
     // extension modules).
-    return PythonPackageComponents.of(
-        ImmutableMap.of(),
-        ImmutableMap.of(),
-        ImmutableMap.of(),
-        ImmutableSet.of(Objects.requireNonNull(getSourcePathToOutput())),
-        Optional.empty());
+    return ImmutableSortedSet.of(Objects.requireNonNull(getSourcePathToOutput()));
   }
 
   @Override

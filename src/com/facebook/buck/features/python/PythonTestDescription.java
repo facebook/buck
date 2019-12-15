@@ -419,8 +419,7 @@ public class PythonTestDescription
                   .toPath(projectFilesystem.getFileSystem())
                   .resolve(coverageSpec.getPathName().get());
           if (!pythonLibrary
-              .getPythonPackageComponents(pythonPlatform, cxxPlatform, graphBuilder)
-              .getModules()
+              .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
               .keySet()
               .contains(path)) {
             throw new HumanReadableException(
@@ -432,8 +431,7 @@ public class PythonTestDescription
           paths =
               ImmutableSortedSet.copyOf(
                   pythonLibrary
-                      .getPythonPackageComponents(pythonPlatform, cxxPlatform, graphBuilder)
-                      .getModules()
+                      .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
                       .keySet());
         }
         neededCoverageBuilder.add(

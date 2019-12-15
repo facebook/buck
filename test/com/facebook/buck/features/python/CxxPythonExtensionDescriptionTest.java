@@ -34,6 +34,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
@@ -64,6 +65,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -132,8 +134,6 @@ public class CxxPythonExtensionDescriptionTest {
 
     CxxPythonExtension normal = builder.build(graphBuilder, filesystem, targetGraph);
 
-    PythonPackageComponents normalComps =
-        normal.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     assertEquals(
         ImmutableSet.of(
             target
@@ -141,7 +141,7 @@ public class CxxPythonExtensionDescriptionTest {
                 .getPath()
                 .toPath(filesystem.getFileSystem())
                 .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName()))),
-        normalComps.getModules().keySet());
+        normal.getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder).keySet());
 
     // Verify that explicitly setting works.
     BuildTarget target2 = BuildTargetFactory.newInstance("//:target2#py2");
@@ -156,13 +156,11 @@ public class CxxPythonExtensionDescriptionTest {
     targetGraph = TargetGraphFactory.newInstance(baseModuleBuilder.build());
     graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxPythonExtension baseModule = baseModuleBuilder.build(graphBuilder, filesystem, targetGraph);
-    PythonPackageComponents baseModuleComps =
-        baseModule.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     assertEquals(
         ImmutableSet.of(
             Paths.get(name)
                 .resolve(CxxPythonExtensionDescription.getExtensionName(target2.getShortName()))),
-        baseModuleComps.getModules().keySet());
+        baseModule.getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder).keySet());
   }
 
   @Test
@@ -201,7 +199,7 @@ public class CxxPythonExtensionDescriptionTest {
             UnconfiguredTargetConfiguration.INSTANCE);
 
     // Verify that the shared library dep propagated to the link rule.
-    extension.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+    extension.getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     BuildRule rule =
         graphBuilder.getRule(
             CxxPythonExtensionDescription.getExtensionTarget(
@@ -232,26 +230,23 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtension extension = builder.build(graphBuilder, filesystem, targetGraph);
 
     // Verify that we get the expected view from the python packageable interface.
-    PythonPackageComponents actualComponent =
-        extension.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+    ImmutableMap<Path, SourcePath> modules =
+        extension.getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     BuildRule rule =
         graphBuilder.getRule(
             CxxPythonExtensionDescription.getExtensionTarget(
                 target, PY2.getFlavor(), CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR));
-    PythonPackageComponents expectedComponents =
-        PythonPackageComponents.of(
-            ImmutableMap.of(
-                target
-                    .getCellRelativeBasePath()
-                    .getPath()
-                    .toPath(filesystem.getFileSystem())
-                    .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName())),
-                rule.getSourcePathToOutput()),
-            ImmutableMap.of(),
-            ImmutableMap.of(),
-            ImmutableSet.of(),
-            Optional.of(false));
-    assertEquals(expectedComponents, actualComponent);
+
+    assertEquals(
+        ImmutableMap.of(
+            target
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPath(filesystem.getFileSystem())
+                .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName())),
+            rule.getSourcePathToOutput()),
+        modules);
+    assertThat(extension.isPythonZipSafe(), Matchers.equalTo(Optional.of(false)));
   }
 
   @Test
