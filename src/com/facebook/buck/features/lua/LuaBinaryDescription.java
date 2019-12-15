@@ -331,9 +331,12 @@ public class LuaBinaryDescription
           omnibusRoots.addIncludedRoot(target);
         } else if (rule instanceof PythonPackagable) {
           PythonPackagable packageable = (PythonPackagable) rule;
-          ImmutableMap<Path, SourcePath> modules =
-              packageable.getPythonModules(pythonPlatform, cxxPlatform, graphBuilder);
-          builder.putAllPythonModules(MoreMaps.transformKeys(modules, Object::toString));
+          packageable
+              .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+              .ifPresent(
+                  modules ->
+                      builder.putAllPythonModules(
+                          MoreMaps.transformKeys(modules.getComponents(), Object::toString)));
           deps = packageable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
           if (packageable.doesPythonPackageDisallowOmnibus(
               pythonPlatform, cxxPlatform, graphBuilder)) {
@@ -471,10 +474,13 @@ public class LuaBinaryDescription
       // For regular linking, add all extensions via the package components interface and their
       // python-platform specific deps to the native linkables.
       for (Map.Entry<BuildTarget, CxxPythonExtension> entry : pythonExtensions.entrySet()) {
-        builder.putAllPythonModules(
-            MoreMaps.transformKeys(
-                entry.getValue().getPythonModules(pythonPlatform, cxxPlatform, graphBuilder),
-                Object::toString));
+        entry
+            .getValue()
+            .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+            .ifPresent(
+                modules ->
+                    builder.putAllPythonModules(
+                        MoreMaps.transformKeys(modules.getComponents(), Object::toString)));
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
                 entry

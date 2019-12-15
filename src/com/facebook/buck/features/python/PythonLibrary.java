@@ -23,7 +23,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.file.MorePaths;
@@ -80,26 +79,26 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   @SuppressWarnings("unchecked")
-  public ImmutableSortedMap<Path, SourcePath> getPythonModules(
+  public Optional<PythonMappedComponents> getPythonModules(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return getMetadata(
         pythonPlatform,
         cxxPlatform,
         graphBuilder,
         PythonLibraryDescription.MetadataType.MODULES,
-        ImmutableSortedMap.class);
+        Optional.class);
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public ImmutableSortedMap<Path, SourcePath> getPythonResources(
+  public Optional<PythonMappedComponents> getPythonResources(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return getMetadata(
         pythonPlatform,
         cxxPlatform,
         graphBuilder,
         PythonLibraryDescription.MetadataType.RESOURCES,
-        ImmutableSortedMap.class);
+        Optional.class);
   }
 
   @Override
@@ -121,7 +120,11 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
     // In some cases, Python library rules package prebuilt native extensions, in which case, we
     // can't support library merging (since we can't re-link these extensions).
-    for (Path module : getPythonModules(pythonPlatform, cxxPlatform, graphBuilder).keySet()) {
+    for (Path module :
+        getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+            .map(PythonMappedComponents::getComponents)
+            .orElse(ImmutableSortedMap.of())
+            .keySet()) {
       if (MorePaths.getFileExtension(module).equals(PythonUtil.NATIVE_EXTENSION_EXT)) {
         return true;
       }

@@ -73,12 +73,14 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.io.Resources;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -303,8 +305,8 @@ public class PythonTestDescription
                     .orElseGet(
                         () -> PythonUtil.toModuleName(buildTarget, testMainName.toString())));
 
-    ImmutableMap<Path, SourcePath> modules =
-        ImmutableMap.<Path, SourcePath>builder()
+    ImmutableSortedMap<Path, SourcePath> modules =
+        ImmutableSortedMap.<Path, SourcePath>naturalOrder()
             .put(getTestModulesListName(), testModulesBuildRule.getSourcePathToOutput())
             .put(
                 testMainName,
@@ -327,8 +329,8 @@ public class PythonTestDescription
         PythonBinaryPackagable.builder()
             .setBuildTarget(buildTarget)
             .addAllPythonPackageDeps(deps)
-            .putAllPythonModules(modules)
-            .putAllPythonResources(resources)
+            .setPythonModules(PythonMappedComponents.of(modules))
+            .setPythonResources(PythonMappedComponents.of(ImmutableSortedMap.copyOf(resources)))
             .setPythonZipSafe(args.getZipSafe())
             .build();
 
@@ -405,7 +407,9 @@ public class PythonTestDescription
                   .resolve(coverageSpec.getPathName().get());
           if (!pythonLibrary
               .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
-              .keySet()
+              .map(PythonMappedComponents::getComponents)
+              .map(Map::keySet)
+              .orElseGet(ImmutableSet::of)
               .contains(path)) {
             throw new HumanReadableException(
                 "%s: path %s specified in needed_coverage not found in target %s",
@@ -414,10 +418,11 @@ public class PythonTestDescription
           paths = ImmutableSortedSet.of(path);
         } else {
           paths =
-              ImmutableSortedSet.copyOf(
-                  pythonLibrary
-                      .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
-                      .keySet());
+              pythonLibrary
+                  .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+                  .map(PythonMappedComponents::getComponents)
+                  .map(ImmutableSortedMap::keySet)
+                  .orElseGet(ImmutableSortedSet::of);
         }
         neededCoverageBuilder.add(
             new Pair<>(coverageSpec.getNeededCoverageRatioPercentage() / 100.f, paths));

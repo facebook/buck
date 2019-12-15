@@ -64,6 +64,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -141,7 +142,10 @@ public class CxxPythonExtensionDescriptionTest {
                 .getPath()
                 .toPath(filesystem.getFileSystem())
                 .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName()))),
-        normal.getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder).keySet());
+        normal
+            .getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .map(modules -> modules.getComponents().keySet())
+            .orElseGet(ImmutableSortedSet::of));
 
     // Verify that explicitly setting works.
     BuildTarget target2 = BuildTargetFactory.newInstance("//:target2#py2");
@@ -160,7 +164,10 @@ public class CxxPythonExtensionDescriptionTest {
         ImmutableSet.of(
             Paths.get(name)
                 .resolve(CxxPythonExtensionDescription.getExtensionName(target2.getShortName()))),
-        baseModule.getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder).keySet());
+        baseModule
+            .getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .map(modules -> modules.getComponents().keySet())
+            .orElseGet(ImmutableSortedSet::of));
   }
 
   @Test
@@ -231,7 +238,10 @@ public class CxxPythonExtensionDescriptionTest {
 
     // Verify that we get the expected view from the python packageable interface.
     ImmutableMap<Path, SourcePath> modules =
-        extension.getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+        extension
+            .getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .map(PythonMappedComponents::getComponents)
+            .orElseGet(ImmutableSortedMap::of);
     BuildRule rule =
         graphBuilder.getRule(
             CxxPythonExtensionDescription.getExtensionTarget(

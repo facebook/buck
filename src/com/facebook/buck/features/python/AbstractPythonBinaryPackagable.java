@@ -18,13 +18,10 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedMap;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -41,11 +38,9 @@ abstract class AbstractPythonBinaryPackagable implements PythonPackagable {
 
   abstract ImmutableList<BuildRule> getPythonPackageDeps();
 
-  @Value.NaturalOrder
-  abstract ImmutableSortedMap<Path, SourcePath> getPythonModules();
+  abstract Optional<PythonMappedComponents> getPythonModules();
 
-  @Value.NaturalOrder
-  abstract ImmutableSortedMap<Path, SourcePath> getPythonResources();
+  abstract Optional<PythonMappedComponents> getPythonResources();
 
   @Override
   public abstract Optional<Boolean> isPythonZipSafe();
@@ -57,13 +52,13 @@ abstract class AbstractPythonBinaryPackagable implements PythonPackagable {
   }
 
   @Override
-  public ImmutableSortedMap<Path, SourcePath> getPythonModules(
+  public Optional<PythonMappedComponents> getPythonModules(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return getPythonModules();
   }
 
   @Override
-  public ImmutableSortedMap<Path, SourcePath> getPythonResources(
+  public Optional<PythonMappedComponents> getPythonResources(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return getPythonResources();
   }

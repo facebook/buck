@@ -22,13 +22,11 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -47,7 +45,7 @@ public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExt
   public abstract Path getModule();
 
   @Override
-  public abstract ImmutableSortedMap<Path, SourcePath> getPythonModules(
+  public abstract Optional<PythonMappedComponents> getPythonModules(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   // TODO(agallagher): This ideally be inferred automatically.

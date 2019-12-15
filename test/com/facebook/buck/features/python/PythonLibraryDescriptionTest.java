@@ -56,10 +56,12 @@ import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionedAliasBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -87,13 +89,15 @@ public class PythonLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(normalTargetGraph);
     PythonLibrary normal = normalBuilder.build(graphBuilder, filesystem, normalTargetGraph);
     assertEquals(
-        ImmutableMap.of(
-            target
-                .getCellRelativeBasePath()
-                .getPath()
-                .toPath(filesystem.getFileSystem())
-                .resolve(sourceName),
-            source),
+        Optional.of(
+            PythonMappedComponents.of(
+                ImmutableSortedMap.of(
+                    target
+                        .getCellRelativeBasePath()
+                        .getPath()
+                        .toPath(filesystem.getFileSystem())
+                        .resolve(sourceName),
+                    source))),
         normal.getPythonModules(
             PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder));
 
@@ -109,7 +113,9 @@ public class PythonLibraryDescriptionTest {
     PythonLibrary withBaseModule =
         withBaseModuleBuilder.build(graphBuilder, filesystem, withBaseModuleTargetGraph);
     assertEquals(
-        ImmutableMap.of(Paths.get(baseModule).resolve(sourceName), source),
+        Optional.of(
+            PythonMappedComponents.of(
+                ImmutableSortedMap.of(Paths.get(baseModule).resolve(sourceName), source))),
         withBaseModule.getPythonModules(
             PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder));
   }
@@ -144,7 +150,8 @@ public class PythonLibraryDescriptionTest {
         library
             .getPythonModules(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .values(),
+            .map(modules -> modules.getComponents().values())
+            .orElseGet(ImmutableSet::of),
         Matchers.contains(pyPlatformMatchedSource, cxxPlatformMatchedSource));
   }
 
@@ -178,7 +185,8 @@ public class PythonLibraryDescriptionTest {
         library
             .getPythonResources(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .values(),
+            .map(modules -> modules.getComponents().values())
+            .orElseGet(ImmutableSet::of),
         Matchers.contains(pyPlatformMatchedSource, cxxPlatformMatchedSource));
   }
 
@@ -227,7 +235,8 @@ public class PythonLibraryDescriptionTest {
         library
             .getPythonModules(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .values(),
+            .map(modules -> modules.getComponents().values())
+            .orElseGet(ImmutableSet::of),
         Matchers.contains(matchedSource));
   }
 
@@ -276,7 +285,8 @@ public class PythonLibraryDescriptionTest {
         library
             .getPythonResources(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .values(),
+            .map(modules -> modules.getComponents().values())
+            .orElseGet(ImmutableSet::of),
         Matchers.contains(matchedSource));
   }
 
@@ -299,7 +309,8 @@ public class PythonLibraryDescriptionTest {
         library
             .getPythonModules(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .values(),
+            .map(modules -> modules.getComponents().values())
+            .orElseGet(ImmutableSet::of),
         Matchers.contains(src.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)));
   }
 

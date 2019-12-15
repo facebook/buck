@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -275,7 +276,7 @@ public class PythonBinaryDescription
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.
     String mainModule;
-    ImmutableMap.Builder<Path, SourcePath> modulesBuilder = ImmutableMap.builder();
+    ImmutableSortedMap.Builder<Path, SourcePath> modulesBuilder = ImmutableSortedMap.naturalOrder();
     if (args.getMain().isPresent()) {
       LOG.info(
           "%s: parameter `main` is deprecated, please use `main_module` instead.", buildTarget);
@@ -287,7 +288,7 @@ public class PythonBinaryDescription
     } else {
       mainModule = args.getMainModule().get();
     }
-    ImmutableMap<Path, SourcePath> modules = modulesBuilder.build();
+    ImmutableSortedMap<Path, SourcePath> modules = modulesBuilder.build();
 
     FlavorDomain<PythonPlatform> pythonPlatforms =
         toolchainProvider
@@ -321,7 +322,7 @@ public class PythonBinaryDescription
                     .stream()
                     .map(graphBuilder::getRule)
                     .collect(ImmutableList.toImmutableList()))
-            .putAllPythonModules(modules)
+            .setPythonModules(PythonMappedComponents.of(modules))
             .setPythonZipSafe(args.getZipSafe())
             .build();
 

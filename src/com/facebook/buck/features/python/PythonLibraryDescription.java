@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -44,7 +45,9 @@ import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -122,31 +125,39 @@ public class PythonLibraryDescription
     switch (type.getValue()) {
       case MODULES:
         {
+          ImmutableSortedMap<Path, SourcePath> components =
+              PythonUtil.parseSrcs(
+                  baseTarget,
+                  graphBuilder,
+                  pythonPlatform.getValue(),
+                  cxxPlatform
+                      .getValue()
+                      .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+                  selectedVersions,
+                  args);
           return Optional.of(
-                  PythonUtil.parseSrcs(
-                      baseTarget,
-                      graphBuilder,
-                      pythonPlatform.getValue(),
-                      cxxPlatform
-                          .getValue()
-                          .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-                      selectedVersions,
-                      args))
+                  components.isEmpty()
+                      ? Optional.empty()
+                      : Optional.of(PythonMappedComponents.of(components)))
               .map(metadataClass::cast);
         }
 
       case RESOURCES:
         {
+          ImmutableSortedMap<Path, SourcePath> components =
+              PythonUtil.parseResources(
+                  baseTarget,
+                  graphBuilder,
+                  pythonPlatform.getValue(),
+                  cxxPlatform
+                      .getValue()
+                      .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+                  selectedVersions,
+                  args);
           return Optional.of(
-                  PythonUtil.parseResources(
-                      baseTarget,
-                      graphBuilder,
-                      pythonPlatform.getValue(),
-                      cxxPlatform
-                          .getValue()
-                          .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-                      selectedVersions,
-                      args))
+                  components.isEmpty()
+                      ? Optional.empty()
+                      : Optional.of(PythonMappedComponents.of(components)))
               .map(metadataClass::cast);
         }
 

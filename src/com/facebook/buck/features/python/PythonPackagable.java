@@ -22,8 +22,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -41,15 +39,13 @@ public interface PythonPackagable extends HasBuildTarget {
    * @return a map of modules, where the key is the module in {@link Path} form (including
    *     extension).
    */
-  // TODO(agallagher): The keys here should be module names in `String` form (e.g, `foo.bar`) --
-  //  not `Path`s.
   // TODO(agallagher): Separate out separate methods to access sources, bytecode, and native
   //  extensions independently of one another.
-  default ImmutableSortedMap<Path, SourcePath> getPythonModules(
+  default Optional<PythonMappedComponents> getPythonModules(
       @SuppressWarnings("unused") PythonPlatform pythonPlatform,
       @SuppressWarnings("unused") CxxPlatform cxxPlatform,
       @SuppressWarnings("unused") ActionGraphBuilder graphBuilder) {
-    return ImmutableSortedMap.of();
+    return Optional.empty();
   }
 
   /**
@@ -60,11 +56,11 @@ public interface PythonPackagable extends HasBuildTarget {
   // TODO(agallagher): Keys here ideally aren't `Path`s, as Buck's rule key calculations assume
   //  these paths exist and tries to hash them, which means we need to convert to strings
   //  beforehand.
-  default ImmutableSortedMap<Path, SourcePath> getPythonResources(
+  default Optional<PythonMappedComponents> getPythonResources(
       @SuppressWarnings("unused") PythonPlatform pythonPlatform,
       @SuppressWarnings("unused") CxxPlatform cxxPlatform,
       @SuppressWarnings("unused") ActionGraphBuilder graphBuilder) {
-    return ImmutableSortedMap.of();
+    return Optional.empty();
   }
 
   /**
@@ -81,8 +77,8 @@ public interface PythonPackagable extends HasBuildTarget {
   //  native extensions, this can actually probably include resources (and native libs?) too.  We
   //  should fix to handle these or, ideally, just avoid this in favor of pre-unpacking prebuilt
   //  python wheels and using `python_library()`.
-  default ImmutableSortedSet<SourcePath> getPythonModuleDirs() {
-    return ImmutableSortedSet.of();
+  default Optional<PythonModuleDirComponents> getPythonModuleDirs() {
+    return Optional.empty();
   }
 
   /**

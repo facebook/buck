@@ -486,11 +486,11 @@ public class CxxPythonExtensionDescription
       }
 
       @Override
-      public ImmutableSortedMap<Path, SourcePath> getPythonModules(
+      public Optional<PythonMappedComponents> getPythonModules(
           PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         BuildRule extension = getExtension(pythonPlatform, cxxPlatform, graphBuilder);
         SourcePath output = extension.getSourcePathToOutput();
-        return ImmutableSortedMap.of(module, output);
+        return Optional.of(PythonMappedComponents.of(ImmutableSortedMap.of(module, output)));
       }
 
       @Override

@@ -269,13 +269,23 @@ public class PythonUtil {
           deps = cxxpydeps;
         } else if (node instanceof PythonPackagable) {
           PythonPackagable packagable = (PythonPackagable) node;
-          ImmutableMap<Path, SourcePath> modules =
-              packagable.getPythonModules(pythonPlatform, cxxPlatform, graphBuilder);
-          allComponents.addModules(modules, packagable.getBuildTarget());
-          allComponents.addResources(
-              packagable.getPythonResources(pythonPlatform, cxxPlatform, graphBuilder),
-              packagable.getBuildTarget());
-          allComponents.addModuleDirs(packagable.getPythonModuleDirs());
+          packagable
+              .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+              .ifPresent(
+                  modules ->
+                      allComponents.addModules(
+                          modules.getComponents(), packagable.getBuildTarget()));
+          packagable
+              .getPythonResources(pythonPlatform, cxxPlatform, graphBuilder)
+              .ifPresent(
+                  resources ->
+                      allComponents.addResources(
+                          resources.getComponents(), packagable.getBuildTarget()));
+          packagable
+              .getPythonModuleDirs()
+              .ifPresent(
+                  moduleDirs ->
+                      allComponents.addModuleDirs(ImmutableSet.of(moduleDirs.getDirectory())));
           allComponents.addZipSafe(packagable.isPythonZipSafe());
           if (packagable.doesPythonPackageDisallowOmnibus(
               pythonPlatform, cxxPlatform, graphBuilder)) {
@@ -352,13 +362,26 @@ public class PythonUtil {
       // For regular linking, add all extensions via the package components interface.
       Map<BuildTarget, NativeLinkable> extensionNativeDeps = new LinkedHashMap<>();
       for (Map.Entry<BuildTarget, CxxPythonExtension> entry : extensions.entrySet()) {
-        allComponents.addModules(
-            entry.getValue().getPythonModules(pythonPlatform, cxxPlatform, graphBuilder),
-            entry.getValue().getBuildTarget());
-        allComponents.addResources(
-            entry.getValue().getPythonResources(pythonPlatform, cxxPlatform, graphBuilder),
-            entry.getValue().getBuildTarget());
-        allComponents.addModuleDirs(entry.getValue().getPythonModuleDirs());
+        entry
+            .getValue()
+            .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+            .ifPresent(
+                modules ->
+                    allComponents.addModules(
+                        modules.getComponents(), entry.getValue().getBuildTarget()));
+        entry
+            .getValue()
+            .getPythonResources(pythonPlatform, cxxPlatform, graphBuilder)
+            .ifPresent(
+                resources ->
+                    allComponents.addResources(
+                        resources.getComponents(), entry.getValue().getBuildTarget()));
+        entry
+            .getValue()
+            .getPythonModuleDirs()
+            .ifPresent(
+                modulesDirs ->
+                    allComponents.addModuleDirs(ImmutableSet.of(modulesDirs.getDirectory())));
         allComponents.addZipSafe(entry.getValue().isPythonZipSafe());
         extensionNativeDeps.putAll(
             Maps.uniqueIndex(
