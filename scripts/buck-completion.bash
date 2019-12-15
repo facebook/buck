@@ -99,7 +99,7 @@ function _buck_completion_run() {
 }
 
 function _buck_completion_try_build() {
-  _buck_completion_try_long_arg "--help --no-cache --num-threads --verbose --populate-cache" \
+  _buck_completion_try_long_arg "--help --no-cache --num-threads --verbose --populate-cache --show-output" \
     || _buck_completion_try_target "$@"
 }
 
