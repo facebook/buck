@@ -69,16 +69,19 @@ import org.hamcrest.junit.MatcherAssert;
 import org.immutables.value.Value;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class BuildCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
+  @Rule public ExpectedException expectedThrownException = ExpectedException.none();
+
+  private ProjectWorkspace workspace;
 
   @Test
   public void justBuild() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     workspace.runBuckBuild("--just-build", "//:bar", "//:foo", "//:ex ample").assertSuccess();
     assertThat(
@@ -88,8 +91,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void justBuildWithOutputLabel() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp).setUp();
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp).setUp();
     workspace
         .runBuckBuild("--just-build", "//:bar[label]", "//:foo", "//:ex ample")
         .assertSuccess();
@@ -102,8 +104,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void showOutput() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:bar");
     runBuckResult.assertSuccess();
@@ -111,9 +112,86 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
+  public void showOutputsForRulesWithoutMultipleOutputs() throws IOException {
+    // --show-outputs should work the same as --show-output for rules without multiple outputs
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    ProcessResult runBuckResult = workspace.runBuckBuild("--show-outputs", "//:bar");
+    runBuckResult.assertSuccess();
+    assertThat(runBuckResult.getStdout(), Matchers.containsString("//:bar buck-out"));
+  }
+
+  @Test
+  public void showOutputsForRulesWithMultipleOutputs() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    Path expectedPath1 =
+        getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "bar");
+    Path expectedPath2 =
+        getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "baz");
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckBuild("--show-outputs", "//:bar_with_multiple_outputs[output1]")
+            .assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        Matchers.containsString(
+            String.format("//:bar_with_multiple_outputs[output1] %s", expectedPath1)));
+    assertFalse(
+        runBuckResult
+            .getStdout()
+            .contains(String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath2)));
+
+    runBuckResult =
+        workspace
+            .runBuckBuild("--show-outputs", "//:bar_with_multiple_outputs[output2]")
+            .assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        Matchers.containsString(
+            String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath2)));
+  }
+
+  @Test
+  public void showOutputsForMultipleDefaultOutputs() throws IOException {
+    // This isn't supported yet. Assert that this fails with the right error message
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckBuild("--show-outputs", "//:bar_with_multiple_outputs")
+            .assertExitCode(ExitCode.BUILD_ERROR);
+    assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "Genrule target //:bar_with_multiple_outputs doesn't support multiple default outputs yet. Use named outputs"));
+  }
+
+  @Test
+  public void showOutputsForSingleDefaultOutput() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    Path expectedPath =
+        getExpectedOutputPathRelativeToProjectRoot(
+            "//:bar_with_multiple_outputs_but_really_only_has_one_heehee", "bar");
+
+    ProcessResult result =
+        workspace
+            .runBuckBuild(
+                "--show-outputs", "//:bar_with_multiple_outputs_but_really_only_has_one_heehee")
+            .assertSuccess();
+    assertThat(
+        result.getStdout(),
+        Matchers.containsString(
+            String.format(
+                "//:bar_with_multiple_outputs_but_really_only_has_one_heehee %s", expectedPath)));
+  }
+
+  @Test
   public void showFullOutput() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult = workspace.runBuckBuild("--show-full-output", "//:bar");
     runBuckResult.assertSuccess();
@@ -127,8 +205,7 @@ public class BuildCommandIntegrationTest {
   @Test
   public void showJsonOutput() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult =
         workspace.runBuckBuild("--show-json-output", "//:foo", "//:bar", "//:ex ample");
@@ -150,7 +227,7 @@ public class BuildCommandIntegrationTest {
   @Test
   public void showFullJsonOutput() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
-    ProjectWorkspace workspace =
+    workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build/sub folder", tmp);
     workspace.setUp();
     ProcessResult runBuckResult =
@@ -181,8 +258,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void showRuleKey() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult = workspace.runBuckBuild("--show-rulekey", "//:bar");
     runBuckResult.assertSuccess();
@@ -197,8 +273,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void showRuleKeyAndOutput() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult =
         workspace.runBuckBuild("--show-output", "--show-rulekey", "//:bar");
@@ -215,8 +290,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void buckBuildAndCopyOutputFileWithBuildTargetThatSupportsIt() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
     workspace.setUp();
 
     Path externalOutputs = tmp.newFolder("into-output");
@@ -232,8 +306,7 @@ public class BuildCommandIntegrationTest {
   @Test
   public void buckBuildAndCopyOutputFileIntoDirectoryWithBuildTargetThatSupportsIt()
       throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
     workspace.setUp();
 
     Path outputDir = tmp.newFolder("into-output");
@@ -246,8 +319,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void buckBuildAndCopyOutputFileWithBuildTargetThatDoesNotSupportIt() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
     workspace.setUp();
 
     Path externalOutputs = tmp.newFolder("into-output");
@@ -264,8 +336,7 @@ public class BuildCommandIntegrationTest {
   @Test
   public void buckBuildAndCopyOutputDirectoryIntoDirectoryWithBuildTargetThatSupportsIt()
       throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
     workspace.setUp();
 
     Path outputDir = tmp.newFolder("into-output");
@@ -280,8 +351,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void lastOutputDir() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult =
         workspace.runBuckBuild("-c", "build.create_build_output_symlinks_enabled=true", "//:bar");
@@ -293,8 +363,7 @@ public class BuildCommandIntegrationTest {
   @Test
   public void lastOutputDirForAppleBundle() throws IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_app_bundle", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "apple_app_bundle", tmp);
     workspace.setUp();
     ProcessResult runBuckResult =
         workspace.runBuckBuild(
@@ -315,8 +384,7 @@ public class BuildCommandIntegrationTest {
   @Test
   public void writesBinaryRuleKeysToDisk() throws IOException, TException {
     Path logFile = tmp.newFile("out.bin");
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult =
         workspace.runBuckBuild(
@@ -333,8 +401,7 @@ public class BuildCommandIntegrationTest {
   public void configuredBuckoutSymlinkinSubdirWorksWithoutCells() throws IOException {
     assumeFalse(Platform.detect() == WINDOWS);
 
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult =
         workspace.runBuckBuild(
@@ -361,8 +428,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void enableEmbeddedCellHasOnlyOneBuckOut() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "multiple_cell_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "multiple_cell_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult =
         workspace.runBuckBuild("-c", "project.embedded_cell_buck_out_enabled=true", "//main/...");
@@ -377,8 +443,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void testFailsIfNoTargetsProvided() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
@@ -391,8 +456,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void handlesRelativeTargets() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
 
     Path absolutePath = workspace.buildAndReturnOutput("//subdir1/subdir2:bar");
@@ -409,8 +473,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void canBuildAndUseRelativePathsFromWithinASymlinkedDirectory() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
 
     assertFalse(tmp.getRoot().startsWith(tmp2.getRoot()));
@@ -437,8 +500,7 @@ public class BuildCommandIntegrationTest {
   @Test
   public void printsAFriendlyErrorWhenRelativePathDoesNotExistInPwdButDoesInRoot()
       throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
 
     String expectedWhenExists =
@@ -500,8 +562,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void ruleCreationError() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "rule_creation_error", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "rule_creation_error", tmp);
     workspace.setUp();
     workspace.setKnownRuleTypesFactoryFactory(
         (executor,
@@ -520,7 +581,7 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void includeTargetConfigHashInBuckOutWhenBuckConfigIsSet() throws IOException {
-    ProjectWorkspace workspace =
+    workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "buck_out_config_target_hash", tmp);
     workspace.setUp();
 
@@ -535,5 +596,16 @@ public class BuildCommandIntegrationTest {
         Matchers.matchesPattern(
             ".*" + TargetConfigurationHasher.hash(target.getTargetConfiguration()) + ".*"));
     assertEquals(runBuckResult.getStdout().trim(), "//:binary " + expected);
+  }
+
+  private Path getExpectedOutputPathRelativeToProjectRoot(String targetName, String pathName)
+      throws IOException {
+    return workspace
+        .getProjectFileSystem()
+        .getRootPath()
+        .relativize(
+            workspace
+                .getGenPath(BuildTargetFactory.newInstance(targetName), "%s__")
+                .resolve(pathName));
   }
 }

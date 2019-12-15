@@ -6,6 +6,31 @@ genrule(
 )
 
 genrule(
+    name = "bar_with_multiple_outputs",
+    outs = {
+        "output1": [
+            "bar",
+        ],
+        "output2": [
+            "baz",
+        ],
+    },
+    bash = "touch $OUT/bar && touch $OUT/baz",
+    cmd_exe = "echo \"\" > %OUT%\\bar; echo \"\" > %OUT%\\baz",
+)
+
+genrule(
+    name = "bar_with_multiple_outputs_but_really_only_has_one_heehee",
+    outs = {
+        "output1": [
+            "bar",
+        ],
+    },
+    bash = "touch $OUT/bar",
+    cmd_exe = "echo \"\" > %OUT%\\bar",
+)
+
+genrule(
     name = "foo",
     srcs = [
         ":bar",
