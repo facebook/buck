@@ -1,0 +1,52 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.facebook.buck.features.python;
+
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.keys.AlterRuleKeys;
+import com.facebook.buck.rules.keys.RuleKeyBuilder;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.hash.HashCode;
+import java.nio.file.Path;
+import org.junit.Test;
+
+public class PythonMappedComponentsTest {
+
+  /**
+   * Test that adding to rule key doesn't attempt to hash the `Path`ified keys in the copmponent map
+   */
+  @Test
+  public void ruleKey() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path dst = filesystem.getPath("dst");
+    Path src = filesystem.getPath("src");
+    TestDefaultRuleKeyFactory factory =
+        new TestDefaultRuleKeyFactory(
+            new FakeFileHashCache(ImmutableMap.of(filesystem.resolve(src), HashCode.fromInt(123))),
+            new TestActionGraphBuilder());
+    RuleKeyBuilder builder = factory.newBuilderForTesting(new FakeBuildRule("//:fake"));
+    AlterRuleKeys.amendKey(
+        builder, PythonMappedComponents.of(ImmutableSortedMap.of(dst, FakeSourcePath.of(src))));
+  }
+}
