@@ -638,7 +638,8 @@ public class AppleTestDescription
               .withAppendedFlavors(UNZIP_XCTOOL_FLAVOR)
               .withAppendedFlavors(InternalFlavor.of(sha1Hash));
       Path outputDirectory =
-          BuildTargetPaths.getGenPath(projectFilesystem, unzipXctoolTarget, "%s/unzipped");
+          BuildTargetPaths.getGenPath(
+              xctoolZipBuildRule.getProjectFilesystem(), unzipXctoolTarget, "%s/unzipped");
       graphBuilder.computeIfAbsent(
           unzipXctoolTarget,
           ignored -> {
@@ -647,7 +648,7 @@ public class AppleTestDescription
                     .withDeclaredDeps(ImmutableSortedSet.of(xctoolZipBuildRule))
                     .withoutExtraDeps();
             return new AbstractBuildRuleWithDeclaredAndExtraDeps(
-                unzipXctoolTarget, projectFilesystem, unzipXctoolParams) {
+                unzipXctoolTarget, xctoolZipBuildRule.getProjectFilesystem(), unzipXctoolParams) {
               @Override
               public ImmutableList<Step> getBuildSteps(
                   BuildContext context, BuildableContext buildableContext) {
