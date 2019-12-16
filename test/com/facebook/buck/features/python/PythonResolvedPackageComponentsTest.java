@@ -17,8 +17,10 @@
 package com.facebook.buck.features.python;
 
 import static org.hamcrest.junit.MatcherAssume.assumeThat;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
@@ -29,6 +31,8 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,5 +85,32 @@ public class PythonResolvedPackageComponentsTest {
     ImmutableMap.Builder<Path, Path> builder = ImmutableMap.builder();
     components.forEachModule(builder::put);
     builder.build();
+  }
+
+  @Test
+  public void defaultInitPy() throws IOException {
+    BuildTarget target1 = BuildTargetFactory.newInstance("//:target1");
+    BuildTarget target2 = BuildTargetFactory.newInstance("//:target2");
+    PythonResolvedPackageComponents components =
+        PythonResolvedPackageComponents.builder()
+            .putModules(
+                target1,
+                new PythonMappedComponents.Resolved(
+                    ImmutableMap.of(
+                        Paths.get("foo/src.py"), Paths.get("target1/src.py"),
+                        Paths.get("src.py"), Paths.get("target1/src.py"))))
+            .putModules(
+                target2,
+                new PythonMappedComponents.Resolved(
+                    ImmutableMap.of(
+                        Paths.get("bar/src.py"),
+                        Paths.get("target2/src.py"),
+                        Paths.get("bar/__init__.py"),
+                        Paths.get("target2/__init__.py"))))
+            .setDefaultInitPy(Paths.get("default/__init__.py"))
+            .build();
+    Map<Path, Path> modules = new HashMap<>();
+    components.forEachModule(modules::put);
+    assertThat(modules.keySet(), Matchers.hasItem(Paths.get("foo/__init__.py")));
   }
 }

@@ -19,19 +19,23 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.file.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import org.immutables.value.Value;
 
 /**
@@ -49,6 +53,8 @@ abstract class AbstractPythonResolvedPackageComponents {
   protected abstract ImmutableMultimap<BuildTarget, PythonComponents.Resolved> getModuleDirs();
 
   protected abstract ImmutableMultimap<BuildTarget, PythonComponents.Resolved> getNativeLibraries();
+
+  protected abstract Optional<Path> getDefaultInitPy();
 
   protected abstract Optional<Boolean> isZipSafe();
 
@@ -123,8 +129,40 @@ abstract class AbstractPythonResolvedPackageComponents {
   /** Run {@code consumer} on all modules, throwing an error on duplicates. */
   public void forEachModule(PythonComponents.Resolved.ComponentConsumer consumer)
       throws IOException {
+    Set<Path> packages = new HashSet<>();
+    Set<Path> packagesWithInit = new HashSet<>();
+
     forEachComponent(
-        "module", Iterables.concat(getModules().entries(), getModuleDirs().entries()), consumer);
+        "module",
+        Iterables.concat(getModules().entries(), getModuleDirs().entries()),
+        (destination, source) -> {
+
+          // Record all packages that do and don't contain an `__init__.py`.
+          if (getDefaultInitPy().isPresent()
+              // TODO(agallagher): This shouldn't be necessary, but currently, prebuilt module dirs
+              //  can include files that aren't really modules.
+              && PythonUtil.isModuleExt(MorePaths.getFileExtension(destination))) {
+            // Record all "packages" we see as we go.
+            for (Path pkg = destination.getParent();
+                pkg != null && !packages.contains(pkg);
+                pkg = pkg.getParent()) {
+              packages.add(pkg);
+            }
+            // Record all existing `__init__.py` files.
+            if (destination.getFileName().toString().equals(PythonUtil.INIT_PY)) {
+              packagesWithInit.add(destination.getParent());
+            }
+          }
+
+          consumer.accept(destination, source);
+        });
+
+    // If a default `__init__.py` is provided, use for all packages w/o one.
+    if (getDefaultInitPy().isPresent()) {
+      for (Path pkg : Sets.difference(packages, packagesWithInit)) {
+        consumer.accept(pkg.resolve(PythonUtil.INIT_PY), getDefaultInitPy().get());
+      }
+    }
   }
 
   /** Run {@code consumer} on all resources, throwing an error on duplicates. */

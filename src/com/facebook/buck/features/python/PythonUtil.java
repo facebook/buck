@@ -73,12 +73,19 @@ import java.util.function.BiConsumer;
 
 public class PythonUtil {
 
+  static final String SOURCE_EXT = "py";
   static final String NATIVE_EXTENSION_EXT = "so";
+
+  static final String INIT_PY = "__init__.py";
 
   static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
       ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander());
 
   private PythonUtil() {}
+
+  public static boolean isModuleExt(String ext) {
+    return ext.equals(NATIVE_EXTENSION_EXT) || ext.equals(SOURCE_EXT);
+  }
 
   public static ImmutableList<BuildTarget> getDeps(
       PythonPlatform pythonPlatform,
