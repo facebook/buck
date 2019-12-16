@@ -16,8 +16,10 @@ from __future__ import print_function
 
 import errno
 import hashlib
+import logging
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import textwrap
@@ -55,6 +57,70 @@ def makedirs(path):
         raise
 
 
+def _is_eden(path):
+    return os.path.isdir(os.path.join(path, ".eden", "root"))
+
+
+def _find_eden_root(project_root):
+    return os.readlink(os.path.join(project_root, ".eden", "root"))
+
+
+def _add_eden_bindmount(eden_root, path):
+    relative_path = os.path.relpath(path, eden_root)
+    logging.debug(
+        "Adding eden mount at {}, path relative to eden {}".format(path, relative_path)
+    )
+    try:
+        subprocess.check_output(["eden", "redirect", "add", relative_path, "bind"])
+    except subprocess.CalledProcessError:
+        logging.warning("Could not add eden redirect for " + path)
+        raise
+
+
+def add_eden_bindmounts(repo_root, buck_out):
+    if not _is_eden(repo_root):
+        return
+
+    add_bindmounts = os.environ.get("NO_BUCK_ADD_EDEN_BINDMOUNTS", "0").strip() == "0"
+    if not add_bindmounts:
+        logging.warning(
+            "Skipping adding eden bindmounts because "
+            + "NO_BUCK_ADD_EDEN_BINDMOUNTS was set"
+        )
+        return
+
+    eden_root = _find_eden_root(repo_root)
+
+    eden_bindmounts = set(buck_out)
+    eden_bindmounts_file = os.path.join(repo_root, ".buck-eden-bindmounts")
+    if os.path.exists(eden_bindmounts_file):
+        logging.debug("Reading eden bindmounts from " + eden_bindmounts_file)
+        with open(eden_bindmounts_file, "r") as fin:
+            for bindmount in fin:
+                bindmount = bindmount.strip()
+                if bindmount and not bindmount.startswith("#"):
+                    eden_bindmounts.add(os.path.join(repo_root, bindmount))
+
+    for mount in eden_bindmounts:
+        if os.path.exists(mount):
+            if _is_eden(mount):
+                msg = (
+                    "Eden bindmount at {path} was requested, but it is already a "
+                    "directory within an eden filesystem.\n"
+                    "In order to prevent destructive actions on user data, you "
+                    "must remove this directory yourself.\n"
+                    "Please stop buck with `buck killall`, remove {path}, and run buck "
+                    "again."
+                )
+                logging.warning(msg.format(path=mount))
+            else:
+                logging.debug(
+                    "Eden bindmount at {} already exists, skipping".format(mount)
+                )
+        else:
+            _add_eden_bindmount(eden_root, mount)
+
+
 class BuckProject:
     def __init__(self, root):
         self.root = root
@@ -72,6 +138,8 @@ class BuckProject:
             self._buck_out_dirname = self.prefix + "-" + self._buck_out_dirname
 
         self._buck_out = os.path.join(self.root, self._buck_out_dirname)
+        add_eden_bindmounts(self.root, self._buck_out)
+
         self._buck_out_tmp = os.path.join(self._buck_out, "tmp")
         makedirs(self._buck_out_tmp)
         self._buck_out_log = os.path.join(self._buck_out, "log")
