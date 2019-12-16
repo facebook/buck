@@ -27,6 +27,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.shell.ProvidesWorkerTool;
 import com.facebook.buck.shell.WorkerTool;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
@@ -39,6 +40,7 @@ import java.util.Optional;
 public class WorkerMacroArg extends ProxyArg {
 
   private final BuildTarget workerTarget;
+  private final ProjectFilesystem projectFilesystem;
   private final WorkerTool workerTool;
   private final ImmutableList<String> startupCommand;
   private final ImmutableMap<String, String> startupEnvironment;
@@ -46,11 +48,20 @@ public class WorkerMacroArg extends ProxyArg {
   private WorkerMacroArg(
       Arg arg,
       BuildTarget workerTarget,
+      ProjectFilesystem projectFilesystem,
       WorkerTool workerTool,
       ImmutableList<String> startupCommand,
       ImmutableMap<String, String> startupEnvironment) {
     super(arg);
+
+    Preconditions.checkArgument(
+        workerTarget.getCell().equals(projectFilesystem.getBuckPaths().getCellName()),
+        "filesystem cell '%s' must match target cell: %s",
+        projectFilesystem.getBuckPaths().getCellName(),
+        workerTarget);
+
     this.workerTarget = workerTarget;
+    this.projectFilesystem = projectFilesystem;
     this.workerTool = workerTool;
     this.startupCommand = startupCommand;
     this.startupEnvironment = startupEnvironment;
@@ -85,7 +96,13 @@ public class WorkerMacroArg extends ProxyArg {
     ImmutableList<String> startupCommand = exe.getCommandPrefix(resolver.getSourcePathResolver());
     ImmutableMap<String, String> startupEnvironment =
         exe.getEnvironment(resolver.getSourcePathResolver());
-    return new WorkerMacroArg(arg, workerTarget, workerTool, startupCommand, startupEnvironment);
+    return new WorkerMacroArg(
+        arg,
+        workerTarget,
+        workerToolProvider.getProjectFilesystem(),
+        workerTool,
+        startupCommand,
+        startupEnvironment);
   }
 
   public ImmutableList<String> getStartupCommand() {
@@ -96,8 +113,8 @@ public class WorkerMacroArg extends ProxyArg {
     return startupEnvironment;
   }
 
-  public Path getTempDir(ProjectFilesystem filesystem) {
-    return workerTool.getTempDir(filesystem);
+  public Path getTempDir() {
+    return workerTool.getTempDir(projectFilesystem);
   }
 
   public Optional<String> getPersistentWorkerKey() {

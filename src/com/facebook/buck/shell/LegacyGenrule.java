@@ -396,9 +396,9 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ProjectFilesystem filesystem = getProjectFilesystem();
     return new WorkerShellStep(
         getBuildTarget(),
-        convertToWorkerJobParams(filesystem, context.getSourcePathResolver(), cmd),
-        convertToWorkerJobParams(filesystem, context.getSourcePathResolver(), bash),
-        convertToWorkerJobParams(filesystem, context.getSourcePathResolver(), cmdExe),
+        convertToWorkerJobParams(context.getSourcePathResolver(), cmd),
+        convertToWorkerJobParams(context.getSourcePathResolver(), bash),
+        convertToWorkerJobParams(context.getSourcePathResolver(), cmdExe),
         new WorkerProcessPoolFactory(filesystem)) {
       @Override
       protected ImmutableMap<String, String> getEnvironmentVariables() {
@@ -410,14 +410,14 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private static Optional<WorkerJobParams> convertToWorkerJobParams(
-      ProjectFilesystem filesystem, SourcePathResolverAdapter resolver, Optional<Arg> arg) {
+      SourcePathResolverAdapter resolver, Optional<Arg> arg) {
     return arg.map(
         arg1 -> {
           WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
           return WorkerJobParams.of(
               workerMacroArg.getJobArgs(resolver),
               WorkerProcessParams.of(
-                  workerMacroArg.getTempDir(filesystem),
+                  workerMacroArg.getTempDir(),
                   workerMacroArg.getStartupCommand(),
                   workerMacroArg.getEnvironment(),
                   workerMacroArg.getMaxWorkers(),
