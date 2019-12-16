@@ -586,6 +586,12 @@ public class TestCommand extends BuildCommand {
               new RuleKeyCacheRecycler.SettingsAffectingCache(
                   params.getBuckConfig().getView(BuildBuckConfig.class).getKeySeed(),
                   actionGraphAndBuilder.getActionGraph()))) {
+        boolean remoteExecutionAutoEnabled =
+            params
+                .getBuckConfig()
+                .getView(RemoteExecutionConfig.class)
+                .isRemoteExecutionAutoEnabled(
+                    params.getBuildEnvironmentDescription().getUser(), getArguments());
         LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
         try (CachingBuildEngine cachingBuildEngine =
@@ -600,8 +606,8 @@ public class TestCommand extends BuildCommand {
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         params.getBuckEventBus(),
                         params.getMetadataProvider(),
-                        false,
-                        false),
+                        remoteExecutionAutoEnabled,
+                        isRemoteExecutionForceDisabled()),
                     pool.getWeightedListeningExecutorService(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
                     cachingBuildEngineBuckConfig.getBuildDepFiles(),
