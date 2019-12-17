@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution.event;
 
+import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
@@ -59,7 +60,8 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
         Optional<String> remoteErrorMessage,
         Status remoteGrpcStatus,
         State lastNonTerminalState,
-        OptionalInt exitCode) {
+        OptionalInt exitCode,
+        Optional<ExecutedActionMetadata> executedActionMetadata) {
       return new Finished(
           this,
           remoteResult,
@@ -68,7 +70,8 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
           remoteErrorMessage,
           remoteGrpcStatus,
           lastNonTerminalState,
-          exitCode);
+          exitCode,
+          executedActionMetadata);
     }
 
     public String getBuildTarget() {
@@ -91,6 +94,7 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
     private final Status remoteGrpcStatus;
     private final State lastNonTerminalState;
     private final OptionalInt exitCode;
+    private final Optional<ExecutedActionMetadata> executedActionMetadata;
 
     private Finished(
         Started startedEvent,
@@ -100,7 +104,8 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
         Optional<String> remoteErrorMessage,
         Status remoteGrpcStatus,
         State lastNonTerminalState,
-        OptionalInt exitCode) {
+        OptionalInt exitCode,
+        Optional<ExecutedActionMetadata> executedActionMetadata) {
       this.startedEvent = startedEvent;
       this.remoteResult = remoteResult;
       this.localResult = localResult;
@@ -109,6 +114,7 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
       this.remoteGrpcStatus = remoteGrpcStatus;
       this.lastNonTerminalState = lastNonTerminalState;
       this.exitCode = exitCode;
+      this.executedActionMetadata = executedActionMetadata;
     }
 
     public Started getStartedEvent() {
@@ -141,6 +147,10 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
 
     public OptionalInt getExitCode() {
       return exitCode;
+    }
+
+    public Optional<ExecutedActionMetadata> getExecutedActionMetadata() {
+      return executedActionMetadata;
     }
 
     @Override

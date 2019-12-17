@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
@@ -158,6 +159,9 @@ public class LocalFallbackStrategyTest {
     eventBus.post(EasyMock.capture(eventCapture));
     EasyMock.expectLastCall().times(2);
     EasyMock.replay(eventBus);
+    String mockWorker = "mock_worker";
+    ExecutedActionMetadata executedActionMetadata =
+        ExecutedActionMetadata.newBuilder().setWorker(mockWorker).build();
 
     EasyMock.expect(strategyBuildResult.getBuildResult())
         .andReturn(
@@ -170,7 +174,8 @@ public class LocalFallbackStrategyTest {
                       }
                     },
                     executionContext,
-                    ImmutableStepExecutionResult.builder().setExitCode(1).setStderr("").build())))
+                    ImmutableStepExecutionResult.builder().setExitCode(1).setStderr("").build(),
+                    executedActionMetadata)))
         .times(2);
     BuildResult localResult = successBuildResult("//local/did:though");
     EasyMock.expect(buildStrategyContext.runWithDefaultBehavior())
@@ -194,6 +199,7 @@ public class LocalFallbackStrategyTest {
     LocalFallbackEvent.Finished finishedEvent = (LocalFallbackEvent.Finished) events.get(1);
     Assert.assertEquals(finishedEvent.getRemoteGrpcStatus(), Status.OK);
     Assert.assertEquals(finishedEvent.getExitCode(), OptionalInt.of(1));
+    Assert.assertEquals(finishedEvent.getExecutedActionMetadata().get().getWorker(), mockWorker);
   }
 
   @Test

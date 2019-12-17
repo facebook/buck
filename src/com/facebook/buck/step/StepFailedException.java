@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step;
 
+import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -32,6 +33,7 @@ public class StepFailedException extends Exception implements WrapsException, Ex
   private final Step step;
   private final String description;
   private final OptionalInt exitCode;
+  private Optional<ExecutedActionMetadata> executedActionMetadata;
 
   /** Callers should use {@link #createForFailingStepWithExitCode} unless in a unit test. */
   private StepFailedException(
@@ -40,6 +42,7 @@ public class StepFailedException extends Exception implements WrapsException, Ex
     this.step = step;
     this.description = description;
     this.exitCode = exitCode;
+    this.executedActionMetadata = Optional.empty();
   }
 
   @Override
@@ -73,6 +76,18 @@ public class StepFailedException extends Exception implements WrapsException, Ex
     return ret;
   }
 
+  /** Same as above but includes RE action metadata */
+  public static StepFailedException createForFailingStepWithExitCode(
+      Step step,
+      ExecutionContext context,
+      StepExecutionResult executionResult,
+      ExecutedActionMetadata executedActionMetadata) {
+    StepFailedException ret =
+        StepFailedException.createForFailingStepWithExitCode(step, context, executionResult);
+    ret.executedActionMetadata = Optional.of(executedActionMetadata);
+    return ret;
+  }
+
   private static StringBuilder appendToErrorMessage(
       StringBuilder messageBuilder, String name, String value, boolean truncate) {
     return messageBuilder
@@ -101,6 +116,10 @@ public class StepFailedException extends Exception implements WrapsException, Ex
 
   public OptionalInt getExitCode() {
     return exitCode;
+  }
+
+  public Optional<ExecutedActionMetadata> getExecutedActionMetadata() {
+    return executedActionMetadata;
   }
 
   @Override
