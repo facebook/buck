@@ -25,6 +25,8 @@ import com.android.common.SdkConstants;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
@@ -74,7 +76,7 @@ public class AndroidBinaryInstallIntegrationTest {
       ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT.resolve(FAKE_PACKAGE_NAME);
   private static final Path CONFIG_PATH = Paths.get("state.config");
   private static final String BINARY_TARGET = "//:binary";
-  private static final Path APK_PATH = Paths.get("buck-out/gen/binary.apk");
+  private Path apkPath;
 
   @Parameterized.Parameters(name = "concurrentInstall: {0}")
   public static Collection<Object[]> data() {
@@ -119,6 +121,10 @@ public class AndroidBinaryInstallIntegrationTest {
         Paths.get("assets/android/native-exopackage-fakes.apk").toAbsolutePath().toString());
     AdbHelper.setDevicesSupplierForTests(Optional.of(() -> ImmutableList.of(installLimiter)));
 
+    apkPath =
+        BuildTargetPaths.getGenPath(
+            filesystem, BuildTargetFactory.newInstance(BINARY_TARGET), "%s.apk");
+
     setupDeviceWithAbi(SdkConstants.ABI_ARMEABI_V7A);
   }
 
@@ -133,7 +139,7 @@ public class AndroidBinaryInstallIntegrationTest {
             abi);
     this.installLimiter =
         new InstallLimitingAndroidDevice(
-            testDevice, INSTALL_ROOT, filesystem.resolve(APK_PATH), filesystem.resolve(""));
+            testDevice, INSTALL_ROOT, filesystem.resolve(apkPath), filesystem.resolve(""));
   }
 
   @Test
