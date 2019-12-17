@@ -49,6 +49,7 @@ import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
+import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.CaseFormat;
@@ -61,6 +62,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -242,8 +244,7 @@ public class PythonUtil {
       NativeLinkStrategy nativeLinkStrategy,
       ImmutableSet<BuildTarget> preloadDeps) {
 
-    PythonPackageComponents.Builder allComponents =
-        new PythonPackageComponents.Builder(buildTarget);
+    PythonPackageComponents.Builder allComponents = new PythonPackageComponents.Builder();
 
     Map<BuildTarget, CxxPythonExtension> extensions = new LinkedHashMap<>();
     Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
@@ -278,26 +279,24 @@ public class PythonUtil {
           PythonPackagable packagable = (PythonPackagable) node;
           packagable
               .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
-              .ifPresent(
-                  modules ->
-                      allComponents.addModules(
-                          modules.getComponents(), packagable.getBuildTarget()));
+              .ifPresent(modules -> allComponents.putModules(packagable.getBuildTarget(), modules));
+
           packagable
               .getPythonResources(pythonPlatform, cxxPlatform, graphBuilder)
               .ifPresent(
-                  resources ->
-                      allComponents.addResources(
-                          resources.getComponents(), packagable.getBuildTarget()));
+                  resources -> allComponents.putResources(packagable.getBuildTarget(), resources));
           packagable
               .getPythonModuleDirs()
               .ifPresent(
                   moduleDirs ->
-                      allComponents.addModuleDirs(ImmutableSet.of(moduleDirs.getDirectory())));
+                      allComponents.putModuleDirs(packagable.getBuildTarget(), moduleDirs));
           allComponents.addZipSafe(packagable.isPythonZipSafe());
-          if (packagable.doesPythonPackageDisallowOmnibus(
-              pythonPlatform, cxxPlatform, graphBuilder)) {
-            for (BuildRule dep :
-                packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder)) {
+          Iterable<BuildRule> packagableDeps =
+              packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
+          if (nativeLinkStrategy == NativeLinkStrategy.MERGED
+              && packagable.doesPythonPackageDisallowOmnibus(
+                  pythonPlatform, cxxPlatform, graphBuilder)) {
+            for (BuildRule dep : packagableDeps) {
               if (dep instanceof NativeLinkableGroup) {
                 NativeLinkable linkable =
                     ((NativeLinkableGroup) dep).getNativeLinkable(cxxPlatform, graphBuilder);
@@ -306,7 +305,7 @@ public class PythonUtil {
               }
             }
           }
-          deps = packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
+          deps = packagableDeps;
         } else if (node instanceof NativeLinkableGroup) {
           NativeLinkable linkable =
               ((NativeLinkableGroup) node).getNativeLinkable(cxxPlatform, graphBuilder);
@@ -339,7 +338,10 @@ public class PythonUtil {
       for (Map.Entry<BuildTarget, OmnibusRoot> root : libraries.getRoots().entrySet()) {
         CxxPythonExtension extension = extensions.get(root.getKey());
         if (extension != null) {
-          allComponents.addModule(extension.getModule(), root.getValue().getPath(), root.getKey());
+          allComponents.putModules(
+              root.getKey(),
+              PythonMappedComponents.of(
+                  ImmutableSortedMap.of(extension.getModule(), root.getValue().getPath())));
         } else {
           NativeLinkTarget target =
               Preconditions.checkNotNull(
@@ -354,15 +356,24 @@ public class PythonUtil {
                   "%s: omnibus library for %s was built without soname",
                   buildTarget,
                   root.getKey());
-          allComponents.addNativeLibraries(
-              Paths.get(soname), root.getValue().getPath(), root.getKey());
+          allComponents.putNativeLibraries(
+              root.getKey(),
+              PythonMappedComponents.of(
+                  ImmutableSortedMap.of(Paths.get(soname), root.getValue().getPath())));
         }
       }
 
       // Add all remaining libraries as native libraries.
-      for (OmnibusLibrary library : libraries.getLibraries()) {
-        allComponents.addNativeLibraries(
-            Paths.get(library.getSoname()), library.getPath(), buildTarget);
+      if (!libraries.getLibraries().isEmpty()) {
+        allComponents.putNativeLibraries(
+            buildTarget,
+            PythonMappedComponents.of(
+                libraries.getLibraries().stream()
+                    .collect(
+                        ImmutableSortedMap.toImmutableSortedMap(
+                            Ordering.natural(),
+                            l -> Paths.get(l.getSoname()),
+                            OmnibusLibrary::getPath))));
       }
     } else {
 
@@ -373,22 +384,20 @@ public class PythonUtil {
             .getValue()
             .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
             .ifPresent(
-                modules ->
-                    allComponents.addModules(
-                        modules.getComponents(), entry.getValue().getBuildTarget()));
+                modules -> allComponents.putModules(entry.getValue().getBuildTarget(), modules));
         entry
             .getValue()
             .getPythonResources(pythonPlatform, cxxPlatform, graphBuilder)
             .ifPresent(
                 resources ->
-                    allComponents.addResources(
-                        resources.getComponents(), entry.getValue().getBuildTarget()));
+                    allComponents.putResources(entry.getValue().getBuildTarget(), resources));
         entry
             .getValue()
             .getPythonModuleDirs()
             .ifPresent(
                 modulesDirs ->
-                    allComponents.addModuleDirs(ImmutableSet.of(modulesDirs.getDirectory())));
+                    allComponents.putModuleDirs(
+                        entry.getKey(), PythonModuleDirComponents.of(modulesDirs.getDirectory())));
         allComponents.addZipSafe(entry.getValue().isPythonZipSafe());
         extensionNativeDeps.putAll(
             Maps.uniqueIndex(
@@ -408,11 +417,12 @@ public class PythonUtil {
         NativeLinkableGroup.Linkage linkage = nativeLinkable.getPreferredLinkage();
         if (nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget())
             || linkage != NativeLinkableGroup.Linkage.STATIC) {
-          ImmutableMap<String, SourcePath> libs = nativeLinkable.getSharedLibraries(graphBuilder);
-          for (Map.Entry<String, SourcePath> ent : libs.entrySet()) {
-            allComponents.addNativeLibraries(
-                Paths.get(ent.getKey()), ent.getValue(), nativeLinkable.getBuildTarget());
-          }
+          allComponents.putNativeLibraries(
+              nativeLinkable.getBuildTarget(),
+              PythonMappedComponents.of(
+                  ImmutableSortedMap.copyOf(
+                      MoreMaps.transformKeys(
+                          nativeLinkable.getSharedLibraries(graphBuilder), Paths::get))));
         }
       }
     }

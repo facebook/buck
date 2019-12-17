@@ -67,6 +67,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -76,7 +77,7 @@ import org.junit.Test;
 public class PythonTestDescriptionTest {
 
   @Test
-  public void thatTestModulesAreInComponents() {
+  public void thatTestModulesAreInComponents() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonTestBuilder builder =
         PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
@@ -87,12 +88,13 @@ public class PythonTestDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonTest testRule = builder.build(graphBuilder, filesystem, targetGraph);
     PythonBinary binRule = testRule.getBinary();
-    PythonPackageComponents components = binRule.getComponents();
+    PythonResolvedPackageComponents components =
+        binRule.getComponents().resolve(graphBuilder.getSourcePathResolver());
     assertThat(
-        components.getModules().keySet(),
+        components.getAllModules().keySet(),
         Matchers.hasItem(PythonTestDescription.getTestModulesListName()));
     assertThat(
-        components.getModules().keySet(),
+        components.getAllModules().keySet(),
         Matchers.hasItem(PythonTestDescription.getTestMainPath(null, Optional.empty())));
     assertThat(
         binRule.getMainModule(),
@@ -103,7 +105,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void baseModule() {
+  public void baseModule() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     String sourceName = "main.py";
@@ -115,11 +117,15 @@ public class PythonTestDescriptionTest {
         PythonTestBuilder.create(target)
             .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(source)));
     TargetGraph normalTargetGraph = TargetGraphFactory.newInstance(normalBuilder.build());
-    PythonTest normal =
-        normalBuilder.build(
-            new TestActionGraphBuilder(normalTargetGraph), filesystem, normalTargetGraph);
+    ActionGraphBuilder normalGraphBuilder = new TestActionGraphBuilder(normalTargetGraph);
+    PythonTest normal = normalBuilder.build(normalGraphBuilder, filesystem, normalTargetGraph);
     assertThat(
-        normal.getBinary().getComponents().getModules().keySet(),
+        normal
+            .getBinary()
+            .getComponents()
+            .resolve(normalGraphBuilder.getSourcePathResolver())
+            .getAllModules()
+            .keySet(),
         Matchers.hasItem(
             target
                 .getCellRelativeBasePath()
@@ -135,13 +141,18 @@ public class PythonTestDescriptionTest {
             .setBaseModule(baseModule);
     TargetGraph withBaseModuleTargetGraph =
         TargetGraphFactory.newInstance(withBaseModuleBuilder.build());
+    ActionGraphBuilder withBaseModuleGraphBuilder =
+        new TestActionGraphBuilder(withBaseModuleTargetGraph);
     PythonTest withBaseModule =
         withBaseModuleBuilder.build(
-            new TestActionGraphBuilder(withBaseModuleTargetGraph),
-            filesystem,
-            withBaseModuleTargetGraph);
+            withBaseModuleGraphBuilder, filesystem, withBaseModuleTargetGraph);
     assertThat(
-        withBaseModule.getBinary().getComponents().getModules().keySet(),
+        withBaseModule
+            .getBinary()
+            .getComponents()
+            .resolve(withBaseModuleGraphBuilder.getSourcePathResolver())
+            .getAllModules()
+            .keySet(),
         Matchers.hasItem(Paths.get(baseModule).resolve(sourceName)));
   }
 
@@ -164,7 +175,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void platformSrcs() {
+  public void platformSrcs() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
@@ -181,16 +192,23 @@ public class PythonTestDescriptionTest {
                         SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
-    PythonTest test =
-        builder.build(new TestActionGraphBuilder(targetGraph), filesystem, targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PythonTest test = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        test.getBinary().getComponents().getModules().values(),
+        test.getBinary()
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllModules()
+            .values(),
         Matchers.allOf(
-            Matchers.hasItem(matchedSource), Matchers.not(Matchers.hasItem(unmatchedSource))));
+            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(matchedSource)),
+            Matchers.not(
+                Matchers.hasItem(
+                    graphBuilder.getSourcePathResolver().getAbsolutePath(unmatchedSource)))));
   }
 
   @Test
-  public void platformResources() {
+  public void platformResources() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     SourcePath matchedSource = FakeSourcePath.of("foo/a.dat");
@@ -207,12 +225,19 @@ public class PythonTestDescriptionTest {
                         SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
-    PythonTest test =
-        builder.build(new TestActionGraphBuilder(targetGraph), filesystem, targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PythonTest test = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        test.getBinary().getComponents().getResources().values(),
+        test.getBinary()
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllResources()
+            .values(),
         Matchers.allOf(
-            Matchers.hasItem(matchedSource), Matchers.not(Matchers.hasItem(unmatchedSource))));
+            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(matchedSource)),
+            Matchers.not(
+                Matchers.hasItem(
+                    graphBuilder.getSourcePathResolver().getAbsolutePath(unmatchedSource)))));
   }
 
   @Test
@@ -381,7 +406,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void versionedSrcs() {
+  public void versionedSrcs() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
@@ -405,13 +430,20 @@ public class PythonTestDescriptionTest {
     depBuilder.build(graphBuilder, filesystem, targetGraph);
     PythonTest test = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        test.getBinary().getComponents().getModules().values(),
+        test.getBinary()
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllModules()
+            .values(),
         Matchers.allOf(
-            Matchers.hasItem(matchedSource), Matchers.not(Matchers.hasItem(unmatchedSource))));
+            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(matchedSource)),
+            Matchers.not(
+                Matchers.hasItem(
+                    graphBuilder.getSourcePathResolver().getAbsolutePath(unmatchedSource)))));
   }
 
   @Test
-  public void versionedResources() {
+  public void versionedResources() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
@@ -435,9 +467,16 @@ public class PythonTestDescriptionTest {
     depBuilder.build(graphBuilder, filesystem, targetGraph);
     PythonTest test = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        test.getBinary().getComponents().getResources().values(),
+        test.getBinary()
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllResources()
+            .values(),
         Matchers.allOf(
-            Matchers.hasItem(matchedSource), Matchers.not(Matchers.hasItem(unmatchedSource))));
+            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(matchedSource)),
+            Matchers.not(
+                Matchers.hasItem(
+                    graphBuilder.getSourcePathResolver().getAbsolutePath(unmatchedSource)))));
   }
 
   @Test
@@ -473,7 +512,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void platformDeps() {
+  public void platformDeps() throws IOException {
     SourcePath libASrc = FakeSourcePath.of("libA.py");
     PythonLibraryBuilder libraryABuilder =
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libA"))
@@ -500,12 +539,19 @@ public class PythonTestDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonTest test = (PythonTest) graphBuilder.requireRule(binaryBuilder.getTarget());
     assertThat(
-        test.getBinary().getComponents().getModules().values(),
-        Matchers.allOf(Matchers.hasItem(libASrc), Matchers.not(Matchers.hasItem(libBSrc))));
+        test.getBinary()
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllModules()
+            .values(),
+        Matchers.allOf(
+            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc)),
+            Matchers.not(
+                Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc)))));
   }
 
   @Test
-  public void cxxPlatform() {
+  public void cxxPlatform() throws IOException {
     CxxPlatform platformA =
         CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("platA"));
     CxxPlatform platformB =
@@ -550,8 +596,15 @@ public class PythonTestDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonTest test = (PythonTest) graphBuilder.requireRule(binaryBuilder.getTarget());
     assertThat(
-        test.getBinary().getComponents().getModules().values(),
-        Matchers.allOf(Matchers.hasItem(libASrc), Matchers.not(Matchers.hasItem(libBSrc))));
+        test.getBinary()
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllModules()
+            .values(),
+        Matchers.allOf(
+            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc)),
+            Matchers.not(
+                Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc)))));
   }
 
   private RuleKey calculateRuleKey(BuildRuleResolver ruleResolver, BuildRule rule) {

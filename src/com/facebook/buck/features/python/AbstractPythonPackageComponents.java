@@ -16,80 +16,62 @@
 
 package com.facebook.buck.features.python;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.impl.SymlinkPack;
+import com.facebook.buck.core.rules.impl.Symlinks;
+import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.step.fs.SymlinkPaths;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Multimaps;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 import org.immutables.value.Value;
 
-@Value.Immutable(builder = false, singleton = true)
-@BuckStyleImmutable
+/** All per-rule components that contribute to a Python binary. */
+@Value.Immutable(singleton = true, copy = true, builder = false)
+@BuckStyleTuple
 abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
 
   // Python modules as map of their module name to location of the source.
-  @Value.Parameter
-  @Value.NaturalOrder
-  public abstract ImmutableSortedMap<Path, SourcePath> getModules();
-
   @AddToRuleKey
-  public final ImmutableSortedMap<String, SourcePath> getModulesRuleKey() {
-    return MoreMaps.transformKeysAndSort(getModules(), Path::toString);
-  }
+  public abstract ImmutableListMultimap<BuildTarget, PythonMappedComponents> getModules();
 
   // Resources to include in the package.
-  @Value.Parameter
-  @Value.NaturalOrder
-  public abstract ImmutableSortedMap<Path, SourcePath> getResources();
-
   @AddToRuleKey
-  public final ImmutableSortedMap<String, SourcePath> getResourcesRuleKey() {
-    return MoreMaps.transformKeysAndSort(getResources(), Path::toString);
-  }
+  public abstract ImmutableListMultimap<BuildTarget, PythonMappedComponents> getResources();
 
   // Native libraries to include in the package.
-  @Value.Parameter
-  @Value.NaturalOrder
-  public abstract ImmutableSortedMap<Path, SourcePath> getNativeLibraries();
+  @AddToRuleKey
+  public abstract ImmutableListMultimap<BuildTarget, PythonMappedComponents> getNativeLibraries();
+
+  // Native libraries to include in the package.
+  @AddToRuleKey
+  public abstract ImmutableListMultimap<BuildTarget, PythonModuleDirComponents> getModuleDirs();
 
   @AddToRuleKey
-  public final ImmutableSortedMap<String, SourcePath> getNativeLibrariesRuleKey() {
-    return MoreMaps.transformKeysAndSort(getNativeLibraries(), Path::toString);
-  }
+  public abstract Optional<SourcePath> getDefaultInitPy();
 
-  // Directories that pre-built python libraries are extracted to. Note that these
-  // can refer to the same libraries that are in getPrebuiltLibraries, but these are
-  // directories instead of archives. The key of this map is where to link the contents
-  // of the directory within the archive relative to its root
-  @Value.Parameter
-  @Value.NaturalOrder
-  public abstract ImmutableSortedSet<SourcePath> getModuleDirs();
-
-  @Value.Parameter
+  @AddToRuleKey
   public abstract Optional<Boolean> isZipSafe();
 
   public void forEachInput(Consumer<SourcePath> consumer) {
-    getModules().values().forEach(consumer);
-    getResources().values().forEach(consumer);
-    getNativeLibraries().values().forEach(consumer);
-    getModuleDirs().forEach(consumer);
+    getModules().values().forEach(c -> c.forEachInput(consumer));
+    getResources().values().forEach(c -> c.forEachInput(consumer));
+    getNativeLibraries().values().forEach(c -> c.forEachInput(consumer));
+    getModuleDirs().values().forEach(c -> c.forEachInput(consumer));
+    getDefaultInitPy().ifPresent(consumer);
   }
 
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
@@ -98,100 +80,97 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
     return deps.build();
   }
 
+  public PythonResolvedPackageComponents resolve(SourcePathResolverAdapter resolver) {
+    return PythonResolvedPackageComponents.builder()
+        .putAllModules(
+            Multimaps.transformValues(
+                getModules(), c -> Objects.requireNonNull(c).resolvePythonComponents(resolver)))
+        .putAllResources(
+            Multimaps.transformValues(
+                getResources(), c -> Objects.requireNonNull(c).resolvePythonComponents(resolver)))
+        .putAllNativeLibraries(
+            Multimaps.transformValues(
+                getNativeLibraries(),
+                c -> Objects.requireNonNull(c).resolvePythonComponents(resolver)))
+        .putAllModuleDirs(
+            Multimaps.transformValues(
+                getModuleDirs(), c -> Objects.requireNonNull(c).resolvePythonComponents(resolver)))
+        .setDefaultInitPy(getDefaultInitPy().map(resolver::getAbsolutePath))
+        .setZipSafe(isZipSafe())
+        .build();
+  }
+
+  public Symlinks asSymlinks() {
+    return new SymlinkPack(
+        ImmutableList.<Symlinks>builder()
+            .addAll(
+                getModules().values().stream()
+                    .map(PythonComponents::asSymlinks)
+                    .collect(ImmutableList.toImmutableList()))
+            .addAll(
+                getResources().values().stream()
+                    .map(PythonComponents::asSymlinks)
+                    .collect(ImmutableList.toImmutableList()))
+            .addAll(
+                getNativeLibraries().values().stream()
+                    .map(PythonComponents::asSymlinks)
+                    .collect(ImmutableList.toImmutableList()))
+            .addAll(
+                getModuleDirs().values().stream()
+                    .map(PythonComponents::asSymlinks)
+                    .collect(ImmutableList.toImmutableList()))
+            .build()) {
+
+      @AddToRuleKey
+      private final Optional<NonHashableSourcePathContainer> defaultInitPy =
+          getDefaultInitPy().map(NonHashableSourcePathContainer::new);
+
+      @Override
+      public SymlinkPaths resolveSymlinkPaths(SourcePathResolverAdapter resolver) {
+        return resolve(resolver).asSymlinkPaths();
+      }
+
+      @Override
+      public void forEachSymlinkInput(Consumer<SourcePath> consumer) {
+        defaultInitPy.ifPresent(nsp -> consumer.accept(nsp.getSourcePath()));
+        super.forEachSymlinkInput(consumer);
+      }
+    };
+  }
+
   /**
    * A helper class to construct a PythonPackageComponents instance which throws human readable
    * error messages on duplicates.
    */
   public static class Builder {
 
-    // A description of the entity that is building this PythonPackageComponents instance.
-    private final BuildTarget owner;
-
-    // The actual maps holding the components.
-    private final Map<Path, SourcePath> modules = new HashMap<>();
-    private final Map<Path, SourcePath> resources = new HashMap<>();
-    private final Map<Path, SourcePath> nativeLibraries = new HashMap<>();
-    private final Set<SourcePath> moduleDirs = new HashSet<>();
+    private final ListMultimap<BuildTarget, PythonMappedComponents> modules =
+        MultimapBuilder.treeKeys().arrayListValues().build();
+    private final ListMultimap<BuildTarget, PythonMappedComponents> resources =
+        MultimapBuilder.treeKeys().arrayListValues().build();
+    private final ListMultimap<BuildTarget, PythonMappedComponents> nativeLibraries =
+        MultimapBuilder.treeKeys().arrayListValues().build();
+    private final ListMultimap<BuildTarget, PythonModuleDirComponents> moduleDirs =
+        MultimapBuilder.treeKeys().arrayListValues().build();
     private Optional<Boolean> zipSafe = Optional.empty();
 
-    // Bookkeeping used to for error handling in the presence of duplicate
-    // entries.  These data structures map the components named above to the
-    // entities that provided them.
-    private final Map<Path, BuildTarget> moduleSources = new HashMap<>();
-    private final Map<Path, BuildTarget> resourceSources = new HashMap<>();
-    private final Map<Path, BuildTarget> nativeLibrarySources = new HashMap<>();
-
-    public Builder(BuildTarget owner) {
-      this.owner = owner;
-    }
-
-    private HumanReadableException createDuplicateError(
-        String type, Path destination, BuildTarget sourceA, BuildTarget sourceB) {
-      return new HumanReadableException(
-          "%s: found duplicate entries for %s %s when creating python package (%s and %s)",
-          owner, type, destination, sourceA, sourceB);
-    }
-
-    private Builder add(
-        String type,
-        Map<Path, SourcePath> builder,
-        Map<Path, BuildTarget> sourceDescs,
-        Path destination,
-        SourcePath source,
-        BuildTarget sourceDesc) {
-      SourcePath existing = builder.put(destination, source);
-      if (existing != null && !existing.equals(source)) {
-        throw createDuplicateError(
-            type, destination, sourceDesc, Objects.requireNonNull(sourceDescs.get(destination)));
-      }
-      sourceDescs.put(destination, sourceDesc);
+    public Builder putModules(BuildTarget owner, PythonMappedComponents components) {
+      modules.put(owner, components);
       return this;
     }
 
-    private Builder add(
-        String type,
-        Map<Path, SourcePath> builder,
-        Map<Path, BuildTarget> sourceDescs,
-        Map<Path, SourcePath> toAdd,
-        BuildTarget sourceDesc) {
-      for (Map.Entry<Path, SourcePath> ent : toAdd.entrySet()) {
-        add(type, builder, sourceDescs, ent.getKey(), ent.getValue(), sourceDesc);
-      }
+    public Builder putResources(BuildTarget owner, PythonMappedComponents components) {
+      resources.put(owner, components);
       return this;
     }
 
-    public Builder addModule(Path destination, SourcePath source, BuildTarget from) {
-      return add("module", modules, moduleSources, destination, source, from);
-    }
-
-    public Builder addModules(Map<Path, SourcePath> sources, BuildTarget from) {
-      return add("module", modules, moduleSources, sources, from);
-    }
-
-    public Builder addResources(Map<Path, SourcePath> sources, BuildTarget from) {
-      return add("resource", resources, resourceSources, sources, from);
-    }
-
-    public Builder addNativeLibraries(Path destination, SourcePath source, BuildTarget from) {
-      return add(
-          "native library", nativeLibraries, nativeLibrarySources, destination, source, from);
-    }
-
-    public Builder addNativeLibraries(Map<Path, SourcePath> sources, BuildTarget from) {
-      return add("native library", nativeLibraries, nativeLibrarySources, sources, from);
-    }
-
-    public Builder addModuleDirs(Set<SourcePath> moduleDirs) {
-      this.moduleDirs.addAll(moduleDirs);
+    public Builder putNativeLibraries(BuildTarget owner, PythonMappedComponents components) {
+      nativeLibraries.put(owner, components);
       return this;
     }
 
-    public Builder addComponent(PythonPackageComponents other, BuildTarget from) {
-      addModules(other.getModules(), from);
-      addResources(other.getResources(), from);
-      addNativeLibraries(other.getNativeLibraries(), from);
-      addModuleDirs(other.getModuleDirs());
-      addZipSafe(other.isZipSafe());
+    public Builder putModuleDirs(BuildTarget owner, PythonModuleDirComponents components) {
+      moduleDirs.put(owner, components);
       return this;
     }
 
@@ -199,18 +178,13 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
       if (!this.zipSafe.isPresent() && !zipSafe.isPresent()) {
         return this;
       }
-
       this.zipSafe = Optional.of(this.zipSafe.orElse(true) && zipSafe.orElse(true));
       return this;
     }
 
     public PythonPackageComponents build() {
       return PythonPackageComponents.of(
-          ImmutableSortedMap.copyOf(modules),
-          ImmutableSortedMap.copyOf(resources),
-          ImmutableSortedMap.copyOf(nativeLibraries),
-          ImmutableSet.copyOf(moduleDirs),
-          zipSafe);
+          modules, resources, nativeLibraries, moduleDirs, Optional.empty(), zipSafe);
     }
   }
 }

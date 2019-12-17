@@ -66,6 +66,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -462,7 +463,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void platformDepsSeparateLinkage() {
+  public void platformDepsSeparateLinkage() throws IOException {
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(FakeBuckConfig.builder().build());
     FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2, PY3);
 
@@ -504,10 +505,18 @@ public class CxxPythonExtensionDescriptionTest {
     PythonBinary binary3 = binary3Builder.build(graphBuilder);
 
     assertThat(
-        binary2.getComponents().getNativeLibraries().keySet(),
+        binary2
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllNativeLibraries()
+            .keySet(),
         Matchers.contains(Paths.get("libdep.so")));
     assertThat(
-        binary3.getComponents().getNativeLibraries().keySet(),
+        binary3
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllNativeLibraries()
+            .keySet(),
         Matchers.not(Matchers.contains(Paths.get("libdep.so"))));
   }
 

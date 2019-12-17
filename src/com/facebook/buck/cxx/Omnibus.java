@@ -66,7 +66,7 @@ import org.immutables.value.Value;
 
 public class Omnibus {
 
-  private static final Flavor OMNIBUS_FLAVOR = InternalFlavor.of("omnibus");
+  public static final Flavor OMNIBUS_FLAVOR = InternalFlavor.of("omnibus");
   private static final Flavor DUMMY_OMNIBUS_FLAVOR = InternalFlavor.of("dummy-omnibus");
 
   private Omnibus() {}

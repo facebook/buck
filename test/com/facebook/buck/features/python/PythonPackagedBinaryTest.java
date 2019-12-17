@@ -41,13 +41,12 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -90,15 +89,15 @@ public class PythonPackagedBinaryTest {
                 PythonBuckConfig.SECTION,
                 UnconfiguredTargetConfiguration.INSTANCE),
             "main",
-            PythonPackageComponents.of(
-                ImmutableMap.of(
-                    Paths.get(main), PathSourcePath.of(projectFilesystem, mainSrc),
-                    Paths.get(mod1), PathSourcePath.of(projectFilesystem, src1),
-                    Paths.get(mod2), PathSourcePath.of(projectFilesystem, src2)),
-                ImmutableMap.of(),
-                ImmutableMap.of(),
-                ImmutableSet.of(),
-                Optional.empty()),
+            new PythonPackageComponents.Builder()
+                .putModules(
+                    target,
+                    PythonMappedComponents.of(
+                        ImmutableSortedMap.of(
+                            Paths.get(main), PathSourcePath.of(projectFilesystem, mainSrc),
+                            Paths.get(mod1), PathSourcePath.of(projectFilesystem, src1),
+                            Paths.get(mod2), PathSourcePath.of(projectFilesystem, src2))))
+                .build(),
             ImmutableSortedSet.of(),
             /* cache */ true,
             /* legacyOutputPath */ false);

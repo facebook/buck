@@ -21,6 +21,6 @@ prebuilt_python_library(
 
 prebuilt_python_library(
     name = "whl_dep_copy",
-    binary_src = "wheel_package-0.0.1-py2-none-any.whl",
+    binary_src = "wheel_package-0.0.1-py2-none-any-copy.whl",
     visibility = ["PUBLIC"],
 )

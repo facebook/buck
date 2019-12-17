@@ -59,6 +59,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -351,7 +352,7 @@ public class PythonLibraryDescriptionTest {
   }
 
   @Test
-  public void excludingTransitiveNativeDepsUsingMergedNativeLinkStrategy() {
+  public void excludingTransitiveNativeDepsUsingMergedNativeLinkStrategy() throws IOException {
     CxxLibraryBuilder cxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("dep.c"))));
@@ -388,7 +389,12 @@ public class PythonLibraryDescriptionTest {
     cxxBuilder.build(graphBuilder);
     libBuilder.build(graphBuilder);
     PythonBinary binary = binaryBuilder.build(graphBuilder);
-    ImmutableSortedSet<Path> nativeLibs = binary.getComponents().getNativeLibraries().keySet();
+    ImmutableSet<Path> nativeLibs =
+        binary
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllNativeLibraries()
+            .keySet();
     assertThat(
         Iterables.transform(nativeLibs, Object::toString),
         Matchers.containsInAnyOrder("libdep.so", "libcxx.so"));

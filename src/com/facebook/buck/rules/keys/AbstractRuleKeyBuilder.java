@@ -29,6 +29,7 @@ import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -168,6 +169,21 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> {
       try (RuleKeyScopedHasher.ContainerScope containerScope =
           scopedHasher.containerScope(RuleKeyHasher.Container.MAP)) {
         for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
+          try (Scope ignored = containerScope.elementScope()) {
+            setReflectively(entry.getKey());
+          }
+          try (Scope ignored = containerScope.elementScope()) {
+            setReflectively(entry.getValue());
+          }
+        }
+      }
+      return this;
+    }
+
+    if (val instanceof Multimap) {
+      try (RuleKeyScopedHasher.ContainerScope containerScope =
+          scopedHasher.containerScope(RuleKeyHasher.Container.MAP)) {
+        for (Map.Entry<?, ?> entry : ((Multimap<?, ?>) val).entries()) {
           try (Scope ignored = containerScope.elementScope()) {
             setReflectively(entry.getKey());
           }

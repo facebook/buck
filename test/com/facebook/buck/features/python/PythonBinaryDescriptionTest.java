@@ -36,7 +36,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -50,6 +49,7 @@ import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -85,6 +85,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -150,7 +151,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void baseModule() {
+  public void baseModule() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     String sourceName = "main.py";
     SourcePath source = FakeSourcePath.of("foo/" + sourceName);
@@ -159,8 +160,13 @@ public class PythonBinaryDescriptionTest {
     // base name.
     PythonBinary normal =
         PythonBinaryBuilder.create(target).setMain(source).build(new TestActionGraphBuilder());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     assertThat(
-        normal.getComponents().getModules().keySet(),
+        normal
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllModules()
+            .keySet(),
         Matchers.hasItem(
             target
                 .getCellRelativeBasePath()
@@ -176,7 +182,11 @@ public class PythonBinaryDescriptionTest {
             .setBaseModule(baseModule)
             .build(new TestActionGraphBuilder());
     assertThat(
-        withBaseModule.getComponents().getModules().keySet(),
+        withBaseModule
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllModules()
+            .keySet(),
         Matchers.hasItem(Paths.get(baseModule).resolve(sourceName)));
   }
 
@@ -380,7 +390,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void transitiveNativeDepsUsingMergedNativeLinkStrategy() {
+  public void transitiveNativeDepsUsingMergedNativeLinkStrategy() throws IOException {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setSrcs(
@@ -419,12 +429,18 @@ public class PythonBinaryDescriptionTest {
     cxxBuilder.build(graphBuilder);
     PythonBinary binary = binaryBuilder.build(graphBuilder);
     assertThat(
-        Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
+        Iterables.transform(
+            binary
+                .getComponents()
+                .resolve(graphBuilder.getSourcePathResolver())
+                .getAllNativeLibraries()
+                .keySet(),
+            Object::toString),
         Matchers.containsInAnyOrder("libomnibus.so", "libcxx.so"));
   }
 
   @Test
-  public void transitiveNativeDepsUsingSeparateNativeLinkStrategy() {
+  public void transitiveNativeDepsUsingSeparateNativeLinkStrategy() throws IOException {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setSrcs(
@@ -463,12 +479,18 @@ public class PythonBinaryDescriptionTest {
     cxxBuilder.build(graphBuilder);
     PythonBinary binary = binaryBuilder.build(graphBuilder);
     assertThat(
-        Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
+        Iterables.transform(
+            binary
+                .getComponents()
+                .resolve(graphBuilder.getSourcePathResolver())
+                .getAllNativeLibraries()
+                .keySet(),
+            Object::toString),
         Matchers.containsInAnyOrder("libtransitive_dep.so", "libdep.so", "libcxx.so"));
   }
 
   @Test
-  public void extensionDepUsingMergedNativeLinkStrategy() {
+  public void extensionDepUsingMergedNativeLinkStrategy() throws IOException {
     FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2);
 
     PrebuiltCxxLibraryBuilder python2Builder =
@@ -507,14 +529,21 @@ public class PythonBinaryDescriptionTest {
     extensionBuilder.build(graphBuilder, filesystem, targetGraph);
     PythonBinary binary = binaryBuilder.build(graphBuilder, filesystem, targetGraph);
 
-    assertThat(binary.getComponents().getNativeLibraries().entrySet(), Matchers.empty());
+    assertThat(binary.getComponents().getNativeLibraries().entries(), Matchers.empty());
     assertThat(
-        Iterables.transform(binary.getComponents().getModules().keySet(), Object::toString),
+        Iterables.transform(
+            binary
+                .getComponents()
+                .resolve(graphBuilder.getSourcePathResolver())
+                .getAllModules()
+                .keySet(),
+            Object::toString),
         Matchers.containsInAnyOrder(MorePaths.pathWithPlatformSeparators("hello/extension.so")));
   }
 
   @Test
-  public void transitiveDepsOfLibsWithPrebuiltNativeLibsAreNotIncludedInMergedLink() {
+  public void transitiveDepsOfLibsWithPrebuiltNativeLibsAreNotIncludedInMergedLink()
+      throws IOException {
     CxxLibraryBuilder transitiveCxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_cxx"))
             .setSrcs(
@@ -554,7 +583,13 @@ public class PythonBinaryDescriptionTest {
     pythonLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     PythonBinary binary = pythonBinaryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
+        Iterables.transform(
+            binary
+                .getComponents()
+                .resolve(graphBuilder.getSourcePathResolver())
+                .getAllNativeLibraries()
+                .keySet(),
+            Object::toString),
         Matchers.hasItem("libtransitive_cxx.so"));
   }
 
@@ -577,7 +612,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void preloadLibraries() {
+  public void preloadLibraries() throws IOException {
     for (NativeLinkStrategy strategy : NativeLinkStrategy.values()) {
       CxxLibraryBuilder cxxLibraryBuilder =
           new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
@@ -602,7 +637,11 @@ public class PythonBinaryDescriptionTest {
       assertThat("Using " + strategy, binary.getPreloadLibraries(), Matchers.hasItems("libdep.so"));
       assertThat(
           "Using " + strategy,
-          binary.getComponents().getNativeLibraries().keySet(),
+          binary
+              .getComponents()
+              .resolve(graphBuilder.getSourcePathResolver())
+              .getAllNativeLibraries()
+              .keySet(),
           Matchers.hasItems(Paths.get("libdep.so")));
     }
   }
@@ -629,7 +668,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void linkerFlagsUsingMergedNativeLinkStrategy() {
+  public void linkerFlagsUsingMergedNativeLinkStrategy() throws IOException {
     CxxLibraryBuilder cxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("dep.c"))));
@@ -658,20 +697,17 @@ public class PythonBinaryDescriptionTest {
                 cxxDepBuilder.build(), cxxBuilder.build(), binaryBuilder.build()));
     cxxDepBuilder.build(graphBuilder);
     cxxBuilder.build(graphBuilder);
-    PythonBinary binary = binaryBuilder.build(graphBuilder);
-    SourcePath mergedLib =
-        binary.getComponents().getNativeLibraries().get(Paths.get("libomnibus.so"));
+    binaryBuilder.build(graphBuilder);
     CxxLink link =
-        graphBuilder
-            .getRuleOptionalWithType(((BuildTargetSourcePath) mergedLib).getTarget(), CxxLink.class)
-            .get();
+        graphBuilder.getRuleWithType(
+            binaryBuilder.getTarget().withAppendedFlavors(Omnibus.OMNIBUS_FLAVOR), CxxLink.class);
     assertThat(
         Arg.stringify(link.getArgs(), graphBuilder.getSourcePathResolver()),
         Matchers.hasItem("-flag"));
   }
 
   @Test
-  public void explicitDepOnlinkWholeLibPullsInSharedLibrary() {
+  public void explicitDepOnlinkWholeLibPullsInSharedLibrary() throws IOException {
     for (NativeLinkStrategy strategy : NativeLinkStrategy.values()) {
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
       CxxLibraryBuilder cxxLibraryBuilder =
@@ -705,13 +741,18 @@ public class PythonBinaryDescriptionTest {
       PythonBinary binary = binaryBuilder.build(graphBuilder, filesystem, targetGraph);
       assertThat(
           "Using " + strategy,
-          binary.getComponents().getNativeLibraries().keySet(),
+          binary
+              .getComponents()
+              .resolve(graphBuilder.getSourcePathResolver())
+              .getAllNativeLibraries()
+              .keySet(),
           Matchers.hasItems(Paths.get("libdep1.so"), Paths.get("libdep2.so")));
     }
   }
 
   @Test
-  public void transitiveDepsOfPreloadDepsAreExcludedFromMergedNativeLinkStrategy() {
+  public void transitiveDepsOfPreloadDepsAreExcludedFromMergedNativeLinkStrategy()
+      throws IOException {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setSrcs(
@@ -757,7 +798,13 @@ public class PythonBinaryDescriptionTest {
     preloadCxxBuilder.build(graphBuilder);
     PythonBinary binary = binaryBuilder.build(graphBuilder);
     assertThat(
-        Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
+        Iterables.transform(
+            binary
+                .getComponents()
+                .resolve(graphBuilder.getSourcePathResolver())
+                .getAllNativeLibraries()
+                .keySet(),
+            Object::toString),
         Matchers.containsInAnyOrder(
             "libomnibus.so", "libcxx.so", "libpreload_cxx.so", "libtransitive_dep.so"));
   }
@@ -850,7 +897,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void platformDeps() {
+  public void platformDeps() throws IOException {
     SourcePath libASrc = FakeSourcePath.of("libA.py");
     PythonLibraryBuilder libraryABuilder =
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libA"))
@@ -878,12 +925,19 @@ public class PythonBinaryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonBinary binary = (PythonBinary) graphBuilder.requireRule(binaryBuilder.getTarget());
     assertThat(
-        binary.getComponents().getModules().values(),
-        Matchers.allOf(Matchers.hasItem(libASrc), Matchers.not(Matchers.hasItem(libBSrc))));
+        binary
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllModules()
+            .values(),
+        Matchers.allOf(
+            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc)),
+            Matchers.not(
+                Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc)))));
   }
 
   @Test
-  public void cxxPlatform() {
+  public void cxxPlatform() throws IOException {
     UnresolvedCxxPlatform platformA =
         CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.withFlavor(InternalFlavor.of("platA"));
     UnresolvedCxxPlatform platformB =
@@ -928,8 +982,15 @@ public class PythonBinaryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonBinary binary = (PythonBinary) graphBuilder.requireRule(binaryBuilder.getTarget());
     assertThat(
-        binary.getComponents().getModules().values(),
-        Matchers.allOf(Matchers.hasItem(libASrc), Matchers.not(Matchers.hasItem(libBSrc))));
+        binary
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllModules()
+            .values(),
+        Matchers.allOf(
+            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc)),
+            Matchers.not(
+                Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc)))));
   }
 
   private RuleKey calculateRuleKey(BuildRuleResolver ruleResolver, BuildRule rule) {

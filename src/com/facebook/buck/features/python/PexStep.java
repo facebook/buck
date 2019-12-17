@@ -17,7 +17,6 @@
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -27,15 +26,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 
 public class PexStep extends ShellStep {
-
-  private final ProjectFilesystem filesystem;
 
   // The PEX builder environment variables.
   private final ImmutableMap<String, String> environment;
@@ -49,23 +43,13 @@ public class PexStep extends ShellStep {
   // The main module that begins execution in the PEX.
   private final String entry;
 
-  // The map of modules to sources to package into the PEX.
-  // This includes extracted prebuilt archives
-  private final ImmutableMap<Path, Path> modules;
+  private final AbstractPythonResolvedPackageComponents components;
 
-  // The map of resources to include in the PEX.
-  private final ImmutableMap<Path, Path> resources;
   private final PythonVersion pythonVersion;
   private final Path pythonPath;
 
-  // The map of native libraries to include in the PEX.
-  private final ImmutableMap<Path, Path> nativeLibraries;
-
   // The list of native libraries to preload into the interpreter.
   private final ImmutableSet<String> preloadLibraries;
-
-  private final ImmutableSet<Path> moduleDirs;
-  private final boolean zipSafe;
 
   public PexStep(
       ProjectFilesystem filesystem,
@@ -75,27 +59,18 @@ public class PexStep extends ShellStep {
       PythonVersion pythonVersion,
       Path destination,
       String entry,
-      ImmutableMap<Path, Path> modules,
-      ImmutableMap<Path, Path> resources,
-      ImmutableMap<Path, Path> nativeLibraries,
-      ImmutableSet<Path> moduleDirs,
-      ImmutableSet<String> preloadLibraries,
-      boolean zipSafe) {
+      AbstractPythonResolvedPackageComponents components,
+      ImmutableSet<String> preloadLibraries) {
     super(filesystem.getRootPath());
 
-    this.filesystem = filesystem;
     this.environment = environment;
     this.commandPrefix = commandPrefix;
     this.pythonPath = pythonPath;
     this.pythonVersion = pythonVersion;
     this.destination = destination;
     this.entry = entry;
-    this.modules = modules;
-    this.resources = resources;
-    this.nativeLibraries = nativeLibraries;
+    this.components = components;
     this.preloadLibraries = preloadLibraries;
-    this.moduleDirs = moduleDirs;
-    this.zipSafe = zipSafe;
   }
 
   @Override
@@ -110,35 +85,24 @@ public class PexStep extends ShellStep {
    * occasionally get extremely large, and surpass exec/shell limits on arguments.
    */
   @Override
-  protected Optional<String> getStdin(ExecutionContext context) {
+  protected Optional<String> getStdin(ExecutionContext context) throws IOException {
     // Convert the map of paths to a map of strings before converting to JSON.
     ImmutableMap.Builder<String, String> modulesBuilder = ImmutableMap.builder();
-    for (ImmutableMap.Entry<Path, Path> ent : modules.entrySet()) {
-      modulesBuilder.put(ent.getKey().toString(), ent.getValue().toString());
-    }
-    addResolvedModuleDirsSources(modulesBuilder);
-
+    components.forEachModule((dest, src) -> modulesBuilder.put(dest.toString(), src.toString()));
     ImmutableMap.Builder<String, String> resourcesBuilder = ImmutableMap.builder();
-    for (ImmutableMap.Entry<Path, Path> ent : resources.entrySet()) {
-      resourcesBuilder.put(ent.getKey().toString(), ent.getValue().toString());
-    }
+    components.forEachResource(
+        (dest, src) -> resourcesBuilder.put(dest.toString(), src.toString()));
     ImmutableMap.Builder<String, String> nativeLibrariesBuilder = ImmutableMap.builder();
-    for (ImmutableMap.Entry<Path, Path> ent : nativeLibraries.entrySet()) {
-      nativeLibrariesBuilder.put(ent.getKey().toString(), ent.getValue().toString());
-    }
-
-    try {
-      return Optional.of(
-          ObjectMappers.WRITER.writeValueAsString(
-              ImmutableMap.of(
-                  "modules", modulesBuilder.build(),
-                  "resources", resourcesBuilder.build(),
-                  "nativeLibraries", nativeLibrariesBuilder.build(),
-                  // prebuiltLibraries key kept for compatibility
-                  "prebuiltLibraries", ImmutableList.<String>of())));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    components.forEachNativeLibrary(
+        (dest, src) -> nativeLibrariesBuilder.put(dest.toString(), src.toString()));
+    return Optional.of(
+        ObjectMappers.WRITER.writeValueAsString(
+            ImmutableMap.of(
+                "modules", modulesBuilder.build(),
+                "resources", resourcesBuilder.build(),
+                "nativeLibraries", nativeLibrariesBuilder.build(),
+                // prebuiltLibraries key kept for compatibility
+                "prebuiltLibraries", ImmutableList.<String>of())));
   }
 
   @Override
@@ -152,7 +116,7 @@ public class PexStep extends ShellStep {
     builder.add("--entry-point");
     builder.add(entry);
 
-    if (!zipSafe) {
+    if (!components.isZipSafe().orElse(true)) {
       builder.add("--no-zip-safe");
     }
 
@@ -172,30 +136,5 @@ public class PexStep extends ShellStep {
   @VisibleForTesting
   protected ImmutableList<String> getCommandPrefix() {
     return commandPrefix;
-  }
-
-  /** Add a mapping of location in the python root -> location on the filesystem of moduleDirs */
-  private void addResolvedModuleDirsSources(ImmutableMap.Builder<String, String> pathBuilder) {
-    moduleDirs.forEach(
-        originalDirPath -> {
-          try {
-            filesystem.walkFileTree(
-                originalDirPath,
-                new SimpleFileVisitor<Path>() {
-                  @Override
-                  public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                    Path relativeToRealRoot = originalDirPath.relativize(file);
-                    pathBuilder.put(relativeToRealRoot.toString(), file.toString());
-                    return FileVisitResult.CONTINUE;
-                  }
-                });
-          } catch (IOException e) {
-            throw new HumanReadableException(
-                e,
-                "Could not traverse %s to build python package: %s",
-                originalDirPath,
-                e.getMessage());
-          }
-        });
   }
 }

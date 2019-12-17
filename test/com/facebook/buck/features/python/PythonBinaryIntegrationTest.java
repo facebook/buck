@@ -444,7 +444,7 @@ public class PythonBinaryIntegrationTest {
             .getStderr(),
         Matchers.matchesPattern(
             Pattern.compile(
-                ".*Tried to link.*external_sources[/\\\\]__init__.py.*",
+                ".*found duplicate entries for module \\S+ when creating python package.*",
                 Pattern.MULTILINE | Pattern.DOTALL)));
   }
 
@@ -453,11 +453,7 @@ public class PythonBinaryIntegrationTest {
     assumeThat(packageStyle, is(PackageStyle.INPLACE));
 
     // Iteration order on whls not guaranteed, but we want to make sure it's the whls conflicting
-    String expected =
-        ".*Tried to link .*__whl_dep__extracted\\S+, but "
-            + ".*__whl_dep_copy__extracted\\S+.*|"
-            + ".*Tried to link .*__whl_dep_copy__extracted\\S+, but "
-            + ".*__whl_dep__extracted\\S+.*";
+    String expected = ".*found duplicate entries for module \\S+ when creating python package.*";
 
     assertThat(
         workspace

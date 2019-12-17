@@ -24,6 +24,8 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -34,6 +36,8 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -47,6 +51,7 @@ import org.junit.Test;
 
 public class PexStepTest {
 
+  private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:target");
   private static final Path PYTHON_PATH = Paths.get("/usr/local/bin/python");
   private static final PythonVersion PYTHON_VERSION = PythonVersion.of("CPython", "2.6");
   private static final ImmutableMap<String, String> PEX_ENVIRONMENT = ImmutableMap.of();
@@ -54,15 +59,24 @@ public class PexStepTest {
   private static final Path DEST_PATH = Paths.get("/dest");
   private static final String ENTRY_POINT = "entry_point.main";
 
-  private static final ImmutableMap<Path, Path> MODULES =
-      ImmutableMap.of(Paths.get("m"), Paths.get("/src/m"));
-  private static final ImmutableMap<Path, Path> RESOURCES =
-      ImmutableMap.of(Paths.get("r"), Paths.get("/src/r"));
-  private static final ImmutableMap<Path, Path> NATIVE_LIBRARIES =
-      ImmutableMap.of(Paths.get("n.so"), Paths.get("/src/n.so"));
+  private static final PythonResolvedPackageComponents COMPONENTS =
+      PythonResolvedPackageComponents.builder()
+          .putModules(
+              TARGET,
+              new PythonMappedComponents.Resolved(
+                  ImmutableSortedMap.of(Paths.get("m"), Paths.get("/src/m"))))
+          .putResources(
+              TARGET,
+              new PythonMappedComponents.Resolved(
+                  ImmutableSortedMap.of(Paths.get("r"), Paths.get("/src/r"))))
+          .putNativeLibraries(
+              TARGET,
+              new PythonMappedComponents.Resolved(
+                  ImmutableSortedMap.of(Paths.get("n.so"), Paths.get("/src/n.so"))))
+          .putModuleDirs(TARGET, new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir1.whl")))
+          .putModuleDirs(TARGET, new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir2.whl")))
+          .build();
   private static final ImmutableSortedSet<String> PRELOAD_LIBRARIES = ImmutableSortedSet.of();
-  private static final ImmutableSortedSet<Path> MODULE_DIRS =
-      ImmutableSortedSet.of(Paths.get("/tmp/dir1.whl"), Paths.get("/tmp/dir2.whl"));
 
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
 
@@ -77,12 +91,8 @@ public class PexStepTest {
             PYTHON_VERSION,
             DEST_PATH,
             ENTRY_POINT,
-            MODULES,
-            RESOURCES,
-            NATIVE_LIBRARIES,
-            MODULE_DIRS,
-            PRELOAD_LIBRARIES,
-            /* zipSafe */ true);
+            COMPONENTS,
+            PRELOAD_LIBRARIES);
     String command =
         Joiner.on(" ").join(step.getShellCommandInternal(TestExecutionContext.newInstance()));
 
@@ -104,12 +114,8 @@ public class PexStepTest {
             PYTHON_VERSION,
             DEST_PATH,
             ENTRY_POINT,
-            MODULES,
-            RESOURCES,
-            NATIVE_LIBRARIES,
-            MODULE_DIRS,
-            PRELOAD_LIBRARIES,
-            /* zipSafe */ false);
+            COMPONENTS.withZipSafe(false),
+            PRELOAD_LIBRARIES);
     String command =
         Joiner.on(" ").join(step.getShellCommandInternal(TestExecutionContext.newInstance()));
 
@@ -118,14 +124,12 @@ public class PexStepTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void testCommandStdin() throws InterruptedException, IOException {
+  public void testCommandStdin() throws IOException {
     Path realDir1 = tmpDir.getRoot().resolve("dir1.whl");
     Path realDir2 = tmpDir.getRoot().resolve("dir2.whl");
     Path file1 = realDir1.resolve("file1.py");
     Path file2 = realDir2.resolve("subdir").resolve("file2.py");
     Path childFile = realDir1.resolve("some_dir").resolve("child.py");
-
-    ImmutableSortedSet<Path> moduleDirs = ImmutableSortedSet.of(realDir1, realDir2);
 
     Files.createDirectories(realDir1);
     Files.createDirectories(realDir2);
@@ -144,15 +148,15 @@ public class PexStepTest {
             PYTHON_VERSION,
             DEST_PATH,
             ENTRY_POINT,
-            MODULES,
-            RESOURCES,
-            NATIVE_LIBRARIES,
-            moduleDirs,
-            PRELOAD_LIBRARIES,
-            /* zipSafe */ true);
+            COMPONENTS.withModuleDirs(
+                ImmutableMultimap.of(
+                    TARGET, new PythonModuleDirComponents.Resolved(realDir1),
+                    TARGET, new PythonModuleDirComponents.Resolved(realDir2))),
+            PRELOAD_LIBRARIES);
 
     Map<String, Object> args =
-        ObjectMappers.readValue(step.getStdin(TestExecutionContext.newInstance()).get(), Map.class);
+        ObjectMappers.readValue(
+            step.getStdin(TestExecutionContext.newInstance()).orElse(""), Map.class);
     Assert.assertTrue(file1.isAbsolute());
     Assert.assertTrue(file2.isAbsolute());
     Assert.assertTrue(childFile.isAbsolute());
@@ -188,12 +192,8 @@ public class PexStepTest {
             PYTHON_VERSION,
             DEST_PATH,
             ENTRY_POINT,
-            MODULES,
-            RESOURCES,
-            NATIVE_LIBRARIES,
-            MODULE_DIRS,
-            PRELOAD_LIBRARIES,
-            /* zipSafe */ true);
+            COMPONENTS,
+            PRELOAD_LIBRARIES);
     assertThat(
         step.getShellCommandInternal(TestExecutionContext.newInstance()),
         hasItems("--some", "--args"));

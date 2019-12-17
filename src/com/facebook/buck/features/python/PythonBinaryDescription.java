@@ -144,26 +144,18 @@ public class PythonBinaryDescription
       ImmutableSet<String> preloadLibraries,
       PackageStyle packageStyle) {
 
-    // Add in any missing init modules into the python components.
     SourcePath emptyInit = createEmptyInitModule(buildTarget, projectFilesystem, graphBuilder);
-    components = components.withModules(addMissingInitModules(components.getModules(), emptyInit));
-
     BuildTarget linkTreeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("link-tree"));
     Path linkTreeRoot = BuildTargetPaths.getGenPath(projectFilesystem, linkTreeTarget, "%s");
     SymlinkTree linkTree =
         graphBuilder.addToIndex(
-            new PythonSymlinkTree(
+            new SymlinkTree(
                 "python_in_place_binary",
                 linkTreeTarget,
                 projectFilesystem,
+                graphBuilder,
                 linkTreeRoot,
-                ImmutableMap.<Path, SourcePath>builder()
-                    .putAll(components.getModules())
-                    .putAll(components.getResources())
-                    .putAll(components.getNativeLibraries())
-                    .build(),
-                components.getModuleDirs(),
-                graphBuilder));
+                components.withDefaultInitPy(emptyInit).asSymlinks()));
 
     return new PythonInPlaceBinary(
         buildTarget,
