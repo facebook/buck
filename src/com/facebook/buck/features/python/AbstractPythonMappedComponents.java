@@ -17,9 +17,12 @@
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.impl.SymlinkMap;
+import com.facebook.buck.core.rules.impl.Symlinks;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.step.fs.SymlinkPaths;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -83,5 +86,21 @@ abstract class AbstractPythonMappedComponents implements PythonComponents {
         consumer.accept(ent.getKey(), ent.getValue());
       }
     }
+  }
+
+  // Use a `Lazy` annotation here so that we get a single instance that multiple different top-level
+  // Python binaries can re-use to get rule key caching.
+  @Override
+  @Value.Lazy
+  public Symlinks asSymlinks() {
+    return new SymlinkMap(getComponents()) {
+      @Override
+      public SymlinkPaths resolveSymlinkPaths(SourcePathResolverAdapter resolver) {
+        // Don't support resolving to `SymlinkPath`s for individual component objects, as we rely on
+        // on an implementation which combines all component objects in a package to provide module
+        // conflict detection.
+        throw new UnsupportedOperationException();
+      }
+    };
   }
 }

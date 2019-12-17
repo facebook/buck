@@ -18,6 +18,7 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.impl.Symlinks;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import java.io.IOException;
@@ -67,4 +68,10 @@ public interface PythonComponents extends AddsToRuleKey {
       void accept(Path destination, Path source) throws IOException;
     }
   }
+
+  /**
+   * @return a {@link Symlinks} used to symlink the components contained in this object via a {@link
+   *     com.facebook.buck.core.rules.impl.SymlinkTree} rule.
+   */
+  Symlinks asSymlinks();
 }

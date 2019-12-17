@@ -17,9 +17,12 @@
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.impl.SymlinkDir;
+import com.facebook.buck.core.rules.impl.Symlinks;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.step.fs.SymlinkPaths;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -80,5 +83,18 @@ abstract class AbstractPythonModuleDirComponents implements PythonComponents {
             }
           });
     }
+  }
+
+  @Override
+  public Symlinks asSymlinks() {
+    return new SymlinkDir(getDirectory()) {
+      @Override
+      public SymlinkPaths resolveSymlinkPaths(SourcePathResolverAdapter resolver) {
+        // Don't support resolving to `SymlinkPath`s for individual component objects, as we rely on
+        // on an implementation which combines all component objects in a package to provide module
+        // conflict detection.
+        throw new UnsupportedOperationException();
+      }
+    };
   }
 }
