@@ -72,7 +72,7 @@ class DirectHeaderMap extends HeaderSymlinkTree {
               context.getSourcePathResolver().getAbsolutePath(entry.getValue())));
     }
     return ImmutableList.<Step>builder()
-        .add(getVerifyStep())
+        .add(getVerifyStep(getResolvedSymlinks(context.getSourcePathResolver())))
         .addAll(
             MakeCleanDirectoryStep.of(
                 BuildCellRelativePath.fromCellRelativePath(

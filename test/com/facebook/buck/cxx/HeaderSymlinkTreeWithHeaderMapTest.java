@@ -43,7 +43,8 @@ import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.step.fs.SymlinkMapsPaths;
+import com.facebook.buck.step.fs.SymlinkTreeMergeStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -123,11 +124,12 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                     BuildCellRelativePath.fromCellRelativePath(
                         buildContext.getBuildCellRootPath(), projectFilesystem, symlinkTreeRoot)))
             .add(
-                new SymlinkTreeStep(
+                new SymlinkTreeMergeStep(
                     "cxx_header",
                     projectFilesystem,
                     symlinkTreeRoot,
-                    resolver.getMappedPaths(links)))
+                    new SymlinkMapsPaths(resolver.getMappedPaths(links)),
+                    (fs, p) -> false))
             .add(
                 new HeaderMapStep(
                     projectFilesystem,

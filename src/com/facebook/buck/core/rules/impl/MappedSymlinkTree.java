@@ -19,6 +19,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Path;
 
 /**
@@ -28,12 +29,28 @@ import java.nio.file.Path;
  */
 public class MappedSymlinkTree extends SymlinkTree {
 
+  private final ImmutableSortedMap<Path, SourcePath> links;
+
+  public MappedSymlinkTree(
+      String category,
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      Path root,
+      ImmutableSortedMap<Path, SourcePath> links) {
+    super(category, target, filesystem, root, links);
+    this.links = links;
+  }
+
   public MappedSymlinkTree(
       String category,
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links) {
-    super(category, target, filesystem, root, links);
+    this(category, target, filesystem, root, ImmutableSortedMap.copyOf(links));
+  }
+
+  public ImmutableSortedMap<Path, SourcePath> getLinks() {
+    return links;
   }
 }

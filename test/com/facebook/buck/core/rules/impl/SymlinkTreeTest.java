@@ -47,7 +47,8 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.step.fs.SymlinkMapsPaths;
+import com.facebook.buck.step.fs.SymlinkTreeMergeStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -136,8 +137,12 @@ public class SymlinkTreeTest {
                     BuildCellRelativePath.fromCellRelativePath(
                         buildContext.getBuildCellRootPath(), projectFilesystem, outputPath)))
             .add(
-                new SymlinkTreeStep(
-                    "link_tree", projectFilesystem, outputPath, pathResolver.getMappedPaths(links)))
+                new SymlinkTreeMergeStep(
+                    "link_tree",
+                    projectFilesystem,
+                    outputPath,
+                    new SymlinkMapsPaths(pathResolver.getMappedPaths(links)),
+                    (a, b) -> false))
             .build();
     ImmutableList<Step> actualBuildSteps =
         symlinkTreeBuildRule.getBuildSteps(buildContext, buildableContext);
@@ -267,6 +272,7 @@ public class SymlinkTreeTest {
 
   @Test
   public void verifyStepFailsIfKeyContainsDotDot() throws Exception {
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SymlinkTree symlinkTree =
         new SymlinkTree(
             "link_tree",
@@ -278,7 +284,10 @@ public class SymlinkTreeTest {
                 PathSourcePath.of(
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), tmpDir.newFile()))));
     int exitCode =
-        symlinkTree.getVerifyStep().execute(TestExecutionContext.newInstance()).getExitCode();
+        symlinkTree
+            .getVerifyStep(symlinkTree.getResolvedSymlinks(ruleResolver.getSourcePathResolver()))
+            .execute(TestExecutionContext.newInstance())
+            .getExitCode();
     assertThat(exitCode, Matchers.not(Matchers.equalTo(0)));
   }
 
