@@ -17,6 +17,7 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Sets;
 import java.io.IOException;
@@ -30,6 +31,14 @@ public class JsonMatcher extends TypeSafeDiagnosingMatcher<String> {
 
   public JsonMatcher(String json) {
     this.expectedJson = json;
+  }
+
+  public static JsonMatcher fromJsonObject(Object json) {
+    try {
+      return new JsonMatcher(ObjectMappers.WRITER.writeValueAsString(json));
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override

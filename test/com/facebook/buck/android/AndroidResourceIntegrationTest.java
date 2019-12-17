@@ -19,6 +19,9 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -26,7 +29,10 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
@@ -89,7 +95,51 @@ public class AndroidResourceIntegrationTest {
     String buildTarget =
         "//generated_res:res#" + AndroidResourceDescription.ANDROID_RESOURCE_INDEX_FLAVOR;
     workspace.runBuckBuild(buildTarget);
-    workspace.verify();
+
+    String resourceIndexJson =
+        Charsets.US_ASCII
+            .decode(
+                ByteBuffer.wrap(
+                    Files.readAllBytes(
+                        workspace
+                            .getGenPath(BuildTargetFactory.newInstance(buildTarget), "__%s")
+                            .resolve("resource_index.json"))))
+            .toString();
+
+    String resourceFilePath =
+        BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance("//generated_res:gen-res"),
+                "%s")
+            .resolve("res/values/strings.xml")
+            .toString();
+
+    assertThat(
+        resourceIndexJson,
+        JsonMatcher.fromJsonObject(
+            ImmutableList.of(
+                ImmutableMap.of(
+                    "type",
+                    "STRING",
+                    "name",
+                    "another_name",
+                    "lineNumber",
+                    3,
+                    "columnNumber",
+                    30,
+                    "resourceFilePath",
+                    resourceFilePath),
+                ImmutableMap.of(
+                    "type",
+                    "STRING",
+                    "name",
+                    "some_name",
+                    "lineNumber",
+                    2,
+                    "columnNumber",
+                    27,
+                    "resourceFilePath",
+                    resourceFilePath))));
 
     // Add a new item in the input and verify that the resource rule gets re-run.
     Files.createDirectory(workspace.getPath("generated_res/input_res/raw"));
