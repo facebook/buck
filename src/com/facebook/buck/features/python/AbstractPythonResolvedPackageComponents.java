@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.step.fs.SymlinkPaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -196,5 +197,17 @@ abstract class AbstractPythonResolvedPackageComponents {
     ImmutableMap.Builder<Path, Path> builder = ImmutableMap.builder();
     forEachNativeLibrary(builder::put);
     return builder.build();
+  }
+
+  /**
+   * @return this object as a {@link SymlinkPaths} for use with {@link
+   *     com.facebook.buck.step.fs.SymlinkTreeMergeStep}.
+   */
+  public SymlinkPaths asSymlinkPaths() {
+    return consumer -> {
+      forEachModule(consumer::accept);
+      forEachResource(consumer::accept);
+      forEachNativeLibrary(consumer::accept);
+    };
   }
 }
