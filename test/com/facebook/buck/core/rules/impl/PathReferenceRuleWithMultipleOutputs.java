@@ -23,7 +23,9 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -34,26 +36,27 @@ import java.util.Map;
  */
 public class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
     implements HasMultipleOutputs {
-  private final ImmutableMap<OutputLabel, Path> outputLabelToSource;
+  private final ImmutableMap<OutputLabel, ImmutableSet<Path>> outputLabelToSource;
   private final ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> outputLabelsToSourcePaths;
 
   public PathReferenceRuleWithMultipleOutputs(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       Path source,
-      ImmutableMap<OutputLabel, Path> outputLabelToSource) {
+      ImmutableMap<OutputLabel, ImmutableSet<Path>> outputLabelsToOutputs) {
     super(buildTarget, projectFilesystem, source);
-    this.outputLabelToSource = outputLabelToSource;
+    this.outputLabelToSource = outputLabelsToOutputs;
     ImmutableMap.Builder<OutputLabel, ImmutableSortedSet<SourcePath>> builder =
-        ImmutableMap.builderWithExpectedSize(1 + outputLabelToSource.size());
+        ImmutableMap.builderWithExpectedSize(1 + outputLabelsToOutputs.size());
     builder.put(
         OutputLabel.defaultLabel(),
         source == null ? ImmutableSortedSet.of() : ImmutableSortedSet.of(getSourcePathToOutput()));
-    for (Map.Entry<OutputLabel, Path> entry : outputLabelToSource.entrySet()) {
+    for (Map.Entry<OutputLabel, ImmutableSet<Path>> entry : outputLabelsToOutputs.entrySet()) {
       builder.put(
           entry.getKey(),
-          ImmutableSortedSet.of(
-              ExplicitBuildTargetSourcePath.of(getBuildTarget(), entry.getValue())));
+          entry.getValue().stream()
+              .map(path -> ExplicitBuildTargetSourcePath.of(getBuildTarget(), path))
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     }
     outputLabelsToSourcePaths = builder.build();
   }
@@ -67,11 +70,7 @@ public class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
       }
       return ImmutableSortedSet.of(sourcePath);
     }
-    Path path = outputLabelToSource.get(outputLabel);
-    if (path == null) {
-      return ImmutableSortedSet.of();
-    }
-    return ImmutableSortedSet.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), path));
+    return outputLabelsToSourcePaths.get(outputLabel);
   }
 
   @Override

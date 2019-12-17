@@ -23,12 +23,15 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.impl.PathReferenceRuleWithMultipleOutputs;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -37,7 +40,11 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -117,6 +124,64 @@ public class LocationMacroExpanderTest {
 
     assertEquals(
         filesystem.getRootPath().resolve("supplementary-sup").toString(), transformedString);
+  }
+
+  @Test
+  public void replaceOutputLabelOutputLocation() throws Exception {
+    filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/some_root");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    graphBuilder = setup(filesystem, buildTarget);
+    BuildRule rule =
+        new PathReferenceRuleWithMultipleOutputs(
+            buildTarget,
+            filesystem,
+            Paths.get("incorrect"),
+            ImmutableMap.of(OutputLabel.of("label"), ImmutableSet.of(Paths.get("pathpathpath"))));
+    graphBuilder.addToIndex(rule);
+
+    String transformedString = coerceAndStringify("$(location //foo:bar[label])", rule);
+
+    assertEquals(filesystem.getRootPath().resolve("pathpathpath").toString(), transformedString);
+  }
+
+  @Test
+  public void throwsExceptionWhenCannotFindNamedOutputs() throws Exception {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectCause(Matchers.instanceOf(MacroException.class));
+    thrown.expectMessage(
+        "//foo:bar used in location macro does not produce outputs with label [nonexistent]");
+
+    filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/some_root");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    graphBuilder = setup(filesystem, buildTarget);
+    BuildRule rule =
+        new PathReferenceRuleWithMultipleOutputs(
+            buildTarget, filesystem, Paths.get("incorrect"), ImmutableMap.of());
+    graphBuilder.addToIndex(rule);
+
+    coerceAndStringify("$(location //foo:bar[nonexistent])", rule);
+  }
+
+  @Test
+  public void throwsExceptionWhenRetrieveMultipleOutputs() throws Exception {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectCause(Matchers.instanceOf(MacroException.class));
+    thrown.expectMessage(
+        "//foo:bar[label] produces multiple outputs but location macro accepts only one output");
+
+    filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/some_root");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    graphBuilder = setup(filesystem, buildTarget);
+    BuildRule rule =
+        new PathReferenceRuleWithMultipleOutputs(
+            buildTarget,
+            filesystem,
+            Paths.get("incorrect"),
+            ImmutableMap.of(
+                OutputLabel.of("label"), ImmutableSet.of(Paths.get("path1"), Paths.get("path2"))));
+    graphBuilder.addToIndex(rule);
+
+    coerceAndStringify("$(location //foo:bar[label])", rule);
   }
 
   @Test

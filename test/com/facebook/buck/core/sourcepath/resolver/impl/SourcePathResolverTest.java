@@ -49,6 +49,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -96,7 +97,7 @@ public class SourcePathResolverTest {
             buildTarget,
             new FakeProjectFilesystem(),
             null,
-            ImmutableMap.of(OutputLabel.of("bar"), expectedPath));
+            ImmutableMap.of(OutputLabel.of("bar"), ImmutableSet.of(expectedPath)));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
         ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
@@ -119,11 +120,11 @@ public class SourcePathResolverTest {
             null,
             ImmutableMap.of(
                 OutputLabel.of("baz"),
-                Paths.get("foo").resolve("baz"),
+                ImmutableSet.of(Paths.get("foo").resolve("baz")),
                 OutputLabel.of("bar"),
-                expectedPath,
+                ImmutableSet.of(expectedPath),
                 OutputLabel.of("qux"),
-                Paths.get("foo").resolve("qux")));
+                ImmutableSet.of(Paths.get("foo").resolve("qux"))));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
         ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
@@ -147,7 +148,7 @@ public class SourcePathResolverTest {
             buildTarget,
             new FakeProjectFilesystem(),
             path,
-            ImmutableMap.of(OutputLabel.of("bar"), path));
+            ImmutableMap.of(OutputLabel.of("bar"), ImmutableSet.of(path)));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
         ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.of("baz"));

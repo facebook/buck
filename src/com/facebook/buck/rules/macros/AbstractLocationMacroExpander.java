@@ -17,12 +17,16 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.macros.MacroException;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.util.Optional;
 
 /** Expands to the path of a build rules output. */
@@ -43,35 +47,55 @@ public class AbstractLocationMacroExpander<T extends BaseLocationMacro>
   @Override
   protected Arg expand(SourcePathResolverAdapter resolver, T macro, BuildRule rule)
       throws MacroException {
-    Optional<String> supplementaryOutputIdentifier = macro.getSupplementaryOutputIdentifier();
+    Optional<String> stringInSquareBrackets = macro.getSupplementaryOutputIdentifier();
 
     SourcePath output;
-    if (supplementaryOutputIdentifier.isPresent()) {
-      if (rule instanceof HasSupplementaryOutputs) {
-        output =
-            ((HasSupplementaryOutputs) rule)
-                .getSourcePathToSupplementaryOutput(supplementaryOutputIdentifier.get());
-        if (output == null) {
-          throw new MacroException(
-              String.format(
-                  "%s used in location macro does not produce supplementary output %s",
-                  rule.getBuildTarget(), supplementaryOutputIdentifier.get()));
-        }
-      } else {
-        throw new MacroException(
-            String.format(
-                "%s used in location macro does not produce supplementary output",
-                rule.getBuildTarget()));
-      }
-    } else {
-      output = rule.getSourcePathToOutput();
+    if (stringInSquareBrackets.isPresent()) {
+      return resolveArgWithBracketSyntax(stringInSquareBrackets.get(), rule);
+    }
+    output = rule.getSourcePathToOutput();
+    if (output == null) {
+      throw new MacroException(
+          String.format(
+              "%s used in location macro does not produce output", rule.getBuildTarget()));
+    }
+    return SourcePathArg.of(output);
+  }
+
+  private Arg resolveArgWithBracketSyntax(String stringInSquareBrackets, BuildRule rule)
+      throws MacroException {
+    if (rule instanceof HasSupplementaryOutputs) {
+      SourcePath output =
+          ((HasSupplementaryOutputs) rule)
+              .getSourcePathToSupplementaryOutput(stringInSquareBrackets);
       if (output == null) {
         throw new MacroException(
             String.format(
-                "%s used in location macro does not produce output", rule.getBuildTarget()));
+                "%s used in location macro does not produce supplementary output %s",
+                rule.getBuildTarget(), stringInSquareBrackets));
+      }
+      return SourcePathArg.of(output);
+    } else if (rule instanceof HasMultipleOutputs) {
+      ImmutableSortedSet<SourcePath> outputs =
+          ((HasMultipleOutputs) rule).getSourcePathToOutput(OutputLabel.of(stringInSquareBrackets));
+      if (outputs == null || outputs.isEmpty()) {
+        throw new MacroException(
+            String.format(
+                "%s used in location macro does not produce outputs with label [%s]",
+                rule.getBuildTarget(), stringInSquareBrackets));
+      }
+      try {
+        return SourcePathArg.of(Iterables.getOnlyElement(outputs));
+      } catch (IllegalArgumentException e) {
+        throw new MacroException(
+            String.format(
+                "%s[%s] produces multiple outputs but location macro accepts only one output",
+                rule.getBuildTarget(), stringInSquareBrackets));
       }
     }
-
-    return SourcePathArg.of(output);
+    throw new MacroException(
+        String.format(
+            "%s used in location macro does not produce supplementary output or output groups",
+            rule.getBuildTarget()));
   }
 }

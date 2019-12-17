@@ -438,7 +438,8 @@ public class BuildCommandTest {
             ImmutableSet.of(new Pair(buildTargetName, "")),
             expected,
             ImmutableMap.of(
-                buildTargetName, ImmutableMap.of(OutputLabel.defaultLabel(), Paths.get("unused"))),
+                buildTargetName,
+                ImmutableMap.of(OutputLabel.defaultLabel(), ImmutableSet.of(Paths.get("unused")))),
             false);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
@@ -458,7 +459,8 @@ public class BuildCommandTest {
         getGraphsAndBuildTargets(
             ImmutableSet.of(new Pair(buildTargetName, label)),
             Paths.get("path, wrongpath"),
-            ImmutableMap.of(buildTargetName, ImmutableMap.of(OutputLabel.of(label), expected)),
+            ImmutableMap.of(
+                buildTargetName, ImmutableMap.of(OutputLabel.of(label), ImmutableSet.of(expected))),
             true);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
@@ -484,9 +486,9 @@ public class BuildCommandTest {
             Paths.get("path, wrongpath"),
             ImmutableMap.of(
                 buildTargetName,
-                ImmutableMap.of(OutputLabel.of(label), expected),
+                ImmutableMap.of(OutputLabel.of(label), ImmutableSet.of(expected)),
                 buildTargetName2,
-                ImmutableMap.of(OutputLabel.of(label2), expected2)),
+                ImmutableMap.of(OutputLabel.of(label2), ImmutableSet.of(expected2))),
             true);
     CommandRunnerParams params =
         createTestParams(ImmutableSet.of(buildTargetName, buildTargetName2));
@@ -517,11 +519,12 @@ public class BuildCommandTest {
                 buildTargetName,
                 ImmutableMap.of(
                     OutputLabel.of(label),
-                    Paths.get("path, timeforlunch"),
+                    ImmutableSet.of(Paths.get("path, timeforlunch")),
                     OutputLabel.of(label2),
-                    Paths.get("path, timeforsnacc")),
+                    ImmutableSet.of(Paths.get("path, timeforsnacc"))),
                 buildTargetName2,
-                ImmutableMap.of(OutputLabel.of(label3), Paths.get("path, timefornoms"))),
+                ImmutableMap.of(
+                    OutputLabel.of(label3), ImmutableSet.of(Paths.get("path, timefornoms")))),
             true);
     CommandRunnerParams params =
         createTestParams(ImmutableSet.of(buildTargetName, buildTargetName2));
@@ -548,7 +551,8 @@ public class BuildCommandTest {
             Paths.get("path, wrongpath"),
             ImmutableMap.of(
                 buildTargetName,
-                ImmutableMap.of(OutputLabel.of(label), Paths.get("path, timeforlunch"))),
+                ImmutableMap.of(
+                    OutputLabel.of(label), ImmutableSet.of(Paths.get("path, timeforlunch")))),
             true);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
@@ -567,7 +571,8 @@ public class BuildCommandTest {
             Paths.get("path, correctPath"),
             ImmutableMap.of(
                 buildTargetName,
-                ImmutableMap.of(OutputLabel.of(label), Paths.get("path, timeforlunch"))),
+                ImmutableMap.of(
+                    OutputLabel.of(label), ImmutableSet.of(Paths.get("path, timeforlunch")))),
             true);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
@@ -591,9 +596,9 @@ public class BuildCommandTest {
                 buildTargetName,
                 ImmutableMap.of(
                     OutputLabel.of("unrequestedLabel"),
-                    Paths.get("path, nottimeforlunch"),
+                    ImmutableSet.of(Paths.get("path, nottimeforlunch")),
                     OutputLabel.of(label),
-                    expected)),
+                    ImmutableSet.of(expected))),
             true);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
@@ -618,7 +623,8 @@ public class BuildCommandTest {
             Paths.get("path, wrongpath"),
             ImmutableMap.of(
                 buildTargetName,
-                ImmutableMap.of(OutputLabel.of(label), Paths.get("path, timeforlunch"))),
+                ImmutableMap.of(
+                    OutputLabel.of(label), ImmutableSet.of(Paths.get("path, timeforlunch")))),
             false);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
@@ -721,7 +727,7 @@ public class BuildCommandTest {
       TargetGraph targetGraph,
       ImmutableSet<ImmutableBuildTargetWithOutputs> buildTargetsWithOutputs,
       Path defaultPath,
-      ImmutableMap<String, ImmutableMap<OutputLabel, Path>> pathsByLabelsForTargets,
+      ImmutableMap<String, ImmutableMap<OutputLabel, ImmutableSet<Path>>> pathsByLabelsForTargets,
       boolean useMultipleOutputsRule) {
     TargetGraphCreationResult targetGraphCreationResult =
         new ImmutableTargetGraphCreationResult(
@@ -742,7 +748,7 @@ public class BuildCommandTest {
   private BuildCommand.GraphsAndBuildTargets getGraphsAndBuildTargets(
       ImmutableSet<Pair<String, String>> targetNamesWithLabels,
       Path defaultPath,
-      ImmutableMap<String, ImmutableMap<OutputLabel, Path>> pathsByLabelsForTargets,
+      ImmutableMap<String, ImmutableMap<OutputLabel, ImmutableSet<Path>>> pathsByLabelsForTargets,
       boolean useMultipleOutputsRule) {
     ImmutableMap.Builder<ImmutableBuildTargetWithOutputs, BuildTarget> builder =
         new ImmutableMap.Builder<>();
@@ -775,7 +781,7 @@ public class BuildCommandTest {
   private ActionGraphAndBuilder createActionGraph(
       TargetGraph targetGraph,
       Path defaultPath,
-      ImmutableMap<String, ImmutableMap<OutputLabel, Path>> pathsByLabelsForTargets,
+      ImmutableMap<String, ImmutableMap<OutputLabel, ImmutableSet<Path>>> pathsByLabelsForTargets,
       boolean useMultipleOutputsRule) {
     ImmutableMap.Builder<BuildTarget, BuildRule> builder = new ImmutableMap.Builder<>();
     for (String targetName : pathsByLabelsForTargets.keySet()) {

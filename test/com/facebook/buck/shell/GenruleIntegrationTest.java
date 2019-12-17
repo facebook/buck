@@ -304,21 +304,16 @@ public class GenruleIntegrationTest {
 
   @Test
   public void genruleDirectorySourcePath() throws IOException {
-    // TODO(irenewchen): Change this test once multiple outputs is supported in location macros
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "genrule_directory_source_path", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//:cpdir");
-    buildResult.assertSuccess();
+    String targetName = targetWithSuffix("//:cpdir");
+    workspace.runBuckBuild(targetName).assertSuccess();
 
-    assertTrue(
-        Files.isDirectory(
-            workspace.getGenPath(BuildTargetFactory.newInstance("//:cpdir"), "%s/copy")));
-    assertTrue(
-        Files.isRegularFile(
-            workspace.getGenPath(BuildTargetFactory.newInstance("//:cpdir"), "%s/copy/hello")));
+    assertTrue(Files.isDirectory(getOutputPath(workspace, targetName, "copy")));
+    assertTrue(Files.isRegularFile(getOutputPath(workspace, targetName, "copy/hello")));
   }
 
   @Test

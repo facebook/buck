@@ -34,6 +34,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -91,11 +92,11 @@ public class PathUtilsTest {
             null,
             ImmutableMap.of(
                 OutputLabel.of("baz"),
-                Paths.get("baz"),
+                ImmutableSet.of(Paths.get("baz")),
                 OutputLabel.of("bar"),
-                Paths.get("bar"),
+                ImmutableSet.of(Paths.get("bar")),
                 OutputLabel.of("qux"),
-                Paths.get(("qux"))));
+                ImmutableSet.of(Paths.get(("qux")))));
     graphBuilder.addToIndex(rule);
     Path expected = fileSystem.getRootPath().resolve("bar");
 
@@ -115,11 +116,11 @@ public class PathUtilsTest {
             null,
             ImmutableMap.of(
                 OutputLabel.of("baz"),
-                Paths.get("baz"),
+                ImmutableSet.of(Paths.get("baz")),
                 OutputLabel.of("bar"),
-                Paths.get("bar"),
+                ImmutableSet.of(Paths.get("bar")),
                 OutputLabel.of("qux"),
-                Paths.get(("qux"))));
+                ImmutableSet.of(Paths.get(("qux")))));
     graphBuilder.addToIndex(rule);
 
     assertFalse(
@@ -153,7 +154,7 @@ public class PathUtilsTest {
             buildTarget,
             fileSystem,
             Paths.get("foo"),
-            ImmutableMap.of(OutputLabel.of("foo"), Paths.get("foo")));
+            ImmutableMap.of(OutputLabel.of("foo"), ImmutableSet.of(Paths.get("foo"))));
     graphBuilder.addToIndex(rule);
 
     PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("label"), false)
