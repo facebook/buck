@@ -27,7 +27,6 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -92,10 +91,10 @@ public class SymlinkTreeMergeStepTest {
 
   @Test
   public void mergesFromDirectoriesProperly() throws IOException {
-    ImmutableSortedSet<Path> dirs =
-        ImmutableSortedSet.of(
-            filesystem.resolve(Paths.get("example_py")),
-            filesystem.resolve(Paths.get("example_2_py")));
+    SymlinkPaths dirs =
+        SymlinkPackPaths.of(
+            new SymlinkDirPaths(filesystem.resolve(Paths.get("example_py"))),
+            new SymlinkDirPaths(filesystem.resolve(Paths.get("example_2_py"))));
 
     SymlinkTreeMergeStep step =
         new SymlinkTreeMergeStep("binary", filesystem, linkPath, dirs, deleteExistingLinkPredicate);
@@ -162,7 +161,7 @@ public class SymlinkTreeMergeStepTest {
             "binary",
             filesystem,
             linkPath,
-            ImmutableSortedSet.of(examplePySource.getParent()),
+            new SymlinkDirPaths(examplePySource.getParent()),
             deleteExistingLinkPredicate);
     step.execute(TestExecutionContext.newInstance());
   }
@@ -177,7 +176,7 @@ public class SymlinkTreeMergeStepTest {
     String expectedMessage =
         String.format(
             "Tried to link %s to %s, but %s already links to %s",
-            examplePyDest, examplePySource, examplePyDest, otherPySource);
+            examplePyDest, otherPySource, examplePyDest, examplePySource);
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(expectedMessage);
@@ -187,7 +186,9 @@ public class SymlinkTreeMergeStepTest {
             "binary",
             filesystem,
             linkPath,
-            ImmutableSortedSet.of(examplePySource.getParent(), otherPySource.getParent()),
+            SymlinkPackPaths.of(
+                new SymlinkDirPaths(examplePySource.getParent()),
+                new SymlinkDirPaths(otherPySource.getParent())),
             deleteExistingLinkPredicate);
     step.execute(TestExecutionContext.newInstance());
   }
@@ -205,7 +206,9 @@ public class SymlinkTreeMergeStepTest {
             "binary",
             filesystem,
             linkPath,
-            ImmutableSortedSet.of(examplePySource.getParent(), otherPySource.getParent()),
+            SymlinkPackPaths.of(
+                new SymlinkDirPaths(examplePySource.getParent()),
+                new SymlinkDirPaths(otherPySource.getParent())),
             (fs, existingTarget) -> true);
     step.execute(TestExecutionContext.newInstance());
 

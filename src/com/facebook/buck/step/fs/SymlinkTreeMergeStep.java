@@ -23,13 +23,11 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.BiFunction;
 
 /** A step to merge the contents of provided directories into a symlink tree */
@@ -38,7 +36,7 @@ public class SymlinkTreeMergeStep implements Step {
   private final String name;
   private final ProjectFilesystem filesystem;
   private final Path root;
-  private final ImmutableSet<Path> links;
+  private final SymlinkPaths links;
   private final BiFunction<ProjectFilesystem, Path, Boolean> deleteExistingLinkPredicate;
 
   /**
@@ -62,7 +60,7 @@ public class SymlinkTreeMergeStep implements Step {
       String category,
       ProjectFilesystem filesystem,
       Path root,
-      ImmutableSet<Path> links,
+      SymlinkPaths links,
       BiFunction<ProjectFilesystem, Path, Boolean> deleteExistingLinkPredicate) {
     this.name = category + "_link_merge_dir";
     this.filesystem = filesystem;
@@ -83,58 +81,34 @@ public class SymlinkTreeMergeStep implements Step {
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
-
-    for (Path sourceToRelative : links) {
-      merge(sourceToRelative);
-    }
-    return StepExecutionResults.SUCCESS;
-  }
-
-  private void merge(Path dirPath) throws IOException {
-    filesystem.walkFileTree(
-        dirPath,
-        new SimpleFileVisitor<Path>() {
-          @Override
-          public FileVisitResult preVisitDirectory(Path childPath, BasicFileAttributes attrs)
-              throws IOException {
-            Path relativePath = dirPath.relativize(childPath);
-            Path destPath = root.resolve(relativePath);
-            filesystem.mkdirs(destPath);
-            return FileVisitResult.CONTINUE;
+    Set<Path> dirs = new HashSet<>();
+    links.forEachSymlink(
+        (relativePath, srcPath) -> {
+          Path destPath = root.resolve(relativePath);
+          if (destPath.getParent() != null) {
+            if (dirs.add(destPath.getParent())) {
+              filesystem.mkdirs(destPath.getParent());
+            }
           }
-
-          @Override
-          public FileVisitResult visitFile(Path childPath, BasicFileAttributes attrs)
-              throws IOException {
-            return visitFile(childPath, attrs, true);
-          }
-
-          private FileVisitResult visitFile(
-              Path childPath, BasicFileAttributes attrs, boolean allowDeletingExistingSymlink)
-              throws IOException {
-            Path relativePath = dirPath.relativize(childPath);
-            Path destPath = root.resolve(relativePath);
-            try {
-              filesystem.createSymLink(filesystem.resolve(destPath), childPath, false);
-            } catch (FileAlreadyExistsException e) {
-              if (filesystem.isSymLink(destPath)) {
-                if (allowDeletingExistingSymlink
-                    && deleteExistingLinkPredicate.apply(filesystem, destPath)) {
-                  filesystem.deleteFileAtPath(destPath);
-                  return visitFile(childPath, attrs, false);
-                } else {
-                  throw new HumanReadableException(
-                      "Tried to link %s to %s, but %s already links to %s",
-                      destPath, childPath, destPath, filesystem.readSymLink(destPath));
-                }
+          try {
+            filesystem.createSymLink(filesystem.resolve(destPath), srcPath, false);
+          } catch (FileAlreadyExistsException e) {
+            if (filesystem.isSymLink(destPath)) {
+              if (deleteExistingLinkPredicate.apply(filesystem, destPath)) {
+                filesystem.deleteFileAtPath(destPath);
+                filesystem.createSymLink(filesystem.resolve(destPath), srcPath, true);
               } else {
                 throw new HumanReadableException(
-                    "Tried to link %s to %s, but %s already exists", destPath, childPath, destPath);
+                    "Tried to link %s to %s, but %s already links to %s",
+                    destPath, srcPath, destPath, filesystem.readSymLink(destPath));
               }
+            } else {
+              throw new HumanReadableException(
+                  "Tried to link %s to %s, but %s already exists", destPath, srcPath, destPath);
             }
-            return FileVisitResult.CONTINUE;
           }
         });
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

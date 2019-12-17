@@ -454,10 +454,10 @@ public class PythonBinaryIntegrationTest {
 
     // Iteration order on whls not guaranteed, but we want to make sure it's the whls conflicting
     String expected =
-        ".*Tried to link .*__whl_dep__extracted\\S+__init__.py, but "
-            + ".*__whl_dep_copy__extracted\\S+__init__.py.*|"
-            + ".*Tried to link .*__whl_dep_copy__extracted\\S+__init__.py, but "
-            + ".*__whl_dep__extracted\\S+__init__.py.*";
+        ".*Tried to link .*__whl_dep__extracted\\S+, but "
+            + ".*__whl_dep_copy__extracted\\S+.*|"
+            + ".*Tried to link .*__whl_dep_copy__extracted\\S+, but "
+            + ".*__whl_dep__extracted\\S+.*";
 
     assertThat(
         workspace

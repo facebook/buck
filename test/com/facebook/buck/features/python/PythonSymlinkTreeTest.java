@@ -45,6 +45,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.SymlinkPackPaths;
 import com.facebook.buck.step.fs.SymlinkTreeMergeStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -150,7 +151,7 @@ public class PythonSymlinkTreeTest {
                     "link_tree",
                     projectFilesystem,
                     outputPath,
-                    ImmutableSortedSet.of(),
+                    new SymlinkPackPaths(ImmutableList.of()),
                     (fs, existingTarget) -> false))
             .build();
     ImmutableList<Step> actualBuildSteps =
