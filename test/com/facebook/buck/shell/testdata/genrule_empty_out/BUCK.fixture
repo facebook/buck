@@ -3,3 +3,13 @@ genrule(
     out = "",
     cmd = "echo something > $OUT",
 )
+
+genrule(
+    name = "genrule_outs",
+    outs = {
+        "output": [
+            "",
+        ],
+    },
+    cmd = "echo something > $OUT",
+)

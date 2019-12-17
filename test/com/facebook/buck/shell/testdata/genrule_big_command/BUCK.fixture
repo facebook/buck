@@ -12,12 +12,22 @@ NOOP_CMD_COMMAND = "echo {0}>NUL".format(STRING)
 
 FINAL_COMMAND = "echo {0}>$OUT".format(STRING)
 
+FINAL_COMMAND_FOR_OUTS = "echo {0}>$OUT/file".format(STRING)
+
 BASH_COMMAND = joinlines(
     [NOOP_BASH_COMMAND] * REPETITIONS + [FINAL_COMMAND],
 )
 
 CMD_COMMAND = joinlines(
     [NOOP_CMD_COMMAND] * REPETITIONS + [FINAL_COMMAND],
+)
+
+BASH_COMMAND_FOR_OUTS = joinlines(
+    [NOOP_BASH_COMMAND] * REPETITIONS + [FINAL_COMMAND_FOR_OUTS],
+)
+
+CMD_COMMAND_FOR_OUTS = joinlines(
+    [NOOP_CMD_COMMAND] * REPETITIONS + [FINAL_COMMAND_FOR_OUTS],
 )
 
 assert len(BASH_COMMAND) >= STRING_SIZE * REPETITIONS
@@ -29,4 +39,15 @@ genrule(
     out = "file",
     bash = BASH_COMMAND,
     cmd_exe = CMD_COMMAND,
+)
+
+genrule(
+    name = "big_outs",
+    outs = {
+        "output": [
+            "file",
+        ],
+    },
+    bash = BASH_COMMAND_FOR_OUTS,
+    cmd_exe = CMD_COMMAND_FOR_OUTS,
 )

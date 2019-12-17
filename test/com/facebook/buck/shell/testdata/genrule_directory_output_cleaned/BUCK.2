@@ -1,11 +1,33 @@
 genrule(
-  name = 'mkdir',
-  cmd = 'mkdir $OUT && echo something > $OUT/two',
-  out = 'directory',
+    name = "mkdir",
+    out = "directory",
+    cmd = "mkdir $OUT && echo something > $OUT/two",
 )
 
 genrule(
-  name = 'mkdir_another',
-  cmd = 'mkdir $OUT && echo something > $OUT/file',
-  out = 'another_directory',
+    name = "mkdir_another",
+    out = "another_directory",
+    cmd = "mkdir $OUT && echo something > $OUT/file",
+)
+
+genrule(
+    name = "mkdir_outs",
+    outs = {
+        "output": [
+            "directory",
+        ],
+    },
+    bash = "mkdir $OUT/directory && echo something > $OUT/directory/two",
+    cmd_exe = "powershell -Command mkdir (Split-Path -Parent ${OUT}\\directory\\two) ; New-Item -Type file ${OUT}\\directory\\two",
+)
+
+genrule(
+    name = "mkdir_another_outs",
+    outs = {
+        "output": [
+            "another_directory",
+        ],
+    },
+    bash = "mkdir $OUT/another_directory && echo something > $OUT/another_directory/file",
+    cmd_exe = "powershell -Command mkdir (Split-Path -Parent ${OUT}\\another_directory\\file) ; New-Item -Type file ${OUT}\\another_directory\\file",
 )

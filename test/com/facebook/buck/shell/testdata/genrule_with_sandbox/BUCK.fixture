@@ -8,11 +8,38 @@ genrule(
 )
 
 genrule(
+    name = "cat_input_outs",
+    srcs = [
+        "input.txt",
+    ],
+    outs = {
+        "output": [
+            "output.txt",
+        ],
+    },
+    bash = "cat `dirname $SRCS`/undeclared_input.txt > $OUT/output.txt",
+)
+
+genrule(
     name = "cat_input_with_sandbox",
     srcs = [
         "input.txt",
     ],
     out = "output.txt",
     bash = "cat `dirname $SRCS`/undeclared_input.txt > $OUT",
+    enable_sandbox = True,
+)
+
+genrule(
+    name = "cat_input_with_sandbox_outs",
+    srcs = [
+        "input.txt",
+    ],
+    outs = {
+        "output": [
+            "output.txt",
+        ],
+    },
+    bash = "cat `dirname $SRCS`/undeclared_input.txt > $OUT/output.txt",
     enable_sandbox = True,
 )

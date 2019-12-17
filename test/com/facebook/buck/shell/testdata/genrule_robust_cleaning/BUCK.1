@@ -1,8 +1,22 @@
 genrule(
-  name = 'write',
-  # One should never navigate up from a directory path provided by a genrule. We do so in this
-  # test just to make sure that the entire directory is removed between runs, as a precaution
-  # against bugs in genrules.
-  cmd = 'mkdir $OUT && cd $OUT && cd .. && echo something > one',
-  out = 'directory',
+    name = "write",
+    out = "directory",
+    # One should never navigate up from a directory path provided by a genrule. We do so in this
+    # test just to make sure that the entire directory is removed between runs, as a precaution
+    # against bugs in genrules.
+    cmd = "mkdir $OUT && cd $OUT && cd .. && echo something > one",
+)
+
+genrule(
+    name = "write_outs",
+    outs = {
+        "output": [
+            "directory",
+        ],
+    },
+    # One should never navigate up from a directory path provided by a genrule. We do so in this
+    # test just to make sure that the entire directory is removed between runs, as a precaution
+    # against bugs in genrules.
+    bash = "mkdir $OUT/directory && cd $OUT/directory && cd .. && echo something > one",
+    cmd_exe = "mkdir $OUT\\directory && cd $OUT\\directory && cd .. && echo something > one",
 )

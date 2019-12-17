@@ -1,7 +1,25 @@
 genrule(
     name = "binary",
+    srcs = [
+        "input",
+    ],
     out = "out.bat",
-    bash = "(echo \"#!/bin/sh\"; echo \"echo hi\") > $OUT && chmod +x $OUT",
-    cmd_exe = "powershell -Command \"Out-File -FilePath $env:OUT -Encoding ascii -InputObject \\\"exit 0\\\"\"",
+    bash = "cp $SRCS $OUT && chmod +x $OUT",
+    cmd_exe = "copy %SRCS% %OUT%",
+    executable = True,
+)
+
+genrule(
+    name = "binary_outs",
+    srcs = [
+        "input",
+    ],
+    outs = {
+        "output": [
+            "out.bat",
+        ],
+    },
+    bash = "cp $SRCS $OUT/out.bat && chmod +x $OUT/out.bat",
+    cmd_exe = "copy %SRCS% %OUT%\\out.bat",
     executable = True,
 )

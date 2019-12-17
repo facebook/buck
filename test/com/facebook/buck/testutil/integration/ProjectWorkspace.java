@@ -283,7 +283,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
       Optional<NGContext> context, Path buildRoot, String... args) {
     // Add in `--show-output` to the build, so we can parse the output paths after the fact.
     ImmutableList<String> buildArgs =
-        ImmutableList.<String>builder().add("--show-output").add(args).build();
+        ImmutableList.<String>builder().add("--show-outputs").add(args).build();
     ProcessResult buildResult = runBuckBuild(context, buildRoot, buildArgs.toArray(new String[0]));
     buildResult.assertSuccess();
 

@@ -10,12 +10,38 @@ genrule(
 )
 
 genrule(
+    name = "genrule-one_outs",
+    srcs = [
+        script,
+    ],
+    outs = {
+        "output": [
+            "output-one.zip",
+        ],
+    },
+    cmd = "python $SRCS $OUT/output-one.zip 0",
+)
+
+genrule(
     name = "genrule-two",
     srcs = [
         script,
     ],
     out = "output-two.zip",
     cmd = "python $SRCS $OUT 1",
+)
+
+genrule(
+    name = "genrule-two_outs",
+    srcs = [
+        script,
+    ],
+    outs = {
+        "output": [
+            "output-two.zip",
+        ],
+    },
+    cmd = "python $SRCS $OUT/output-two.zip 0",
 )
 
 genrule(
@@ -29,6 +55,20 @@ genrule(
 )
 
 genrule(
+    name = "extended-time-one_outs",
+    srcs = [
+        "extended_time.zip",
+    ],
+    outs = {
+        "output": [
+            "output.zip",
+        ],
+    },
+    bash = "cp $SRCS $OUT/output.zip",
+    cmd_exe = "copy $SRCS $OUT\\output.zip",
+)
+
+genrule(
     name = "extended-time-two",
     srcs = [
         "extended_time_2.zip",
@@ -36,4 +76,18 @@ genrule(
     out = "output.zip",
     bash = "cp $SRCS $OUT",
     cmd_exe = "copy $SRCS $OUT",
+)
+
+genrule(
+    name = "extended-time-two_outs",
+    srcs = [
+        "extended_time_2.zip",
+    ],
+    outs = {
+        "output": [
+            "output.zip",
+        ],
+    },
+    bash = "cp $SRCS $OUT/output.zip",
+    cmd_exe = "copy $SRCS $OUT\\output.zip",
 )

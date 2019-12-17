@@ -17,3 +17,31 @@ genrule(
     bash = "echo \"two\" > $OUT",
     cmd_exe = "powershell -Command Out-File -FilePath $env:OUT -Encoding ascii -InputObject \"two\"",
 )
+
+genrule(
+    name = "genrule-one_outs",
+    srcs = [
+        "input-file.txt",
+    ],
+    outs = {
+        "output": [
+            "output.txt",
+        ],
+    },
+    bash = "echo \"one\" > $OUT/output.txt",
+    cmd_exe = "powershell -Command Out-File -FilePath $env:OUT\output.txt -Encoding ascii -InputObject \"one\"",
+)
+
+genrule(
+    name = "genrule-two_outs",
+    srcs = [
+        "input-file.txt",
+    ],
+    outs = {
+        "output": [
+            "output.txt",
+        ],
+    },
+    bash = "echo \"two\" > $OUT/output.txt",
+    cmd_exe = "powershell -Command Out-File -FilePath $env:OUT\output.txt -Encoding ascii -InputObject \"two\"",
+)
