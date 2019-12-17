@@ -18,8 +18,8 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.testutil.RegexMatcher.containsPattern;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
+import static com.facebook.buck.testutil.integration.BuckOutConfigHashPlaceholder.removeHash;
 import static com.facebook.buck.testutil.integration.BuckOutConfigHashPlaceholder.removePlaceholder;
-import static com.facebook.buck.testutil.integration.BuckOutConfigHashPlaceholder.replaceHashByPlaceholder;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -673,7 +673,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     assertTrue(workspace.getFileContents(proguardCommandLine).contains(generatedConfig.toString()));
     assertEquals(
         removePlaceholder(workspace.getFileContents("native/proguard_gen/expected-16.pro")),
-        replaceHashByPlaceholder(workspace.getFileContents(generatedConfig)));
+        removeHash(workspace.getFileContents(generatedConfig)));
   }
 
   @Test
@@ -701,7 +701,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     assertTrue(workspace.getFileContents(proguardCommandLine).contains(generatedConfig.toString()));
     assertEquals(
         removePlaceholder(workspace.getFileContents("native/proguard_gen/expected-17.pro")),
-        replaceHashByPlaceholder(workspace.getFileContents(generatedConfig)));
+        removeHash(workspace.getFileContents(generatedConfig)));
   }
 
   @Test
@@ -728,7 +728,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     assertTrue(workspace.getFileContents(proguardCommandLine).contains(generatedConfig.toString()));
     assertEquals(
         removePlaceholder(workspace.getFileContents("native/proguard_gen/expected.pro")),
-        replaceHashByPlaceholder(workspace.getFileContents(generatedConfig)));
+        removeHash(workspace.getFileContents(generatedConfig)));
   }
 
   @Test

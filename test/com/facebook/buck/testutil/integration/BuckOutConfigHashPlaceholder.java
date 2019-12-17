@@ -34,6 +34,11 @@ public class BuckOutConfigHashPlaceholder {
         CONFIG_HASH_PLACEHOLDER_WITH_TRAILING_SLASH);
   }
 
+  // TODO(gabrielrc): Remove "removePlaceholder" part once with land config hashes changes.
+  public static String removeHash(String content) {
+    return removePlaceholder(replaceHashByPlaceholder(content));
+  }
+
   // TODO(gabrielrc): Remove this method once we land the config hashes changes.
   public static String removePlaceholder(String contents) {
     return contents.replaceAll(CONFIG_HASH_PLACEHOLDER_WITH_TRAILING_SLASH, "");
