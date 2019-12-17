@@ -1,0 +1,13 @@
+genrule(
+    name = "named_output_groups",
+    outs = {
+        "output1": [
+            "out.txt",
+        ],
+        "output2": [
+            "out.txt",
+        ],
+    },
+    bash = "echo something> $OUT/out.txt",
+    cmd_exe = "echo something> %OUT%\\out.txt",
+)

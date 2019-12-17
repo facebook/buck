@@ -519,6 +519,49 @@ public class GenruleIntegrationTest {
   }
 
   @Test
+  public void namedOutputsMapToCorrespondingOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_outputs_map", temporaryFolder);
+    workspace.setUp();
+
+    Path result = workspace.buildAndReturnOutput("//:outputs_map[output1]");
+    assertTrue(result.endsWith("out1.txt"));
+    assertEquals("something" + System.lineSeparator(), workspace.getFileContents(result));
+
+    result = workspace.buildAndReturnOutput("//:outputs_map[output2]");
+    assertTrue(result.endsWith("out2.txt"));
+    assertEquals("another" + System.lineSeparator(), workspace.getFileContents(result));
+  }
+
+  @Test
+  public void namedOutputCanBeInMultipleGroups() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_named_output_groups", temporaryFolder);
+    workspace.setUp();
+
+    Path result = workspace.buildAndReturnOutput("//:named_output_groups[output1]");
+    assertTrue(result.endsWith("out.txt"));
+    assertEquals("something" + System.lineSeparator(), workspace.getFileContents(result));
+
+    result = workspace.buildAndReturnOutput("//:named_output_groups[output2]");
+    assertTrue(result.endsWith("out.txt"));
+    assertEquals("something" + System.lineSeparator(), workspace.getFileContents(result));
+  }
+
+  @Test
+  public void canUseGenruleOutputLabelInSrcs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_output_label_used_in_srcs", temporaryFolder);
+    workspace.setUp();
+
+    Path result = workspace.buildAndReturnOutput("//:file");
+    assertEquals("something" + System.lineSeparator(), workspace.getFileContents(result));
+  }
+
+  @Test
   public void cannotHaveBothOutAndOuts() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
