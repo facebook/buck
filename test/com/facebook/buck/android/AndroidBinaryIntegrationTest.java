@@ -98,7 +98,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   private static final String SIMPLE_TARGET = "//apps/multidex:app";
   private static final String RES_D8_TARGET = "//apps/multidex:app_with_resources_and_d8";
-  private static final String RES_GROUPS_TARGET = "//apps/multidex:app_with_resources_groups";
+  private static final String RES_GROUPS_TARGET = "//apps/multidex:app_with_resources_and_groups";
   private static final String RAW_DEX_TARGET = "//apps/multidex:app-art";
   private static final String APP_REDEX_TARGET = "//apps/sample:app_redex";
 
