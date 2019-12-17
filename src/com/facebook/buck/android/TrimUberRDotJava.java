@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -55,13 +56,17 @@ import javax.annotation.Nonnull;
 
 /** Rule for trimming unnecessary ids from R.java files. */
 class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+  /** Interface for build rules that keep track of referenced Android resources */
+  interface UsesResources extends BuildRule {
+    ImmutableList<String> getReferencedResources();
+  }
   /**
    * If the app has resources, aapt will have generated an R.java in this directory. If there are no
    * resources, this should be empty and we'll create a placeholder R.java below.
    */
   private final Optional<SourcePath> pathToRDotJavaDir;
 
-  private final Collection<DexProducedFromJavaLibrary> allPreDexRules;
+  private final Collection<? extends UsesResources> allPreDexRules;
   private final Optional<String> keepResourcePattern;
 
   private static final Pattern R_DOT_JAVA_LINE_PATTERN =
@@ -75,7 +80,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Optional<SourcePath> pathToRDotJavaDir,
-      Collection<DexProducedFromJavaLibrary> allPreDexRules,
+      Collection<? extends UsesResources> allPreDexRules,
       Optional<String> keepResourcePattern) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.pathToRDotJavaDir = pathToRDotJavaDir;
@@ -122,7 +127,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     @Override
     public StepExecutionResult execute(ExecutionContext context) throws IOException {
       ImmutableSet.Builder<String> allReferencedResourcesBuilder = ImmutableSet.builder();
-      for (DexProducedFromJavaLibrary preDexRule : allPreDexRules) {
+      for (UsesResources preDexRule : allPreDexRules) {
         allReferencedResourcesBuilder.addAll(preDexRule.getReferencedResources());
       }
       ImmutableSet<String> allReferencedResources = allReferencedResourcesBuilder.build();

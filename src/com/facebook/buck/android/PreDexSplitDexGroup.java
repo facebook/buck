@@ -75,7 +75,8 @@ import javax.annotation.Nullable;
  * much smaller set of artifacts from cache when the predexed libraries are invalidated.
  */
 public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements InitializableFromDisk<PreDexSplitDexGroup.BuildOutput> {
+    implements InitializableFromDisk<PreDexSplitDexGroup.BuildOutput>,
+        TrimUberRDotJava.UsesResources {
 
   @AddToRuleKey private final DexSplitMode dexSplitMode;
 
@@ -153,7 +154,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     // re-merged (since their contents did not change).
     steps.add(
         MkdirStep.of(
-          BuildCellRelativePath.fromCellRelativePath(
+            BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), secondaryDexDir)));
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -165,6 +166,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     buildableContext.recordArtifact(secondaryDexDir);
     buildableContext.recordArtifact(outputHashDir);
     buildableContext.recordArtifact(metadataTxtPath);
+    buildableContext.recordArtifact(getReferencedResourcesPath());
 
     final ImmutableSet<String> primaryDexPatterns = getPrimaryDexPatterns();
     PreDexedFilesSorter preDexedFilesSorter =
@@ -219,6 +221,19 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
         });
 
     steps.add(
+        new AbstractExecutionStep("write_referenced_resources") {
+          @Override
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            ImmutableList.Builder<String> builder = ImmutableList.builder();
+            for (DexProducedFromJavaLibrary dex : preDexDeps) {
+              builder.addAll(dex.getReferencedResources());
+            }
+            writeReferencedResources(getReferencedResourcesPath(), builder.build());
+            return StepExecutionResults.SUCCESS;
+          }
+        });
+
+    steps.add(
         new SmartDexingStep(
             androidPlatformTarget,
             context,
@@ -268,8 +283,18 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     return steps.build();
   }
 
+  @Override
+  public ImmutableList<String> getReferencedResources() {
+    return buildOutputInitializer.getBuildOutput().referencedResources;
+  }
+
   public Path getPrimaryDexRoot() {
     return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget()).resolve("primary");
+  }
+
+  public Path getReferencedResourcesPath() {
+    return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget())
+        .resolve("referenced_resources.txt");
   }
 
   public Path getPrimaryDexInputHashesPath() {
@@ -330,7 +355,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
 
   @Override
   public BuildOutput initializeFromDisk(SourcePathResolverAdapter pathResolver) throws IOException {
-    return new BuildOutput(readPrimaryDexInputHashesFromMetadata());
+    return new BuildOutput(readPrimaryDexInputHashesFromMetadata(), readReferencedResources());
   }
 
   private ImmutableMap<String, Sha1HashCode> readPrimaryDexInputHashesFromMetadata()
@@ -343,6 +368,14 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     return ImmutableMap.copyOf(Maps.transformValues(map, Sha1HashCode::of));
   }
 
+  private ImmutableList<String> readReferencedResources() throws IOException {
+    List<String> list =
+        ObjectMappers.readValue(
+            getProjectFilesystem().readFileIfItExists(getReferencedResourcesPath()).get(),
+            new TypeReference<List<String>>() {});
+    return ImmutableList.copyOf(list);
+  }
+
   private void writePrimaryDexInputHashes(
       Path outputPath, ImmutableMap<String, Sha1HashCode> primaryDexInputHashes)
       throws IOException {
@@ -353,6 +386,13 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             outputPath);
   }
 
+  private void writeReferencedResources(Path outputPath, ImmutableList<String> referencedResources)
+      throws IOException {
+    getProjectFilesystem()
+        .writeContentsToPath(
+            ObjectMappers.WRITER.writeValueAsString(referencedResources), outputPath);
+  }
+
   @Override
   public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
     return buildOutputInitializer;
@@ -361,9 +401,13 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   /** Contains serialized build output accessible from the rule type */
   static class BuildOutput {
     final ImmutableMap<String, Sha1HashCode> primaryDexInputHashes;
+    final ImmutableList<String> referencedResources;
 
-    BuildOutput(ImmutableMap<String, Sha1HashCode> primaryDexInputHashes) {
+    BuildOutput(
+        ImmutableMap<String, Sha1HashCode> primaryDexInputHashes,
+        ImmutableList<String> referencedResources) {
       this.primaryDexInputHashes = primaryDexInputHashes;
+      this.referencedResources = referencedResources;
     }
   }
 

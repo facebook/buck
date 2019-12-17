@@ -290,7 +290,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
                 filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
-    zipInspector.assertFileExists("assets/" + module + "/" + module + "-1.dex.jar");
+    zipInspector.assertFileExists("assets/" + module + "/" + module + "-1_1.dex.jar");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1_1.dex.jar");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-2_1.dex.jar");
   }
