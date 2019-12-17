@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
@@ -205,7 +205,7 @@ public class HaskellBinaryDescription
     if (depType == Linker.LinkableDepType.SHARED) {
 
       // Create a symlink tree with for all shared libraries needed by this binary.
-      SymlinkTree sharedLibraries =
+      MappedSymlinkTree sharedLibraries =
           graphBuilder.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                   buildTarget,

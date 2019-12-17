@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -144,7 +145,8 @@ abstract class GoDescriptors {
     }
 
     BuildTarget target = createSymlinkTreeTarget(buildTarget);
-    SymlinkTree symlinkTree = makeSymlinkTree(target, projectFilesystem, graphBuilder, linkables);
+    MappedSymlinkTree symlinkTree =
+        makeSymlinkTree(target, projectFilesystem, graphBuilder, linkables);
     graphBuilder.addToIndex(symlinkTree);
 
     ImmutableList.Builder<SourcePath> extraAsmOutputsBuilder = ImmutableList.builder();
@@ -344,7 +346,7 @@ abstract class GoDescriptors {
     extraDeps.add(library);
 
     BuildTarget target = createTransitiveSymlinkTreeTarget(buildTarget);
-    SymlinkTree symlinkTree =
+    MappedSymlinkTree symlinkTree =
         makeSymlinkTree(
             target,
             projectFilesystem,
@@ -569,7 +571,7 @@ abstract class GoDescriptors {
         .collect(ImmutableList.toImmutableList());
   }
 
-  private static SymlinkTree makeSymlinkTree(
+  private static MappedSymlinkTree makeSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
@@ -595,7 +597,7 @@ abstract class GoDescriptors {
 
     Path root = BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, "__%s__tree");
 
-    return new SymlinkTree("go_linkable", buildTarget, projectFilesystem, root, treeMap);
+    return new MappedSymlinkTree("go_linkable", buildTarget, projectFilesystem, root, treeMap);
   }
 
   /**

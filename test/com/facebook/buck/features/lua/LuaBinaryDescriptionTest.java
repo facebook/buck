@@ -28,7 +28,7 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -157,10 +157,10 @@ public class LuaBinaryDescriptionTest {
             TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), binaryBuilder.build()));
     cxxLibraryBuilder.build(graphBuilder);
     binaryBuilder.build(graphBuilder);
-    SymlinkTree tree =
+    MappedSymlinkTree tree =
         graphBuilder.getRuleWithType(
             LuaBinaryDescription.getNativeLibsSymlinkTreeTarget(binaryBuilder.getTarget()),
-            SymlinkTree.class);
+            MappedSymlinkTree.class);
     assertThat(
         tree.getLinks().keySet(),
         Matchers.hasItem(tree.getProjectFilesystem().getPath("libfoo.so")));

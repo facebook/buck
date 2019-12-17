@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.test.rule.HasTestRunner;
@@ -335,7 +335,7 @@ public class JavaTestDescription
         ActionGraphBuilder graphBuilder,
         CxxPlatform cxxPlatform) {
       if (useCxxLibraries.orElse(false)) {
-        SymlinkTree nativeLibsSymlinkTree =
+        MappedSymlinkTree nativeLibsSymlinkTree =
             buildNativeLibsSymlinkTreeRule(
                 buildTarget, projectFilesystem, graphBuilder, params, cxxPlatform);
 
@@ -354,7 +354,7 @@ public class JavaTestDescription
             }
           }
           nativeLibsSymlinkTree =
-              new SymlinkTree(
+              new MappedSymlinkTree(
                   "java_test_native_libs",
                   nativeLibsSymlinkTree.getBuildTarget(),
                   nativeLibsSymlinkTree.getProjectFilesystem(),
@@ -391,7 +391,7 @@ public class JavaTestDescription
       }
     }
 
-    public static SymlinkTree buildNativeLibsSymlinkTreeRule(
+    public static MappedSymlinkTree buildNativeLibsSymlinkTreeRule(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         ActionGraphBuilder graphBuilder,

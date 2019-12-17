@@ -31,7 +31,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -211,7 +211,7 @@ public class AndroidResourceDescriptionTest {
                 target.withAppendedFlavors(
                     AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR))));
     assertThat(
-        ((SymlinkTree) deps.get(0)).getLinks(),
+        ((MappedSymlinkTree) deps.get(0)).getLinks(),
         is(
             equalTo(
                 ImmutableSortedMap.of(
@@ -229,7 +229,7 @@ public class AndroidResourceDescriptionTest {
                 target.withAppendedFlavors(
                     AndroidResourceDescription.RESOURCES_SYMLINK_TREE_FLAVOR))));
     assertThat(
-        ((SymlinkTree) deps.get(1)).getLinks(),
+        ((MappedSymlinkTree) deps.get(1)).getLinks(),
         is(
             equalTo(
                 ImmutableSortedMap.of(

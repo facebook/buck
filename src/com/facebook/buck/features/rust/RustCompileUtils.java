@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.rules.tool.BinaryWrapperRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -501,8 +501,8 @@ public class RustCompileUtils {
 
       // Create a symlink tree with for all native shared (NativeLinkable) libraries
       // needed by this binary.
-      SymlinkTree sharedLibraries =
-          (SymlinkTree)
+      MappedSymlinkTree sharedLibraries =
+          (MappedSymlinkTree)
               graphBuilder.computeIfAbsent(
                   createSharedLibrarySymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor()),
                   target ->

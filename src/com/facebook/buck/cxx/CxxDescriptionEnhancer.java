@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -1123,7 +1123,7 @@ public class CxxDescriptionEnhancer {
     if (linkStyle == Linker.LinkableDepType.SHARED
         && linker.getSharedLibraryLoadingType() == Linker.SharedLibraryLoadingType.RPATH) {
       // Create a symlink tree with for all shared libraries needed by this binary.
-      SymlinkTree sharedLibraries =
+      MappedSymlinkTree sharedLibraries =
           requireSharedLibrarySymlinkTree(
               target, projectFilesystem, graphBuilder, cxxPlatform, deps);
 
@@ -1515,7 +1515,7 @@ public class CxxDescriptionEnhancer {
           getBinaryWithSharedLibrariesSymlinkTreePath(
               projectFilesystem, binaryWithSharedLibrariesTarget, cxxPlatform.getFlavor());
       Path appPath = symlinkTreeRoot.resolve(binaryName);
-      SymlinkTree binaryWithSharedLibraries =
+      MappedSymlinkTree binaryWithSharedLibraries =
           requireBinaryWithSharedLibrariesSymlinkTree(
               target,
               projectFilesystem,
@@ -1651,7 +1651,7 @@ public class CxxDescriptionEnhancer {
    * Build a {@link HeaderSymlinkTree} of all the shared libraries found via the top-level rule's
    * transitive dependencies.
    */
-  public static SymlinkTree createSharedLibrarySymlinkTree(
+  public static MappedSymlinkTree createSharedLibrarySymlinkTree(
       BuildTarget baseBuildTarget,
       ProjectFilesystem filesystem,
       ActionGraphBuilder graphBuilder,
@@ -1677,17 +1677,17 @@ public class CxxDescriptionEnhancer {
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
       links.put(Paths.get(ent.getKey()), ent.getValue());
     }
-    return new SymlinkTree(
+    return new MappedSymlinkTree(
         "cxx_binary", symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
   }
 
-  public static SymlinkTree requireSharedLibrarySymlinkTree(
+  public static MappedSymlinkTree requireSharedLibrarySymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps) {
-    return (SymlinkTree)
+    return (MappedSymlinkTree)
         graphBuilder.computeIfAbsent(
             createSharedLibrarySymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor()),
             ignored ->
@@ -1711,7 +1711,7 @@ public class CxxDescriptionEnhancer {
         filesystem, createBinaryWithSharedLibrariesSymlinkTreeTarget(target, platform), "%s");
   }
 
-  private static SymlinkTree createBinaryWithSharedLibrariesSymlinkTree(
+  private static MappedSymlinkTree createBinaryWithSharedLibrariesSymlinkTree(
       BuildTarget baseBuildTarget,
       ProjectFilesystem filesystem,
       ActionGraphBuilder graphBuilder,
@@ -1740,11 +1740,11 @@ public class CxxDescriptionEnhancer {
       links.put(Paths.get(ent.getKey()), ent.getValue());
     }
     links.put(binaryName, binarySource);
-    return new SymlinkTree(
+    return new MappedSymlinkTree(
         "cxx_binary", symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
   }
 
-  private static SymlinkTree requireBinaryWithSharedLibrariesSymlinkTree(
+  private static MappedSymlinkTree requireBinaryWithSharedLibrariesSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       ActionGraphBuilder graphBuilder,
@@ -1752,7 +1752,7 @@ public class CxxDescriptionEnhancer {
       Iterable<? extends BuildRule> deps,
       Path binaryName,
       SourcePath binarySource) {
-    return (SymlinkTree)
+    return (MappedSymlinkTree)
         graphBuilder.computeIfAbsent(
             createBinaryWithSharedLibrariesSymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor()),
             ignored ->

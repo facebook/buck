@@ -35,7 +35,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -137,10 +137,10 @@ public class AndroidResourceDescription
     // hashing the contents of the entire resources directory, we try to filter out anything that
     // doesn't look like a resource.  This means when our resources are supplied from another rule,
     // we have to resort to some hackery to make sure things work correctly.
-    Pair<Optional<SymlinkTree>, Optional<SourcePath>> resInputs =
+    Pair<Optional<MappedSymlinkTree>, Optional<SourcePath>> resInputs =
         collectInputSourcePaths(
             graphBuilder, buildTarget, RESOURCES_SYMLINK_TREE_FLAVOR, args.getRes());
-    Pair<Optional<SymlinkTree>, Optional<SourcePath>> assetsInputs =
+    Pair<Optional<MappedSymlinkTree>, Optional<SourcePath>> assetsInputs =
         collectInputSourcePaths(
             graphBuilder, buildTarget, ASSETS_SYMLINK_TREE_FLAVOR, args.getAssets());
 
@@ -200,17 +200,17 @@ public class AndroidResourceDescription
         graphBuilder,
         graphBuilder.getAllRules(args.getDeps()),
         resInputs.getSecond().orElse(null),
-        resInputs.getFirst().map(SymlinkTree::getLinks).orElse(ImmutableSortedMap.of()),
+        resInputs.getFirst().map(MappedSymlinkTree::getLinks).orElse(ImmutableSortedMap.of()),
         args.getPackage().orElse(null),
         assetsInputs.getSecond().orElse(null),
-        assetsInputs.getFirst().map(SymlinkTree::getLinks).orElse(ImmutableSortedMap.of()),
+        assetsInputs.getFirst().map(MappedSymlinkTree::getLinks).orElse(ImmutableSortedMap.of()),
         args.getManifest().orElse(null),
         args.getHasWhitelistedStrings(),
         args.getResourceUnion(),
         androidBuckConfig.isGrayscaleImageProcessingEnabled());
   }
 
-  private SymlinkTree createSymlinkTree(
+  private MappedSymlinkTree createSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> symlinkAttribute,
@@ -241,10 +241,11 @@ public class AndroidResourceDescription
     }
     Path symlinkTreeRoot =
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").resolve(outputDirName);
-    return new SymlinkTree("android_res", buildTarget, projectFilesystem, symlinkTreeRoot, links);
+    return new MappedSymlinkTree(
+        "android_res", buildTarget, projectFilesystem, symlinkTreeRoot, links);
   }
 
-  private static Pair<Optional<SymlinkTree>, Optional<SourcePath>> collectInputSourcePaths(
+  private static Pair<Optional<MappedSymlinkTree>, Optional<SourcePath>> collectInputSourcePaths(
       ActionGraphBuilder graphBuilder,
       BuildTarget resourceRuleTarget,
       Flavor symlinkTreeFlavor,
@@ -261,8 +262,8 @@ public class AndroidResourceDescription
       }
     }
     BuildTarget symlinkTreeTarget = resourceRuleTarget.withFlavors(symlinkTreeFlavor);
-    SymlinkTree symlinkTree;
-    symlinkTree = (SymlinkTree) graphBuilder.requireRule(symlinkTreeTarget);
+    MappedSymlinkTree symlinkTree;
+    symlinkTree = (MappedSymlinkTree) graphBuilder.requireRule(symlinkTreeTarget);
     return new Pair<>(Optional.of(symlinkTree), Optional.of(symlinkTree.getSourcePathToOutput()));
   }
 

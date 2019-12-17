@@ -33,6 +33,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -517,7 +518,7 @@ public class LuaBinaryDescription
       Path root,
       ImmutableMap<String, SourcePath> components) {
     return graphBuilder.addToIndex(
-        new SymlinkTree(
+        new MappedSymlinkTree(
             "lua_binary",
             linkTreeTarget,
             filesystem,
