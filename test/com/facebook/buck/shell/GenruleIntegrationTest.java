@@ -557,8 +557,19 @@ public class GenruleIntegrationTest {
             this, "genrule_output_label_used_in_srcs", temporaryFolder);
     workspace.setUp();
 
-    Path result = workspace.buildAndReturnOutput("//:file");
+    Path result = workspace.buildAndReturnOutput("//:file_with_named_outputs");
     assertEquals("something" + System.lineSeparator(), workspace.getFileContents(result));
+  }
+
+  @Test
+  public void canUseGenruleDefaultOutputsInSrcs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_output_label_used_in_srcs", temporaryFolder);
+    workspace.setUp();
+
+    Path result = workspace.buildAndReturnOutput("//:file_with_default_outputs");
+    assertThat(workspace.getFileContents(result), equalTo("other" + System.lineSeparator()));
   }
 
   @Test

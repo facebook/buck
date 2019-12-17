@@ -13,7 +13,24 @@ genrule(
 )
 
 export_file(
-    name = "file",
+    name = "file_with_named_outputs",
     src = ":magic[correct]",
+    out = "more.txt",
+)
+
+genrule(
+    name = "more_magic",
+    outs = {
+        "correct": [
+            "other-file.txt",
+        ],
+    },
+    bash = "echo other > $OUT/other-file.txt",
+    cmd_exe = "echo other> %OUT%\\other-file.txt",
+)
+
+export_file(
+    name = "file_with_default_outputs",
+    src = ":more_magic",
     out = "more.txt",
 )

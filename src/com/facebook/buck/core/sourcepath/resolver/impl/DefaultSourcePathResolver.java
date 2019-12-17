@@ -59,12 +59,7 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
       DefaultBuildTargetSourcePath targetSourcePath) {
     BuildTargetWithOutputs buildTargetWithOutputs = targetSourcePath.getTargetWithOutputs();
     BuildRule rule = ruleFinder.getRule(targetSourcePath);
-    if (!buildTargetWithOutputs.getOutputLabel().isDefault()) {
-      Preconditions.checkState(
-          rule instanceof HasMultipleOutputs,
-          "Multiple outputs not supported for %s target %s",
-          rule.getType(),
-          targetSourcePath.getTargetWithOutputs());
+    if (rule instanceof HasMultipleOutputs) {
       ImmutableSortedSet<SourcePath> resolvedPaths =
           ((HasMultipleOutputs) rule)
               .getSourcePathToOutput(buildTargetWithOutputs.getOutputLabel());
@@ -74,6 +69,11 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
       }
       return resolvedPaths;
     }
+    Preconditions.checkState(
+        buildTargetWithOutputs.getOutputLabel().isDefault(),
+        "Multiple outputs not supported for %s target %s",
+        rule.getType(),
+        targetSourcePath.getTargetWithOutputs());
     SourcePath resolvedPath = rule.getSourcePathToOutput();
     if (resolvedPath == null) {
       throw new HumanReadableException(
