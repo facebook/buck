@@ -195,13 +195,10 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   public Tool getExecutableCommand() {
     CommandTool.Builder builder = new CommandTool.Builder(python);
     getPythonPlatform().getInplaceBinaryInterpreterFlags().forEach(builder::addArg);
-
+    getComponents().forEachInput(builder::addInput);
     return builder
         .addArg(SourcePathArg.of(getSourcePathToOutput()))
         .addNonHashableInput(linkTree.getRootSourcePath())
-        .addInputs(getComponents().getModules().values())
-        .addInputs(getComponents().getResources().values())
-        .addInputs(getComponents().getNativeLibraries().values())
         .build();
   }
 

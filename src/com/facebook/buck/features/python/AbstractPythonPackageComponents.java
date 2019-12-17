@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, singleton = true)
@@ -84,13 +85,16 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
   @Value.Parameter
   public abstract Optional<Boolean> isZipSafe();
 
+  public void forEachInput(Consumer<SourcePath> consumer) {
+    getModules().values().forEach(consumer);
+    getResources().values().forEach(consumer);
+    getNativeLibraries().values().forEach(consumer);
+    getModuleDirs().forEach(consumer);
+  }
+
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    deps.addAll(ruleFinder.filterBuildRuleInputs(getModules().values()));
-    deps.addAll(ruleFinder.filterBuildRuleInputs(getResources().values()));
-    deps.addAll(ruleFinder.filterBuildRuleInputs(getNativeLibraries().values()));
-    deps.addAll(ruleFinder.filterBuildRuleInputs(getModuleDirs()));
-
+    forEachInput(sp -> ruleFinder.getRule(sp).ifPresent(deps::add));
     return deps.build();
   }
 
