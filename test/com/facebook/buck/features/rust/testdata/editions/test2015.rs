@@ -3,5 +3,5 @@ use rust2018::do_thing;
 
 #[test]
 fn test() {
-  do_thing();
+    do_thing();
 }

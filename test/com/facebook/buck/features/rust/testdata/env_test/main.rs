@@ -13,7 +13,11 @@ fn main() {
 
     assert_eq!(env_library::FOO, "a simple thing");
     assert_eq!(FOO, Some("something else"));
-    assert!(Path::new(HELLOPATH).is_absolute(), "HELLO {} not absolute", HELLOPATH);
+    assert!(
+        Path::new(HELLOPATH).is_absolute(),
+        "HELLO {} not absolute",
+        HELLOPATH
+    );
     assert_eq!(HELLO, "Hello, world\n");
 }
 

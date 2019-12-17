@@ -14,5 +14,5 @@ struct FrenchToast;
 struct Waffles;
 
 fn main() {
-  println!("Hello");
+    println!("Hello");
 }
