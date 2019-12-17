@@ -96,17 +96,18 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
         return getSourcePathName(target, castPath.getDelegate());
       } else if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
         Path path = ((ExplicitBuildTargetSourcePath) sourcePath).getResolvedPath();
-        if (path.startsWith(rule.getProjectFilesystem().getBuckPaths().getGenDir())) {
-          path = rule.getProjectFilesystem().getBuckPaths().getGenDir().relativize(path);
-        }
         Path basePath =
-            BuildTargetPaths.getBasePathForBaseName(
-                    rule.getProjectFilesystem(), rule.getBuildTarget())
-                .toPath(path.getFileSystem());
-        rule.getBuildTarget().getCellRelativeBasePath().getPath().toPath(path.getFileSystem());
+            rule.getProjectFilesystem()
+                .getBuckPaths()
+                .getGenDir()
+                .resolve(
+                    BuildTargetPaths.getBasePathForBaseName(
+                            rule.getProjectFilesystem(), rule.getBuildTarget())
+                        .toPath(path.getFileSystem()));
         if (path.startsWith(basePath)) {
           return basePath.relativize(path).toString();
         }
+        // TODO(nga): path must start with base dir
       }
       return rule.getBuildTarget().getShortName();
     }

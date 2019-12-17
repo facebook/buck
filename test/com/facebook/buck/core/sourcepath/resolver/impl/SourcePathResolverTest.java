@@ -336,7 +336,7 @@ public class SourcePathResolverTest {
     String actual2 =
         pathResolver.getSourcePathName(
             BuildTargetFactory.newInstance("//:test"), buildTargetSourcePath2);
-    assertEquals(Paths.get("foo", "bar").toString(), actual2);
+    assertEquals("fake", actual2);
 
     BuildTarget otherFakeBuildTarget = BuildTargetFactory.newInstance("//package:fake2");
     FakeBuildRule otherFakeBuildRule =
