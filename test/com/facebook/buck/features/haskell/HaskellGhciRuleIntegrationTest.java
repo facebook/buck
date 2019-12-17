@@ -18,6 +18,8 @@ package com.facebook.buck.features.haskell;
 
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.TargetConfigurationHasher;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -75,6 +77,10 @@ public class HaskellGhciRuleIntegrationTest {
     // Write out the `.buckconfig`.
     workspace.writeContentsToPath(HaskellTestUtils.formatHaskellConfig(version), ".buckconfig");
     genPath = workspace.getBuckPaths().getGenDir();
+    if (workspace.getProjectFileSystem().getBuckPaths().shouldIncludeTargetConfigHash()) {
+      genPath =
+          genPath.resolve(TargetConfigurationHasher.hash(UnconfiguredTargetConfiguration.INSTANCE));
+    }
   }
 
   @Test
