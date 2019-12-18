@@ -169,7 +169,9 @@ public class WindowsCxxIntegrationTest {
     ProcessResult logResult = workspace.runBuckCommand("build", "//implib_prebuilt:log");
     logResult.assertSuccess();
     Path outputPath = workspace.resolve("buck-out/gen/implib_prebuilt/log/log.txt");
-    assertThat(workspace.getFileContents(outputPath), Matchers.containsString("a + (a * b)"));
+    String outputPathContents = workspace.getFileContents(outputPath);
+    assertThat(outputPathContents, Matchers.containsString("a + (a * b)"));
+    assertThat(outputPathContents, Matchers.containsString("Hello, world!"));
   }
 
   @Test

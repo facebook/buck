@@ -268,7 +268,8 @@ public class CxxLinkableEnhancer {
                   Linkage link = nativeLinkable.getPreferredLinkage();
                   NativeLinkableInput input =
                       nativeLinkable.getNativeLinkableInput(
-                          NativeLinkables.getLinkStyle(link, depType),
+                          NativeLinkables.getLinkStyle(
+                              link, depType, Optional.of(cxxPlatform.getPicTypeForSharedLinking())),
                           linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
                           graphBuilder,
                           target.getTargetConfiguration());

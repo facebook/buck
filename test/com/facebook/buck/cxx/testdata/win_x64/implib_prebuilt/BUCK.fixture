@@ -7,11 +7,21 @@ prebuilt_cxx_library(
     visibility = ["PUBLIC"],
 )
 
+cxx_library(
+    name = "helloworld_static",
+    srcs = ["HelloWorldLibrary.cpp"],
+    exported_headers = ["HelloWorldLibrary.h"],
+    preferred_linkage = "static",
+)
+
 cxx_binary(
     name = "app",
-    srcs = ["MathClient.cpp"],
+    srcs = ["HelloWorldMathClient.cpp"],
     link_style = "shared",
-    deps = [":implib_prebuilt"],
+    deps = [
+        ":helloworld_static",
+        ":implib_prebuilt",
+    ],
 )
 
 genrule(

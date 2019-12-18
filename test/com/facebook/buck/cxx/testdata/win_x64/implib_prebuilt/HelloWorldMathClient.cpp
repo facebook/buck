@@ -17,6 +17,7 @@
 // Compile by using: cl /EHsc /link MathLibrary.lib MathClient.cpp
 
 #include <iostream>
+#include "HelloWorldLibrary.h"
 #include "MathLibrary.h"
 
 using namespace std;
@@ -32,6 +33,8 @@ int main()
         MathLibrary::Functions::Multiply(a, b) << endl;
     cout << "a + (a * b) = " <<
         MathLibrary::Functions::AddMultiply(a, b) << endl;
+
+    HelloWorldLibrary::HelloWorld();
 
     return 0;
 }

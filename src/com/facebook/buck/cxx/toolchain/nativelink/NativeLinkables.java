@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.TopologicalSort;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.FluentIterable;
@@ -149,7 +150,9 @@ public class NativeLinkables {
    * a preferred and requested linkage.
    */
   public static Linker.LinkableDepType getLinkStyle(
-      NativeLinkableGroup.Linkage preferredLinkage, Linker.LinkableDepType requestedLinkStyle) {
+      NativeLinkableGroup.Linkage preferredLinkage,
+      Linker.LinkableDepType requestedLinkStyle,
+      Optional<PicType> picTypeForSharedLinking) {
     Linker.LinkableDepType linkStyle;
     switch (preferredLinkage) {
       case SHARED:
@@ -158,6 +161,8 @@ public class NativeLinkables {
       case STATIC:
         linkStyle =
             requestedLinkStyle == Linker.LinkableDepType.STATIC
+                    || (picTypeForSharedLinking.isPresent()
+                        && picTypeForSharedLinking.get() == PicType.PDC)
                 ? Linker.LinkableDepType.STATIC
                 : Linker.LinkableDepType.STATIC_PIC;
         break;
@@ -168,6 +173,15 @@ public class NativeLinkables {
         throw new IllegalStateException();
     }
     return linkStyle;
+  }
+
+  /**
+   * Determine the final {@link com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType} given
+   * a preferred and requested linkage.
+   */
+  public static Linker.LinkableDepType getLinkStyle(
+      NativeLinkableGroup.Linkage preferredLinkage, Linker.LinkableDepType requestedLinkStyle) {
+    return getLinkStyle(preferredLinkage, requestedLinkStyle, Optional.empty());
   }
 
   /** Get the {@link NativeLinkableInput} for a {@link NativeLinkable}. */
