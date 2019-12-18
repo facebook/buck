@@ -29,7 +29,9 @@ import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.impl.TargetConfigurationHasher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.PredicateMatcher;
@@ -69,6 +71,10 @@ public class JsRulesIntegrationTest {
     workspace.setUp();
     projectFilesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     genPath = projectFilesystem.getBuckPaths().getGenDir();
+    if (projectFilesystem.getBuckPaths().shouldIncludeTargetConfigHash()) {
+      genPath =
+          genPath.resolve(TargetConfigurationHasher.hash(UnconfiguredTargetConfiguration.INSTANCE));
+    }
   }
 
   @Test
