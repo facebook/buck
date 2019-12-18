@@ -411,10 +411,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
       RichStream.from(instance.conflictingHeadersBasenameWhitelist)
           .forEachThrowing(serializer::visitString);
       Preconditions.checkState(
-          !instance.leadingIncludePaths.isPresent()
-              || instance.leadingIncludePaths.get().getFPaths().isEmpty()
-                  && instance.leadingIncludePaths.get().getIPaths().isEmpty(),
-          "leadingIncludePaths is not serializable.");
+          !instance.leadingIncludePaths.isPresent(), "leadingIncludePaths is not serializable.");
     }
 
     @Override
