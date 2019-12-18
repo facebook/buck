@@ -200,7 +200,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             service, () -> computeActionAndUpload(rule, strategyContext, ruleContext));
 
     AtomicReference<RemoteExecutionActionInfo> actionInfo = new AtomicReference<>();
-    ListenableFuture<Optional<ExecutionResult>> executionResult =
+    ListenableFuture<ExecutionResult> executionResult =
         Futures.transformAsync(
             actionInfoFuture,
             actionInfoResult -> {
@@ -214,12 +214,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         Futures.transformAsync(
             executionResult,
             result -> {
-              if (!result.isPresent()) {
-                return Futures.immediateFuture(
-                    Optional.of(
-                        strategyContext.createCancelledResult(ruleContext.getCancelReason())));
-              }
-              executionInfo.set(result.get());
+              executionInfo.set(result);
               // actionInfoFuture must be set at this point
               Preconditions.checkState(actionInfo.get() != null);
               Streams.stream(actionInfo.get().getOutputs())
@@ -288,7 +283,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                     : OptionalInt.empty();
             RemoteExecutionActionEvent.sendTerminalEvent(
                 eventBus,
-                t instanceof InterruptedException ? State.ACTION_CANCELLED : State.ACTION_FAILED,
+                t instanceof InterruptedException || t instanceof ActionCancelledException
+                    ? State.ACTION_CANCELLED
+                    : State.ACTION_FAILED,
                 rule,
                 Optional.ofNullable(actionInfo.get())
                     .map(RemoteExecutionActionInfo::getActionDigest),
@@ -364,6 +361,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     }
 
     Digest actionDigest = actionInfo.getActionDigest();
+    if (guardContext.isCancelled()) {
+      throw new ActionCancelledException(guardContext.getCancelReason());
+    }
     Scope uploadingInputsScope =
         guardContext.enterState(State.UPLOADING_INPUTS, Optional.of(actionDigest));
     ListenableFuture<Unit> inputsUploadedFuture =
@@ -380,7 +380,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         MoreExecutors.directExecutor());
   }
 
-  private ListenableFuture<Optional<ExecutionResult>> handleActionInfo(
+  private ListenableFuture<ExecutionResult> handleActionInfo(
       BuildRule rule,
       BuildStrategyContext strategyContext,
       RemoteExecutionActionInfo actionInfo,
@@ -392,6 +392,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     // very, very large.
     Digest actionDigest = actionInfo.getActionDigest();
     Iterable<? extends Path> actionOutputs = actionInfo.getOutputs();
+    if (guardContext.isCancelled()) {
+      throw new ActionCancelledException(guardContext.getCancelReason());
+    }
     Scope uploadingInputsScope =
         guardContext.enterState(State.UPLOADING_ACTION, Optional.of(actionDigest));
 
@@ -419,6 +422,10 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
 
       List<RemoteExecutionActionEvent.InputsUploaded.LargeBlob> largeBlobs = Lists.newArrayList();
       long largeBlobSizeThreshold = largeBlobSizeBytes.orElse(-1L);
+
+      if (guardContext.isCancelled()) {
+        throw new ActionCancelledException(guardContext.getCancelReason());
+      }
       try (Scope ignored1 = guardContext.enterState(State.COMPUTING_ACTION, Optional.empty())) {
         actionInfo =
             mbrHelper.prepareRemoteExecution(
@@ -437,14 +444,13 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     }
   }
 
-  private ListenableFuture<Optional<ExecutionResult>> executeNowThatInputsAreReady(
+  private ListenableFuture<ExecutionResult> executeNowThatInputsAreReady(
       BuildStrategyContext strategyContext,
       BuildRule buildRule,
       RemoteRuleContext guardContext,
       Digest actionDigest,
       Iterable<? extends Path> actionOutputs,
       String ruleName) {
-    AtomicReference<Throwable> cancelled = new AtomicReference<>(null);
     MetadataProvider metadataProvider =
         MetadataProviderFactory.wrapForRuleWithWorkerRequirements(
             this.metadataProvider,
@@ -456,8 +462,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             service,
             () -> {
               if (guardContext.isCancelled()) {
-                cancelled.set(guardContext.getCancelReason());
-                return Futures.immediateFuture(null);
+                throw new ActionCancelledException(guardContext.getCancelReason());
               }
               Scope executingScope =
                   guardContext.enterState(State.EXECUTING, Optional.of(actionDigest));
@@ -489,8 +494,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                     // cancellation till the result is ready.
                     guardContext.tryStart();
                     if (guardContext.isCancelled()) {
-                      cancelled.set(guardContext.getCancelReason());
-                      return null;
+                      throw new ActionCancelledException(guardContext.getCancelReason());
                     }
                     return result;
                   },
@@ -499,26 +503,22 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
 
     return Futures.transformAsync(
         executionResult,
-        result -> {
-          if (cancelled.get() != null) {
-            return Futures.immediateFuture(Optional.empty());
-          }
-          return handleResultLimiter.schedule(
-              service,
-              () ->
-                  handleExecutionResult(
-                      strategyContext,
-                      buildRule,
-                      result,
-                      actionDigest,
-                      actionOutputs,
-                      metadataProvider,
-                      guardContext));
-        },
+        result ->
+            handleResultLimiter.schedule(
+                service,
+                () ->
+                    handleExecutionResult(
+                        strategyContext,
+                        buildRule,
+                        result,
+                        actionDigest,
+                        actionOutputs,
+                        metadataProvider,
+                        guardContext)),
         service);
   }
 
-  private ListenableFuture<Optional<ExecutionResult>> handleExecutionResult(
+  private ListenableFuture<ExecutionResult> handleExecutionResult(
       BuildStrategyContext strategyContext,
       BuildRule buildRule,
       ExecutionResult result,
@@ -583,7 +583,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 new FilesystemFileMaterializer(mbrHelper.getCellPathPrefix()));
     materializationFuture.addListener(materializationScope::close, MoreExecutors.directExecutor());
     return Futures.whenAllSucceed(ImmutableList.of(metadata, materializationFuture))
-        .call(() -> Optional.of(result), MoreExecutors.directExecutor());
+        .call(() -> result, MoreExecutors.directExecutor());
   }
 
   private ListenableFuture<Unit> stripMetadata(

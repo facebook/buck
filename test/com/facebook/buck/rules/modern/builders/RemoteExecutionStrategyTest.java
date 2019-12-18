@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -27,6 +28,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy.StrategyBuildResult;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -41,6 +43,7 @@ import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionR
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
@@ -55,6 +58,7 @@ import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -69,6 +73,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -97,50 +102,25 @@ public class RemoteExecutionStrategyTest {
     service.shutdownNow();
   }
 
+  public StrategyBuildResult beginCustomStrategyBuild() {
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    BuildTarget target = BuildTargetFactory.newInstance("//some:target");
+    ModernBuildRule rule = new NoOpModernBuildRule(target, filesystem, ruleFinder);
+    BuildStrategyContext strategyContext = new SimpleBuildStrategyContext(rule, service);
+
+    return strategy.build(rule, strategyContext);
+  }
+
   public StrategyBuildResult beginBuild() {
     this.service = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-
-    RemoteExecutionStrategyConfig strategyConfig = new TestRemoteExecutionConfig();
-
-    RemoteExecutionActionInfo actionInfo =
-        RemoteExecutionActionInfo.of(
-            protocol.computeDigest(new byte[] {1}),
-            ImmutableList.of(
-                UploadDataSupplier.of(
-                    "data", missingDigest, () -> new ByteArrayInputStream(missingData))),
-            missingData.length,
-            ImmutableList.of());
-
-    Path cellPathPrefix = tmp.getRoot();
-
-    RemoteExecutionHelper mbrHelper =
-        new RemoteExecutionHelper() {
-          @Override
-          public boolean supportsRemoteExecution(ModernBuildRule<?> instance) {
-            return true;
-          }
-
-          @Override
-          public RemoteExecutionActionInfo prepareRemoteExecution(
-              ModernBuildRule<?> rule1,
-              BiPredicate<Digest, String> requiredDataPredicate,
-              WorkerRequirements workerRequirements) {
-            return actionInfo;
-          }
-
-          @Override
-          public Path getCellPathPrefix() {
-            return cellPathPrefix;
-          }
-        };
-
     this.strategy =
         new RemoteExecutionStrategy(
             BuckEventBusForTests.newInstance(),
-            strategyConfig,
+            new TestRemoteExecutionConfig(),
             clients,
             MetadataProviderFactory.emptyMetadataProvider(),
-            mbrHelper,
+            new TestRemoteExecutionHelper(),
             new NoOpWorkerRequirementsProvider(),
             service,
             "" /* auxiliaryBuildTag */);
@@ -149,8 +129,8 @@ public class RemoteExecutionStrategyTest {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//some:target");
     ModernBuildRule rule = new NoOpModernBuildRule(target, filesystem, ruleFinder);
-
     BuildStrategyContext strategyContext = new SimpleBuildStrategyContext(rule, service);
+
     return strategy.build(rule, strategyContext);
   }
 
@@ -220,6 +200,59 @@ public class RemoteExecutionStrategyTest {
     // The server should have received indication that the client cancelled the call.
     expectedException.expect(IllegalStateException.class);
     completer.get().run();
+  }
+
+  public abstract static class TerminalEventHandler {
+    @Subscribe
+    public abstract void handleTerminalEvent(RemoteExecutionActionEvent.Terminal event);
+  }
+
+  @Test
+  public void testStolenByLocalDuringComputeAction() throws Exception {
+    SettableFuture<Unit> signal = SettableFuture.create();
+    SettableFuture<RemoteExecutionActionEvent.Terminal> terminalCompleter = SettableFuture.create();
+    this.clients =
+        new SimpleRemoteExecutionClients() {
+          @Override
+          public boolean containsDigest(Digest digest) {
+            try {
+              signal.get();
+              return false;
+            } catch (InterruptedException | ExecutionException e) {
+              throw new IllegalStateException();
+            }
+          }
+        };
+
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+    eventBus.register(
+        new TerminalEventHandler() {
+          @Override
+          public void handleTerminalEvent(RemoteExecutionActionEvent.Terminal event) {
+            terminalCompleter.set(event);
+          }
+        });
+
+    this.service = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+    this.strategy =
+        new RemoteExecutionStrategy(
+            eventBus,
+            new TestRemoteExecutionConfig(),
+            clients,
+            MetadataProviderFactory.emptyMetadataProvider(),
+            new TestRemoteExecutionHelper(),
+            new NoOpWorkerRequirementsProvider(),
+            service,
+            "" /* auxiliaryBuildTag */);
+
+    StrategyBuildResult result = beginCustomStrategyBuild();
+    result.cancelIfNotComplete(new CancellationException("Job is being stolen"));
+    signal.set(null);
+    RemoteExecutionActionEvent.Terminal terminalEvent = terminalCompleter.get();
+    assertEquals(RemoteExecutionActionEvent.State.ACTION_CANCELLED, terminalEvent.getState());
+    assertTrue(
+        RemoteExecutionActionEvent.State.COMPUTING_ACTION == terminalEvent.getLastNonTerminalState()
+            || RemoteExecutionActionEvent.State.WAITING == terminalEvent.getLastNonTerminalState());
   }
 
   @Test
@@ -316,6 +349,35 @@ public class RemoteExecutionStrategyTest {
       return ImmutableSet.of();
     }
   }
+
+  private class TestRemoteExecutionHelper implements RemoteExecutionHelper {
+    @Override
+    public boolean supportsRemoteExecution(ModernBuildRule<?> instance) {
+      return true;
+    }
+
+    @Override
+    public RemoteExecutionActionInfo prepareRemoteExecution(
+        ModernBuildRule<?> rule1,
+        BiPredicate<Digest, String> requiredDataPredicate,
+        WorkerRequirements workerRequirements) {
+      RemoteExecutionActionInfo actionInfo =
+          RemoteExecutionActionInfo.of(
+              protocol.computeDigest(new byte[] {1}),
+              ImmutableList.of(
+                  UploadDataSupplier.of(
+                      "data", missingDigest, () -> new ByteArrayInputStream(missingData))),
+              missingData.length,
+              ImmutableList.of());
+
+      return actionInfo;
+    }
+
+    @Override
+    public Path getCellPathPrefix() {
+      return tmp.getRoot();
+    }
+  };
 
   private class SimpleRemoteExecutionClients implements RemoteExecutionClients {
     public ExecutionHandle execute() {
