@@ -49,6 +49,7 @@ import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -139,6 +140,9 @@ public class PrebuiltCxxLibraryDescription
         .setHeaderDirs(args.getHeaderDirs())
         .setPlatformHeaderDirs(args.getPlatformHeaderDirs())
         .setVersionedHeaderDirs(args.getVersionedHeaderDirs())
+        .setImportLib(args.getImportLib())
+        .setPlatformImportLib(args.getPlatformImportLib())
+        .setVersionedImportLib(args.getVersionedImportLib())
         .setSharedLib(args.getSharedLib())
         .setPlatformSharedLib(args.getPlatformSharedLib())
         .setVersionedSharedLib(args.getVersionedSharedLib())
@@ -280,6 +284,20 @@ public class PrebuiltCxxLibraryDescription
             .build(),
         Optional.empty(),
         cellRoots);
+  }
+
+  private Optional<SourcePath> getImportLibrary(
+      BuildTarget target,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      ProjectFilesystem filesystem,
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
+      PrebuiltCxxLibraryDescriptionArg args) {
+    PrebuiltCxxLibraryPaths paths = getPaths(target, args);
+    Optional<SourcePath> importLibraryPath =
+        paths.getImportLibrary(filesystem, graphBuilder, cellRoots, cxxPlatform, selectedVersions);
+    return importLibraryPath;
   }
 
   /**
@@ -517,9 +535,19 @@ public class PrebuiltCxxLibraryDescription
                     ::convert));
       }
 
-      private String getSoname(CxxPlatform cxxPlatform) {
-        return PrebuiltCxxLibraryDescription.getSoname(
-            getBuildTarget(), cxxPlatform, args.getSoname());
+      private String getSoname(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+        Optional<String> soname = args.getSoname();
+        if (!soname.isPresent()
+            && cxxPlatform.getLd().getType() == LinkerProvider.Type.WINDOWS
+            && getImportLibrary(cxxPlatform, graphBuilder).isPresent()) {
+          // TODO(fishb): We should allow `shared_lib` to be absent (ex. link against import lib
+          //  of pre-deployed DLL)
+          SourcePath sharedLibraryPath = requireSharedLibrary(cxxPlatform, false, graphBuilder);
+          soname =
+              Optional.ofNullable(
+                  ((PathSourcePath) sharedLibraryPath).getRelativePath().getFileName().toString());
+        }
+        return PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname);
       }
 
       private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -528,6 +556,18 @@ public class PrebuiltCxxLibraryDescription
                 .get()
                 .matcher(cxxPlatform.getFlavor().toString())
                 .find();
+      }
+
+      private Optional<SourcePath> getImportLibrary(
+          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+        return PrebuiltCxxLibraryDescription.this.getImportLibrary(
+            buildTarget,
+            graphBuilder,
+            cellRoots,
+            projectFilesystem,
+            cxxPlatform,
+            selectedVersions,
+            args);
       }
 
       /**
@@ -751,16 +791,33 @@ public class PrebuiltCxxLibraryDescription
         if (!args.isHeaderOnly()) {
           if (type == Linker.LinkableDepType.SHARED) {
             Preconditions.checkState(linkable.getPreferredLinkage() != Linkage.STATIC);
-            SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, true, graphBuilder);
-            if (args.getLinkWithoutSoname()) {
-              if (!(sharedLibrary instanceof PathSourcePath)) {
+            Optional<SourcePath> importLibraryPath = getImportLibrary(cxxPlatform, graphBuilder);
+            if (importLibraryPath.isPresent()
+                && cxxPlatform.getLd().getType() == LinkerProvider.Type.WINDOWS) {
+              SourcePathArg importLibrary =
+                  SourcePathArg.of(
+                      importLibraryPath.orElseThrow(
+                          () ->
+                              new HumanReadableException(
+                                  "Could not find import library for %s.", getBuildTarget())));
+              if (args.isLinkWhole() || forceLinkWhole) {
                 throw new HumanReadableException(
-                    "%s: can only link prebuilt DSOs without sonames", getBuildTarget());
+                    "%s: whole linking is not supported for import libraries", getBuildTarget());
+              } else {
+                linkerArgsBuilder.add(FileListableLinkerInputArg.withSourcePathArg(importLibrary));
               }
-              linkerArgsBuilder.add(new RelativeLinkArg((PathSourcePath) sharedLibrary));
             } else {
-              linkerArgsBuilder.add(
-                  SourcePathArg.of(requireSharedLibrary(cxxPlatform, true, graphBuilder)));
+              SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, true, graphBuilder);
+              if (args.getLinkWithoutSoname()) {
+                if (!(sharedLibrary instanceof PathSourcePath)) {
+                  throw new HumanReadableException(
+                      "%s: can only link prebuilt DSOs without sonames", getBuildTarget());
+                }
+                linkerArgsBuilder.add(new RelativeLinkArg((PathSourcePath) sharedLibrary));
+              } else {
+                linkerArgsBuilder.add(
+                    SourcePathArg.of(requireSharedLibrary(cxxPlatform, true, graphBuilder)));
+              }
             }
           } else {
             Preconditions.checkState(linkable.getPreferredLinkage() != Linkage.SHARED);
@@ -797,6 +854,12 @@ public class PrebuiltCxxLibraryDescription
       public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
         if (args.isHeaderOnly()) {
           return Linkage.ANY;
+        }
+        if (cxxPlatform.getLd().getType() == LinkerProvider.Type.WINDOWS) {
+          Optional<SourcePath> importLibraryPath = getImportLibrary(cxxPlatform, graphBuilder);
+          if (importLibraryPath.isPresent()) {
+            return Linkage.SHARED;
+          }
         }
         if (args.isForceStatic()) {
           return Linkage.STATIC;
@@ -837,7 +900,7 @@ public class PrebuiltCxxLibraryDescription
 
         ImmutableMap.Builder<String, SourcePath> solibs = ImmutableMap.builder();
         if (!args.isHeaderOnly() && !args.isProvided()) {
-          String resolvedSoname = getSoname(cxxPlatform);
+          String resolvedSoname = getSoname(cxxPlatform, graphBuilder);
           SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, false, graphBuilder);
           solibs.put(resolvedSoname, sharedLibrary);
         }
@@ -884,7 +947,7 @@ public class PrebuiltCxxLibraryDescription
               Optional.of(
                   new NativeLinkTargetInfo(
                       getBuildTarget(),
-                      NativeLinkTargetMode.library(getSoname(cxxPlatform)),
+                      NativeLinkTargetMode.library(getSoname(cxxPlatform, graphBuilder)),
                       Iterables.concat(deps, exportedDeps),
                       linkableInput,
                       Optional.empty()));
@@ -952,6 +1015,13 @@ public class PrebuiltCxxLibraryDescription
     Optional<PatternMatchedCollection<ImmutableList<SourcePath>>> getPlatformHeaderDirs();
 
     Optional<VersionMatchedCollection<ImmutableList<SourcePath>>> getVersionedHeaderDirs();
+
+    Optional<SourcePath> getImportLib();
+
+    @Hint(isTargetGraphOnlyDep = true)
+    Optional<PatternMatchedCollection<SourcePath>> getPlatformImportLib();
+
+    Optional<VersionMatchedCollection<SourcePath>> getVersionedImportLib();
 
     Optional<SourcePath> getSharedLib();
 

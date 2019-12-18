@@ -1,0 +1,12 @@
+cxx_binary(
+    name = "app",
+    srcs = ["MathClient.cpp"],
+    link_style = "shared",
+    deps = ["implib_prebuilt_cell1//:implib_prebuilt"],
+)
+
+genrule(
+    name = "log",
+    out = "log.txt",
+    cmd_exe = "\"$(exe :app#windows-x86_64)\" > %OUT%",
+)

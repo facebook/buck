@@ -45,6 +45,12 @@ abstract class AbstractNewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryP
 
   abstract Optional<VersionMatchedCollection<ImmutableList<SourcePath>>> getVersionedHeaderDirs();
 
+  abstract Optional<SourcePath> getImportLib();
+
+  abstract Optional<PatternMatchedCollection<SourcePath>> getPlatformImportLib();
+
+  abstract Optional<VersionMatchedCollection<SourcePath>> getVersionedImportLib();
+
   abstract Optional<SourcePath> getSharedLib();
 
   abstract Optional<PatternMatchedCollection<SourcePath>> getPlatformSharedLib();
@@ -107,6 +113,23 @@ abstract class AbstractNewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryP
     Optional<SourcePath> path =
         getParameter(parameter, lib, cxxPlatform, platformLib, selectedVersions, versionedLib);
     return path.map(p -> CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, p));
+  }
+
+  @Override
+  public Optional<SourcePath> getImportLibrary(
+      ProjectFilesystem filesystem,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
+    return getLibrary(
+        graphBuilder,
+        cxxPlatform,
+        selectedVersions,
+        "import_lib",
+        getImportLib(),
+        getPlatformImportLib(),
+        getVersionedImportLib());
   }
 
   @Override

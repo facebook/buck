@@ -68,6 +68,21 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
+  public PrebuiltCxxLibraryBuilder setImportLib(SourcePath lib) {
+    getArgForPopulating().setImportLib(lib);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setPlatformImportLib(PatternMatchedCollection<SourcePath> lib) {
+    getArgForPopulating().setPlatformImportLib(lib);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setVersionedImportLib(VersionMatchedCollection<SourcePath> lib) {
+    getArgForPopulating().setVersionedImportLib(lib);
+    return this;
+  }
+
   public PrebuiltCxxLibraryBuilder setSharedLib(SourcePath lib) {
     getArgForPopulating().setSharedLib(lib);
     return this;

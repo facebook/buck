@@ -32,6 +32,13 @@ import java.util.Optional;
 /** Class abstracting extracting paths to prebuilt C/C++ library components via the user API. */
 interface PrebuiltCxxLibraryPaths {
 
+  Optional<SourcePath> getImportLibrary(
+      ProjectFilesystem filesystem,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions);
+
   Optional<SourcePath> getSharedLibrary(
       ProjectFilesystem filesystem,
       ActionGraphBuilder graphBuilder,

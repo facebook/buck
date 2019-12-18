@@ -257,6 +257,38 @@ public class WindowsClangCxxIntegrationTest {
   }
 
   @Test
+  public void simpleBinaryWithPrebuiltDll() throws IOException {
+    ProcessResult appResult =
+        workspace.runBuckCommand("build", "//implib_prebuilt:app#windows-x86_64");
+    appResult.assertSuccess();
+
+    ProcessResult runResult =
+        workspace.runBuckCommand("run", "//implib_prebuilt:app#windows-x86_64");
+    runResult.assertSuccess();
+
+    ProcessResult logResult = workspace.runBuckCommand("build", "//implib_prebuilt:log");
+    logResult.assertSuccess();
+    Path outputPath = workspace.resolve("buck-out/gen/implib_prebuilt/log/log.txt");
+    assertThat(workspace.getFileContents(outputPath), Matchers.containsString("a + (a * b)"));
+  }
+
+  @Test
+  public void simpleCrossCellBinaryWithPrebuiltDll() throws IOException {
+    ProcessResult appResult =
+        workspace.runBuckCommand("build", "implib_prebuilt_cell2//:app#windows-x86_64");
+    appResult.assertSuccess();
+
+    ProcessResult runResult =
+        workspace.runBuckCommand("run", "implib_prebuilt_cell2//:app#windows-x86_64");
+    runResult.assertSuccess();
+
+    ProcessResult logResult = workspace.runBuckCommand("build", "implib_prebuilt_cell2//:log");
+    logResult.assertSuccess();
+    Path outputPath = workspace.resolve("implib_prebuilt/cell2/buck-out/gen/log/log.txt");
+    assertThat(workspace.getFileContents(outputPath), Matchers.containsString("a + (a * b)"));
+  }
+
+  @Test
   public void pdbFilesAreCached() throws IOException {
     workspace.enableDirCache();
     workspace.runBuckCommand("build", "//implib_usage:app_debug#windows-x86_64").assertSuccess();

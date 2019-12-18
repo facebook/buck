@@ -41,6 +41,5 @@
   asmpp_type=windows
 
 [repositories]
-  x = xplat
-  implib_prebuilt_cell1 = implib_prebuilt\cell1
-  implib_prebuilt_cell2 = implib_prebuilt\cell2
+  implib_prebuilt_cell1 = .
+  implib_prebuilt_cell2 = ../cell2

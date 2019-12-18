@@ -411,6 +411,9 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
     /** Libraries references in the shared link args above. */
     ImmutableMap<String, SourcePath> getSharedLibs();
 
+    /** Import libraries references in the shared link args above. */
+    ImmutableMap<String, SourcePath> getImportLibs();
+
     ImmutableMap<String, SourcePath> getProvidedSharedLibs();
 
     @Value.NaturalOrder
