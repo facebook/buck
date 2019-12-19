@@ -41,6 +41,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteLock;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -434,6 +435,11 @@ public class DaemonicParserState {
 
   public PipelineNodeCache.Cache<Path, BuildFileManifest> getRawNodeCache() {
     return rawNodeCache;
+  }
+
+  @VisibleForTesting
+  PipelineNodeCache.Cache<BuildTarget, TargetNode<?>> getTargetNodeCache() {
+    return targetNodeCache;
   }
 
   @Nullable

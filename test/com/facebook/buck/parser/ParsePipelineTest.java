@@ -46,7 +46,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.BuildFileManifestFactory;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -217,78 +216,6 @@ public class ParsePipelineTest {
   }
 
   @Test
-  public void exceptionOnMalformedRawNode() throws Exception {
-    try (Fixture fixture = createMultiThreadedFixture("pipeline_test")) {
-      Cell cell = fixture.getCell();
-      Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
-      fixture
-          .getRawNodeParsePipelineCache()
-          .putComputedNodeIfNotPresent(
-              cell,
-              rootBuildFilePath,
-              BuildFileManifestFactory.create(
-                  ImmutableMap.of("bar", ImmutableMap.of("name", "bar"))),
-              false,
-              eventBus);
-      expectedException.expectMessage("malformed raw data");
-      fixture
-          .getTargetNodeParsePipeline()
-          .getAllRequestedTargetNodes(cell, rootBuildFilePath, Optional.empty());
-    }
-  }
-
-  @Test
-  public void exceptionOnSwappedRawNodesInGetAllTargetNodes() throws Exception {
-    try (Fixture fixture = createSynchronousExecutionFixture("pipeline_test")) {
-      Cell cell = fixture.getCell();
-      Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
-      Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
-      fixture
-          .getTargetNodeParsePipeline()
-          .getAllRequestedTargetNodes(cell, rootBuildFilePath, Optional.empty());
-      Optional<BuildFileManifest> rootRawNodes =
-          fixture
-              .getRawNodeParsePipelineCache()
-              .lookupComputedNode(cell, rootBuildFilePath, eventBus);
-      fixture
-          .getRawNodeParsePipelineCache()
-          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), false, eventBus);
-      expectedException.expectMessage(
-          "Raw data claims to come from [], but we tried rooting it at [a].");
-      fixture
-          .getTargetNodeParsePipeline()
-          .getAllRequestedTargetNodes(cell, aBuildFilePath, Optional.empty());
-    }
-  }
-
-  @Test
-  public void exceptionOnSwappedRawNodesInGetTargetNode() throws Exception {
-    // The difference between this test and exceptionOnSwappedRawNodesInGetAllTargetNodes is that
-    // the two methods follow different code paths to determine what the BuildTarget for the result
-    // should be and we want to test both of them.
-    try (Fixture fixture = createSynchronousExecutionFixture("pipeline_test")) {
-      Cell cell = fixture.getCell();
-      Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
-      Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
-      fixture
-          .getTargetNodeParsePipeline()
-          .getAllRequestedTargetNodes(cell, rootBuildFilePath, Optional.empty());
-      Optional<BuildFileManifest> rootRawNodes =
-          fixture
-              .getRawNodeParsePipelineCache()
-              .lookupComputedNode(cell, rootBuildFilePath, eventBus);
-      fixture
-          .getRawNodeParsePipelineCache()
-          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), false, eventBus);
-      expectedException.expectMessage(
-          "Raw data claims to come from [], but we tried rooting it at [a].");
-      fixture
-          .getTargetNodeParsePipeline()
-          .getNode(cell, BuildTargetFactory.newInstance("//a:lib"), DependencyStack.root());
-    }
-  }
-
-  @Test
   public void recoversAfterSyntaxError() throws Exception {
     try (Fixture fixture = createSynchronousExecutionFixture("syntax_error")) {
       Cell cell = fixture.getCell();
@@ -344,6 +271,8 @@ public class ParsePipelineTest {
 
   private class Fixture implements AutoCloseable {
 
+    private final int NUM_THREADS = 4;
+
     private final ProjectWorkspace workspace;
     private final BuckEventBus eventBus;
     private final TestConsole console;
@@ -351,8 +280,7 @@ public class ParsePipelineTest {
     private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
     private final ProjectBuildFileParserPool projectBuildFileParserPool;
     private final Cell cell;
-    private final TypedParsePipelineCache<BuildTarget, TargetNode<?>> targetNodeParsePipelineCache;
-    private final TypedParsePipelineCache<Path, BuildFileManifest> rawNodeParsePipelineCache;
+    private final DaemonicParserState daemonicParserState;
     private final ListeningExecutorService executorService;
     private final Set<CloseRecordingProjectBuildFileParserDecorator> projectBuildFileParsers;
 
@@ -373,15 +301,16 @@ public class ParsePipelineTest {
       this.workspace.setUp();
 
       this.cell = this.workspace.asCell();
-      this.targetNodeParsePipelineCache = new TypedParsePipelineCache<>();
-      this.rawNodeParsePipelineCache = new TypedParsePipelineCache<>();
+
       TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
       ConstructorArgMarshaller constructorArgMarshaller =
           new DefaultConstructorArgMarshaller(coercerFactory);
 
+      this.daemonicParserState = new DaemonicParserState(NUM_THREADS);
+
       projectBuildFileParserPool =
           new ProjectBuildFileParserPool(
-              4, // max parsers
+              NUM_THREADS,
               (buckEventBus, input, watchman, threadSafe) -> {
                 CloseRecordingProjectBuildFileParserDecorator buildFileParser =
                     new CloseRecordingProjectBuildFileParserDecorator(
@@ -415,7 +344,7 @@ public class ParsePipelineTest {
                   });
       buildFileRawNodeParsePipeline =
           new BuildFileRawNodeParsePipeline(
-              new PipelineNodeCache<>(rawNodeParsePipelineCache, n -> false),
+              new PipelineNodeCache<>(daemonicParserState.getRawNodeCache(), n -> false),
               projectBuildFileParserPool,
               executorService,
               eventBus,
@@ -453,7 +382,7 @@ public class ParsePipelineTest {
               UnconfiguredTargetConfiguration.INSTANCE);
       this.targetNodeParsePipeline =
           new UnconfiguredTargetNodeToTargetNodeParsePipeline(
-              this.targetNodeParsePipelineCache,
+              this.daemonicParserState.getTargetNodeCache(),
               this.executorService,
               unconfiguredTargetNodePipeline,
               TargetConfigurationDetectorFactory.empty(),
@@ -478,12 +407,12 @@ public class ParsePipelineTest {
       return cell;
     }
 
-    public TypedParsePipelineCache<BuildTarget, TargetNode<?>> getTargetNodeParsePipelineCache() {
-      return targetNodeParsePipelineCache;
+    public PipelineNodeCache.Cache<BuildTarget, TargetNode<?>> getTargetNodeParsePipelineCache() {
+      return daemonicParserState.getTargetNodeCache();
     }
 
-    public TypedParsePipelineCache<Path, BuildFileManifest> getRawNodeParsePipelineCache() {
-      return rawNodeParsePipelineCache;
+    public PipelineNodeCache.Cache<Path, BuildFileManifest> getRawNodeParsePipelineCache() {
+      return daemonicParserState.getRawNodeCache();
     }
 
     private void waitForParsersToClose() throws InterruptedException {
