@@ -48,8 +48,10 @@ public class UnconfiguredTargetConfiguration extends TargetConfiguration {
     return Optional.empty();
   }
 
+  private static final String TO_STRING = UnconfiguredTargetConfiguration.class.getSimpleName();
+
   @Override
   public String toString() {
-    return UnconfiguredTargetConfiguration.class.getSimpleName();
+    return TO_STRING;
   }
 }
