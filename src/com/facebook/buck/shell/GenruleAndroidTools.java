@@ -21,6 +21,7 @@ import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
@@ -29,10 +30,22 @@ import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-/** Immutable class for holding Android paths and tools, for use in {@link GenruleBuildable}. */
+/**
+ * Immutable class for holding Android paths and tools, for use in {@link GenruleBuildable}.
+ *
+ * <p>Note that, despite implementing AddsToRuleKey, GenruleAndroidTools does not actually
+ * contribute to rule keys. The reason for this is that all of the Path objects contained in this
+ * object are paths outside of the repository. GenruleAndroidTools is never serialized due to other
+ * logic in {@link GenruleBuildable} that prevents it from happening; it is a logic error to
+ * serialize this class across a {@link com.facebook.buck.rules.modern.ModernBuildRule} boundary.
+ *
+ * <p>This class still must implement AddsToRuleKey because ModernBuildRule requires that all fields
+ * in a {@link com.facebook.buck.rules.modern.Buildable} must implement AddsToRuleKey so that a
+ * serializer can be derived.
+ */
 @Value.Immutable(prehash = false, builder = false, copy = false)
 @BuckStyleValue
-abstract class GenruleAndroidTools {
+abstract class GenruleAndroidTools implements AddsToRuleKey {
   public abstract Path getAndroidSdkLocation();
 
   public abstract Path getAndroidPathToDx();

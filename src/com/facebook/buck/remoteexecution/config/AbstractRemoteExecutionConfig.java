@@ -163,6 +163,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final String USE_REMOTE_EXECUTION_IF_BUCK_DISTCC_SET_PROPERTY =
       "use_remote_execution_if_buck_distcc_set";
 
+  public static final String USE_REMOTE_EXECUTION_FOR_GENRULE_IF_REQUESTED =
+      "use_remote_execution_for_genrule_if_requested";
+
   // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
   private static final Pattern GLOB_CHARS = Pattern.compile("[*?{\\[]");
 
@@ -184,6 +187,15 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   private boolean shouldUseRemoteExecutionIfBuckDistccSet() {
     return getDelegate()
         .getBooleanValue(SECTION, USE_REMOTE_EXECUTION_IF_BUCK_DISTCC_SET_PROPERTY, false);
+  }
+
+  /**
+   * Returns whether or not we should honor the `remote` argument to `genrule`, which requests that
+   * the genrule run remotely.
+   */
+  public boolean shouldUseRemoteExecutionForGenruleIfRequested() {
+    return getDelegate()
+        .getBooleanValue(SECTION, USE_REMOTE_EXECUTION_FOR_GENRULE_IF_REQUESTED, false);
   }
 
   public boolean isRemoteExecutionAutoEnabled(String username, List<String> commandArguments) {

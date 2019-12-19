@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -63,6 +64,12 @@ public class GenruleBuilder
         filesystem);
   }
 
+  private GenruleBuilder(BuildTarget target, BuckConfig config) {
+    super(
+        new GenruleDescription(createToolchainProvider(), config, new NoSandboxExecutionStrategy()),
+        target);
+  }
+
   private static ToolchainProvider createToolchainProvider() {
     return new ToolchainProviderBuilder().build();
   }
@@ -78,6 +85,10 @@ public class GenruleBuilder
 
   public static GenruleBuilder newGenruleBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     return new GenruleBuilder(target, filesystem);
+  }
+
+  public static GenruleBuilder newGenruleBuilder(BuildTarget target, BuckConfig config) {
+    return new GenruleBuilder(target, config);
   }
 
   public GenruleBuilder setOut(String out) {
@@ -128,6 +139,11 @@ public class GenruleBuilder
 
   public GenruleBuilder setCacheable(@Nullable Boolean isCacheable) {
     getArgForPopulating().setCacheable(Optional.ofNullable(isCacheable));
+    return this;
+  }
+
+  public GenruleBuilder setRemote(@Nullable Boolean remote) {
+    getArgForPopulating().setRemote(Optional.ofNullable(remote));
     return this;
   }
 

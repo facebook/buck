@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
@@ -676,5 +677,39 @@ public class GenruleBuildableTest {
                     BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s")
                         .resolve("output.txt"))
                 .toString()));
+  }
+
+  @Test
+  public void remoteTrueIsRespected() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(fakeProjectFileSystem)
+            .setBash("echo something")
+            .setOut(Optional.of("output.txt"))
+            .setRemote(true)
+            .build()
+            .toBuildable();
+
+    assertTrue(buildable.shouldExecuteRemotely());
+  }
+
+  @Test
+  public void remoteFalseIsRespected() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(fakeProjectFileSystem)
+            .setBash("echo something")
+            .setOut(Optional.of("output.txt"))
+            .setRemote(false)
+            .build()
+            .toBuildable();
+
+    assertFalse(buildable.shouldExecuteRemotely());
   }
 }

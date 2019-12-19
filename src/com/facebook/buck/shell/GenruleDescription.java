@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
@@ -62,7 +63,11 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
-
+    boolean executeRemotely = args.getRemote().orElse(false);
+    if (executeRemotely) {
+      RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
+      executeRemotely = reConfig.shouldUseRemoteExecutionForGenruleIfRequested();
+    }
     if (!args.getExecutable().orElse(false)) {
       SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
       return new Genrule(
@@ -81,7 +86,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
               && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
-          getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()));
+          getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
+          executeRemotely);
     } else {
       return new GenruleBinary(
           buildTarget,
@@ -97,7 +103,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getOuts(),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
-          getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()));
+          getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
+          executeRemotely);
     }
   }
 

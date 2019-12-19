@@ -118,7 +118,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         args.getEnableSandbox().orElse(enableSandbox),
         args.getCacheable().orElse(true),
         args.getEnvironmentExpansionSeparator(),
-        getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()));
+        getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
+        false);
   }
 
   /**
@@ -247,6 +248,12 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     Optional<Boolean> getEnableSandbox();
 
     Optional<String> getEnvironmentExpansionSeparator();
+
+    /**
+     * If present and true, requests that Buck run this genrule remotely if possible. Defaults to
+     * false for now.
+     */
+    Optional<Boolean> getRemote();
 
     /**
      * This functionality only exists to get around the lack of extensibility in our current build

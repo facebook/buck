@@ -92,6 +92,11 @@ abstract class AbstractGenruleBuildableBuilder {
 
   public abstract Optional<GenruleAndroidTools> getAndroidTools();
 
+  @Value.Default
+  public boolean getRemote() {
+    return false;
+  }
+
   public GenruleBuildable toBuildable() {
     return new GenruleBuildable(
         getBuildTarget(),
@@ -108,6 +113,7 @@ abstract class AbstractGenruleBuildableBuilder {
         isCacheable(),
         getEnvironmentExpansionSeparator(),
         getSandboxProperties(),
-        getAndroidTools());
+        getAndroidTools(),
+        getRemote());
   }
 }

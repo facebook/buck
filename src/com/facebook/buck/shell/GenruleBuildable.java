@@ -152,7 +152,7 @@ public class GenruleBuildable implements Buildable {
   /** Whether or not this genrule can be executed remotely. Fails serialization if false. */
   @AddToRuleKey
   @CustomFieldBehavior(RemoteExecutionEnabled.class)
-  private final boolean executeRemotely = false;
+  private final boolean executeRemotely;
 
   /** Type for this genrule, if one was provided. */
   @AddToRuleKey protected final Optional<String> type;
@@ -210,7 +210,8 @@ public class GenruleBuildable implements Buildable {
       boolean isCacheable,
       String environmentExpansionSeparator,
       Optional<SandboxProperties> sandboxProperties,
-      Optional<GenruleAndroidTools> androidTools) {
+      Optional<GenruleAndroidTools> androidTools,
+      boolean executeRemotely) {
     this.buildTarget = buildTarget;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.srcs = srcs;
@@ -225,6 +226,7 @@ public class GenruleBuildable implements Buildable {
     this.sandboxProperties = sandboxProperties;
     this.isWorkerGenrule = isWorkerGenrule();
     this.androidTools = androidTools;
+    this.executeRemotely = executeRemotely;
 
     Preconditions.checkArgument(
         out.isPresent() ^ outs.isPresent(), "Genrule unexpectedly has both 'out' and 'outs'.");
@@ -555,6 +557,11 @@ public class GenruleBuildable implements Buildable {
             environmentVariablesBuilder);
       }
     };
+  }
+
+  @VisibleForTesting
+  final boolean shouldExecuteRemotely() {
+    return executeRemotely;
   }
 
   /**

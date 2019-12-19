@@ -18,8 +18,11 @@ package com.facebook.buck.shell;
 
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
@@ -40,6 +43,7 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
@@ -154,5 +158,88 @@ public class GenruleDescriptionTest {
     BuildRule genrule = graphBuilder.requireRule(genruleNode.getBuildTarget());
 
     assertThat(genrule.getBuildDeps(), Matchers.containsInAnyOrder(dep, transitiveDep));
+  }
+
+  /** Tests that omitting remote results in a genrule that does not execute remotely. */
+  @Test
+  public void testGenrulesDefaultToNotRemoteExecutable() {
+    TargetNode<?> genruleNode =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setOut("out")
+            .setBash("echo something > out")
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(genruleNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+
+    Genrule genrule = (Genrule) graphBuilder.requireRule(genruleNode.getBuildTarget());
+    assertFalse(genrule.getBuildable().shouldExecuteRemotely());
+  }
+
+  /** Tests that passing "false" to remote results in a genrule that does not execute remotely. */
+  @Test
+  public void testGenruleRemoteExecutableFalse() {
+    TargetNode<?> genruleNode =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setOut("out")
+            .setBash("echo something > out")
+            .setRemote(false)
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(genruleNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+
+    Genrule genrule = (Genrule) graphBuilder.requireRule(genruleNode.getBuildTarget());
+    assertFalse(genrule.getBuildable().shouldExecuteRemotely());
+  }
+
+  /**
+   * Tests that passing "true" to remote has no effect if there is no corresponding config key
+   * present that enables RE for genrules.
+   */
+  @Test
+  public void testGenrulesAreNotExecutableWithoutConfig() {
+    TargetNode<?> genruleNode =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setOut("out")
+            .setBash("echo something > out")
+            .setRemote(true)
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(genruleNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+
+    Genrule genrule = (Genrule) graphBuilder.requireRule(genruleNode.getBuildTarget());
+    assertFalse(genrule.getBuildable().shouldExecuteRemotely());
+  }
+
+  /**
+   * Tests that passing "true" to remote results in a genrule that executes remotely if the correct
+   * configuration key is present in buckconfig.
+   */
+  @Test
+  public void testGenrulesAreExecutableWithConfig() {
+    ImmutableMap<String, ImmutableMap<String, String>> config =
+        ImmutableMap.<String, ImmutableMap<String, String>>builder()
+            .put(
+                "remoteexecution",
+                ImmutableMap.<String, String>builder()
+                    .put(
+                        RemoteExecutionConfig.USE_REMOTE_EXECUTION_FOR_GENRULE_IF_REQUESTED, "true")
+                    .build())
+            .build();
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(config).build();
+    TargetNode<?> genruleNode =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"), buckConfig)
+            .setOut("out")
+            .setBash("echo something > out")
+            .setRemote(true)
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(genruleNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+
+    Genrule genrule = (Genrule) graphBuilder.requireRule(genruleNode.getBuildTarget());
+    assertTrue(genrule.getBuildable().shouldExecuteRemotely());
   }
 }

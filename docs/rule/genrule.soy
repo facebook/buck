@@ -71,6 +71,18 @@
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'remote' /}
+  {param default : 'False' /}
+  {param desc}
+  Opts this genrule in to remote execution. Note that it is only safe to
+  execute a genrule remotely if it is completely hermetic and completely
+  and correctly describes its dependencies. Defaults to false. This parameter
+  is unstable. It is subject to removal, default reversal, and other arbitrary
+  changes in the future.
+  {/param}
+{/call}
+
 {call buck.tests_arg /}
 
 {/param} // args

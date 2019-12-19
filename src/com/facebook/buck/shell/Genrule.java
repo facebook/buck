@@ -121,7 +121,8 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
-      Optional<AndroidTools> androidTools) {
+      Optional<AndroidTools> androidTools,
+      boolean executeRemotely) {
     super(
         buildTarget,
         projectFilesystem,
@@ -146,7 +147,8 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
                         buildRuleResolver, buildTarget, projectFilesystem, srcs, cmd, bash, cmdExe))
                 : Optional.empty(),
             androidTools.map(
-                tools -> GenruleAndroidTools.of(tools, buildTarget, buildRuleResolver))));
+                tools -> GenruleAndroidTools.of(tools, buildTarget, buildRuleResolver)),
+            executeRemotely));
   }
 
   @Override

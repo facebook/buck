@@ -47,7 +47,8 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
       Optional<ImmutableMap<String, ImmutableList<String>>> outs,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
-      Optional<AndroidTools> androidTools) {
+      Optional<AndroidTools> androidTools,
+      boolean executeRemotely) {
     super(
         buildTarget,
         projectFilesystem,
@@ -63,7 +64,8 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
         false,
         isCacheable,
         environmentExpansionSeparator,
-        androidTools);
+        androidTools,
+        executeRemotely);
   }
 
   @Override
