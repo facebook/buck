@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -98,6 +99,11 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
     }
 
     for (Field field : current.getDeclaredFields()) {
+      Preconditions.checkArgument(
+          Modifier.isFinal(field.getModifiers()),
+          "All fields of Action must be final but %s.%s is not.",
+          current.getSimpleName(),
+          field.getName());
       try {
         AbstractAction.class.getDeclaredField(field.getName());
       } catch (NoSuchFieldException e) {
