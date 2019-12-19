@@ -19,7 +19,9 @@ package com.facebook.buck.parser;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.stringContainsInOrder;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -45,7 +47,6 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.manifestservice.ManifestService;
-import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -138,11 +139,7 @@ public class ParsePipelineTest {
             .getTargetNodeParsePipeline()
             .getNode(cell, BuildTargetFactory.newInstance("//:lib"), DependencyStack.root());
 
-    waitForAll(
-        libTargetNode.getBuildDeps(),
-        dep ->
-            fixture.getTargetNodeParsePipelineCache().lookupComputedNode(cell, dep, eventBus)
-                != null);
+    waitForAll(libTargetNode.getBuildDeps(), dep -> fixture.targetExistsInCache(dep));
     fixture.close();
   }
 
@@ -157,11 +154,7 @@ public class ParsePipelineTest {
                 cell, fixture.getCell().getFilesystem().resolve("BUCK"), Optional.empty());
     FluentIterable<BuildTarget> allDeps =
         FluentIterable.from(libTargetNodes).transformAndConcat(input -> input.getBuildDeps());
-    waitForAll(
-        allDeps,
-        dep ->
-            fixture.getTargetNodeParsePipelineCache().lookupComputedNode(cell, dep, eventBus)
-                != null);
+    waitForAll(allDeps, dep -> fixture.targetExistsInCache(dep));
     fixture.close();
   }
 
@@ -234,6 +227,138 @@ public class ParsePipelineTest {
           .getNode(
               cell, BuildTargetFactory.newInstance("//correct:correct"), DependencyStack.root());
     }
+  }
+
+  @Test
+  public void invalidedBuildFileInvalidatesRelevantNodesAndManifest() throws Exception {
+    Fixture fixture = createMultiThreadedFixture("pipeline_test");
+    Cell cell = fixture.getCell();
+
+    Path rootBuildFile = cell.getFilesystem().resolve("BUCK");
+
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
+
+    TargetNode<?> libTargetNode =
+        fixture.getTargetNodeParsePipeline().getNode(cell, libTarget, DependencyStack.root());
+
+    Set<BuildTarget> deps = libTargetNode.getBuildDeps();
+    for (BuildTarget buildTarget : deps) {
+      fixture.getTargetNodeParsePipeline().getNode(cell, buildTarget, DependencyStack.root());
+    }
+
+    // Validate expected state
+    assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
+    assertTrue(fixture.targetExistsInCache(libTarget));
+
+    Path aBuildFile = cell.getFilesystem().resolve("a/BUCK");
+    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
+    BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
+    assertTrue(fixture.targetExistsInCache(aTarget));
+
+    Path bBuildFile = cell.getFilesystem().resolve("b/BUCK");
+    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
+    BuildTarget bTarget = BuildTargetFactory.newInstance("//b:b");
+    assertTrue(fixture.targetExistsInCache(bTarget));
+
+    // Invalidation of build file should only remove the nodes in that build file
+    fixture.invalidatePath(rootBuildFile);
+
+    assertFalse(fixture.buildFileExistsInCache(rootBuildFile));
+    assertFalse(fixture.targetExistsInCache(libTarget));
+
+    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
+    assertTrue(fixture.targetExistsInCache(aTarget));
+
+    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
+    assertTrue(fixture.targetExistsInCache(bTarget));
+  }
+
+  @Test
+  public void invalidatedIncludeFileInvalidatesRelevantNodesAndManifest() throws Exception {
+    Fixture fixture = createMultiThreadedFixture("pipeline_test");
+    Cell cell = fixture.getCell();
+
+    Path rootBuildFile = cell.getFilesystem().resolve("BUCK");
+
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
+
+    TargetNode<?> libTargetNode =
+        fixture.getTargetNodeParsePipeline().getNode(cell, libTarget, DependencyStack.root());
+
+    Set<BuildTarget> deps = libTargetNode.getBuildDeps();
+    for (BuildTarget buildTarget : deps) {
+      fixture.getTargetNodeParsePipeline().getNode(cell, buildTarget, DependencyStack.root());
+    }
+
+    // Validate expected state
+    assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
+    assertTrue(fixture.targetExistsInCache(libTarget));
+
+    Path aBuildFile = cell.getFilesystem().resolve("a/BUCK");
+    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
+    BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
+    assertTrue(fixture.targetExistsInCache(aTarget));
+
+    Path bBuildFile = cell.getFilesystem().resolve("b/BUCK");
+    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
+    BuildTarget bTarget = BuildTargetFactory.newInstance("//b:b");
+    assertTrue(fixture.targetExistsInCache(bTarget));
+
+    // Invalidation of an include file only invalidates build files that depend on it
+    fixture.invalidatePath(cell.getFilesystem().resolve("a/test.bzl"));
+
+    assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
+    assertTrue(fixture.targetExistsInCache(libTarget));
+
+    assertFalse(fixture.buildFileExistsInCache(aBuildFile));
+    assertFalse(fixture.targetExistsInCache(aTarget));
+
+    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
+    assertTrue(fixture.targetExistsInCache(bTarget));
+  }
+
+  @Test
+  public void invalidatedSourceFileDoesNotInvalidateNodesOrManifest() throws Exception {
+    Fixture fixture = createMultiThreadedFixture("pipeline_test");
+    Cell cell = fixture.getCell();
+
+    Path rootBuildFile = cell.getFilesystem().resolve("BUCK");
+
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
+
+    TargetNode<?> libTargetNode =
+        fixture.getTargetNodeParsePipeline().getNode(cell, libTarget, DependencyStack.root());
+
+    Set<BuildTarget> deps = libTargetNode.getBuildDeps();
+    for (BuildTarget buildTarget : deps) {
+      fixture.getTargetNodeParsePipeline().getNode(cell, buildTarget, DependencyStack.root());
+    }
+
+    // Validate expected state
+    assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
+    assertTrue(fixture.targetExistsInCache(libTarget));
+
+    Path aBuildFile = cell.getFilesystem().resolve("a/BUCK");
+    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
+    BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
+    assertTrue(fixture.targetExistsInCache(aTarget));
+
+    Path bBuildFile = cell.getFilesystem().resolve("b/BUCK");
+    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
+    BuildTarget bTarget = BuildTargetFactory.newInstance("//b:b");
+    assertTrue(fixture.targetExistsInCache(bTarget));
+
+    // Invalidation of a source file does not invalidate any nodes/manifests
+    fixture.invalidatePath(cell.getFilesystem().resolve("b/B.java"));
+
+    assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
+    assertTrue(fixture.targetExistsInCache(libTarget));
+
+    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
+    assertTrue(fixture.targetExistsInCache(aTarget));
+
+    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
+    assertTrue(fixture.targetExistsInCache(bTarget));
   }
 
   private static class TypedParsePipelineCache<K, V> implements PipelineNodeCache.Cache<K, V> {
@@ -407,12 +532,22 @@ public class ParsePipelineTest {
       return cell;
     }
 
-    public PipelineNodeCache.Cache<BuildTarget, TargetNode<?>> getTargetNodeParsePipelineCache() {
-      return daemonicParserState.getTargetNodeCache();
+    public boolean targetExistsInCache(BuildTarget target) {
+      return daemonicParserState
+          .getTargetNodeCache()
+          .lookupComputedNode(cell, target, eventBus)
+          .isPresent();
     }
 
-    public PipelineNodeCache.Cache<Path, BuildFileManifest> getRawNodeParsePipelineCache() {
-      return daemonicParserState.getRawNodeCache();
+    public boolean buildFileExistsInCache(Path path) {
+      return daemonicParserState
+          .getRawNodeCache()
+          .lookupComputedNode(cell, path, eventBus)
+          .isPresent();
+    }
+
+    public void invalidatePath(Path path) {
+      daemonicParserState.invalidatePath(path);
     }
 
     private void waitForParsersToClose() throws InterruptedException {

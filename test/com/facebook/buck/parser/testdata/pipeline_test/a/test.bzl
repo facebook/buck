@@ -1,0 +1,3 @@
+""" Ignored docstring """
+
+TEST = "foo"
