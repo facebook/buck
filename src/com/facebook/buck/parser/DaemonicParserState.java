@@ -215,6 +215,12 @@ public class DaemonicParserState {
 
       addAllIncludes(dependentsOfEveryNode, manifest.getIncludes(), cell);
 
+      if (cell.getBuckConfig().getView(ParserConfig.class).getEnablePackageFiles()) {
+        // Add the PACKAGE file in the build file's directory as a dependent, regardless of whether
+        // it current exists. If a PACKAGE file is added, we need to invalidate all relevant nodes.
+        dependentsOfEveryNode.add(PackagePipeline.packageFileFromBuildFile(cell, buildFile));
+      }
+
       return getOrCreateCellState(cell)
           .putBuildFileManifestIfNotPresent(
               buildFile,
@@ -341,8 +347,6 @@ public class DaemonicParserState {
 
   private final DaemonicRawCacheView rawNodeCache;
 
-  // TODO: Integrate package pipeline using cache
-  @SuppressWarnings("unused")
   private final DaemonicPackageCache packageFileCache;
 
   private final int parsingThreads;
@@ -435,6 +439,10 @@ public class DaemonicParserState {
 
   public PipelineNodeCache.Cache<Path, BuildFileManifest> getRawNodeCache() {
     return rawNodeCache;
+  }
+
+  public PipelineNodeCache.Cache<Path, PackageFileManifest> getPackageFileCache() {
+    return packageFileCache;
   }
 
   @VisibleForTesting

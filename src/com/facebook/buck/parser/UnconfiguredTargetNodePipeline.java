@@ -30,9 +30,9 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
-import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -68,6 +68,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
 
   private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
   private final BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline;
+  private final PackagePipeline packagePipeline;
   private final UnconfiguredTargetNodeFactory unconfiguredTargetNodeFactory;
 
   public UnconfiguredTargetNodePipeline(
@@ -76,11 +77,13 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
       BuckEventBus eventBus,
       BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
       BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline,
+      PackagePipeline packagePipeline,
       UnconfiguredTargetNodeFactory unconfiguredTargetNodeFactory) {
     this.executorService = executorService;
     this.eventBus = eventBus;
     this.buildFileRawNodeParsePipeline = buildFileRawNodeParsePipeline;
     this.buildTargetRawNodeParsePipeline = buildTargetRawNodeParsePipeline;
+    this.packagePipeline = packagePipeline;
     this.unconfiguredTargetNodeFactory = unconfiguredTargetNodeFactory;
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
     this.perfEventId = PerfEventId.of("GetRawTargetNode");
@@ -105,15 +108,16 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
       return cachedFuture;
     }
 
-    Package stubPackage = PackageFactory.create(cell, buildFile, PackageMetadata.EMPTY_SINGLETON);
-
     try {
       ListenableFuture<List<UnconfiguredTargetNode>> allNodesListJob =
           Futures.transformAsync(
-              buildFileRawNodeParsePipeline.getFileJob(cell, buildFile),
-              buildFileManifest -> {
+              MoreFutures.combinedFutures(
+                  packagePipeline.getPackageJob(cell, buildFile),
+                  buildFileRawNodeParsePipeline.getFileJob(cell, buildFile),
+                  executorService),
+              resultingPair -> {
                 ImmutableList<Map<String, Object>> allToConvert =
-                    ImmutableList.copyOf(buildFileManifest.getTargets().values());
+                    ImmutableList.copyOf(resultingPair.getSecond().getTargets().values());
                 if (shuttingDown()) {
                   return Futures.immediateCancelledFuture();
                 }
@@ -133,7 +137,11 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                           target,
                           () ->
                               dispatchComputeNode(
-                                  cell, target, DependencyStack.top(target), from, stubPackage),
+                                  cell,
+                                  target,
+                                  DependencyStack.top(target),
+                                  from,
+                                  resultingPair.getFirst()),
                           eventBus));
                 }
 
@@ -154,15 +162,21 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
 
     Path buildFile =
         cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, buildTarget);
-    Package stubPackage = PackageFactory.create(cell, buildFile, PackageMetadata.EMPTY_SINGLETON);
 
     return cache.getJobWithCacheLookup(
         cell,
         buildTarget,
         () ->
             Futures.transformAsync(
-                buildTargetRawNodeParsePipeline.getNodeJob(cell, buildTarget),
-                from -> dispatchComputeNode(cell, buildTarget, dependencyStack, from, stubPackage),
+                MoreFutures.combinedFutures(
+                    packagePipeline.getPackageJob(cell, buildFile),
+                    buildTargetRawNodeParsePipeline.getNodeJob(cell, buildTarget),
+                    executorService),
+                resultingPair -> {
+                  Map<String, Object> rawAttributes = resultingPair.getSecond();
+                  return dispatchComputeNode(
+                      cell, buildTarget, dependencyStack, rawAttributes, resultingPair.getFirst());
+                },
                 executorService),
         eventBus);
   }

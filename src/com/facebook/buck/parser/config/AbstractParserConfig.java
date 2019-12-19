@@ -416,4 +416,10 @@ public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public boolean getEnableUserDefinedRules() {
     return getDelegate().getBooleanValue("parser", "enable_user_defined_rules", false);
   }
+
+  /** @return Whether to enable parsing of PACKAGE files and apply their attributes to nodes. */
+  @Value.Lazy
+  public boolean getEnablePackageFiles() {
+    return getDelegate().getBooleanValue("parser", "enable_package_files", false);
+  }
 }

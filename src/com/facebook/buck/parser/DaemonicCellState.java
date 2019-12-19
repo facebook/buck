@@ -285,7 +285,13 @@ class DaemonicCellState {
     }
   }
 
-  int invalidatePath(Path path) {
+  /**
+   * Invalidates all target nodes defined in {@param path}. Optionally also invalidates the build
+   * targets {@link UnflavoredBuildTargetView} depending on {@param invalidateBuildTargets}.
+   *
+   * @return The number of invalidated nodes.
+   */
+  int invalidateNodesInPath(Path path, boolean invalidateBuildTargets) {
     try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
       int invalidatedRawNodes = 0;
       BuildFileManifest buildFileManifest = allBuildFileManifests.getIfPresent(path);
@@ -302,23 +308,65 @@ class DaemonicCellState {
           for (Cache<?, ?> cache : typedNodeCaches()) {
             cache.invalidateFor(target);
           }
-          allRawNodeTargets.remove(target);
+          if (invalidateBuildTargets) {
+            allRawNodeTargets.remove(target);
+          }
         }
-        allBuildFileManifests.invalidate(path);
       }
+      return invalidatedRawNodes;
+    }
+  }
+
+  /**
+   * Invalidates all cached content based on the {@param path}, returning the count of invalidated
+   * raw nodes.
+   *
+   * <p>The path may be a reference to any file. In the case of a:
+   *
+   * <ul>
+   *   <li>build file, it invalidates the cached build manifest, cached nodes and build targets
+   *   <li>package file, it invalidates the cached package manifest and cached nodes that depend on
+   *       the package file
+   *   <li>bzl file, it invalidates any dependent build files and package files, which they
+   *       themselves invalidate recursively, invalidated any relevant cached content.
+   * </ul>
+   *
+   * @param path Absolute path to the file for which to invalidate all cached content.
+   * @return Count of all invalidated raw nodes for the path
+   */
+  int invalidatePath(Path path) {
+    try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
+      // If `path` is a build file with a valid entry in `allBuildFileManifests`, we also want to
+      // invalidate the build targets in the manifest.
+      int invalidatedRawNodes = invalidateNodesInPath(path, true);
+
+      allBuildFileManifests.invalidate(path);
       allPackageFileManifests.invalidate(path);
 
-      // We may have been given a file that other build files depend on. Iteratively remove those.
+      // We may have been given a file that other build files depend on. Invalidate accordingly.
       Iterable<Path> dependents = buildFileDependents.get(path);
+      boolean isPackageFile = PackagePipeline.isPackageFile(path);
       LOG.verbose("Invalidating dependents for path %s: %s", path, dependents);
       for (Path dependent : dependents) {
         if (dependent.equals(path)) {
           continue;
         }
-        invalidatedRawNodes += invalidatePath(dependent);
+        if (isPackageFile) {
+          // Typically, the dependents of PACKAGE files are build files. If there is a valid entry
+          // for `dependent` in `allBuildFileManifests`, invalidate the cached nodes, but not the
+          // build targets contained within in.
+          invalidatedRawNodes += invalidateNodesInPath(dependent, false);
+        } else {
+          // Recursively invalidate all cached content based on `dependent`.
+          invalidatedRawNodes += invalidatePath(dependent);
+        }
       }
-      buildFileDependents.removeAll(path);
-      buildFileEnv.remove(path);
+      if (!isPackageFile) {
+        // Package files do not invalidate the build file (as the build file does not need to be
+        // re-parsed). This means the dependents of the package remain intact.
+        buildFileDependents.removeAll(path);
+        buildFileEnv.remove(path);
+      }
 
       // We may have been given a file that package files depends on. Iteratively invalidate those
       // package files.

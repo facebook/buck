@@ -1,0 +1,13 @@
+java_library(
+    name = "baz",
+)
+
+java_library(
+    name = "qux",
+    visibility = ["PUBLIC"],
+)
+
+java_library(
+    name = "waldo",
+    visibility = ["//:should_pass_2"],
+)

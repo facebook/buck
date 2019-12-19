@@ -32,9 +32,10 @@ public class PackageFactory {
   private PackageFactory() {}
 
   /** Create a {@link Package} from the {@code rawPackage} */
-  public static Package create(Cell cell, Path buildFile, PackageMetadata rawPackage) {
+  public static Package create(Cell cell, Path packageFile, PackageMetadata rawPackage) {
 
-    String visibilityDefinerDescription = String.format("the package at %s", buildFile.toString());
+    String visibilityDefinerDescription =
+        String.format("the package at %s", packageFile.toString());
 
     ImmutableSet<VisibilityPattern> visibilityPatterns =
         VisibilityPatterns.createFromStringList(

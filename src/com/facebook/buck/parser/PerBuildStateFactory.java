@@ -150,6 +150,35 @@ public class PerBuildStateFactory {
     BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline =
         new BuildTargetRawNodeParsePipeline(executorService, buildFileRawNodeParsePipeline);
 
+    PackageFileParserFactory packageFileParserFactory =
+        new PackageFileParserFactory(
+            typeCoercerFactory,
+            parserPythonInterpreterProvider,
+            knownRuleTypesProvider,
+            parsingContext.isProfilingEnabled());
+
+    PackageFileParserPool packageFileParserPool =
+        new PackageFileParserPool(
+            numParsingThreads, // Max parsers to create per cell.
+            packageFileParserFactory);
+
+    PackageFileParsePipeline packageFileParsePipeline =
+        new PackageFileParsePipeline(
+            new PipelineNodeCache<>(daemonicParserState.getPackageFileCache(), n -> false),
+            packageFileParserPool,
+            executorService,
+            eventBus,
+            watchman);
+
+    PerBuildStateCache perBuildStateCache = new PerBuildStateCache(numParsingThreads);
+
+    PackagePipeline packagePipeline =
+        new PackagePipeline(
+            executorService,
+            eventBus,
+            packageFileParsePipeline,
+            perBuildStateCache.getPackageCache());
+
     ListeningExecutorService pipelineExecutorService =
         parserConfig.getEnableParallelParsing()
             ? executorService
@@ -165,6 +194,7 @@ public class PerBuildStateFactory {
             eventBus,
             buildFileRawNodeParsePipeline,
             buildTargetRawNodeParsePipeline,
+            packagePipeline,
             new DefaultUnconfiguredTargetNodeFactory(
                 knownRuleTypesProvider,
                 new BuiltTargetVerifier(),

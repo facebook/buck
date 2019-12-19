@@ -252,6 +252,27 @@ public class ParserIntegrationTest {
     assertThat(processResult.getStderr(), containsString("can only be referenced from"));
   }
 
+  @Test
+  public void packageVisibilityAreEnforced() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "package_visibility", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:should_pass").assertSuccess();
+    workspace.runBuckCommand("build", "//:should_pass_2").assertSuccess();
+
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:should_fail");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("which is not visible"));
+
+    workspace.runBuckCommand("build", "//bar:should_pass").assertSuccess();
+
+    processResult = workspace.runBuckCommand("build", "//bar:should_fail");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("which is not visible"));
+  }
+
   static class BigFileTree {
     private final ProjectWorkspace workspace;
 

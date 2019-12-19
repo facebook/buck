@@ -361,6 +361,55 @@ public class ParsePipelineTest {
     assertTrue(fixture.targetExistsInCache(bTarget));
   }
 
+  @Test
+  public void invalidatedPackageFileInvalidatesNodeButNotManifest() throws Exception {
+    Fixture fixture = createMultiThreadedFixture("pipeline_test");
+    Cell cell = fixture.getCell();
+
+    Path rootBuildFile = cell.getFilesystem().resolve("BUCK");
+
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
+
+    TargetNode<?> libTargetNode =
+        fixture.getTargetNodeParsePipeline().getNode(cell, libTarget, DependencyStack.root());
+
+    Set<BuildTarget> deps = libTargetNode.getBuildDeps();
+    for (BuildTarget buildTarget : deps) {
+      fixture.getTargetNodeParsePipeline().getNode(cell, buildTarget, DependencyStack.root());
+    }
+
+    // Validate expected state
+    assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
+    assertTrue(fixture.targetExistsInCache(libTarget));
+
+    Path aBuildFile = cell.getFilesystem().resolve("a/BUCK");
+    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
+    BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
+    assertTrue(fixture.targetExistsInCache(aTarget));
+
+    Path bBuildFile = cell.getFilesystem().resolve("b/BUCK");
+    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
+    BuildTarget bTarget = BuildTargetFactory.newInstance("//b:b");
+    assertTrue(fixture.targetExistsInCache(bTarget));
+
+    Path packageFile = cell.getFilesystem().resolve("b/PACKAGE");
+    assertTrue(fixture.packageFileExistsInCache(packageFile));
+
+    // Invalidation of a package only invalidates the nodes of the dependent build file
+    fixture.invalidatePath(packageFile);
+
+    assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
+    assertTrue(fixture.targetExistsInCache(libTarget));
+
+    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
+    assertTrue(fixture.targetExistsInCache(aTarget));
+
+    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
+    assertFalse(fixture.targetExistsInCache(bTarget));
+
+    assertFalse(fixture.packageFileExistsInCache(packageFile));
+  }
+
   private static class TypedParsePipelineCache<K, V> implements PipelineNodeCache.Cache<K, V> {
     private final Map<K, V> nodeMap = new HashMap<>();
 
@@ -480,6 +529,34 @@ public class ParsePipelineTest {
 
       KnownRuleTypesProvider knownRuleTypesProvider =
           TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
+
+      ParserPythonInterpreterProvider pythonInterpreterProvider =
+          new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder());
+
+      PackageFileParserFactory packageFileParserFactory =
+          new PackageFileParserFactory(
+              coercerFactory, pythonInterpreterProvider, knownRuleTypesProvider, false);
+
+      PackageFileParserPool packageFileParserPool =
+          new PackageFileParserPool(NUM_THREADS, packageFileParserFactory);
+
+      PackageFileParsePipeline packageFileParsePipeline =
+          new PackageFileParsePipeline(
+              new PipelineNodeCache<>(daemonicParserState.getPackageFileCache(), n -> false),
+              packageFileParserPool,
+              executorService,
+              eventBus,
+              WatchmanFactory.NULL_WATCHMAN);
+
+      PerBuildStateCache perStateBuildCache = new PerBuildStateCache(NUM_THREADS);
+
+      PackagePipeline packagePipeline =
+          new PackagePipeline(
+              executorService,
+              eventBus,
+              packageFileParsePipeline,
+              perStateBuildCache.getPackageCache());
+
       UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline =
           new UnconfiguredTargetNodePipeline(
               executorService,
@@ -487,6 +564,7 @@ public class ParsePipelineTest {
               eventBus,
               buildFileRawNodeParsePipeline,
               buildTargetRawNodeParsePipeline,
+              packagePipeline,
               new DefaultUnconfiguredTargetNodeFactory(
                   knownRuleTypesProvider,
                   new BuiltTargetVerifier(),
@@ -542,6 +620,13 @@ public class ParsePipelineTest {
     public boolean buildFileExistsInCache(Path path) {
       return daemonicParserState
           .getRawNodeCache()
+          .lookupComputedNode(cell, path, eventBus)
+          .isPresent();
+    }
+
+    public boolean packageFileExistsInCache(Path path) {
+      return daemonicParserState
+          .getPackageFileCache()
           .lookupComputedNode(cell, path, eventBus)
           .isPresent();
     }
