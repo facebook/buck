@@ -17,6 +17,7 @@
 package com.facebook.buck.util.concurrent;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -40,6 +41,27 @@ public class MoreFutures {
 
   /** Utility class: do not instantiate. */
   private MoreFutures() {}
+
+  /**
+   * Combine the {@param first} and {@param second} listenable futures, returning a listenable
+   * future that wraps the result of these futures as a {@link Pair}.
+   */
+  public static <U, V> ListenableFuture<Pair<U, V>> combinedFutures(
+      ListenableFuture<U> first,
+      ListenableFuture<V> second,
+      ListeningExecutorService executorService) {
+
+    Callable<Pair<U, V>> pairComputation =
+        new Callable<Pair<U, V>>() {
+          @Override
+          public Pair<U, V> call() throws Exception {
+            return new Pair<U, V>(first.get(), second.get());
+          }
+        };
+    ListenableFuture<Pair<U, V>> pairFuture =
+        Futures.whenAllSucceed(first, second).call(pairComputation, executorService);
+    return pairFuture;
+  }
 
   /**
    * Invoke multiple callables on the provided executor and wait for all to return successfully. An
