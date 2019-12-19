@@ -237,9 +237,11 @@ public class AppleBundleDescription
     CxxPlatformsProvider cxxPlatformsProvider =
         getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
     if (!cxxPlatformsProvider.getUnresolvedCxxPlatforms().containsAnyOf(buildTarget.getFlavors())) {
-      buildTarget =
-          buildTarget.withAppendedFlavors(
-              cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor());
+      Flavor platformFlavor =
+          constructorArg
+              .getDefaultPlatform()
+              .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor());
+      buildTarget = buildTarget.withAppendedFlavors(platformFlavor);
     }
 
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
