@@ -268,14 +268,6 @@ public class GenruleBuildable implements Buildable {
     }
   }
 
-  public OutputPath getOutput() {
-    Preconditions.checkState(
-        outputPath.isPresent(),
-        "Unexpectedly cannot find output for %s",
-        buildTarget.getFullyQualifiedName());
-    return outputPath.get();
-  }
-
   /**
    * Returns the set of {@link OutputPath} instances associated with the given {@link OutputLabel}.
    *
@@ -306,7 +298,7 @@ public class GenruleBuildable implements Buildable {
                   "Unexpected output label [%s] for target %s. Use 'outs' instead of 'out' to use output labels",
                   outputLabel,
                   buildTarget.getFullyQualifiedName());
-              return ImmutableSet.of(getOutput());
+              return ImmutableSet.of(outputPath.get());
             });
   }
 

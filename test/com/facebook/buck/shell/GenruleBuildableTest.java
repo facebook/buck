@@ -57,6 +57,7 @@ import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -414,22 +415,47 @@ public class GenruleBuildableTest {
               .toBuildable();
 
       OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
-      Path outputPath = outputPathResolver.resolvePath(buildable.getOutput());
+      Path outputPath =
+          outputPathResolver.resolvePath(
+              Iterables.getOnlyElement(buildable.getOutputs(OutputLabel.defaultLabel())));
       assertEquals(outputPath, outputPath.normalize());
     }
   }
 
   @Test
-  public void canGetSingleNamedOutput() {
+  public void canGetSingleDefaultOutput() {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
     OutputPathResolver outputPathResolver =
-        new DefaultOutputPathResolver(new FakeProjectFilesystem(), target);
-    Path rootPath = outputPathResolver.getRootPath();
+        new DefaultOutputPathResolver(fakeProjectFileSystem, target);
 
     GenruleBuildable buildable =
         GenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(new FakeProjectFilesystem())
+            .setBash("echo something > $OUT")
+            .setOuts(Optional.of(ImmutableMap.of("label1", ImmutableList.of("output1a"))))
+            .build()
+            .toBuildable();
+
+    Path outputPath =
+        outputPathResolver.resolvePath(
+            Iterables.getOnlyElement(buildable.getOutputs(OutputLabel.defaultLabel())));
+    assertEquals(outputPathResolver.getRootPath().resolve("output1a"), outputPath);
+  }
+
+  @Test
+  public void canGetSingleNamedOutput() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
+    OutputPathResolver outputPathResolver =
+        new DefaultOutputPathResolver(fakeProjectFileSystem, target);
+    Path rootPath = outputPathResolver.getRootPath();
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(fakeProjectFileSystem)
             .setBash("echo something")
             .setOuts(
                 Optional.of(
@@ -452,14 +478,15 @@ public class GenruleBuildableTest {
   @Test
   public void canGetMultipleNamedOutputs() {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
     OutputPathResolver outputPathResolver =
-        new DefaultOutputPathResolver(new FakeProjectFilesystem(), target);
+        new DefaultOutputPathResolver(fakeProjectFileSystem, target);
     Path rootPath = outputPathResolver.getRootPath();
 
     GenruleBuildable buildable =
         GenruleBuildableBuilder.builder()
             .setBuildTarget(target)
-            .setFilesystem(new FakeProjectFilesystem())
+            .setFilesystem(fakeProjectFileSystem)
             .setBash("echo something")
             .setOuts(
                 Optional.of(
@@ -484,14 +511,15 @@ public class GenruleBuildableTest {
   @Test
   public void defaultGroupReturnsAllNamedOutputs() {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
     OutputPathResolver outputPathResolver =
-        new DefaultOutputPathResolver(new FakeProjectFilesystem(), target);
+        new DefaultOutputPathResolver(fakeProjectFileSystem, target);
     Path rootPath = outputPathResolver.getRootPath();
 
     GenruleBuildable buildable =
         GenruleBuildableBuilder.builder()
             .setBuildTarget(target)
-            .setFilesystem(new FakeProjectFilesystem())
+            .setFilesystem(fakeProjectFileSystem)
             .setBash("echo something")
             .setOuts(
                 Optional.of(

@@ -41,6 +41,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
@@ -150,7 +151,12 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return getSourcePath(getBuildable().getOutput());
+    ImmutableSortedSet<SourcePath> sourcePaths = getSourcePathToOutput(OutputLabel.defaultLabel());
+    Preconditions.checkState(
+        sourcePaths != null && !sourcePaths.isEmpty(),
+        "Unexpectedly cannot find genrule single default output for target %s",
+        getBuildTarget());
+    return Iterables.getOnlyElement(sourcePaths);
   }
 
   @Override
