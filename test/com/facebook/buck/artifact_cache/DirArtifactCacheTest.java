@@ -18,7 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -254,9 +254,9 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     BuildRule inputRuleY = new BuildRuleForTest(fileY);
     BuildRule inputRuleZ = new BuildRuleForTest(fileZ);
-    assertFalse(inputRuleX.equals(inputRuleY));
-    assertFalse(inputRuleX.equals(inputRuleZ));
-    assertFalse(inputRuleY.equals(inputRuleZ));
+    assertNotEquals(inputRuleX, inputRuleY);
+    assertNotEquals(inputRuleX, inputRuleZ);
+    assertNotEquals(inputRuleY, inputRuleZ);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(inputRuleX);
     graphBuilder.addToIndex(inputRuleY);
@@ -355,9 +355,9 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     BuildRule inputRuleY = new BuildRuleForTest(fileY);
     BuildRule inputRuleZ = new BuildRuleForTest(fileZ);
-    assertFalse(inputRuleX.equals(inputRuleY));
-    assertFalse(inputRuleX.equals(inputRuleZ));
-    assertFalse(inputRuleY.equals(inputRuleZ));
+    assertNotEquals(inputRuleX, inputRuleY);
+    assertNotEquals(inputRuleX, inputRuleZ);
+    assertNotEquals(inputRuleY, inputRuleZ);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(inputRuleX);
     graphBuilder.addToIndex(inputRuleY);
@@ -459,9 +459,9 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     BuildRule inputRuleY = new BuildRuleForTest(fileY);
     BuildRule inputRuleZ = new BuildRuleForTest(fileZ);
-    assertFalse(inputRuleX.equals(inputRuleY));
-    assertFalse(inputRuleX.equals(inputRuleZ));
-    assertFalse(inputRuleY.equals(inputRuleZ));
+    assertNotEquals(inputRuleX, inputRuleY);
+    assertNotEquals(inputRuleX, inputRuleZ);
+    assertNotEquals(inputRuleY, inputRuleZ);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(inputRuleX);
     graphBuilder.addToIndex(inputRuleY);
@@ -524,7 +524,7 @@ public class DirArtifactCacheTest {
 
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     BuildRule inputRuleY = new BuildRuleForTest(fileY);
-    assertFalse(inputRuleX.equals(inputRuleY));
+    assertNotEquals(inputRuleX, inputRuleY);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(inputRuleX);
     graphBuilder.addToIndex(inputRuleY);
@@ -567,9 +567,9 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     BuildRule inputRuleY = new BuildRuleForTest(fileY);
     BuildRule inputRuleZ = new BuildRuleForTest(fileZ);
-    assertFalse(inputRuleX.equals(inputRuleY));
-    assertFalse(inputRuleX.equals(inputRuleZ));
-    assertFalse(inputRuleY.equals(inputRuleZ));
+    assertNotEquals(inputRuleX, inputRuleY);
+    assertNotEquals(inputRuleX, inputRuleZ);
+    assertNotEquals(inputRuleY, inputRuleZ);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(inputRuleX);
     graphBuilder.addToIndex(inputRuleY);

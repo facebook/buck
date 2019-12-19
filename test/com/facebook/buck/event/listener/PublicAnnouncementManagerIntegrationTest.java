@@ -17,7 +17,6 @@
 package com.facebook.buck.event.listener;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -96,9 +95,10 @@ public class PublicAnnouncementManagerIntegrationTest {
               requestBody.set(ByteStreams.toByteArray(httpServletRequest.getInputStream()));
               FrontendRequest thriftRequest = new FrontendRequest();
               ThriftUtil.deserialize(ThriftProtocol.BINARY, requestBody.get(), thriftRequest);
-              assertTrue(
+              assertEquals(
                   "Request should contain the repository.",
-                  thriftRequest.getAnnouncementRequest().getRepository().equals(REPOSITORY));
+                  REPOSITORY,
+                  thriftRequest.getAnnouncementRequest().getRepository());
 
               try (DataOutputStream out =
                   new DataOutputStream(httpServletResponse.getOutputStream())) {

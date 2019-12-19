@@ -47,9 +47,9 @@ public class EitherTest {
   @Test
   public void equality() {
     Object value = new Object();
-    assertTrue("Left equals left", Either.ofLeft(value).equals(Either.ofLeft(value)));
-    assertTrue("Right equals right", Either.ofRight(value).equals(Either.ofRight(value)));
-    assertFalse("Left !equals right", Either.ofLeft(value).equals(Either.ofRight(value)));
+    assertEquals("Left equals left", Either.ofLeft(value), Either.ofLeft(value));
+    assertEquals("Right equals right", Either.ofRight(value), Either.ofRight(value));
+    assertNotEquals("Left !equals right", Either.ofLeft(value), Either.ofRight(value));
   }
 
   @Test

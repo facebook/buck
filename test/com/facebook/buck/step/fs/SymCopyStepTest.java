@@ -100,17 +100,13 @@ public class SymCopyStepTest {
     assertTrue(projectFilesystem.isSymLink(destRoot.resolve("dir2").resolve("file3")));
 
     // check that the symlinks generated are correct
-    assertTrue(
-        projectFilesystem
-            .readSymLink(destRoot.resolve("file1"))
-            .equals(projectFilesystem.resolve(file1)));
-    assertTrue(
-        projectFilesystem
-            .readSymLink(destRoot.resolve("dir1").resolve("file2"))
-            .equals(projectFilesystem.resolve(file2)));
-    assertTrue(
-        projectFilesystem
-            .readSymLink(destRoot.resolve("dir2").resolve("file3"))
-            .equals(projectFilesystem.resolve(file3)));
+    assertEquals(
+        projectFilesystem.readSymLink(destRoot.resolve("file1")), projectFilesystem.resolve(file1));
+    assertEquals(
+        projectFilesystem.readSymLink(destRoot.resolve("dir1").resolve("file2")),
+        projectFilesystem.resolve(file2));
+    assertEquals(
+        projectFilesystem.readSymLink(destRoot.resolve("dir2").resolve("file3")),
+        projectFilesystem.resolve(file3));
   }
 }

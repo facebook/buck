@@ -20,6 +20,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -67,7 +68,7 @@ public class HeaderMapTest {
       assertEquals("value of foo" + i, hmap.lookup("FOO" + i));
     }
 
-    assertEquals(null, hmap.lookup("BAR"));
+    assertNull(hmap.lookup("BAR"));
     assertEquals(n, hmap.getNumEntries());
     assertEquals("value of foo10".length(), hmap.getMaxValueLength());
 

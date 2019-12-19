@@ -18,6 +18,7 @@ package com.facebook.buck.core.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
@@ -80,7 +81,7 @@ public class BuildTargetTest {
   public void testNotEquals() {
     BuildTarget utilTarget = BuildTargetFactory.newInstance("//src/com/facebook/buck/util", "util");
     BuildTarget ioTarget = BuildTargetFactory.newInstance("//src/com/facebook/buck/util", "io");
-    assertFalse(utilTarget.equals(ioTarget));
+    assertNotEquals(utilTarget, ioTarget);
   }
 
   @Test

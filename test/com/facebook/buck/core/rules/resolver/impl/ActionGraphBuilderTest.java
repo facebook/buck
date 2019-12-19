@@ -21,6 +21,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
@@ -253,7 +254,7 @@ public class ActionGraphBuilderTest {
                   TargetNode<T> targetNode,
                   ProviderInfoCollection providerInfoCollection) {
                 Boolean existing = transformCalls.put(targetNode.getBuildTarget(), true);
-                assertEquals("Should only be called once for each build target", null, existing);
+                assertNull("Should only be called once for each build target", existing);
                 try {
                   if (targetNode.getBuildTarget().equals(target1)) {
                     jobsStarted.countDown();

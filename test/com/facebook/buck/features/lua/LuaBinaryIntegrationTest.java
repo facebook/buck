@@ -18,7 +18,6 @@ package com.facebook.buck.features.lua;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -275,14 +274,14 @@ public class LuaBinaryIntegrationTest {
                 "-c",
                 "lua.packager=//:packager",
                 "//:simple"));
-    assertTrue(standaloneFirst.equals(standaloneSecond));
+    assertEquals(standaloneFirst, standaloneSecond);
 
     // Now rebuild again, switching back to in-place, and verify the output matches the original
     // build's output.
     String inplaceSecond =
         workspace.getFileContents(
             workspace.buildAndReturnOutput("-c", "lua.package_style=inplace", "//:simple"));
-    assertTrue(inplaceFirst.equals(inplaceSecond));
+    assertEquals(inplaceFirst, inplaceSecond);
   }
 
   @Test

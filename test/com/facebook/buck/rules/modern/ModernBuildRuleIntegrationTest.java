@@ -89,7 +89,7 @@ public class ModernBuildRuleIntegrationTest {
             workspace.getPath(workspace.getBuckPaths().getScratchDir()),
             255,
             (path, basicFileAttributes) -> path.endsWith("temporary_writing_rule_temp"))) {
-      Assert.assertTrue("Temporary file should be deleted", paths.count() == 0);
+      Assert.assertEquals("Temporary file should be deleted", 0, paths.count());
     }
   }
 
