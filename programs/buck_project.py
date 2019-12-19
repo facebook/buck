@@ -91,7 +91,7 @@ def add_eden_bindmounts(repo_root, buck_out):
 
     eden_root = _find_eden_root(repo_root)
 
-    eden_bindmounts = set(buck_out)
+    eden_bindmounts = {buck_out}
     eden_bindmounts_file = os.path.join(repo_root, ".buck-eden-bindmounts")
     if os.path.exists(eden_bindmounts_file):
         logging.debug("Reading eden bindmounts from " + eden_bindmounts_file)
