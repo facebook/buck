@@ -94,13 +94,15 @@ public class SymlinkTreeMergeStep implements Step {
             filesystem.createSymLink(filesystem.resolve(destPath), srcPath, false);
           } catch (FileAlreadyExistsException e) {
             if (filesystem.isSymLink(destPath)) {
-              if (deleteExistingLinkPredicate.apply(filesystem, destPath)) {
-                filesystem.deleteFileAtPath(destPath);
-                filesystem.createSymLink(filesystem.resolve(destPath), srcPath, true);
-              } else {
-                throw new HumanReadableException(
-                    "Tried to link %s to %s, but %s already links to %s",
-                    destPath, srcPath, destPath, filesystem.readSymLink(destPath));
+              if (!filesystem.readSymLink(destPath).equals(srcPath)) {
+                if (deleteExistingLinkPredicate.apply(filesystem, destPath)) {
+                  filesystem.deleteFileAtPath(destPath);
+                  filesystem.createSymLink(filesystem.resolve(destPath), srcPath, true);
+                } else {
+                  throw new HumanReadableException(
+                      "Tried to link %s to %s, but %s already links to %s",
+                      destPath, srcPath, destPath, filesystem.readSymLink(destPath));
+                }
               }
             } else {
               throw new HumanReadableException(
