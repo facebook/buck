@@ -202,7 +202,7 @@ public class WatchmanWatcherTest {
         new ImmutableList.Builder<>();
     // The threshold is 10000; go a little above that.
     for (int i = 0; i < 10010; i++) {
-      changedFiles.add(ImmutableMap.of("name", "foo/bar/baz" + Integer.toString(i)));
+      changedFiles.add(ImmutableMap.of("name", "foo/bar/baz" + i));
     }
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of("files", changedFiles.build());
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
