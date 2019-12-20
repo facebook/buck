@@ -98,7 +98,6 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   private static final String SIMPLE_TARGET = "//apps/multidex:app";
   private static final String RES_D8_TARGET = "//apps/multidex:app_with_resources_and_d8";
-  private static final String RES_GROUPS_TARGET = "//apps/multidex:app_with_resources_and_groups";
   private static final String RAW_DEX_TARGET = "//apps/multidex:app-art";
   private static final String APP_REDEX_TARGET = "//apps/sample:app_redex";
 
@@ -446,25 +445,6 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         DexProducedFromJavaLibrary.getMetadataResources(filesystem, dexTarget);
     assertTrue(resourcesFromMetadata.isPresent());
     assertEquals("[\"com.sample.top_layout\",\"com.sample2.title\"]", resourcesFromMetadata.get());
-  }
-
-  @Test
-  public void testDexGroupsReferencedResources() {
-    workspace.runBuckBuild(RES_GROUPS_TARGET).assertSuccess();
-    BuildTarget dexTarget =
-        BuildTargetFactory.newInstance(
-            "//apps/multidex:app_with_resources_and_groups#secondary_dexes_1");
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
-    Path resourcesFile =
-        BuildTargetPaths.getGenPath(filesystem, dexTarget, "%s")
-            .resolve("referenced_resources.txt");
-    Optional<String> referencedResources = filesystem.readFileIfItExists(resourcesFile);
-    assertTrue(referencedResources.isPresent());
-    // resources from both //java/com/sample/lib:lib and //java/com/sample2:lib
-    assertEquals(
-        "[\"com.sample.top_layout\",\"com.sample2.title\",\"com.sample2.sample2_string\"]",
-        referencedResources.get());
   }
 
   @Test

@@ -82,8 +82,7 @@ import javax.annotation.Nullable;
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
 public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJavaLibrary.Impl>
-    implements InitializableFromDisk<DexProducedFromJavaLibrary.BuildOutput>,
-        TrimUberRDotJava.UsesResources {
+    implements InitializableFromDisk<DexProducedFromJavaLibrary.BuildOutput> {
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -418,8 +417,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
     return buildOutputInitializer.getBuildOutput().weightEstimate;
   }
 
-  @Override
-  public ImmutableList<String> getReferencedResources() {
+  ImmutableList<String> getReferencedResources() {
     return buildOutputInitializer.getBuildOutput().referencedResources;
   }
 
