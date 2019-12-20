@@ -64,6 +64,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasRuntimeDeps {
@@ -228,8 +229,8 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private CellLookupResult lookupCellForPath(Path path) {
-    Optional<String> result = null;
-    Path matchedPath = null;
+    @Nullable Optional<String> result = null;
+    @Nullable Path matchedPath = null;
 
     for (Map.Entry<Optional<String>, CanonicalCellName> alias :
         cellNameResolver.getKnownCells().entrySet()) {
@@ -241,8 +242,10 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       }
     }
 
-    Objects.requireNonNull(result, String.format("path %s is not included in any cell", path));
-    return ImmutableCellLookupResult.of(result, matchedPath);
+    return ImmutableCellLookupResult.of(
+        Objects.requireNonNull(result, String.format("path %s is not included in any cell", path)),
+        Objects.requireNonNull(
+            matchedPath, String.format("path %s is not included in any cell", path)));
   }
 
   @Override
