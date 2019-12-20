@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+//
+
 package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -24,24 +26,19 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * An implementation of the {@link RuleAnalysisResult} for legacy provider results from {@link
  * com.facebook.buck.core.rules.LegacyProviderCompatibleDescription#createProviders(ProviderCreationContext,
  * BuildTarget, BuildRuleArg)}.
  *
- * <p>This implementation throws on any operation relating to {@link ActionAnalysisData}.
+ * <p>This implementation throws on any operation relating to {@link ActionAnalysisData}
  */
-@Value.Immutable(builder = false, copy = false)
-@Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
 public abstract class LegacyProviderRuleAnalysisResult implements RuleAnalysisResult {
-  @Value.Parameter
+
   @Override
   public abstract BuildTarget getBuildTarget();
 
-  /** @return a {@link ProviderInfoCollection} exported by the rule */
-  @Value.Parameter
   @Override
   public abstract ProviderInfoCollection getProviderInfos();
 
@@ -51,17 +48,17 @@ public abstract class LegacyProviderRuleAnalysisResult implements RuleAnalysisRe
   }
 
   @Override
-  public ImmutableMap<ActionAnalysisData.ID, ActionAnalysisData> getRegisteredActions() {
+  public final boolean actionExists(ActionAnalysisData.ID key) {
     throw noActionsMethodOnLegacyProviders();
   }
 
   @Override
-  public boolean actionExists(ActionAnalysisData.ID key) {
+  public final Optional<ActionAnalysisData> getActionOptional(ActionAnalysisData.ID key) {
     throw noActionsMethodOnLegacyProviders();
   }
 
   @Override
-  public Optional<ActionAnalysisData> getActionOptional(ActionAnalysisData.ID key) {
+  public final ImmutableMap<ActionAnalysisData.ID, ActionAnalysisData> getRegisteredActions() {
     throw noActionsMethodOnLegacyProviders();
   }
 }

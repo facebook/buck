@@ -16,9 +16,9 @@
 
 package com.facebook.buck.core.rules.analysis.impl;
 
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Just here to provide test visibility */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public abstract class FakeLegacyProviderRuleAnalysisResultImpl
-    extends LegacyProviderRuleAnalysisResult {}
+    extends LegacyProviderRuleAnalysisResultImpl {}

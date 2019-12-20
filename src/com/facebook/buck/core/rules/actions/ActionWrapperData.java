@@ -18,22 +18,16 @@ package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
-import org.immutables.value.Value;
-import org.immutables.value.Value.Style.ImplementationVisibility;
 
 /**
  * Implementation of {@link ActionAnalysisData} that just holds an {@link Action}. This mimics the
  * effect of having a deferred
  */
-@Value.Immutable(builder = false, copy = false)
-@Value.Style(visibility = ImplementationVisibility.PACKAGE)
-public abstract class ActionWrapperData implements ActionAnalysisData {
+public interface ActionWrapperData extends ActionAnalysisData {
 
   @Override
-  @Value.Parameter
-  public abstract ActionAnalysisDataKey getKey();
+  ActionAnalysisDataKey getKey();
 
   /** @return the {@link Action} this wraps */
-  @Value.Parameter
-  public abstract Action getAction();
+  Action getAction();
 }

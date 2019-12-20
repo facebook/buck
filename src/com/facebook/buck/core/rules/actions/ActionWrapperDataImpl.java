@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.rules.analysis.impl;
+package com.facebook.buck.core.rules.actions;
 
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/** Just here to provide test visibility */
+/**
+ * Package private immutable implementation of {@link ActionWrapperData} so constructor is limited
+ * to package scope
+ */
 @BuckStyleValue
-public abstract class FakeRuleAnalysisResultImpl extends RuleAnalysisResultImpl {}
+abstract class ActionWrapperDataImpl implements ActionWrapperData {
+
+  @Override
+  public abstract ActionAnalysisDataKey getKey();
+
+  /** @return the {@link Action} this wraps */
+  @Override
+  public abstract Action getAction();
+}

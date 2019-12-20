@@ -20,26 +20,22 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
-import org.immutables.value.Value;
-import org.immutables.value.Value.Style.ImplementationVisibility;
 
 /** An Immutables implementation of the {@link RuleAnalysisResult}. */
-@Value.Immutable(builder = false, copy = false)
-@Value.Style(visibility = ImplementationVisibility.PACKAGE)
+@BuckStyleValue
 abstract class RuleAnalysisResultImpl implements RuleAnalysisResult {
-  @Value.Parameter
+
   @Override
   public abstract BuildTarget getBuildTarget();
 
   /** @return a {@link ProviderInfoCollection} exported by the rule */
-  @Value.Parameter
   @Override
   public abstract ProviderInfoCollection getProviderInfos();
 
   @Override
-  @Value.Parameter
   public abstract ImmutableMap<ActionAnalysisData.ID, ActionAnalysisData> getRegisteredActions();
 
   /** @return if the given key exists in the look up */
