@@ -17,6 +17,7 @@
 package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Date;
@@ -25,52 +26,37 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import org.immutables.value.Value;
 
-@Value.Immutable(copy = false, builder = false)
+@BuckStyleValue
 public interface BuildLogEntry {
 
-  @Value.Parameter
   Path getRelativePath();
 
-  @Value.Parameter
   Optional<BuildId> getBuildId();
 
-  @Value.Parameter
   Optional<List<String>> getCommandArgs();
 
-  @Value.Parameter
   Optional<List<String>> getExpandedCommandArgs();
 
-  @Value.Parameter
   OptionalInt getExitCode();
 
-  @Value.Parameter
   OptionalInt getBuildTimeMs();
 
-  @Value.Parameter
   Optional<Path> getRuleKeyLoggerLogFile();
 
-  @Value.Parameter
   Optional<Path> getMachineReadableLogFile();
 
-  @Value.Parameter
   Optional<Path> getRuleKeyDiagKeysFile();
 
-  @Value.Parameter
   Optional<Path> getRuleKeyDiagGraphFile();
 
-  @Value.Parameter
   Optional<Path> getTraceFile();
 
-  @Value.Parameter
   Optional<Path> getConfigJsonFile();
 
-  @Value.Parameter
   Optional<Path> getBuckFixSpecFile();
 
-  @Value.Parameter
   long getSize();
 
-  @Value.Parameter
   Date getLastModifiedTime();
 
   @Value.Check
