@@ -235,7 +235,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     boolean isWindows = Platform.detect() == Platform.WINDOWS;
 
     Configuration configuration = isWindows ? Configuration.windows() : Configuration.unix();
-    rootPath = isWindows ? "C:" + rootPath : rootPath;
+    rootPath = isWindows && !rootPath.startsWith("C:") ? "C:" + rootPath : rootPath;
 
     FileSystem vfs =
         Jimfs.newFileSystem(configuration.toBuilder().setAttributeViews("basic", "posix").build());
