@@ -16,9 +16,9 @@
 
 package com.facebook.buck.core.graph.transformation.model;
 
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import java.util.Iterator;
-import org.immutables.value.Value;
 
 /**
  * The {@link ComputeResult} for a composed computation. Each {@link ComposedResult} holds a list of
@@ -26,12 +26,11 @@ import org.immutables.value.Value;
  *
  * @param <ResultType> the type of the results held
  */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public abstract class ComposedResult<
         KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
     implements ComputeResult, Iterable<ResultType> {
 
-  @Value.Parameter
   public abstract ImmutableMap<KeyType, ResultType> resultMap();
 
   @Override

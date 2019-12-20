@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.graph.transformation.model;
 
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.base.Preconditions;
 import org.immutables.value.Value;
 
@@ -25,14 +26,12 @@ import org.immutables.value.Value;
  * @param <KeyType1> the origin key type
  * @param <ResultType2> the target result type
  */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class ComposedKey<KeyType1 extends ComputeKey<?>, ResultType2 extends ComputeResult>
     implements ComputeKey<ComposedResult<ComputeKey<ResultType2>, ResultType2>> {
 
-  @Value.Parameter
   public abstract KeyType1 getOriginKey();
 
-  @Value.Parameter
   public abstract Class<ResultType2> getTargetResultClass();
 
   @Value.Derived
