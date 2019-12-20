@@ -42,6 +42,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -97,7 +98,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
-import org.immutables.value.Value.Immutable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -915,12 +915,10 @@ public class BuildCommand extends AbstractCommand {
     return true;
   }
 
-  @Immutable(builder = false, copy = false)
+  @BuckStyleValue
   interface GraphsAndBuildTargets {
-    @Value.Parameter
     ActionAndTargetGraphs getGraphs();
 
-    @Value.Parameter
     ImmutableSet<ImmutableBuildTargetWithOutputs> getBuildTargetWithOutputs();
 
     @Value.Lazy
@@ -933,12 +931,10 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  @Immutable(builder = false, copy = false)
+  @BuckStyleValue
   interface BuildRunResult {
-    @Value.Parameter
     ExitCode getExitCode();
 
-    @Value.Parameter
     ImmutableSet<BuildTarget> getBuildTargets();
   }
 }
