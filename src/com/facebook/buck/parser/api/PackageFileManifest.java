@@ -17,17 +17,17 @@
 package com.facebook.buck.parser.api;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.parser.exceptions.ParsingError;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Describes the content of a package file, which includes a package definition and their metadata.
  */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public abstract class PackageFileManifest implements ComputeResult, FileManifest {
 
   /** A singleton instance of a manifest with an empty package metadata. */
@@ -40,22 +40,17 @@ public abstract class PackageFileManifest implements ComputeResult, FileManifest
           ImmutableList.of());
 
   /** Contains the package defined in the build file. */
-  @Value.Parameter
   public abstract ImmutablePackageMetadata getPackage();
 
-  @Value.Parameter
   @Override
   public abstract ImmutableSortedSet<String> getIncludes();
 
-  @Value.Parameter
   @Override
   public abstract ImmutableMap<String, Object> getConfigs();
 
-  @Value.Parameter
   @Override
   public abstract Optional<ImmutableMap<String, Optional<String>>> getEnv();
 
-  @Value.Parameter
   @Override
   public abstract ImmutableList<ParsingError> getErrors();
 }

@@ -19,13 +19,14 @@ package com.facebook.buck.parser.manifest;
 import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** Transformation key containing path to a build file to parse */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class BuildPackagePathToBuildFileManifestKey
     implements ComputeKey<BuildFileManifest> {
 
@@ -37,7 +38,6 @@ public abstract class BuildPackagePathToBuildFileManifestKey
    * Path of the root of the package to parse, relative to some root (usually cell root). The
    * physical folder should contain build file.
    */
-  @Value.Parameter
   public abstract Path getPath();
 
   @Value.Check

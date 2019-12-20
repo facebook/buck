@@ -20,6 +20,7 @@ import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationId
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
@@ -28,7 +29,7 @@ import org.immutables.value.Value;
  * Transformation key containing a path to a build package to get parsed {@link
  * UnconfiguredTargetNodeWithDepsPackage} from it
  */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class BuildPackagePathToUnconfiguredTargetNodePackageKey
     implements ComputeKey<UnconfiguredTargetNodeWithDepsPackage> {
 
@@ -41,7 +42,6 @@ public abstract class BuildPackagePathToUnconfiguredTargetNodePackageKey
    * A path to a package root directory, i.e. a directory containing build file, relative to some
    * root (usually cell folder root)
    */
-  @Value.Parameter
   public abstract Path getPath();
 
   @Value.Check

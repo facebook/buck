@@ -21,12 +21,13 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** Transformation key containing build target to get {@link UnconfiguredTargetNode} for. */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class BuildTargetToUnconfiguredTargetNodeKey
     implements ComputeKey<UnconfiguredTargetNode> {
 
@@ -35,14 +36,12 @@ public abstract class BuildTargetToUnconfiguredTargetNodeKey
           BuildTargetToUnconfiguredTargetNodeKey.class, UnconfiguredTargetNode.class);
 
   /** Build target that uniquely identifies {@link UnconfiguredTargetNode} */
-  @Value.Parameter
   public abstract UnconfiguredBuildTarget getBuildTarget();
 
   /**
    * {@link Path} to the root of a package that has this {@link UnconfiguredTargetNode}, relative to
    * parse root, usually cell root
    */
-  @Value.Parameter
   public abstract Path getPackagePath();
 
   @Value.Check

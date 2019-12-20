@@ -21,6 +21,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
@@ -29,7 +30,7 @@ import org.immutables.value.Value;
  * Transformation key containing {@link UnconfiguredTargetNode} to translate it to {@link
  * UnconfiguredTargetNodeWithDeps}.
  */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey
     implements ComputeKey<UnconfiguredTargetNodeWithDeps> {
 
@@ -42,14 +43,12 @@ public abstract class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey
    * {@link UnconfiguredTargetNode} which should be translated to {@link
    * UnconfiguredTargetNodeWithDeps}
    */
-  @Value.Parameter
   public abstract UnconfiguredTargetNode getUnconfiguredTargetNode();
 
   /**
    * {@link Path} to the root of a package that has this {@link UnconfiguredTargetNode}, relative to
    * parse root, usually cell root
    */
-  @Value.Parameter
   public abstract Path getPackagePath();
 
   @Value.Check

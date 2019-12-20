@@ -27,17 +27,16 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.stream.StreamSupport;
-import org.immutables.value.Value;
 
 /** Matches a {@link TargetNode} that corresponds to a single build target */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public abstract class BuildTargetSpec implements TargetNodeSpec {
 
   /** @return Build target to match with this spec and its output label, if any */
-  @Value.Parameter
   public abstract UnconfiguredBuildTargetWithOutputs getUnconfiguredBuildTargetViewWithOutputs();
 
   public UnconfiguredBuildTargetView getUnconfiguredBuildTargetView() {
@@ -54,7 +53,6 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
   }
 
   @Override
-  @Value.Parameter
   public abstract BuildFileSpec getBuildFileSpec();
 
   /**

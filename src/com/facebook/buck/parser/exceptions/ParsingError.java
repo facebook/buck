@@ -16,23 +16,21 @@
 
 package com.facebook.buck.parser.exceptions;
 
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
-import org.immutables.value.Value;
 
 /** Holds information about error occurred during parsing a build file */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 @JsonDeserialize
 public abstract class ParsingError {
   /** @return Human readable message of the error. */
-  @Value.Parameter
   @JsonProperty("message")
   public abstract String getMessage();
 
   /** @return Parser stack trace to the errorred callsite, if any. */
-  @Value.Parameter
   @JsonProperty("stacktrace")
   public abstract ImmutableList<String> getStackTrace();
 
