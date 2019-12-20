@@ -342,6 +342,12 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testGeneratingAndroidManifestWithMinSdkParameterized()
+      throws InterruptedException, IOException {
+    runBuckProjectAndVerify("min_sdk_parameterized");
+  }
+
+  @Test
   public void testGeneratingAndroidManifestWithMinSdkFromBinaryManifest()
       throws InterruptedException, IOException {
     runBuckProjectAndVerify("min_sdk_version_from_binary_manifest");

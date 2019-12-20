@@ -70,7 +70,18 @@ abstract class AbstractIjModuleAndroidFacet {
   @Value.Lazy
   public Optional<String> getMinSdkVersion() {
     Ordering<String> byIntegerValue = Ordering.natural().onResultOf(Integer::valueOf);
-    return getMinSdkVersions().stream().min(byIntegerValue);
+    return getMinSdkVersions().stream()
+        .filter(AbstractIjModuleAndroidFacet::isInteger)
+        .min(byIntegerValue);
+  }
+
+  private static boolean isInteger(String s) {
+    try {
+      Integer.valueOf(s);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
   }
 
   /** @return either the package name from facet or package name from the first manifest */
