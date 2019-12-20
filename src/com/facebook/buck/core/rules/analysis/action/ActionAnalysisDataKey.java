@@ -17,7 +17,7 @@
 package com.facebook.buck.core.rules.analysis.action;
 
 import com.facebook.buck.core.model.BuildTarget;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 
 /**
  * The key used to look up the corresponding {@link ActionAnalysisData}.
@@ -28,17 +28,15 @@ import org.immutables.value.Value;
  * ActionAnalysisData} of the many that a single rule analysis of a {@link BuildTarget} could
  * produce.
  */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public interface ActionAnalysisDataKey {
 
   /**
    * @return the {@link BuildTarget} for the rule analysis which the corresponding {@link
    *     ActionAnalysisData} is created from
    */
-  @Value.Parameter
   BuildTarget getBuildTarget();
 
   /** @return the unique and stable ID of the corresponding {@link ActionAnalysisData} */
-  @Value.Parameter
   ActionAnalysisData.ID getID();
 }

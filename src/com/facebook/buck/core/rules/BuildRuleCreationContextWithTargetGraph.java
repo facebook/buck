@@ -23,36 +23,30 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import org.immutables.value.Value;
 
 /**
  * Contains common objects used during {@link BuildRule} creation in {@link
  * DescriptionWithTargetGraph#createBuildRule}.
  */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public interface BuildRuleCreationContextWithTargetGraph extends BuildRuleCreationContext {
 
-  @Value.Parameter
   TargetGraph getTargetGraph();
 
-  @Value.Parameter
   @Override
   ActionGraphBuilder getActionGraphBuilder();
 
-  @Value.Parameter
   @Override
   ProjectFilesystem getProjectFilesystem();
 
-  @Value.Parameter
   @Override
   CellPathResolver getCellPathResolver();
 
-  @Value.Parameter
   @Override
   ToolchainProvider getToolchainProvider();
 
-  @Value.Parameter
   @Override
   ConfigurationRuleRegistry getConfigurationRuleRegistry();
 
@@ -61,6 +55,5 @@ public interface BuildRuleCreationContextWithTargetGraph extends BuildRuleCreati
    *     LegacyProviderCompatibleDescription#createProviders(ProviderCreationContext, BuildTarget,
    *     BuildRuleArg)}
    */
-  @Value.Parameter
   ProviderInfoCollection getProviderInfoCollection();
 }

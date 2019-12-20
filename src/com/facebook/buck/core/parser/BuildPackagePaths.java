@@ -17,15 +17,14 @@
 package com.facebook.buck.core.parser;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /** Contains relative paths for all the packages matched by some build target pattern */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public abstract class BuildPackagePaths implements ComputeResult {
 
   /** Relative paths to folders that are roots for build packages, i.e. which contain build files */
-  @Value.Parameter
   public abstract ImmutableSortedSet<Path> getPackageRoots();
 }

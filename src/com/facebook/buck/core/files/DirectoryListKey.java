@@ -19,17 +19,16 @@ package com.facebook.buck.core.files;
 import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /** Transformation key that has info about directory listing computation */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class DirectoryListKey implements ComputeKey<DirectoryList> {
 
   public static final ComputationIdentifier<DirectoryList> IDENTIFIER =
       ClassBasedComputationIdentifier.of(DirectoryListKey.class, DirectoryList.class);
 
-  @Value.Parameter
   /** Path of the directory to list */
   public abstract Path getPath();
 

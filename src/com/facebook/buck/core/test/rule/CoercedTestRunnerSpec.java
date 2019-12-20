@@ -17,6 +17,7 @@
 package com.facebook.buck.core.test.rule;
 
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.args.Arg;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Preconditions;
@@ -29,10 +30,9 @@ import org.immutables.value.Value;
  * com.facebook.buck.rules.macros.StringWithMacros} from {@link TestRunnerSpec} resolved to {@link
  * Arg}s.
  */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public abstract class CoercedTestRunnerSpec {
 
-  @Value.Parameter
   protected abstract Object getData();
 
   @Value.Check

@@ -18,19 +18,18 @@ package com.facebook.buck.core.model.targetgraph.raw;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableSet;
-import org.immutables.value.Value;
 
 /** A pair of {@link UnconfiguredTargetNode} and its dependencies */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 @JsonDeserialize
 public abstract class UnconfiguredTargetNodeWithDeps implements ComputeResult {
 
   /** Raw target node, i.e. a target node with partially resolved attributes */
-  @Value.Parameter
   @JsonProperty("node")
   public abstract UnconfiguredTargetNode getUnconfiguredTargetNode();
 
@@ -39,7 +38,6 @@ public abstract class UnconfiguredTargetNodeWithDeps implements ComputeResult {
    * have unresolved configuration, this list is excessive, i.e. may contain all possible dependents
    * for all possible configurations.
    */
-  @Value.Parameter
   @JsonProperty("deps")
   public abstract ImmutableSet<UnconfiguredBuildTarget> getDeps();
 

@@ -21,6 +21,7 @@ import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlarkFunction;
 import com.facebook.buck.core.starlark.compatible.MethodLookup;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -30,7 +31,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
-import org.immutables.value.Value;
 
 /**
  * A {@link Provider} for a {@link ProviderInfo} that is declared in java. The provider is auto
@@ -159,10 +159,8 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
    *
    * @param <U> the type of the {@link BuiltInProviderInfo}
    */
-  @Value.Immutable(copy = false, builder = false, prehash = true)
-  @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
-  public abstract static class BuiltInKey<U> implements Provider.Key<U> {
-    @Value.Parameter
+  @BuckStylePrehashedValue
+  abstract static class BuiltInKey<U> implements Provider.Key<U> {
     abstract Class<?> getInfoClass();
 
     @Override

@@ -21,7 +21,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 
 /**
  * The key of a computation of the {@link com.facebook.buck.core.model.targetgraph.TargetGraph} to
@@ -30,7 +30,7 @@ import org.immutables.value.Value;
  *
  * <p>This key will be used to indicate which rule's analysis we are currently interested in.
  */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class RuleAnalysisKey implements ComputeKey<RuleAnalysisResult> {
 
   public static final ComputationIdentifier<RuleAnalysisResult> IDENTIFIER =
@@ -41,7 +41,6 @@ public abstract class RuleAnalysisKey implements ComputeKey<RuleAnalysisResult> 
    *
    * @return the {@link BuildTarget} of this key
    */
-  @Value.Parameter
   public abstract BuildTarget getBuildTarget();
 
   @Override

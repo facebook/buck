@@ -20,10 +20,10 @@ import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationId
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 
 /** Transformation key containing build target pattern for which to discover package paths */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class BuildTargetPatternToBuildPackagePathKey
     implements ComputeKey<BuildPackagePaths> {
 
@@ -31,7 +31,6 @@ public abstract class BuildTargetPatternToBuildPackagePathKey
       ClassBasedComputationIdentifier.of(
           BuildTargetPatternToBuildPackagePathKey.class, BuildPackagePaths.class);
 
-  @Value.Parameter
   /**
    * Pattern for which to discover paths to appropriate packages. Pattern can specify single target
    * like //package:target or multiple targets like //package: or //package/...

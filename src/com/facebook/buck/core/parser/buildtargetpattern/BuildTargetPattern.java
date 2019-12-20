@@ -17,6 +17,7 @@
 package com.facebook.buck.core.parser.buildtargetpattern;
 
 import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.base.Preconditions;
 import org.immutables.value.Value;
 
@@ -25,7 +26,7 @@ import org.immutables.value.Value;
  *
  * <p>Refer to {@link BuildTargetPatternParser} for acceptable pattern formats
  */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class BuildTargetPattern {
 
   /** Type of a pattern */
@@ -59,15 +60,12 @@ public abstract class BuildTargetPattern {
   }
 
   /** Path to the package folder that is a root for all build targets matched by a pattern */
-  @Value.Parameter
   public abstract CellRelativePath getCellRelativeBasePath();
 
   /** Type of the parsed pattern */
-  @Value.Parameter
   public abstract Kind getKind();
 
   /** Target name in case pattern is single build target pattern; otherwise an empty string */
-  @Value.Parameter
   public abstract String getLocalNameAndFlavors();
 
   /** Whether this is a '//package/...' pattern. */

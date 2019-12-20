@@ -17,24 +17,23 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.util.ProcessExecutor;
 import java.nio.file.Path;
 import java.util.Map;
-import org.immutables.value.Value;
 
 /**
  * Holds the information {@link Action}s can use for its {@link
  * Action#execute(ActionExecutionContext)}
  */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public abstract class ActionExecutionContext {
   // TODO(bobyf): fill more as needed. The current is approximately what is needed based on
   // BuildContext and ExecutionContext
 
-  @Value.Parameter
   protected abstract BuckEventBus getBuckEventBus();
 
   /**
@@ -42,7 +41,6 @@ public abstract class ActionExecutionContext {
    *     a filesystem that operates on {@link com.facebook.buck.core.artifact.Artifact}s without
    *     requiring actions to be aware of the actual underlying paths.
    */
-  @Value.Parameter
   public abstract ArtifactFilesystem getArtifactFilesystem();
 
   /** Logs an error */
@@ -56,14 +54,11 @@ public abstract class ActionExecutionContext {
   }
 
   /** @return The executor to run processes in */
-  @Value.Parameter
   public abstract ProcessExecutor getProcessExecutor();
 
   /** @return The environment of the current context */
-  @Value.Parameter
   public abstract Map<String, String> getEnvironment();
 
   /** @return The working directory for the current context */
-  @Value.Parameter
   public abstract Path getWorkingDirectory();
 }

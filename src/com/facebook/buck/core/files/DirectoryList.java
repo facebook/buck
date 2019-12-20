@@ -17,20 +17,17 @@
 package com.facebook.buck.core.files;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /** Has information about files and folders at some directory */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public abstract class DirectoryList implements ComputeResult {
 
-  @Value.Parameter
   public abstract ImmutableSortedSet<Path> getFiles();
 
-  @Value.Parameter
   public abstract ImmutableSortedSet<Path> getDirectories();
 
-  @Value.Parameter
   public abstract ImmutableSortedSet<Path> getSymlinks();
 }

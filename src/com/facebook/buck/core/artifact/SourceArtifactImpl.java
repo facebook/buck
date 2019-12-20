@@ -17,6 +17,7 @@
 package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
@@ -25,7 +26,7 @@ import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** An artifact representing a source file */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class SourceArtifactImpl extends AbstractArtifact
     implements SourceArtifact, BoundArtifact {
 
@@ -36,7 +37,6 @@ public abstract class SourceArtifactImpl extends AbstractArtifact
 
   /** @return the path to the source file */
   @Override
-  @Value.Parameter
   public abstract PathSourcePath getSourcePath();
 
   @Nullable

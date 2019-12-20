@@ -16,14 +16,13 @@
 
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Optional;
 import org.immutables.value.Value;
-import org.immutables.value.Value.Immutable;
-import org.immutables.value.Value.Parameter;
 
 /** Platform target implementation of {@link TargetConfiguration}. */
-@Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class RuleBasedTargetConfiguration extends TargetConfiguration {
 
   @Value.Check
@@ -31,7 +30,6 @@ public abstract class RuleBasedTargetConfiguration extends TargetConfiguration {
     ConfigurationForConfigurationTargets.validateTarget(getTargetPlatform());
   }
 
-  @Parameter
   public abstract BuildTarget getTargetPlatform();
 
   @JsonIgnore

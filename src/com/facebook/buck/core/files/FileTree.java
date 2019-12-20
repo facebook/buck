@@ -17,23 +17,20 @@
 package com.facebook.buck.core.files;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /** Has information about files and folders at some directory */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public abstract class FileTree implements ComputeResult {
 
-  @Value.Parameter
   /** Relative path to this instance from some root, usually cell root */
   public abstract Path getPath();
 
-  @Value.Parameter
   /** List of files, folders and symlinks in the desired directory */
   public abstract DirectoryList getDirectoryList();
 
-  @Value.Parameter
   /** File trees of all subfolders recursively */
   public abstract ImmutableMap<Path, FileTree> getChildren();
 }

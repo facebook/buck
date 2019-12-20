@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.AbstractCellPathResolver;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.config.Config;
@@ -37,26 +38,22 @@ import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   private static final Logger LOG = Logger.get(DefaultCellPathResolver.class);
 
   public static final String REPOSITORIES_SECTION = "repositories";
 
-  @Value.Parameter
   public abstract Path getRoot();
 
   @Override
-  @Value.Parameter
   public abstract ImmutableMap<String, Path> getCellPathsByRootCellExternalName();
 
   @Override
-  @Value.Parameter
   public abstract CellNameResolver getCellNameResolver();
 
   @Override
-  @Value.Parameter
   public abstract NewCellPathResolver getNewCellPathResolver();
 
   /** This gives the names as they are specified in the root cell. */

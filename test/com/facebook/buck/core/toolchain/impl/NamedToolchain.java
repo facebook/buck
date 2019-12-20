@@ -17,7 +17,7 @@
 package com.facebook.buck.core.toolchain.impl;
 
 import com.facebook.buck.core.toolchain.Toolchain;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
  * Helper class that assists {@link ToolchainProviderBuilder} with creating toolchains.
@@ -29,12 +29,11 @@ import org.immutables.value.Value;
  * allows consolidate creation of toolchains in helper methods that return instances of this class
  * and use them in {@link ToolchainProviderBuilder#withToolchain(NamedToolchain)}.
  */
-@Value.Immutable(copy = false, builder = false)
+@BuckStyleValue
 public interface NamedToolchain {
-  @Value.Parameter
+
   String getName();
 
-  @Value.Parameter
   Toolchain getToolchain();
 
   static NamedToolchain of(String name, Toolchain toolchain) {

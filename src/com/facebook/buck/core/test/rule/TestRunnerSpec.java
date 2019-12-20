@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.test.rule;
 
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.base.Preconditions;
 import java.util.Map;
@@ -28,10 +29,9 @@ import org.immutables.value.Value;
  * <p>The JSON map keys must be {@link StringWithMacros}, and not other complicated collection
  * structures.
  */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public abstract class TestRunnerSpec {
 
-  @Value.Parameter
   public abstract Object getData();
 
   @Value.Check
