@@ -33,6 +33,8 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.stream.RichStream;
@@ -56,7 +58,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.immutables.value.Value;
-import org.immutables.value.Value.Style.ImplementationVisibility;
 
 /**
  * Takes a regular {@link TargetGraph}, resolves any versioned nodes, and returns a new graph with
@@ -181,14 +182,12 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
    * Computes all the {@link VersionInfo} in the graph. TODO(bobyf) rewrite this as stages once
    * {@link GraphComputation} supports staging
    */
-  @Value.Immutable(builder = false, copy = false, prehash = true)
-  @Value.Style(visibility = ImplementationVisibility.PACKAGE)
+  @BuckStylePrehashedValue
   abstract static class VersionInfoKey implements ComputeKey<VersionInfo> {
 
     public static final ComputationIdentifier<VersionInfo> IDENTIFIER =
         ClassBasedComputationIdentifier.of(VersionInfoKey.class, VersionInfo.class);
 
-    @Value.Parameter
     public abstract TargetNode<?> getTargetNode();
 
     @Override
@@ -278,7 +277,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   }
 
   /** Key used to request for resolved {@link TargetNode}s. */
-  @Value.Immutable(builder = false, copy = false, prehash = true)
+  @BuckStylePrehashedValue
   abstract static class VersionTargetGraphKey implements ComputeKey<TargetNode<?>> {
 
     @SuppressWarnings("unchecked")
@@ -286,13 +285,10 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
         ClassBasedComputationIdentifier.of(
             VersionTargetGraphKey.class, (Class<TargetNode<?>>) (Class<?>) TargetNode.class);
 
-    @Value.Parameter
     public abstract TargetNode<?> getTargetNode();
 
-    @Value.Parameter
     public abstract Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions();
 
-    @Value.Parameter
     @Value.Auxiliary
     public abstract Optional<TargetNodeTranslator> targetNodeTranslator();
 
@@ -307,13 +303,10 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   }
 
   /** Key used to request for {@link VersionInfo} */
-  @Value.Immutable(builder = false, copy = false)
-  @Value.Style(visibility = ImplementationVisibility.PACKAGE)
+  @BuckStyleValue
   abstract static class VersionRootInfo {
-    @Value.Parameter
     abstract ImmutableMap<BuildTarget, Version> getSelectedVersions();
 
-    @Value.Parameter
     abstract TargetNodeTranslator getTargetTranslator();
   }
 
