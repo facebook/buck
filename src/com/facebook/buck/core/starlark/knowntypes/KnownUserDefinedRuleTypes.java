@@ -104,7 +104,7 @@ public class KnownUserDefinedRuleTypes implements KnownRuleTypes {
       TypeCoercerFactory typeCoercerFactory, RuleType ruleType, Class<T> dtoClass) {
     Preconditions.checkArgument(dtoClass.isAssignableFrom(SkylarkDescriptionArg.class));
     SkylarkUserDefinedRule rule = Objects.requireNonNull(getRule(ruleType.getName()));
-    return new ImmutableDataTransferObjectDescriptor<>(
+    return ImmutableDataTransferObjectDescriptor.of(
         dtoClass,
         () -> new SkylarkDescriptionArg(rule),
         rule.getAllParamInfo(),

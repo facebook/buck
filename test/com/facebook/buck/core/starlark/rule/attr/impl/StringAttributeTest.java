@@ -38,7 +38,7 @@ public class StringAttributeTest {
   @Test
   public void coercesStringsProperly() throws CoerceFailedException {
 
-    StringAttribute attr = new ImmutableStringAttribute("foobaz", "", true, ImmutableList.of());
+    StringAttribute attr = ImmutableStringAttribute.of("foobaz", "", true, ImmutableList.of());
     String coerced =
         attr.getValue(
             cellRoots,
@@ -55,7 +55,7 @@ public class StringAttributeTest {
   public void failsMandatoryCoercionProperly() throws CoerceFailedException {
     expected.expect(CoerceFailedException.class);
 
-    StringAttribute attr = new ImmutableStringAttribute("foobaz", "", true, ImmutableList.of());
+    StringAttribute attr = ImmutableStringAttribute.of("foobaz", "", true, ImmutableList.of());
 
     attr.getValue(
         cellRoots,
@@ -70,7 +70,7 @@ public class StringAttributeTest {
   public void succeedsIfValueInArray() throws CoerceFailedException {
 
     StringAttribute attr =
-        new ImmutableStringAttribute("foobaz", "", true, ImmutableList.of("foo", "bar", "baz"));
+        ImmutableStringAttribute.of("foobaz", "", true, ImmutableList.of("foo", "bar", "baz"));
     String value =
         attr.getValue(
             cellRoots,
@@ -84,7 +84,7 @@ public class StringAttributeTest {
 
   @Test
   public void allowsAnyValueIfValuesIsEmptyList() throws CoerceFailedException {
-    StringAttribute attr = new ImmutableStringAttribute("foobaz", "", true, ImmutableList.of());
+    StringAttribute attr = ImmutableStringAttribute.of("foobaz", "", true, ImmutableList.of());
     String value =
         attr.getValue(
             cellRoots,
@@ -103,7 +103,7 @@ public class StringAttributeTest {
     expected.expectMessage("must be one of 'foo', 'baz' instead of 'bar'");
 
     StringAttribute attr =
-        new ImmutableStringAttribute("foobaz", "", true, ImmutableList.of("foo", "baz"));
+        ImmutableStringAttribute.of("foobaz", "", true, ImmutableList.of("foo", "baz"));
 
     attr.getValue(
         cellRoots,

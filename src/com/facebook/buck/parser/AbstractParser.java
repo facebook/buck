@@ -172,7 +172,7 @@ abstract class AbstractParser implements Parser {
       throws IOException, InterruptedException, BuildFileParseException {
 
     if (toExplore.isEmpty()) {
-      return new ImmutableTargetGraphCreationResult(TargetGraph.EMPTY, toExplore);
+      return ImmutableTargetGraphCreationResult.of(TargetGraph.EMPTY, toExplore);
     }
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
@@ -245,7 +245,7 @@ abstract class AbstractParser implements Parser {
       }
 
       targetGraph = new TargetGraph(graph, ImmutableMap.copyOf(index));
-      return new ImmutableTargetGraphCreationResult(targetGraph, toExplore);
+      return ImmutableTargetGraphCreationResult.of(targetGraph, toExplore);
     } catch (CycleException e) {
       throw new HumanReadableException(e.getMessage());
     } catch (RuntimeException e) {

@@ -39,7 +39,7 @@ abstract class RustAssumptions {
 
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     RustPlatform rustPlatform =
-        new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
+        ImmutableRustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
             .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
     Throwable exception = null;
@@ -58,7 +58,7 @@ abstract class RustAssumptions {
       throws IOException, InterruptedException {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     RustPlatform rustPlatform =
-        new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
+        ImmutableRustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
             .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
     ImmutableList<String> rustc =
@@ -75,7 +75,7 @@ abstract class RustAssumptions {
       throws IOException, InterruptedException {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     RustPlatform rustPlatform =
-        new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
+        ImmutableRustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
             .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
     ImmutableList<String> rustc =

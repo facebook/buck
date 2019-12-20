@@ -89,7 +89,7 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
 
     ParsingError error = ImmutableParsingError.of("error1", ImmutableList.of("stacktrace1"));
 
-    return new ImmutableUnconfiguredTargetNodeWithDepsPackage(
+    return ImmutableUnconfiguredTargetNodeWithDepsPackage.of(
         Paths.get("base"),
         ImmutableMap.of(
             "target1", unconfiguredTargetNodeWithDeps1, "target2", unconfiguredTargetNodeWithDeps2),

@@ -266,7 +266,7 @@ public class VersionedTargetGraphCacheTest {
             .setDeps(ImmutableSortedSet.of(alias.getBuildTarget()))
             .build();
     TargetGraph graph = TargetGraphFactory.newInstance(root, pythonTest, alias, v1, v2);
-    return new ImmutableTargetGraphCreationResult(
+    return ImmutableTargetGraphCreationResult.of(
         graph,
         ImmutableSet.of(
             root.getBuildTarget(),

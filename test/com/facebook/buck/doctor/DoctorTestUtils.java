@@ -123,7 +123,7 @@ final class DoctorTestUtils {
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of(DoctorConfig.DOCTOR_SECTION, options))
             .build();
-    return new ImmutableDoctorConfig(buckConfig);
+    return ImmutableDoctorConfig.of(buckConfig);
   }
 
   public static class CapturingDefectReporter implements DefectReporter {

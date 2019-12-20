@@ -79,7 +79,7 @@ abstract class GenruleAndroidTools implements AddsToRuleKey {
     ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
     TargetConfiguration targetConfiguration = target.getTargetConfiguration();
     Tool androidAapt2 = aapt2ToolProvider.resolve(ruleResolver, targetConfiguration);
-    return new ImmutableGenruleAndroidTools(
+    return ImmutableGenruleAndroidTools.of(
         androidSdk,
         androidDx,
         androidZipalign,

@@ -262,7 +262,7 @@ class NativeLibraryMergeEnhancer {
 
       mergedLinkablesBuilder.put(
           cpuType,
-          new ImmutableNativeLinkableEnhancementResult(
+          ImmutableNativeLinkableEnhancementResult.of(
               moduleLinkablesBuilder.build(), moduleAssetLinkablesBuilder.build()));
     }
 
@@ -273,7 +273,7 @@ class NativeLibraryMergeEnhancer {
         .asMap()
         .forEach((k, v) -> finalSonameTargetsBuilder.put(k, ImmutableSortedSet.copyOf(v)));
 
-    return new ImmutableNativeLibraryMergeEnhancementResult(
+    return ImmutableNativeLibraryMergeEnhancementResult.of(
         mergedLinkablesBuilder.build(),
         ImmutableSortedMap.copyOf(sonameMapBuilder),
         finalSonameTargetsBuilder.build());

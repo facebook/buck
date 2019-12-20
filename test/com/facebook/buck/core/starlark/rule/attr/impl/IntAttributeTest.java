@@ -39,7 +39,7 @@ public class IntAttributeTest {
   @Test
   public void coercesIntegersProperly() throws CoerceFailedException {
 
-    IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of());
+    IntAttribute attr = ImmutableIntAttribute.of(4, "", true, ImmutableList.of());
     Integer coerced =
         attr.getValue(
             cellRoots,
@@ -56,7 +56,7 @@ public class IntAttributeTest {
   public void failsMandatoryCoercionProperly() throws CoerceFailedException {
     expected.expect(CoerceFailedException.class);
 
-    IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of());
+    IntAttribute attr = ImmutableIntAttribute.of(4, "", true, ImmutableList.of());
 
     attr.getValue(
         cellRoots,
@@ -70,7 +70,7 @@ public class IntAttributeTest {
   @Test
   public void succeedsIfValueInArray() throws CoerceFailedException {
 
-    IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of(1, 2, 3, 4));
+    IntAttribute attr = ImmutableIntAttribute.of(4, "", true, ImmutableList.of(1, 2, 3, 4));
     int value =
         attr.getValue(
             cellRoots,
@@ -85,7 +85,7 @@ public class IntAttributeTest {
 
   @Test
   public void allowsAnyValueIfValuesIsEmptyList() throws CoerceFailedException {
-    IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of());
+    IntAttribute attr = ImmutableIntAttribute.of(4, "", true, ImmutableList.of());
     int value =
         attr.getValue(
             cellRoots,
@@ -103,7 +103,7 @@ public class IntAttributeTest {
     expected.expect(CoerceFailedException.class);
     expected.expectMessage("must be one of '1', '2', '4' instead of '3'");
 
-    IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of(1, 2, 4));
+    IntAttribute attr = ImmutableIntAttribute.of(4, "", true, ImmutableList.of(1, 2, 4));
 
     attr.getValue(
         cellRoots,

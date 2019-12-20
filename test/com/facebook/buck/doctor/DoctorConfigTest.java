@@ -46,7 +46,7 @@ public class DoctorConfigTest {
   @Test
   public void testEmpty() {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
-    DoctorConfig config = new ImmutableDoctorConfig(buckConfig);
+    DoctorConfig config = ImmutableDoctorConfig.of(buckConfig);
     assertThat(
         config.getReportUploadPath(), Matchers.equalTo(DoctorConfig.DEFAULT_REPORT_UPLOAD_PATH));
     assertThat(
@@ -65,7 +65,7 @@ public class DoctorConfigTest {
                     ImmutableMap.of(
                         "report_upload_path", testPath, "slb_server_pool", "https://test.url.net")))
             .build();
-    DoctorConfig config = new ImmutableDoctorConfig(buckConfig);
+    DoctorConfig config = ImmutableDoctorConfig.of(buckConfig);
     assertThat(config.getReportUploadPath(), Matchers.equalTo(testPath));
     assertThat(
         config.getFrontendConfig().get().tryCreatingClientSideSlb(clock, eventBus),

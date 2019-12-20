@@ -26,8 +26,8 @@ import org.immutables.value.Value;
 /**
  * Value-style objects conforming to {@link BuckStyleImmutable} naming style.
  *
- * <p>Value-style objects have all attributes as constructor parameters, do not have builders,
- * "with" methods, "copy" methods, or "of" methods.
+ * <p>Value-style objects have all attributes as "of" constructor parameters, do not have builders,
+ * "with" methods, "copy" methods.
  *
  * <p>When using this annotation, it's unnecessary to explicitly use @Value.Immutable.
  *
@@ -39,7 +39,7 @@ import org.immutables.value.Value;
 @Value.Style(
     get = {"is*", "get*"},
     init = "set*",
-    of = "new",
+    of = "of",
     visibility = Value.Style.ImplementationVisibility.SAME,
     allParameters = true,
     defaults = @Value.Immutable(builder = false, copy = false, prehash = false),

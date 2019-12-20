@@ -180,7 +180,7 @@ public final class RunCommand extends AbstractCommand {
               .putAll(executable.getEnvironment(resolver))
               .build();
       BuckRunSpec cmd =
-          new ImmutableBuckRunSpec(
+          ImmutableBuckRunSpec.of(
               argv, envp, params.getCell().getFilesystem().getRootPath(), false);
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
       return ExitCode.SUCCESS;

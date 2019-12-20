@@ -36,7 +36,7 @@ public class InferPlatformFactory {
   /** Tries to construct {@link InferPlatform} based on buck config or otherwise env vars. */
   public static Optional<UnresolvedInferPlatform> getBasedOnConfigAndPath(
       BuckConfig buckConfig, ExecutableFinder executableFinder) {
-    InferConfig inferConfig = new ImmutableInferConfig(buckConfig);
+    InferConfig inferConfig = ImmutableInferConfig.of(buckConfig);
     Optional<ToolProvider> toolProviderOpt;
 
     Optional<ToolProvider> binaryProvider = inferConfig.getBinary();

@@ -51,7 +51,7 @@ public class AttrModule implements AttrModuleApi {
       Integer defaultValue, String doc, Boolean mandatory, SkylarkList<Integer> values)
       throws EvalException {
     List<Integer> validatedValues = SkylarkList.castList(values, Integer.class, null);
-    return new ImmutableIntAttribute(defaultValue, doc, mandatory, validatedValues);
+    return ImmutableIntAttribute.of(defaultValue, doc, mandatory, validatedValues);
   }
 
   @Override
@@ -61,7 +61,7 @@ public class AttrModule implements AttrModuleApi {
     ImmutableList<Integer> validatedDefaultValue =
         ImmutableList.copyOf(defaultValue.getContents(Integer.class, null));
 
-    return new ImmutableIntListAttribute(validatedDefaultValue, doc, mandatory, allowEmpty);
+    return ImmutableIntListAttribute.of(validatedDefaultValue, doc, mandatory, allowEmpty);
   }
 
   @Override
@@ -70,7 +70,7 @@ public class AttrModule implements AttrModuleApi {
       throws EvalException {
     List<String> validatedValues = SkylarkList.castList(values, String.class, null);
 
-    return new ImmutableStringAttribute(defaultValue, doc, mandatory, validatedValues);
+    return ImmutableStringAttribute.of(defaultValue, doc, mandatory, validatedValues);
   }
 
   @Override
@@ -80,12 +80,12 @@ public class AttrModule implements AttrModuleApi {
     ImmutableList<String> validatedDefaultValue =
         ImmutableList.copyOf(defaultValue.getContents(String.class, null));
 
-    return new ImmutableStringListAttribute(validatedDefaultValue, doc, mandatory, allowEmpty);
+    return ImmutableStringListAttribute.of(validatedDefaultValue, doc, mandatory, allowEmpty);
   }
 
   @Override
   public AttributeHolder boolAttribute(boolean defaultValue, String doc, boolean mandatory) {
-    return new ImmutableBoolAttribute(defaultValue, doc, mandatory);
+    return ImmutableBoolAttribute.of(defaultValue, doc, mandatory);
   }
 
   @Override
@@ -94,13 +94,13 @@ public class AttrModule implements AttrModuleApi {
       throws EvalException {
     List<String> validatedDefaultValues = defaultValue.getContents(String.class, null);
 
-    return new ImmutableSourceListAttribute(validatedDefaultValues, doc, mandatory, allowEmpty);
+    return ImmutableSourceListAttribute.of(validatedDefaultValues, doc, mandatory, allowEmpty);
   }
 
   @Override
   public AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory)
       throws EvalException {
-    return new ImmutableSourceAttribute(defaultValue, doc, mandatory);
+    return ImmutableSourceAttribute.of(defaultValue, doc, mandatory);
   }
 
   @Override
@@ -110,7 +110,7 @@ public class AttrModule implements AttrModuleApi {
     ImmutableList<Provider<?>> validatedProviders =
         BuckSkylarkTypes.toJavaList(providers, Provider.class, null);
 
-    return new ImmutableDepAttribute(defaultValue, doc, mandatory, validatedProviders);
+    return ImmutableDepAttribute.of(defaultValue, doc, mandatory, validatedProviders);
   }
 
   @Override
@@ -125,7 +125,7 @@ public class AttrModule implements AttrModuleApi {
     ImmutableList<Provider<?>> validatedProviders =
         BuckSkylarkTypes.toJavaList(providers, Provider.class, null);
 
-    return new ImmutableDepListAttribute(
+    return ImmutableDepListAttribute.of(
         validatedDefaultValues, doc, mandatory, allowEmpty, validatedProviders);
   }
 
@@ -136,7 +136,7 @@ public class AttrModule implements AttrModuleApi {
       throw new EvalException(
           location, "output attributes must have a default value, or be mandatory");
     }
-    return new ImmutableOutputAttribute(defaultValue, doc, mandatory);
+    return ImmutableOutputAttribute.of(defaultValue, doc, mandatory);
   }
 
   @Override
@@ -144,6 +144,6 @@ public class AttrModule implements AttrModuleApi {
       SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     List<String> validatedValues = defaultValue.getContents(String.class, null);
-    return new ImmutableOutputListAttribute(validatedValues, doc, mandatory, allowEmpty);
+    return ImmutableOutputListAttribute.of(validatedValues, doc, mandatory, allowEmpty);
   }
 }

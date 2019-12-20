@@ -61,7 +61,7 @@ public class DepListAttributeTest {
           BuildTargetFactory.newInstance("//some:rule"));
 
   private final DepListAttribute attr =
-      new ImmutableDepListAttribute(ImmutableList.of(), "", true, true, ImmutableList.of());
+      ImmutableDepListAttribute.of(ImmutableList.of(), "", true, true, ImmutableList.of());
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -111,7 +111,7 @@ public class DepListAttributeTest {
   @Test
   public void failsIfEmptyListProvidedAndNotAllowed() throws CoerceFailedException {
     DepListAttribute attr =
-        new ImmutableDepListAttribute(ImmutableList.of(), "", true, false, ImmutableList.of());
+        ImmutableDepListAttribute.of(ImmutableList.of(), "", true, false, ImmutableList.of());
 
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage("may not be empty");
@@ -179,7 +179,7 @@ public class DepListAttributeTest {
   public void failsTransformIfMissingRequiredProvider() throws CoerceFailedException {
     FakeBuiltInProvider expectedProvider = new FakeBuiltInProvider("expected");
     DepListAttribute attr =
-        new ImmutableDepListAttribute(
+        ImmutableDepListAttribute.of(
             ImmutableList.of(), "", true, true, ImmutableList.of(expectedProvider));
     FakeBuiltInProvider presentProvider = new FakeBuiltInProvider("present");
 

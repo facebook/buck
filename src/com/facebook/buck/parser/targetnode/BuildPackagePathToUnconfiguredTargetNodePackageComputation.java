@@ -152,7 +152,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
         buildFileManifest.getIncludes().stream()
             .map(include -> superRootPath.relativize(fileSystem.getPath(include)))
             .collect(ImmutableSet.toImmutableSet());
-    return new ImmutableUnconfiguredTargetNodeWithDepsPackage(
+    return ImmutableUnconfiguredTargetNodeWithDepsPackage.of(
         packagePath, rawTargetNodesWithDeps, errors, includes);
   }
 

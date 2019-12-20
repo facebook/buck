@@ -383,7 +383,7 @@ public class IncrementalActionGraphScenarioTest {
         AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                new ImmutableTargetGraphCreationResult(
+                ImmutableTargetGraphCreationResult.of(
                     unversionedTargetGraph, ImmutableSet.of(binaryTarget, binaryTarget2)),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
@@ -558,7 +558,7 @@ public class IncrementalActionGraphScenarioTest {
         AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                new ImmutableTargetGraphCreationResult(
+                ImmutableTargetGraphCreationResult.of(
                     unversionedTargetGraph, ImmutableSet.of(compilationDatabaseTarget)),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
@@ -584,7 +584,7 @@ public class IncrementalActionGraphScenarioTest {
         AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     newUnversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                new ImmutableTargetGraphCreationResult(
+                ImmutableTargetGraphCreationResult.of(
                     newUnversionedTargetGraph, ImmutableSet.of(binaryTarget)),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),

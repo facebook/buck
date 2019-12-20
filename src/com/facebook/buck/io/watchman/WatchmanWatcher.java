@@ -173,7 +173,7 @@ public class WatchmanWatcher {
     if (watchPrefix.isPresent()) {
       sinceParams.put("relative_root", watchPrefix.get());
     }
-    return new ImmutableWatchmanQuery(watchRoot, sinceParams);
+    return ImmutableWatchmanQuery.of(watchRoot, sinceParams);
   }
 
   @VisibleForTesting
@@ -404,7 +404,7 @@ public class WatchmanWatcher {
 
           Path filePath = fileSystem.getPath(fileName);
 
-          changes.add(new ImmutableChange(type, filePath, kind));
+          changes.add(ImmutableChange.of(type, filePath, kind));
 
           if (type != WatchmanEvent.Type.DIRECTORY) {
             // WatchmanPathEvent is sent for everything but directories - this is legacy
@@ -416,7 +416,7 @@ public class WatchmanWatcher {
         }
 
         if (!changes.isEmpty()) {
-          postWatchEvent(buckEventBus, new ImmutableWatchmanMultiplePathEvent(cellPath, changes));
+          postWatchEvent(buckEventBus, ImmutableWatchmanMultiplePathEvent.of(cellPath, changes));
         }
 
         if (!files.isEmpty() || freshInstanceAction == FreshInstanceAction.NONE) {

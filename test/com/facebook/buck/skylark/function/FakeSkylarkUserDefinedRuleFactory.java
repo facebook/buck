@@ -49,7 +49,7 @@ public class FakeSkylarkUserDefinedRuleFactory {
   public static SkylarkUserDefinedRule createSimpleRule()
       throws EvalException, LabelSyntaxException {
     return createSingleArgRule(
-        "some_rule", "baz", new ImmutableStringAttribute("default", "", false, ImmutableList.of()));
+        "some_rule", "baz", ImmutableStringAttribute.of("default", "", false, ImmutableList.of()));
   }
 
   /** Create a single argument rule with the given argument name and attr to back it */
@@ -71,7 +71,7 @@ public class FakeSkylarkUserDefinedRuleFactory {
     return createRuleFromCallable(
         "some_rule",
         "baz",
-        new ImmutableStringAttribute("default", "", false, ImmutableList.of()),
+        ImmutableStringAttribute.of("default", "", false, ImmutableList.of()),
         "//foo:bar.bzl",
         callable);
   }

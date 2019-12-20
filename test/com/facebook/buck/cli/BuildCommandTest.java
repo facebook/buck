@@ -699,7 +699,7 @@ public class BuildCommandTest {
         knownRuleTypesProvider,
         new TestParser(
             TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider),
-            new ImmutableTargetGraphCreationResult(
+            ImmutableTargetGraphCreationResult.of(
                 TargetGraph.EMPTY,
                 buildTargetNames.stream()
                     .map(BuildTargetFactory::newInstance)
@@ -730,7 +730,7 @@ public class BuildCommandTest {
       ImmutableMap<String, ImmutableMap<OutputLabel, ImmutableSet<Path>>> pathsByLabelsForTargets,
       boolean useMultipleOutputsRule) {
     TargetGraphCreationResult targetGraphCreationResult =
-        new ImmutableTargetGraphCreationResult(
+        ImmutableTargetGraphCreationResult.of(
             targetGraph,
             buildTargetsWithOutputs.stream()
                 .map(ImmutableBuildTargetWithOutputs::getBuildTarget)

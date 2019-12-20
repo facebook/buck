@@ -75,7 +75,7 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
       Environment env)
       throws EvalException {
     ParseContext.getParseContext(env, ast)
-        .recordPackage(new ImmutablePackageMetadata(visibility, within_view), ast);
+        .recordPackage(ImmutablePackageMetadata.of(visibility, within_view), ast);
   }
 
   public static final SkylarkPackageModule PACKAGE_MODULE = new SkylarkPackageModule();

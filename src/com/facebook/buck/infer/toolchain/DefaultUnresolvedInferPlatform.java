@@ -53,7 +53,7 @@ class DefaultUnresolvedInferPlatform implements UnresolvedInferPlatform {
         inferConfig.getNullsafeThirdPartySignatures(configuration);
     Boolean executeRemotely = inferConfig.executeRemotely();
 
-    return new ImmutableInferPlatform(
+    return ImmutableInferPlatform.of(
         tool, version, configFile, nullsafeThirdPartySignatures, executeRemotely);
   }
 

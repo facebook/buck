@@ -127,7 +127,7 @@ public class RuleKeyLogFileUploaderTest {
       httpResponse.setCharacterEncoding("utf-8");
 
       DoctorJsonResponse json =
-          new ImmutableDoctorJsonResponse(
+          ImmutableDoctorJsonResponse.of(
               true, Optional.empty(), Optional.of(rageUrl), Optional.of(rageMsg));
       try (DataOutputStream out = new DataOutputStream(httpResponse.getOutputStream())) {
         ObjectMappers.WRITER.writeValue((DataOutput) out, json);

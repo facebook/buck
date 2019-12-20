@@ -94,7 +94,7 @@ public abstract class AbstractReport {
     }
     FullVersionControlStats versionControlStats = versionControlStatsOptional.get();
     return Optional.of(
-        new ImmutableSourceControlInfo(
+        ImmutableSourceControlInfo.of(
             versionControlStats.getCurrentRevisionId(),
             versionControlStats.getBaseBookmarks(),
             Optional.of(versionControlStats.getBranchedFromMasterRevisionId()),
@@ -137,7 +137,7 @@ public abstract class AbstractReport {
     Optional<FileChangesIgnoredReport> fileChangesIgnoredReport = getFileChangesIgnoredReport();
 
     UserLocalConfiguration userLocalConfiguration =
-        new ImmutableUserLocalConfiguration(
+        ImmutableUserLocalConfiguration.of(
             isNoBuckCheckPresent(), getLocalConfigs(), getConfigOverrides(selectedBuilds));
 
     ImmutableSet<Path> includedPaths =

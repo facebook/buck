@@ -133,7 +133,7 @@ public class AuditClasspathCommandTest {
     // - independent targets in the same BUCK file are not included in the output
     auditClasspathCommand.printClasspath(
         params,
-        new ImmutableTargetGraphCreationResult(targetGraph, ImmutableSet.of(testAndroidTarget)));
+        ImmutableTargetGraphCreationResult.of(targetGraph, ImmutableSet.of(testAndroidTarget)));
 
     Path root = projectFilesystem.getRootPath();
     SortedSet<String> expectedPaths =
@@ -166,7 +166,7 @@ public class AuditClasspathCommandTest {
     setUp();
     auditClasspathCommand.printClasspath(
         params,
-        new ImmutableTargetGraphCreationResult(
+        ImmutableTargetGraphCreationResult.of(
             TargetGraphFactory.newInstance(
                 ImmutableSet.of(
                     javaLibraryNode,
@@ -224,7 +224,7 @@ public class AuditClasspathCommandTest {
 
     auditClasspathCommand.printJsonClasspath(
         params,
-        new ImmutableTargetGraphCreationResult(
+        ImmutableTargetGraphCreationResult.of(
             TargetGraphFactory.newInstance(ImmutableSet.of(androidNode, javaNode)),
             ImmutableSet.of(androidTarget, javaTarget)));
 
@@ -285,7 +285,7 @@ public class AuditClasspathCommandTest {
             FakeBuckConfig.builder()
                 .setSections(ImmutableMap.of("build", ImmutableMap.of("versions", "true")))
                 .build()),
-        new ImmutableTargetGraphCreationResult(targetGraph, targets));
+        ImmutableTargetGraphCreationResult.of(targetGraph, targets));
 
     // Verify output.
     Path root = projectFilesystem.getRootPath();
@@ -343,7 +343,7 @@ public class AuditClasspathCommandTest {
             FakeBuckConfig.builder()
                 .setSections(ImmutableMap.of("build", ImmutableMap.of("versions", "true")))
                 .build()),
-        new ImmutableTargetGraphCreationResult(targetGraph, targets));
+        ImmutableTargetGraphCreationResult.of(targetGraph, targets));
 
     // Verify output.
     Path root = projectFilesystem.getRootPath();

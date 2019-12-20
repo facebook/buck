@@ -83,23 +83,23 @@ class SkylarkRuleFunctionImplicitAttributes {
   private static Attribute<?> attributeFromMethodReturn(Method method) {
     // TODO(nga): obtain doc from `@Hint`
     if (method.getReturnType() == String.class) {
-      return new ImmutableStringAttribute(
+      return ImmutableStringAttribute.of(
           "", "The name of the target", !method.isDefault(), ImmutableList.of());
     } else if (new TypeToken<ImmutableSortedSet<String>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return new ImmutableStringListAttribute(ImmutableList.of(), "", false, true);
+      return ImmutableStringListAttribute.of(ImmutableList.of(), "", false, true);
     } else if (new TypeToken<ImmutableSet<SourcePath>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return new ImmutableStringListAttribute(ImmutableList.of(), "", false, true);
+      return ImmutableStringListAttribute.of(ImmutableList.of(), "", false, true);
     } else if (new TypeToken<ImmutableList<BuildTarget>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return new ImmutableStringListAttribute(ImmutableList.of(), "", false, true);
+      return ImmutableStringListAttribute.of(ImmutableList.of(), "", false, true);
     } else if (new TypeToken<ImmutableList<UnconfiguredBuildTargetView>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return new ImmutableUnconfiguredDepListAttribute(ImmutableList.of(), "", false, true);
+      return ImmutableUnconfiguredDepListAttribute.of(ImmutableList.of(), "", false, true);
     } else if (new TypeToken<Optional<UnconfiguredBuildTargetView>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return new ImmutableUnconfiguredOptionalDepAttribute(Optional.empty(), "", false, true);
+      return ImmutableUnconfiguredOptionalDepAttribute.of(Optional.empty(), "", false, true);
     } else {
       throw new IllegalStateException("unknown type for method: " + method);
     }

@@ -132,7 +132,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(graph, ImmutableSet.of(root.getBuildTarget())),
+            ImmutableTargetGraphCreationResult.of(graph, ImmutableSet.of(root.getBuildTarget())),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
     TargetGraph versionedGraph = builder.build();
@@ -149,7 +149,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            ImmutableTargetGraphCreationResult.of(
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:root1"),
@@ -171,7 +171,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            ImmutableTargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -195,7 +195,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            ImmutableTargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -222,7 +222,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            ImmutableTargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root1"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -248,7 +248,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            ImmutableTargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -291,7 +291,7 @@ public class VersionedTargetGraphBuilderTest {
                 ImmutableMap.of(
                     a, ImmutableMap.of(dep, Version.of("1.0")),
                     b, ImmutableMap.of(dep, Version.of("2.0")))),
-            new ImmutableTargetGraphCreationResult(
+            ImmutableTargetGraphCreationResult.of(
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:a"),
@@ -331,7 +331,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            ImmutableTargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -355,7 +355,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            ImmutableTargetGraphCreationResult.of(
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:root1"),

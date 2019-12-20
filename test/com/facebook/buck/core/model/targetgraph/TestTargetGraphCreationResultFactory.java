@@ -28,6 +28,6 @@ public class TestTargetGraphCreationResultFactory {
 
   public static TargetGraphCreationResult create(
       TargetGraph targetGraph, ImmutableSet<BuildTarget> buildTargets) {
-    return new ImmutableTargetGraphCreationResult(targetGraph, buildTargets);
+    return ImmutableTargetGraphCreationResult.of(targetGraph, buildTargets);
   }
 }

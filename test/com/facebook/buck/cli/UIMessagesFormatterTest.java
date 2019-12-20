@@ -92,7 +92,7 @@ public class UIMessagesFormatterTest {
     ImmutableMap.Builder<String, ConfigChange> builder = ImmutableMap.builder();
     IntStream.range(0, n)
         .forEach(
-            (i) -> builder.put("diff" + i, new ImmutableConfigChange("before" + i, "after" + i)));
+            (i) -> builder.put("diff" + i, ImmutableConfigChange.of("before" + i, "after" + i)));
     return builder.build();
   }
 

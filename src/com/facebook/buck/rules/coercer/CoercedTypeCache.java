@@ -83,7 +83,7 @@ class CoercedTypeCache {
     try {
       Method builderMethod = dtoType.getMethod("builder");
       Method buildMethod = builderMethod.getReturnType().getMethod("build");
-      return new ImmutableDataTransferObjectDescriptor<>(
+      return ImmutableDataTransferObjectDescriptor.of(
           dtoType,
           () -> {
             try {

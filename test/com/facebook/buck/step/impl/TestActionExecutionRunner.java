@@ -113,6 +113,6 @@ public class TestActionExecutionRunner {
                 processExecutor,
                 projectFilesystemFactory));
 
-    return new ImmutableExecutionDetails<>(action, consoleEventListener, executionResult);
+    return ImmutableExecutionDetails.of(action, consoleEventListener, executionResult);
   }
 }

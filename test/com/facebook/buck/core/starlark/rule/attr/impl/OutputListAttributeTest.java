@@ -48,7 +48,7 @@ public class OutputListAttributeTest {
   private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
 
   private final OutputListAttribute attr =
-      new ImmutableOutputListAttribute(ImmutableList.of(), "", true, true);
+      ImmutableOutputListAttribute.of(ImmutableList.of(), "", true, true);
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -193,7 +193,7 @@ public class OutputListAttributeTest {
     thrown.expectMessage("may not be empty");
 
     OutputListAttribute attr =
-        new ImmutableOutputListAttribute(ImmutableList.of(), "", true, false);
+        ImmutableOutputListAttribute.of(ImmutableList.of(), "", true, false);
 
     attr.getValue(
         cellRoots,

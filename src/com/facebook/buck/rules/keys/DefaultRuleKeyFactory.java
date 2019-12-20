@@ -197,7 +197,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
             .ifPresent(
                 path ->
                     inputs.add(
-                        new ImmutableRuleKeyInput(path.getFilesystem(), path.getRelativePath())));
+                        ImmutableRuleKeyInput.of(path.getFilesystem(), path.getRelativePath())));
         return setSourcePathDirectly(sourcePath);
       }
     }

@@ -130,7 +130,7 @@ public class TargetCompatibilityCheckerTest {
           }
         };
     configurationRuleRegistry =
-        new ImmutableConfigurationRuleRegistry(
+        ImmutableConfigurationRuleRegistry.of(
             configurationRuleResolver,
             constraintResolver,
             (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);

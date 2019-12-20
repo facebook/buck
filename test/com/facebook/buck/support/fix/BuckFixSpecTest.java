@@ -31,7 +31,7 @@ import org.junit.Test;
 public class BuckFixSpecTest {
 
   public static BuckFixSpec specWithPaths =
-      new ImmutableBuckFixSpec(
+      ImmutableBuckFixSpec.of(
           new BuildId("foo-bar-baz"),
           "run",
           ExitCode.FATAL_GENERIC.getCode(),
@@ -50,7 +50,7 @@ public class BuckFixSpecTest {
   public void seralizesAsExpected() throws IOException {
 
     BuckFixSpec specWithoutPaths =
-        new ImmutableBuckFixSpec(
+        ImmutableBuckFixSpec.of(
             new BuildId("foo-bar-baz"),
             "run",
             ExitCode.FATAL_GENERIC.getCode(),

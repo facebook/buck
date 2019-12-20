@@ -53,7 +53,7 @@ public class HybridKnownRuleTypesTest {
     nativeRuleTypes = KnownNativeRuleTypes.of(ImmutableList.of(description), ImmutableList.of());
     userDefinedRuleTypes = new KnownUserDefinedRuleTypes();
     ImmutableStringAttribute attr =
-        new ImmutableStringAttribute("default", "", false, ImmutableList.of());
+        ImmutableStringAttribute.of("default", "", false, ImmutableList.of());
     SkylarkUserDefinedRule rule =
         FakeSkylarkUserDefinedRuleFactory.createSingleArgRuleWithLabel(
             "baz_rule", "baz", attr, "//foo:bar.bzl");

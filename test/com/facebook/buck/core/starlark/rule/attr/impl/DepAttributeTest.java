@@ -61,7 +61,7 @@ public class DepAttributeTest {
           BuildTargetFactory.newInstance("//some:rule"));
 
   private final DepAttribute attr =
-      new ImmutableDepAttribute(Runtime.NONE, "", true, ImmutableList.of());
+      ImmutableDepAttribute.of(Runtime.NONE, "", true, ImmutableList.of());
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -146,7 +146,7 @@ public class DepAttributeTest {
   public void failsTransformIfMissingRequiredProvider() throws CoerceFailedException {
     FakeBuiltInProvider expectedProvider = new FakeBuiltInProvider("expected");
     DepAttribute attr =
-        new ImmutableDepAttribute(Runtime.NONE, "", true, ImmutableList.of(expectedProvider));
+        ImmutableDepAttribute.of(Runtime.NONE, "", true, ImmutableList.of(expectedProvider));
     FakeBuiltInProvider presentProvider = new FakeBuiltInProvider("present");
 
     FakeInfo info = new FakeInfo(presentProvider);

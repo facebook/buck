@@ -248,7 +248,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
       TargetConfiguration targetConfiguration) {
     try {
       return nativeLinkableCache.get(
-          new ImmutableLinkableInputCacheKey(forceLinkWhole, type, targetConfiguration),
+          ImmutableLinkableInputCacheKey.of(forceLinkWhole, type, targetConfiguration),
           () -> delegate.computeInput(graphBuilder, type, forceLinkWhole, targetConfiguration));
     } catch (ExecutionException e) {
       Throwables.throwIfUnchecked(e);

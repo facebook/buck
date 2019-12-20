@@ -59,7 +59,7 @@ public class SourceAttributeTest {
           filesystem,
           BuildTargetFactory.newInstance("//some:rule"));
 
-  private final SourceAttribute attr = new ImmutableSourceAttribute(Runtime.NONE, "", true);
+  private final SourceAttribute attr = ImmutableSourceAttribute.of(Runtime.NONE, "", true);
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 

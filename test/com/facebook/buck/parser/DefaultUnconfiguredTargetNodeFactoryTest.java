@@ -152,7 +152,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
 
   Package getPackage() {
     ImmutablePackageMetadata pkg =
-        new ImmutablePackageMetadata(ImmutableList.of("//a/..."), ImmutableList.of("//d/..."));
+        ImmutablePackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//d/..."));
 
     return PackageFactory.create(cell, cell.getRoot().resolve("a/b/BUCK"), pkg);
   }

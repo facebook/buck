@@ -72,7 +72,7 @@ public class DoctorReportHelperTest {
 
     String errorMessage = "This is an error message.";
     DoctorEndpointResponse response =
-        new ImmutableDoctorEndpointResponse(Optional.of(errorMessage), ImmutableList.of());
+        ImmutableDoctorEndpointResponse.of(Optional.of(errorMessage), ImmutableList.of());
 
     helper.presentResponse(response);
     assertEquals("=> " + errorMessage + System.lineSeparator(), console.getTextWrittenToStdOut());
@@ -90,7 +90,7 @@ public class DoctorReportHelperTest {
             doctorConfig);
 
     DoctorEndpointResponse response =
-        new ImmutableDoctorEndpointResponse(Optional.empty(), ImmutableList.of());
+        ImmutableDoctorEndpointResponse.of(Optional.empty(), ImmutableList.of());
 
     helper.presentResponse(response);
     assertEquals(

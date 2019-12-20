@@ -38,7 +38,7 @@ public class BoolAttributeTest {
   @Test
   public void coercesBoolsProperly() throws CoerceFailedException {
 
-    BoolAttribute attr = new ImmutableBoolAttribute(false, "", true);
+    BoolAttribute attr = ImmutableBoolAttribute.of(false, "", true);
     boolean coerced =
         attr.getValue(
             cellRoots,
@@ -55,7 +55,7 @@ public class BoolAttributeTest {
   public void failsMandatoryCoercionProperly() throws CoerceFailedException {
     expected.expect(CoerceFailedException.class);
 
-    BoolAttribute attr = new ImmutableBoolAttribute(false, "", true);
+    BoolAttribute attr = ImmutableBoolAttribute.of(false, "", true);
 
     attr.getValue(
         cellRoots,

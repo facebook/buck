@@ -51,6 +51,6 @@ public class PackageFactory {
             rawPackage.getWithinView(),
             () -> visibilityDefinerDescription);
 
-    return new ImmutablePackage(visibilityPatterns, withinViewPatterns);
+    return ImmutablePackage.of(visibilityPatterns, withinViewPatterns);
   }
 }

@@ -550,7 +550,7 @@ public class TargetsCommand extends AbstractCommand {
     ActionGraphAndBuilder result =
         params
             .getActionGraphProvider()
-            .getActionGraph(new ImmutableTargetGraphCreationResult(targetGraph, ImmutableSet.of()));
+            .getActionGraph(ImmutableTargetGraphCreationResult.of(targetGraph, ImmutableSet.of()));
 
     // construct real graph
     MutableDirectedGraph<BuildRule> actionGraphMutable = new MutableDirectedGraph<>();
@@ -622,7 +622,7 @@ public class TargetsCommand extends AbstractCommand {
       Iterable<BuildTarget> buildTargets =
           FluentIterable.from(matchingNodes.values()).transform(TargetNode::getBuildTarget);
 
-      return new ImmutableTargetGraphCreationResult(
+      return ImmutableTargetGraphCreationResult.of(
           completeTargetGraphAndBuildTargets.getTargetGraph(), buildTargets);
     } else {
       return filterTargetGraphCreationResultByType(
@@ -658,7 +658,7 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     TargetGraph targetGraph = targetGraphCreationResult.getTargetGraph();
-    return new ImmutableTargetGraphCreationResult(
+    return ImmutableTargetGraphCreationResult.of(
         targetGraph,
         targetGraphCreationResult.getBuildTargets().stream()
             .filter(
@@ -730,7 +730,7 @@ public class TargetsCommand extends AbstractCommand {
     TargetGraphCreationResult targetGraphCreationResult;
     if (arguments.isEmpty() || isDetectTestChanges) {
       targetGraphCreationResult =
-          new ImmutableTargetGraphCreationResult(
+          ImmutableTargetGraphCreationResult.of(
               params
                   .getParser()
                   .buildTargetGraphWithTopLevelConfigurationTargets(
@@ -1085,7 +1085,7 @@ public class TargetsCommand extends AbstractCommand {
             params
                 .getActionGraphProvider()
                 .getActionGraph(
-                    new ImmutableTargetGraphCreationResult(
+                    ImmutableTargetGraphCreationResult.of(
                         targetGraphAndTargetNodes.getFirst(), ImmutableSet.of()));
         actionGraph = Optional.of(result.getActionGraph());
         graphBuilder = Optional.of(result.getActionGraphBuilder());

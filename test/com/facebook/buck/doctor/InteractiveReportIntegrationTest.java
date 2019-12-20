@@ -56,7 +56,7 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testReport() throws Exception {
     UserInputFixture userInputFixture = new UserInputFixture("0");
-    DoctorConfig doctorConfig = new ImmutableDoctorConfig(traceWorkspace.asCell().getBuckConfig());
+    DoctorConfig doctorConfig = ImmutableDoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
     DoctorReportHelper helper =
         DoctorTestUtils.createDoctorHelper(
             traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
@@ -85,7 +85,7 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testTraceInReport() throws Exception {
     UserInputFixture userInputFixture = new UserInputFixture("0");
-    DoctorConfig doctorConfig = new ImmutableDoctorConfig(traceWorkspace.asCell().getBuckConfig());
+    DoctorConfig doctorConfig = ImmutableDoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
     DoctorReportHelper helper =
         DoctorTestUtils.createDoctorHelper(
             traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
@@ -109,7 +109,7 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testTraceRespectReportSize() throws Exception {
     UserInputFixture userInputFixture = new UserInputFixture("0");
-    DoctorConfig doctorConfig = new ImmutableDoctorConfig(traceWorkspace.asCell().getBuckConfig());
+    DoctorConfig doctorConfig = ImmutableDoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
     DoctorReportHelper helper =
         DoctorTestUtils.createDoctorHelper(
             traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
@@ -134,7 +134,7 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testLocalConfigurationReport() throws Exception {
     UserInputFixture userInputFixture = new UserInputFixture("0");
-    DoctorConfig doctorConfig = new ImmutableDoctorConfig(traceWorkspace.asCell().getBuckConfig());
+    DoctorConfig doctorConfig = ImmutableDoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
     DoctorReportHelper helper =
         DoctorTestUtils.createDoctorHelper(
             traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
@@ -160,7 +160,7 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testWatchmanDiagReport() throws Exception {
     UserInputFixture userInputFixture = new UserInputFixture("0\n\n\ny");
-    DoctorConfig doctorConfig = new ImmutableDoctorConfig(traceWorkspace.asCell().getBuckConfig());
+    DoctorConfig doctorConfig = ImmutableDoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
     DoctorReportHelper helper =
         DoctorTestUtils.createDoctorHelper(
             traceWorkspace, userInputFixture.getUserInput(), doctorConfig);

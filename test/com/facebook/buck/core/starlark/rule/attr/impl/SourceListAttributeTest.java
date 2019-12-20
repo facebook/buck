@@ -60,7 +60,7 @@ public class SourceListAttributeTest {
           BuildTargetFactory.newInstance("//some:rule"));
 
   private final SourceListAttribute attr =
-      new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
+      ImmutableSourceListAttribute.of(ImmutableList.of(), "", true, true);
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -116,7 +116,7 @@ public class SourceListAttributeTest {
     thrown.expectMessage("may not be empty");
 
     SourceListAttribute attr =
-        new ImmutableSourceListAttribute(ImmutableList.of(), "", true, false);
+        ImmutableSourceListAttribute.of(ImmutableList.of(), "", true, false);
 
     attr.getValue(
         cellRoots,

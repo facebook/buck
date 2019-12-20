@@ -436,7 +436,7 @@ public class CxxBinaryDescriptionTest {
         AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                new ImmutableTargetGraphCreationResult(
+                ImmutableTargetGraphCreationResult.of(
                     unversionedTargetGraph, ImmutableSet.of(builder.getTarget())),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),

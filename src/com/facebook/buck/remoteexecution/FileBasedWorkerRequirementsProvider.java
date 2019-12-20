@@ -131,7 +131,7 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
                     MutableActionTags mutableTags =
                         MAPPER.readValue(reqsEntry.getKey(), MUTABLE_ACTION_TAGS_TYPE);
                     requirements.put(
-                        new ImmutableActionTags(
+                        ImmutableActionTags.of(
                             mutableTags.ruleName, mutableTags.auxiliaryBuildTag),
                         mapRequirements(reqsEntry.getValue()));
                   }
@@ -145,7 +145,7 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
                       .collect(
                           Collectors.toMap(
                               reqsEntry ->
-                                  new ImmutableActionTags(
+                                  ImmutableActionTags.of(
                                       reqsEntry.getKey(), NO_AUXILIARY_BUILD_TAG),
                               reqsEntry -> mapRequirements(reqsEntry.getValue())));
                 }
@@ -153,13 +153,13 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
 
       String ruleName = target.getShortNameAndFlavorPostfix();
       WorkerRequirements requirements =
-          requirementsMap.get(new ImmutableActionTags(ruleName, auxiliaryBuildTag));
+          requirementsMap.get(ImmutableActionTags.of(ruleName, auxiliaryBuildTag));
       if (requirements == null && !auxiliaryBuildTag.equals(NO_AUXILIARY_BUILD_TAG)) {
         LOG.debug(
             "No requirements found for rule=%s with auxiliary build tag=%s, trying without tag.",
             target.getFullyQualifiedName(), auxiliaryBuildTag);
         requirements =
-            requirementsMap.get(new ImmutableActionTags(ruleName, NO_AUXILIARY_BUILD_TAG));
+            requirementsMap.get(ImmutableActionTags.of(ruleName, NO_AUXILIARY_BUILD_TAG));
       }
       if (requirements == null) {
         LOG.debug(

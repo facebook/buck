@@ -74,14 +74,14 @@ public class DefectReporterTest {
   @Before
   public void setUp() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    config = new ImmutableDoctorConfig(FakeBuckConfig.builder().build());
+    config = ImmutableDoctorConfig.of(FakeBuckConfig.builder().build());
     clock = new DefaultClock();
     reporter =
         new DefaultDefectReporter(
             filesystem, config, BuckEventBusForTests.newInstance(clock), clock);
 
     UserLocalConfiguration testUserLocalConfiguration =
-        new ImmutableUserLocalConfiguration(
+        ImmutableUserLocalConfiguration.of(
             true,
             ImmutableMap.of(
                 Paths.get(".buckconfig.local"),
@@ -157,7 +157,7 @@ public class DefectReporterTest {
         reporter.submitReport(
             defectReportBuilder
                 .setSourceControlInfo(
-                    new ImmutableSourceControlInfo(
+                    ImmutableSourceControlInfo.of(
                         "commitid",
                         ImmutableSet.of("base"),
                         Optional.empty(),

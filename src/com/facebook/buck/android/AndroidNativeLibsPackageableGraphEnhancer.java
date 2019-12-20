@@ -190,7 +190,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     boolean hasNativeCode = hasLinkables || hasNativeLibDirs;
 
     if (!hasNativeCode) {
-      return new ImmutableAndroidNativeLibsGraphEnhancementResult(
+      return ImmutableAndroidNativeLibsGraphEnhancementResult.of(
           Optional.empty(),
           Optional.of(ImmutableSortedSet.of()),
           Optional.empty(),
@@ -406,7 +406,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             ? Optional.of(moduleMappedCopyNativeLibriesBuilder.build())
             : Optional.empty();
 
-    return new ImmutableAndroidNativeLibsGraphEnhancementResult(
+    return ImmutableAndroidNativeLibsGraphEnhancementResult.of(
         copyNativeLibraries,
         Optional.of(unstrippedLibraries),
         Optional.ofNullable(sonameMapping),
@@ -432,7 +432,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         (module, group) ->
             linkableAssetsBuilder.put(module, group.getNativeLinkable(cxxPlatform, graphBuilder)));
 
-    return new ImmutableNativeLinkableEnhancementResult(
+    return ImmutableNativeLinkableEnhancementResult.of(
         linkablesBuilder.build(), linkableAssetsBuilder.build());
   }
 

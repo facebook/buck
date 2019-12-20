@@ -46,7 +46,7 @@ public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
         cxxPlatformsProviderFactory.getDefaultUnresolvedCxxPlatform();
 
     RustPlatformFactory platformFactory =
-        new ImmutableRustPlatformFactory(context.getBuckConfig(), context.getExecutableFinder());
+        ImmutableRustPlatformFactory.of(context.getBuckConfig(), context.getExecutableFinder());
 
     FlavorDomain<UnresolvedRustPlatform> rustPlatforms =
         FlavorDomain.from(

@@ -38,7 +38,7 @@ public class BuckRunSpecTest {
     }
 
     BuckRunSpec spec =
-        new ImmutableBuckRunSpec(
+        ImmutableBuckRunSpec.of(
             ImmutableList.of("foo", "bar"),
             ImmutableMap.of("FOO", "BAR"),
             Paths.get("cwd/goes/here"),

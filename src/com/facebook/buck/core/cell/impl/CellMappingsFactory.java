@@ -54,7 +54,7 @@ public class CellMappingsFactory {
             canonicalNameMap.computeIfAbsent(
                 path, ignored -> ImmutableCanonicalCellName.of(Optional.of(name))));
 
-    return new ImmutableDefaultNewCellPathResolver(ImmutableMap.copyOf(canonicalNameMap));
+    return ImmutableDefaultNewCellPathResolver.of(ImmutableMap.copyOf(canonicalNameMap));
   }
 
   /** Creates a {@link CellNameResolver} for a cell. */
@@ -67,7 +67,7 @@ public class CellMappingsFactory {
     cellMapping.forEach(
         (name, path) ->
             builder.put(Optional.of(name), cellPathResolver.getCanonicalCellName(path)));
-    return new ImmutableDefaultCellNameResolver(builder);
+    return ImmutableDefaultCellNameResolver.of(builder);
   }
 
   private static ImmutableSortedMap<String, Path> getCellMapping(Path cellRoot, Config cellConfig) {

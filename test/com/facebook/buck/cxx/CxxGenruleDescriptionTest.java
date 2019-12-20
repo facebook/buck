@@ -224,7 +224,7 @@ public class CxxGenruleDescriptionTest {
     TargetGraphCreationResult transformed =
         AsyncVersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            ImmutableTargetGraphCreationResult.of(
                 graph, ImmutableSet.of(genruleBuilder.getTarget())),
             executor.get(),
             new DefaultTypeCoercerFactory(),
@@ -262,7 +262,7 @@ public class CxxGenruleDescriptionTest {
     TargetGraphCreationResult transformed =
         AsyncVersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            ImmutableTargetGraphCreationResult.of(
                 graph, ImmutableSet.of(genruleBuilder.getTarget())),
             executor.get(),
             new DefaultTypeCoercerFactory(),

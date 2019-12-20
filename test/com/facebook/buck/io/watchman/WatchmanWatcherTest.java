@@ -61,13 +61,13 @@ public class WatchmanWatcherTest {
 
   private static final Path FAKE_ROOT = Paths.get("/fake/root").toAbsolutePath();
   private static final WatchmanQuery FAKE_QUERY =
-      new ImmutableWatchmanQuery("/fake/root", ImmutableMap.of());
+      ImmutableWatchmanQuery.of("/fake/root", ImmutableMap.of());
   private static final List<Object> FAKE_UUID_QUERY = FAKE_QUERY.toList("n:buckduuid");
   private static final List<Object> FAKE_CLOCK_QUERY = FAKE_QUERY.toList("c:0:0");
 
   private static final Path FAKE_SECONDARY_ROOT = Paths.get("/fake/secondary").toAbsolutePath();
   private static final WatchmanQuery FAKE_SECONDARY_QUERY =
-      new ImmutableWatchmanQuery("/fake/SECONDARY", ImmutableMap.of());
+      ImmutableWatchmanQuery.of("/fake/SECONDARY", ImmutableMap.of());
 
   private EventBus eventBus;
   private EventBuffer eventBuffer;
@@ -382,7 +382,7 @@ public class WatchmanWatcherTest {
                 RecursiveFileMatcher.of(Paths.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        new ImmutableWatchmanQuery(
+        ImmutableWatchmanQuery.of(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",
@@ -411,7 +411,7 @@ public class WatchmanWatcherTest {
                 RecursiveFileMatcher.of(Paths.get("bar/baz"))),
             ImmutableSet.of());
     assertEquals(
-        new ImmutableWatchmanQuery(
+        ImmutableWatchmanQuery.of(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",
@@ -443,7 +443,7 @@ public class WatchmanWatcherTest {
                 RecursiveFileMatcher.of(Paths.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        new ImmutableWatchmanQuery(
+        ImmutableWatchmanQuery.of(
             watchRoot,
             ImmutableMap.of(
                 "expression",
@@ -470,7 +470,7 @@ public class WatchmanWatcherTest {
             ImmutableSet.of(GlobPatternMatcher.of("*.pbxproj")),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        new ImmutableWatchmanQuery(
+        ImmutableWatchmanQuery.of(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",

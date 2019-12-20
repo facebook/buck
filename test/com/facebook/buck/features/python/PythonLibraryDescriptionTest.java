@@ -221,7 +221,7 @@ public class PythonLibraryDescriptionTest {
                     ImmutableMap.of(
                         builder.getTarget(),
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")))),
-                new ImmutableTargetGraphCreationResult(
+                ImmutableTargetGraphCreationResult.of(
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
@@ -271,7 +271,7 @@ public class PythonLibraryDescriptionTest {
                     ImmutableMap.of(
                         builder.getTarget(),
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")))),
-                new ImmutableTargetGraphCreationResult(
+                ImmutableTargetGraphCreationResult.of(
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),

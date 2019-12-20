@@ -242,7 +242,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     Objects.requireNonNull(result, String.format("path %s is not included in any cell", path));
-    return new ImmutableCellLookupResult(result, matchedPath);
+    return ImmutableCellLookupResult.of(result, matchedPath);
   }
 
   @Override

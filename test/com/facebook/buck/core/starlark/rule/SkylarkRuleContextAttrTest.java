@@ -50,7 +50,7 @@ import org.junit.Test;
 public class SkylarkRuleContextAttrTest {
 
   private final StringAttribute placeholderStringAttr =
-      new ImmutableStringAttribute("", "", true, ImmutableList.of());
+      ImmutableStringAttribute.of("", "", true, ImmutableList.of());
   private TestActionExecutionRunner runner;
 
   static class TestAttribute extends Attribute<BuildTarget> {

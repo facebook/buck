@@ -45,7 +45,7 @@ public class OutputAttributeTest {
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
 
-  private final OutputAttribute attr = new ImmutableOutputAttribute(Runtime.NONE, "", true);
+  private final OutputAttribute attr = ImmutableOutputAttribute.of(Runtime.NONE, "", true);
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 

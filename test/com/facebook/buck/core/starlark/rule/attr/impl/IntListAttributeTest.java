@@ -36,7 +36,7 @@ public class IntListAttributeTest {
   private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
 
   private final IntListAttribute attr =
-      new ImmutableIntListAttribute(ImmutableList.of(1), "", true, true);
+      ImmutableIntListAttribute.of(ImmutableList.of(1), "", true, true);
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -84,7 +84,7 @@ public class IntListAttributeTest {
 
   @Test
   public void failsIfEmptyListProvidedAndNotAllowed() throws CoerceFailedException {
-    IntListAttribute attr = new ImmutableIntListAttribute(ImmutableList.of(), "", true, false);
+    IntListAttribute attr = ImmutableIntListAttribute.of(ImmutableList.of(), "", true, false);
 
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage("may not be empty");

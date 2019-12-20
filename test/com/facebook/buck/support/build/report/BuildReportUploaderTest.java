@@ -93,7 +93,7 @@ public class BuildReportUploaderTest {
   public void uploadReportToTestServer() throws Exception {
 
     FullBuildReport reportToSend =
-        new ImmutableFullBuildReport(buckConfig.getConfig(), Optional.of(versionControlStats));
+        ImmutableFullBuildReport.of(buckConfig.getConfig(), Optional.of(versionControlStats));
 
     try (HttpdForTests httpd = HttpdForTests.httpdForOkHttpTests()) {
       httpd.addHandler(new BuildReportHandler());

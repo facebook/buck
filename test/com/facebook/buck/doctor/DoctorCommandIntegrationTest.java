@@ -118,12 +118,12 @@ public class DoctorCommandIntegrationTest {
             .build();
 
     doctorResponse =
-        new ImmutableDoctorEndpointResponse(
+        ImmutableDoctorEndpointResponse.of(
             Optional.empty(),
             ImmutableList.of(
-                new ImmutableDoctorSuggestion(
+                ImmutableDoctorSuggestion.of(
                     DoctorSuggestion.StepStatus.ERROR, Optional.empty(), "Suggestion no1"),
-                new ImmutableDoctorSuggestion(
+                ImmutableDoctorSuggestion.of(
                     DoctorSuggestion.StepStatus.WARNING, Optional.of("Area"), "Suggestion no2")));
 
     httpd = new HttpdForTests();
@@ -147,7 +147,7 @@ public class DoctorCommandIntegrationTest {
         createDoctorHelper(
             workspace,
             userInputFixture.getUserInput(),
-            new ImmutableDoctorConfig(FakeBuckConfig.builder().build()));
+            ImmutableDoctorConfig.of(FakeBuckConfig.builder().build()));
     BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
@@ -286,7 +286,7 @@ public class DoctorCommandIntegrationTest {
               }
 
               DoctorJsonResponse json =
-                  new ImmutableDoctorJsonResponse(
+                  ImmutableDoctorJsonResponse.of(
                       /* isRequestSuccessful */ true,
                       /* errorMessage */ Optional.empty(),
                       /* rageUrl */ Optional.of(rageUrl),

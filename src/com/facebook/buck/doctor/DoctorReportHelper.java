@@ -128,7 +128,7 @@ public class DoctorReportHelper {
       machineLog = Optional.empty();
     }
 
-    return new ImmutableDoctorEndpointRequest(
+    return ImmutableDoctorEndpointRequest.of(
         entry.getBuildId(),
         entry.getRelativePath().toString(),
         machineLog,
@@ -297,7 +297,7 @@ public class DoctorReportHelper {
   private DoctorEndpointResponse createErrorDoctorEndpointResponse(String errorMessage) {
     console.printErrorText(errorMessage);
     LOG.error(errorMessage);
-    return new ImmutableDoctorEndpointResponse(Optional.of(errorMessage), ImmutableList.of());
+    return ImmutableDoctorEndpointResponse.of(Optional.of(errorMessage), ImmutableList.of());
   }
 
   @VisibleForTesting

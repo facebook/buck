@@ -65,7 +65,7 @@ public class ConfigurationRuleRegistryFactory {
     TargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(new RuleBasedTargetPlatformResolver(platformResolver));
 
-    return new ImmutableConfigurationRuleRegistry(
+    return ImmutableConfigurationRuleRegistry.of(
         configurationRuleResolver, constraintResolver, targetPlatformResolver);
   }
 }

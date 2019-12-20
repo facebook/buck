@@ -89,7 +89,7 @@ public class DoctorCommand extends AbstractCommand {
       BuildLogEntry entry,
       Optional<String> issueDescription)
       throws IOException, InterruptedException {
-    DoctorConfig doctorConfig = new ImmutableDoctorConfig(params.getBuckConfig());
+    DoctorConfig doctorConfig = ImmutableDoctorConfig.of(params.getBuckConfig());
 
     Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector =
         WatchmanDiagReportCollector.newInstanceIfWatchmanUsed(

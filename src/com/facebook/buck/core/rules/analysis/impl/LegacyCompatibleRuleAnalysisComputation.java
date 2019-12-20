@@ -112,7 +112,7 @@ public class LegacyCompatibleRuleAnalysisComputation
       LegacyProviderCompatibleDescription<T> description) {
     ProviderInfoCollection providerInfoCollection =
         description.createProviders(
-            new ImmutableProviderCreationContext(
+            ImmutableProviderCreationContext.of(
                 env.getDeps(RuleAnalysisKey.IDENTIFIER).values().stream()
                     .collect(
                         ImmutableMap.toImmutableMap(

@@ -36,7 +36,7 @@ public class PackageFactoryTest {
     Path buildFile = Paths.get("foo/BUCK");
 
     ImmutablePackageMetadata rawPackage =
-        new ImmutablePackageMetadata(ImmutableList.of("//a/..."), ImmutableList.of("//b/..."));
+        ImmutablePackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//b/..."));
 
     Package pkg = PackageFactory.create(cell, buildFile, rawPackage);
 

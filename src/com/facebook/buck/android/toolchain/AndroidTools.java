@@ -51,7 +51,7 @@ public interface AndroidTools {
             toolchainTargetConfiguration,
             AndroidSdkLocation.class);
 
-    return new ImmutableAndroidTools(androidPlatformTarget, androidSdkLocation, androidNdk);
+    return ImmutableAndroidTools.of(androidPlatformTarget, androidSdkLocation, androidNdk);
   }
 
   /** Adds parse time deps to android tools */

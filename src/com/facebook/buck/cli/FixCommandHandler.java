@@ -185,7 +185,7 @@ public class FixCommandHandler {
     ImmutableList<String> fixScript =
         fixConfig.getInterpolatedFixScript(fixConfig.getFixScript().get(), repositoryRoot, fixPath);
 
-    BuckRunSpec runSpec = new ImmutableBuckRunSpec(fixScript, environment, repositoryRoot, true);
+    BuckRunSpec runSpec = ImmutableBuckRunSpec.of(fixScript, environment, repositoryRoot, true);
 
     // If the fix command was invoked automatically, make sure to tell users how they can
     // run buck fix on this specific build id manually with the `buck fix` command
