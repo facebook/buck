@@ -73,7 +73,7 @@ public class PerBuildStateCacheTest {
       Path packageFile,
       ImmutableList<String> visibility,
       ImmutableList<String> within_view) {
-    return createPackage(cell, packageFile, new ImmutablePackageMetadata(visibility, within_view));
+    return createPackage(cell, packageFile, ImmutablePackageMetadata.of(visibility, within_view));
   }
 
   Package createPackage(Cell cell, Path packageFile, ImmutablePackageMetadata packageMetadata) {
