@@ -16,13 +16,11 @@
 
 package com.facebook.buck.util.zip.collect;
 
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /** A source for a zip file entry that represents an entry for another zip file. */
-@BuckStyleValue
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public interface ZipEntrySourceFromZip extends ZipEntrySource {
 
   /** Path to the source zip file. */
