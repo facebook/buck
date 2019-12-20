@@ -52,7 +52,7 @@ public class AuditConfigCommand extends AbstractCommand {
 
   @Option(
       name = "--tab",
-      usage = "Output in a tab-delmiited format key/value format",
+      usage = "Output in a tab-delimited format key/value format",
       forbids = {"--json"})
   private boolean generateTabbedOutput;
 
