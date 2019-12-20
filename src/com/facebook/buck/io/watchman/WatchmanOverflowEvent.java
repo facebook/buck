@@ -16,20 +16,18 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /**
  * Buck sends this event when Watchman is unable to correctly determine the whole set of changes in
  * the filesystem, or if too many files have changed
  */
-@Value.Immutable(copy = false, builder = false)
+@BuckStyleValue
 public abstract class WatchmanOverflowEvent implements WatchmanEvent {
   @Override
-  @Value.Parameter
   public abstract Path getCellPath();
 
   /** Human-readable message why overflow event is sent */
-  @Value.Parameter
   public abstract String getReason();
 }
