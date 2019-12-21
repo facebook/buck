@@ -34,11 +34,13 @@ import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -345,6 +347,28 @@ public class StackedFileHashCacheTest {
     expectedException.expect(NoSuchFileException.class);
     cache.getForArchiveMember(
         filesystem, archiveMemberPath.getArchivePath(), archiveMemberPath.getMemberPath());
+  }
+
+  @Test
+  public void sortsByRootPathLength() throws IOException {
+    ProjectFilesystem filesystem1 = FakeProjectFilesystem.createJavaOnlyFilesystem();
+
+    Path path = filesystem1.getPath("dir");
+    Path newRoot = Files.createDirectory(filesystem1.resolve(path));
+
+    ProjectFilesystem filesystem2 =
+        FakeProjectFilesystem.createJavaOnlyFilesystem(
+            filesystem1.resolve(newRoot).toAbsolutePath().toString());
+
+    ProjectFileHashCache shortCache =
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem1, fileHashCacheMode);
+    ProjectFileHashCache longCache =
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem2, fileHashCacheMode);
+    StackedFileHashCache stackedFileHashCache =
+        new StackedFileHashCache(ImmutableList.of(shortCache, longCache));
+
+    Assert.assertSame(longCache, stackedFileHashCache.getCaches().get(0));
+    Assert.assertSame(shortCache, stackedFileHashCache.getCaches().get(1));
   }
 
   private void writeJarWithHashes(ProjectFilesystem filesystem, Path path) throws IOException {

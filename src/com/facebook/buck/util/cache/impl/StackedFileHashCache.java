@@ -28,6 +28,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -65,10 +66,25 @@ import java.util.stream.Stream;
  */
 public class StackedFileHashCache implements FileHashCache {
 
+  /**
+   * Used to make sure that for two Paths where one is a sub-path of another, the longer Path
+   * appears first in the StackedFileHasCache. This is important for finding matching cells in the
+   * `lookup` function.
+   */
+  static class FileHashCacheComparator implements Comparator<ProjectFileHashCache> {
+    @Override
+    public int compare(ProjectFileHashCache c1, ProjectFileHashCache c2) {
+      return c2.getFilesystem()
+          .getRootPath()
+          .toString()
+          .compareTo(c1.getFilesystem().getRootPath().toString());
+    }
+  }
+
   private final ImmutableList<? extends ProjectFileHashCache> caches;
 
   public StackedFileHashCache(ImmutableList<? extends ProjectFileHashCache> caches) {
-    this.caches = caches;
+    this.caches = ImmutableList.sortedCopyOf(new FileHashCacheComparator(), caches);
   }
 
   public static StackedFileHashCache createDefaultHashCaches(
