@@ -414,6 +414,8 @@ public abstract class DefaultJavaLibraryRules {
               new UnusedDependenciesFinderFactory(
                   Objects.requireNonNull(getJavaBuckConfig())
                       .getUnusedDependenciesBuildozerString(),
+                  Objects.requireNonNull(getJavaBuckConfig())
+                      .isUnusedDependenciesOnlyPrintCommands(),
                   UnusedDependenciesFinder.getDependencies(
                       buildRuleResolver,
                       buildRuleResolver.getAllRules(

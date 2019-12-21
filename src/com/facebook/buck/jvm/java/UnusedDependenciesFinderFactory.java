@@ -30,6 +30,7 @@ import java.util.Optional;
 /** The factory is used to avoid creation of {@link UnusedDependenciesFinder} when */
 public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
   @AddToRuleKey private final Optional<String> buildozerPath;
+  @AddToRuleKey private final boolean onlyPrintCommands;
 
   @ExcludeFromRuleKey(
       reason = "includes source paths",
@@ -46,9 +47,11 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
 
   public UnusedDependenciesFinderFactory(
       Optional<String> buildozerPath,
+      boolean onlyPrintCommands,
       ImmutableList<AbstractUnusedDependenciesFinder.DependencyAndExportedDeps> deps,
       ImmutableList<AbstractUnusedDependenciesFinder.DependencyAndExportedDeps> providedDeps) {
     this.buildozerPath = buildozerPath;
+    this.onlyPrintCommands = onlyPrintCommands;
     this.deps = deps;
     this.providedDeps = providedDeps;
   }
@@ -66,6 +69,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         providedDeps,
         sourcePathResolverAdapter,
         unusedDependenciesAction,
-        buildozerPath);
+        buildozerPath,
+        onlyPrintCommands);
   }
 }

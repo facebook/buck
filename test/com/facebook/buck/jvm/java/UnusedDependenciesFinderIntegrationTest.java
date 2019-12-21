@@ -344,4 +344,26 @@ public class UnusedDependenciesFinderIntegrationTest {
             Matchers.containsString(
                 "buildozer 'remove deps //:dep_with_exported_dep' //:barmeh_with_unused_dep")));
   }
+
+  @Test
+  public void testShowCommandOnly() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=warn",
+            "-c",
+            "java.unused_dependencies_only_print_commands=true",
+            ":bar_with_dep");
+
+    processResult.assertSuccess();
+    assertThat(
+        processResult.getStderr(),
+        Matchers.allOf(
+            Matchers.containsString(
+                "buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep"),
+            Matchers.not(
+                Matchers.containsString(
+                    "Target //:bar_with_dep is declared with unused targets in deps: "))));
+  }
 }

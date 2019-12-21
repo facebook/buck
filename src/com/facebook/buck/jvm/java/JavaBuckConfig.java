@@ -261,6 +261,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getValue(SECTION, "unused_dependencies_buildozer_path");
   }
 
+  public boolean isUnusedDependenciesOnlyPrintCommands() {
+    return delegate.getBooleanValue(SECTION, "unused_dependencies_only_print_commands", false);
+  }
+
   public Optional<String> getJavaTempDir() {
     return delegate.getValue("java", "test_temp_dir");
   }
