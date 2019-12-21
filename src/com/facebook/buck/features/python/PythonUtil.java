@@ -285,11 +285,6 @@ public class PythonUtil {
               .getPythonResources(pythonPlatform, cxxPlatform, graphBuilder)
               .ifPresent(
                   resources -> allComponents.putResources(packagable.getBuildTarget(), resources));
-          packagable
-              .getPythonModuleDirs()
-              .ifPresent(
-                  moduleDirs ->
-                      allComponents.putModuleDirs(packagable.getBuildTarget(), moduleDirs));
           allComponents.addZipSafe(packagable.isPythonZipSafe());
           Iterable<BuildRule> packagableDeps =
               packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
@@ -391,14 +386,8 @@ public class PythonUtil {
             .ifPresent(
                 resources ->
                     allComponents.putResources(entry.getValue().getBuildTarget(), resources));
-        entry
-            .getValue()
-            .getPythonModuleDirs()
-            .ifPresent(
-                modulesDirs ->
-                    allComponents.putModuleDirs(
-                        entry.getKey(), PythonModuleDirComponents.of(modulesDirs.getDirectory())));
         allComponents.addZipSafe(entry.getValue().isPythonZipSafe());
+
         extensionNativeDeps.putAll(
             Maps.uniqueIndex(
                 entry

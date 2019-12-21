@@ -58,6 +58,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.features.python.CxxPythonExtension;
 import com.facebook.buck.features.python.PythonBinaryDescription;
+import com.facebook.buck.features.python.PythonMappedComponents;
 import com.facebook.buck.features.python.PythonPackagable;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
@@ -335,9 +336,15 @@ public class LuaBinaryDescription
           packageable
               .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
               .ifPresent(
-                  modules ->
+                  modules -> {
+                    // TODO(agallagher): This doesn't support prebuilt python libs.
+                    if (modules instanceof PythonMappedComponents) {
                       builder.putAllPythonModules(
-                          MoreMaps.transformKeys(modules.getComponents(), Object::toString)));
+                          MoreMaps.transformKeys(
+                              ((PythonMappedComponents) modules).getComponents(),
+                              Object::toString));
+                    }
+                  });
           deps = packageable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
           if (packageable.doesPythonPackageDisallowOmnibus(
               pythonPlatform, cxxPlatform, graphBuilder)) {

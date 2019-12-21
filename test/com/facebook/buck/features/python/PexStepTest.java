@@ -65,6 +65,8 @@ public class PexStepTest {
               TARGET,
               new PythonMappedComponents.Resolved(
                   ImmutableSortedMap.of(Paths.get("m"), Paths.get("/src/m"))))
+          .putModules(TARGET, new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir1.whl")))
+          .putModules(TARGET, new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir2.whl")))
           .putResources(
               TARGET,
               new PythonMappedComponents.Resolved(
@@ -73,8 +75,6 @@ public class PexStepTest {
               TARGET,
               new PythonMappedComponents.Resolved(
                   ImmutableSortedMap.of(Paths.get("n.so"), Paths.get("/src/n.so"))))
-          .putModuleDirs(TARGET, new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir1.whl")))
-          .putModuleDirs(TARGET, new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir2.whl")))
           .build();
   private static final ImmutableSortedSet<String> PRELOAD_LIBRARIES = ImmutableSortedSet.of();
 
@@ -148,10 +148,15 @@ public class PexStepTest {
             PYTHON_VERSION,
             DEST_PATH,
             ENTRY_POINT,
-            COMPONENTS.withModuleDirs(
+            COMPONENTS.withModules(
                 ImmutableMultimap.of(
-                    TARGET, new PythonModuleDirComponents.Resolved(realDir1),
-                    TARGET, new PythonModuleDirComponents.Resolved(realDir2))),
+                    TARGET,
+                    new PythonMappedComponents.Resolved(
+                        ImmutableSortedMap.of(Paths.get("m"), Paths.get("/src/m"))),
+                    TARGET,
+                    new PythonModuleDirComponents.Resolved(realDir1),
+                    TARGET,
+                    new PythonModuleDirComponents.Resolved(realDir2))),
             PRELOAD_LIBRARIES);
 
     Map<String, Object> args =

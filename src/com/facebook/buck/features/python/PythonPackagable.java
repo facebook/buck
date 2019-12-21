@@ -19,7 +19,6 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import java.nio.file.Path;
@@ -41,7 +40,7 @@ public interface PythonPackagable extends HasBuildTarget {
    */
   // TODO(agallagher): Separate out separate methods to access sources, bytecode, and native
   //  extensions independently of one another.
-  default Optional<PythonMappedComponents> getPythonModules(
+  default Optional<? extends PythonComponents> getPythonModules(
       @SuppressWarnings("unused") PythonPlatform pythonPlatform,
       @SuppressWarnings("unused") CxxPlatform cxxPlatform,
       @SuppressWarnings("unused") ActionGraphBuilder graphBuilder) {
@@ -56,28 +55,10 @@ public interface PythonPackagable extends HasBuildTarget {
   // TODO(agallagher): Keys here ideally aren't `Path`s, as Buck's rule key calculations assume
   //  these paths exist and tries to hash them, which means we need to convert to strings
   //  beforehand.
-  default Optional<PythonMappedComponents> getPythonResources(
+  default Optional<? extends PythonComponents> getPythonResources(
       @SuppressWarnings("unused") PythonPlatform pythonPlatform,
       @SuppressWarnings("unused") CxxPlatform cxxPlatform,
       @SuppressWarnings("unused") ActionGraphBuilder graphBuilder) {
-    return Optional.empty();
-  }
-
-  /**
-   * Directories of extracted pre-built python libraries.
-   *
-   * @return a map where the values are {@link SourcePath}s of directories containing Python
-   *     components (e.g. sources, native extensions, resources, etc) and the keys are the location
-   *     where to link them in the final package.
-   */
-  // TODO(agallagher): The key here should be `String` representing the module location in the
-  //  final package -- not `Path`.  That said, it looks like there aren't actually any cases that
-  //  set the key to something other than the empty string, so we could probably just remove it.
-  // TODO(agallagher): While this claims to be "module dirs" (which we define as python source or
-  //  native extensions, this can actually probably include resources (and native libs?) too.  We
-  //  should fix to handle these or, ideally, just avoid this in favor of pre-unpacking prebuilt
-  //  python wheels and using `python_library()`.
-  default Optional<PythonModuleDirComponents> getPythonModuleDirs() {
     return Optional.empty();
   }
 

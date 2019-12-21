@@ -24,7 +24,6 @@ import com.facebook.buck.step.fs.SymlinkPaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
@@ -50,8 +49,6 @@ abstract class AbstractPythonResolvedPackageComponents {
   protected abstract ImmutableMultimap<BuildTarget, PythonComponents.Resolved> getModules();
 
   protected abstract ImmutableMultimap<BuildTarget, PythonComponents.Resolved> getResources();
-
-  protected abstract ImmutableMultimap<BuildTarget, PythonComponents.Resolved> getModuleDirs();
 
   protected abstract ImmutableMultimap<BuildTarget, PythonComponents.Resolved> getNativeLibraries();
 
@@ -135,7 +132,7 @@ abstract class AbstractPythonResolvedPackageComponents {
 
     forEachComponent(
         "module",
-        Iterables.concat(getModules().entries(), getModuleDirs().entries()),
+        getModules().entries(),
         (destination, source) -> {
 
           // Record all packages that do and don't contain an `__init__.py`.

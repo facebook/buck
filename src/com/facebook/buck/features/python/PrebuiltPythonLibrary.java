@@ -68,11 +68,22 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   @Override
-  public Optional<PythonModuleDirComponents> getPythonModuleDirs() {
+  public Optional<PythonComponents> getPythonModules(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
     // extension modules).
     return Optional.of(
-        PythonModuleDirComponents.of(Objects.requireNonNull(getSourcePathToOutput())));
+        PrebuiltPythonLibraryComponents.ofModules(Objects.requireNonNull(getSourcePathToOutput())));
+  }
+
+  @Override
+  public Optional<PythonComponents> getPythonResources(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
+    // extension modules).
+    return Optional.of(
+        PrebuiltPythonLibraryComponents.ofResources(
+            Objects.requireNonNull(getSourcePathToOutput())));
   }
 
   @Override

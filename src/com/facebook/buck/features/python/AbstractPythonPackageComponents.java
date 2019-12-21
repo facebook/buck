@@ -46,19 +46,15 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
 
   // Python modules as map of their module name to location of the source.
   @AddToRuleKey
-  public abstract ImmutableListMultimap<BuildTarget, PythonMappedComponents> getModules();
+  public abstract ImmutableListMultimap<BuildTarget, PythonComponents> getModules();
 
   // Resources to include in the package.
   @AddToRuleKey
-  public abstract ImmutableListMultimap<BuildTarget, PythonMappedComponents> getResources();
+  public abstract ImmutableListMultimap<BuildTarget, PythonComponents> getResources();
 
   // Native libraries to include in the package.
   @AddToRuleKey
-  public abstract ImmutableListMultimap<BuildTarget, PythonMappedComponents> getNativeLibraries();
-
-  // Native libraries to include in the package.
-  @AddToRuleKey
-  public abstract ImmutableListMultimap<BuildTarget, PythonModuleDirComponents> getModuleDirs();
+  public abstract ImmutableListMultimap<BuildTarget, PythonComponents> getNativeLibraries();
 
   @AddToRuleKey
   public abstract Optional<SourcePath> getDefaultInitPy();
@@ -70,7 +66,6 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
     getModules().values().forEach(c -> c.forEachInput(consumer));
     getResources().values().forEach(c -> c.forEachInput(consumer));
     getNativeLibraries().values().forEach(c -> c.forEachInput(consumer));
-    getModuleDirs().values().forEach(c -> c.forEachInput(consumer));
     getDefaultInitPy().ifPresent(consumer);
   }
 
@@ -92,9 +87,6 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
             Multimaps.transformValues(
                 getNativeLibraries(),
                 c -> Objects.requireNonNull(c).resolvePythonComponents(resolver)))
-        .putAllModuleDirs(
-            Multimaps.transformValues(
-                getModuleDirs(), c -> Objects.requireNonNull(c).resolvePythonComponents(resolver)))
         .setDefaultInitPy(getDefaultInitPy().map(resolver::getAbsolutePath))
         .setZipSafe(isZipSafe())
         .build();
@@ -113,10 +105,6 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
                     .collect(ImmutableList.toImmutableList()))
             .addAll(
                 getNativeLibraries().values().stream()
-                    .map(PythonComponents::asSymlinks)
-                    .collect(ImmutableList.toImmutableList()))
-            .addAll(
-                getModuleDirs().values().stream()
                     .map(PythonComponents::asSymlinks)
                     .collect(ImmutableList.toImmutableList()))
             .build()) {
@@ -144,33 +132,26 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
    */
   public static class Builder {
 
-    private final ListMultimap<BuildTarget, PythonMappedComponents> modules =
+    private final ListMultimap<BuildTarget, PythonComponents> modules =
         MultimapBuilder.treeKeys().arrayListValues().build();
-    private final ListMultimap<BuildTarget, PythonMappedComponents> resources =
+    private final ListMultimap<BuildTarget, PythonComponents> resources =
         MultimapBuilder.treeKeys().arrayListValues().build();
-    private final ListMultimap<BuildTarget, PythonMappedComponents> nativeLibraries =
-        MultimapBuilder.treeKeys().arrayListValues().build();
-    private final ListMultimap<BuildTarget, PythonModuleDirComponents> moduleDirs =
+    private final ListMultimap<BuildTarget, PythonComponents> nativeLibraries =
         MultimapBuilder.treeKeys().arrayListValues().build();
     private Optional<Boolean> zipSafe = Optional.empty();
 
-    public Builder putModules(BuildTarget owner, PythonMappedComponents components) {
+    public Builder putModules(BuildTarget owner, PythonComponents components) {
       modules.put(owner, components);
       return this;
     }
 
-    public Builder putResources(BuildTarget owner, PythonMappedComponents components) {
+    public Builder putResources(BuildTarget owner, PythonComponents components) {
       resources.put(owner, components);
       return this;
     }
 
-    public Builder putNativeLibraries(BuildTarget owner, PythonMappedComponents components) {
+    public Builder putNativeLibraries(BuildTarget owner, PythonComponents components) {
       nativeLibraries.put(owner, components);
-      return this;
-    }
-
-    public Builder putModuleDirs(BuildTarget owner, PythonModuleDirComponents components) {
-      moduleDirs.put(owner, components);
       return this;
     }
 
@@ -184,7 +165,7 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
 
     public PythonPackageComponents build() {
       return PythonPackageComponents.of(
-          modules, resources, nativeLibraries, moduleDirs, Optional.empty(), zipSafe);
+          modules, resources, nativeLibraries, Optional.empty(), zipSafe);
     }
   }
 }
