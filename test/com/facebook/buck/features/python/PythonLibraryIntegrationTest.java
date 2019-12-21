@@ -16,13 +16,22 @@
 
 package com.facebook.buck.features.python;
 
+import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Path;
+import java.util.EnumSet;
 import org.hamcrest.Matchers;
+import org.hamcrest.comparator.ComparatorMatcherBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -42,5 +51,29 @@ public class PythonLibraryIntegrationTest {
     workspace.setUp();
 
     workspace.runBuckBuild("-c", "python.native_link_strategy=merged", "//:bin");
+  }
+
+  @Test
+  public void compile() throws Exception {
+    Path py3 = PythonTestUtils.assumeInterpreter("python3");
+    PythonTestUtils.assumeVersion(
+        py3,
+        Matchers.any(String.class),
+        ComparatorMatcherBuilder.comparedBy(new VersionStringComparator())
+            .greaterThanOrEqualTo("3.7"));
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "python_library_compile", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+    Path dir =
+        filesystem.relativize(
+            workspace.buildAndReturnOutput(
+                "-c", "python.interpreter=" + py3, "//:lib#py-default,default,compile"));
+    assertThat(
+        filesystem.asView().getFilesUnderPath(dir, EnumSet.noneOf(FileVisitOption.class)).stream()
+            .map(p -> PathFormatter.pathWithUnixSeparators(dir.relativize(p)))
+            .collect(ImmutableList.toImmutableList()),
+        Matchers.containsInAnyOrder(
+            Matchers.matchesRegex("(__pycache__/)?foo(.cpython-3[0-9])?.pyc")));
   }
 }

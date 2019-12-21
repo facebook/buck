@@ -269,7 +269,7 @@ public class PythonTestDescription
         context.getTargetGraph().get(buildTarget).getSelectedVersions();
 
     ImmutableMap<Path, SourcePath> srcs =
-        PythonUtil.parseSrcs(
+        PythonUtil.parseModules(
             buildTarget, graphBuilder, pythonPlatform, cxxPlatform, selectedVersions, args);
 
     ImmutableMap<Path, SourcePath> resources =

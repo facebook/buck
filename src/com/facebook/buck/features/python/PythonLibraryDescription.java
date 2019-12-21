@@ -21,19 +21,23 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
@@ -45,6 +49,7 @@ import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -56,15 +61,34 @@ import org.immutables.value.Value;
 public class PythonLibraryDescription
     implements DescriptionWithTargetGraph<PythonLibraryDescriptionArg>,
         VersionPropagator<PythonLibraryDescriptionArg>,
-        MetadataProvidingDescription<PythonLibraryDescriptionArg> {
+        MetadataProvidingDescription<PythonLibraryDescriptionArg>,
+        Flavored {
 
   private final ToolchainProvider toolchainProvider;
 
   private static final FlavorDomain<MetadataType> METADATA_TYPE =
       FlavorDomain.from("Python Metadata Type", MetadataType.class);
 
+  private static final FlavorDomain<LibraryType> LIBRARY_TYPE =
+      FlavorDomain.from("Python Library Type", LibraryType.class);
+
   public PythonLibraryDescription(ToolchainProvider toolchainProvider) {
     this.toolchainProvider = toolchainProvider;
+  }
+
+  @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        ImmutableSet.of(
+            LIBRARY_TYPE,
+            getPythonPlatforms(toolchainTargetConfiguration),
+            toolchainProvider
+                .getByName(
+                    CxxPlatformsProvider.DEFAULT_NAME,
+                    toolchainTargetConfiguration,
+                    CxxPlatformsProvider.class)
+                .getUnresolvedCxxPlatforms()));
   }
 
   @Override
@@ -73,17 +97,73 @@ public class PythonLibraryDescription
   }
 
   @Override
-  public PythonLibrary createBuildRule(
+  public BuildRule createBuildRule(
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       PythonLibraryDescriptionArg args) {
+
+    Optional<Map.Entry<Flavor, LibraryType>> optionalType =
+        LIBRARY_TYPE.getFlavorAndValue(buildTarget);
+    if (optionalType.isPresent()) {
+      Map.Entry<Flavor, PythonPlatform> pythonPlatform =
+          getPythonPlatforms(buildTarget.getTargetConfiguration())
+              .getFlavorAndValue(buildTarget)
+              .orElseThrow(IllegalArgumentException::new);
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+          toolchainProvider
+              .getByName(
+                  CxxPlatformsProvider.DEFAULT_NAME,
+                  buildTarget.getTargetConfiguration(),
+                  CxxPlatformsProvider.class)
+              .getUnresolvedCxxPlatforms();
+      Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
+          cxxPlatforms.getFlavorAndValue(buildTarget).orElseThrow(IllegalArgumentException::new);
+      BuildTarget baseTarget =
+          buildTarget.withoutFlavors(
+              optionalType.get().getKey(), pythonPlatform.getKey(), cxxPlatform.getKey());
+      return PythonCompileRule.from(
+          buildTarget,
+          context.getProjectFilesystem(),
+          context.getActionGraphBuilder(),
+          pythonPlatform.getValue().getEnvironment(),
+          getSources(
+                  baseTarget,
+                  pythonPlatform.getValue(),
+                  cxxPlatform
+                      .getValue()
+                      .resolve(
+                          context.getActionGraphBuilder(), buildTarget.getTargetConfiguration()),
+                  context.getActionGraphBuilder())
+              .orElseThrow(
+                  () ->
+                      new HumanReadableException(
+                          "%s: rule has no sources to compile", buildTarget)),
+          false);
+    }
+
     return new PythonLibrary(
         buildTarget,
         context.getProjectFilesystem(),
         params,
         args.getZipSafe(),
         args.isExcludeDepsFromMergedLinking());
+  }
+
+  @SuppressWarnings("unchecked")
+  private Optional<PythonMappedComponents> getSources(
+      BuildTarget baseTarget,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      ActionGraphBuilder graphBuilder) {
+    return graphBuilder
+        .requireMetadata(
+            baseTarget.withAppendedFlavors(
+                MetadataType.SOURCES.getFlavor(),
+                pythonPlatform.getFlavor(),
+                cxxPlatform.getFlavor()),
+            Optional.class)
+        .orElseThrow(IllegalStateException::new);
   }
 
   @Override
@@ -126,7 +206,7 @@ public class PythonLibraryDescription
       case MODULES:
         {
           ImmutableSortedMap<Path, SourcePath> components =
-              PythonUtil.parseSrcs(
+              PythonUtil.parseModules(
                   baseTarget,
                   graphBuilder,
                   pythonPlatform.getValue(),
@@ -146,6 +226,25 @@ public class PythonLibraryDescription
         {
           ImmutableSortedMap<Path, SourcePath> components =
               PythonUtil.parseResources(
+                  baseTarget,
+                  graphBuilder,
+                  pythonPlatform.getValue(),
+                  cxxPlatform
+                      .getValue()
+                      .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+                  selectedVersions,
+                  args);
+          return Optional.of(
+                  components.isEmpty()
+                      ? Optional.empty()
+                      : Optional.of(PythonMappedComponents.of(components)))
+              .map(metadataClass::cast);
+        }
+
+      case SOURCES:
+        {
+          ImmutableSortedMap<Path, SourcePath> components =
+              PythonUtil.parseSources(
                   baseTarget,
                   graphBuilder,
                   pythonPlatform.getValue(),
@@ -193,9 +292,28 @@ public class PythonLibraryDescription
         .getPythonPlatforms();
   }
 
+  /** Ways of building this library. */
+  enum LibraryType implements FlavorConvertible {
+    /** Compile the sources in this library into bytecode. */
+    COMPILE(InternalFlavor.of("compile")),
+    ;
+
+    private final Flavor flavor;
+
+    LibraryType(Flavor flavor) {
+      this.flavor = flavor;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
+  }
+
   enum MetadataType implements FlavorConvertible {
     RESOURCES(InternalFlavor.of("resources")),
     MODULES(InternalFlavor.of("modules")),
+    SOURCES(InternalFlavor.of("sources")),
     PACKAGE_DEPS(InternalFlavor.of("package-deps")),
     ;
 

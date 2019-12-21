@@ -1,0 +1,6 @@
+python_library(
+    name = "lib",
+    srcs = [
+        "foo.py",
+    ],
+)

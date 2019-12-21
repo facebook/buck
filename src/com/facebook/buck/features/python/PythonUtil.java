@@ -39,6 +39,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.args.Arg;
@@ -146,14 +147,14 @@ public class PythonUtil {
         consumer);
   }
 
-  public static ImmutableSortedMap<Path, SourcePath> parseSrcs(
+  public static void forEachSrc(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> versions,
-      PythonLibraryDescription.CoreArg args) {
-    ImmutableSortedMap.Builder<Path, SourcePath> builder = ImmutableSortedMap.naturalOrder();
+      PythonLibraryDescription.CoreArg args,
+      BiConsumer<Path, SourcePath> consumer) {
     forEachModule(
         target,
         graphBuilder,
@@ -165,7 +166,41 @@ public class PythonUtil {
         args.getPlatformSrcs(),
         args.getVersionedSrcs(),
         versions,
-        builder::put);
+        consumer);
+  }
+
+  public static ImmutableSortedMap<Path, SourcePath> parseSources(
+      BuildTarget target,
+      ActionGraphBuilder graphBuilder,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> versions,
+      PythonLibraryDescription.CoreArg args) {
+    ImmutableSortedMap.Builder<Path, SourcePath> builder = ImmutableSortedMap.naturalOrder();
+    forEachSrc(
+        target,
+        graphBuilder,
+        pythonPlatform,
+        cxxPlatform,
+        versions,
+        args,
+        (name, src) -> {
+          if (MorePaths.getFileExtension(name).equals(SOURCE_EXT)) {
+            builder.put(name, src);
+          }
+        });
+    return builder.build();
+  }
+
+  public static ImmutableSortedMap<Path, SourcePath> parseModules(
+      BuildTarget target,
+      ActionGraphBuilder graphBuilder,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> versions,
+      PythonLibraryDescription.CoreArg args) {
+    ImmutableSortedMap.Builder<Path, SourcePath> builder = ImmutableSortedMap.naturalOrder();
+    forEachSrc(target, graphBuilder, pythonPlatform, cxxPlatform, versions, args, builder::put);
     return builder.build();
   }
 
