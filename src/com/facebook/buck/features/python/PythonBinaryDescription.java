@@ -268,19 +268,22 @@ public class PythonBinaryDescription
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.
     String mainModule;
-    ImmutableSortedMap.Builder<Path, SourcePath> modulesBuilder = ImmutableSortedMap.naturalOrder();
+    Optional<PythonMappedComponents> modules;
     if (args.getMain().isPresent()) {
       LOG.info(
           "%s: parameter `main` is deprecated, please use `main_module` instead.", buildTarget);
       String mainName =
           graphBuilder.getSourcePathResolver().getSourcePathName(buildTarget, args.getMain().get());
       Path main = baseModule.resolve(mainName);
-      modulesBuilder.put(baseModule.resolve(mainName), args.getMain().get());
       mainModule = PythonUtil.toModuleName(buildTarget, main.toString());
+      modules =
+          Optional.of(
+              PythonMappedComponents.of(
+                  ImmutableSortedMap.of(baseModule.resolve(mainName), args.getMain().get())));
     } else {
       mainModule = args.getMainModule().get();
+      modules = Optional.empty();
     }
-    ImmutableSortedMap<Path, SourcePath> modules = modulesBuilder.build();
 
     FlavorDomain<PythonPlatform> pythonPlatforms =
         toolchainProvider
@@ -304,22 +307,24 @@ public class PythonBinaryDescription
         getCxxPlatform(buildTarget, args)
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+
     // Build up the list of all components going into the python binary.
     PythonPackagable root =
         PythonBinaryPackagable.builder()
             .setBuildTarget(buildTarget)
+            .setFilesystem(projectFilesystem)
             .setPythonPackageDeps(
                 PythonUtil.getDeps(
                         pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
                     .stream()
                     .map(graphBuilder::getRule)
                     .collect(ImmutableList.toImmutableList()))
-            .setPythonModules(PythonMappedComponents.of(modules))
+            .setPythonModules(modules)
             .setPythonZipSafe(args.getZipSafe())
             .build();
 
     CellPathResolver cellRoots = context.getCellPathResolver();
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)

@@ -21,7 +21,11 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Maps;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -36,6 +40,8 @@ abstract class AbstractPythonBinaryPackagable implements PythonPackagable {
   @Override
   public abstract BuildTarget getBuildTarget();
 
+  abstract ProjectFilesystem getFilesystem();
+
   abstract ImmutableList<BuildRule> getPythonPackageDeps();
 
   abstract Optional<PythonMappedComponents> getPythonModules();
@@ -44,6 +50,24 @@ abstract class AbstractPythonBinaryPackagable implements PythonPackagable {
 
   @Override
   public abstract Optional<Boolean> isPythonZipSafe();
+
+  @Value.Lazy
+  public Optional<PythonMappedComponents> getPythonSources() {
+    return getPythonModules()
+        .<Optional<PythonMappedComponents>>map(
+            components ->
+                components.getComponents().isEmpty()
+                    ? Optional.empty()
+                    : Optional.of(
+                        PythonMappedComponents.of(
+                            ImmutableSortedMap.copyOf(
+                                Maps.filterKeys(
+                                    components.getComponents(),
+                                    dst ->
+                                        MorePaths.getFileExtension(dst)
+                                            .equals(PythonUtil.SOURCE_EXT))))))
+        .orElseGet(Optional::empty);
+  }
 
   @Override
   public Iterable<BuildRule> getPythonPackageDeps(
@@ -61,5 +85,30 @@ abstract class AbstractPythonBinaryPackagable implements PythonPackagable {
   public Optional<PythonMappedComponents> getPythonResources(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return getPythonResources();
+  }
+
+  public Optional<PythonComponents> getPythonBytecode(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return getPythonSources()
+        .map(
+            sources -> {
+              PythonCompileRule compileRule =
+                  (PythonCompileRule)
+                      graphBuilder.computeIfAbsent(
+                          getBuildTarget()
+                              .withAppendedFlavors(
+                                  pythonPlatform.getFlavor(),
+                                  cxxPlatform.getFlavor(),
+                                  PythonLibraryDescription.LibraryType.COMPILE.getFlavor()),
+                          target ->
+                              PythonCompileRule.from(
+                                  target,
+                                  getFilesystem(),
+                                  graphBuilder,
+                                  pythonPlatform.getEnvironment(),
+                                  sources,
+                                  false));
+              return compileRule.getCompiledSources();
+            });
   }
 }

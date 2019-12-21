@@ -328,6 +328,7 @@ public class PythonTestDescription
     PythonPackagable root =
         PythonBinaryPackagable.builder()
             .setBuildTarget(buildTarget)
+            .setFilesystem(projectFilesystem)
             .addAllPythonPackageDeps(deps)
             .setPythonModules(PythonMappedComponents.of(modules))
             .setPythonResources(PythonMappedComponents.of(ImmutableSortedMap.copyOf(resources)))
