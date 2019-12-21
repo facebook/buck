@@ -63,6 +63,19 @@ public interface PythonPackagable extends HasBuildTarget {
   }
 
   /**
+   * Compiled Python bytecode (e.g. `.pyc`) associated with this rule.
+   *
+   * @return a map of compiled Python bytecode, where the key is the module in {@link Path} form
+   *     (including extension).
+   */
+  default Optional<PythonComponents> getPythonBytecode(
+      @SuppressWarnings("unused") PythonPlatform pythonPlatform,
+      @SuppressWarnings("unused") CxxPlatform cxxPlatform,
+      @SuppressWarnings("unused") ActionGraphBuilder graphBuilder) {
+    return Optional.empty();
+  }
+
+  /**
    * @return whether the modules in this rule can be imported/run transparently from a Zip file
    *     (e.g. via zipimport). This is almost always the case, but in rare situations (e.g.
    *     execution expects to find packaged files in disk) rules can opt-out.

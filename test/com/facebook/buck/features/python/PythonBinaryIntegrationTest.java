@@ -41,6 +41,7 @@ import com.facebook.buck.features.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.features.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -51,6 +52,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Platform;
@@ -68,7 +70,9 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
+import org.hamcrest.comparator.ComparatorMatcherBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -605,5 +609,30 @@ public class PythonBinaryIntegrationTest {
             .map(path -> tmp.getRoot().relativize(path))
             .collect(ImmutableList.toImmutableList());
     Assert.assertEquals(3, pycFiles.size());
+  }
+
+  @Test
+  public void compileSources() throws IOException, InterruptedException {
+    assumeThat(packageStyle, is(PackageStyle.STANDALONE));
+    Path py3 = PythonTestUtils.assumeInterpreter("python3");
+    PythonTestUtils.assumeVersion(
+        py3,
+        Matchers.any(String.class),
+        ComparatorMatcherBuilder.comparedBy(new VersionStringComparator())
+            .greaterThanOrEqualTo("3.7"));
+    Path binPath =
+        workspace.buildAndReturnOutput("-c", "python.interpreter=" + py3, "//:bin_compile");
+    ImmutableSet<Path> paths =
+        pexDirectory
+            ? Files.walk(binPath)
+                .filter(p -> !p.equals(binPath))
+                .map(binPath::relativize)
+                .collect(ImmutableSet.toImmutableSet())
+            : Unzip.getZipMembers(binPath);
+    assertThat(
+        paths.stream().map(PathFormatter::pathWithUnixSeparators).collect(Collectors.toList()),
+        Matchers.hasItems(
+            Matchers.matchesRegex("foo/bar/(__pycache__/)?mod(.cpython-3[0-9])?.pyc"),
+            Matchers.matchesRegex("(__pycache__/)?main(.cpython-3[0-9])?.pyc")));
   }
 }

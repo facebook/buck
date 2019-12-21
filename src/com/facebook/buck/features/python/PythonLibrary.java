@@ -101,6 +101,35 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         Optional.class);
   }
 
+  @SuppressWarnings("unchecked")
+  private Optional<PythonMappedComponents> getPythonSources(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return getMetadata(
+        pythonPlatform,
+        cxxPlatform,
+        graphBuilder,
+        PythonLibraryDescription.MetadataType.SOURCES,
+        Optional.class);
+  }
+
+  @Override
+  public Optional<PythonComponents> getPythonBytecode(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return getPythonSources(pythonPlatform, cxxPlatform, graphBuilder)
+        .map(
+            sources -> {
+              PythonCompileRule compileRule =
+                  (PythonCompileRule)
+                      graphBuilder.requireRule(
+                          getBuildTarget()
+                              .withAppendedFlavors(
+                                  pythonPlatform.getFlavor(),
+                                  cxxPlatform.getFlavor(),
+                                  PythonLibraryDescription.LibraryType.COMPILE.getFlavor()));
+              return compileRule.getCompiledSources();
+            });
+  }
+
   @Override
   public Optional<Boolean> isPythonZipSafe() {
     return zipSafe;

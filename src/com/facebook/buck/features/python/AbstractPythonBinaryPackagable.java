@@ -87,6 +87,7 @@ abstract class AbstractPythonBinaryPackagable implements PythonPackagable {
     return getPythonResources();
   }
 
+  @Override
   public Optional<PythonComponents> getPythonBytecode(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return getPythonSources()

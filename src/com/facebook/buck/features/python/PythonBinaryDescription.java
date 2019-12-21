@@ -347,7 +347,8 @@ public class PythonBinaryDescription
                 .map(macrosConverter::convert)
                 .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
-            args.getPreloadDeps());
+            args.getPreloadDeps(),
+            args.getCompile().orElse(false));
     return createPackageRule(
         buildTarget,
         projectFilesystem,
@@ -421,5 +422,7 @@ public class PythonBinaryDescription
     ImmutableList<StringWithMacros> getLinkerFlags();
 
     Optional<String> getExtension();
+
+    Optional<Boolean> getCompile();
   }
 }

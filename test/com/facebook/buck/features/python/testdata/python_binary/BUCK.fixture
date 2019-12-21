@@ -189,3 +189,12 @@ python_binary(
         "//external_sources:whl_dep_copy",
     ],
 )
+
+python_binary(
+    name = "bin_compile",
+    compile = True,
+    main_module = "main",
+    deps = [
+        ":lib",
+    ],
+)

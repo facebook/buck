@@ -358,7 +358,8 @@ public class PythonTestDescription
                 .map(macrosConverter::convert)
                 .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
-            args.getPreloadDeps());
+            args.getPreloadDeps(),
+            args.getCompile().orElse(false));
 
     // Build the PEX using a python binary rule with the minimum dependencies.
     buildTarget.assertUnflavored();
@@ -548,5 +549,7 @@ public class PythonTestDescription
     // targets that builds foo.so so that buck can resolve its binary path and
     // export the downstream testing framework to consume
     ImmutableSet<BuildTarget> getAdditionalCoverageTargets();
+
+    Optional<Boolean> getCompile();
   }
 }

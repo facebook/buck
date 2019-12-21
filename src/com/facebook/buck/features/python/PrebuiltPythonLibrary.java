@@ -86,6 +86,30 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
             Objects.requireNonNull(getSourcePathToOutput())));
   }
 
+  private Optional<PythonComponents> getPythonSources() {
+    return Optional.of(
+        PrebuiltPythonLibraryComponents.ofSources(Objects.requireNonNull(getSourcePathToOutput())));
+  }
+
+  @Override
+  public Optional<PythonComponents> getPythonBytecode(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return getPythonSources()
+        .map(
+            sources -> {
+              PythonCompileRule compileRule =
+                  (PythonCompileRule)
+                      graphBuilder.requireRule(
+                          getBuildTarget()
+                              .withAppendedFlavors(
+                                  pythonPlatform.getFlavor(),
+                                  cxxPlatform.getFlavor(),
+                                  PrebuiltPythonLibraryDescription.LibraryType.COMPILE
+                                      .getFlavor()));
+              return compileRule.getCompiledSources();
+            });
+  }
+
   @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {

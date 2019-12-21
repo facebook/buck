@@ -284,7 +284,8 @@ public class PythonUtil {
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
       NativeLinkStrategy nativeLinkStrategy,
-      ImmutableSet<BuildTarget> preloadDeps) {
+      ImmutableSet<BuildTarget> preloadDeps,
+      boolean compile) {
 
     PythonPackageComponents.Builder allComponents = new PythonPackageComponents.Builder();
 
@@ -322,7 +323,12 @@ public class PythonUtil {
           packagable
               .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
               .ifPresent(modules -> allComponents.putModules(packagable.getBuildTarget(), modules));
-
+          if (compile) {
+            packagable
+                .getPythonBytecode(pythonPlatform, cxxPlatform, graphBuilder)
+                .ifPresent(
+                    bytecode -> allComponents.putModules(packagable.getBuildTarget(), bytecode));
+          }
           packagable
               .getPythonResources(pythonPlatform, cxxPlatform, graphBuilder)
               .ifPresent(
