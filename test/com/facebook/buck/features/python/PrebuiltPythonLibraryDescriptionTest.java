@@ -45,7 +45,7 @@ public class PrebuiltPythonLibraryDescriptionTest {
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("cxx.c"))))
             .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
     PrebuiltPythonLibraryBuilder libBuilder =
-        new PrebuiltPythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+        PrebuiltPythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()))
             .setBinarySrc(FakeSourcePath.of("test.whl"))
             .setExcludeDepsFromMergedLinking(true);

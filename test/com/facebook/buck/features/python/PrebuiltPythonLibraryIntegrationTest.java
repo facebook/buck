@@ -16,12 +16,15 @@
 
 package com.facebook.buck.features.python;
 
+import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.features.python.toolchain.impl.PythonPlatformsProviderFactoryUtils;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -29,11 +32,17 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.EnumSet;
+import org.hamcrest.Matchers;
+import org.hamcrest.comparator.ComparatorMatcherBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -111,5 +120,27 @@ public class PrebuiltPythonLibraryIntegrationTest {
         Files.exists(extractedWhl.resolve(Paths.get("package-0.1.dist-info", "METADATA"))));
     Assert.assertTrue(
         Files.exists(extractedWhl.resolve(Paths.get("package-0.1.dist-info", "RECORD"))));
+  }
+
+  @Test
+  public void compile() throws IOException, InterruptedException {
+    Path py3 = PythonTestUtils.assumeInterpreter("python3");
+    PythonTestUtils.assumeVersion(
+        py3,
+        Matchers.any(String.class),
+        ComparatorMatcherBuilder.comparedBy(new VersionStringComparator())
+            .greaterThanOrEqualTo("3.7"));
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+    Path dir =
+        filesystem.relativize(
+            workspace.buildAndReturnOutput(
+                "-c", "python.interpreter=" + py3, "//:python_egg#py-default,default,compile"));
+    assertThat(
+        filesystem.asView().getFilesUnderPath(dir, EnumSet.noneOf(FileVisitOption.class)).stream()
+            .map(p -> PathFormatter.pathWithUnixSeparators(dir.relativize(p)))
+            .collect(ImmutableList.toImmutableList()),
+        Matchers.containsInAnyOrder(
+            Matchers.matchesRegex("package(/__pycache__)?/file(.cpython-3[0-9])?.pyc"),
+            Matchers.matchesRegex("package(/__pycache__)?/__init__(.cpython-3[0-9])?.pyc")));
   }
 }

@@ -52,14 +52,23 @@ abstract class AbstractPrebuiltPythonLibraryComponents implements PythonComponen
     return PrebuiltPythonLibraryComponents.of(Type.RESOURCES, sourcePath);
   }
 
+  public static PrebuiltPythonLibraryComponents ofSources(SourcePath sourcePath) {
+    return PrebuiltPythonLibraryComponents.of(Type.SOURCES, sourcePath);
+  }
+
   private static boolean accept(Type type, Path path) {
     String extension = MorePaths.getFileExtension(path);
-    if (PythonUtil.SOURCE_EXT.equals(extension)
-        || PythonUtil.NATIVE_EXTENSION_EXT.equals(extension)) {
-      return type.equals(Type.MODULES);
-    } else {
-      return type.equals(Type.RESOURCES);
+    switch (type) {
+      case MODULES:
+        return extension.equals(PythonUtil.SOURCE_EXT)
+            || extension.equals(PythonUtil.NATIVE_EXTENSION_EXT);
+      case SOURCES:
+        return extension.equals(PythonUtil.SOURCE_EXT);
+      case RESOURCES:
+        return !extension.equals(PythonUtil.SOURCE_EXT)
+            && !extension.equals(PythonUtil.NATIVE_EXTENSION_EXT);
     }
+    throw new IllegalStateException();
   }
 
   @Override
@@ -111,5 +120,6 @@ abstract class AbstractPrebuiltPythonLibraryComponents implements PythonComponen
   protected enum Type {
     MODULES,
     RESOURCES,
+    SOURCES,
   }
 }
