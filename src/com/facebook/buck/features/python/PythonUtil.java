@@ -226,6 +226,13 @@ public class PythonUtil {
     if (ext == -1) {
       throw new HumanReadableException("%s: missing extension for module path: %s", target, name);
     }
+    return toModuleName(name);
+  }
+
+  /** Convert a path to a module to it's module name as referenced in import statements. */
+  static String toModuleName(String name) {
+    int ext = name.lastIndexOf('.');
+    Preconditions.checkState(ext != -1);
     name = name.substring(0, ext);
     return PathFormatter.pathWithUnixSeparators(name).replace('/', '.');
   }

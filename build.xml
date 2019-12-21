@@ -898,6 +898,7 @@
   <target name="copy-resources" description="Copy resources used by Buck at runtime to the build directory">
     <copy todir="${classes.dir}">
       <fileset dir="${src.dir}">
+        <include name="com/facebook/buck/features/python/compile.py"/>
         <include name="com/facebook/buck/httpserver/*.stg"/>
         <include name="com/facebook/buck/httpserver/resources/static/*"/>
         <include name="com/facebook/buck/maven/build-file.st"/>
