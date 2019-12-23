@@ -100,6 +100,14 @@ public class BuildTargetPaths {
         .resolve(getBasePath(filesystem, target, format).toPath(filesystem.getFileSystem()));
   }
 
+  /** A folder where all targets in the file of target are created. */
+  public static Path getGenPathForBaseName(ProjectFilesystem filesystem, BuildTarget target) {
+    return filesystem
+        .getBuckPaths()
+        .getGenDir()
+        .resolve(getBasePathForBaseName(filesystem, target).toPath(filesystem.getFileSystem()));
+  }
+
   /**
    * Return a relative path to a file. {@code format} will be prepended with the target base path,
    * then formatted with the target short name.

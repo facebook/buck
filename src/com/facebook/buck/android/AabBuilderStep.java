@@ -29,6 +29,7 @@ import com.android.tools.build.bundletool.model.BundleModule;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -152,14 +153,7 @@ public class AabBuilderStep implements Step {
   }
 
   private Path getPathForModule(ModuleInfo moduleInfo) {
-    return filesystem
-        .getBuckPaths()
-        .getGenDir()
-        .resolve(
-            buildTarget
-                .getCellRelativeBasePath()
-                .getPath()
-                .toPath(filesystem.getRootPath().getFileSystem()))
+    return BuildTargetPaths.getGenPathForBaseName(filesystem, buildTarget)
         .resolve(String.format("%s.zip", moduleInfo.getModuleName()));
   }
 
