@@ -12,3 +12,10 @@ java_binary(
         ":lib",
     ],
 )
+
+genrule(
+    name = "dir",
+    out = "output",
+    bash = "mkdir $OUT",
+    cmd_exe = "md %OUT%",
+)

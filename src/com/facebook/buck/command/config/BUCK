@@ -18,5 +18,6 @@ java_immutables_library(
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/string:string",
+        "//src/com/facebook/buck/core/model/impl:impl",
     ],
 )

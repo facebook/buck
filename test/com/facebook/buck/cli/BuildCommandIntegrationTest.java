@@ -33,6 +33,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.impl.TargetConfigurationHasher;
 import com.facebook.buck.core.rules.BuildRule;
@@ -607,5 +608,88 @@ public class BuildCommandIntegrationTest {
             workspace
                 .getGenPath(BuildTargetFactory.newInstance(targetName), "%s__")
                 .resolve(pathName));
+  }
+
+  @Test
+  public void hardlinkOriginalBuckOutToHashedBuckOutWhenBuckConfigIsSet() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "buck_out_config_target_hash", tmp);
+    workspace.addBuckConfigLocalOption("project", "buck_out_links_to_hashed_paths", "hardlink");
+    workspace.setUp();
+
+    ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:binary");
+    runBuckResult.assertSuccess();
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary");
+    Path expected =
+        workspace.resolve(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                .resolveSibling("binary.jar"));
+    Path hardlink = BuildPaths.removeHashFrom(expected, target);
+
+    assertTrue("File not found " + expected.toString(), Files.exists(expected));
+    assertTrue("File not found " + hardlink.toString(), Files.exists(hardlink));
+    assertTrue("File is not a hardlink " + hardlink.toString(), Files.isRegularFile(hardlink));
+  }
+
+  @Test
+  public void symlinkOriginalBuckOutToHashedBuckOutWhenBuckConfigIsSet() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "buck_out_config_target_hash", tmp);
+    workspace.addBuckConfigLocalOption("project", "buck_out_links_to_hashed_paths", "symlink");
+    workspace.setUp();
+
+    ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:binary");
+    runBuckResult.assertSuccess();
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary");
+    Path expected =
+        workspace.resolve(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                .resolveSibling("binary.jar"));
+    Path symlink = BuildPaths.removeHashFrom(expected, target);
+
+    assertTrue("File not found " + expected.toString(), Files.exists(expected));
+    assertTrue("File not found " + symlink.toString(), Files.exists(symlink));
+    assertTrue("File is not a symlink " + symlink.toString(), Files.isSymbolicLink(symlink));
+  }
+
+  @Test
+  public void canOverwriteExistingLinksToHashedBuckOut() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "buck_out_config_target_hash", tmp);
+    workspace.addBuckConfigLocalOption("project", "buck_out_links_to_hashed_paths", "hardlink");
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary");
+    Path hardlink =
+        BuildPaths.removeHashFrom(
+            workspace.resolve(
+                BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                    .resolveSibling("binary.jar")),
+            target);
+
+    workspace.runBuckBuild("--show-output", "//:binary").assertSuccess();
+    assertTrue(Files.exists(hardlink));
+    workspace.runBuckBuild("--show-output", "//:binary").assertSuccess();
+    assertTrue(Files.exists(hardlink));
+  }
+
+  @Test
+  public void createSymlinkToHashedBuckOutForDirectoriesWhenHardlinkBuckConfigIsSet()
+      throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "buck_out_config_target_hash", tmp);
+    workspace.addBuckConfigLocalOption("project", "buck_out_links_to_hashed_paths", "hardlink");
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:dir");
+    Path symlink =
+        BuildPaths.removeHashFrom(
+            workspace.resolve(
+                BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                    .resolve("output")),
+            target);
+
+    workspace.runBuckBuild("--show-output", "//:dir").assertSuccess();
+    assertTrue(Files.isSymbolicLink(symlink));
   }
 }

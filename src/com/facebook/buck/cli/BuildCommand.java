@@ -33,6 +33,8 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
+import com.facebook.buck.core.model.impl.BuildPaths;
+import com.facebook.buck.core.model.impl.HashedBuckOutLinkMode;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetOutputLabelParser;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -562,8 +564,13 @@ public class BuildCommand extends AbstractCommand {
       GraphsAndBuildTargets graphsAndBuildTargets,
       RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
       throws IOException {
-    if (params.getBuckConfig().getView(BuildBuckConfig.class).createBuildOutputSymLinksEnabled()) {
+    BuildBuckConfig buildBuckConfig = params.getBuckConfig().getView(BuildBuckConfig.class);
+    if (buildBuckConfig.createBuildOutputSymLinksEnabled()) {
       symLinkBuildResults(params, graphsAndBuildTargets);
+    }
+    if (buildBuckConfig.shouldBuckOutIncludeTargetConfigHash()
+        && !buildBuckConfig.getHashedBuckOutLinkMode().equals(HashedBuckOutLinkMode.NONE)) {
+      linkBuildResultsToHashedBuckOut(params, graphsAndBuildTargets);
     }
     ActionAndTargetGraphs graphs = graphsAndBuildTargets.getGraphs();
     // TODO(irenewchen): Merge full output, JSON output, full JSON output into a enum
@@ -628,6 +635,66 @@ public class BuildCommand extends AbstractCommand {
       }
     }
     return ExitCode.SUCCESS;
+  }
+
+  private void linkBuildResultsToHashedBuckOut(
+      CommandRunnerParams params, GraphsAndBuildTargets graphsAndBuildTargets)
+      throws IllegalStateException, IOException {
+    BuildBuckConfig buildBuckConfig = params.getBuckConfig().getView(BuildBuckConfig.class);
+    if (!buildBuckConfig.shouldBuckOutIncludeTargetConfigHash()) {
+      throw new IllegalStateException(
+          "buckconfig buck_out_include_target_config_hash must be true to "
+              + "hardlink build results to hashed buck-out!");
+    }
+    ActionGraphBuilder graphBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
+
+    for (ImmutableBuildTargetWithOutputs buildTargetWithOutputs :
+        graphsAndBuildTargets.getBuildTargetWithOutputs()) {
+      BuildRule rule = graphBuilder.requireRule(buildTargetWithOutputs.getBuildTarget());
+      linkRuleToHashedBuckOut(
+          rule,
+          pathResolver,
+          buildBuckConfig.getBuckOutCompatLink(),
+          buildTargetWithOutputs.getOutputLabel(),
+          buildBuckConfig.getHashedBuckOutLinkMode());
+    }
+  }
+
+  private void linkRuleToHashedBuckOut(
+      BuildRule rule,
+      SourcePathResolverAdapter pathResolver,
+      boolean buckOutCompatLink,
+      OutputLabel outputLabel,
+      HashedBuckOutLinkMode linkMode)
+      throws IOException {
+    Optional<Path> outputPath =
+        PathUtils.getUserFacingOutputPath(
+            pathResolver, rule, buckOutCompatLink, outputLabel, showOutputs);
+    if (!outputPath.isPresent()) {
+      return;
+    }
+    Path absolutePathWithHash = outputPath.get().toAbsolutePath();
+    Path absolutePathWithoutHash =
+        BuildPaths.removeHashFrom(absolutePathWithHash, rule.getBuildTarget());
+    Files.deleteIfExists(absolutePathWithoutHash);
+    Files.createDirectories(absolutePathWithoutHash.getParent());
+
+    switch (linkMode) {
+      case SYMLINK:
+        Files.createSymbolicLink(absolutePathWithoutHash, absolutePathWithHash);
+        break;
+      case HARDLINK:
+        if (Files.isDirectory(absolutePathWithHash)) {
+          Files.createSymbolicLink(absolutePathWithoutHash, absolutePathWithHash);
+        } else {
+          Files.createLink(absolutePathWithoutHash, absolutePathWithHash);
+        }
+        break;
+      case NONE:
+        break;
+    }
   }
 
   private void symLinkBuildRuleResult(
