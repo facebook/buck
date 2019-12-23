@@ -99,10 +99,14 @@ public class BuildPathsTest {
 
     ProjectFilesystem filesystemWithTargetConfigHashInBuckPaths =
         FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths();
+    ProjectFilesystem filesystemWithoutTargetConfigHashInBuckPaths =
+        FakeProjectFilesystem.createFilesystemWithoutTargetConfigHashInBuckPaths();
     Path hashedGenPath =
         BuildPaths.getGenDir(filesystemWithTargetConfigHashInBuckPaths, buildTarget)
             .resolve("a.out");
-    Path legacyGenPath = BuildPaths.getGenDir(filesystem, buildTarget).resolve("a.out");
+    Path legacyGenPath =
+        BuildPaths.getGenDir(filesystemWithoutTargetConfigHashInBuckPaths, buildTarget)
+            .resolve("a.out");
 
     Path hash = Paths.get(TargetConfigurationHasher.hash(buildTarget.getTargetConfiguration()));
 
@@ -117,12 +121,16 @@ public class BuildPathsTest {
 
     ProjectFilesystem filesystemWithTargetConfigHashInBuckPaths =
         FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths();
+    ProjectFilesystem filesystemWithoutTargetConfigHashInBuckPaths =
+        FakeProjectFilesystem.createFilesystemWithoutTargetConfigHashInBuckPaths();
     Path hashedGenPath =
         BuildPaths.getGenDir(filesystemWithTargetConfigHashInBuckPaths, buildTarget)
             .resolve("a.out")
             .toAbsolutePath();
     Path legacyGenPath =
-        BuildPaths.getGenDir(filesystem, buildTarget).resolve("a.out").toAbsolutePath();
+        BuildPaths.getGenDir(filesystemWithoutTargetConfigHashInBuckPaths, buildTarget)
+            .resolve("a.out")
+            .toAbsolutePath();
 
     Path hash = Paths.get(TargetConfigurationHasher.hash(buildTarget.getTargetConfiguration()));
 

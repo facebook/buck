@@ -270,6 +270,16 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         DefaultProjectFilesystemFactory.getWindowsFSInstance());
   }
 
+  public static ProjectFilesystem createFilesystemWithoutTargetConfigHashInBuckPaths() {
+    Path root = DEFAULT_ROOT;
+    return new DefaultProjectFilesystem(
+        root,
+        ImmutableSet.of(),
+        BuckPaths.createDefaultBuckPaths(CanonicalCellName.rootCell(), root, false),
+        new DefaultProjectFilesystemDelegate(root),
+        DefaultProjectFilesystemFactory.getWindowsFSInstance());
+  }
+
   public FakeProjectFilesystem() {
     this(CanonicalCellName.rootCell(), DEFAULT_ROOT);
   }
