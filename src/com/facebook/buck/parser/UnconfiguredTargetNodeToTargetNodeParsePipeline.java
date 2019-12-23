@@ -24,7 +24,6 @@ import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -243,7 +242,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
 
                 for (UnconfiguredTargetNode from : allToConvert) {
                   UnconfiguredBuildTargetView unconfiguredTarget =
-                      ImmutableUnconfiguredBuildTargetView.of(from.getBuildTarget());
+                      UnconfiguredBuildTargetView.of(from.getBuildTarget());
                   ListenableFuture<TargetNode<?>> targetNode =
                       configureRequestedTarget(
                           cell, unconfiguredTarget, globalTargetConfiguration, from);

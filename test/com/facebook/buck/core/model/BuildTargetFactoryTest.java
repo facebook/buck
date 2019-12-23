@@ -60,7 +60,7 @@ public class BuildTargetFactoryTest {
   public void testTargetWithCell() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("xplat//example/base:one");
     assertEquals(
-        ImmutableUnconfiguredBuildTargetView.of(
+        UnconfiguredBuildTargetView.of(
                 UnflavoredBuildTarget.of(
                     ImmutableCanonicalCellName.of(Optional.of("xplat")),
                     BaseName.of("//example/base"),

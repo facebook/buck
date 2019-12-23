@@ -50,12 +50,12 @@ public class UnconfiguredBuildTargetFactoryForTests {
     Preconditions.checkArgument(parts.length == 2);
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
-      return ImmutableUnconfiguredBuildTargetView.of(
+      return UnconfiguredBuildTargetView.of(
           UnflavoredBuildTarget.of(cellName, BaseName.of(parts[0]), parts[1]),
           UnconfiguredBuildTarget.NO_FLAVORS);
     }
     String[] flavors = nameAndFlavor[1].split(",");
-    return ImmutableUnconfiguredBuildTargetView.of(
+    return UnconfiguredBuildTargetView.of(
         UnflavoredBuildTarget.of(cellName, BaseName.of(parts[0]), nameAndFlavor[0]),
         RichStream.from(flavors)
             .map(InternalFlavor::of)
@@ -65,7 +65,7 @@ public class UnconfiguredBuildTargetFactoryForTests {
 
   public static UnconfiguredBuildTargetView newInstance(String baseName, String shortName) {
     BuckCellArg arg = BuckCellArg.of(baseName);
-    return ImmutableUnconfiguredBuildTargetView.of(
+    return UnconfiguredBuildTargetView.of(
         UnflavoredBuildTarget.of(
             ImmutableCanonicalCellName.of(arg.getCellName()),
             BaseName.of(arg.getBasePath()),
@@ -76,7 +76,7 @@ public class UnconfiguredBuildTargetFactoryForTests {
   public static UnconfiguredBuildTargetView newInstance(
       String baseName, String shortName, Flavor... flavors) {
     BuckCellArg arg = BuckCellArg.of(baseName);
-    return ImmutableUnconfiguredBuildTargetView.of(
+    return UnconfiguredBuildTargetView.of(
         UnflavoredBuildTarget.of(
             ImmutableCanonicalCellName.of(arg.getCellName()),
             BaseName.of(arg.getBasePath()),

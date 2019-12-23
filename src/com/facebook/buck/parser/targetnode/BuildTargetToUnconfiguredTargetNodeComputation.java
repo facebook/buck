@@ -23,7 +23,6 @@ import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.Package;
@@ -93,7 +92,7 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
 
     /** TODO: do it directly not using {@link UnconfiguredBuildTargetView} */
     UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-        ImmutableUnconfiguredBuildTargetView.of(buildTarget);
+        UnconfiguredBuildTargetView.of(buildTarget);
 
     /**
      * TODO: If we want to support packages in the query service, we'll need to implement the
@@ -139,7 +138,7 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
 
     /** TODO: do it directly not using {@link UnconfiguredBuildTargetView} */
     UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-        ImmutableUnconfiguredBuildTargetView.of(buildTarget);
+        UnconfiguredBuildTargetView.of(buildTarget);
 
     return ImmutableBuildPackagePathToBuildFileManifestKey.of(
         unconfiguredBuildTargetView

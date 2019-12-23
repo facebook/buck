@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.name.ImmutableCanonicalCellName;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -74,7 +73,7 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
             .map(InternalFlavor::of)
             .collect(
                 ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING));
-    return ImmutableUnconfiguredBuildTargetView.of(
+    return UnconfiguredBuildTargetView.of(
         UnflavoredBuildTarget.of(cellName, BaseName.of(baseName), shortName), flavors);
   }
 }
