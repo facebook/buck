@@ -18,7 +18,6 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.model.AbstractBuildTarget;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -42,7 +41,7 @@ import org.immutables.value.Value;
     setterVisibility = JsonAutoDetect.Visibility.NONE)
 @BuckStylePackageVisibleTuple
 @Value.Immutable(prehash = true, builder = false)
-abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
+abstract class AbstractImmutableBuildTarget extends BuildTarget {
 
   @Override
   public abstract UnconfiguredBuildTargetView getUnconfiguredBuildTargetView();

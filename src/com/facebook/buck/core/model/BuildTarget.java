@@ -18,52 +18,84 @@ package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
 
 @ThreadSafe
-public interface BuildTarget extends Comparable<BuildTarget>, DependencyStack.Element {
+public abstract class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Element {
 
-  UnconfiguredBuildTargetView getUnconfiguredBuildTargetView();
+  public abstract UnconfiguredBuildTargetView getUnconfiguredBuildTargetView();
 
-  UnflavoredBuildTarget getUnflavoredBuildTarget();
+  public UnflavoredBuildTarget getUnflavoredBuildTarget() {
+    return getUnconfiguredBuildTargetView().getUnflavoredBuildTarget();
+  }
 
-  ImmutableSortedSet<Flavor> getFlavors();
+  public ImmutableSortedSet<Flavor> getFlavors() {
+    return getUnconfiguredBuildTargetView().getFlavors();
+  }
 
-  TargetConfiguration getTargetConfiguration();
+  public abstract TargetConfiguration getTargetConfiguration();
 
-  CanonicalCellName getCell();
+  public CanonicalCellName getCell() {
+    return getUnconfiguredBuildTargetView().getCell();
+  }
 
-  BaseName getBaseName();
+  public BaseName getBaseName() {
+    return getUnconfiguredBuildTargetView().getBaseName();
+  }
 
-  CellRelativePath getCellRelativeBasePath();
+  public CellRelativePath getCellRelativeBasePath() {
+    return getUnconfiguredBuildTargetView().getCellRelativeBasePath();
+  }
 
-  String getShortName();
+  public String getShortName() {
+    return getUnconfiguredBuildTargetView().getShortName();
+  }
 
   /**
    * If this build target were cell//third_party/java/guava:guava-latest, then this would return
    * "guava-latest". Note that the flavor of the target is included here.
    */
-  String getShortNameAndFlavorPostfix();
+  public String getShortNameAndFlavorPostfix() {
+    return getUnconfiguredBuildTargetView().getShortNameAndFlavorPostfix();
+  }
 
-  String getFlavorPostfix();
+  /** An empty string when there are no flavors, or hash followed by comma-separated flavors. */
+  public String getFlavorPostfix() {
+    if (getFlavors().isEmpty()) {
+      return "";
+    }
+    return "#" + getFlavorsAsString();
+  }
+
+  protected String getFlavorsAsString() {
+    return Joiner.on(",").join(getFlavors());
+  }
 
   /**
    * If this build target is cell//third_party/java/guava:guava-latest, then this would return
    * "cell//third_party/java/guava:guava-latest".
    */
-  String getFullyQualifiedName();
+  public String getFullyQualifiedName() {
+    return getUnconfiguredBuildTargetView().getFullyQualifiedName();
+  }
 
   /**
    * If this build target is cell//third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava:guava-latest".
    */
-  String getCellRelativeName();
+  public String getCellRelativeName() {
+    return getUnconfiguredBuildTargetView().getCellRelativeName();
+  }
 
-  boolean isFlavored();
+  public boolean isFlavored() {
+    return getUnconfiguredBuildTargetView().isFlavored();
+  }
 
-  BuildTarget withShortName(String shortName);
+  public abstract BuildTarget withShortName(String shortName);
 
   /**
    * Verifies that this build target has no flavors.
@@ -71,21 +103,36 @@ public interface BuildTarget extends Comparable<BuildTarget>, DependencyStack.El
    * @return this build target
    * @throws IllegalStateException if a build target has flavors
    */
-  BuildTarget assertUnflavored();
+  public BuildTarget assertUnflavored() {
+    getUnconfiguredBuildTargetView().assertUnflavored();
+    return this;
+  }
 
-  BuildTarget withoutFlavors(Set<Flavor> flavors);
+  public abstract BuildTarget withoutFlavors(Set<Flavor> flavors);
 
-  BuildTarget withoutFlavors(Flavor... flavors);
+  public abstract BuildTarget withoutFlavors(Flavor... flavors);
 
-  BuildTarget withoutFlavors();
+  public abstract BuildTarget withoutFlavors();
 
-  BuildTarget withFlavors(Flavor... flavors);
+  public abstract BuildTarget withFlavors(Flavor... flavors);
 
-  BuildTarget withFlavors(Iterable<? extends Flavor> flavors);
+  public abstract BuildTarget withFlavors(Iterable<? extends Flavor> flavors);
 
-  BuildTarget withAppendedFlavors(Set<Flavor> flavors);
+  public abstract BuildTarget withAppendedFlavors(Set<Flavor> flavors);
 
-  BuildTarget withAppendedFlavors(Flavor... flavors);
+  public abstract BuildTarget withAppendedFlavors(Flavor... flavors);
 
-  BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target);
+  public abstract BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target);
+
+  @Override
+  public int compareTo(BuildTarget that) {
+    if (this == that) {
+      return 0;
+    }
+
+    return ComparisonChain.start()
+        .compare(this.getUnconfiguredBuildTargetView(), that.getUnconfiguredBuildTargetView())
+        .compare(this.getTargetConfiguration(), that.getTargetConfiguration())
+        .result();
+  }
 }
