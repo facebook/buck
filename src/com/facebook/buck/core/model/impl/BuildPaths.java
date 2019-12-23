@@ -19,6 +19,8 @@ package com.facebook.buck.core.model.impl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 
 /**
@@ -76,6 +78,27 @@ public class BuildPaths {
    */
   public static ForwardRelativePath getBaseDir(ProjectFilesystem filesystem, BuildTarget target) {
     return BuildTargetPaths.getBasePath(filesystem, target, getFormat(target));
+  }
+
+  /**
+   * Removes the hash from the buck-out path. Used temporarily to create links.
+   *
+   * @param path Hashed buck-out path
+   * @param target Build target that generated {@code path}
+   * @return {@code path} without the hash directory.
+   */
+  // TODO(gabrielrc): Remove this once we removed all hardcoded buck paths.
+  public static Path removeHashFrom(Path path, BuildTarget target) {
+    String hash = TargetConfigurationHasher.hash(target.getTargetConfiguration());
+    int index = Iterables.indexOf(path, p -> p.endsWith(hash));
+    Preconditions.checkState(index != -1, "target config hash not found in %s", path.toString());
+    Path pathWithoutHash =
+        path.subpath(0, index).resolve(path.subpath(index + 1, path.getNameCount()));
+    if (path.isAbsolute()) {
+      // Path.subpath(0, n) doesn't include the root
+      return path.getRoot().resolve(pathWithoutHash);
+    }
+    return pathWithoutHash;
   }
 
   private static String getFormat(BuildTarget target) {

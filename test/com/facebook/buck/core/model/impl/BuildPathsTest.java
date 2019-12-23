@@ -17,6 +17,7 @@
 package com.facebook.buck.core.model.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
@@ -24,6 +25,9 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.google.common.collect.Iterables;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Test;
@@ -87,5 +91,43 @@ public class BuildPathsTest {
     String hash = TargetConfigurationHasher.hash(target.getTargetConfiguration());
     assertEquals(
         BuildPaths.getBaseDir(filesystem, target), ForwardRelativePath.of(hash).resolve(path));
+  }
+
+  @Test
+  public void removeTargetHashFromRelativePath() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//my/folder:foo");
+
+    ProjectFilesystem filesystemWithTargetConfigHashInBuckPaths =
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths();
+    Path hashedGenPath =
+        BuildPaths.getGenDir(filesystemWithTargetConfigHashInBuckPaths, buildTarget)
+            .resolve("a.out");
+    Path legacyGenPath = BuildPaths.getGenDir(filesystem, buildTarget).resolve("a.out");
+
+    Path hash = Paths.get(TargetConfigurationHasher.hash(buildTarget.getTargetConfiguration()));
+
+    assertTrue(Iterables.contains(hashedGenPath, hash));
+    assertFalse(Iterables.contains(legacyGenPath, hash));
+    assertEquals(legacyGenPath, BuildPaths.removeHashFrom(hashedGenPath, buildTarget));
+  }
+
+  @Test
+  public void removeTargetHashFromAbsolutePath() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//my/folder:foo");
+
+    ProjectFilesystem filesystemWithTargetConfigHashInBuckPaths =
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths();
+    Path hashedGenPath =
+        BuildPaths.getGenDir(filesystemWithTargetConfigHashInBuckPaths, buildTarget)
+            .resolve("a.out")
+            .toAbsolutePath();
+    Path legacyGenPath =
+        BuildPaths.getGenDir(filesystem, buildTarget).resolve("a.out").toAbsolutePath();
+
+    Path hash = Paths.get(TargetConfigurationHasher.hash(buildTarget.getTargetConfiguration()));
+
+    assertTrue(Iterables.contains(hashedGenPath, hash));
+    assertFalse(Iterables.contains(legacyGenPath, hash));
+    assertEquals(legacyGenPath, BuildPaths.removeHashFrom(hashedGenPath, buildTarget));
   }
 }
