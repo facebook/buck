@@ -128,7 +128,6 @@ public class BuildReport {
                   }
                 },
                 new HumanReadableExceptionAugmentor(ImmutableMap.of()))
-            .setSuppressStackTraces(true)
             .logException(failure);
       }
     }

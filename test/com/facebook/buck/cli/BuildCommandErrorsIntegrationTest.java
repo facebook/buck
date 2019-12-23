@@ -271,7 +271,8 @@ public class BuildCommandErrorsIntegrationTest {
         result.getStderr(),
         Matchers.stringContainsInOrder(
             " ** Summary of failures encountered during the build **",
-            "Rule //:target_name FAILED because java.lang.RuntimeException: failure message",
+            "Rule //:target_name FAILED because",
+            "java.lang.RuntimeException: failure message",
             "When building rule //:target_name.",
             "Not all rules succeeded."));
   }
@@ -286,7 +287,8 @@ public class BuildCommandErrorsIntegrationTest {
         result.getStderr(),
         Matchers.stringContainsInOrder(
             " ** Summary of failures encountered during the build **",
-            "Rule //:target_name FAILED because java.lang.RuntimeException: failure message",
+            "Rule //:target_name FAILED because",
+            "java.lang.RuntimeException: failure message",
             "When running <failing_step>.",
             "When building rule //:target_name.",
             "Not all rules succeeded."));
@@ -302,7 +304,8 @@ public class BuildCommandErrorsIntegrationTest {
         result.getStderr(),
         Matchers.stringContainsInOrder(
             " ** Summary of failures encountered during the build **",
-            "Rule //:target_name FAILED because java.io.IOException: failure message",
+            "Rule //:target_name FAILED because",
+            "java.io.IOException: failure message",
             "When running <failing_step>.",
             "When building rule //:target_name.",
             "Not all rules succeeded."));
@@ -317,7 +320,8 @@ public class BuildCommandErrorsIntegrationTest {
         result.getStderr(),
         Matchers.stringContainsInOrder(
             " ** Summary of failures encountered during the build **",
-            "Rule //:target_name FAILED because java.io.IOException: failure message",
+            "Rule //:target_name FAILED because",
+            "java.io.IOException: failure message",
             "When building rule //:target_name.",
             "Not all rules succeeded."));
   }

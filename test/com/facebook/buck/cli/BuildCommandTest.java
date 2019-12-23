@@ -112,6 +112,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -188,15 +189,19 @@ public class BuildCommandTest {
   public void testGenerateBuildReportForConsole() {
     String expectedReport =
         linesToText(
-            "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule1 "
-                + "BUILT_LOCALLY "
-                + MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt"),
-            "\u001B[31mFAIL\u001B[0m //fake:rule2",
-            "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE",
-            "\u001B[31mFAIL\u001B[0m //fake:rule4",
+            "(?s)"
+                + Pattern.quote(
+                    "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule1 "
+                        + "BUILT_LOCALLY "
+                        + MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt")),
+            Pattern.quote("\u001B[31mFAIL\u001B[0m //fake:rule2"),
+            Pattern.quote(
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE"),
+            Pattern.quote("\u001B[31mFAIL\u001B[0m //fake:rule4"),
             "",
-            " ** Summary of failures encountered during the build **",
-            "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some.");
+            " \\*\\* Summary of failures encountered during the build \\*\\*",
+            "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
+            "\tat .*");
     String observedReport =
         new BuildReport(buildExecutionResult, resolver, rootCell)
             .generateForConsole(
@@ -205,25 +210,27 @@ public class BuildCommandTest {
                     new CapturingPrintStream(),
                     new CapturingPrintStream(),
                     Ansi.forceTty()));
-    assertEquals(expectedReport, observedReport);
+    assertThat(observedReport, Matchers.matchesPattern(expectedReport));
   }
 
   @Test
   public void testGenerateVerboseBuildReportForConsole() {
     String expectedReport =
         linesToText(
-            "OK   //fake:rule1 BUILT_LOCALLY "
-                + MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt"),
+            "(?s)OK   //fake:rule1 BUILT_LOCALLY "
+                + Pattern.quote(
+                    MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt")),
             "FAIL //fake:rule2",
             "OK   //fake:rule3 FETCHED_FROM_CACHE",
             "FAIL //fake:rule4",
             "",
-            " ** Summary of failures encountered during the build **",
-            "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some.");
+            " \\*\\* Summary of failures encountered during the build \\*\\*",
+            "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
+            "\tat .*");
     String observedReport =
         new BuildReport(buildExecutionResult, resolver, rootCell)
             .generateForConsole(new TestConsole(Verbosity.COMMANDS));
-    assertEquals(expectedReport, observedReport);
+    assertThat(observedReport, Matchers.matchesPattern(expectedReport));
   }
 
   @Test
