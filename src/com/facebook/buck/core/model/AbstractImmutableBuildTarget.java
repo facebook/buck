@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.model.impl;
+package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.model.BaseName;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;

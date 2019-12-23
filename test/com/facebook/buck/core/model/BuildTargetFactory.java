@@ -17,7 +17,6 @@
 package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.cell.name.ImmutableCanonicalCellName;
-import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;

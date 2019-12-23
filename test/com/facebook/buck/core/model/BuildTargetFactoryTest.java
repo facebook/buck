@@ -19,7 +19,6 @@ package com.facebook.buck.core.model;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.name.ImmutableCanonicalCellName;
-import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
