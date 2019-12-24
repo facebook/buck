@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -345,7 +346,10 @@ public class SourcePathResolverTest {
     graphBuilder.addToIndex(otherFakeBuildRule);
     ExplicitBuildTargetSourcePath buildTargetSourcePath3 =
         ExplicitBuildTargetSourcePath.of(
-            otherFakeBuildRule.getBuildTarget(), Paths.get("buck-out/gen/package/foo/bar"));
+            otherFakeBuildRule.getBuildTarget(),
+            BuildTargetPaths.getGenPathForBaseName(
+                    new FakeProjectFilesystem(), otherFakeBuildRule.getBuildTarget())
+                .resolve("foo/bar"));
     String actual3 =
         pathResolver.getSourcePathName(
             BuildTargetFactory.newInstance("//:test"), buildTargetSourcePath3);
@@ -446,7 +450,8 @@ public class SourcePathResolverTest {
             rule.getBuildTarget(),
             ExplicitBuildTargetSourcePath.of(
                 rule.getBuildTarget(),
-                filesystem.getBuckPaths().getGenDir().resolve("foo").resolve("something.cpp"))),
+                BuildTargetPaths.getGenPathForBaseName(filesystem, rule.getBuildTarget())
+                    .resolve("something.cpp"))),
         Matchers.equalTo("something.cpp"));
   }
 
@@ -460,11 +465,13 @@ public class SourcePathResolverTest {
     SourcePath sourcePath1 =
         ExplicitBuildTargetSourcePath.of(
             rule.getBuildTarget(),
-            filesystem.getBuckPaths().getGenDir().resolve("foo").resolve("name1"));
+            BuildTargetPaths.getGenPathForBaseName(filesystem, rule.getBuildTarget())
+                .resolve("name1"));
     SourcePath sourcePath2 =
         ExplicitBuildTargetSourcePath.of(
             rule.getBuildTarget(),
-            filesystem.getBuckPaths().getGenDir().resolve("foo").resolve("name2"));
+            BuildTargetPaths.getGenPathForBaseName(filesystem, rule.getBuildTarget())
+                .resolve("name2"));
     pathResolver.getSourcePathNames(
         rule.getBuildTarget(), "srcs", ImmutableList.of(sourcePath1, sourcePath2));
   }
