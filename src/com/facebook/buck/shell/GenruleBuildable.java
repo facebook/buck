@@ -306,10 +306,9 @@ public class GenruleBuildable implements Buildable {
 
   /** Returns a map of output labels to its associated {@link OutputPath} instances. */
   public ImmutableMap<OutputLabel, ImmutableSet<OutputPath>> getOutputMap() {
-    Preconditions.checkState(
-        outputPaths.isPresent(),
-        "Unexpectedly cannot find output map for %s.",
-        buildTarget.getFullyQualifiedName());
+    if (!outputPaths.isPresent()) {
+      return ImmutableMap.of(OutputLabel.defaultLabel(), ImmutableSet.of(outputPath.get()));
+    }
     ImmutableMap<OutputLabel, ImmutableSet<OutputPath>> paths = outputPaths.get();
     return ImmutableMap.<OutputLabel, ImmutableSet<OutputPath>>builderWithExpectedSize(
             paths.size() + 1)

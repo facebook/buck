@@ -1089,6 +1089,32 @@ public class GenruleTest {
             getExpectedPath(fakeFileSystem, target, "output2a")));
   }
 
+  @Test
+  public void canGetOutPathDefaultLabel() {
+    ProjectFilesystem fakeFileSystem = new FakeProjectFilesystem();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    BuildTarget target = BuildTargetFactory.newInstance("//:test_genrule");
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(target)
+            .setCmd("echo hello >> $OUT")
+            .setOut("expected")
+            .build(graphBuilder, new FakeProjectFilesystem());
+
+    ImmutableMap<OutputLabel, ImmutableSet<Path>> actual =
+        genrule.getSourcePathsByOutputsLabels().entrySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    Map.Entry::getKey,
+                    e -> convertSourcePathsToPaths(sourcePathResolver, e.getValue())));
+
+    assertThat(actual.entrySet(), Matchers.hasSize(1));
+    assertThat(
+        actual.get(OutputLabel.defaultLabel()),
+        Matchers.contains(
+            BuildTargetPaths.getGenPath(fakeFileSystem, target, "%s").resolve("expected")));
+  }
+
   private Path getExpectedPath(ProjectFilesystem filesystem, BuildTarget target, String path) {
     return BuildTargetPaths.getGenPath(filesystem, target, "%s__").resolve(path);
   }
