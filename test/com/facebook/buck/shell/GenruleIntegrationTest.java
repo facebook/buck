@@ -471,11 +471,12 @@ public class GenruleIntegrationTest {
 
   @Test
   public void testGenruleWithMacrosRuleKeyDoesNotDependOnAbsolutePath() throws IOException {
-    // TODO(irenewchen): Change this test once multiple outputs is supported in classpath abi macros
     Sha1HashCode rulekey1 =
-        buildAndGetRuleKey("genrule_rulekey", temporaryFolder.newFolder(), "//:bar");
+        buildAndGetRuleKey(
+            "genrule_rulekey", temporaryFolder.newFolder(), targetWithSuffix("//:bar"));
     Sha1HashCode rulekey2 =
-        buildAndGetRuleKey("genrule_rulekey", temporaryFolder.newFolder(), "//:bar");
+        buildAndGetRuleKey(
+            "genrule_rulekey", temporaryFolder.newFolder(), targetWithSuffix("//:bar"));
 
     assertEquals(rulekey1, rulekey2);
   }
