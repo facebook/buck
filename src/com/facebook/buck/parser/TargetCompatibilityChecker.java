@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -44,7 +45,8 @@ class TargetCompatibilityChecker {
       ConfigurationRuleRegistry configurationRuleRegistry,
       ConstructorArg targetNodeArg,
       Platform platform,
-      DependencyStack dependencyStack) {
+      DependencyStack dependencyStack,
+      BuckConfig buckConfig) {
     if (!(targetNodeArg instanceof BuildRuleArg)) {
       return true;
     }
@@ -81,7 +83,10 @@ class TargetCompatibilityChecker {
         if (configSettingRule
             .getSelectable()
             .matchesPlatform(
-                platform, constraintResolver, dependencyStack.child(compatibleConfigTarget))) {
+                platform,
+                constraintResolver,
+                dependencyStack.child(compatibleConfigTarget),
+                buckConfig)) {
           compatible = true;
           break;
         }

@@ -267,7 +267,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                   .getTargetPlatform(
                       targetNode.getBuildTarget().getTargetConfiguration(),
                       DependencyStack.top(targetNode.getBuildTarget())),
-              DependencyStack.top(targetNode.getBuildTarget()));
+              DependencyStack.top(targetNode.getBuildTarget()),
+              state.getParsingContext().getCell().getBuckConfig());
         });
   }
 
@@ -379,7 +380,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         state.getConfigurationRuleRegistry(),
         targetNode.getConstructorArg(),
         targetPlatform,
-        dependencyStack)) {
+        dependencyStack,
+        state.getParsingContext().getCell().getBuckConfig())) {
       BuildRuleArg argWithTargetCompatible = (BuildRuleArg) targetNode.getConstructorArg();
 
       StringBuilder diagnostics = new StringBuilder();

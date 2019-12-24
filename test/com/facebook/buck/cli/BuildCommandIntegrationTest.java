@@ -47,6 +47,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.RegexMatcher;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -597,6 +598,30 @@ public class BuildCommandIntegrationTest {
         Matchers.matchesPattern(
             ".*" + TargetConfigurationHasher.hash(target.getTargetConfiguration()) + ".*"));
     assertEquals(runBuckResult.getStdout().trim(), "//:binary " + expected);
+  }
+
+  @Test
+  public void matchBuckConfigValuesInConfigSettingInsideCompatibleWith() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "compatible_with_buck_config_values", tmp);
+    workspace.setUp();
+
+    workspace.addBuckConfigLocalOption("section", "config", "true");
+    assertThat(
+        workspace
+            .runBuckBuild("//:lib", "--target-platforms", "//:platform")
+            .assertSuccess()
+            .getStderr(),
+        Matchers.containsString("BUILT 1/1 JOBS"));
+
+    workspace.addBuckConfigLocalOption("section", "config", "false");
+    assertThat(
+        workspace
+            .runBuckBuild("//:lib", "--target-platforms", "//:platform")
+            .assertSuccess()
+            .getStderr(),
+        RegexMatcher.containsRegex("FINISHED IN .* 0/0 JOBS"));
   }
 
   private Path getExpectedOutputPathRelativeToProjectRoot(String targetName, String pathName)
