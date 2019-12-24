@@ -76,7 +76,6 @@ abstract class AbstractImmutableBuildTarget extends BuildTarget {
   }
 
   @Value.Auxiliary
-  @Value.Lazy
   @Override
   public String getFullyQualifiedName() {
     return super.getFullyQualifiedName();

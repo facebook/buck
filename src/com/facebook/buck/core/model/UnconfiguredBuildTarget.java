@@ -30,6 +30,7 @@ import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import com.google.common.collect.Ordering;
 import java.util.Objects;
+import javax.annotation.Nullable;
 
 /**
  * Data object that holds properties to uniquely identify a build target with flavors
@@ -121,13 +122,18 @@ public class UnconfiguredBuildTarget
     return flavors;
   }
 
+  @Nullable private String fullyQualifiedName;
+
   /**
    * Fully qualified name of unconfigured build target, for example
    * cell//some/target:name#flavor1,flavor2
    */
   @JsonIgnore
   public String getFullyQualifiedName() {
-    return getUnflavoredBuildTarget().getFullyQualifiedName() + getFlavorPostfix();
+    if (fullyQualifiedName == null) {
+      fullyQualifiedName = getUnflavoredBuildTarget().getFullyQualifiedName() + getFlavorPostfix();
+    }
+    return fullyQualifiedName;
   }
 
   @JsonIgnore
