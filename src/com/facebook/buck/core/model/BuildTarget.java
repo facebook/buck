@@ -18,41 +18,84 @@ package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.log.views.JsonViews;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
+import java.util.Objects;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
 
 @ThreadSafe
-public abstract class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Element {
+@JsonAutoDetect(
+    fieldVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE)
+public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Element {
 
-  public abstract UnconfiguredBuildTargetView getUnconfiguredBuildTargetView();
+  private final UnconfiguredBuildTargetView unconfiguredBuildTargetView;
+  private final TargetConfiguration targetConfiguration;
+  private final int hash;
+
+  private BuildTarget(
+      UnconfiguredBuildTargetView unconfiguredBuildTargetView,
+      TargetConfiguration targetConfiguration) {
+    this.unconfiguredBuildTargetView = unconfiguredBuildTargetView;
+    this.targetConfiguration = targetConfiguration;
+    this.hash = Objects.hash(unconfiguredBuildTargetView, targetConfiguration);
+  }
+
+  static BuildTarget of(
+      UnconfiguredBuildTargetView unconfiguredBuildTargetView,
+      TargetConfiguration targetConfiguration) {
+    return new BuildTarget(unconfiguredBuildTargetView, targetConfiguration);
+  }
+
+  public UnconfiguredBuildTargetView getUnconfiguredBuildTargetView() {
+    return unconfiguredBuildTargetView;
+  }
 
   public UnflavoredBuildTarget getUnflavoredBuildTarget() {
-    return getUnconfiguredBuildTargetView().getUnflavoredBuildTarget();
+    return unconfiguredBuildTargetView.getUnflavoredBuildTarget();
   }
 
   public ImmutableSortedSet<Flavor> getFlavors() {
-    return getUnconfiguredBuildTargetView().getFlavors();
+    return unconfiguredBuildTargetView.getFlavors();
   }
 
-  public abstract TargetConfiguration getTargetConfiguration();
+  public TargetConfiguration getTargetConfiguration() {
+    return targetConfiguration;
+  }
 
+  @JsonProperty("cell")
   public CanonicalCellName getCell() {
-    return getUnconfiguredBuildTargetView().getCell();
+    return unconfiguredBuildTargetView.getCell();
   }
 
   public BaseName getBaseName() {
-    return getUnconfiguredBuildTargetView().getBaseName();
+    return unconfiguredBuildTargetView.getBaseName();
   }
 
   public CellRelativePath getCellRelativeBasePath() {
-    return getUnconfiguredBuildTargetView().getCellRelativeBasePath();
+    return unconfiguredBuildTargetView.getCellRelativeBasePath();
   }
 
+  @JsonProperty("baseName")
+  @JsonView(JsonViews.MachineReadableLog.class)
+  private String getBaseNameString() {
+    return getBaseName().toString();
+  }
+
+  @JsonProperty("shortName")
+  @JsonView(JsonViews.MachineReadableLog.class)
   public String getShortName() {
-    return getUnconfiguredBuildTargetView().getShortName();
+    return unconfiguredBuildTargetView.getShortName();
   }
 
   /**
@@ -60,7 +103,7 @@ public abstract class BuildTarget implements Comparable<BuildTarget>, Dependency
    * "guava-latest". Note that the flavor of the target is included here.
    */
   public String getShortNameAndFlavorPostfix() {
-    return getUnconfiguredBuildTargetView().getShortNameAndFlavorPostfix();
+    return unconfiguredBuildTargetView.getShortNameAndFlavorPostfix();
   }
 
   /** An empty string when there are no flavors, or hash followed by comma-separated flavors. */
@@ -71,6 +114,8 @@ public abstract class BuildTarget implements Comparable<BuildTarget>, Dependency
     return "#" + getFlavorsAsString();
   }
 
+  @JsonProperty("flavor")
+  @JsonView(JsonViews.MachineReadableLog.class)
   protected String getFlavorsAsString() {
     return Joiner.on(",").join(getFlavors());
   }
@@ -80,7 +125,7 @@ public abstract class BuildTarget implements Comparable<BuildTarget>, Dependency
    * "cell//third_party/java/guava:guava-latest".
    */
   public String getFullyQualifiedName() {
-    return getUnconfiguredBuildTargetView().getFullyQualifiedName();
+    return unconfiguredBuildTargetView.getFullyQualifiedName();
   }
 
   /**
@@ -88,14 +133,23 @@ public abstract class BuildTarget implements Comparable<BuildTarget>, Dependency
    * "//third_party/java/guava:guava-latest".
    */
   public String getCellRelativeName() {
-    return getUnconfiguredBuildTargetView().getCellRelativeName();
+    return unconfiguredBuildTargetView.getCellRelativeName();
   }
 
   public boolean isFlavored() {
-    return getUnconfiguredBuildTargetView().isFlavored();
+    return unconfiguredBuildTargetView.isFlavored();
   }
 
-  public abstract BuildTarget withShortName(String shortName);
+  /** @return {@link #getFullyQualifiedName()} */
+  @Override
+  public String toString() {
+    return getFullyQualifiedName();
+  }
+
+  public BuildTarget withShortName(String shortName) {
+    return BuildTarget.of(
+        unconfiguredBuildTargetView.withShortName(shortName), targetConfiguration);
+  }
 
   /**
    * Verifies that this build target has no flavors.
@@ -104,25 +158,67 @@ public abstract class BuildTarget implements Comparable<BuildTarget>, Dependency
    * @throws IllegalStateException if a build target has flavors
    */
   public BuildTarget assertUnflavored() {
-    getUnconfiguredBuildTargetView().assertUnflavored();
+    unconfiguredBuildTargetView.assertUnflavored();
     return this;
   }
 
-  public abstract BuildTarget withoutFlavors(Set<Flavor> flavors);
+  public BuildTarget withoutFlavors(Set<Flavor> flavors) {
+    return withFlavors(Sets.difference(getFlavors(), flavors));
+  }
 
-  public abstract BuildTarget withoutFlavors(Flavor... flavors);
+  public BuildTarget withoutFlavors(Flavor... flavors) {
+    return withoutFlavors(ImmutableSet.copyOf(flavors));
+  }
 
-  public abstract BuildTarget withoutFlavors();
+  /** A copy of this build target but without any flavors. */
+  public BuildTarget withoutFlavors() {
+    if (getFlavors().isEmpty()) {
+      return this;
+    }
 
-  public abstract BuildTarget withFlavors(Flavor... flavors);
+    return BuildTarget.of(unconfiguredBuildTargetView.withoutFlavors(), targetConfiguration);
+  }
 
-  public abstract BuildTarget withFlavors(Iterable<? extends Flavor> flavors);
+  public BuildTarget withFlavors(Flavor... flavors) {
+    return withFlavors(ImmutableSet.copyOf(flavors));
+  }
 
-  public abstract BuildTarget withAppendedFlavors(Set<Flavor> flavors);
+  public BuildTarget withFlavors(Iterable<? extends Flavor> flavors) {
+    return BuildTarget.of(unconfiguredBuildTargetView.withFlavors(flavors), targetConfiguration);
+  }
 
-  public abstract BuildTarget withAppendedFlavors(Flavor... flavors);
+  public BuildTarget withAppendedFlavors(Set<Flavor> flavors) {
+    return withFlavors(Sets.union(getFlavors(), flavors));
+  }
 
-  public abstract BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target);
+  public BuildTarget withAppendedFlavors(Flavor... flavors) {
+    return withAppendedFlavors(ImmutableSet.copyOf(flavors));
+  }
+
+  /** Keep flavors and configuration, replace everything else. */
+  public BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target) {
+    return BuildTarget.of(
+        unconfiguredBuildTargetView.withUnflavoredBuildTarget(target), targetConfiguration);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    BuildTarget that = (BuildTarget) o;
+    return hash == that.hash
+        && unconfiguredBuildTargetView.equals(that.unconfiguredBuildTargetView)
+        && targetConfiguration.equals(that.targetConfiguration);
+  }
+
+  @Override
+  public int hashCode() {
+    return hash;
+  }
 
   @Override
   public int compareTo(BuildTarget that) {
@@ -131,8 +227,8 @@ public abstract class BuildTarget implements Comparable<BuildTarget>, Dependency
     }
 
     return ComparisonChain.start()
-        .compare(this.getUnconfiguredBuildTargetView(), that.getUnconfiguredBuildTargetView())
-        .compare(this.getTargetConfiguration(), that.getTargetConfiguration())
+        .compare(unconfiguredBuildTargetView, that.unconfiguredBuildTargetView)
+        .compare(targetConfiguration, that.targetConfiguration)
         .result();
   }
 }

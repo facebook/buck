@@ -276,7 +276,7 @@ public class UnconfiguredBuildTargetView
    * target.
    */
   public BuildTarget configure(TargetConfiguration targetConfiguration) {
-    return ImmutableBuildTarget.of(this, targetConfiguration);
+    return BuildTarget.of(this, targetConfiguration);
   }
 
   /** @return {@link #getFullyQualifiedName()} */
