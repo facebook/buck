@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.stringContainsInOrder;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -79,6 +80,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -408,6 +410,36 @@ public class ParsePipelineTest {
     assertFalse(fixture.targetExistsInCache(bTarget));
 
     assertFalse(fixture.packageFileExistsInCache(packageFile));
+  }
+
+  @Test
+  public void packageFileInvalidationInvalidatesAllChildNodes() throws Exception {
+    try (Fixture fixture = createMultiThreadedFixture("package_inheritance")) {
+      Cell cell = fixture.getCell();
+      Path barBuildFilePath = cell.getFilesystem().resolve("bar/BUCK");
+      List<TargetNode<?>> nodes =
+          fixture
+              .getTargetNodeParsePipeline()
+              .getAllRequestedTargetNodes(cell, barBuildFilePath, Optional.empty());
+
+      // Validate the cache has the data we expect
+      assertTrue(fixture.buildFileExistsInCache(barBuildFilePath));
+      assertEquals(2, nodes.size());
+      assertTrue(fixture.targetExistsInCache(nodes.get(0).getBuildTarget()));
+      assertTrue(fixture.targetExistsInCache(nodes.get(1).getBuildTarget()));
+
+      Path parentPackageFile = cell.getFilesystem().resolve("PACKAGE");
+      assertTrue(fixture.packageFileExistsInCache(parentPackageFile));
+
+      // Invalidate the package file
+      fixture.invalidatePath(parentPackageFile);
+
+      // Verify the expected cache state
+      assertTrue(fixture.buildFileExistsInCache(barBuildFilePath));
+      assertFalse(fixture.targetExistsInCache(nodes.get(0).getBuildTarget()));
+      assertFalse(fixture.targetExistsInCache(nodes.get(1).getBuildTarget()));
+      assertFalse(fixture.packageFileExistsInCache(parentPackageFile));
+    }
   }
 
   private static class TypedParsePipelineCache<K, V> implements PipelineNodeCache.Cache<K, V> {
