@@ -24,6 +24,7 @@ import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /** Generic factory to create {@link Package} */
 public class PackageFactory {
@@ -32,25 +33,35 @@ public class PackageFactory {
   private PackageFactory() {}
 
   /** Create a {@link Package} from the {@code rawPackage} */
-  public static Package create(Cell cell, Path packageFile, PackageMetadata rawPackage) {
+  public static Package create(
+      Cell cell, Path packageFile, PackageMetadata rawPackage, Optional<Package> parentPackage) {
 
     String visibilityDefinerDescription =
         String.format("the package at %s", packageFile.toString());
 
-    ImmutableSet<VisibilityPattern> visibilityPatterns =
+    ImmutableSet.Builder<VisibilityPattern> visibilityBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<VisibilityPattern> withinViewBuilder = ImmutableSet.builder();
+
+    parentPackage.ifPresent(
+        pkg -> {
+          visibilityBuilder.addAll(pkg.getVisibilityPatterns());
+          withinViewBuilder.addAll(pkg.getWithinViewPatterns());
+        });
+
+    visibilityBuilder.addAll(
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
             "visibility",
             rawPackage.getVisibility(),
-            () -> visibilityDefinerDescription);
+            () -> visibilityDefinerDescription));
 
-    ImmutableSet<VisibilityPattern> withinViewPatterns =
+    withinViewBuilder.addAll(
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
             "within_view",
             rawPackage.getWithinView(),
-            () -> visibilityDefinerDescription);
+            () -> visibilityDefinerDescription));
 
-    return ImmutablePackage.of(visibilityPatterns, withinViewPatterns);
+    return ImmutablePackage.of(visibilityBuilder.build(), withinViewBuilder.build());
   }
 }

@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.targetgraph.Package;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
@@ -117,10 +116,6 @@ public class DaemonicCellStateTest {
 
   private Path dummyPackageFile() {
     return filesystem.resolve("path/to/PACKAGE");
-  }
-
-  private Package dummyPackage(Path buildFile) {
-    return PackageFactory.create(rootCell, buildFile, PackageMetadata.EMPTY_SINGLETON);
   }
 
   @Test

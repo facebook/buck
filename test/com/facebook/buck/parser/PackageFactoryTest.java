@@ -26,23 +26,50 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Test;
 
 public class PackageFactoryTest {
 
-  @Test
-  public void testCreate() {
-    Cell cell = new TestCellBuilder().build();
-    Path buildFile = Paths.get("foo/BUCK");
+  private Cell cell = new TestCellBuilder().build();
+
+  private Package createGenericPackage() {
+    Path packageFile = Paths.get("foo/PACKAGE");
 
     ImmutablePackageMetadata rawPackage =
         ImmutablePackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//b/..."));
 
-    Package pkg = PackageFactory.create(cell, buildFile, rawPackage);
+    Package pkg = PackageFactory.create(cell, packageFile, rawPackage, Optional.empty());
+    return pkg;
+  }
+
+  @Test
+  public void createPackageWorks() {
+    Package pkg = createGenericPackage();
 
     assertEquals(
         "//a/...", Iterables.getFirst(pkg.getVisibilityPatterns(), null).getRepresentation());
     assertEquals(
         "//b/...", Iterables.getFirst(pkg.getWithinViewPatterns(), null).getRepresentation());
+  }
+
+  @Test
+  public void createWithParent() {
+    Package parentPkg = createGenericPackage();
+
+    Path packageFile = Paths.get("foo/bar/PACKAGE");
+
+    ImmutablePackageMetadata rawPackage =
+        ImmutablePackageMetadata.of(ImmutableList.of("//c/..."), ImmutableList.of("//d/..."));
+
+    Package pkg = PackageFactory.create(cell, packageFile, rawPackage, Optional.of(parentPkg));
+
+    assertEquals(2, pkg.getVisibilityPatterns().size());
+    assertEquals("//a/...", pkg.getVisibilityPatterns().asList().get(0).getRepresentation());
+    assertEquals("//c/...", pkg.getVisibilityPatterns().asList().get(1).getRepresentation());
+
+    assertEquals(pkg.getWithinViewPatterns().size(), 2);
+    assertEquals("//b/...", pkg.getWithinViewPatterns().asList().get(0).getRepresentation());
+    assertEquals("//d/...", pkg.getWithinViewPatterns().asList().get(1).getRepresentation());
   }
 }

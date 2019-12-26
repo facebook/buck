@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.List;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -154,6 +155,6 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
     ImmutablePackageMetadata pkg =
         ImmutablePackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//d/..."));
 
-    return PackageFactory.create(cell, cell.getRoot().resolve("a/b/BUCK"), pkg);
+    return PackageFactory.create(cell, cell.getRoot().resolve("a/b/BUCK"), pkg, Optional.empty());
   }
 }

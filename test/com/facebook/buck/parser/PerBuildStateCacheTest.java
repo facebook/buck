@@ -77,7 +77,7 @@ public class PerBuildStateCacheTest {
   }
 
   Package createPackage(Cell cell, Path packageFile, ImmutablePackageMetadata packageMetadata) {
-    return PackageFactory.create(cell, packageFile, packageMetadata);
+    return PackageFactory.create(cell, packageFile, packageMetadata, Optional.empty());
   }
 
   @Test

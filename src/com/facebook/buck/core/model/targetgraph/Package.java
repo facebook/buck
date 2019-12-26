@@ -23,7 +23,8 @@ import com.google.common.collect.ImmutableSet;
 /**
  * A {@link Package} contains attributes that are applied by default to all {@link TargetNode}s
  * contained within a build file {@link com.facebook.buck.parser.api.BuildFileManifest}. A `Package`
- * contains metadata gathered from `PACKAGE` files of the current directory/package.
+ * contains metadata gathered from `PACKAGE` files of the current directory/package and all parent
+ * directories/packages.
  */
 public interface Package extends DependencyStack.Element {
 

@@ -32,6 +32,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -102,7 +103,9 @@ class PackagePipeline implements AutoCloseable {
     Path packageFile = packageFileFromBuildFile(cell, buildFile);
 
     if (!cell.getBuckConfig().getView(ParserConfig.class).getEnablePackageFiles()) {
-      Package pkg = PackageFactory.create(cell, packageFile, PackageMetadata.EMPTY_SINGLETON);
+      Package pkg =
+          PackageFactory.create(
+              cell, packageFile, PackageMetadata.EMPTY_SINGLETON, Optional.empty());
       return Futures.immediateFuture(pkg);
     }
 
@@ -156,7 +159,7 @@ class PackagePipeline implements AutoCloseable {
             minimumPerfEventTimeMs,
             TimeUnit.MILLISECONDS)) {
 
-      result = PackageFactory.create(cell, packageFile, pkg);
+      result = PackageFactory.create(cell, packageFile, pkg, Optional.empty());
     }
     return Futures.immediateFuture(result);
   }

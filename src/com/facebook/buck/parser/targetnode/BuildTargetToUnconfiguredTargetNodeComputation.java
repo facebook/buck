@@ -38,6 +38,7 @@ import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileMan
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -101,7 +102,9 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
     Path buildFile =
         cell.getBuckConfigView(ParserConfig.class)
             .getAbsolutePathToBuildFile(cell, unconfiguredBuildTargetView);
-    Package stubPackage = PackageFactory.create(cell, buildFile, PackageMetadata.EMPTY_SINGLETON);
+
+    Package stubPackage =
+        PackageFactory.create(cell, buildFile, PackageMetadata.EMPTY_SINGLETON, Optional.empty());
 
     return unconfiguredTargetNodeFactory.create(
         cell,
