@@ -37,6 +37,7 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryNormalizer;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.PatternsMatcher;
@@ -846,9 +847,13 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
               "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
       return Optional.empty();
     }
+
+    SortedMap<String, Object> computedNodeAttributes =
+        updateWithComputedAttributes(targetNodeAttributes, node);
+
     SortedMap<String, Object> attributes = new TreeMap<>();
     if (!patternsMatcher.isMatchesNone()) {
-      for (Map.Entry<String, Object> entry : targetNodeAttributes.entrySet()) {
+      for (Map.Entry<String, Object> entry : computedNodeAttributes.entrySet()) {
         String snakeCaseKey =
             CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entry.getKey());
         if (patternsMatcher.matches(snakeCaseKey)) {
@@ -858,15 +863,43 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
       if (whichQueryCommand == WhichQueryCommand.QUERY
           && patternsMatcher.matches(InternalTargetAttributeNames.TARGET_CONFIGURATIONS)) {
-        ImmutableList<String> targetConfigurations =
-            node.getTargetConfigurations().stream()
-                .map(Object::toString)
-                .sorted()
-                .collect(ImmutableList.toImmutableList());
-        attributes.put(InternalTargetAttributeNames.TARGET_CONFIGURATIONS, targetConfigurations);
+        attributes.put(
+            InternalTargetAttributeNames.TARGET_CONFIGURATIONS,
+            computedNodeAttributes.get(InternalTargetAttributeNames.TARGET_CONFIGURATIONS));
       }
     }
     return Optional.of(attributes);
+  }
+
+  private static SortedMap<String, Object> updateWithComputedAttributes(
+      SortedMap<String, Object> rawAttributes, MergedTargetNode node) {
+    SortedMap<String, Object> computedAttributes = new TreeMap<>(rawAttributes);
+
+    List<String> computedVisibility =
+        node.getAnyNode().getVisibilityPatterns().stream()
+            .map(visibilityPattern -> visibilityPattern.getRepresentation())
+            .collect(ImmutableList.toImmutableList());
+    if (!computedVisibility.isEmpty()) {
+      computedAttributes.put(VisibilityAttributes.VISIBILITY, computedVisibility);
+    }
+
+    List<String> computedWithinView =
+        node.getAnyNode().getWithinViewPatterns().stream()
+            .map(visibilityPattern -> visibilityPattern.getRepresentation())
+            .collect(ImmutableList.toImmutableList());
+    if (!computedWithinView.isEmpty()) {
+      computedAttributes.put(VisibilityAttributes.WITHIN_VIEW, computedWithinView);
+    }
+
+    ImmutableList<String> targetConfigurations =
+        node.getTargetConfigurations().stream()
+            .map(Object::toString)
+            .sorted()
+            .collect(ImmutableList.toImmutableList());
+    computedAttributes.put(
+        InternalTargetAttributeNames.TARGET_CONFIGURATIONS, targetConfigurations);
+
+    return computedAttributes;
   }
 
   private static String toPresentationForm(MergedTargetNode node) {

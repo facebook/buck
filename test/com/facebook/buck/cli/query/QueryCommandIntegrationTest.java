@@ -1771,4 +1771,20 @@ public class QueryCommandIntegrationTest {
         parseJSON(result.getStdout()),
         is(equalTo(parseJSON(workspace.getFileContents("j-q-query-out.json")))));
   }
+
+  @Test
+  public void queryOutputsComputedAttributes() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "//example:three", "--output-attributes", "name", "visibility");
+    result.assertSuccess();
+
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("example/three-query-out.json")))));
+  }
 }
