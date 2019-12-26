@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +47,7 @@ import java.util.stream.Collectors;
 public class RuleFunctionFactory {
 
   private static final ImmutableSet<String> IMPLICIT_ATTRIBUTES =
-      ImmutableSet.of("visibility", "within_view");
+      ImmutableSet.of(VisibilityAttributes.VISIBILITY, VisibilityAttributes.WITHIN_VIEW);
   // URL prefix for all build rule documentation pages
   private static final String BUCK_RULE_DOC_URL_PREFIX = "https://buck.build/rule/";
 

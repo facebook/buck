@@ -36,6 +36,7 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.base.Preconditions;
@@ -132,19 +133,19 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     ImmutableSet<VisibilityPattern> visibilityPatterns =
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
-            "visibility",
-            rawAttributes.get("visibility"),
+            VisibilityAttributes.VISIBILITY,
+            rawAttributes.get(VisibilityAttributes.VISIBILITY),
             () -> visibilityDefinerDescription);
 
     if (visibilityPatterns.isEmpty()) {
       visibilityPatterns = pkg.getVisibilityPatterns();
     }
-    
+
     ImmutableSet<VisibilityPattern> withinViewPatterns =
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
-            "within_view",
-            rawAttributes.get("within_view"),
+            VisibilityAttributes.WITHIN_VIEW,
+            rawAttributes.get(VisibilityAttributes.WITHIN_VIEW),
             () -> visibilityDefinerDescription);
 
     if (withinViewPatterns.isEmpty()) {

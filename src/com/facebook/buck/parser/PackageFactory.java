@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.targetgraph.Package;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutablePackage;
 import com.facebook.buck.parser.api.PackageMetadata;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.collect.ImmutableSet;
@@ -51,14 +52,14 @@ public class PackageFactory {
     visibilityBuilder.addAll(
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
-            "visibility",
+            VisibilityAttributes.VISIBILITY,
             rawPackage.getVisibility(),
             () -> visibilityDefinerDescription));
 
     withinViewBuilder.addAll(
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
-            "within_view",
+            VisibilityAttributes.WITHIN_VIEW,
             rawPackage.getWithinView(),
             () -> visibilityDefinerDescription));
 

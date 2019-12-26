@@ -4,6 +4,7 @@ java_library(
     visibility = [
         "PUBLIC",
     ],
+    required_for_source_only_abi = True,
     deps = [
         "//src/com/facebook/buck/core/model:model",
         "//third-party/java/guava:guava",

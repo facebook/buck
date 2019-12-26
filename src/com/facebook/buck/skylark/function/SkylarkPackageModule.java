@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.parser.api.ImmutablePackageMetadata;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
@@ -52,7 +53,7 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
       allowReturnNones = true,
       parameters = {
         @Param(
-            name = "visibility",
+            name = VisibilityAttributes.VISIBILITY,
             type = SkylarkList.class,
             generic1 = String.class,
             defaultValue = "[]",
@@ -60,7 +61,7 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
             positional = false,
             doc = "a list of build patterns to make targets visible to."),
         @Param(
-            name = "within_view",
+            name = VisibilityAttributes.WITHIN_VIEW,
             type = SkylarkList.class,
             generic1 = String.class,
             defaultValue = "[]",

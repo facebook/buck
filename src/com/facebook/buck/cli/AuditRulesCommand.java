@@ -24,6 +24,7 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.string.MoreStrings;
@@ -63,7 +64,8 @@ public class AuditRulesCommand extends AbstractCommand {
   private static final String INDENT = "  ";
 
   /** Properties that should be listed last in the declaration of a build rule. */
-  private static final ImmutableSet<String> LAST_PROPERTIES = ImmutableSet.of("deps", "visibility");
+  private static final ImmutableSet<String> LAST_PROPERTIES =
+      ImmutableSet.of("deps", VisibilityAttributes.VISIBILITY);
 
   @Option(
       name = "--type",
