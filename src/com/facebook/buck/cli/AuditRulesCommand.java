@@ -65,7 +65,7 @@ public class AuditRulesCommand extends AbstractCommand {
 
   /** Properties that should be listed last in the declaration of a build rule. */
   private static final ImmutableSet<String> LAST_PROPERTIES =
-      ImmutableSet.of("deps", VisibilityAttributes.VISIBILITY);
+      ImmutableSet.of("deps", VisibilityAttributes.VISIBILITY, VisibilityAttributes.WITHIN_VIEW);
 
   @Option(
       name = "--type",
