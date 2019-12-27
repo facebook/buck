@@ -28,7 +28,6 @@ import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointRequest;
 import com.facebook.buck.doctor.config.DoctorEndpointResponse;
-import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
@@ -57,7 +56,7 @@ public class DoctorCommand extends AbstractCommand {
             params.getCell().getFilesystem(),
             userInput,
             params.getConsole(),
-            params.getBuckConfig().getView(ImmutableDoctorConfig.class));
+            params.getBuckConfig().getView(DoctorConfig.class));
 
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
@@ -89,7 +88,7 @@ public class DoctorCommand extends AbstractCommand {
       BuildLogEntry entry,
       Optional<String> issueDescription)
       throws IOException, InterruptedException {
-    DoctorConfig doctorConfig = ImmutableDoctorConfig.of(params.getBuckConfig());
+    DoctorConfig doctorConfig = DoctorConfig.of(params.getBuckConfig());
 
     Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector =
         WatchmanDiagReportCollector.newInstanceIfWatchmanUsed(

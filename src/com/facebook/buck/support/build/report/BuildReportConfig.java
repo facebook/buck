@@ -19,7 +19,7 @@ package com.facebook.buck.support.build.report;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -27,9 +27,8 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** {@link ConfigView} for BuildReport Configuration */
-@BuckStyleTuple
-@Value.Immutable(builder = false, copy = false)
-public abstract class AbstractBuildReportConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class BuildReportConfig implements ConfigView<BuckConfig> {
 
   private static final String BUILD_REPORT_SECTION = "build_report";
 
@@ -44,6 +43,10 @@ public abstract class AbstractBuildReportConfig implements ConfigView<BuckConfig
 
   @Override
   public abstract BuckConfig getDelegate();
+
+  public static BuildReportConfig of(BuckConfig delegate) {
+    return ImmutableBuildReportConfig.of(delegate);
+  }
 
   @Value.Lazy
   public boolean getEnabled() {

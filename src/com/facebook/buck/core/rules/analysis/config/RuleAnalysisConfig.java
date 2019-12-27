@@ -14,27 +14,29 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.rulekey.config;
+package com.facebook.buck.core.rules.analysis.config;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@BuckStyleImmutable
-@Value.Immutable(builder = false, copy = false)
-public abstract class AbstractRuleKeyConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class RuleAnalysisConfig implements ConfigView<BuckConfig> {
 
-  private static final String LOG_SECTION = "log";
+  private static final String SECTION = "rule_analysis";
+
+  private static final String MODE_PROPERTY = "mode";
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
 
-  public RuleKeyDiagnosticsMode getRuleKeyDiagnosticsMode() {
+  public static RuleAnalysisConfig of(BuckConfig delegate) {
+    return ImmutableRuleAnalysisConfig.of(delegate);
+  }
+
+  public RuleAnalysisComputationMode getComputationMode() {
     return getDelegate()
-        .getEnum(LOG_SECTION, "rule_key_diagnostics_mode", RuleKeyDiagnosticsMode.class)
-        .orElse(RuleKeyDiagnosticsMode.NEVER);
+        .getEnum(SECTION, MODE_PROPERTY, RuleAnalysisComputationMode.class)
+        .orElse(RuleAnalysisComputationMode.DEFAULT);
   }
 }

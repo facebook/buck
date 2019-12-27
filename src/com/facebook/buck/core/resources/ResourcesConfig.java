@@ -19,7 +19,7 @@ package com.facebook.buck.core.resources;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
@@ -29,15 +29,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-abstract class AbstractResourcesConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class ResourcesConfig implements ConfigView<BuckConfig> {
   public static final String RESOURCES_SECTION_HEADER = "resources";
   public static final String RESOURCES_PER_RULE_SECTION_HEADER = "resources_per_rule";
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
+
+  public static ResourcesConfig of(BuckConfig delegate) {
+    return ImmutableResourcesConfig.of(delegate);
+  }
 
   @Value.Lazy
   public ResourceAllocationFairness getResourceAllocationFairness() {

@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.doctor.config.DoctorConfig;
-import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.util.timing.Clock;
@@ -46,7 +45,7 @@ public class DoctorConfigTest {
   @Test
   public void testEmpty() {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
-    DoctorConfig config = ImmutableDoctorConfig.of(buckConfig);
+    DoctorConfig config = DoctorConfig.of(buckConfig);
     assertThat(
         config.getReportUploadPath(), Matchers.equalTo(DoctorConfig.DEFAULT_REPORT_UPLOAD_PATH));
     assertThat(
@@ -65,7 +64,7 @@ public class DoctorConfigTest {
                     ImmutableMap.of(
                         "report_upload_path", testPath, "slb_server_pool", "https://test.url.net")))
             .build();
-    DoctorConfig config = ImmutableDoctorConfig.of(buckConfig);
+    DoctorConfig config = DoctorConfig.of(buckConfig);
     assertThat(config.getReportUploadPath(), Matchers.equalTo(testPath));
     assertThat(
         config.getFrontendConfig().get().tryCreatingClientSideSlb(clock, eventBus),

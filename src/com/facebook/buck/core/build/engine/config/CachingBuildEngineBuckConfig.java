@@ -21,16 +21,19 @@ import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.resources.ResourcesConfig;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import java.io.IOException;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class CachingBuildEngineBuckConfig implements ConfigView<BuckConfig> {
+
+  public static CachingBuildEngineBuckConfig of(BuckConfig delegate) {
+    return ImmutableCachingBuildEngineBuckConfig.of(delegate);
+  }
+
   /** @return the mode with which to run the build engine. */
   public BuildType getBuildEngineMode() {
     return getDelegate().getEnum("build", "engine", BuildType.class).orElse(BuildType.SHALLOW);

@@ -14,33 +14,32 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android.exopackage;
+package com.facebook.buck.cli;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
-@BuckStyleTuple
-@Value.Immutable(builder = false, copy = false)
-public abstract class AbstractAdbConfig implements ConfigView<BuckConfig> {
+/** Configuration options used by {@code buck clean} command. */
+@BuckStyleValue
+public abstract class CleanCommandBuckConfig implements ConfigView<BuckConfig> {
+
   @Override
   public abstract BuckConfig getDelegate();
 
-  @Value.Lazy
-  public boolean getRestartAdbOnFailure() {
-    return Boolean.parseBoolean(
-        getDelegate().getValue("adb", "adb_restart_on_failure").orElse("true"));
+  public static CleanCommandBuckConfig of(BuckConfig delegate) {
+    return ImmutableCleanCommandBuckConfig.of(delegate);
   }
 
   @Value.Lazy
-  public ImmutableList<String> getAdbRapidInstallTypes() {
-    return getDelegate().getListWithoutComments("adb", "rapid_install_types_beta");
+  public ImmutableList<String> getCleanAdditionalPaths() {
+    return getDelegate().getListWithoutComments("clean", "additional_paths");
   }
 
   @Value.Lazy
-  public boolean getMultiInstallMode() {
-    return getDelegate().getBooleanValue("adb", "multi_install_mode", false);
+  public ImmutableList<String> getCleanExcludedCaches() {
+    return getDelegate().getListWithoutComments("clean", "excluded_dir_caches");
   }
 }

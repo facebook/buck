@@ -22,7 +22,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.impl.HashedBuckOutLinkMode;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -30,9 +30,8 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Some configuration options that may affect the build in some way. */
-@BuckStyleTuple
-@Value.Immutable(builder = false, copy = false)
-public abstract class AbstractBuildBuckConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class BuildBuckConfig implements ConfigView<BuckConfig> {
 
   private static final Float DEFAULT_THREAD_CORE_RATIO = 1.0F;
 
@@ -43,6 +42,10 @@ public abstract class AbstractBuildBuckConfig implements ConfigView<BuckConfig> 
 
   @Override
   public abstract BuckConfig getDelegate();
+
+  public static BuildBuckConfig of(BuckConfig delegate) {
+    return ImmutableBuildBuckConfig.of(delegate);
+  }
 
   @Value.Lazy
   public int getMaxActionGraphCacheEntries() {

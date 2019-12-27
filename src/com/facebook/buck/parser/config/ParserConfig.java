@@ -21,7 +21,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.api.Syntax;
@@ -36,9 +36,8 @@ import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class ParserConfig implements ConfigView<BuckConfig> {
 
   public static final boolean DEFAULT_ALLOW_EMPTY_GLOBS = true;
   public static final String DEFAULT_BUILD_FILE_NAME = "BUCK";
@@ -89,8 +88,11 @@ public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   }
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
+
+  public static ParserConfig of(BuckConfig delegate) {
+    return ImmutableParserConfig.of(delegate);
+  }
 
   @Value.Lazy
   public boolean getAllowEmptyGlobs() {

@@ -71,7 +71,7 @@ public class LocalCacheStorage implements ParserCacheStorage {
   }
 
   private static ParserCacheAccessMode obtainLocalCacheStorageAccessModeFromConfig(
-      AbstractParserCacheConfig parserCacheConfig) {
+      ParserCacheConfig parserCacheConfig) {
     return parserCacheConfig.getDirCacheAccessMode();
   }
 
@@ -83,7 +83,7 @@ public class LocalCacheStorage implements ParserCacheStorage {
    * @throws ParserCacheException when the {@link LocalCacheStorage} object cannot be constructed.
    */
   public static LocalCacheStorage of(
-      AbstractParserCacheConfig parserCacheConfig, ProjectFilesystem filesystem) {
+      ParserCacheConfig parserCacheConfig, ProjectFilesystem filesystem) {
     Preconditions.checkState(
         parserCacheConfig.isDirParserCacheEnabled(),
         "Invalid state: LocalCacheStorage should not be instantiated if the cache is disabled.");

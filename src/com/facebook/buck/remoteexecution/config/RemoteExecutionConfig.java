@@ -22,7 +22,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -46,9 +46,8 @@ import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 /** Config object for the [remoteexecution] section of .buckconfig. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final Logger LOG = Logger.get(RemoteExecutionConfig.class);
   public static final String SECTION = "remoteexecution";
 
@@ -171,6 +170,10 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   private String getAutoReExperimentPropertyKey() {
     return getValue(AUTO_RE_EXPERIMENT_PROPERTY_KEY).orElse(DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY);
+  }
+
+  public static RemoteExecutionConfig of(BuckConfig delegate) {
+    return ImmutableRemoteExecutionConfig.of(delegate);
   }
 
   @VisibleForTesting

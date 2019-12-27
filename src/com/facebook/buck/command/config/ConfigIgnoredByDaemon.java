@@ -18,7 +18,7 @@ package com.facebook.buck.command.config;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
@@ -29,12 +29,15 @@ import java.util.Map;
 import org.immutables.value.Value;
 
 /** A view of a config that excludes configuration options that do not invalidate global state. */
-@BuckStyleTuple
-@Value.Immutable(builder = false, copy = false)
-public abstract class AbstractConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
 
   @Override
   public abstract BuckConfig getDelegate();
+
+  public static ConfigIgnoredByDaemon of(BuckConfig delegate) {
+    return ImmutableConfigIgnoredByDaemon.of(delegate);
+  }
 
   private static ImmutableMap<String, ImmutableSet<String>> getIgnoreFieldsForDaemonRestart() {
     ImmutableMap.Builder<String, ImmutableSet<String>> ignoreFieldsForDaemonRestartBuilder =

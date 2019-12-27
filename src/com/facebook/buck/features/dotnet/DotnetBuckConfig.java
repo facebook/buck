@@ -14,28 +14,29 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.rules.analysis.config;
+package com.facebook.buck.features.dotnet;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.tool.config.ToolConfig;
+import java.util.Optional;
 
-@BuckStyleImmutable
-@Value.Immutable(copy = false, builder = false)
-public abstract class AbstractRuleAnalysisConfig implements ConfigView<BuckConfig> {
-
-  private static final String SECTION = "rule_analysis";
-
-  private static final String MODE_PROPERTY = "mode";
+/** Config to get toolchains for dotnet rules */
+@BuckStyleValue
+public abstract class DotnetBuckConfig implements ConfigView<BuckConfig> {
+  private static final String SECTION = "dotnet";
+  private static final String CSC = "csc";
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
 
-  public RuleAnalysisComputationMode getComputationMode() {
-    return getDelegate()
-        .getEnum(SECTION, MODE_PROPERTY, RuleAnalysisComputationMode.class)
-        .orElse(RuleAnalysisComputationMode.DEFAULT);
+  public static DotnetBuckConfig of(BuckConfig delegate) {
+    return ImmutableDotnetBuckConfig.of(delegate);
+  }
+
+  public Optional<ToolProvider> getCsharpCompiler() {
+    return getDelegate().getView(ToolConfig.class).getToolProvider(SECTION, CSC);
   }
 }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser;
 
-import static com.facebook.buck.parser.config.AbstractParserConfig.DEFAULT_BUILD_FILE_NAME;
+import static com.facebook.buck.parser.config.ParserConfig.DEFAULT_BUILD_FILE_NAME;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 

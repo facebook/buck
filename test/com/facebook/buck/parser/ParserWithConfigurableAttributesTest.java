@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser;
 
-import static com.facebook.buck.parser.config.AbstractParserConfig.DEFAULT_BUILD_FILE_NAME;
+import static com.facebook.buck.parser.config.ParserConfig.DEFAULT_BUILD_FILE_NAME;
 import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -86,8 +86,8 @@ import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.manifestservice.ManifestService;
-import com.facebook.buck.parser.config.AbstractParserConfig.ApplyDefaultFlavorsMode;
 import com.facebook.buck.parser.config.ParserConfig;
+import com.facebook.buck.parser.config.ParserConfig.ApplyDefaultFlavorsMode;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;

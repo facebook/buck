@@ -43,7 +43,7 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
   private final ManifestService manifestService;
 
   private RemoteManifestServiceCacheStorage(
-      ManifestService manifestService, AbstractParserCacheConfig parserConfig) {
+      ManifestService manifestService, ParserCacheConfig parserConfig) {
     this.cacheAccessMode = parserConfig.getRemoteCacheAccessMode();
     this.manifestService = manifestService;
   }
@@ -60,12 +60,11 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
    * Static factory for creating {@code RemoteManifestServiceCacheStorage} objects.
    *
    * @param manifestService the {@link ManifestService} object.
-   * @param parserConfig the {@link com.facebook.buck.parser.cache.impl.AbstractParserCacheConfig}
-   *     object.
+   * @param parserConfig the {@link ParserCacheConfig} object.
    * @return a new instance of fully instantiated remote cache object.
    */
   public static RemoteManifestServiceCacheStorage of(
-      ManifestService manifestService, AbstractParserCacheConfig parserConfig) {
+      ManifestService manifestService, ParserCacheConfig parserConfig) {
     Preconditions.checkState(parserConfig.isRemoteParserCacheEnabled());
     return new RemoteManifestServiceCacheStorage(manifestService, parserConfig);
   }

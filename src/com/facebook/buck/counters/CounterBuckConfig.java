@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.counters;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.google.common.collect.ImmutableList;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/** Configuration options used by {@code buck clean} command. */
-@BuckStyleTuple
-@Value.Immutable(builder = false, copy = false)
-public abstract class AbstractCleanCommandBuckConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class CounterBuckConfig implements ConfigView<BuckConfig> {
+
+  private static final String COUNTERS_SECTION = "counters";
 
   @Override
   public abstract BuckConfig getDelegate();
 
-  @Value.Lazy
-  public ImmutableList<String> getCleanAdditionalPaths() {
-    return getDelegate().getListWithoutComments("clean", "additional_paths");
+  public static CounterBuckConfig of(BuckConfig delegate) {
+    return ImmutableCounterBuckConfig.of(delegate);
   }
 
-  @Value.Lazy
-  public ImmutableList<String> getCleanExcludedCaches() {
-    return getDelegate().getListWithoutComments("clean", "excluded_dir_caches");
+  public long getCountersFirstFlushIntervalMillis() {
+    return getDelegate().getLong(COUNTERS_SECTION, "first_flush_interval_millis").orElse(5000L);
+  }
+
+  public long getCountersFlushIntervalMillis() {
+    return getDelegate().getLong(COUNTERS_SECTION, "flush_interval_millis").orElse(30000L);
   }
 }

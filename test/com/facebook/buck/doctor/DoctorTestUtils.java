@@ -23,7 +23,6 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
-import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.TestBuildEnvironmentDescription;
@@ -123,7 +122,7 @@ final class DoctorTestUtils {
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of(DoctorConfig.DOCTOR_SECTION, options))
             .build();
-    return ImmutableDoctorConfig.of(buckConfig);
+    return DoctorConfig.of(buckConfig);
   }
 
   public static class CapturingDefectReporter implements DefectReporter {

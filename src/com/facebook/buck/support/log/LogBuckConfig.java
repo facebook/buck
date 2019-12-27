@@ -18,17 +18,20 @@ package com.facebook.buck.support.log;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@BuckStyleTuple
-@Value.Immutable(builder = false, copy = false)
-public abstract class AbstractLogBuckConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class LogBuckConfig implements ConfigView<BuckConfig> {
 
   @Override
   public abstract BuckConfig getDelegate();
+
+  public static LogBuckConfig of(BuckConfig delegate) {
+    return ImmutableLogBuckConfig.of(delegate);
+  }
 
   private static final String LOG_SECTION = "log";
 

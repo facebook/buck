@@ -42,6 +42,10 @@ public abstract class InferConfig implements ConfigView<BuckConfig> {
   @Override
   public abstract BuckConfig getDelegate();
 
+  public static InferConfig of(BuckConfig delegate) {
+    return ImmutableInferConfig.of(delegate);
+  }
+
   @Value.Lazy
   public Optional<ToolProvider> getBinary() {
     return getDelegate().getView(ToolConfig.class).getToolProvider(SECTION, "binary");

@@ -26,20 +26,21 @@ import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-abstract class AbstractToolConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class ToolConfig implements ConfigView<BuckConfig> {
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
+
+  public static ToolConfig of(BuckConfig delegate) {
+    return ImmutableToolConfig.of(delegate);
+  }
 
   /**
    * @return a {@link Tool} identified by a @{link BuildTarget} or {@link Path} reference by the

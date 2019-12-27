@@ -18,20 +18,22 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
 /** Strong-type configuration for [scribe_event_listener] section */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-abstract class AbstractScribeEventListenerConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class ScribeEventListenerConfig implements ConfigView<BuckConfig> {
 
   public static final String BUILDFILE_SECTION_NAME = "scribe_event_listener";
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
+
+  public static ScribeEventListenerConfig of(BuckConfig delegate) {
+    return ImmutableScribeEventListenerConfig.of(delegate);
+  }
 
   /** If false (default) then Buck events are not logged to Scribe */
   @Value.Lazy

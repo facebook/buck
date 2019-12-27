@@ -43,7 +43,7 @@ public class AbstractFixBuckConfigTest {
                         "fix_script_contact", "support@example.com")))
             .build();
 
-    AbstractFixBuckConfig fixConfig = config.getView(FixBuckConfig.class);
+    FixBuckConfig fixConfig = config.getView(FixBuckConfig.class);
 
     assertEquals(
         Optional.of(
@@ -88,7 +88,7 @@ public class AbstractFixBuckConfigTest {
                         "Running '{command}', talk to '{contact}'")))
             .build();
 
-    AbstractFixBuckConfig fixConfig = config.getView(FixBuckConfig.class);
+    FixBuckConfig fixConfig = config.getView(FixBuckConfig.class);
 
     assertEquals(
         String.format(
@@ -117,7 +117,7 @@ public class AbstractFixBuckConfigTest {
                         "")))
             .build();
 
-    AbstractFixBuckConfig fixConfig = config.getView(FixBuckConfig.class);
+    FixBuckConfig fixConfig = config.getView(FixBuckConfig.class);
 
     assertFalse(fixConfig.shouldPrintFixScriptMessage());
   }

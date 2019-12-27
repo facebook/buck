@@ -18,20 +18,22 @@ package com.facebook.buck.sandbox;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.environment.Platform;
 import org.immutables.value.Value;
 
 /** Config section responsible for sandbox features. */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public abstract class AbstractSandboxConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class SandboxConfig implements ConfigView<BuckConfig> {
 
   private static final String SANDBOX_CONFIG_SECTION = "sandbox";
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
+
+  public static SandboxConfig of(BuckConfig delegate) {
+    return ImmutableSandboxConfig.of(delegate);
+  }
 
   /**
    * Whether `genrule` should use sandboxing.

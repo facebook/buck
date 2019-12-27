@@ -19,16 +19,19 @@ package com.facebook.buck.core.exceptions.config;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
-@BuckStyleTuple
-@Value.Immutable(builder = false, copy = false)
-public abstract class AbstractErrorHandlingBuckConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class ErrorHandlingBuckConfig implements ConfigView<BuckConfig> {
+
+  public static ErrorHandlingBuckConfig of(BuckConfig delegate) {
+    return ImmutableErrorHandlingBuckConfig.of(delegate);
+  }
 
   @Override
   public abstract BuckConfig getDelegate();

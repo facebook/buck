@@ -18,17 +18,18 @@ package com.facebook.buck.core.model.actiongraph.computation;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.Map;
 import org.immutables.value.Value;
-import org.immutables.value.Value.Immutable;
 
-@BuckStyleImmutable
-@Immutable(builder = false, copy = false)
-public abstract class AbstractActionGraphConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class ActionGraphConfig implements ConfigView<BuckConfig> {
+
+  public static ActionGraphConfig of(BuckConfig delegate) {
+    return ImmutableActionGraphConfig.of(delegate);
+  }
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
 
   @Value.Derived

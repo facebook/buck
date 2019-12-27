@@ -16,7 +16,7 @@
 
 package com.facebook.buck.support.build.report;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -26,7 +26,6 @@ import com.facebook.buck.doctor.DefectReporter;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorJsonResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
-import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.doctor.config.ImmutableDoctorJsonResponse;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -180,7 +179,7 @@ public class RuleKeyLogFileUploaderTest {
                         .put("slb_server_pool", endpointUrl)
                         .build()))
             .build();
-    DoctorConfig doctorConfig = buckConfig.getView(ImmutableDoctorConfig.class);
+    DoctorConfig doctorConfig = buckConfig.getView(DoctorConfig.class);
 
     return new DefaultDefectReporter(
         filesystem, doctorConfig, BuckEventBusForTests.newInstance(clock), clock);

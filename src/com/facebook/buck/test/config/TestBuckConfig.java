@@ -20,23 +20,25 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.OptionalInt;
-import org.immutables.value.Value;
 import org.immutables.value.Value.Lazy;
 
-@BuckStyleTuple
-@Value.Immutable(builder = false, copy = false)
-public abstract class AbstractTestBuckConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class TestBuckConfig implements ConfigView<BuckConfig> {
 
   private static final String TEST_SECTION_HEADER = "test";
   private static final String TEST_SUMMARY_SECTION_NAME = "test_summary";
 
   @Override
   public abstract BuckConfig getDelegate();
+
+  public static TestBuckConfig of(BuckConfig delegate) {
+    return ImmutableTestBuckConfig.of(delegate);
+  }
 
   @Lazy
   public boolean isParallelExternalTestSpecComputationEnabled() {

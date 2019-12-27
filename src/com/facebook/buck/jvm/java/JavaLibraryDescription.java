@@ -36,7 +36,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.infer.ImmutableInferConfig;
+import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.infer.InferNullsafe;
 import com.facebook.buck.infer.UnresolvedInferPlatform;
 import com.facebook.buck.infer.toolchain.InferToolchain;
@@ -146,7 +146,7 @@ public class JavaLibraryDescription
                   () ->
                       new HumanReadableException(
                           "Cannot use #nullsafe flavor: infer platform not configured")),
-          ImmutableInferConfig.of(javaBuckConfig.getDelegate()));
+          InferConfig.of(javaBuckConfig.getDelegate()));
     }
 
     if (flavors.contains(Javadoc.DOC_JAR)) {

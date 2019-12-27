@@ -36,12 +36,11 @@ import com.facebook.buck.json.TargetCountVerificationParserDecorator;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
-import com.facebook.buck.parser.cache.impl.AbstractParserCacheConfig;
 import com.facebook.buck.parser.cache.impl.CachingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.cache.impl.ParserCache;
 import com.facebook.buck.parser.cache.impl.ParserCacheConfig;
-import com.facebook.buck.parser.config.AbstractParserConfig.SkylarkGlobHandler;
 import com.facebook.buck.parser.config.ParserConfig;
+import com.facebook.buck.parser.config.ParserConfig.SkylarkGlobHandler;
 import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -203,7 +202,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       SkylarkProjectBuildFileParser skylarkParser,
       ProjectFilesystem filesystem,
       BuckEventBus eventBus) {
-    AbstractParserCacheConfig parserCacheConfig = buckConfig.getView(ParserCacheConfig.class);
+    ParserCacheConfig parserCacheConfig = buckConfig.getView(ParserCacheConfig.class);
     if (parserCacheConfig.isParserCacheEnabled()) {
       ParserCache parserCache =
           ParserCache.of(buckConfig, filesystem, manifestServiceSupplier, eventBus);

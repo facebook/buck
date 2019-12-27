@@ -16,8 +16,8 @@
 
 package com.facebook.buck.remoteexecution.config;
 
-import static com.facebook.buck.remoteexecution.config.AbstractRemoteExecutionConfig.AUTO_RE_EXPERIMENT_PROPERTY_KEY;
-import static com.facebook.buck.remoteexecution.config.AbstractRemoteExecutionConfig.DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY;
+import static com.facebook.buck.remoteexecution.config.RemoteExecutionConfig.AUTO_RE_EXPERIMENT_PROPERTY_KEY;
+import static com.facebook.buck.remoteexecution.config.RemoteExecutionConfig.DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;

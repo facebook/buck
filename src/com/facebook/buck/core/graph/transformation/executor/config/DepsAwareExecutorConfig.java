@@ -19,22 +19,23 @@ package com.facebook.buck.core.graph.transformation.executor.config;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.graph.transformation.executor.factory.DepsAwareExecutorType;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.Map;
-import org.immutables.value.Value;
 
 /**
  * Configuration for {@link com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor}s
  */
-@BuckStyleImmutable
-@Value.Immutable(builder = false, copy = false)
-abstract class AbstractDepsAwareExecutorConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class DepsAwareExecutorConfig implements ConfigView<BuckConfig> {
 
   private static final String SECTION = "depsawareexecutor";
 
-  @Value.Parameter
   @Override
   public abstract BuckConfig getDelegate();
+
+  public static DepsAwareExecutorConfig of(BuckConfig delegate) {
+    return ImmutableDepsAwareExecutorConfig.of(delegate);
+  }
 
   /** @return the {@link DepsAwareExecutorType} we should use based on the buckconfig */
   public Map<DepsAwareExecutorType, Double> getExecutorType() {

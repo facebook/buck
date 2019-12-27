@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.features.dotnet;
+package com.facebook.buck.core.rulekey.config;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.tool.config.ToolConfig;
-import java.util.Optional;
-import org.immutables.value.Value;
+import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/** Config to get toolchains for dotnet rules */
-@BuckStyleImmutable
-@Value.Immutable(builder = false, copy = false)
-public abstract class AbstractDotnetBuckConfig implements ConfigView<BuckConfig> {
-  private static final String SECTION = "dotnet";
-  private static final String CSC = "csc";
+@BuckStyleValue
+public abstract class RuleKeyConfig implements ConfigView<BuckConfig> {
+
+  private static final String LOG_SECTION = "log";
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
 
-  public Optional<ToolProvider> getCsharpCompiler() {
-    return getDelegate().getView(ToolConfig.class).getToolProvider(SECTION, CSC);
+  public static RuleKeyConfig of(BuckConfig delegate) {
+    return ImmutableRuleKeyConfig.of(delegate);
+  }
+
+  public RuleKeyDiagnosticsMode getRuleKeyDiagnosticsMode() {
+    return getDelegate()
+        .getEnum(LOG_SECTION, "rule_key_diagnostics_mode", RuleKeyDiagnosticsMode.class)
+        .orElse(RuleKeyDiagnosticsMode.NEVER);
   }
 }

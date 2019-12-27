@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.doctor.config.DoctorConfig;
-import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.doctor.config.ImmutableSourceControlInfo;
 import com.facebook.buck.doctor.config.ImmutableUserLocalConfiguration;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
@@ -74,7 +73,7 @@ public class DefectReporterTest {
   @Before
   public void setUp() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    config = ImmutableDoctorConfig.of(FakeBuckConfig.builder().build());
+    config = DoctorConfig.of(FakeBuckConfig.builder().build());
     clock = new DefaultClock();
     reporter =
         new DefaultDefectReporter(

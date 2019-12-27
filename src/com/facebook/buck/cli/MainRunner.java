@@ -69,7 +69,7 @@ import com.facebook.buck.counters.CounterBuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.doctor.DefaultDefectReporter;
-import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
+import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.BuckInitializationDurationEvent;
@@ -2328,10 +2328,7 @@ public final class MainRunner {
       return Optional.of(
           new RuleKeyLogFileUploader(
               new DefaultDefectReporter(
-                  projectFilesystem,
-                  buckConfig.getView(ImmutableDoctorConfig.class),
-                  buckEventBus,
-                  clock),
+                  projectFilesystem, buckConfig.getView(DoctorConfig.class), buckEventBus, clock),
               getBuildEnvironmentDescription(
                   executionEnvironment,
                   buckConfig),

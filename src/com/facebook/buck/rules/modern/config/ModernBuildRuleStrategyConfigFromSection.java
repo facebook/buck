@@ -45,7 +45,8 @@ public class ModernBuildRuleStrategyConfigFromSection implements ModernBuildRule
         // If Remote Execution was auto enabled, and no explicit strategy was set, then use the
         // experimental_strategy setting as the ModernBuildRuleBuildStrategy for this build.
         .orElse(
-            (section.equals(AbstractModernBuildRuleConfig.SECTION) && remoteExecutionAutoEnabled)
+            (section.equals(com.facebook.buck.rules.modern.config.ModernBuildRuleConfig.SECTION)
+                    && remoteExecutionAutoEnabled)
                 ? delegate
                     .getEnum(section, "experimental_strategy", ModernBuildRuleBuildStrategy.class)
                     .orElse(ModernBuildRuleBuildStrategy.DEFAULT)

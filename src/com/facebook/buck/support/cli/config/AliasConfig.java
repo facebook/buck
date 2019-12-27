@@ -20,7 +20,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,13 +36,16 @@ import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 /** Contains the logic for handling the [alias] section of .buckconfig. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractAliasConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class AliasConfig implements ConfigView<BuckConfig> {
   private static final String SECTION = "alias";
 
   public static AliasConfig from(BuckConfig config) {
     return config.getView(AliasConfig.class);
+  }
+
+  public static AliasConfig of(BuckConfig delegate) {
+    return ImmutableAliasConfig.of(delegate);
   }
 
   /**

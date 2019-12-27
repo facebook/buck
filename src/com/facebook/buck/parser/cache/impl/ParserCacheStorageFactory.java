@@ -26,21 +26,21 @@ import java.io.IOException;
 
 /**
  * Factory for creating the appropriate {@link ParserCacheStorage}, based on the {@link
- * AbstractParserCacheConfig}.
+ * ParserCacheConfig}.
  */
 public class ParserCacheStorageFactory {
-  private static AbstractParserCacheConfig obtainParserCacheConfig(BuckConfig buckConfig) {
+  private static ParserCacheConfig obtainParserCacheConfig(BuckConfig buckConfig) {
     return buckConfig.getView(ParserCacheConfig.class);
   }
 
   private static ParserCacheStorage createLocalParserStorage(
-      AbstractParserCacheConfig parserCacheConfig, ProjectFilesystem filesystem) {
+      ParserCacheConfig parserCacheConfig, ProjectFilesystem filesystem) {
     Preconditions.checkState(parserCacheConfig.isDirParserCacheEnabled());
     return LocalCacheStorage.of(parserCacheConfig, filesystem);
   }
 
   private static ParserCacheStorage createRemoteManifestParserStorage(
-      AbstractParserCacheConfig parserCacheConfig,
+      ParserCacheConfig parserCacheConfig,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
     Preconditions.checkState(parserCacheConfig.isRemoteParserCacheEnabled());
     return RemoteManifestServiceCacheStorage.of(manifestServiceSupplier.get(), parserCacheConfig);
@@ -56,7 +56,7 @@ public class ParserCacheStorageFactory {
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
     // TODO(buck_team): Generalize this to return a list of parser storages (see TODOs in
     // HybridCacheStorage.java).
-    AbstractParserCacheConfig parserCacheConfig = obtainParserCacheConfig(buckConfig);
+    ParserCacheConfig parserCacheConfig = obtainParserCacheConfig(buckConfig);
     Preconditions.checkState(
         parserCacheConfig.isDirParserCacheEnabled()
             || parserCacheConfig.isRemoteParserCacheEnabled());

@@ -18,7 +18,7 @@ package com.facebook.buck.parser.cache.impl;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.cache.ParserCacheException;
@@ -26,11 +26,12 @@ import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-/** Class that implements the {@link com.facebook.buck.parser.cache.ParserCache} configuration. */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public abstract class AbstractParserCacheConfig implements ConfigView<BuckConfig> {
-  private static final Logger LOG = Logger.get(AbstractParserCacheConfig.class);
+/**
+ * Class that implements the {@link com.facebook.buck.parser.cache.impl.ParserCache} configuration.
+ */
+@BuckStyleValue
+public abstract class ParserCacheConfig implements ConfigView<BuckConfig> {
+  private static final Logger LOG = Logger.get(ParserCacheConfig.class);
 
   static final String PARSER_CACHE_SECTION_NAME = "parser";
   static final String PARSER_CACHE_LOCAL_LOCATION_NAME = "dir";
@@ -42,8 +43,11 @@ public abstract class AbstractParserCacheConfig implements ConfigView<BuckConfig
   private static final String MANIFEST_SERVICE_MODE_NAME = "remote_parser_caching_access_mode";
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
+
+  public static ParserCacheConfig of(BuckConfig delegate) {
+    return ImmutableParserCacheConfig.of(delegate);
+  }
 
   private ParserCacheAccessMode getCacheMode(String cacheType) throws ParserCacheException {
     String cacheMode =

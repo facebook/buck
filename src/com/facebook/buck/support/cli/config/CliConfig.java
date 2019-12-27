@@ -18,7 +18,7 @@ package com.facebook.buck.support.cli.config;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.google.common.collect.ImmutableList;
@@ -28,15 +28,17 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@BuckStyleImmutable
-@Value.Immutable(builder = false, copy = false)
-public abstract class AbstractCliConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class CliConfig implements ConfigView<BuckConfig> {
 
   private static final String UI_SECTION = "ui";
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
+
+  public static CliConfig of(BuckConfig delegate) {
+    return ImmutableCliConfig.of(delegate);
+  }
 
   /**
    * Create an Ansi object appropriate for the current output. First respect the user's preferences,

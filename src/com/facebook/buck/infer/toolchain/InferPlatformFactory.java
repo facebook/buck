@@ -20,7 +20,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
-import com.facebook.buck.infer.ImmutableInferConfig;
 import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.infer.InferPlatform;
 import com.facebook.buck.infer.UnresolvedInferPlatform;
@@ -36,7 +35,7 @@ public class InferPlatformFactory {
   /** Tries to construct {@link InferPlatform} based on buck config or otherwise env vars. */
   public static Optional<UnresolvedInferPlatform> getBasedOnConfigAndPath(
       BuckConfig buckConfig, ExecutableFinder executableFinder) {
-    InferConfig inferConfig = ImmutableInferConfig.of(buckConfig);
+    InferConfig inferConfig = InferConfig.of(buckConfig);
     Optional<ToolProvider> toolProviderOpt;
 
     Optional<ToolProvider> binaryProvider = inferConfig.getBinary();

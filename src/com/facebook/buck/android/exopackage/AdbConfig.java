@@ -14,27 +14,36 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.counters;
+package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
-@BuckStyleTuple
-@Value.Immutable(builder = false, copy = false)
-public abstract class AbstractCounterBuckConfig implements ConfigView<BuckConfig> {
-
-  private static final String COUNTERS_SECTION = "counters";
-
+@BuckStyleValue
+public abstract class AdbConfig implements ConfigView<BuckConfig> {
   @Override
   public abstract BuckConfig getDelegate();
 
-  public long getCountersFirstFlushIntervalMillis() {
-    return getDelegate().getLong(COUNTERS_SECTION, "first_flush_interval_millis").orElse(5000L);
+  public static AdbConfig of(BuckConfig delegate) {
+    return ImmutableAdbConfig.of(delegate);
   }
 
-  public long getCountersFlushIntervalMillis() {
-    return getDelegate().getLong(COUNTERS_SECTION, "flush_interval_millis").orElse(30000L);
+  @Value.Lazy
+  public boolean getRestartAdbOnFailure() {
+    return Boolean.parseBoolean(
+        getDelegate().getValue("adb", "adb_restart_on_failure").orElse("true"));
+  }
+
+  @Value.Lazy
+  public ImmutableList<String> getAdbRapidInstallTypes() {
+    return getDelegate().getListWithoutComments("adb", "rapid_install_types_beta");
+  }
+
+  @Value.Lazy
+  public boolean getMultiInstallMode() {
+    return getDelegate().getBooleanValue("adb", "multi_install_mode", false);
   }
 }

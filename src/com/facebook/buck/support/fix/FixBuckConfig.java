@@ -18,7 +18,7 @@ package com.facebook.buck.support.fix;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -30,9 +30,8 @@ import org.immutables.value.Value;
 import org.stringtemplate.v4.ST;
 
 /** Configuration that handles how `buck fix` and automatic invocations of fix scripts work */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public abstract class AbstractFixBuckConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class FixBuckConfig implements ConfigView<BuckConfig> {
 
   /** When to invoke `buck fix` automatically */
   enum AutofixEnabled {
@@ -57,8 +56,11 @@ public abstract class AbstractFixBuckConfig implements ConfigView<BuckConfig> {
           System.lineSeparator());
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
+
+  public static FixBuckConfig of(BuckConfig delegate) {
+    return ImmutableFixBuckConfig.of(delegate);
+  }
 
   /** Get the script to run when buck fix is invoked */
   @Value.Lazy
@@ -156,7 +158,7 @@ public abstract class AbstractFixBuckConfig implements ConfigView<BuckConfig> {
    * {@code fixScriptContact}
    *
    * @param interpolatedFixScript The fix script per {@link
-   *     AbstractFixBuckConfig#getInterpolatedFixScript(ImmutableList, Path, Path)}
+   *     FixBuckConfig#getInterpolatedFixScript(ImmutableList, Path, Path)}
    * @param fixScriptContact The contact to use in the message
    * @return A string to be printed before the fix script is invoked, with template parameters
    *     substituted
