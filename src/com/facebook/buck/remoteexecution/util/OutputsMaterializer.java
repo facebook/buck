@@ -57,7 +57,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Consumer;
 
-/** Used for materialzing outputs from the CAS. */
+/** Used for materializing outputs from the CAS. */
 public class OutputsMaterializer {
 
   private static final Logger LOG = Logger.get(OutputsMaterializer.class);
@@ -102,7 +102,7 @@ public class OutputsMaterializer {
 
     private void setExecutable(boolean isExecutable, Path path) {
       if (isExecutable) {
-        Preconditions.checkState(path.toFile().setExecutable(true));
+        Preconditions.checkState(path.toFile().setExecutable(true, false));
       }
     }
   }
