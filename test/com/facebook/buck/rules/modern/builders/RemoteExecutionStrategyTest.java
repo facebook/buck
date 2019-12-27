@@ -361,16 +361,14 @@ public class RemoteExecutionStrategyTest {
         ModernBuildRule<?> rule1,
         BiPredicate<Digest, String> requiredDataPredicate,
         WorkerRequirements workerRequirements) {
-      RemoteExecutionActionInfo actionInfo =
-          RemoteExecutionActionInfo.of(
-              protocol.computeDigest(new byte[] {1}),
-              ImmutableList.of(
-                  UploadDataSupplier.of(
-                      "data", missingDigest, () -> new ByteArrayInputStream(missingData))),
-              missingData.length,
-              ImmutableList.of());
-
-      return actionInfo;
+      requiredDataPredicate.test(missingDigest, "data");
+      return RemoteExecutionActionInfo.of(
+          protocol.computeDigest(new byte[] {1}),
+          ImmutableList.of(
+              UploadDataSupplier.of(
+                  "data", missingDigest, () -> new ByteArrayInputStream(missingData))),
+          missingData.length,
+          ImmutableList.of());
     }
 
     @Override
