@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -50,6 +51,8 @@ import com.facebook.buck.sandbox.SandboxProperties;
 import com.facebook.buck.shell.programrunner.DirectProgramRunner;
 import com.facebook.buck.shell.programrunner.ProgramRunner;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.worker.WorkerJobParams;
@@ -63,6 +66,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -365,7 +370,13 @@ public class GenruleBuildable implements Buildable {
           createWorkerShellStep(buildContext, outputPathResolver, filesystem, srcPath, tmpPath));
     } else {
       commands.add(
-          createGenruleStep(buildContext, outputPathResolver, filesystem, srcPath, tmpPath));
+          createGenruleStep(
+              buildContext,
+              outputPathResolver,
+              filesystem,
+              srcPath,
+              tmpPath,
+              createProgramRunner()));
     }
 
     outputPaths.ifPresent(
@@ -508,29 +519,28 @@ public class GenruleBuildable implements Buildable {
     return cmd;
   }
 
+  private ProgramRunner createProgramRunner() {
+    if (sandboxExecutionStrategy.isSandboxEnabled() && enableSandboxingInGenrule) {
+      Preconditions.checkState(
+          sandboxProperties.isPresent(),
+          "SandboxProperties must have been calculated earlier if sandboxing was requested");
+      return sandboxExecutionStrategy.createSandboxProgramRunner(sandboxProperties.get());
+    }
+    return new DirectProgramRunner();
+  }
+
   @VisibleForTesting
   final AbstractGenruleStep createGenruleStep(
       BuildContext context,
       OutputPathResolver outputPathResolver,
       ProjectFilesystem filesystem,
       Path srcPath,
-      Path tmpPath) {
+      Path tmpPath,
+      ProgramRunner programRunner) {
     SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
-
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
     // as srcs. Without this, a genrule is not guaranteed to be hermetic.
-
-    ProgramRunner programRunner;
-
-    if (sandboxExecutionStrategy.isSandboxEnabled() && enableSandboxingInGenrule) {
-      Preconditions.checkState(
-          sandboxProperties.isPresent(),
-          "SandboxProperties must have been calculated earlier if sandboxing was requested");
-      programRunner = sandboxExecutionStrategy.createSandboxProgramRunner(sandboxProperties.get());
-    } else {
-      programRunner = new DirectProgramRunner();
-    }
 
     return new AbstractGenruleStep(
         filesystem,
@@ -542,7 +552,6 @@ public class GenruleBuildable implements Buildable {
                 context.getBuildCellRootPath(), filesystem, srcPath)
             .getPathRelativeToBuildCellRoot(),
         programRunner) {
-      // TODO(irenewchen): Override execute() to verify that expected outputs exist
       @Override
       protected void addEnvironmentVariables(
           ExecutionContext executionContext,
@@ -554,6 +563,33 @@ public class GenruleBuildable implements Buildable {
             srcPath,
             tmpPath,
             environmentVariablesBuilder);
+      }
+
+      @Override
+      public StepExecutionResult execute(ExecutionContext context)
+          throws IOException, InterruptedException {
+        StepExecutionResult result = super.execute(context);
+        if (result.getExitCode() != StepExecutionResults.SUCCESS_EXIT_CODE) {
+          return result;
+        }
+        if (outputPaths.isPresent()) {
+          for (ImmutableSet<OutputPath> paths : outputPaths.get().values()) {
+            paths.forEach(p -> checkPath(filesystem, outputPathResolver.resolvePath(p)));
+          }
+        } else {
+          checkPath(filesystem, outputPathResolver.resolvePath(outputPath.get()));
+        }
+        return result;
+      }
+
+      private void checkPath(ProjectFilesystem filesystem, Path resolvedPath) {
+        if (!filesystem.exists(resolvedPath)) {
+          throw new BuckUncheckedExecutionException(
+              new FileNotFoundException(
+                  String.format(
+                      "Expected file %s to be written from genrule %s. File was not present",
+                      resolvedPath, buildTarget.getFullyQualifiedName())));
+        }
       }
     };
   }

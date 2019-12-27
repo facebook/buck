@@ -27,6 +27,7 @@ import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -48,8 +49,12 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.DefaultBuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
+import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
+import com.facebook.buck.rules.modern.PublicOutputPath;
+import com.facebook.buck.shell.programrunner.DirectProgramRunner;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -59,6 +64,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -711,5 +717,100 @@ public class GenruleBuildableTest {
             .toBuildable();
 
     assertFalse(buildable.shouldExecuteRemotely());
+  }
+
+  @Test
+  public void throwsIfExpectedNamedOutputNotPresentForMultipleOutputs() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
+            .withBuildCellRootPath(fakeProjectFileSystem.getRootPath());
+    OutputPathResolver outputPathResolver =
+        new DefaultOutputPathResolver(fakeProjectFileSystem, target);
+    Path srcPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__srcs");
+    Path tmpPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__tmp");
+
+    expectedThrownException.expect(BuckUncheckedExecutionException.class);
+    expectedThrownException.expectCause(Matchers.instanceOf(FileNotFoundException.class));
+    // Note that Windows uses backslashes while Unix uses forward slashes
+    expectedThrownException.expectMessage(
+        String.format(
+            "Expected file %s to be written from genrule //example:genrule. File was not present",
+            outputPathResolver.resolvePath(new OutputPath("output.txt"))));
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(fakeProjectFileSystem)
+            .setCmd("echo something")
+            .setOuts(Optional.of(ImmutableMap.of("named", ImmutableList.of("output.txt"))))
+            .build()
+            .toBuildable();
+    AbstractGenruleStep step =
+        buildable.createGenruleStep(
+            context,
+            outputPathResolver,
+            fakeProjectFileSystem,
+            srcPath,
+            tmpPath,
+            new DirectProgramRunner() {
+              @Override
+              public ImmutableList<String> enhanceCommandLine(ImmutableList<String> commandLine) {
+                return ImmutableList.of();
+              }
+            });
+
+    step.execute(TestExecutionContext.newInstance());
+  }
+
+  @Test
+  public void throwsIfExpectedNamedOutputputNotPresentForSingleOutput() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
+            .withBuildCellRootPath(fakeProjectFileSystem.getRootPath());
+    OutputPathResolver outputPathResolver =
+        new DefaultOutputPathResolver(fakeProjectFileSystem, target);
+    Path srcPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__srcs");
+    Path tmpPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__tmp");
+
+    expectedThrownException.expect(BuckUncheckedExecutionException.class);
+    expectedThrownException.expectCause(Matchers.instanceOf(FileNotFoundException.class));
+    // Note that Windows uses backslashes while Unix uses forward slashes
+    expectedThrownException.expectMessage(
+        String.format(
+            "Expected file %s to be written from genrule //example:genrule. File was not present",
+            outputPathResolver.resolvePath(
+                new PublicOutputPath(
+                    BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s")
+                        .resolve("output.txt")))));
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(fakeProjectFileSystem)
+            .setCmd("echo something")
+            .setOut(Optional.of("output.txt"))
+            .build()
+            .toBuildable();
+    AbstractGenruleStep step =
+        buildable.createGenruleStep(
+            context,
+            outputPathResolver,
+            fakeProjectFileSystem,
+            srcPath,
+            tmpPath,
+            new DirectProgramRunner() {
+              @Override
+              public ImmutableList<String> enhanceCommandLine(ImmutableList<String> commandLine) {
+                return ImmutableList.of();
+              }
+            });
+
+    step.execute(TestExecutionContext.newInstance());
   }
 }

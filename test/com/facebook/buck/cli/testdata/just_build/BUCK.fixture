@@ -16,7 +16,7 @@ genrule(
         ],
     },
     bash = "touch $OUT/bar && touch $OUT/baz",
-    cmd_exe = "echo \"\" > %OUT%\\bar; echo \"\" > %OUT%\\baz",
+    cmd_exe = "(echo something)>%OUT%\\bar && (echo something)>%OUT%\\baz",
 )
 
 genrule(
@@ -27,7 +27,7 @@ genrule(
         ],
     },
     bash = "touch $OUT/bar",
-    cmd_exe = "echo \"\" > %OUT%\\bar",
+    cmd_exe = "(echo something)> %OUT%\\bar",
 )
 
 genrule(
