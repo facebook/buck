@@ -425,7 +425,7 @@ UTILS_API_SRCS = [
     "exopackage/AndroidDevice.java",
     "HasInstallableApk.java",
     "exopackage/PackageInfo.java",
-    "exopackage/AbstractExopackagePathAndHash.java",
+    "exopackage/ExopackagePathAndHash.java",
 ]
 
 java_immutables_library(

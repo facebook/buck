@@ -29,7 +29,7 @@ import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.util.MoreSuppliers;
@@ -50,7 +50,6 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
-import org.immutables.value.Value;
 
 public class AppleConfig implements ConfigView<BuckConfig> {
 
@@ -499,11 +498,14 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "use_modern_build_system", true);
   }
 
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractApplePackageConfig {
+  @BuckStyleValue
+  interface ApplePackageConfig {
     String getCommand();
 
     String getExtension();
+
+    static ApplePackageConfig of(String command, String extension) {
+      return ImmutableApplePackageConfig.of(command, extension);
+    }
   }
 }

@@ -16,13 +16,19 @@
 
 package com.facebook.buck.features.apple.common;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractCopyInXcode {
+@BuckStyleValue
+public abstract class CopyInXcode {
+
+  public static CopyInXcode of(
+      CopyInXcode.SourceType sourceType,
+      Path sourcePath,
+      CopyInXcode.DestinationBase destinationBase,
+      Path destinationPath) {
+    return ImmutableCopyInXcode.of(sourceType, sourcePath, destinationBase, destinationPath);
+  }
 
   public enum SourceType {
     FILE,

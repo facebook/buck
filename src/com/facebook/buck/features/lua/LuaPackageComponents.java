@@ -22,7 +22,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -31,9 +31,8 @@ import java.util.Map;
 import org.immutables.value.Value;
 
 /** Components that contribute to a Lua package. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractLuaPackageComponents implements AddsToRuleKey {
+@BuckStyleValue
+abstract class LuaPackageComponents implements AddsToRuleKey {
 
   /** @return mapping of module names to their respective {@link SourcePath}s. */
   @AddToRuleKey
@@ -144,5 +143,12 @@ abstract class AbstractLuaPackageComponents implements AddsToRuleKey {
     public LuaPackageComponents build() {
       return LuaPackageComponents.of(modules, pythonModules, nativeLibraries);
     }
+  }
+
+  static LuaPackageComponents of(
+      Map<String, ? extends SourcePath> modules,
+      Map<String, ? extends SourcePath> pythonModules,
+      Map<String, ? extends SourcePath> nativeLibraries) {
+    return ImmutableLuaPackageComponents.of(modules, pythonModules, nativeLibraries);
   }
 }

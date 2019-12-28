@@ -143,7 +143,7 @@ public class AppleConfigTest {
                 "iphoneos_package_command = echo $OUT")
             .build()
             .getView(AppleConfig.class);
-    Optional<ApplePackageConfig> packageConfig =
+    Optional<AppleConfig.ApplePackageConfig> packageConfig =
         config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS);
     assertThat(packageConfig.get().getCommand(), equalTo("echo $OUT"));
     assertThat(packageConfig.get().getExtension(), equalTo("api"));

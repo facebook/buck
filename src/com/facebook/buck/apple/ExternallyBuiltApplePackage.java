@@ -96,7 +96,7 @@ public class ExternallyBuiltApplePackage extends LegacyGenrule {
   @Value.Immutable
   @BuckStyleTuple
   abstract static class AbstractApplePackageConfigAndPlatformInfo {
-    public abstract ApplePackageConfig getConfig();
+    public abstract AppleConfig.ApplePackageConfig getConfig();
 
     /**
      * The apple cxx platform in question.

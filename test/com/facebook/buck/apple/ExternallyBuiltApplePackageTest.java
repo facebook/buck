@@ -72,7 +72,7 @@ public class ExternallyBuiltApplePackageTest {
     graphBuilder = new TestActionGraphBuilder();
     config =
         ApplePackageConfigAndPlatformInfo.of(
-            ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),
+            AppleConfig.ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),
             FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_I386_PLATFORM);
   }
 

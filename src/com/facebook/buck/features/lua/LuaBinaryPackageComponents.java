@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.features.haskell;
+package com.facebook.buck.features.lua;
 
-import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/** Identifying information for a {@link HaskellPackage}. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractHaskellPackageInfo implements AddsToRuleKey {
+/** The package components in a Lua binary. */
+@BuckStyleValue
+abstract class LuaBinaryPackageComponents {
+  public abstract SourcePath getStarter();
 
-  @AddToRuleKey
-  public abstract String getName();
+  public abstract LuaPackageComponents getComponents();
 
-  @AddToRuleKey
-  public abstract String getVersion();
-
-  @AddToRuleKey
-  public abstract String getIdentifier();
+  public static LuaBinaryPackageComponents of(SourcePath starter, LuaPackageComponents components) {
+    return ImmutableLuaBinaryPackageComponents.of(starter, components);
+  }
 }

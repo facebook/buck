@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.WriteStringTemplateRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.AbstractCxxLibraryGroup;
 import com.facebook.buck.cxx.AbstractCxxSource.Type;
 import com.facebook.buck.cxx.CxxLink;
@@ -67,11 +67,44 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** {@link Starter} implementation which builds a starter as a native executable. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractNativeExecutableStarter implements Starter {
+@BuckStyleValue
+abstract class NativeExecutableStarter implements Starter {
 
   private static final String NATIVE_STARTER_CXX_SOURCE = "native-starter.cpp.in";
+
+  public static NativeExecutableStarter of(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget baseTarget,
+      BuildRuleParams baseParams,
+      ActionGraphBuilder actionGraphBuilder,
+      SourcePathResolverAdapter pathResolver,
+      CellPathResolver cellPathResolver,
+      LuaPlatform luaPlatform,
+      CxxBuckConfig cxxBuckConfig,
+      BuildTarget target,
+      Path output,
+      String mainModule,
+      Optional<? extends BuildTarget> nativeStarterLibrary,
+      Optional<? extends Path> relativeModulesDir,
+      Optional<? extends Path> relativePythonModulesDir,
+      Optional<? extends Path> relativeNativeLibsDir) {
+    return ImmutableNativeExecutableStarter.of(
+        projectFilesystem,
+        baseTarget,
+        baseParams,
+        actionGraphBuilder,
+        pathResolver,
+        cellPathResolver,
+        luaPlatform,
+        cxxBuckConfig,
+        target,
+        output,
+        mainModule,
+        nativeStarterLibrary,
+        relativeModulesDir,
+        relativePythonModulesDir,
+        relativeNativeLibsDir);
+  }
 
   abstract ProjectFilesystem getProjectFilesystem();
 
@@ -106,7 +139,7 @@ abstract class AbstractNativeExecutableStarter implements Starter {
   private String getNativeStarterCxxSourceTemplate() {
     try {
       return Resources.toString(
-          Resources.getResource(AbstractNativeExecutableStarter.class, NATIVE_STARTER_CXX_SOURCE),
+          Resources.getResource(NativeExecutableStarter.class, NATIVE_STARTER_CXX_SOURCE),
           Charsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);

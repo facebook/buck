@@ -18,15 +18,18 @@ package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Container for {@link OcamlPlatform}s. */
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractOcamlToolchain extends Toolchain {
+@BuckStyleValue
+interface OcamlToolchain extends Toolchain {
 
   String DEFAULT_NAME = "ocaml-toolchain";
+
+  static OcamlToolchain of(
+      OcamlPlatform defaultOcamlPlatform, FlavorDomain<OcamlPlatform> ocamlPlatforms) {
+    return ImmutableOcamlToolchain.of(defaultOcamlPlatform, ocamlPlatforms);
+  }
 
   OcamlPlatform getDefaultOcamlPlatform();
 

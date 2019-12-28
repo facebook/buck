@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.impl.WriteStringTemplateRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Escaper;
@@ -35,14 +35,38 @@ import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** {@link Starter} implementation which builds a starter as a Lua script. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractLuaScriptStarter implements Starter {
+@BuckStyleValue
+abstract class LuaScriptStarter implements Starter {
 
   private static final String STARTER = "starter.lua.in";
+
+  public static LuaScriptStarter of(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget baseTarget,
+      BuildRuleParams baseParams,
+      ActionGraphBuilder actionGraphBuilder,
+      SourcePathResolverAdapter pathResolver,
+      LuaPlatform luaPlatform,
+      BuildTarget target,
+      Path output,
+      String mainModule,
+      Optional<? extends Path> relativeModulesDir,
+      Optional<? extends Path> relativePythonModulesDir) {
+    return ImmutableLuaScriptStarter.of(
+        projectFilesystem,
+        baseTarget,
+        baseParams,
+        actionGraphBuilder,
+        pathResolver,
+        luaPlatform,
+        target,
+        output,
+        mainModule,
+        relativeModulesDir,
+        relativePythonModulesDir);
+  }
 
   abstract ProjectFilesystem getProjectFilesystem();
 
@@ -69,7 +93,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
   private String getPureStarterTemplate() {
     try {
       return Resources.toString(
-          Resources.getResource(AbstractLuaScriptStarter.class, STARTER), Charsets.UTF_8);
+          Resources.getResource(LuaScriptStarter.class, STARTER), Charsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

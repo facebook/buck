@@ -17,16 +17,19 @@
 package com.facebook.buck.android.toolchain;
 
 import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.environment.Platform;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
-@Value.Immutable(copy = false)
-@BuckStyleTuple
-public interface AbstractAndroidBuildToolsLocation extends Toolchain {
+@BuckStyleValue
+public interface AndroidBuildToolsLocation extends Toolchain {
 
   String DEFAULT_NAME = "android-build-tools";
+
+  static AndroidBuildToolsLocation of(Path buildToolsPath) {
+    return ImmutableAndroidBuildToolsLocation.of(buildToolsPath);
+  }
 
   /** @return {@code Path} pointing to Android SDK build tools */
   Path getBuildToolsPath();

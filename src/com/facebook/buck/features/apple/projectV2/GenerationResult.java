@@ -14,23 +14,42 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.features.apple.project;
+package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.features.apple.common.CopyInXcode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multimap;
 import java.nio.file.Path;
-import org.immutables.value.Value;
+import java.util.Map;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractGenerationResult {
+@BuckStyleValue
+abstract class GenerationResult {
+
+  public static GenerationResult of(
+      Path projectPath,
+      boolean projectGenerated,
+      Iterable<? extends BuildTarget> requiredBuildTargets,
+      Iterable<? extends Path> xcconfigPaths,
+      Iterable<? extends CopyInXcode> filesToCopyInXcode,
+      Map<? extends BuildTarget, ? extends PBXTarget> buildTargetToGeneratedTargetMap,
+      Multimap<? extends PBXProject, ? extends PBXTarget> generatedProjectToPbxTargets) {
+    return ImmutableGenerationResult.of(
+        projectPath,
+        projectGenerated,
+        requiredBuildTargets,
+        xcconfigPaths,
+        filesToCopyInXcode,
+        buildTargetToGeneratedTargetMap,
+        generatedProjectToPbxTargets);
+  }
+
   public abstract Path getProjectPath();
 
   public abstract boolean isProjectGenerated();

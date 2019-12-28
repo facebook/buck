@@ -14,21 +14,26 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android.exopackage;
+package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/** Holds a path to a file and a path to a file containing the hash of the first. */
-@BuckStyleTuple
-@Value.Immutable
-interface AbstractExopackagePathAndHash extends AddsToRuleKey {
-  @AddToRuleKey
-  SourcePath getPath();
+/** Identifying information for a {@link HaskellPackage}. */
+@BuckStyleValue
+abstract class HaskellPackageInfo implements AddsToRuleKey {
+
+  public static HaskellPackageInfo of(String name, String version, String identifier) {
+    return ImmutableHaskellPackageInfo.of(name, version, identifier);
+  }
 
   @AddToRuleKey
-  SourcePath getHashPath();
+  public abstract String getName();
+
+  @AddToRuleKey
+  public abstract String getVersion();
+
+  @AddToRuleKey
+  public abstract String getIdentifier();
 }

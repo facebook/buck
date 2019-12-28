@@ -188,7 +188,7 @@ public class ApplePackageDescription
 
     for (Flavor flavor : platformFlavors) {
       AppleCxxPlatform platform = appleCxxPlatformFlavorDomain.getValue(flavor);
-      Optional<ApplePackageConfig> packageConfig =
+      Optional<AppleConfig.ApplePackageConfig> packageConfig =
           config.getPackageConfigForPlatform(platform.getAppleSdk().getApplePlatform());
       packageConfigs.put(
           packageConfig.map(

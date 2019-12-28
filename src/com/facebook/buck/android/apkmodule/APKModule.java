@@ -18,12 +18,16 @@ package com.facebook.buck.android.apkmodule;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractAPKModule implements Comparable<AbstractAPKModule>, AddsToRuleKey {
+@BuckStyleValue
+public abstract class APKModule implements Comparable<APKModule>, AddsToRuleKey {
+
+  public static APKModule of(String name, boolean hasResources) {
+    return ImmutableAPKModule.of(name, hasResources);
+  }
+
   @AddToRuleKey
   public abstract String getName();
 
@@ -45,7 +49,7 @@ abstract class AbstractAPKModule implements Comparable<AbstractAPKModule>, AddsT
   }
 
   @Override
-  public int compareTo(AbstractAPKModule o) {
+  public int compareTo(APKModule o) {
     if (this == o) {
       return 0;
     }
