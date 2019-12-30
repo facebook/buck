@@ -28,7 +28,7 @@ public class SuperConsoleConfig {
   private static final String SECTION_NAME = "ui";
   private static final int DEFAULT_THREAD_LINE_LIMIT = 10;
   private static final long DEFAULT_BUILD_RULE_MINIMUM_DURATION_MILLIS = 0;
-  private static final int DEFAULT_NUMBER_OF_SLOW_RULES_TO_SHOW = 0;
+  private static final int DEFAULT_NUMBER_OF_SLOW_RULES_TO_SHOW = 10;
 
   /** Whether the super console is forced on, off or should we auto detect it */
   private enum Mode {

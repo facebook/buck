@@ -1105,7 +1105,7 @@ public final class MainRunner {
                     testConfig.getResultSummaryVerbosity(),
                     superConsoleConfig.getHideSucceededRulesInLogMode(),
                     superConsoleConfig.getNumberOfSlowRulesToShow(),
-                    superConsoleConfig.shouldShowSlowRulesInConsole(),
+                    true, // Always show slow rules in File Logger Console
                     locale,
                     testLogPath,
                     executionEnvironment,
