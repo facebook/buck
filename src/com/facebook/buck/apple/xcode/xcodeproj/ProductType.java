@@ -16,14 +16,16 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractProductType {
+@BuckStyleValue
+public abstract class ProductType {
 
   public abstract String getIdentifier();
+
+  public static ProductType of(String identifier) {
+    return ImmutableProductType.of(identifier);
+  }
 
   @Override
   public String toString() {

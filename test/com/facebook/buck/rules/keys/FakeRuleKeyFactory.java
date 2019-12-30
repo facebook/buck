@@ -51,14 +51,15 @@ public class FakeRuleKeyFactory
   }
 
   @Override
-  public RuleKeyAndInputs build(
+  public DependencyFileRuleKeyFactory.RuleKeyAndInputs build(
       SupportsDependencyFileRuleKey rule, ImmutableList<DependencyFileEntry> inputs) {
-    return RuleKeyAndInputs.of(build(rule), ImmutableSet.of());
+    return ImmutableRuleKeyAndInputs.of(build(rule), ImmutableSet.of());
   }
 
   @Override
-  public RuleKeyAndInputs buildManifestKey(SupportsDependencyFileRuleKey rule) {
-    return RuleKeyAndInputs.of(build(rule), ImmutableSet.of());
+  public DependencyFileRuleKeyFactory.RuleKeyAndInputs buildManifestKey(
+      SupportsDependencyFileRuleKey rule) {
+    return ImmutableRuleKeyAndInputs.of(build(rule), ImmutableSet.of());
   }
 
   @Override

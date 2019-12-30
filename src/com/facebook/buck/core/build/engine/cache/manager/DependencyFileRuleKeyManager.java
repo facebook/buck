@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
-import com.facebook.buck.rules.keys.RuleKeyAndInputs;
+import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.SizeLimiter;
 import com.facebook.buck.util.Discardable;
@@ -74,7 +74,7 @@ public class DependencyFileRuleKeyManager {
 
   public boolean checkMatchingDepfile() throws IOException {
     // Try to get the current dep-file rule key.
-    Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
+    Optional<DependencyFileRuleKeyFactory.RuleKeyAndInputs> depFileRuleKeyAndInputs =
         calculateDepFileRuleKey(
             onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
             /* allowMissingInputs */ true);
@@ -91,7 +91,7 @@ public class DependencyFileRuleKeyManager {
     return lastDepFileRuleKey.isPresent() && depFileRuleKey.equals(lastDepFileRuleKey.get());
   }
 
-  public Optional<RuleKeyAndInputs> calculateDepFileRuleKey(
+  public Optional<DependencyFileRuleKeyFactory.RuleKeyAndInputs> calculateDepFileRuleKey(
       Optional<ImmutableList<String>> depFile, boolean allowMissingInputs) throws IOException {
 
     Preconditions.checkState(useDependencyFileRuleKey());

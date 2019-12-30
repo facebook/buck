@@ -541,7 +541,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule1.setCoveredByDepFilePredicate(coveredInputPaths);
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
-    RuleKeyAndInputs res1 =
+    DependencyFileRuleKeyFactory.RuleKeyAndInputs res1 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, ruleFinder)
             .build(rule1, depFileEntries);
 
@@ -549,7 +549,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule2.setCoveredByDepFilePredicate(coveredInputPaths);
     rule2.setExistenceOfInterestPredicate(interestingInputPaths);
     hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
-    RuleKeyAndInputs res2 =
+    DependencyFileRuleKeyFactory.RuleKeyAndInputs res2 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, ruleFinder)
             .build(rule2, depFileEntries);
 
@@ -817,7 +817,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule1.setCoveredByDepFilePredicate(coveredInputPaths);
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
-    RuleKeyAndInputs res1 =
+    DependencyFileRuleKeyFactory.RuleKeyAndInputs res1 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, ruleFinder)
             .buildManifestKey(rule1);
 
@@ -825,7 +825,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule2.setCoveredByDepFilePredicate(coveredInputPaths);
     rule2.setExistenceOfInterestPredicate(interestingInputPaths);
     hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
-    RuleKeyAndInputs res2 =
+    DependencyFileRuleKeyFactory.RuleKeyAndInputs res2 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, ruleFinder)
             .buildManifestKey(rule2);
 
@@ -864,7 +864,7 @@ public class DependencyFileRuleKeyFactoryTest {
         };
     rule1.setCoveredByDepFilePredicate(coveredPredicate);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
-    RuleKeyAndInputs res1 =
+    DependencyFileRuleKeyFactory.RuleKeyAndInputs res1 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, ruleResolver)
             .build(rule1, ImmutableList.of(dependencyFileEntry));
 
@@ -875,7 +875,7 @@ public class DependencyFileRuleKeyFactoryTest {
         };
     rule2.setCoveredByDepFilePredicate(coveredPredicate);
     hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
-    RuleKeyAndInputs res2 =
+    DependencyFileRuleKeyFactory.RuleKeyAndInputs res2 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, ruleResolver)
             .build(rule2, ImmutableList.of(dependencyFileEntry));
 

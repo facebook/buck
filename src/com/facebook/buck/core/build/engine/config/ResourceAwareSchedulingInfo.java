@@ -17,21 +17,28 @@
 package com.facebook.buck.core.build.engine.config;
 
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import org.immutables.value.Value;
+import java.util.Map;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractResourceAwareSchedulingInfo {
+@BuckStyleValue
+public abstract class ResourceAwareSchedulingInfo {
 
   public static final ResourceAwareSchedulingInfo NON_AWARE_SCHEDULING_INFO =
-      ResourceAwareSchedulingInfo.of(
+      ImmutableResourceAwareSchedulingInfo.of(
           false, ResourceAmountsEstimator.DEFAULT_AMOUNTS, ImmutableMap.of());
+
+  public static ResourceAwareSchedulingInfo of(
+      boolean resourceAwareSchedulingEnabled,
+      ResourceAmounts defaultResourceAmounts,
+      Map<String, ? extends ResourceAmounts> amountsPerRuleType) {
+    return ImmutableResourceAwareSchedulingInfo.of(
+        resourceAwareSchedulingEnabled, defaultResourceAmounts, amountsPerRuleType);
+  }
 
   public abstract boolean isResourceAwareSchedulingEnabled();
 

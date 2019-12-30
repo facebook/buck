@@ -20,11 +20,10 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import org.immutables.value.Value;
 
 public interface DependencyFileRuleKeyFactory {
 
@@ -44,9 +43,8 @@ public interface DependencyFileRuleKeyFactory {
    */
   RuleKeyAndInputs buildManifestKey(SupportsDependencyFileRuleKey rule) throws IOException;
 
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractRuleKeyAndInputs {
+  @BuckStyleValue
+  interface RuleKeyAndInputs {
     RuleKey getRuleKey();
 
     ImmutableSet<SourcePath> getInputs();

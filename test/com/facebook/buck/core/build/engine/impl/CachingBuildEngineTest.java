@@ -123,7 +123,6 @@ import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
-import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
@@ -2922,7 +2921,7 @@ public class CachingBuildEngineTest {
       return engine
           .ruleKeyFactories
           .calculateManifestKey(rule, eventBus)
-          .map(RuleKeyAndInputs::getRuleKey);
+          .map(DependencyFileRuleKeyFactory.RuleKeyAndInputs::getRuleKey);
     }
 
     @Test
@@ -3334,7 +3333,7 @@ public class CachingBuildEngineTest {
 
       // Calculate expected rule keys.
       RuleKey ruleKey = defaultRuleKeyFactory.build(rule);
-      RuleKeyAndInputs depFileKey =
+      DependencyFileRuleKeyFactory.RuleKeyAndInputs depFileKey =
           depFilefactory.build(
               rule, ImmutableList.of(DependencyFileEntry.fromSourcePath(input, pathResolver)));
 

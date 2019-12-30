@@ -19,17 +19,19 @@ package com.facebook.buck.rules.args;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Joiner;
 import java.util.function.Consumer;
-import org.immutables.value.Value;
 
 /** An Arg that just wraps a Tool. */
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractToolArg extends Arg {
+@BuckStyleValue
+public interface ToolArg extends Arg {
   @AddToRuleKey
   Tool getTool();
+
+  static ToolArg of(Tool tool) {
+    return ImmutableToolArg.of(tool);
+  }
 
   @Override
   default void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {

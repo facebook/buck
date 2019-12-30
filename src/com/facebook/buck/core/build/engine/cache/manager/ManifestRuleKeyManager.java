@@ -32,7 +32,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.LazyPath;
-import com.facebook.buck.rules.keys.RuleKeyAndInputs;
+import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.hashing.FileHashLoader;
@@ -68,7 +68,8 @@ public class ManifestRuleKeyManager {
   private final RuleKeyFactories ruleKeyFactories;
   private final BuildCacheArtifactFetcher buildCacheArtifactFetcher;
   private final ArtifactCache artifactCache;
-  private final Supplier<Optional<RuleKeyAndInputs>> manifestBasedKeySupplier;
+  private final Supplier<Optional<DependencyFileRuleKeyFactory.RuleKeyAndInputs>>
+      manifestBasedKeySupplier;
   private ManifestRuleKeyService manifestRuleKeyService;
 
   public ManifestRuleKeyManager(
@@ -80,7 +81,7 @@ public class ManifestRuleKeyManager {
       RuleKeyFactories ruleKeyFactories,
       BuildCacheArtifactFetcher buildCacheArtifactFetcher,
       ArtifactCache artifactCache,
-      Supplier<Optional<RuleKeyAndInputs>> manifestBasedKeySupplier,
+      Supplier<Optional<DependencyFileRuleKeyFactory.RuleKeyAndInputs>> manifestBasedKeySupplier,
       ManifestRuleKeyService manifestRuleKeyService) {
     this.depFiles = depFiles;
     this.rule = rule;
@@ -112,7 +113,7 @@ public class ManifestRuleKeyManager {
   public ManifestStoreResult updateAndStoreManifest(
       RuleKey key,
       ImmutableSet<SourcePath> inputs,
-      RuleKeyAndInputs manifestKey,
+      DependencyFileRuleKeyFactory.RuleKeyAndInputs manifestKey,
       long artifactBuildTimeMs)
       throws IOException {
 
@@ -189,7 +190,8 @@ public class ManifestRuleKeyManager {
     return resultBuilder.build();
   }
 
-  public Optional<RuleKeyAndInputs> calculateManifestKey(BuckEventBus eventBus) throws IOException {
+  public Optional<DependencyFileRuleKeyFactory.RuleKeyAndInputs> calculateManifestKey(
+      BuckEventBus eventBus) throws IOException {
     return ruleKeyFactories.calculateManifestKey((SupportsDependencyFileRuleKey) rule, eventBus);
   }
 
@@ -271,7 +273,7 @@ public class ManifestRuleKeyManager {
 
   // Fetch an artifact from the cache using manifest-based caching.
   public ListenableFuture<ManifestFetchResult> performManifestBasedCacheFetch(
-      RuleKeyAndInputs originalRuleKeyAndInputs) {
+      DependencyFileRuleKeyFactory.RuleKeyAndInputs originalRuleKeyAndInputs) {
     Preconditions.checkArgument(useManifestCaching());
 
     // Explicitly drop the input list from the caller, as holding this in the closure below until
@@ -292,7 +294,7 @@ public class ManifestRuleKeyManager {
           // Re-calculate the rule key and the input list.  While we do already have the input list
           // above in `originalRuleKeyAndInputs`, we intentionally don't pass it in and use it here
           // to avoid holding on to significant memory until this future runs.
-          RuleKeyAndInputs keyAndInputs =
+          DependencyFileRuleKeyFactory.RuleKeyAndInputs keyAndInputs =
               manifestBasedKeySupplier.get().orElseThrow(IllegalStateException::new);
 
           // Load the manifest from disk.

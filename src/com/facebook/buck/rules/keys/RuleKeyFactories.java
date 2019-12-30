@@ -19,7 +19,7 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
@@ -28,12 +28,10 @@ import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import java.io.IOException;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** The various rule key factories used by the build engine. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractRuleKeyFactories {
+@BuckStyleValue
+public abstract class RuleKeyFactories {
 
   /** @return a {@link RuleKeyFactory} that produces {@link RuleKey}s. */
   public abstract RuleKeyFactoryWithDiagnostics<RuleKey> getDefaultRuleKeyFactory();
@@ -69,7 +67,7 @@ abstract class AbstractRuleKeyFactories {
       TrackedRuleKeyCache<RuleKey> defaultRuleKeyFactoryCache,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
-    return RuleKeyFactories.of(
+    return of(
         new DefaultRuleKeyFactory(
             fieldLoader, fileHashLoader, resolver, defaultRuleKeyFactoryCache, ruleKeyLogger),
         new InputBasedRuleKeyFactory(
@@ -78,7 +76,15 @@ abstract class AbstractRuleKeyFactories {
             fieldLoader, fileHashLoader, resolver, ruleKeyLogger));
   }
 
-  public Optional<RuleKeyAndInputs> calculateManifestKey(
+  public static RuleKeyFactories of(
+      RuleKeyFactoryWithDiagnostics<RuleKey> defaultRuleKeyFactory,
+      RuleKeyFactory<RuleKey> inputBasedRuleKeyFactory,
+      DependencyFileRuleKeyFactory depFileRuleKeyFactory) {
+    return ImmutableRuleKeyFactories.of(
+        defaultRuleKeyFactory, inputBasedRuleKeyFactory, depFileRuleKeyFactory);
+  }
+
+  public Optional<DependencyFileRuleKeyFactory.RuleKeyAndInputs> calculateManifestKey(
       SupportsDependencyFileRuleKey rule, BuckEventBus eventBus) throws IOException {
     try (Scope scope =
         RuleKeyCalculationEvent.scope(

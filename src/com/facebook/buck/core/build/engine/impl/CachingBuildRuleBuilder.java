@@ -80,7 +80,7 @@ import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
-import com.facebook.buck.rules.keys.RuleKeyAndInputs;
+import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyType;
@@ -179,7 +179,8 @@ class CachingBuildRuleBuilder {
    * need the manifest's RuleKeyAndInputs. If we just stored the RuleKeyAndInputs directly, we could
    * use too much memory.
    */
-  private final Supplier<Optional<RuleKeyAndInputs>> manifestBasedKeySupplier;
+  private final Supplier<Optional<DependencyFileRuleKeyFactory.RuleKeyAndInputs>>
+      manifestBasedKeySupplier;
 
   // These fields contain data that may be computed during a build.
 
@@ -686,7 +687,7 @@ class CachingBuildRuleBuilder {
       getBuildInfoRecorder().addMetadata(BuildInfo.MetadataKey.DEP_FILE, inputStrings);
 
       // Re-calculate and store the depfile rule key for next time.
-      Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
+      Optional<DependencyFileRuleKeyFactory.RuleKeyAndInputs> depFileRuleKeyAndInputs =
           dependencyFileRuleKeyManager.calculateDepFileRuleKey(
               Optional.of(inputStrings), /* allowMissingInputs */ false);
       if (depFileRuleKeyAndInputs.isPresent()) {
@@ -698,7 +699,8 @@ class CachingBuildRuleBuilder {
         if (manifestRuleKeyManager.useManifestCaching()) {
           // TODO(cjhopman): This should be able to use manifestKeySupplier.
           try (Scope ignored = LeafEvents.scope(eventBus, "updating_and_storing_manifest")) {
-            Optional<RuleKeyAndInputs> manifestKey = calculateManifestKey(eventBus);
+            Optional<DependencyFileRuleKeyFactory.RuleKeyAndInputs> manifestKey =
+                calculateManifestKey(eventBus);
             if (manifestKey.isPresent()) {
               getBuildInfoRecorder()
                   .addBuildMetadata(
@@ -905,7 +907,8 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> checkManifestBasedCaches() {
-    Optional<RuleKeyAndInputs> manifestKeyAndInputs = manifestBasedKeySupplier.get();
+    Optional<DependencyFileRuleKeyFactory.RuleKeyAndInputs> manifestKeyAndInputs =
+        manifestBasedKeySupplier.get();
     if (!manifestKeyAndInputs.isPresent()) {
       return Futures.immediateFuture(Optional.empty());
     }
@@ -1248,8 +1251,8 @@ class CachingBuildRuleBuilder {
     }
   }
 
-  private Optional<RuleKeyAndInputs> calculateManifestKey(BuckEventBus eventBus)
-      throws IOException {
+  private Optional<DependencyFileRuleKeyFactory.RuleKeyAndInputs> calculateManifestKey(
+      BuckEventBus eventBus) throws IOException {
     Preconditions.checkState(depsAreAvailable);
     return manifestRuleKeyManager.calculateManifestKey(eventBus);
   }
