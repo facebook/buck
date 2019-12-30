@@ -16,10 +16,23 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/** <code>$(ld)</code> macro type. */
-@Value.Immutable
-@BuckStyleTuple
-class AbstractLdMacro implements Macro {}
+/**
+ * Macro used to denote the absolute path of an output of a rule. Used when constructing command
+ * lines for the rule, e.g. in {@code flags} fields of supporting rules.
+ */
+@BuckStyleValue
+public abstract class AbsoluteOutputMacro implements Macro {
+
+  public static AbsoluteOutputMacro of(String outputName) {
+    return ImmutableAbsoluteOutputMacro.of(outputName);
+  }
+
+  @Override
+  public Class<? extends Macro> getMacroClass() {
+    return AbsoluteOutputMacro.class;
+  }
+
+  public abstract String getOutputName();
+}

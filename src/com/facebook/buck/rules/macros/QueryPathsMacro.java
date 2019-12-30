@@ -16,10 +16,27 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.query.Query;
 
-/** <code>$(ldflags-static-pic-filter ...)</code> macro type. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractLdflagsStaticPicFilterMacro extends CxxGenruleFilterAndTargetsMacro {}
+/**
+ * Class providing the type for macros used in `$(query_paths ...)` macro strings. The
+ * implementation is provided by the {@link QueryMacro} base class.
+ */
+@BuckStyleValue
+public abstract class QueryPathsMacro extends QueryMacro {
+
+  @Override
+  public Class<? extends Macro> getMacroClass() {
+    return QueryPathsMacro.class;
+  }
+
+  @Override
+  QueryMacro withQuery(Query query) {
+    return ImmutableQueryPathsMacro.of(query);
+  }
+
+  public static QueryPathsMacro of(Query query) {
+    return ImmutableQueryPathsMacro.of(query);
+  }
+}

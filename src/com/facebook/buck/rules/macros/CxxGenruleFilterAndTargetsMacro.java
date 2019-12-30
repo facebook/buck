@@ -35,7 +35,7 @@ public abstract class CxxGenruleFilterAndTargetsMacro implements Macro {
    * @return a copy of this {@link CxxGenruleFilterAndTargetsMacro} with the given {@link
    *     BuildTarget}.
    */
-  abstract CxxGenruleFilterAndTargetsMacro withTargets(Iterable<? extends BuildTarget> targets);
+  abstract CxxGenruleFilterAndTargetsMacro withTargets(ImmutableList<BuildTarget> targets);
 
   @Override
   public Optional<Macro> translateTargets(

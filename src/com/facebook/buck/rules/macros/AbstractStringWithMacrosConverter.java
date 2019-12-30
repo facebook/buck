@@ -82,9 +82,10 @@ abstract class AbstractStringWithMacrosConverter {
 
   @SuppressWarnings("unchecked")
   private <M extends Macro, P> MacroExpander<M, P> getExpander(M macro) throws MacroException {
-    MacroExpander<M, P> expander = (MacroExpander<M, P>) getClassExpanders().get(macro.getClass());
+    MacroExpander<M, P> expander =
+        (MacroExpander<M, P>) getClassExpanders().get(macro.getMacroClass());
     if (expander == null) {
-      throw new MacroException(String.format("unexpected macro %s", macro.getClass()));
+      throw new MacroException(String.format("unexpected macro %s", macro.getMacroClass()));
     }
     return expander;
   }
@@ -119,7 +120,7 @@ abstract class AbstractStringWithMacrosConverter {
       // happen within a single run, but using a random name would cause 'buck-out' to expand in an
       // uncontrolled manner.
       Hasher hasher = Hashing.sha256().newHasher();
-      hasher.putString(macroContainer.getMacro().getClass().getName(), UTF_8);
+      hasher.putString(macroContainer.getMacro().getMacroClass().getName(), UTF_8);
       hasher.putInt(macroContainer.getMacro().hashCode());
       String prefix = hasher.hash().toString();
       arg = new WriteToFileArg(getBuildTarget(), prefix, arg);

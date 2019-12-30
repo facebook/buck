@@ -16,19 +16,23 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.facebook.buck.rules.query.Query;
-import org.immutables.value.Value;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/**
- * Class providing the type for macros used in `$(query_targets_and_outputs ...)` macro strings. The
- * implementation is provided by the {@link QueryMacro} base class.
- */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractQueryTargetsAndOutputsMacro extends QueryMacro {
-  abstract String getSeparator();
+@BuckStyleValue
+public abstract class ExecutableMacro extends AbstractExecutableTargetOrHostMacro {
 
   @Override
-  public abstract Query getQuery();
+  public Class<? extends Macro> getMacroClass() {
+    return ExecutableMacro.class;
+  }
+
+  @Override
+  protected ExecutableMacro withTarget(BuildTarget target) {
+    return ImmutableExecutableMacro.of(target);
+  }
+
+  public static ExecutableMacro of(BuildTarget buildTarget) {
+    return ImmutableExecutableMacro.of(buildTarget);
+  }
 }

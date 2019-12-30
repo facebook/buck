@@ -25,6 +25,7 @@ import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildT
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.BuildTargetMacro;
+import com.facebook.buck.rules.macros.Macro;
 import com.google.common.collect.ImmutableList;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,6 +37,11 @@ public class BuildTargetMacroTypeCoercerTest {
 
     private MyBuildTargetMacro(BuildTarget buildTarget) {
       this.buildTarget = buildTarget;
+    }
+
+    @Override
+    public Class<? extends Macro> getMacroClass() {
+      return MyBuildTargetMacro.class;
     }
 
     @Override

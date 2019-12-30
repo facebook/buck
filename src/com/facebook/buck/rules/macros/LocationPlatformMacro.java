@@ -18,21 +18,35 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 /** Macro that resolves to the output location of a build rule. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractLocationPlatformMacro extends BaseLocationMacro {
+@BuckStyleValue
+public abstract class LocationPlatformMacro extends BaseLocationMacro {
 
   @Override
   public abstract BuildTarget getTarget();
+
+  @Override
+  public Class<? extends Macro> getMacroClass() {
+    return LocationPlatformMacro.class;
+  }
+
+  @Override
+  protected LocationPlatformMacro withTarget(BuildTarget target) {
+    return of(target, getSupplementaryOutputIdentifier(), getFlavors());
+  }
+
+  public static LocationPlatformMacro of(
+      BuildTarget target,
+      Optional<String> supplementaryOutputIdentifier,
+      Iterable<? extends Flavor> flavors) {
+    return ImmutableLocationPlatformMacro.of(target, supplementaryOutputIdentifier, flavors);
+  }
 
   @Override
   abstract Optional<String> getSupplementaryOutputIdentifier();
@@ -55,11 +69,5 @@ abstract class AbstractLocationPlatformMacro extends BaseLocationMacro {
     LocationPlatformMacro anotherLocationMacro = (LocationPlatformMacro) another;
     return super.equals(anotherLocationMacro)
         && Objects.equals(this.getFlavors(), ((LocationPlatformMacro) another).getFlavors());
-  }
-
-  /** Shorthand for constructing a LocationMacro referring to the main output. */
-  @VisibleForTesting
-  public static LocationPlatformMacro of(BuildTarget buildTarget, ImmutableSet<Flavor> flavors) {
-    return LocationPlatformMacro.of(buildTarget, Optional.empty(), flavors);
   }
 }

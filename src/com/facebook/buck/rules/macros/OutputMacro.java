@@ -16,9 +16,23 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractClasspathAbiMacro extends BuildTargetMacro {}
+/**
+ * Macro used to denote the path of an output of a rule. Used when constructing command lines for
+ * the rule, e.g. in {@code flags} fields of supporting rules.
+ */
+@BuckStyleValue
+public abstract class OutputMacro implements Macro {
+
+  public static OutputMacro of(String outputName) {
+    return ImmutableOutputMacro.of(outputName);
+  }
+
+  @Override
+  public Class<? extends Macro> getMacroClass() {
+    return OutputMacro.class;
+  }
+
+  public abstract String getOutputName();
+}

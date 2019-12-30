@@ -16,10 +16,23 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/** <code>$(ldflags-shared ...)</code> macro type. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractLdflagsSharedMacro extends CxxGenruleFilterAndTargetsMacro {}
+@BuckStyleValue
+public abstract class MavenCoordinatesMacro extends BuildTargetMacro {
+
+  @Override
+  public Class<? extends Macro> getMacroClass() {
+    return MavenCoordinatesMacro.class;
+  }
+
+  @Override
+  protected MavenCoordinatesMacro withTarget(BuildTarget target) {
+    return of(target);
+  }
+
+  public static MavenCoordinatesMacro of(BuildTarget buildTarget) {
+    return ImmutableMavenCoordinatesMacro.of(buildTarget);
+  }
+}

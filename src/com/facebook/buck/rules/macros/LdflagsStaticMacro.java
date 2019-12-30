@@ -17,19 +17,27 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import org.immutables.value.Value;
+import java.util.regex.Pattern;
 
-/** Macro that resolves to the output location of a build rule. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractLocationMacro extends BaseLocationMacro {
+/** <code>$(ldflags-static ...)</code> macro type. */
+@BuckStyleValue
+public abstract class LdflagsStaticMacro extends CxxGenruleFilterAndTargetsMacro {
 
-  /** Shorthand for constructing a LocationMacro referring to the main output. */
-  @VisibleForTesting
-  public static LocationMacro of(BuildTarget buildTarget) {
-    return LocationMacro.of(buildTarget, Optional.empty());
+  @Override
+  public Class<? extends Macro> getMacroClass() {
+    return LdflagsStaticMacro.class;
+  }
+
+  @Override
+  LdflagsStaticMacro withTargets(ImmutableList<BuildTarget> targets) {
+    return of(getFilter(), targets);
+  }
+
+  public static LdflagsStaticMacro of(
+      Optional<Pattern> pattern, ImmutableList<BuildTarget> buildTargets) {
+    return ImmutableLdflagsStaticMacro.of(pattern, buildTargets);
   }
 }

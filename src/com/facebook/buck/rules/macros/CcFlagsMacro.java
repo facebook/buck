@@ -16,10 +16,18 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/** <code>$(cc)</code> macro type. */
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractCcMacro extends Macro {}
+/** <code>$(cflags)</code> macro type. */
+@BuckStyleValue
+public interface CcFlagsMacro extends Macro {
+
+  @Override
+  default Class<? extends Macro> getMacroClass() {
+    return CcFlagsMacro.class;
+  }
+
+  static CcFlagsMacro of() {
+    return ImmutableCcFlagsMacro.of();
+  }
+}

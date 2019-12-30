@@ -16,13 +16,20 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/**
- * Class providing the type for macros used in `$(query_paths ...)` macro strings. The
- * implementation is provided by the {@link QueryMacro} base class.
- */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractQueryPathsMacro extends QueryMacro {}
+/** <code>$(env)</code> macro type. */
+@BuckStyleValue
+public interface EnvMacro extends Macro {
+
+  @Override
+  default Class<? extends Macro> getMacroClass() {
+    return EnvMacro.class;
+  }
+
+  static EnvMacro of(String var) {
+    return ImmutableEnvMacro.of(var);
+  }
+
+  String getVar();
+}

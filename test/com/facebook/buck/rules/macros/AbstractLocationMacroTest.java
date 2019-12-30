@@ -32,16 +32,15 @@ public class AbstractLocationMacroTest {
   @Test
   public void testSplitParsableBuildTarget() {
     assertThat(
-        AbstractLocationMacro.splitSupplementaryOutputPart("target[sup]").target,
+        LocationMacro.splitSupplementaryOutputPart("target[sup]").target,
         Matchers.equalTo("target"));
     assertThat(
-        AbstractLocationMacro.splitSupplementaryOutputPart("target[sup]").supplementaryOutput,
+        LocationMacro.splitSupplementaryOutputPart("target[sup]").supplementaryOutput,
         Matchers.equalTo(Optional.of("sup")));
     assertThat(
-        AbstractLocationMacro.splitSupplementaryOutputPart("target").target,
-        Matchers.equalTo("target"));
+        LocationMacro.splitSupplementaryOutputPart("target").target, Matchers.equalTo("target"));
     assertThat(
-        AbstractLocationMacro.splitSupplementaryOutputPart("target").supplementaryOutput,
+        LocationMacro.splitSupplementaryOutputPart("target").supplementaryOutput,
         Matchers.equalTo(Optional.empty()));
   }
 
@@ -50,6 +49,6 @@ public class AbstractLocationMacroTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("Cannot parse build target");
 
-    AbstractLocationMacro.splitSupplementaryOutputPart("");
+    LocationMacro.splitSupplementaryOutputPart("");
   }
 }

@@ -16,10 +16,23 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/** <code>$(platform-name)</code> macro type. */
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractPlatformNameMacro extends Macro {}
+@BuckStyleValue
+public abstract class ClasspathAbiMacro extends BuildTargetMacro {
+
+  @Override
+  public Class<? extends Macro> getMacroClass() {
+    return ClasspathAbiMacro.class;
+  }
+
+  @Override
+  protected ClasspathAbiMacro withTarget(BuildTarget target) {
+    return of(target);
+  }
+
+  public static ClasspathAbiMacro of(BuildTarget buildTarget) {
+    return ImmutableClasspathAbiMacro.of(buildTarget);
+  }
+}

@@ -84,7 +84,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       CellPathResolver cellRoots, StringWithMacros stringWithMacros, Traversal traversal) {
     for (MacroContainer macroContainer : stringWithMacros.getMacros()) {
       MacroTypeCoercer<? extends Macro> coercer =
-          Objects.requireNonNull(coercers.get(macroContainer.getMacro().getClass()));
+          Objects.requireNonNull(coercers.get(macroContainer.getMacro().getMacroClass()));
       traverse(cellRoots, coercer, macroContainer.getMacro(), traversal);
     }
   }

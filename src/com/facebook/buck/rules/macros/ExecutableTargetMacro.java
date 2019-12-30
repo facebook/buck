@@ -16,10 +16,24 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Like {@code exe} macro but does not switch to host platform */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractExecutableTargetMacro extends AbstractExecutableTargetOrHostMacro {}
+@BuckStyleValue
+public abstract class ExecutableTargetMacro extends AbstractExecutableTargetOrHostMacro {
+
+  @Override
+  public Class<? extends Macro> getMacroClass() {
+    return ExecutableTargetMacro.class;
+  }
+
+  @Override
+  protected ExecutableTargetMacro withTarget(BuildTarget target) {
+    return of(target);
+  }
+
+  public static ExecutableTargetMacro of(BuildTarget buildTarget) {
+    return ImmutableExecutableTargetMacro.of(buildTarget);
+  }
+}

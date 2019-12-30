@@ -25,6 +25,8 @@ import java.util.Optional;
 /** Base class for strongly typed macros. */
 public interface Macro extends TargetTranslatable<Macro> {
 
+  Class<? extends Macro> getMacroClass();
+
   @Override
   default Optional<Macro> translateTargets(
       CellPathResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {

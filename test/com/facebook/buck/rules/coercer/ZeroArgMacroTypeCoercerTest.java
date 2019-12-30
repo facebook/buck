@@ -63,5 +63,11 @@ public class ZeroArgMacroTypeCoercerTest {
         ImmutableList.of("arg"));
   }
 
-  private static class ZeroArgMacro implements Macro {}
+  private static class ZeroArgMacro implements Macro {
+
+    @Override
+    public Class<? extends Macro> getMacroClass() {
+      return ZeroArgMacro.class;
+    }
+  }
 }

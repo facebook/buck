@@ -434,6 +434,11 @@ public class StringWithMacrosTypeCoercerTest {
     }
 
     @Override
+    public Class<? extends Macro> getMacroClass() {
+      return TestMacro.class;
+    }
+
+    @Override
     public int hashCode() {
       return args.hashCode();
     }

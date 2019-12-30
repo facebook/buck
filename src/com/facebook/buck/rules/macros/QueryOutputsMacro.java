@@ -16,13 +16,27 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.query.Query;
 
 /**
- * Class providing the type for macros used in `$(query_targets ...)` macro strings. The
+ * Class providing the type for macros used in `$(query_outputs ...)` macro strings. The
  * implementation is provided by the {@link QueryMacro} base class.
  */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractQueryTargetsMacro extends QueryMacro {}
+@BuckStyleValue
+public abstract class QueryOutputsMacro extends QueryMacro {
+
+  @Override
+  public Class<? extends Macro> getMacroClass() {
+    return QueryOutputsMacro.class;
+  }
+
+  @Override
+  QueryMacro withQuery(Query query) {
+    return ImmutableQueryOutputsMacro.of(query);
+  }
+
+  public static QueryOutputsMacro of(Query query) {
+    return ImmutableQueryOutputsMacro.of(query);
+  }
+}

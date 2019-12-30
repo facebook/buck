@@ -16,10 +16,18 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/** <code>$(ldflags-static-filter ...)</code> macro type. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractLdflagsStaticFilterMacro extends CxxGenruleFilterAndTargetsMacro {}
+/** <code>$(cxx)</code> macro type. */
+@BuckStyleValue
+public interface CxxMacro extends Macro {
+
+  @Override
+  default Class<? extends Macro> getMacroClass() {
+    return CxxMacro.class;
+  }
+
+  static CxxMacro of() {
+    return ImmutableCxxMacro.of();
+  }
+}
