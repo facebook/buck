@@ -19,26 +19,33 @@ package com.facebook.buck.rules.query;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSortedSet;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractQuery {
+@BuckStyleValue
+public abstract class Query {
 
-  abstract String getQuery();
+  public abstract String getQuery();
 
-  abstract TargetConfiguration getTargetConfiguration();
+  public abstract TargetConfiguration getTargetConfiguration();
 
-  abstract BaseName getBaseName();
+  public abstract BaseName getBaseName();
 
   @Nullable
   @Value.NaturalOrder
-  abstract ImmutableSortedSet<BuildTarget> getResolvedQuery();
+  public abstract ImmutableSortedSet<BuildTarget> getResolvedQuery();
 
   public static Query of(String query, TargetConfiguration targetConfiguration, BaseName baseName) {
-    return Query.of(query, targetConfiguration, baseName, null);
+    return ImmutableQuery.of(query, targetConfiguration, baseName, null);
+  }
+
+  public Query withQuery(String query) {
+    return ImmutableQuery.of(query, getTargetConfiguration(), getBaseName(), getResolvedQuery());
+  }
+
+  public Query withResolvedQuery(ImmutableSortedSet<BuildTarget> resolveDepQuery) {
+    return ImmutableQuery.of(getQuery(), getTargetConfiguration(), getBaseName(), resolveDepQuery);
   }
 }
