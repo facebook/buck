@@ -73,7 +73,7 @@ public class RootCellFactory {
             executableFinder,
             ruleKeyConfiguration);
 
-    return ImmutableCell.of(
+    return ImmutableCellImpl.of(
         knownRoots,
         CanonicalCellName.rootCell(),
         rootFilesystem,
@@ -101,7 +101,7 @@ public class RootCellFactory {
     ToolchainProvider toolchainProvider =
         toolchainProviderFactory.create(rootConfig, rootFilesystem, ruleKeyConfiguration);
 
-    return ImmutableCell.of(
+    return ImmutableCellImpl.of(
         rootCellCellPathResolver.getKnownRoots(),
         CanonicalCellName.rootCell(),
         rootFilesystem,

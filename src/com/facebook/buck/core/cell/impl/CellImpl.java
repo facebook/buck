@@ -26,7 +26,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
@@ -40,9 +40,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
-@Value.Immutable(builder = false, prehash = true)
-@BuckStyleTuple
-abstract class AbstractImmutableCell implements Cell {
+@BuckStyleValue
+abstract class CellImpl implements Cell {
 
   @Override
   @Value.Auxiliary
