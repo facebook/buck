@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.util.versioncontrol;
+package com.facebook.buck.io.watchman;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.util.Optional;
 
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractFastVersionControlStats extends CommonFastVersionControlStats {}
+@BuckStyleValue
+public interface ProjectWatch {
+
+  String getWatchRoot();
+
+  Optional<String> getProjectPrefix();
+
+  static ProjectWatch of(String watchRoot, Optional<String> projectPrefix) {
+    return ImmutableProjectWatch.of(watchRoot, projectPrefix);
+  }
+}

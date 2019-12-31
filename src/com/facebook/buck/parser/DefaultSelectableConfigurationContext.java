@@ -21,16 +21,14 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
  * An implementation of {@link com.facebook.buck.core.select.SelectableConfigurationContext} that is
  * used in parser implementation.
  */
-@BuckStyleTuple
-@Value.Immutable(builder = false)
-public abstract class AbstractDefaultSelectableConfigurationContext
+@BuckStyleValue
+public abstract class DefaultSelectableConfigurationContext
     implements ConfigSettingSelectableConfigurationContext {
 
   @Override
@@ -43,5 +41,8 @@ public abstract class AbstractDefaultSelectableConfigurationContext
   public abstract TargetPlatformResolver getPlatformProvider();
 
   @Override
-  public abstract SelectableConfigurationContext withTargetConfiguration(TargetConfiguration value);
+  public SelectableConfigurationContext withTargetConfiguration(TargetConfiguration value) {
+    return ImmutableDefaultSelectableConfigurationContext.of(
+        getBuckConfig(), value, getPlatformProvider());
+  }
 }

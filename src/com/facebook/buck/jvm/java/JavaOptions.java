@@ -21,13 +21,11 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableCollection;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractJavaOptions {
+@BuckStyleValue
+public abstract class JavaOptions {
   public abstract ToolProvider getJavaRuntimeProvider();
 
   public Tool getJavaRuntimeLauncher(
@@ -39,5 +37,9 @@ abstract class AbstractJavaOptions {
       ImmutableCollection.Builder<BuildTarget> depsBuilder,
       TargetConfiguration targetConfiguration) {
     depsBuilder.addAll(getJavaRuntimeProvider().getParseTimeDeps(targetConfiguration));
+  }
+
+  public static JavaOptions of(ToolProvider javaRuntimeProvider) {
+    return ImmutableJavaOptions.of(javaRuntimeProvider);
   }
 }

@@ -16,12 +16,11 @@
 
 package com.facebook.buck.json;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import java.util.Map;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Immutable value type used to hold the parsed and deserialized output of {@code buck.py}.
@@ -29,13 +28,19 @@ import org.immutables.value.Value;
  * <p>{@see BuildFilePythonResultDeserializer} which specializes in deserializing this type from
  * JSON.
  */
-@Value.Immutable
-@BuckStyleTuple
+@BuckStyleValue
 @JsonDeserialize(as = BuildFilePythonResult.class, using = BuildFilePythonResultDeserializer.class)
-interface AbstractBuildFilePythonResult {
+public interface BuildFilePythonResult {
   ImmutableList<Map<String, Object>> getValues();
 
   ImmutableList<Map<String, Object>> getDiagnostics();
 
   Optional<String> getProfile();
+
+  static BuildFilePythonResult of(
+      ImmutableList<Map<String, Object>> values,
+      ImmutableList<Map<String, Object>> diagnostics,
+      Optional<String> profile) {
+    return ImmutableBuildFilePythonResult.of(values, diagnostics, profile);
+  }
 }

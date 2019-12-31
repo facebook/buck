@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.json;
+package com.facebook.buck.io.watchman;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import java.nio.file.Path;
-import java.util.Optional;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractBuildFileSyntaxError {
-  Path getFileName();
+@BuckStyleValue
+public interface WatchmanDiagnostic {
+  enum Level {
+    WARNING,
+    ERROR
+  }
 
-  Number getLineNumber();
+  Level getLevel();
 
-  Optional<Number> getOffset();
+  String getMessage();
 
-  String getText();
+  static WatchmanDiagnostic of(WatchmanDiagnostic.Level level, String message) {
+    return ImmutableWatchmanDiagnostic.of(level, message);
+  }
 }

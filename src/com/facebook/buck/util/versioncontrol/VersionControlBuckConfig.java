@@ -84,7 +84,7 @@ public class VersionControlBuckConfig {
                     PREGENERATED_BASE_REVISION_TIMESTAMP));
       }
       return Optional.of(
-          FastVersionControlStats.of(
+          ImmutableFastVersionControlStats.of(
               getPregeneratedCurrentRevisionId().get(),
               getPregeneratedBaseBookmarks().get(),
               getPregeneratedBaseRevisionId().get(),

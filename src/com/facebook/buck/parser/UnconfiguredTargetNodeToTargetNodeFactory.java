@@ -99,7 +99,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     Cell targetCell = cell.getCell(target.getCell());
 
     SelectableConfigurationContext configurationContext =
-        DefaultSelectableConfigurationContext.of(
+        ImmutableDefaultSelectableConfigurationContext.of(
             cell.getBuckConfig(), target.getTargetConfiguration(), targetPlatformResolver);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSortedSet.Builder<BuildTarget> configurationDeps = ImmutableSortedSet.naturalOrder();

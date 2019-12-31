@@ -51,7 +51,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public static final CommandTool DEFAULT_JAVA_TOOL =
       new CommandTool.Builder().addArg("java").build();
   static final JavaOptions DEFAULT_JAVA_OPTIONS =
-      JavaOptions.of(new ConstantToolProvider(DEFAULT_JAVA_TOOL));
+      ImmutableJavaOptions.of(new ConstantToolProvider(DEFAULT_JAVA_TOOL));
 
   private final BuckConfig delegate;
   private final Function<TargetConfiguration, JavacSpec> javacSpecSupplier;

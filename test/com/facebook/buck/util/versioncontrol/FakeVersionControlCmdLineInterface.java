@@ -53,7 +53,7 @@ public class FakeVersionControlCmdLineInterface extends NoOpCmdLineInterface {
 
   @Override
   public FastVersionControlStats fastVersionControlStats() {
-    return FastVersionControlStats.of(
+    return ImmutableFastVersionControlStats.of(
         versionControlStats.getCurrentRevisionId(),
         versionControlStats.getBaseBookmarks(),
         versionControlStats.getBranchedFromMasterRevisionId(),

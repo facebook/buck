@@ -62,7 +62,7 @@ public class ListeningMultiSemaphore {
     resources = capResourceAmounts(resources);
     if (!checkIfResourcesAvailable(resources)) {
       SettableFuture<Unit> pendingFuture = SettableFuture.create();
-      pending.add(ListeningSemaphoreArrayPendingItem.of(pendingFuture, resources));
+      pending.add(ImmutableListeningSemaphoreArrayPendingItem.of(pendingFuture, resources));
       return pendingFuture;
     }
     increaseUsedResources(resources);

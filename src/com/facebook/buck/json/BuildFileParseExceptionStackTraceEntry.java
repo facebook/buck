@@ -14,17 +14,24 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.watchman;
+package com.facebook.buck.json;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import java.util.Optional;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.nio.file.Path;
 
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractProjectWatch {
+@BuckStyleValue
+public interface BuildFileParseExceptionStackTraceEntry {
+  Path getFileName();
 
-  String getWatchRoot();
+  Number getLineNumber();
 
-  Optional<String> getProjectPrefix();
+  String getFunctionName();
+
+  String getText();
+
+  static BuildFileParseExceptionStackTraceEntry of(
+      Path fileName, Number lineNumber, String functionName, String text) {
+    return ImmutableBuildFileParseExceptionStackTraceEntry.of(
+        fileName, lineNumber, functionName, text);
+  }
 }

@@ -22,7 +22,7 @@ import build.bazel.remote.execution.v2.Digest;
 import build.bazel.remote.execution.v2.ExecutionGrpc;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
@@ -45,7 +45,6 @@ import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.concurrent.TimeUnit;
-import org.immutables.value.Value;
 
 /** A RemoteExecution that sends jobs to a grpc-based remote execution service. */
 public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
@@ -57,9 +56,8 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   private final MetadataProvider metadataProvider;
 
   /** A parsed read resource path. */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractParsedReadResource {
+  @BuckStyleValue
+  interface ParsedReadResource {
     String getInstanceName();
 
     Digest getDigest();

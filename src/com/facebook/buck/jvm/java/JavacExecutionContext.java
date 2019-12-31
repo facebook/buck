@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -26,28 +26,26 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableMap;
 import java.io.PrintStream;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractJavacExecutionContext {
-  public abstract JavacEventSink getEventSink();
+@BuckStyleValue
+public interface JavacExecutionContext {
+  JavacEventSink getEventSink();
 
-  public abstract PrintStream getStdErr();
+  PrintStream getStdErr();
 
-  public abstract ClassLoaderCache getClassLoaderCache();
+  ClassLoaderCache getClassLoaderCache();
 
-  public abstract Verbosity getVerbosity();
+  Verbosity getVerbosity();
 
-  public abstract CellPathResolver getCellPathResolver();
+  CellPathResolver getCellPathResolver();
 
-  public abstract JavaPackageFinder getJavaPackageFinder();
+  JavaPackageFinder getJavaPackageFinder();
 
-  public abstract ProjectFilesystem getProjectFilesystem();
+  ProjectFilesystem getProjectFilesystem();
 
-  public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
+  ProjectFilesystemFactory getProjectFilesystemFactory();
 
-  public abstract ImmutableMap<String, String> getEnvironment();
+  ImmutableMap<String, String> getEnvironment();
 
-  public abstract ProcessExecutor getProcessExecutor();
+  ProcessExecutor getProcessExecutor();
 }

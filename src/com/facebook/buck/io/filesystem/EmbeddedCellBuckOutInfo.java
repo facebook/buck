@@ -17,7 +17,7 @@
 package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
@@ -26,9 +26,8 @@ import org.immutables.value.Value;
  * Information to create the buck-out of cell when it's going to be embedded in the root cell
  * buck-out.
  */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractEmbeddedCellBuckOutInfo {
+@BuckStyleValue
+public abstract class EmbeddedCellBuckOutInfo {
   public abstract Path getMainCellRoot();
 
   public abstract BuckPaths getMainCellBuckPaths();
@@ -43,5 +42,10 @@ abstract class AbstractEmbeddedCellBuckOutInfo {
     Path relativeCellBuckOut =
         getMainCellBuckPaths().getEmbeddedCellsBuckOutBaseDir().resolve(getCellName().getName());
     return getMainCellRoot().resolve(relativeCellBuckOut);
+  }
+
+  public static EmbeddedCellBuckOutInfo of(
+      Path mainCellRoot, BuckPaths mainCellBuckPaths, CanonicalCellName cellName) {
+    return ImmutableEmbeddedCellBuckOutInfo.of(mainCellRoot, mainCellBuckPaths, cellName);
   }
 }

@@ -122,7 +122,7 @@ public class VersionControlStatsGeneratorTest {
   @Test
   public void pregeneratedModeReturnsStats() throws Exception {
     FastVersionControlStats pregenerated =
-        FastVersionControlStats.of(
+        ImmutableFastVersionControlStats.of(
             expected.getCurrentRevisionId(),
             expected.getBaseBookmarks(),
             expected.getBranchedFromMasterRevisionId(),
@@ -144,7 +144,7 @@ public class VersionControlStatsGeneratorTest {
   @Test
   public void pregeneratedStatsHavePrecedence() throws Exception {
     FastVersionControlStats pregenerated =
-        FastVersionControlStats.of("cafe", ImmutableSet.of("remote/master"), "babe", 1L);
+        ImmutableFastVersionControlStats.of("cafe", ImmutableSet.of("remote/master"), "babe", 1L);
     Optional<FullVersionControlStats> actual =
         new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.of(pregenerated))
             .generateStats(VersionControlStatsGenerator.Mode.FULL);

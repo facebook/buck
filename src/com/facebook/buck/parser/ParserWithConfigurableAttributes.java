@@ -181,7 +181,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       Map<String, Object> attributes,
       DependencyStack dependencyStack) {
     SelectableConfigurationContext configurationContext =
-        DefaultSelectableConfigurationContext.of(
+        ImmutableDefaultSelectableConfigurationContext.of(
             cell.getBuckConfig(),
             buildTarget.getTargetConfiguration(),
             state.getConfigurationRuleRegistry().getTargetPlatformResolver());

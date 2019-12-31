@@ -50,10 +50,10 @@ class LocalBackedByteStreamServer extends ByteStreamImplBase {
     this.storage = storage;
   }
 
-  public static ParsedReadResource parseResourceName(String resource) {
+  public static GrpcRemoteExecutionClients.ParsedReadResource parseResourceName(String resource) {
     Matcher matcher = RESOURCE_NAME_PATTERN.matcher(resource);
     Preconditions.checkState(matcher.matches());
-    return ParsedReadResource.of(
+    return ImmutableParsedReadResource.of(
         matcher.group(1),
         Digest.newBuilder()
             .setHash(matcher.group(2))
@@ -64,7 +64,8 @@ class LocalBackedByteStreamServer extends ByteStreamImplBase {
   @Override
   public void read(ReadRequest request, StreamObserver<ReadResponse> responseObserver) {
     try {
-      ParsedReadResource parsedResource = parseResourceName(request.getResourceName());
+      GrpcRemoteExecutionClients.ParsedReadResource parsedResource =
+          parseResourceName(request.getResourceName());
       byte[] buffer = new byte[BYTESTREAM_READ_CHUNK_SIZE];
       try (InputStream data = storage.getData(new GrpcDigest(parsedResource.getDigest()))) {
         while (true) {

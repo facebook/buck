@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.util.xml;
+package com.facebook.buck.util.concurrent;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.util.types.Unit;
+import com.google.common.util.concurrent.SettableFuture;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractDocumentLocation {
+@BuckStyleValue
+interface ListeningSemaphoreArrayPendingItem {
+  SettableFuture<Unit> getFuture();
 
-  abstract Integer getLineNumber();
-
-  abstract Integer getColumnNumber();
+  ResourceAmounts getResources();
 }

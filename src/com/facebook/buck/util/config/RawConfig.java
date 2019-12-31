@@ -16,12 +16,11 @@
 
 package com.facebook.buck.util.config;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Hierarchical configuration of section/key/value triples.
@@ -29,10 +28,8 @@ import org.immutables.value.Value;
  * <p>This class only implements the simple construction/storage/retrieval of these values. Other
  * classes like {@link Config} implements accessors that interpret the values as other types.
  */
-@Value.Immutable
-@BuckStyleTuple
-@SuppressWarnings("PMD.BuckStyleImmutableMustBePackagePrivate")
-public abstract class AbstractRawConfig {
+@BuckStyleValue
+public abstract class RawConfig {
   public abstract ImmutableMap<String, ImmutableMap<String, String>> getValues();
 
   /**
@@ -51,7 +48,11 @@ public abstract class AbstractRawConfig {
 
   /** Returns an empty config. */
   public static RawConfig of() {
-    return RawConfig.of(ImmutableMap.of());
+    return of(ImmutableMap.of());
+  }
+
+  public static RawConfig of(Map<String, ? extends ImmutableMap<String, String>> values) {
+    return ImmutableRawConfig.of(values);
   }
 
   public static Builder builder() {
@@ -91,7 +92,7 @@ public abstract class AbstractRawConfig {
       for (Map.Entry<String, Map<String, String>> entry : values.entrySet()) {
         builder.put(entry.getKey(), ImmutableMap.copyOf(entry.getValue()));
       }
-      return RawConfig.of(builder.build());
+      return of(builder.build());
     }
 
     /** Get a section or create it if it doesn't exist. */

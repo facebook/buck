@@ -16,18 +16,22 @@
 
 package com.facebook.buck.json;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.Path;
-import org.immutables.value.Value;
+import java.util.Optional;
 
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractBuildFileParseExceptionStackTraceEntry {
+@BuckStyleValue
+public interface BuildFileSyntaxError {
   Path getFileName();
 
   Number getLineNumber();
 
-  String getFunctionName();
+  Optional<Number> getOffset();
 
   String getText();
+
+  static BuildFileSyntaxError of(
+      Path fileName, Number lineNumber, Optional<? extends Number> offset, String text) {
+    return ImmutableBuildFileSyntaxError.of(fileName, lineNumber, offset, text);
+  }
 }

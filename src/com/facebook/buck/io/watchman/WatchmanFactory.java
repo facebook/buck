@@ -330,8 +330,8 @@ public class WatchmanFactory {
    * @param rootPath path to the root of the watch-project
    * @param clock used to compute timeouts and statistics
    * @param timeoutNanos for the watchman query
-   * @return If successful, a {@link com.facebook.buck.io.watchman.ProjectWatch} instance containing
-   *     the root of the watchman watch, and relative path from the root to {@code rootPath}
+   * @return If successful, a {@link ProjectWatch} instance containing the root of the watchman
+   *     watch, and relative path from the root to {@code rootPath}
    */
   private static Optional<ProjectWatch> queryWatchProject(
       WatchmanClient watchmanClient, Path rootPath, Clock clock, long timeoutNanos)

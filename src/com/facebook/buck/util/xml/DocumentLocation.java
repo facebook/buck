@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.watchman;
+package com.facebook.buck.util.xml;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleTuple
-interface AbstractWatchmanDiagnostic {
-  enum Level {
-    WARNING,
-    ERROR
+@BuckStyleValue
+public interface DocumentLocation {
+
+  Integer getLineNumber();
+
+  Integer getColumnNumber();
+
+  static DocumentLocation of(Integer lineNumber, Integer columnNumber) {
+    return ImmutableDocumentLocation.of(lineNumber, columnNumber);
   }
-
-  Level getLevel();
-
-  String getMessage();
 }

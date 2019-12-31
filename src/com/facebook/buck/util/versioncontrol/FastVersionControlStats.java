@@ -14,21 +14,9 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.json;
+package com.facebook.buck.util.versioncontrol;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.google.common.collect.ImmutableList;
-import java.util.Optional;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractBuildFileParseExceptionData {
-  String getType();
-
-  String getValue();
-
-  Optional<BuildFileSyntaxError> getSyntaxError();
-
-  ImmutableList<BuildFileParseExceptionStackTraceEntry> getStackTrace();
-}
+@BuckStyleValue
+interface FastVersionControlStats extends CommonFastVersionControlStats {}
