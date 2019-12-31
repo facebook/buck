@@ -29,15 +29,15 @@ public class VersionedAliasBuilder
     extends AbstractNodeBuilder<
         VersionedAliasDescriptionArg.Builder,
         VersionedAliasDescriptionArg,
-        AbstractVersionedAliasDescription,
+        VersionedAliasDescription,
         BuildRule> {
 
-  public VersionedAliasBuilder(AbstractVersionedAliasDescription description, BuildTarget target) {
+  public VersionedAliasBuilder(VersionedAliasDescription description, BuildTarget target) {
     super(description, target);
   }
 
   public VersionedAliasBuilder(BuildTarget target) {
-    this(VersionedAliasDescription.of(), target);
+    this(new VersionedAliasDescription(), target);
   }
 
   public VersionedAliasBuilder(String target) {

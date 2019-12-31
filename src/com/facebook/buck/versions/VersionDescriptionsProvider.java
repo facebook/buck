@@ -28,6 +28,6 @@ public class VersionDescriptionsProvider implements DescriptionProvider {
 
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
-    return Collections.singletonList(VersionedAliasDescription.of());
+    return Collections.singletonList(new VersionedAliasDescription());
   }
 }
