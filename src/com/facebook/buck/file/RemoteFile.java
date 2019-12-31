@@ -124,8 +124,8 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     // an input-based rule key can take a very long time. But we have an ace up our sleeve:
     // we already have a hash that represents the content in those exploded files!
     // Just pass that hash along so that RuleKeyBuilder can use it.
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output)
-        .withPrecomputedHash(sha1.getHashCode());
+    return ExplicitBuildTargetSourcePath.of(
+        getBuildTarget(), output, Optional.of(sha1.getHashCode()));
   }
 
   /** Defines how the remote file should be treated when downloaded. */

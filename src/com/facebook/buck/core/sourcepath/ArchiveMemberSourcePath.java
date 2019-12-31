@@ -16,16 +16,19 @@
 
 package com.facebook.buck.core.sourcepath;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** A {@link SourcePath} that can reference a member within an archive. */
-@BuckStyleTuple
-@Value.Immutable(prehash = true)
-abstract class AbstractArchiveMemberSourcePath implements SourcePath {
+@BuckStylePrehashedValue
+public abstract class ArchiveMemberSourcePath implements SourcePath {
+
+  public static ArchiveMemberSourcePath of(SourcePath archiveSourcePath, Path memberPath) {
+    return ImmutableArchiveMemberSourcePath.of(archiveSourcePath, memberPath);
+  }
 
   public abstract SourcePath getArchiveSourcePath();
 
@@ -50,7 +53,7 @@ abstract class AbstractArchiveMemberSourcePath implements SourcePath {
       return classComparison;
     }
 
-    AbstractArchiveMemberSourcePath that = (AbstractArchiveMemberSourcePath) other;
+    ArchiveMemberSourcePath that = (ArchiveMemberSourcePath) other;
 
     return ComparisonChain.start()
         .compare(getArchiveSourcePath(), that.getArchiveSourcePath())

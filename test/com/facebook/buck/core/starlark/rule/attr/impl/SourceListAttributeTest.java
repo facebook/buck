@@ -115,8 +115,7 @@ public class SourceListAttributeTest {
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage("may not be empty");
 
-    SourceListAttribute attr =
-        ImmutableSourceListAttribute.of(ImmutableList.of(), "", true, false);
+    SourceListAttribute attr = ImmutableSourceListAttribute.of(ImmutableList.of(), "", true, false);
 
     attr.getValue(
         cellRoots,

@@ -17,26 +17,39 @@
 package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.hash.HashCode;
 import java.util.Objects;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** A {@link BuildTargetSourcePath} which resolves to the value of another SourcePath. */
-@BuckStyleTuple
-@Value.Immutable(prehash = true)
-public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTargetSourcePath {
+@BuckStylePrehashedValue
+public abstract class ForwardingBuildTargetSourcePath implements BuildTargetSourcePath {
+
+  /**
+   * Construct a new immutable {@code ForwardingBuildTargetSourcePath} instance.
+   *
+   * @param target The value for the {@code target} attribute
+   * @param delegate The value for the {@code delegate} attribute
+   * @return An immutable ForwardingBuildTargetSourcePath instance
+   */
+  public static ForwardingBuildTargetSourcePath of(BuildTarget target, SourcePath delegate) {
+    return of(target, delegate, Optional.empty());
+  }
+
+  public static ForwardingBuildTargetSourcePath of(
+      BuildTarget target, SourcePath delegate, Optional<? extends HashCode> precomputedHash) {
+    return ImmutableForwardingBuildTargetSourcePath.of(target, delegate, precomputedHash);
+  }
 
   @Override
   public abstract BuildTarget getTarget();
 
-  protected abstract SourcePath getDelegate();
+  public abstract SourcePath getDelegate();
 
   @Override
-  @Value.Parameter(value = false)
   public abstract Optional<HashCode> getPrecomputedHash();
 
   @Override
@@ -50,11 +63,11 @@ public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTa
       return true;
     }
 
-    if (!(other instanceof AbstractForwardingBuildTargetSourcePath)) {
+    if (!(other instanceof ForwardingBuildTargetSourcePath)) {
       return false;
     }
 
-    AbstractForwardingBuildTargetSourcePath that = (AbstractForwardingBuildTargetSourcePath) other;
+    ForwardingBuildTargetSourcePath that = (ForwardingBuildTargetSourcePath) other;
     return getTarget().equals(that.getTarget()) && getDelegate().equals(that.getDelegate());
   }
 
@@ -78,7 +91,7 @@ public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTa
       return classComparison;
     }
 
-    AbstractForwardingBuildTargetSourcePath that = (AbstractForwardingBuildTargetSourcePath) other;
+    ForwardingBuildTargetSourcePath that = (ForwardingBuildTargetSourcePath) other;
 
     return ComparisonChain.start()
         .compare(getTarget(), that.getTarget())
@@ -92,8 +105,8 @@ public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTa
    */
   @Override
   public String representationForRuleKey() {
-    return getDelegate() instanceof AbstractPathSourcePath
-        ? toString(((AbstractPathSourcePath) getDelegate()).getRelativePath())
+    return getDelegate() instanceof PathSourcePath
+        ? toString(((PathSourcePath) getDelegate()).getRelativePath())
         : toString();
   }
 }

@@ -59,7 +59,8 @@ public class BuildTargetSourcePathTest {
         new FakeBuildRule(target) {
           @Override
           public SourcePath getSourcePathToOutput() {
-            return ExplicitBuildTargetSourcePath.of(getBuildTarget(), Paths.get("cheese"));
+            return com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
+                getBuildTarget(), Paths.get("cheese"));
           }
         };
     graphBuilder.addToIndex(rule);
@@ -86,7 +87,8 @@ public class BuildTargetSourcePathTest {
     FakeBuildRule rule = new FakeBuildRule(target);
     Path path = Paths.get("blah");
     ExplicitBuildTargetSourcePath buildTargetSourcePath =
-        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), path);
+        com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
+            rule.getBuildTarget(), path);
     assertEquals(target, buildTargetSourcePath.getTarget());
     assertEquals(path, pathResolver.getRelativePath(buildTargetSourcePath));
   }
@@ -99,9 +101,11 @@ public class BuildTargetSourcePathTest {
     Path path = Paths.get("blah");
 
     ExplicitBuildTargetSourcePath sourcePath1 =
-        ExplicitBuildTargetSourcePath.of(rule1.getBuildTarget(), path);
+        com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
+            rule1.getBuildTarget(), path);
     ForwardingBuildTargetSourcePath sourcePath2 =
-        ForwardingBuildTargetSourcePath.of(rule2.getBuildTarget(), sourcePath1);
+        com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
+            rule2.getBuildTarget(), sourcePath1);
 
     assertEquals(path, pathResolver.getRelativePath(sourcePath1));
     assertEquals(path, pathResolver.getRelativePath(sourcePath2));
@@ -121,7 +125,8 @@ public class BuildTargetSourcePathTest {
     DefaultBuildTargetSourcePath sourcePath1 =
         DefaultBuildTargetSourcePath.of(rule1.getBuildTarget());
     ForwardingBuildTargetSourcePath sourcePath2 =
-        ForwardingBuildTargetSourcePath.of(rule2.getBuildTarget(), sourcePath1);
+        com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
+            rule2.getBuildTarget(), sourcePath1);
 
     assertEquals(path, pathResolver.getRelativePath(sourcePath1));
     assertEquals(path, pathResolver.getRelativePath(sourcePath2));
@@ -140,9 +145,11 @@ public class BuildTargetSourcePathTest {
 
     PathSourcePath sourcePath0 = FakeSourcePath.of("boom");
     ForwardingBuildTargetSourcePath sourcePath1 =
-        ForwardingBuildTargetSourcePath.of(rule1.getBuildTarget(), sourcePath0);
+        com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
+            rule1.getBuildTarget(), sourcePath0);
     ForwardingBuildTargetSourcePath sourcePath2 =
-        ForwardingBuildTargetSourcePath.of(rule2.getBuildTarget(), sourcePath1);
+        com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
+            rule2.getBuildTarget(), sourcePath1);
 
     assertEquals(
         pathResolver.getRelativePath(sourcePath0), pathResolver.getRelativePath(sourcePath1));
@@ -155,9 +162,11 @@ public class BuildTargetSourcePathTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target);
     ExplicitBuildTargetSourcePath path1 =
-        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), Paths.get("something"));
+        com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
+            rule.getBuildTarget(), Paths.get("something"));
     ExplicitBuildTargetSourcePath path2 =
-        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), Paths.get("something else"));
+        com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
+            rule.getBuildTarget(), Paths.get("something else"));
     assertNotEquals(path1, path2);
     assertNotEquals(path1.hashCode(), path2.hashCode());
   }

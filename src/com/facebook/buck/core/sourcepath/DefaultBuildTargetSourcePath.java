@@ -20,18 +20,39 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.hash.HashCode;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * A {@link BuildTargetSourcePath} which resolves to the default output of the {@link
  * com.facebook.buck.core.rules.BuildRule} referred to by its target.
  */
-@BuckStyleTuple
-@Value.Immutable(prehash = true)
-public abstract class AbstractDefaultBuildTargetSourcePath implements BuildTargetSourcePath {
+@BuckStylePrehashedValue
+public abstract class DefaultBuildTargetSourcePath implements BuildTargetSourcePath {
+
+  /**
+   * Returns a default {@link com.facebook.buck.core.sourcepath.BuildTargetSourcePath} with an empty
+   * output label.
+   */
+  public static DefaultBuildTargetSourcePath of(BuildTarget target) {
+    return of(ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
+  }
+
+  /**
+   * Construct a new immutable {@code DefaultBuildTargetSourcePath} instance.
+   *
+   * @param targetWithOutputs The value for the {@code targetWithOutputs} attribute
+   * @return An immutable DefaultBuildTargetSourcePath instance
+   */
+  public static DefaultBuildTargetSourcePath of(BuildTargetWithOutputs targetWithOutputs) {
+    return of(targetWithOutputs, Optional.empty());
+  }
+
+  public static DefaultBuildTargetSourcePath of(
+      BuildTargetWithOutputs targetWithOutputs, Optional<? extends HashCode> precomputedHash) {
+    return ImmutableDefaultBuildTargetSourcePath.of(targetWithOutputs, precomputedHash);
+  }
 
   public abstract BuildTargetWithOutputs getTargetWithOutputs();
 
@@ -40,17 +61,7 @@ public abstract class AbstractDefaultBuildTargetSourcePath implements BuildTarge
     return getTargetWithOutputs().getBuildTarget();
   }
 
-  /**
-   * Returns a default {@link com.facebook.buck.core.sourcepath.BuildTargetSourcePath} with an empty
-   * output label.
-   */
-  public static DefaultBuildTargetSourcePath of(BuildTarget target) {
-    return DefaultBuildTargetSourcePath.of(
-        ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
-  }
-
   @Override
-  @Value.Parameter(value = false)
   public abstract Optional<HashCode> getPrecomputedHash();
 
   @Override
@@ -64,11 +75,11 @@ public abstract class AbstractDefaultBuildTargetSourcePath implements BuildTarge
       return true;
     }
 
-    if (!(other instanceof AbstractDefaultBuildTargetSourcePath)) {
+    if (!(other instanceof DefaultBuildTargetSourcePath)) {
       return false;
     }
 
-    AbstractDefaultBuildTargetSourcePath that = (AbstractDefaultBuildTargetSourcePath) other;
+    DefaultBuildTargetSourcePath that = (DefaultBuildTargetSourcePath) other;
     return getTargetWithOutputs().equals(that.getTargetWithOutputs());
   }
 
@@ -88,7 +99,7 @@ public abstract class AbstractDefaultBuildTargetSourcePath implements BuildTarge
       return classComparison;
     }
 
-    AbstractDefaultBuildTargetSourcePath that = (AbstractDefaultBuildTargetSourcePath) other;
+    DefaultBuildTargetSourcePath that = (DefaultBuildTargetSourcePath) other;
     return getTargetWithOutputs().compareTo(that.getTargetWithOutputs());
   }
 }

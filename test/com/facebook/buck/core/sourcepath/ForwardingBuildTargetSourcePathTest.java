@@ -46,7 +46,7 @@ public class ForwardingBuildTargetSourcePathTest {
     BuildTarget target = BuildTargetFactory.newInstance("//package:name");
     Path relativePath = Paths.get("foo/bar");
     ForwardingBuildTargetSourcePath sourcePath =
-        ForwardingBuildTargetSourcePath.of(
+        com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
             target, PathSourcePath.of(new FakeProjectFilesystem(), relativePath));
     assertEquals(target, sourcePath.getTarget());
     assertEquals(relativePath, pathResolver.getRelativePath(sourcePath));
@@ -59,7 +59,8 @@ public class ForwardingBuildTargetSourcePathTest {
     rule.setOutputFile("foo/bar");
     graphBuilder.addToIndex(rule);
     ForwardingBuildTargetSourcePath sourcePath =
-        ForwardingBuildTargetSourcePath.of(target, DefaultBuildTargetSourcePath.of(target));
+        com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
+            target, DefaultBuildTargetSourcePath.of(target));
     assertEquals(target, sourcePath.getTarget());
     assertEquals(rule.getOutputFile(), pathResolver.getRelativePath(sourcePath));
   }
@@ -71,7 +72,7 @@ public class ForwardingBuildTargetSourcePathTest {
     graphBuilder.addToIndex(rule);
     Path relativePath = Paths.get("foo/bar");
     ForwardingBuildTargetSourcePath sourcePath =
-        ForwardingBuildTargetSourcePath.of(
+        com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
             target, ExplicitBuildTargetSourcePath.of(target, relativePath));
     assertEquals(target, sourcePath.getTarget());
     assertEquals(relativePath, pathResolver.getRelativePath(sourcePath));
@@ -90,9 +91,9 @@ public class ForwardingBuildTargetSourcePathTest {
     Path relativePath = Paths.get("foo/bar");
 
     ForwardingBuildTargetSourcePath sourcePath =
-        ForwardingBuildTargetSourcePath.of(
+        com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
             target1,
-            ForwardingBuildTargetSourcePath.of(
+            com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
                 target2, ExplicitBuildTargetSourcePath.of(target2, relativePath)));
     assertEquals(target1, sourcePath.getTarget());
     assertEquals(relativePath, pathResolver.getRelativePath(sourcePath));

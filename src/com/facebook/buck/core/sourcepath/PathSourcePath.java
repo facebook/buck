@@ -16,19 +16,17 @@
 
 package com.facebook.buck.core.sourcepath;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ComparisonChain;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@BuckStyleTuple
-@Value.Immutable(prehash = true)
-public abstract class AbstractPathSourcePath implements SourcePath {
+@BuckStylePrehashedValue
+public abstract class PathSourcePath implements SourcePath {
 
-  protected abstract ProjectFilesystem getFilesystem();
+  public abstract ProjectFilesystem getFilesystem();
 
   public abstract Path getRelativePath();
 
@@ -42,10 +40,10 @@ public abstract class AbstractPathSourcePath implements SourcePath {
     if (this == other) {
       return true;
     }
-    if (!(other instanceof AbstractPathSourcePath)) {
+    if (!(other instanceof PathSourcePath)) {
       return false;
     }
-    AbstractPathSourcePath that = (AbstractPathSourcePath) other;
+    PathSourcePath that = (PathSourcePath) other;
     return getRelativePath().equals(that.getRelativePath())
         && getFilesystem().getRootPath().equals(that.getFilesystem().getRootPath());
   }
@@ -66,12 +64,16 @@ public abstract class AbstractPathSourcePath implements SourcePath {
       return classComparison;
     }
 
-    AbstractPathSourcePath that = (AbstractPathSourcePath) other;
+    PathSourcePath that = (PathSourcePath) other;
 
     return ComparisonChain.start()
         .compare(getFilesystem().getRootPath(), that.getFilesystem().getRootPath())
         .compare(getRelativePath(), that.getRelativePath())
         .result();
+  }
+
+  public static PathSourcePath of(ProjectFilesystem filesystem, Path relativePath) {
+    return ImmutablePathSourcePath.of(filesystem, relativePath);
   }
 
   /** @return the {@link PathSourcePath} backing the given {@link SourcePath}, if any. */

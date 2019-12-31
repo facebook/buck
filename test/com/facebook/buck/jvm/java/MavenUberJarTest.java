@@ -28,8 +28,8 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.AbstractPathSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.python.PythonLibrary;
 import com.facebook.buck.features.python.PythonLibraryBuilder;
@@ -119,9 +119,7 @@ public class MavenUberJarTest {
     ImmutableSortedSet<SourcePath> sources = buildRule.getSources();
     assertEquals(2, sources.size());
     assertEquals(
-        "depWithoutCoords",
-        ((AbstractPathSourcePath) sources.first()).getRelativePath().toString());
-    assertEquals(
-        "javaTarget", ((AbstractPathSourcePath) sources.last()).getRelativePath().toString());
+        "depWithoutCoords", ((PathSourcePath) sources.first()).getRelativePath().toString());
+    assertEquals("javaTarget", ((PathSourcePath) sources.last()).getRelativePath().toString());
   }
 }

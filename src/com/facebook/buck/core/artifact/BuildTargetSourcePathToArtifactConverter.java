@@ -70,7 +70,8 @@ public class BuildTargetSourcePathToArtifactConverter {
           genDir.relativize(explicitBuildTargetSourcePath.getResolvedPath()),
           explicitBuildTargetSourcePath.getTarget().equals(target)
               ? explicitBuildTargetSourcePath
-              : explicitBuildTargetSourcePath.withTarget(target));
+              : ExplicitBuildTargetSourcePath.of(
+                  target, explicitBuildTargetSourcePath.getResolvedPath()));
     }
     if (sourcePath instanceof ForwardingBuildTargetSourcePath) {
       return convert(

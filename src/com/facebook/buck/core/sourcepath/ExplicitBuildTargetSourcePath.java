@@ -17,30 +17,43 @@
 package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * A {@link BuildTargetSourcePath} which resolves to a specific (possibly non-default) output of the
  * {@link com.facebook.buck.core.rules.BuildRule} referred to by its target.
  */
-@BuckStyleTuple
-@Value.Immutable(prehash = true, builder = false)
-public abstract class AbstractExplicitBuildTargetSourcePath implements BuildTargetSourcePath {
+@BuckStylePrehashedValue
+public abstract class ExplicitBuildTargetSourcePath implements BuildTargetSourcePath {
+
+  /**
+   * Construct a new immutable {@code ExplicitBuildTargetSourcePath} instance.
+   *
+   * @param target The value for the {@code target} attribute
+   * @param resolvedPath The value for the {@code resolvedPath} attribute
+   * @return An immutable ExplicitBuildTargetSourcePath instance
+   */
+  public static ExplicitBuildTargetSourcePath of(BuildTarget target, Path resolvedPath) {
+    return of(target, resolvedPath, Optional.empty());
+  }
+
+  public static ExplicitBuildTargetSourcePath of(
+      BuildTarget target, Path resolvedPath, Optional<? extends HashCode> precomputedHash) {
+    return ImmutableExplicitBuildTargetSourcePath.of(target, resolvedPath, precomputedHash);
+  }
 
   @Override
   public abstract BuildTarget getTarget();
 
-  protected abstract Path getResolvedPath();
+  public abstract Path getResolvedPath();
 
   @Override
-  @Value.Parameter(value = false)
   public abstract Optional<HashCode> getPrecomputedHash();
 
   @Override
@@ -54,11 +67,11 @@ public abstract class AbstractExplicitBuildTargetSourcePath implements BuildTarg
       return true;
     }
 
-    if (!(other instanceof AbstractExplicitBuildTargetSourcePath)) {
+    if (!(other instanceof ExplicitBuildTargetSourcePath)) {
       return false;
     }
 
-    AbstractExplicitBuildTargetSourcePath that = (AbstractExplicitBuildTargetSourcePath) other;
+    ExplicitBuildTargetSourcePath that = (ExplicitBuildTargetSourcePath) other;
     return getTarget().equals(that.getTarget()) && getResolvedPath().equals(that.getResolvedPath());
   }
 
@@ -78,7 +91,7 @@ public abstract class AbstractExplicitBuildTargetSourcePath implements BuildTarg
       return classComparison;
     }
 
-    AbstractExplicitBuildTargetSourcePath that = (AbstractExplicitBuildTargetSourcePath) other;
+    ExplicitBuildTargetSourcePath that = (ExplicitBuildTargetSourcePath) other;
 
     return ComparisonChain.start()
         .compare(getTarget(), that.getTarget())

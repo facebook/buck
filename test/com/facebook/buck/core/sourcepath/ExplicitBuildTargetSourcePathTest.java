@@ -37,7 +37,8 @@ public class ExplicitBuildTargetSourcePathTest {
     FakeBuildRule rule = new FakeBuildRule(target);
     Path path = Paths.get("blah");
     ExplicitBuildTargetSourcePath buildTargetSourcePath =
-        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), path);
+        com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
+            rule.getBuildTarget(), path);
     assertEquals(target, buildTargetSourcePath.getTarget());
     assertEquals(path, pathResolver.getRelativePath(buildTargetSourcePath));
   }
@@ -47,9 +48,11 @@ public class ExplicitBuildTargetSourcePathTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target);
     ExplicitBuildTargetSourcePath path1 =
-        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), Paths.get("something"));
+        com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
+            rule.getBuildTarget(), Paths.get("something"));
     ExplicitBuildTargetSourcePath path2 =
-        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), Paths.get("something else"));
+        com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
+            rule.getBuildTarget(), Paths.get("something else"));
     assertNotEquals(path1, path2);
     assertNotEquals(path1.hashCode(), path2.hashCode());
   }
