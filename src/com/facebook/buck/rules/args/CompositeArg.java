@@ -19,19 +19,17 @@ package com.facebook.buck.rules.args;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Consumer;
-import org.immutables.value.Value;
 
 /**
  * CompositeArg holds a list of args and appends them all to the command-line. It does not add any
  * separator between the args, so if that's necessary it should be added via StringArgs in the list
  * of Args.
  */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractCompositeArg implements Arg {
+@BuckStyleValue
+public abstract class CompositeArg implements Arg {
   @AddToRuleKey
   abstract ImmutableList<Arg> getArgs();
 
@@ -59,5 +57,9 @@ abstract class AbstractCompositeArg implements Arg {
       }
     }
     consumer.accept(builder.toString());
+  }
+
+  public static CompositeArg of(ImmutableList<Arg> args) {
+    return ImmutableCompositeArg.of(args);
   }
 }

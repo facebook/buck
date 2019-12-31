@@ -19,15 +19,13 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractNeededCoverageSpec implements TargetTranslatable<NeededCoverageSpec> {
+@BuckStyleValue
+public abstract class NeededCoverageSpec implements TargetTranslatable<NeededCoverageSpec> {
 
   /**
    * Gets the coverage ratio that is required for a test
@@ -41,13 +39,21 @@ abstract class AbstractNeededCoverageSpec implements TargetTranslatable<NeededCo
 
   public abstract Optional<String> getPathName();
 
+  public static NeededCoverageSpec of(
+      int neededCoverageRatioPercentage, BuildTarget buildTarget, Optional<String> pathName) {
+    return ImmutableNeededCoverageSpec.of(neededCoverageRatioPercentage, buildTarget, pathName);
+  }
+
   @Override
   public Optional<NeededCoverageSpec> translateTargets(
       CellPathResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
     Optional<BuildTarget> newBuildTarget =
         translator.translate(cellPathResolver, targetBaseName, getBuildTarget());
     return newBuildTarget.map(
-        buildTarget ->
-            NeededCoverageSpec.of(getNeededCoverageRatioPercentage(), buildTarget, getPathName()));
+        buildTarget -> of(getNeededCoverageRatioPercentage(), buildTarget, getPathName()));
+  }
+
+  public NeededCoverageSpec withBuildTarget(BuildTarget target) {
+    return of(getNeededCoverageRatioPercentage(), target, getPathName());
   }
 }

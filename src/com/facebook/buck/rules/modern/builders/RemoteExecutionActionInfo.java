@@ -16,22 +16,34 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
+import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /** This includes all the information needed to run a remote execution command. */
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractRemoteExecutionActionInfo {
-  Digest getActionDigest();
+@BuckStyleValue
+public abstract class RemoteExecutionActionInfo {
+  public abstract Digest getActionDigest();
 
-  ImmutableList<UploadDataSupplier> getRequiredData();
+  public abstract ImmutableList<UploadDataSupplier> getRequiredData();
 
-  long getTotalInputSize();
+  public abstract long getTotalInputSize();
 
-  Iterable<? extends Path> getOutputs();
+  public abstract Iterable<? extends Path> getOutputs();
+
+  public RemoteExecutionActionInfo withRequiredData(ImmutableList<UploadDataSupplier> data) {
+    return of(getActionDigest(), data, getTotalInputSize(), getOutputs());
+  }
+
+  public static RemoteExecutionActionInfo of(
+      Protocol.Digest actionDigest,
+      ImmutableList<UploadDataSupplier> requiredData,
+      long totalInputSize,
+      java.lang.Iterable<? extends Path> outputs) {
+    return ImmutableRemoteExecutionActionInfo.of(
+        actionDigest, requiredData, totalInputSize, outputs);
+  }
 }

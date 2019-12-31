@@ -19,14 +19,13 @@ package com.facebook.buck.rules.visibility.parser;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.visibility.ObeysVisibility;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.annotations.VisibleForTesting;
-import org.immutables.value.Value;
 
 public class VisibilityPatternParser {
   public static final String VISIBILITY_PUBLIC = "PUBLIC";
@@ -36,18 +35,17 @@ public class VisibilityPatternParser {
 
   public static VisibilityPattern parse(CellPathResolver cellNames, String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
-      return PublicVisibilityPattern.of();
+      return ImmutablePublicVisibilityPattern.of();
     } else {
-      return BuildTargetVisibilityPattern.of(
+      return ImmutableBuildTargetVisibilityPattern.of(
           buildTargetPatternParser.parse(cellNames, buildTargetPattern));
     }
   }
 
-  @Value.Immutable
-  @BuckStyleTuple
+  @BuckStyleValue
   @VisibleForTesting
   @JsonDeserialize
-  abstract static class AbstractBuildTargetVisibilityPattern implements VisibilityPattern {
+  abstract static class BuildTargetVisibilityPattern implements VisibilityPattern {
 
     @JsonProperty("pattern")
     abstract BuildTargetMatcher getViewerPattern();
@@ -65,10 +63,9 @@ public class VisibilityPatternParser {
     }
   }
 
-  @Value.Immutable
-  @BuckStyleTuple
+  @BuckStyleValue
   @JsonDeserialize
-  static class AbstractPublicVisibilityPattern implements VisibilityPattern {
+  static class PublicVisibilityPattern implements VisibilityPattern {
 
     @Override
     @JsonIgnore

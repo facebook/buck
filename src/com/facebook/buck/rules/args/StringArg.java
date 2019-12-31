@@ -18,17 +18,15 @@ package com.facebook.buck.rules.args;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.Iterables;
 import java.util.Arrays;
 import java.util.function.Consumer;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractStringArg implements Arg {
+@BuckStyleValue
+public abstract class StringArg implements Arg {
   @AddToRuleKey
-  abstract String getArg();
+  public abstract String getArg();
 
   @Override
   public void appendToCommandLine(
@@ -42,5 +40,9 @@ abstract class AbstractStringArg implements Arg {
 
   public static Iterable<Arg> from(String... args) {
     return from(Arrays.asList(args));
+  }
+
+  public static StringArg of(String arg) {
+    return ImmutableStringArg.of(arg);
   }
 }
