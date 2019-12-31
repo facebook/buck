@@ -16,19 +16,23 @@
 
 package com.facebook.buck.core.cell;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Describes a cell name relative to another cell. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractCellName {
+@BuckStylePrehashedValue
+public abstract class CellName {
   public static final String ALL_CELLS_SPECIAL_STRING = "*";
 
-  public static final CellName ROOT_CELL_NAME = CellName.of("");
-  public static final CellName ALL_CELLS_SPECIAL_NAME = CellName.of(ALL_CELLS_SPECIAL_STRING);
+  public static final CellName ROOT_CELL_NAME = ImmutableCellName.of("");
+  public static final CellName ALL_CELLS_SPECIAL_NAME =
+      ImmutableCellName.of(ALL_CELLS_SPECIAL_STRING);
+
+  public static CellName of(String name) {
+    return ImmutableCellName.of(name);
+  }
 
   public abstract String getName();
 
