@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.elf;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class Elf {
 
@@ -76,7 +75,7 @@ public class Elf {
       ElfSection section = getSectionByIndex(index);
       String sectionName = stringTable.lookupString(section.header.sh_name);
       if (name.equals(sectionName)) {
-        return Optional.of(ElfSectionLookupResult.of(index, section));
+        return Optional.of(ImmutableElfSectionLookupResult.of(index, section));
       }
     }
     return Optional.empty();
@@ -192,9 +191,8 @@ public class Elf {
    * A tuple of section index and {@link ElfSection} object returned from lookup functions in this
    * class.
    */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractElfSectionLookupResult {
+  @BuckStyleValue
+  public interface ElfSectionLookupResult {
 
     /** @return the index of the section in the ELF file. */
     int getIndex();

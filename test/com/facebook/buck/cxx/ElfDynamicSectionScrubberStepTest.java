@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
-import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -58,7 +57,7 @@ public class ElfDynamicSectionScrubberStepTest {
     Elf elf = ElfFile.mapReadOnly(step.getFilesystem().resolve(step.getPath()));
     Optional<ElfSection> section =
         elf.getSectionByName(ElfDynamicSectionScrubberStep.SECTION)
-            .map(ElfSectionLookupResult::getSection);
+            .map(Elf.ElfSectionLookupResult::getSection);
     ElfDynamicSection dynamic = ElfDynamicSection.parse(elf.header.ei_class, section.get().body);
     for (ElfDynamicSection.Entry entry : dynamic.entries) {
       if (!whitelist.contains(entry.d_tag)) {
@@ -87,7 +86,7 @@ public class ElfDynamicSectionScrubberStepTest {
     Elf elf = ElfFile.mapReadOnly(step.getFilesystem().resolve(step.getPath()));
     Optional<ElfSection> section =
         elf.getSectionByName(ElfDynamicSectionScrubberStep.SECTION)
-            .map(ElfSectionLookupResult::getSection);
+            .map(Elf.ElfSectionLookupResult::getSection);
     ElfDynamicSection dynamic = ElfDynamicSection.parse(elf.header.ei_class, section.get().body);
     for (ElfDynamicSection.Entry entry : dynamic.entries) {
       assertThat(

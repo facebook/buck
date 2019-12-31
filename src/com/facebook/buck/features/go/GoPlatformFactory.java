@@ -24,7 +24,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
@@ -42,12 +42,10 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Factory to create {@link GoPlatform}s from a {@link BuckConfig} section. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractGoPlatformFactory {
+@BuckStyleValue
+abstract class GoPlatformFactory {
 
   private static final Path DEFAULT_GO_TOOL = Paths.get("go");
 
@@ -116,7 +114,7 @@ abstract class AbstractGoPlatformFactory {
                 throw new HumanReadableException("%s.os: unknown GOOS '%s'", section, os);
               }
             })
-        .orElse(AbstractGoPlatformFactory.getDefaultOs());
+        .orElse(GoPlatformFactory.getDefaultOs());
   }
 
   private GoArch getArch(String section) {
@@ -130,7 +128,7 @@ abstract class AbstractGoPlatformFactory {
                 throw new HumanReadableException("%s.arch unknown GOARCH '%s'", section, arch);
               }
             })
-        .orElse(AbstractGoPlatformFactory.getDefaultArch());
+        .orElse(GoPlatformFactory.getDefaultArch());
   }
 
   private Path getToolDir(String section) {

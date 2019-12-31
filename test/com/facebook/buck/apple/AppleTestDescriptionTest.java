@@ -176,7 +176,7 @@ public class AppleTestDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
     // with app tests there is a binary to use as -bundle_loader linker arg
-    TestHostInfo testHostInfo =
+    AppleTestDescription.TestHostInfo testHostInfo =
         ((AppleTestDescription) testNode.getDescription())
             .createTestHostInfo(
                 testTarget,
@@ -253,7 +253,7 @@ public class AppleTestDescriptionTest {
             uiTestTargetBundleBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
-    TestHostInfo testHostInfo =
+    AppleTestDescription.TestHostInfo testHostInfo =
         ((AppleTestDescription) testNode.getDescription())
             .createTestHostInfo(
                 testTarget,

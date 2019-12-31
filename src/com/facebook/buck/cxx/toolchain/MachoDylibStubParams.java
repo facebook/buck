@@ -18,29 +18,32 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractElfSharedLibraryInterfaceParams implements SharedLibraryInterfaceParams {
+/** Represents the params needed to create scrubbed dylib stubs. */
+@BuckStyleValue
+public abstract class MachoDylibStubParams implements SharedLibraryInterfaceParams {
 
-  abstract ToolProvider getObjcopy();
+  public static MachoDylibStubParams of(Tool strip) {
+    return ImmutableMachoDylibStubParams.of(strip);
+  }
 
-  @Override
-  public abstract ImmutableList<String> getLdflags();
-
-  abstract boolean isRemoveUndefinedSymbols();
+  public abstract Tool getStrip();
 
   @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-    return getObjcopy().getParseTimeDeps(targetConfiguration);
+    return ImmutableList.of();
   }
 
   @Override
   public Kind getKind() {
-    return Kind.ELF;
+    return Kind.MACHO;
+  }
+
+  @Override
+  public ImmutableList<String> getLdflags() {
+    return ImmutableList.of();
   }
 }

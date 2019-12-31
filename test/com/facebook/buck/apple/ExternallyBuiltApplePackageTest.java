@@ -60,7 +60,7 @@ public class ExternallyBuiltApplePackageTest {
   private ProjectFilesystem projectFilesystem;
   private BuildRuleParams params;
   private ActionGraphBuilder graphBuilder;
-  private ApplePackageConfigAndPlatformInfo config;
+  private ExternallyBuiltApplePackage.ApplePackageConfigAndPlatformInfo config;
 
   @Before
   public void setUp() {
@@ -71,7 +71,7 @@ public class ExternallyBuiltApplePackageTest {
     params = TestBuildRuleParams.create();
     graphBuilder = new TestActionGraphBuilder();
     config =
-        ApplePackageConfigAndPlatformInfo.of(
+        ImmutableApplePackageConfigAndPlatformInfo.of(
             AppleConfig.ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),
             FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_I386_PLATFORM);
   }

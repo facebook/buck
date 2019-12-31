@@ -16,19 +16,27 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractCxxLinkOptions {
+@BuckStyleValue
+public abstract class CxxLinkOptions {
   public abstract boolean getThinLto();
 
   public abstract boolean getFatLto();
 
   public static CxxLinkOptions of() {
-    return CxxLinkOptions.of(
+    return of(
         false, false
+        );
+  }
+
+  public static CxxLinkOptions of(
+      boolean thinLto,
+      boolean fatLto
+      ) {
+    return ImmutableCxxLinkOptions.of(
+        thinLto,
+        fatLto
         );
   }
 }

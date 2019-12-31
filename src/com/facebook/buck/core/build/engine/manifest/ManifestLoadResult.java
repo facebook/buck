@@ -16,30 +16,29 @@
 
 package com.facebook.buck.core.build.engine.manifest;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 /** A union of results of loading a {@link Manifest} from it's serialized form. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractManifestLoadResult {
+@BuckStyleValue
+public abstract class ManifestLoadResult {
 
   @Value.Check
   void check() {
     Preconditions.checkArgument(getManifest().isPresent() ^ getError().isPresent());
   }
 
-  abstract Optional<Manifest> getManifest();
+  public abstract Optional<Manifest> getManifest();
 
-  abstract Optional<String> getError();
+  public abstract Optional<String> getError();
 
   public static ManifestLoadResult success(Manifest manifest) {
-    return ManifestLoadResult.of(Optional.of(manifest), Optional.empty());
+    return ImmutableManifestLoadResult.of(Optional.of(manifest), Optional.empty());
   }
 
   public static ManifestLoadResult error(String error) {
-    return ManifestLoadResult.of(Optional.empty(), Optional.of(error));
+    return ImmutableManifestLoadResult.of(Optional.empty(), Optional.of(error));
   }
 }

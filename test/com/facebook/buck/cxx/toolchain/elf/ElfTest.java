@@ -90,19 +90,19 @@ public class ElfTest {
     Elf elf = ElfFile.mapReadOnly(elfPath);
     Optional<ElfSection> section;
 
-    section = elf.getSectionByName(".text").map(ElfSectionLookupResult::getSection);
+    section = elf.getSectionByName(".text").map(Elf.ElfSectionLookupResult::getSection);
     assertTrue(section.isPresent());
     assertEquals(ElfSectionHeader.SHType.SHT_PROGBITS, section.get().header.sh_type);
 
-    section = elf.getSectionByName(".bss").map(ElfSectionLookupResult::getSection);
+    section = elf.getSectionByName(".bss").map(Elf.ElfSectionLookupResult::getSection);
     assertTrue(section.isPresent());
     assertEquals(ElfSectionHeader.SHType.SHT_NOBITS, section.get().header.sh_type);
 
-    section = elf.getSectionByName(".strtab").map(ElfSectionLookupResult::getSection);
+    section = elf.getSectionByName(".strtab").map(Elf.ElfSectionLookupResult::getSection);
     assertTrue(section.isPresent());
     assertEquals(ElfSectionHeader.SHType.SHT_STRTAB, section.get().header.sh_type);
 
-    section = elf.getSectionByName(".symtab").map(ElfSectionLookupResult::getSection);
+    section = elf.getSectionByName(".symtab").map(Elf.ElfSectionLookupResult::getSection);
     assertTrue(section.isPresent());
     assertEquals(ElfSectionHeader.SHType.SHT_SYMTAB, section.get().header.sh_type);
   }

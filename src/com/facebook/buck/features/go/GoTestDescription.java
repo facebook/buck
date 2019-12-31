@@ -172,8 +172,8 @@ public class GoTestDescription
             // current machine, not whatever was specified in the rule or config.
             // That way, tests can be generated properly on this machine.
             platform
-                .withGoOs(AbstractGoPlatformFactory.getDefaultOs())
-                .withGoArch(AbstractGoPlatformFactory.getDefaultArch()),
+                .withGoOs(GoPlatformFactory.getDefaultOs())
+                .withGoArch(GoPlatformFactory.getDefaultArch()),
             buildTarget,
             projectFilesystem,
             params,

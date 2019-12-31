@@ -103,7 +103,7 @@ public class NetworkStatsTracker {
   }
 
   /** Get the current download stats. */
-  public RemoteDownloadStats getRemoteDownloadStats() {
+  public NetworkStatsKeeper.RemoteDownloadStats getRemoteDownloadStats() {
     return networkStatsKeeper.getRemoteDownloadStats();
   }
 

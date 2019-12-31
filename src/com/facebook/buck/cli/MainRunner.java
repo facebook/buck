@@ -63,7 +63,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.counters.CounterBuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
@@ -271,7 +271,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 import org.kohsuke.args4j.CmdLineException;
 import org.pf4j.PluginManager;
 
@@ -1793,19 +1792,18 @@ public final class MainRunner {
   }
 
   /** Struct for the multiple values returned by {@link #getParserAndCaches}. */
-  @Value.Immutable(copy = false, builder = false)
-  @BuckStyleTuple
-  abstract static class AbstractParserAndCaches {
+  @BuckStyleValue
+  public interface ParserAndCaches {
 
-    public abstract Parser getParser();
+    Parser getParser();
 
-    public abstract TypeCoercerFactory getTypeCoercerFactory();
+    TypeCoercerFactory getTypeCoercerFactory();
 
-    public abstract InstrumentedVersionedTargetGraphCache getVersionedTargetGraphCache();
+    InstrumentedVersionedTargetGraphCache getVersionedTargetGraphCache();
 
-    public abstract ActionGraphProvider getActionGraphProvider();
+    ActionGraphProvider getActionGraphProvider();
 
-    public abstract Optional<RuleKeyCacheRecycler<RuleKey>> getDefaultRuleKeyFactoryCacheRecycler();
+    Optional<RuleKeyCacheRecycler<RuleKey>> getDefaultRuleKeyFactoryCacheRecycler();
   }
 
   private static ParserAndCaches getParserAndCaches(
@@ -1871,7 +1869,7 @@ public final class MainRunner {
       }
     }
 
-    return ParserAndCaches.of(
+    return ImmutableParserAndCaches.of(
         ParserFactory.create(
             typeCoercerFactory,
             new DefaultConstructorArgMarshaller(typeCoercerFactory),

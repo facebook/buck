@@ -322,7 +322,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
   }
 
   public PrecompiledHeaderData getData() {
-    return PrecompiledHeaderData.of(
+    return ImmutablePrecompiledHeaderData.of(
         new NonHashableSourcePathContainer(getIncludeFileSourcePath()),
         getInput(),
         canPrecompileFlag);

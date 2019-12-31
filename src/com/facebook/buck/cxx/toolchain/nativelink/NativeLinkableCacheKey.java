@@ -17,14 +17,19 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractNativeLinkableCacheKey {
+@BuckStylePrehashedValue
+public abstract class NativeLinkableCacheKey {
+
+  public static NativeLinkableCacheKey of(
+      Flavor flavor, Linker.LinkableDepType type, boolean forceLinkWhole, CxxPlatform cxxPlatform) {
+    return ImmutableNativeLinkableCacheKey.of(flavor, type, forceLinkWhole, cxxPlatform);
+  }
+
   public abstract Flavor getFlavor();
 
   public abstract Linker.LinkableDepType getType();

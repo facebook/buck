@@ -21,7 +21,7 @@ import com.facebook.buck.core.rules.impl.SymlinkDir;
 import com.facebook.buck.core.rules.impl.Symlinks;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.step.fs.SymlinkPaths;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -30,7 +30,6 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.function.Consumer;
-import org.immutables.value.Value;
 
 /**
  * A {@link PythonComponents} which wraps a directory containing components to add to a top-level
@@ -38,9 +37,12 @@ import org.immutables.value.Value;
  */
 // TODO(agallagher): This directory can contain more than just "modules" (e.g. "resources"), so it'd
 //  be nice to find a way to handle this properly.
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractPythonModuleDirComponents implements PythonComponents {
+@BuckStyleValue
+abstract class PythonModuleDirComponents implements PythonComponents {
+
+  public static PythonModuleDirComponents of(SourcePath directory) {
+    return ImmutablePythonModuleDirComponents.of(directory);
+  }
 
   // TODO(agallagher): We hash the entire dir contents even though, when creating symlinks, we only
   //  actually really care about the directory structure.  Ideally, we'd have a way to model this

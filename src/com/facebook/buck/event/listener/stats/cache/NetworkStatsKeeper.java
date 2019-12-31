@@ -16,10 +16,9 @@
 
 package com.facebook.buck.event.listener.stats.cache;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import org.immutables.value.Value;
 
 public class NetworkStatsKeeper {
   /** remote: For caches out of the local machine. */
@@ -28,9 +27,8 @@ public class NetworkStatsKeeper {
   private final AtomicLong remoteDownloadedArtifactsBytes;
 
   /** Stats about remote artifact downloads. */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractRemoteDownloadStats {
+  @BuckStyleValue
+  public interface RemoteDownloadStats {
     int getArtifacts();
 
     long getBytes();
@@ -50,7 +48,7 @@ public class NetworkStatsKeeper {
   }
 
   RemoteDownloadStats getRemoteDownloadStats() {
-    return RemoteDownloadStats.of(
+    return ImmutableRemoteDownloadStats.of(
         remoteDownloadedArtifactsCount.get(), remoteDownloadedArtifactsBytes.get());
   }
 }

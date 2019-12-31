@@ -21,7 +21,7 @@ import com.facebook.buck.core.rules.impl.SymlinkMap;
 import com.facebook.buck.core.rules.impl.Symlinks;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.step.fs.SymlinkPaths;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.collect.ImmutableMap;
@@ -37,13 +37,16 @@ import org.immutables.value.Value;
  * An implementation of {@link PythonComponents} wrapping a fixed map of sources, where the keys
  * determine where in the Python package the sources get added.
  */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractPythonMappedComponents implements PythonComponents {
+@BuckStyleValue
+public abstract class PythonMappedComponents implements PythonComponents {
+
+  public static PythonMappedComponents of(ImmutableSortedMap<Path, SourcePath> components) {
+    return ImmutablePythonMappedComponents.of(components);
+  }
 
   // TODO(agallagher): The keys here should be module/resource names in `String` form (e.g,
   //  `foo.bar`) -- not `Path`s (which requires the hack below).
-  abstract ImmutableSortedMap<Path, SourcePath> getComponents();
+  public abstract ImmutableSortedMap<Path, SourcePath> getComponents();
 
   // NOTE(agallagher): When rule key hashing sees the `Path` objects in the above map, it wants to
   //  include the hash of their contents on disk into the rule keys, which is wrong as they don't

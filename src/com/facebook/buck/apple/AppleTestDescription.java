@@ -59,7 +59,7 @@ import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.test.rule.impl.ExternalTestRunner;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -839,14 +839,14 @@ public class AppleTestDescription
     if (!uiTestTargetAppBuildTarget.isPresent()) {
       // Check for legacy UITest setup
       if (isUITestTestHostInfo) {
-        return TestHostInfo.of(
+        return ImmutableTestHostInfo.of(
             testHostWithTargetApp,
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of());
       }
-      return TestHostInfo.of(
+      return ImmutableTestHostInfo.of(
           testHostWithTargetApp,
           Optional.empty(),
           Optional.of(testHostAppBinarySourcePath),
@@ -864,7 +864,7 @@ public class AppleTestDescription
     SourcePath uiTestTargetAppBinarySourcePath =
         uiTestTargetApp.getBinaryBuildRule().getSourcePathToOutput();
 
-    return TestHostInfo.of(
+    return ImmutableTestHostInfo.of(
         testHostWithTargetApp,
         Optional.of(uiTestTargetApp),
         Optional.of(testHostAppBinarySourcePath),
@@ -892,9 +892,8 @@ public class AppleTestDescription
         CxxPlatformsProvider.class);
   }
 
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractTestHostInfo {
+  @BuckStyleValue
+  interface TestHostInfo {
     AppleBundle getTestHostApp();
 
     Optional<AppleBundle> getUiTestTargetApp();

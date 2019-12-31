@@ -18,30 +18,32 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
-import org.immutables.value.Value;
 
-/** Represents the params needed to create scrubbed dylib stubs. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractMachoDylibStubParams implements SharedLibraryInterfaceParams {
+@BuckStyleValue
+public abstract class ElfSharedLibraryInterfaceParams implements SharedLibraryInterfaceParams {
 
-  abstract Tool getStrip();
+  public static ElfSharedLibraryInterfaceParams of(
+      ToolProvider objcopy, ImmutableList<String> ldflags, boolean removeUndefinedSymbols) {
+    return ImmutableElfSharedLibraryInterfaceParams.of(objcopy, ldflags, removeUndefinedSymbols);
+  }
+
+  public abstract ToolProvider getObjcopy();
+
+  @Override
+  public abstract ImmutableList<String> getLdflags();
+
+  public abstract boolean isRemoveUndefinedSymbols();
 
   @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-    return ImmutableList.of();
+    return getObjcopy().getParseTimeDeps(targetConfiguration);
   }
 
   @Override
   public Kind getKind() {
-    return Kind.MACHO;
-  }
-
-  @Override
-  public ImmutableList<String> getLdflags() {
-    return ImmutableList.of();
+    return Kind.ELF;
   }
 }

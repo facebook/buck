@@ -31,7 +31,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.Compiler;
@@ -782,9 +782,14 @@ abstract class AbstractCxxSourceRuleFactory {
     return getCxxPlatform().getCompilerDebugPathSanitizer();
   }
 
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractPreprocessorDelegateCacheKey {
+  @BuckStyleValue
+  interface PreprocessorDelegateCacheKey {
+
+    static PreprocessorDelegateCacheKey of(
+        CxxSource.Type sourceType, ImmutableList<String> sourceFlags) {
+      return ImmutablePreprocessorDelegateCacheKey.of(sourceType, sourceFlags);
+    }
+
     CxxSource.Type getSourceType();
 
     ImmutableList<String> getSourceFlags();

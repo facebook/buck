@@ -33,9 +33,9 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper;
+import com.facebook.buck.event.listener.stats.cache.NetworkStatsKeeper;
 import com.facebook.buck.event.listener.stats.cache.NetworkStatsTracker;
 import com.facebook.buck.event.listener.stats.cache.RemoteArtifactUploadStats;
-import com.facebook.buck.event.listener.stats.cache.RemoteDownloadStats;
 import com.facebook.buck.event.listener.stats.parse.ParseStatsTracker;
 import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.event.listener.util.ProgressEstimation;
@@ -728,7 +728,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
             : convertToAllCapsIfNeeded("Downloading") + "...";
     List<String> columns = new ArrayList<>();
 
-    RemoteDownloadStats downloadStats = networkStatsTracker.getRemoteDownloadStats();
+    NetworkStatsKeeper.RemoteDownloadStats downloadStats =
+        networkStatsTracker.getRemoteDownloadStats();
 
     long remoteDownloadedBytes = downloadStats.getBytes();
     Pair<Double, SizeUnit> redableRemoteDownloadedBytes =

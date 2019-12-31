@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.google.common.base.Predicates;
@@ -30,21 +30,19 @@ import com.google.common.collect.Maps;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * A helper class for building the included and excluded omnibus roots to pass to the omnibus
  * builder.
  */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractOmnibusRoots {
+@BuckStyleValue
+public abstract class OmnibusRoots {
 
   /** @return the {@link NativeLinkTarget} roots that are included in omnibus linking. */
-  abstract ImmutableMap<BuildTarget, NativeLinkTarget> getIncludedRoots();
+  public abstract ImmutableMap<BuildTarget, NativeLinkTarget> getIncludedRoots();
 
   /** @return the {@link NativeLinkable} roots that are excluded from omnibus linking. */
-  abstract ImmutableMap<BuildTarget, NativeLinkable> getExcludedRoots();
+  public abstract ImmutableMap<BuildTarget, NativeLinkable> getExcludedRoots();
 
   public static Builder builder(
       ImmutableSet<BuildTarget> excludes, ActionGraphBuilder graphBuilder) {
@@ -145,7 +143,7 @@ abstract class AbstractOmnibusRoots {
     public OmnibusRoots build() {
       ImmutableMap<BuildTarget, NativeLinkable> excluded = buildExcluded();
       ImmutableMap<BuildTarget, NativeLinkTarget> included = buildIncluded(excluded.keySet());
-      return OmnibusRoots.of(included, excluded);
+      return ImmutableOmnibusRoots.of(included, excluded);
     }
   }
 }

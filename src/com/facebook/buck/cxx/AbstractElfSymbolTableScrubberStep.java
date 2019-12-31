@@ -23,7 +23,6 @@ import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfHeader;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
-import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
 import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -155,7 +154,7 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
       Elf elf = new Elf(buffer);
 
       // Locate the symbol table section.
-      Optional<ElfSectionLookupResult> sectionResult = elf.getSectionByName(getSection());
+      Optional<Elf.ElfSectionLookupResult> sectionResult = elf.getSectionByName(getSection());
       if (!sectionResult.isPresent()) {
         if (isAllowMissing()) {
           return StepExecutionResults.SUCCESS;
@@ -185,7 +184,7 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
 
         // If a versym section is given, also update it to remove dropped symbols.
         if (getVersymSection().isPresent()) {
-          Optional<ElfSectionLookupResult> versymSectionResult =
+          Optional<Elf.ElfSectionLookupResult> versymSectionResult =
               elf.getSectionByName(getVersymSection().get());
           if (versymSectionResult.isPresent()) {
             int versymSectionIndex = versymSectionResult.get().getIndex();

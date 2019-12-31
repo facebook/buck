@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -93,9 +93,8 @@ public class ExternallyBuiltApplePackage extends LegacyGenrule {
   }
 
   /** Value type for tracking a package config and information about the platform. */
-  @Value.Immutable
-  @BuckStyleTuple
-  abstract static class AbstractApplePackageConfigAndPlatformInfo {
+  @BuckStyleValue
+  abstract static class ApplePackageConfigAndPlatformInfo {
     public abstract AppleConfig.ApplePackageConfig getConfig();
 
     /**
@@ -139,6 +138,10 @@ public class ExternallyBuiltApplePackage extends LegacyGenrule {
     @Value.Auxiliary
     public Arg getExpandedArg() {
       return StringArg.of(getConfig().getCommand());
+    }
+
+    public ApplePackageConfigAndPlatformInfo withPlatform(AppleCxxPlatform platform) {
+      return ImmutableApplePackageConfigAndPlatformInfo.of(getConfig(), platform);
     }
   }
 }

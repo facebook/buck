@@ -23,7 +23,6 @@ import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
-import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
 import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -74,7 +73,7 @@ abstract class AbstractElfDynamicSectionScrubberStep implements Step {
             StandardOpenOption.WRITE)) {
       MappedByteBuffer buffer = channel.map(READ_WRITE, 0, channel.size());
       Elf elf = new Elf(buffer);
-      ElfSectionLookupResult sectionResult = elf.getMandatorySectionByName(getPath(), SECTION);
+      Elf.ElfSectionLookupResult sectionResult = elf.getMandatorySectionByName(getPath(), SECTION);
       int sectionIndex = sectionResult.getIndex();
       ElfSection section = sectionResult.getSection();
 
@@ -102,7 +101,7 @@ abstract class AbstractElfDynamicSectionScrubberStep implements Step {
         section.header.withSize(section.body.position()).write(elf.header.ei_class, buffer);
 
         // Update the `_DYNAMIC` symbol in the symbol table.
-        Optional<ElfSectionLookupResult> symtabSection = elf.getSectionByName(".symtab");
+        Optional<Elf.ElfSectionLookupResult> symtabSection = elf.getSectionByName(".symtab");
         if (symtabSection.isPresent()) {
           ElfSymbolTable symtab =
               ElfSymbolTable.parse(elf.header.ei_class, symtabSection.get().getSection().body);

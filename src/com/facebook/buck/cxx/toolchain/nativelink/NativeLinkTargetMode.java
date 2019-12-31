@@ -16,21 +16,20 @@
 
 package com.facebook.buck.cxx.toolchain.nativelink;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractNativeLinkTargetMode {
+@BuckStyleValue
+public abstract class NativeLinkTargetMode {
 
   /** @return the link type. */
-  abstract Linker.LinkType getType();
+  public abstract Linker.LinkType getType();
 
   /** @return the name of the library, if applicable. */
-  abstract Optional<String> getLibraryName();
+  public abstract Optional<String> getLibraryName();
 
   @Value.Check
   public void check() {
@@ -40,11 +39,11 @@ abstract class AbstractNativeLinkTargetMode {
   }
 
   public static NativeLinkTargetMode executable() {
-    return NativeLinkTargetMode.of(Linker.LinkType.EXECUTABLE, Optional.empty());
+    return ImmutableNativeLinkTargetMode.of(Linker.LinkType.EXECUTABLE, Optional.empty());
   }
 
   public static NativeLinkTargetMode library(Optional<String> soname) {
-    return NativeLinkTargetMode.of(Linker.LinkType.SHARED, soname);
+    return ImmutableNativeLinkTargetMode.of(Linker.LinkType.SHARED, soname);
   }
 
   public static NativeLinkTargetMode library(String soname) {

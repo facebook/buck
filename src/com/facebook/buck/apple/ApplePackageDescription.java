@@ -83,7 +83,7 @@ public class ApplePackageDescription
     BuildRule bundle =
         graphBuilder.getRule(propagateFlavorsToTarget(buildTarget, args.getBundle()));
 
-    Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
+    Optional<ImmutableApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
         getApplePackageConfig(buildTarget, args.getDefaultPlatform());
 
     if (applePackageConfigAndPlatformInfo.isPresent()) {
@@ -174,7 +174,7 @@ public class ApplePackageDescription
    * @return If found, a package config for this target.
    * @throws HumanReadableException if there are multiple possible package configs.
    */
-  private Optional<ApplePackageConfigAndPlatformInfo> getApplePackageConfig(
+  private Optional<ImmutableApplePackageConfigAndPlatformInfo> getApplePackageConfig(
       BuildTarget target, Optional<Flavor> defaultPlatform) {
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain =
         getAppleCxxPlatformFlavorDomain(target.getTargetConfiguration());
@@ -183,7 +183,7 @@ public class ApplePackageDescription
 
     // Ensure that different platforms generate the same config.
     // The value of this map is just for error reporting.
-    Multimap<Optional<ApplePackageConfigAndPlatformInfo>, Flavor> packageConfigs =
+    Multimap<Optional<ImmutableApplePackageConfigAndPlatformInfo>, Flavor> packageConfigs =
         MultimapBuilder.hashKeys().arrayListValues().build();
 
     for (Flavor flavor : platformFlavors) {
@@ -193,7 +193,7 @@ public class ApplePackageDescription
       packageConfigs.put(
           packageConfig.map(
               applePackageConfig ->
-                  ApplePackageConfigAndPlatformInfo.of(applePackageConfig, platform)),
+                  ImmutableApplePackageConfigAndPlatformInfo.of(applePackageConfig, platform)),
           flavor);
     }
 

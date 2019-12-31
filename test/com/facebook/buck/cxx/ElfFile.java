@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
-import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -43,7 +42,8 @@ public class ElfFile {
 
   /** @return the value of the ELF file's DT_SONAME .dynamic entry, if present. */
   public static Optional<String> getSoname(Elf elf) {
-    Optional<ElfSectionLookupResult> dynamicSectionLookupResult = elf.getSectionByName(".dynamic");
+    Optional<Elf.ElfSectionLookupResult> dynamicSectionLookupResult =
+        elf.getSectionByName(".dynamic");
     if (!dynamicSectionLookupResult.isPresent()) {
       return Optional.empty();
     }

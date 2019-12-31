@@ -48,7 +48,7 @@ public class ElfSectionHeaderTest {
         FileChannel.open(elfPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
       MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
       Elf elf = new Elf(buffer);
-      ElfSectionLookupResult sectionResult = elf.getMandatorySectionByName(elfPath, ".text");
+      Elf.ElfSectionLookupResult sectionResult = elf.getMandatorySectionByName(elfPath, ".text");
       buffer.position(
           (int) (elf.header.e_shoff + sectionResult.getIndex() * elf.header.e_shentsize));
       sectionResult.getSection().header.withInfo(87L).write(elf.header.ei_class, buffer);

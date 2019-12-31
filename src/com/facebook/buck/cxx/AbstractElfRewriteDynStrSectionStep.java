@@ -23,7 +23,6 @@ import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
-import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
 import com.facebook.buck.cxx.toolchain.elf.ElfStringTable;
 import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
 import com.facebook.buck.cxx.toolchain.elf.ElfVerDef;
@@ -147,7 +146,7 @@ abstract class AbstractElfRewriteDynStrSectionStep implements Step {
   /** @return a processor for the GNU version definition section. */
   private Optional<SectionUsingDynamicStrings> getVerdefProcessor(Elf elf) {
     return elf.getSectionByName(VERDEF)
-        .map(ElfSectionLookupResult::getSection)
+        .map(Elf.ElfSectionLookupResult::getSection)
         .map(
             verdefSection ->
                 new SectionUsingDynamicStrings() {
@@ -211,7 +210,7 @@ abstract class AbstractElfRewriteDynStrSectionStep implements Step {
       ImmutableList<SectionUsingDynamicStrings> processors = getSectionProcesors(elf);
 
       // Load the dynamic string table.
-      ElfSectionLookupResult dynStrSection = elf.getMandatorySectionByName(getPath(), DYNSTR);
+      Elf.ElfSectionLookupResult dynStrSection = elf.getMandatorySectionByName(getPath(), DYNSTR);
       byte[] dynStr = new byte[dynStrSection.getSection().body.remaining()];
       dynStrSection.getSection().body.get(dynStr);
 

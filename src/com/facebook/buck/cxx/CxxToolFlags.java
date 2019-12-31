@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -69,7 +69,7 @@ public abstract class CxxToolFlags implements AddsToRuleKey {
       platformFlags = platformFlags.addAll(part.getPlatformFlags());
       ruleFlags = ruleFlags.addAll(part.getRuleFlags());
     }
-    return IterableCxxToolFlags.of(platformFlags.build(), ruleFlags.build());
+    return ImmutableIterableCxxToolFlags.of(platformFlags.build(), ruleFlags.build());
   }
 }
 
@@ -104,9 +104,8 @@ abstract class AbstractExplicitCxxToolFlags extends CxxToolFlags {
  *
  * <p>This improves sharing and reduce copying and memory pressure.
  */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractIterableCxxToolFlags extends CxxToolFlags {
+@BuckStyleValue
+abstract class IterableCxxToolFlags extends CxxToolFlags {
   @Override
   @AddToRuleKey
   public abstract ImmutableList<Arg> getPlatformFlags();

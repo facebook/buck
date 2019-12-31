@@ -59,7 +59,7 @@ public class NetworkStatsTrackerTest {
             BuildTargetFactory.newInstance("//:test"), new RuleKey(HashCode.fromInt(0)));
     eventBus.post(started);
 
-    assertEquals(RemoteDownloadStats.of(0, 0), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.of(0, 0), tracker.getRemoteDownloadStats());
 
     Builder finishedBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(started);
     finishedBuilder
@@ -69,14 +69,14 @@ public class NetworkStatsTrackerTest {
         .setArtifactSizeBytes(100);
     eventBus.post(finishedBuilder.build());
 
-    assertEquals(RemoteDownloadStats.of(1, 100), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.of(1, 100), tracker.getRemoteDownloadStats());
 
     started =
         HttpArtifactCacheEvent.newFetchStartedEvent(
             BuildTargetFactory.newInstance("//:test"), new RuleKey(HashCode.fromInt(0)));
     eventBus.post(started);
 
-    assertEquals(RemoteDownloadStats.of(1, 100), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.of(1, 100), tracker.getRemoteDownloadStats());
 
     finishedBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(started);
     finishedBuilder
@@ -86,7 +86,7 @@ public class NetworkStatsTrackerTest {
         .setArtifactSizeBytes(200);
     eventBus.post(finishedBuilder.build());
 
-    assertEquals(RemoteDownloadStats.of(2, 300), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.of(2, 300), tracker.getRemoteDownloadStats());
   }
 
   @Test
