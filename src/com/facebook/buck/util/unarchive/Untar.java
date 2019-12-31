@@ -28,11 +28,13 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -185,7 +187,8 @@ public class Untar extends Unarchiver {
       ProjectFilesystem filesystem, Set<Path> dirsToTidy, ImmutableSet<Path> createdFiles)
       throws IOException {
     for (Path directory : dirsToTidy) {
-      for (Path foundFile : filesystem.getDirectoryContents(directory)) {
+      for (Path foundFile :
+          filesystem.asView().getFilesUnderPath(directory, EnumSet.noneOf(FileVisitOption.class))) {
         if (!createdFiles.contains(foundFile) && !dirsToTidy.contains(foundFile)) {
           filesystem.deleteRecursivelyIfExists(foundFile);
         }

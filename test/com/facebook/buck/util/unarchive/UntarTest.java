@@ -23,6 +23,8 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.PatternsMatcher;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -732,5 +734,32 @@ public class UntarTest {
 
     Assert.assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
     Assert.assertEquals(expectedPaths.size(), unarchivedFiles.size());
+  }
+
+  /**
+   * Tests that Untar cleans all files from pre-existing directories, even if those files were
+   * ignored by project config.
+   */
+  @Test
+  public void testIgnoredEntiresInTargetDirectoryAreTidied() throws IOException {
+    ArchiveFormat format = ArchiveFormat.TAR;
+    Config config = new Config(RawConfig.builder().put("project", "ignore", "foo.pyc").build());
+    ProjectFilesystem testFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot(), config);
+    testFilesystem.mkdirs(OUTPUT_SUBDIR);
+    testFilesystem.mkdirs(getDestPath("root"));
+    Path pycPath = getDestPath("root", "foo.pyc");
+    testFilesystem.createNewFile(pycPath);
+    Path archivePath = getTestFilePath(format.getExtension());
+    format
+        .getUnarchiver()
+        .extractArchive(
+            archivePath,
+            testFilesystem,
+            Paths.get("output_dir"),
+            Optional.empty(),
+            ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+
+    Assert.assertFalse(testFilesystem.exists(pycPath));
   }
 }
