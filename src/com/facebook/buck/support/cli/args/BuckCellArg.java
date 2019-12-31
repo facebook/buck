@@ -16,14 +16,13 @@
 
 package com.facebook.buck.support.cli.args;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Helps parse common command line argument formats */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractBuckCellArg {
+@BuckStyleValue
+public abstract class BuckCellArg {
 
   public abstract Optional<String> getCellName();
 
@@ -34,14 +33,18 @@ abstract class AbstractBuckCellArg {
     return "//" + getArg();
   }
 
-  /** Convenience constructor for an {@link AbstractBuckCellArg} */
+  /** Convenience constructor for an {@link BuckCellArg} */
   public static BuckCellArg of(String input) {
     int index = input.indexOf("//");
     if (index < 0) {
-      return BuckCellArg.of(Optional.empty(), input);
+      return of(Optional.empty(), input);
     } else if (index == 0) {
-      return BuckCellArg.of(Optional.empty(), input.substring(2));
+      return of(Optional.empty(), input.substring(2));
     }
-    return BuckCellArg.of(Optional.of(input.substring(0, index)), input.substring(index + 2));
+    return of(Optional.of(input.substring(0, index)), input.substring(index + 2));
+  }
+
+  public static BuckCellArg of(Optional<String> cellName, String arg) {
+    return ImmutableBuckCellArg.of(cellName, arg);
   }
 }

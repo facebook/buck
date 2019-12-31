@@ -21,16 +21,14 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Consumer;
-import org.immutables.value.Value;
 
 /** An {@link Arg} which wraps a {@link SourcePath}. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
+@BuckStyleValue
+public abstract class SourcePathArg implements Arg, HasSourcePath {
   @Override
   @AddToRuleKey
   public abstract SourcePath getPath();
@@ -80,5 +78,9 @@ abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
 
   public static ImmutableList<Arg> from(SourcePath... paths) {
     return from(ImmutableList.copyOf(paths));
+  }
+
+  public static SourcePathArg of(SourcePath path) {
+    return ImmutableSourcePathArg.of(path);
   }
 }
