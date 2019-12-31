@@ -16,14 +16,19 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import java.util.Map;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractVersion {
+@BuckStyleValue
+interface VersionInfo extends ComputeResult {
 
-  public static final Version DEFAULT = Version.of("default");
+  ImmutableMap<BuildTarget, ImmutableSet<Version>> getVersionDomain();
 
-  abstract String getName();
+  static VersionInfo of(Map<? extends BuildTarget, ? extends ImmutableSet<Version>> versionDomain) {
+    return ImmutableVersionInfo.of(versionDomain);
+  }
 }

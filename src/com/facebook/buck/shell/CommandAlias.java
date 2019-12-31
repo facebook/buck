@@ -31,7 +31,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -47,7 +47,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 /**
  * A {@link BinaryBuildRule} that wraps other build rules, and can optionally add extra arguments,
@@ -127,7 +126,7 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
                 ImmutableSortedMap.toImmutableSortedMap(
                     Ordering.natural(), Entry::getKey, e -> buildRuleAsTool(e.getValue())));
 
-    return CrossPlatformTool.of(
+    return ImmutableCrossPlatformTool.of(
         genericDelegate
             .map(this::buildRuleAsTool)
             .orElseGet(() -> new UnsupportedPlatformTool(getBuildTarget(), platform)),
@@ -197,9 +196,8 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
    * <p>When calculating rule keys, this tool yields the same value regardless of the host platform,
    * and - in consequence - the underlying tool it delegates to.
    */
-  @Value.Immutable
-  @BuckStyleTuple
-  abstract static class AbstractCrossPlatformTool implements Tool {
+  @BuckStyleValue
+  abstract static class CrossPlatformTool implements Tool {
 
     @AddToRuleKey
     protected abstract Tool getGenericTool();

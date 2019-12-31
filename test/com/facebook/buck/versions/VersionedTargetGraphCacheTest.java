@@ -72,7 +72,7 @@ public class VersionedTargetGraphCacheTest {
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphCreationResult graph = createSimpleGraph("foo");
-    VersionedTargetGraphCacheResult result =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult result =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
@@ -93,7 +93,7 @@ public class VersionedTargetGraphCacheTest {
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphCreationResult graph = createSimpleGraph("foo");
-    VersionedTargetGraphCacheResult firstResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
@@ -101,7 +101,7 @@ public class VersionedTargetGraphCacheTest {
             graph,
             ImmutableMap.of());
     assertEmpty(firstResult);
-    VersionedTargetGraphCacheResult secondResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
@@ -122,7 +122,7 @@ public class VersionedTargetGraphCacheTest {
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphCreationResult graph = createSimpleGraph("foo");
-    VersionedTargetGraphCacheResult firstResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
@@ -130,7 +130,7 @@ public class VersionedTargetGraphCacheTest {
             graph,
             ImmutableMap.of());
     assertEmpty(firstResult);
-    VersionedTargetGraphCacheResult secondResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
@@ -150,7 +150,7 @@ public class VersionedTargetGraphCacheTest {
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphCreationResult firstGraph = createSimpleGraph("foo");
-    VersionedTargetGraphCacheResult firstResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
@@ -159,7 +159,7 @@ public class VersionedTargetGraphCacheTest {
             ImmutableMap.of());
     assertEmpty(firstResult);
     TargetGraphCreationResult secondGraph = createSimpleGraph("bar");
-    VersionedTargetGraphCacheResult secondResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
@@ -182,7 +182,7 @@ public class VersionedTargetGraphCacheTest {
             new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphCreationResult graph = createSimpleGraph("foo");
     ImmutableMap<String, VersionUniverse> firstVersionUniverses = ImmutableMap.of();
-    VersionedTargetGraphCacheResult firstResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
@@ -192,7 +192,7 @@ public class VersionedTargetGraphCacheTest {
     assertEmpty(firstResult);
     ImmutableMap<String, VersionUniverse> secondVersionUniverses =
         ImmutableMap.of("foo", VersionUniverse.of(ImmutableMap.of(versionedAlias, version2)));
-    VersionedTargetGraphCacheResult secondResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
@@ -214,7 +214,7 @@ public class VersionedTargetGraphCacheTest {
     InstrumentedVersionedTargetGraphCache cache1 =
         new InstrumentedVersionedTargetGraphCache(baseCache, new InstrumentingCacheStatsTracker());
     TargetGraphCreationResult graph = createSimpleGraph("foo");
-    VersionedTargetGraphCacheResult firstResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult firstResult =
         cache1.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
@@ -230,7 +230,7 @@ public class VersionedTargetGraphCacheTest {
 
     InstrumentedVersionedTargetGraphCache cache2 =
         new InstrumentedVersionedTargetGraphCache(baseCache, new InstrumentingCacheStatsTracker());
-    VersionedTargetGraphCacheResult secondResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult secondResult =
         cache2.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
@@ -276,17 +276,19 @@ public class VersionedTargetGraphCacheTest {
   }
 
   private void assertHit(
-      VersionedTargetGraphCacheResult result, TargetGraphCreationResult previousGraph) {
+      VersionedTargetGraphCache.VersionedTargetGraphCacheResult result,
+      TargetGraphCreationResult previousGraph) {
     assertThat(result.getType(), Matchers.is(VersionedTargetGraphCache.ResultType.HIT));
     assertThat(result.getTargetGraphCreationResult(), Matchers.is(previousGraph));
   }
 
-  private void assertEmpty(VersionedTargetGraphCacheResult result) {
+  private void assertEmpty(VersionedTargetGraphCache.VersionedTargetGraphCacheResult result) {
     assertThat(result.getType(), Matchers.is(VersionedTargetGraphCache.ResultType.EMPTY));
   }
 
   private void assertMismatch(
-      VersionedTargetGraphCacheResult result, TargetGraphCreationResult previousGraph) {
+      VersionedTargetGraphCache.VersionedTargetGraphCacheResult result,
+      TargetGraphCreationResult previousGraph) {
     assertThat(result.getType(), Matchers.is(VersionedTargetGraphCache.ResultType.MISMATCH));
     assertThat(result.getTargetGraphCreationResult(), Matchers.not(Matchers.is(previousGraph)));
   }

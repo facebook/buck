@@ -16,17 +16,16 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractExactConstraint implements Constraint {
+@BuckStyleValue
+public interface Version {
 
-  protected abstract Version getVersion();
+  Version DEFAULT = ImmutableVersion.of("default");
 
-  @Override
-  public boolean isAcceptable(Version version) {
-    return getVersion().equals(version);
+  String getName();
+
+  static Version of(String name) {
+    return ImmutableVersion.of(name);
   }
 }

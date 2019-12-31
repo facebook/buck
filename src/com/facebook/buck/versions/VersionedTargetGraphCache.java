@@ -22,7 +22,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -35,7 +35,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 public class VersionedTargetGraphCache {
 
@@ -82,12 +81,12 @@ public class VersionedTargetGraphCache {
 
     // If new inputs match old ones, we can used the cached graph, if present.
     VersionedTargetGraphInputs newInputs =
-        VersionedTargetGraphInputs.of(targetGraphCreationResult, versionUniverses);
+        ImmutableVersionedTargetGraphInputs.of(targetGraphCreationResult, versionUniverses);
     if (cachedVersionedTargetGraph != null
         && newInputs.equals(cachedVersionedTargetGraph.getInputs())) {
 
       VersionedTargetGraphCacheResult result =
-          VersionedTargetGraphCacheResult.of(
+          ImmutableVersionedTargetGraphCacheResult.of(
               ResultType.HIT, cachedVersionedTargetGraph.getTargetGraphCreationResult());
 
       request.recordHit();
@@ -113,9 +112,10 @@ public class VersionedTargetGraphCache {
             unconfiguredBuildTargetFactory,
             timeoutSeconds,
             targetGraphCreationResult);
-    cachedVersionedTargetGraph = CachedVersionedTargetGraph.of(newInputs, newVersionedTargetGraph);
+    cachedVersionedTargetGraph =
+        ImmutableCachedVersionedTargetGraph.of(newInputs, newVersionedTargetGraph);
     VersionedTargetGraphCacheResult result =
-        VersionedTargetGraphCacheResult.of(resultType, newVersionedTargetGraph);
+        ImmutableVersionedTargetGraphCacheResult.of(resultType, newVersionedTargetGraph);
 
     request.recordLoadSuccess();
 
@@ -208,9 +208,8 @@ public class VersionedTargetGraphCache {
    * any of these items changes between runs, we cannot use the cached versioned target graph and
    * must re-generate it.
    */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractVersionedTargetGraphInputs {
+  @BuckStyleValue
+  interface VersionedTargetGraphInputs {
 
     /** @return the un-versioned target graph to be transformed. */
     TargetGraphCreationResult getTargetGraphCreationResult();
@@ -223,9 +222,8 @@ public class VersionedTargetGraphCache {
    * Tuple to store the previously cached versioned target graph along with all inputs that affect
    * how it's generated (for invalidation detection).
    */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractCachedVersionedTargetGraph {
+  @BuckStyleValue
+  interface CachedVersionedTargetGraph {
 
     /** @return any inputs which, when changed, may produce a different versioned target graph. */
     VersionedTargetGraphInputs getInputs();
@@ -234,9 +232,8 @@ public class VersionedTargetGraphCache {
     TargetGraphCreationResult getTargetGraphCreationResult();
   }
 
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractVersionedTargetGraphCacheResult {
+  @BuckStyleValue
+  interface VersionedTargetGraphCacheResult {
 
     /** @return the type of result. */
     ResultType getType();

@@ -16,16 +16,19 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractVersionInfo implements ComputeResult {
+@BuckStyleValue
+public abstract class ExactConstraint implements Constraint {
 
-  public abstract ImmutableMap<BuildTarget, ImmutableSet<Version>> getVersionDomain();
+  protected abstract Version getVersion();
+
+  @Override
+  public boolean isAcceptable(Version version) {
+    return getVersion().equals(version);
+  }
+
+  public static ExactConstraint of(Version version) {
+    return ImmutableExactConstraint.of(version);
+  }
 }

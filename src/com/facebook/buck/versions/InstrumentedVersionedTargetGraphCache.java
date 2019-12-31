@@ -49,7 +49,7 @@ public class InstrumentedVersionedTargetGraphCache {
    * @return a versioned target graph, either generated from the parameters or retrieved from a
    *     cache, with the current CacheStatsTracker.
    */
-  public VersionedTargetGraphCacheResult getVersionedTargetGraph(
+  public VersionedTargetGraphCache.VersionedTargetGraphCacheResult getVersionedTargetGraph(
       DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,

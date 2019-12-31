@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -38,12 +38,11 @@ import org.immutables.value.Value;
  * by a base target which contains a subset of the input targets flavors. It is expected that every
  * lookup should match at most one base target.
  */
-@Value.Immutable
-@BuckStyleTuple
+@BuckStyleValue
 @SuppressWarnings(
     "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode
 // not TargetNode<?>
-abstract class AbstractFlavorSearchTargetNodeFinder {
+abstract class FlavorSearchTargetNodeFinder {
 
   /** @return a map of nodes indexed by their "base" target. */
   abstract ImmutableMap<BuildTarget, TargetNode> getBaseTargetIndex();

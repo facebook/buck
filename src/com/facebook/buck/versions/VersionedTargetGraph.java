@@ -120,7 +120,7 @@ public class VersionedTargetGraph extends TargetGraph {
     public VersionedTargetGraph build() {
       checkGraph(graph);
       return new VersionedTargetGraph(
-          graph, FlavorSearchTargetNodeFinder.of(ImmutableMap.copyOf(index)));
+          graph, ImmutableFlavorSearchTargetNodeFinder.of(ImmutableMap.copyOf(index)));
     }
   }
 }
