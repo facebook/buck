@@ -35,7 +35,7 @@ public class PrebuiltCxxLibraryGroupBuilder
         BuildRule> {
 
   public PrebuiltCxxLibraryGroupBuilder(BuildTarget target) {
-    super(PrebuiltCxxLibraryGroupDescription.of(), target);
+    super(new PrebuiltCxxLibraryGroupDescription(), target);
   }
 
   public PrebuiltCxxLibraryGroupBuilder setExportedPreprocessorFlags(ImmutableList<String> flags) {

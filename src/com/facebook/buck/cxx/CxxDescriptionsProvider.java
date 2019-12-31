@@ -77,7 +77,7 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
         new CxxToolchainDescription(),
         new CxxTestDescription(toolchainProvider, cxxBuckConfig, cxxBinaryMetadataFactory),
         new PrebuiltCxxLibraryDescription(toolchainProvider, cxxBuckConfig),
-        PrebuiltCxxLibraryGroupDescription.of(),
+        new PrebuiltCxxLibraryGroupDescription(),
         new CxxPrecompiledHeaderDescription());
   }
 }
