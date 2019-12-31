@@ -16,10 +16,9 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /**
  * A path which is relative to the build cell root, i.e. the top-level cell in which the build was
@@ -27,9 +26,8 @@ import org.immutables.value.Value;
  *
  * <p>See {@link com.facebook.buck.core.build.context.BuildContext#getBuildCellRootPath}.
  */
-@BuckStyleTuple
-@Value.Immutable
-abstract class AbstractBuildCellRelativePath {
+@BuckStyleValue
+public abstract class BuildCellRelativePath {
 
   public abstract Path getPathRelativeToBuildCellRoot();
 
@@ -41,8 +39,12 @@ abstract class AbstractBuildCellRelativePath {
         && !cellRelativeOrAbsolutePath.isAbsolute()) {
       return BuildCellRelativePath.of(cellRelativeOrAbsolutePath);
     }
-    return BuildCellRelativePath.of(
+    return of(
         buildCellRootPath.relativize(cellProjectFilesystem.resolve(cellRelativeOrAbsolutePath)));
+  }
+
+  public static BuildCellRelativePath of(Path pathRelativeToBuildCellRoot) {
+    return ImmutableBuildCellRelativePath.of(pathRelativeToBuildCellRoot);
   }
 
   @Override
