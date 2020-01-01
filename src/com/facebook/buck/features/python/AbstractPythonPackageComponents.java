@@ -40,7 +40,7 @@ import java.util.function.Consumer;
 import org.immutables.value.Value;
 
 /** All per-rule components that contribute to a Python binary. */
-@Value.Immutable(singleton = true, copy = true, builder = false)
+@Value.Immutable(copy = true, builder = false)
 @BuckStyleTuple
 abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
 
