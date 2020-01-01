@@ -16,28 +16,26 @@
 
 package com.facebook.buck.worker;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractWorkerProcessCommand {
+@BuckStyleValue
+interface WorkerProcessCommand {
   /**
    * Path to file which contains the arguments of the command. This content should be considered as
    * an input for the command.
    */
-  public abstract Path getArgsPath();
+  Path getArgsPath();
 
   /**
    * Path to file where stdout can be written out. Remote process should output everything into this
    * file instead of printing out into its own stdout.
    */
-  public abstract Path getStdOutPath();
+  Path getStdOutPath();
 
   /**
    * Path to file where stderr can be written out. Remote process should output everything into this
    * file instead of printing out into its own stderr.
    */
-  public abstract Path getStdErrPath();
+  Path getStdErrPath();
 }

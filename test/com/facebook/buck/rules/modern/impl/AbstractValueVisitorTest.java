@@ -41,7 +41,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
@@ -426,9 +426,8 @@ public abstract class AbstractValueVisitorTest {
     @AddToRuleKey final AddsToRuleKey appendable = new Appendable();
   }
 
-  @BuckStyleTuple
-  @Value.Immutable
-  interface AbstractTupleInterfaceData extends AddsToRuleKey {
+  @BuckStyleValue
+  interface TupleInterfaceData extends AddsToRuleKey {
     @AddToRuleKey
     SourcePath getFirst();
 
@@ -446,14 +445,13 @@ public abstract class AbstractValueVisitorTest {
     String getSecond();
   }
 
-  @BuckStyleTuple
-  @Value.Immutable
-  abstract static class AbstractTupleClassData implements AddsToRuleKey {
+  @BuckStyleValue
+  interface TupleClassData extends AddsToRuleKey {
     @AddToRuleKey
-    abstract SourcePath getFirst();
+    SourcePath getFirst();
 
     @AddToRuleKey
-    abstract String getSecond();
+    String getSecond();
   }
 
   @BuckStyleImmutable
@@ -470,7 +468,7 @@ public abstract class AbstractValueVisitorTest {
 
     @AddToRuleKey
     private final TupleInterfaceData tupleInterfaceData =
-        TupleInterfaceData.of(FakeSourcePath.of(rootFilesystem, "first.path"), "world");
+        ImmutableTupleInterfaceData.of(FakeSourcePath.of(rootFilesystem, "first.path"), "world");
 
     @AddToRuleKey
     private final ImmutableInterfaceData immutableInterfaceData =
@@ -481,7 +479,7 @@ public abstract class AbstractValueVisitorTest {
 
     @AddToRuleKey
     private final TupleClassData tupleClassData =
-        TupleClassData.of(FakeSourcePath.of(rootFilesystem, "third.path"), "world");
+        ImmutableTupleClassData.of(FakeSourcePath.of(rootFilesystem, "third.path"), "world");
 
     @AddToRuleKey
     private final ImmutableClassData immutableClassData =

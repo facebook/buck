@@ -16,13 +16,11 @@
 
 package com.facebook.buck.worker;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.hash.HashCode;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractWorkerProcessIdentity {
+@BuckStyleValue
+public interface WorkerProcessIdentity {
 
   /**
    * If the current invocation allows to have persisted worker pools (buck is running as daemon), it
@@ -36,4 +34,8 @@ interface AbstractWorkerProcessIdentity {
    * and the new pool will be recreated.
    */
   HashCode getWorkerHash();
+
+  static WorkerProcessIdentity of(String persistentWorkerKey, HashCode workerHash) {
+    return ImmutableWorkerProcessIdentity.of(persistentWorkerKey, workerHash);
+  }
 }

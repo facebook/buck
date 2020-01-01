@@ -16,17 +16,18 @@
 
 package com.facebook.buck.worker;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.util.Optional;
 
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractWorkerJobParams {
-  /**
-   * The arguments of the actual job once tool has started and ready to accept jobs. For example,
-   * "--hash-file /path/to/file".
-   */
-  String getJobArgs();
+@BuckStyleValue
+public interface WorkerJobResult {
+  int getExitCode();
 
-  WorkerProcessParams getWorkerProcessParams();
+  Optional<String> getStdout();
+
+  Optional<String> getStderr();
+
+  static WorkerJobResult of(int exitCode, Optional<String> stdout, Optional<String> stderr) {
+    return ImmutableWorkerJobResult.of(exitCode, stdout, stderr);
+  }
 }

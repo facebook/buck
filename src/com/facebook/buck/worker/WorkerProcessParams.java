@@ -16,16 +16,14 @@
 
 package com.facebook.buck.worker;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractWorkerProcessParams {
+@BuckStyleValue
+public interface WorkerProcessParams {
   /**
    * Temp folder location. This will be used to store .args, .out and .err files. Additionally, this
    * will be set into TMP environment variable which worker process tool can use to store other
@@ -54,4 +52,14 @@ interface AbstractWorkerProcessParams {
    * command and startup arguments.
    */
   Optional<WorkerProcessIdentity> getWorkerProcessIdentity();
+
+  static WorkerProcessParams of(
+      Path tempDir,
+      ImmutableList<String> startupCommand,
+      ImmutableMap<String, String> startupEnvironment,
+      int maxWorkers,
+      Optional<WorkerProcessIdentity> workerProcessIdentity) {
+    return ImmutableWorkerProcessParams.of(
+        tempDir, startupCommand, startupEnvironment, maxWorkers, workerProcessIdentity);
+  }
 }

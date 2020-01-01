@@ -359,7 +359,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Test
   public void immutables() {
     assertEquals(
-        "tupleInterfaceData:com.facebook.buck.rules.modern.impl.TupleInterfaceData<\n"
+        "tupleInterfaceData:com.facebook.buck.rules.modern.impl.ImmutableTupleInterfaceData<\n"
             + "  first:SourcePath($ROOT$/first.path)\n"
             + "  second:string(world)\n"
             + ">\n"
@@ -367,7 +367,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "  first:SourcePath($ROOT$/second.path)\n"
             + "  second:string(world)\n"
             + ">\n"
-            + "tupleClassData:com.facebook.buck.rules.modern.impl.TupleClassData<\n"
+            + "tupleClassData:com.facebook.buck.rules.modern.impl.ImmutableTupleClassData<\n"
             + "  first:SourcePath($ROOT$/third.path)\n"
             + "  second:string(world)\n"
             + ">\n"

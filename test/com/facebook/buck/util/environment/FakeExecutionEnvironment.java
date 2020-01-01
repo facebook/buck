@@ -16,15 +16,13 @@
 
 package com.facebook.buck.util.environment;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.Map;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Test utility implementation of {@link ExecutionEnvironment} based on an immutable value type. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractFakeExecutionEnvironment implements ExecutionEnvironment {
+@BuckStyleValue
+public abstract class FakeExecutionEnvironment implements ExecutionEnvironment {
   @Override
   public abstract String getHostname();
 
@@ -51,5 +49,25 @@ abstract class AbstractFakeExecutionEnvironment implements ExecutionEnvironment 
   @Override
   public Optional<String> getenv(String key) {
     return Optional.ofNullable(getEnvironment().get(key));
+  }
+
+  public static FakeExecutionEnvironment of(
+      String hostname,
+      String username,
+      int availableCores,
+      long totalMemory,
+      Platform platform,
+      Network likelyActiveNetwork,
+      Optional<String> wifiSsid,
+      Map<String, ? extends String> environment) {
+    return ImmutableFakeExecutionEnvironment.of(
+        hostname,
+        username,
+        availableCores,
+        totalMemory,
+        platform,
+        likelyActiveNetwork,
+        wifiSsid,
+        environment);
   }
 }

@@ -307,7 +307,9 @@ public class WorkerShellStepTest {
             ImmutableList.of(startupCommand, startupArg), ImmutableMap.of(), jobArgs1, 1);
 
     WorkerShellStep step1 = createWorkerShellStep(params, null, null);
-    WorkerShellStep step2 = createWorkerShellStep(params.withJobArgs(jobArgs2), null, null);
+    WorkerShellStep step2 =
+        createWorkerShellStep(
+            WorkerJobParams.of(jobArgs2, params.getWorkerProcessParams()), null, null);
 
     step1.execute(context);
 
@@ -444,7 +446,9 @@ public class WorkerShellStepTest {
         createJobParams(
             ImmutableList.of(startupCommand, startupArg), ImmutableMap.of(), jobArgsA, 2);
     WorkerShellStep stepA = new WorkerShellStepWithFakeProcesses(jobParamsA);
-    WorkerShellStep stepB = new WorkerShellStepWithFakeProcesses(jobParamsA.withJobArgs(jobArgsB));
+    WorkerShellStep stepB =
+        new WorkerShellStepWithFakeProcesses(
+            WorkerJobParams.of(jobArgsB, jobParamsA.getWorkerProcessParams()));
 
     Thread[] threads = {
       new ConcurrentExecution(stepA, context), new ConcurrentExecution(stepB, context),
