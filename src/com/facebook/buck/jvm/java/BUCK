@@ -481,7 +481,7 @@ java_library_with_plugins(
 java_immutables_library(
     name = "steps",
     srcs = [
-        "AbstractDiffAbisStep.java",
+        "DiffAbisStep.java",
         "AbstractJUnitJvmArgs.java",
         "AccumulateClassNamesStep.java",
         "CalculateClassAbiStep.java",

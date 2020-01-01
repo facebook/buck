@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.util.immutables.BuckStyleStep;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
@@ -28,21 +28,16 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleStep
-abstract class AbstractDiffAbisStep implements Step {
-  private static final Logger LOG = Logger.get(AbstractDiffAbisStep.class);
+@BuckStyleValue
+public abstract class DiffAbisStep implements Step {
+  private static final Logger LOG = Logger.get(DiffAbisStep.class);
 
-  @Value.Parameter
-  protected abstract Path getClassAbiPath();
+  public abstract Path getClassAbiPath();
 
-  @Value.Parameter
-  protected abstract Path getSourceAbiPath();
+  public abstract Path getSourceAbiPath();
 
-  @Value.Parameter
-  protected abstract JavaBuckConfig.SourceAbiVerificationMode getVerificationMode();
+  public abstract JavaBuckConfig.SourceAbiVerificationMode getVerificationMode();
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
@@ -80,5 +75,12 @@ abstract class AbstractDiffAbisStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return String.format("diff %s %s", getClassAbiPath(), getSourceAbiPath());
+  }
+
+  public static DiffAbisStep of(
+      Path classAbiPath,
+      Path sourceAbiPath,
+      JavaBuckConfig.SourceAbiVerificationMode verificationMode) {
+    return ImmutableDiffAbisStep.of(classAbiPath, sourceAbiPath, verificationMode);
   }
 }

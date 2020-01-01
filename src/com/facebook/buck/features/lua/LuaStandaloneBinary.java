@@ -94,9 +94,9 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
     // Delete any other pex that was there (when switching between pex styles).
     steps.add(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), output))
-            .withRecursive(true));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output),
+            true));
 
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 

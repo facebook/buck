@@ -85,16 +85,16 @@ public class ModernBuildRuleTest {
         steps);
     assertEquals(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    filesystem,
-                    filesystem
-                        .getBuckPaths()
-                        .getGenDir()
-                        .resolve(
-                            BuildPaths.getBaseDir(filesystem, target)
-                                .toPath(filesystem.getFileSystem()))))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                filesystem,
+                filesystem
+                    .getBuckPaths()
+                    .getGenDir()
+                    .resolve(
+                        BuildPaths.getBaseDir(filesystem, target)
+                            .toPath(filesystem.getFileSystem()))),
+            true),
         steps.get(0));
 
     assertEquals(
@@ -112,16 +112,16 @@ public class ModernBuildRuleTest {
 
     assertEquals(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    filesystem,
-                    filesystem
-                        .getBuckPaths()
-                        .getScratchDir()
-                        .resolve(
-                            BuildPaths.getBaseDir(filesystem, target)
-                                .toPath(filesystem.getFileSystem()))))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                filesystem,
+                filesystem
+                    .getBuckPaths()
+                    .getScratchDir()
+                    .resolve(
+                        BuildPaths.getBaseDir(filesystem, target)
+                            .toPath(filesystem.getFileSystem()))),
+            true),
         steps.get(2));
 
     assertEquals(

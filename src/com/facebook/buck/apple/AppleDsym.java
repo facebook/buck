@@ -145,9 +145,9 @@ public class AppleDsym extends AbstractBuildRule
     Path dwarfFileFolder = dsymOutputPath.resolve(DSYM_DWARF_FILE_FOLDER);
     return ImmutableList.of(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), dsymOutputPath))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), dsymOutputPath),
+            true),
         new DsymStep(
             getProjectFilesystem(),
             dsymutil.getEnvironment(context.getSourcePathResolver()),

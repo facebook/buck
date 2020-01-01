@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableList;
 public final class MakeCleanDirectoryStep {
 
   public static ImmutableList<Step> of(BuildCellRelativePath path) {
-    return ImmutableList.of(RmStep.of(path).withRecursive(true), MkdirStep.of(path));
+    return ImmutableList.of(RmStep.of(path, true), MkdirStep.of(path));
   }
 
   private MakeCleanDirectoryStep() {}

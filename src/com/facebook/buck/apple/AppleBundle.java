@@ -850,11 +850,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .resolve(bundleRoot.getFileName() + "." + AppleBundleExtension.DSYM.toFileExtension());
     stepsBuilder.add(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    dsymDestinationPath))
-            .withRecursive(true));
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), dsymDestinationPath),
+            true));
     stepsBuilder.add(new MoveStep(getProjectFilesystem(), dsymSourcePath, dsymDestinationPath));
 
     String dwarfFilename =

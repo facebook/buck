@@ -294,9 +294,9 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     if (context.getShouldDeleteTemporaries()) {
       stepBuilder.add(
           RmStep.of(
-                  BuildCellRelativePath.fromCellRelativePath(
-                      context.getBuildCellRootPath(), filesystem, outputPathResolver.getTempPath()))
-              .withRecursive(true));
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), filesystem, outputPathResolver.getTempPath()),
+              true));
     }
 
     return stepBuilder.build();
@@ -327,9 +327,9 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       if (!output.startsWith(outputPathResolver.getRootPath())) {
         stepBuilder.add(
             RmStep.of(
-                    BuildCellRelativePath.fromCellRelativePath(
-                        context.getBuildCellRootPath(), filesystem, output))
-                .withRecursive(true));
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), filesystem, output),
+                true));
       }
     }
 

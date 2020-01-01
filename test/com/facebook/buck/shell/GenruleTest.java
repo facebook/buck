@@ -214,21 +214,21 @@ public class GenruleTest {
 
     assertEquals(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    filesystem,
-                    BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
-                        .resolve("AndroidManifest.xml")))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                filesystem,
+                BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+                    .resolve("AndroidManifest.xml")),
+            true),
         steps.get(0));
 
     assertEquals(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    filesystem,
-                    BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s__")))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                filesystem,
+                BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s__")),
+            true),
         steps.get(1));
     assertEquals(
         MkdirStep.of(
@@ -240,11 +240,11 @@ public class GenruleTest {
 
     assertEquals(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    filesystem,
-                    BuildTargetPaths.getScratchPath(filesystem, buildTarget, "%s__")))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                filesystem,
+                BuildTargetPaths.getScratchPath(filesystem, buildTarget, "%s__")),
+            true),
         steps.get(3));
     assertEquals(
         MkdirStep.of(
@@ -257,9 +257,9 @@ public class GenruleTest {
     Path pathToOutDir = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
     assertEquals(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), filesystem, pathToOutDir))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), filesystem, pathToOutDir),
+            true),
         steps.get(5));
     assertEquals(
         MkdirStep.of(
@@ -270,9 +270,9 @@ public class GenruleTest {
     Path pathToSrcDir = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s__srcs");
     assertEquals(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), filesystem, pathToSrcDir))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), filesystem, pathToSrcDir),
+            true),
         steps.get(7));
     assertEquals(
         MkdirStep.of(

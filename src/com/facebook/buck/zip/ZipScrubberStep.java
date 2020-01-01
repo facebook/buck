@@ -14,43 +14,47 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.step.fs;
+package com.facebook.buck.zip;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.util.immutables.BuckStyleStep;
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.zip.ZipScrubber;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.Path;
 import org.immutables.value.Value;
 
-/** Command that runs equivalent command of {@code mkdir -p} on the specified directory. */
-@Value.Immutable
-@BuckStyleStep
-abstract class AbstractMkdirStep implements Step {
+@BuckStyleValue
+public abstract class ZipScrubberStep implements Step {
 
-  @Value.Parameter
-  protected abstract BuildCellRelativePath getPath();
+  public abstract Path getZipAbsolutePath();
 
-  @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
-    Files.createDirectories(
-        context.getBuildCellRootPath().resolve(getPath().getPathRelativeToBuildCellRoot()));
-    return StepExecutionResults.SUCCESS;
+  @Value.Check
+  protected void check() {
+    Preconditions.checkArgument(
+        getZipAbsolutePath().isAbsolute(), "ZipScrubberStep must take an absolute path");
   }
 
   @Override
   public String getShortName() {
-    return "mkdir";
+    return "zip-scrub";
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format(
-        "mkdir -p %s",
-        Escaper.escapeAsShellString(getPath().getPathRelativeToBuildCellRoot().toString()));
+    return "zip-scrub " + getZipAbsolutePath();
+  }
+
+  @Override
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    ZipScrubber.scrubZip(getZipAbsolutePath());
+    return StepExecutionResults.SUCCESS;
+  }
+
+  public static ZipScrubberStep of(Path zipAbsolutePath) {
+    return ImmutableZipScrubberStep.of(zipAbsolutePath);
   }
 }

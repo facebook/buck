@@ -171,11 +171,11 @@ public class ApkGenruleTest {
     ExecutionContext executionContext = newEmptyExecutionContext();
     assertEquals(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    projectFilesystem,
-                    BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s")))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                projectFilesystem,
+                BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s")),
+            true),
         steps.get(0));
     assertEquals(
         MkdirStep.of(
@@ -187,11 +187,11 @@ public class ApkGenruleTest {
 
     assertEquals(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    projectFilesystem,
-                    BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s__tmp")))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                projectFilesystem,
+                BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s__tmp")),
+            true),
         steps.get(2));
     assertEquals(
         MkdirStep.of(
@@ -205,9 +205,9 @@ public class ApkGenruleTest {
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s__srcs");
     assertEquals(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), projectFilesystem, relativePathToSrcDir))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), projectFilesystem, relativePathToSrcDir),
+            true),
         steps.get(4));
     assertEquals(
         MkdirStep.of(

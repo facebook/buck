@@ -226,9 +226,9 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     Path packageDb = getPackageDb();
     steps.add(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), packageDb))
-            .withRecursive(true));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), packageDb),
+            true));
     buildableContext.recordArtifact(packageDb);
 
     // Create the registration file.

@@ -66,9 +66,8 @@ public class RmStepTest {
 
     RmStep step =
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    filesystem.getRootPath(), filesystem, dir))
-            .withRecursive(true);
+            BuildCellRelativePath.fromCellRelativePath(filesystem.getRootPath(), filesystem, dir),
+            true);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(dir));
@@ -80,9 +79,8 @@ public class RmStepTest {
 
     RmStep step =
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    filesystem.getRootPath(), filesystem, file))
-            .withRecursive(true);
+            BuildCellRelativePath.fromCellRelativePath(filesystem.getRootPath(), filesystem, file),
+            true);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
@@ -117,9 +115,8 @@ public class RmStepTest {
 
     RmStep step =
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    filesystem.getRootPath(), filesystem, file))
-            .withRecursive(true);
+            BuildCellRelativePath.fromCellRelativePath(filesystem.getRootPath(), filesystem, file),
+            true);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));

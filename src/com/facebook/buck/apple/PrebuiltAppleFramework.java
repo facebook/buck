@@ -141,9 +141,9 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
                 context.getBuildCellRootPath(), getProjectFilesystem(), out.getParent())));
     builder.add(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), out))
-            .withRecursive(true));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), out),
+            true));
     builder.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),

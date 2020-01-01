@@ -119,9 +119,9 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     // Delete any other pex that was there (when switching between pex styles).
     steps.add(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), binPath))
-            .withRecursive(true));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), binPath),
+            true));
 
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 

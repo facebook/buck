@@ -123,11 +123,9 @@ public class DirectHeaderMapTest {
     ImmutableList<Step> expectedBuildSteps =
         ImmutableList.of(
             RmStep.of(
-                    BuildCellRelativePath.fromCellRelativePath(
-                        buildContext.getBuildCellRootPath(),
-                        projectFilesystem,
-                        buildRule.getRoot()))
-                .withRecursive(true),
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(), projectFilesystem, buildRule.getRoot()),
+                true),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), projectFilesystem, buildRule.getRoot())),

@@ -17,7 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.util.immutables.BuckStyleStep;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.step.Step;
@@ -28,19 +28,13 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleStep
-abstract class AbstractRmStep implements Step {
+@BuckStyleValue
+public abstract class RmStep implements Step {
 
-  @Value.Parameter
-  protected abstract BuildCellRelativePath getPath();
+  public abstract BuildCellRelativePath getPath();
 
-  @Value.Default
-  protected boolean isRecursive() {
-    return false;
-  }
+  public abstract boolean isRecursive();
 
   @Override
   public String getShortName() {
@@ -74,5 +68,13 @@ abstract class AbstractRmStep implements Step {
     args.add(getPath().getPathRelativeToBuildCellRoot().toString());
 
     return Joiner.on(" ").join(args.build());
+  }
+
+  public static RmStep of(BuildCellRelativePath path, boolean recursive) {
+    return ImmutableRmStep.of(path, recursive);
+  }
+
+  public static RmStep of(BuildCellRelativePath path) {
+    return ImmutableRmStep.of(path, false);
   }
 }

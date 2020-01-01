@@ -133,9 +133,9 @@ public class GenAidlTest {
     Path outputDirectory = BuildTargetPaths.getScratchPath(stubFilesystem, target, "__%s.aidl");
     assertEquals(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), stubFilesystem, outputDirectory))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), stubFilesystem, outputDirectory),
+            true),
         steps.get(2));
     assertEquals(
         MkdirStep.of(
