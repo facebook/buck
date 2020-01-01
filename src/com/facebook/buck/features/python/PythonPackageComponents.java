@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.impl.Symlinks;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.step.fs.SymlinkPaths;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -37,12 +37,11 @@ import com.google.common.collect.Multimaps;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
-import org.immutables.value.Value;
+import javax.annotation.Nullable;
 
 /** All per-rule components that contribute to a Python binary. */
-@Value.Immutable(copy = true, builder = false)
-@BuckStyleTuple
-abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
+@BuckStyleValue
+public abstract class PythonPackageComponents implements AddsToRuleKey {
 
   // Python modules as map of their module name to location of the source.
   @AddToRuleKey
@@ -126,6 +125,15 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
     };
   }
 
+  public PythonPackageComponents withDefaultInitPy(@Nullable SourcePath emptyInit) {
+    return ImmutablePythonPackageComponents.of(
+        getModules(),
+        getResources(),
+        getNativeLibraries(),
+        Optional.ofNullable(emptyInit),
+        isZipSafe());
+  }
+
   /**
    * A helper class to construct a PythonPackageComponents instance which throws human readable
    * error messages on duplicates.
@@ -164,7 +172,7 @@ abstract class AbstractPythonPackageComponents implements AddsToRuleKey {
     }
 
     public PythonPackageComponents build() {
-      return PythonPackageComponents.of(
+      return ImmutablePythonPackageComponents.of(
           modules, resources, nativeLibraries, Optional.empty(), zipSafe);
     }
   }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.cell;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.stream.RichStream;
@@ -35,7 +35,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.immutables.value.Value;
 
 /**
  * Hierarcical configuration of cell/section/key/value quadruples.
@@ -43,11 +42,10 @@ import org.immutables.value.Value;
  * <p>This class only implements the simple construction/storage/retrieval of these values. Other
  * classes like {@link Config} implements accessors that interpret the values as other types.
  */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleTuple
-abstract class AbstractCellConfig {
+@BuckStyleValue
+public abstract class CellConfig {
 
-  public static final CellConfig EMPTY_INSTANCE = CellConfig.of(ImmutableMap.of());
+  public static final CellConfig EMPTY_INSTANCE = ImmutableCellConfig.of(ImmutableMap.of());
 
   public abstract ImmutableMap<CellName, RawConfig> getValues();
 
@@ -150,7 +148,7 @@ abstract class AbstractCellConfig {
                     if (map.isEmpty()) {
                       return CellConfig.EMPTY_INSTANCE;
                     }
-                    return CellConfig.of(map);
+                    return ImmutableCellConfig.of(map);
                   }));
     }
 

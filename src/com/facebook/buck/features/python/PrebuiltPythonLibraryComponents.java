@@ -21,7 +21,7 @@ import com.facebook.buck.core.rules.impl.SymlinkDir;
 import com.facebook.buck.core.rules.impl.Symlinks;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.step.fs.SymlinkDirPaths;
 import com.facebook.buck.step.fs.SymlinkPaths;
@@ -35,9 +35,8 @@ import java.util.function.Consumer;
 import org.immutables.value.Value;
 
 /** {@link PythonComponents} contributed by {@link PrebuiltPythonLibrary} rules. */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractPrebuiltPythonLibraryComponents implements PythonComponents {
+@BuckStyleValue
+abstract class PrebuiltPythonLibraryComponents implements PythonComponents {
 
   protected abstract Type getType();
 
@@ -45,15 +44,15 @@ abstract class AbstractPrebuiltPythonLibraryComponents implements PythonComponen
   abstract SourcePath getDirectory();
 
   public static PrebuiltPythonLibraryComponents ofModules(SourcePath sourcePath) {
-    return PrebuiltPythonLibraryComponents.of(Type.MODULES, sourcePath);
+    return ImmutablePrebuiltPythonLibraryComponents.of(Type.MODULES, sourcePath);
   }
 
   public static PrebuiltPythonLibraryComponents ofResources(SourcePath sourcePath) {
-    return PrebuiltPythonLibraryComponents.of(Type.RESOURCES, sourcePath);
+    return ImmutablePrebuiltPythonLibraryComponents.of(Type.RESOURCES, sourcePath);
   }
 
   public static PrebuiltPythonLibraryComponents ofSources(SourcePath sourcePath) {
-    return PrebuiltPythonLibraryComponents.of(Type.SOURCES, sourcePath);
+    return ImmutablePrebuiltPythonLibraryComponents.of(Type.SOURCES, sourcePath);
   }
 
   private static boolean accept(Type type, Path path) {

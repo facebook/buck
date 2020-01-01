@@ -20,7 +20,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
@@ -720,9 +720,9 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractFetchResult {
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractFetchResult {
     Optional<Long> getResponseSizeBytes();
 
     Optional<BuildTarget> getBuildTarget();
@@ -737,26 +737,27 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractMultiContainsResult {
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractMultiContainsResult {
     Optional<Long> getResponseSizeBytes();
 
     ImmutableMap<RuleKey, CacheResult> getCacheResults();
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractMultiFetchResult {
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractMultiFetchResult {
     /** At least one of the results must be non-skipped. */
+    @Value.Parameter
     ImmutableList<FetchResult> getResults();
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractStoreResult {
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractStoreResult {
     Optional<Long> getRequestSizeBytes();
 
     Optional<String> getArtifactContentHash();

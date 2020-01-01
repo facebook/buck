@@ -21,7 +21,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -35,22 +35,21 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 /**
  * The group of {@link BuildTarget}s from C/C++ constructor args which comprise a C/C++ descriptions
  * logical C/C++ deps used to find dependency {@link NativeLinkableGroup}s or {@link
  * CxxPreprocessorDep}s.
  */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleTuple
-abstract class AbstractCxxDeps {
+@BuckStyleValue
+public abstract class CxxDeps {
 
-  public static final CxxDeps EMPTY_INSTANCE = CxxDeps.of(ImmutableList.of(), ImmutableList.of());
+  public static final CxxDeps EMPTY_INSTANCE =
+      ImmutableCxxDeps.of(ImmutableList.of(), ImmutableList.of());
 
-  abstract ImmutableList<BuildTarget> getDeps();
+  public abstract ImmutableList<BuildTarget> getDeps();
 
-  abstract ImmutableList<PatternMatchedCollection<ImmutableSortedSet<BuildTarget>>>
+  public abstract ImmutableList<PatternMatchedCollection<ImmutableSortedSet<BuildTarget>>>
       getPlatformDeps();
 
   private Stream<BuildTarget> getSpecificPlatformDeps(CxxPlatform cxxPlatform) {
@@ -144,7 +143,7 @@ abstract class AbstractCxxDeps {
       if (deps.isEmpty() && platformDeps.isEmpty()) {
         return CxxDeps.EMPTY_INSTANCE;
       }
-      return CxxDeps.of(deps, platformDeps);
+      return ImmutableCxxDeps.of(deps, platformDeps);
     }
   }
 }
