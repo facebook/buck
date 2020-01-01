@@ -48,7 +48,7 @@ public class TestCellBuilder {
   @Nullable private ToolchainProvider toolchainProvider = null;
 
   public TestCellBuilder() {
-    cellConfig = CellConfig.of();
+    cellConfig = CellConfig.EMPTY_INSTANCE;
   }
 
   public TestCellBuilder setFilesystem(ProjectFilesystem filesystem) {

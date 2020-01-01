@@ -43,9 +43,12 @@ import org.immutables.value.Value;
  * <p>This class only implements the simple construction/storage/retrieval of these values. Other
  * classes like {@link Config} implements accessors that interpret the values as other types.
  */
-@Value.Immutable(singleton = true, builder = false, copy = false)
+@Value.Immutable(builder = false, copy = false)
 @BuckStyleTuple
 abstract class AbstractCellConfig {
+
+  public static final CellConfig EMPTY_INSTANCE = CellConfig.of(ImmutableMap.of());
+
   public abstract ImmutableMap<CellName, RawConfig> getValues();
 
   /**
@@ -143,7 +146,12 @@ abstract class AbstractCellConfig {
           .collect(
               Collectors.collectingAndThen(
                   ImmutableMap.toImmutableMap(e -> e.getKey(), entry -> entry.getValue().build()),
-                  CellConfig::of));
+                  map -> {
+                    if (map.isEmpty()) {
+                      return CellConfig.EMPTY_INSTANCE;
+                    }
+                    return CellConfig.of(map);
+                  }));
     }
 
     /** Get a section or create it if it doesn't exist. */

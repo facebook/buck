@@ -176,7 +176,7 @@ public abstract class IsolatedBuildableBuilder {
         LocalCellProviderFactory.create(
             filesystem,
             buckConfig,
-            CellConfig.of(),
+            CellConfig.EMPTY_INSTANCE,
             cellPathResolver.getPathMapping(),
             cellPathResolver,
             moduleManager,

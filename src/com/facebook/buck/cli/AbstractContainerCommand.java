@@ -147,7 +147,7 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
   @Override
   public CellConfig getConfigOverrides(ImmutableMap<CellName, Path> cellMapping) {
     Optional<Command> cmd = getSubcommand();
-    return cmd.isPresent() ? cmd.get().getConfigOverrides(cellMapping) : CellConfig.of();
+    return cmd.isPresent() ? cmd.get().getConfigOverrides(cellMapping) : CellConfig.EMPTY_INSTANCE;
   }
 
   @Override

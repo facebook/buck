@@ -733,7 +733,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     return LocalCellProviderFactory.create(
             filesystem,
             buckConfig,
-            CellConfig.of(),
+            CellConfig.EMPTY_INSTANCE,
             rootCellCellPathResolver.getPathMapping(),
             rootCellCellPathResolver,
             TestBuckModuleManagerFactory.create(pluginManager),
