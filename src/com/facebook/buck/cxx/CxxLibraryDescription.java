@@ -196,7 +196,7 @@ public class CxxLibraryDescription
                     // Also add private deps if we are _not_ reexporting all deps.
                     args.isReexportAllHeaderDependencies()
                             .orElse(cxxBuckConfig.getDefaultReexportAllHeaderDependencies())
-                        ? CxxDeps.of()
+                        ? CxxDeps.EMPTY_INSTANCE
                         : args.getPrivateCxxDeps()))
             .toOnceIterable(),
         args.getRawHeaders(),

@@ -42,9 +42,11 @@ import org.immutables.value.Value;
  * logical C/C++ deps used to find dependency {@link NativeLinkableGroup}s or {@link
  * CxxPreprocessorDep}s.
  */
-@Value.Immutable(builder = false, copy = false, singleton = true)
+@Value.Immutable(builder = false, copy = false)
 @BuckStyleTuple
 abstract class AbstractCxxDeps {
+
+  public static final CxxDeps EMPTY_INSTANCE = CxxDeps.of(ImmutableList.of(), ImmutableList.of());
 
   abstract ImmutableList<BuildTarget> getDeps();
 
@@ -139,6 +141,9 @@ abstract class AbstractCxxDeps {
     }
 
     public CxxDeps build() {
+      if (deps.isEmpty() && platformDeps.isEmpty()) {
+        return CxxDeps.EMPTY_INSTANCE;
+      }
       return CxxDeps.of(deps, platformDeps);
     }
   }
