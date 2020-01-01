@@ -148,7 +148,7 @@ abstract class Ok1 {
 
 // OK: Not @BuckStyleValue
 @Value.Immutable(prehash = true)
-@BuckStyleTuple
+@BuckStyleValue
 abstract class Ok2 {
 }
 

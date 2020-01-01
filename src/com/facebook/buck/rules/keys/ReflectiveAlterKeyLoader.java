@@ -25,7 +25,6 @@ import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheLoader;
@@ -163,7 +162,6 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
     return current.getAnnotation(BuckStyleImmutable.class) != null
         || current.getAnnotation(BuckStylePackageVisibleImmutable.class) != null
         || current.getAnnotation(BuckStylePackageVisibleTuple.class) != null
-        || current.getAnnotation(BuckStyleTuple.class) != null
         || current.getAnnotation(BuckStyleValue.class) != null;
   }
 
