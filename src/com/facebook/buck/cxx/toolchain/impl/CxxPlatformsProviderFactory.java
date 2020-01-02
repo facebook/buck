@@ -58,7 +58,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
         CxxPlatformsSupplier cxxPlatformsSupplier =
             toolchainProvider.getByName(
                 toolchainName, toolchainTargetConfiguration, CxxPlatformsSupplier.class);
-        cxxSystemPlatforms.putAll(cxxPlatformsSupplier.getCxxPlatforms());
+        cxxSystemPlatforms.putAll(cxxPlatformsSupplier.getUnresolvedCxxPlatforms());
       }
     }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -160,7 +161,7 @@ public class MultiarchFileInfos {
       MultiarchFileInfo info,
       ImmutableSortedSet<BuildRule> thinRules,
       CxxBuckConfig cxxBuckConfig,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain) {
+      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain) {
     Optional<BuildRule> existingRule = graphBuilder.getRuleOptional(info.getFatTarget());
     if (existingRule.isPresent()) {
       return existingRule.get();
@@ -180,7 +181,9 @@ public class MultiarchFileInfos {
           getMultiarchOutputFormatString(graphBuilder.getSourcePathResolver(), inputs);
 
       AppleCxxPlatform applePlatform =
-          appleCxxPlatformsFlavorDomain.getValue(info.getRepresentativePlatformFlavor());
+          appleCxxPlatformsFlavorDomain
+              .getValue(info.getRepresentativePlatformFlavor())
+              .resolve(graphBuilder);
       MultiarchFile multiarchFile =
           new MultiarchFile(
               buildTarget,

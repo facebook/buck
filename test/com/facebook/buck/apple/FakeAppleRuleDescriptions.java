@@ -24,7 +24,9 @@ import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
+import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatforms;
+import com.facebook.buck.apple.toolchain.impl.StaticUnresolvedAppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.impl.XcodeToolFinder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -239,14 +241,20 @@ public class FakeAppleRuleDescriptions {
           new StaticUnresolvedCxxPlatform(DEFAULT_MACOSX_X86_64_PLATFORM.getCxxPlatform()),
           new StaticUnresolvedCxxPlatform(DEFAULT_WATCHOS_ARMV7K_PLATFORM.getCxxPlatform()));
 
-  public static final FlavorDomain<AppleCxxPlatform> DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN =
-      FlavorDomain.of(
-          "Fake Apple C++ Platforms",
-          DEFAULT_IPHONEOS_I386_PLATFORM,
-          DEFAULT_IPHONEOS_X86_64_PLATFORM,
-          DEFAULT_MACOSX_X86_64_PLATFORM,
-          DEFAULT_WATCHOS_ARMV7K_PLATFORM,
-          DEFAULT_WATCHOS_ARM6432_PLATFORM);
+  public static final FlavorDomain<UnresolvedAppleCxxPlatform>
+      DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN =
+          FlavorDomain.of(
+              "Fake Apple C++ Platforms",
+              StaticUnresolvedAppleCxxPlatform.of(
+                  DEFAULT_IPHONEOS_I386_PLATFORM, DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor()),
+              StaticUnresolvedAppleCxxPlatform.of(
+                  DEFAULT_IPHONEOS_X86_64_PLATFORM, DEFAULT_IPHONEOS_X86_64_PLATFORM.getFlavor()),
+              StaticUnresolvedAppleCxxPlatform.of(
+                  DEFAULT_MACOSX_X86_64_PLATFORM, DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor()),
+              StaticUnresolvedAppleCxxPlatform.of(
+                  DEFAULT_WATCHOS_ARMV7K_PLATFORM, DEFAULT_WATCHOS_ARMV7K_PLATFORM.getFlavor()),
+              StaticUnresolvedAppleCxxPlatform.of(
+                  DEFAULT_WATCHOS_ARM6432_PLATFORM, DEFAULT_WATCHOS_ARM6432_PLATFORM.getFlavor()));
 
   public static final FlavorDomain<UnresolvedSwiftPlatform> DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN =
       FlavorDomain.of(
@@ -381,7 +389,7 @@ public class FakeAppleRuleDescriptions {
   }
 
   private static ToolchainProvider createTestToolchainProviderForApplePlatform(
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
+      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain) {
     return new ToolchainProviderBuilder()
         .withToolchain(
             AppleCxxPlatformsProvider.DEFAULT_NAME,
@@ -397,7 +405,7 @@ public class FakeAppleRuleDescriptions {
   }
 
   private static ToolchainProvider createTestToolchainProvider(
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
+      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain,
       FlavorDomain<UnresolvedSwiftPlatform> swiftFlavorDomain) {
     return new ToolchainProviderBuilder()
         .withToolchain(
