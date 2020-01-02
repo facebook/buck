@@ -45,6 +45,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.features.halide.HalideCompile;
 import com.facebook.buck.features.halide.HalideLibraryDescription;
@@ -194,12 +195,12 @@ class HeaderSearchPaths {
   }
 
   /**
-   * Create header symlink trees for the {@link HeaderSearchPathAttributes#targetNode} and any
+   * Create header symlink trees for the {@link HeaderSearchPathAttributes#targetNode()} and any
    * required header maps or generated umbrella headers for public/private headers. Populates
    * {@param headerSymlinkTreesBuilder} with any generated header symlink paths.
    *
    * @return Source paths that need to be build for the {@link
-   *     HeaderSearchPathAttributes#targetNode}.
+   *     HeaderSearchPathAttributes#targetNode()}.
    */
   ImmutableList<SourcePath> createHeaderSearchPaths(
       HeaderSearchPathAttributes headerSearchPathAttributes,
@@ -672,7 +673,16 @@ class HeaderSearchPaths {
         (nativeNode, headerVisibility) -> {
           if (headerVisibility.equals(HeaderVisibility.PUBLIC)
               && NodeHelper.isModularAppleLibrary(nativeNode)) {
-            builder.add(getHeaderSymlinkTreePath(nativeNode, headerVisibility));
+            BuildTarget flavoredBuildTarget =
+                NodeHelper.getModularMapTarget(
+                    nativeNode,
+                    HeaderMode.forModuleMapMode(getModuleMapMode(nativeNode)),
+                    cxxPlatform);
+
+            Path symlinkPath =
+                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                    projectFilesystem, flavoredBuildTarget, headerVisibility);
+            builder.add(projectFilesystem.resolve(symlinkPath));
           }
         });
     return builder.build();

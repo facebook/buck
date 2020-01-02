@@ -23,11 +23,14 @@ import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.apple.clang.ModuleMapMode;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -78,6 +81,21 @@ public class NodeHelper {
       TargetGraph targetGraph, TargetNode<?> targetNode) {
     return getAppleNativeNodeOfType(
         targetGraph, targetNode, APPLE_NATIVE_DESCRIPTION_CLASSES, APPLE_NATIVE_BUNDLE_EXTENSIONS);
+  }
+
+  static BuildTarget getModularMapTarget(
+      TargetNode<?> targetNode, HeaderMode headerMode, CxxPlatform cxxPlatform) {
+    return targetNode
+        .getBuildTarget()
+        .withoutFlavors(CxxLibraryDescription.LIBRARY_TYPE.getFlavors())
+        .withAppendedFlavors(
+            CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
+            // Use the default flavor, which should be iphonesimulatorx86_64
+            // In essence, the flavor doesn't really matter since we are just dealing
+            // with headers here and not compiling anything. We just need to expose them
+            // for module maps.
+            cxxPlatform.getFlavor(),
+            headerMode.getFlavor());
   }
 
   /**
