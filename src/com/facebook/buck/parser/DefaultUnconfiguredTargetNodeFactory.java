@@ -135,6 +135,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             cell.getCellPathResolver(),
             VisibilityAttributes.VISIBILITY,
             rawAttributes.get(VisibilityAttributes.VISIBILITY),
+            buildFile,
             () -> visibilityDefinerDescription);
 
     if (visibilityPatterns.isEmpty()) {
@@ -146,6 +147,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             cell.getCellPathResolver(),
             VisibilityAttributes.WITHIN_VIEW,
             rawAttributes.get(VisibilityAttributes.WITHIN_VIEW),
+            buildFile,
             () -> visibilityDefinerDescription);
 
     if (withinViewPatterns.isEmpty()) {

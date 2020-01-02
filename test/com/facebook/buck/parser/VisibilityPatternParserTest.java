@@ -25,29 +25,33 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatternParser;
+import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Test;
 
 public class VisibilityPatternParserTest {
 
   private ProjectFilesystem filesystem;
+  private Path definingPath;
 
   @Before
   public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    definingPath = filesystem.resolve("BUCK");
   }
 
   @Test
   public void visibilityParserCanHandleSpecialCasedPublicVisibility()
       throws NoSuchBuildTargetException {
-    VisibilityPattern publicPattern = VisibilityPatternParser.parse(null, "PUBLIC");
+    VisibilityPattern publicPattern = VisibilityPatternParser.parse(null, definingPath, "PUBLIC");
     assertNotNull(publicPattern);
     assertEquals("PUBLIC", publicPattern.getRepresentation());
   }
 
   @Test
   public void getDescriptionWorksForVariousPatternTypes() throws NoSuchBuildTargetException {
-    assertEquals("PUBLIC", VisibilityPatternParser.parse(null, "PUBLIC").getRepresentation());
+    assertEquals(
+        "PUBLIC", VisibilityPatternParser.parse(null, definingPath, "PUBLIC").getRepresentation());
     assertEquals(
         "//test/com/facebook/buck/parser:parser",
         parseVisibilityPattern("//test/com/facebook/buck/parser:parser").getRepresentation());
@@ -60,6 +64,6 @@ public class VisibilityPatternParserTest {
   }
 
   private VisibilityPattern parseVisibilityPattern(String pattern) {
-    return VisibilityPatternParser.parse(createCellRoots(filesystem), pattern);
+    return VisibilityPatternParser.parse(createCellRoots(filesystem), definingPath, pattern);
   }
 }

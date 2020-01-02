@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -35,6 +36,7 @@ public class VisibilityPatterns {
       CellPathResolver cellNames,
       String paramName,
       @Nullable Object value,
+      Path definingPath,
       Supplier<String> visibilityDefinerDescription) {
     if (value == null) {
       return ImmutableSet.of();
@@ -48,7 +50,7 @@ public class VisibilityPatterns {
         ImmutableSet.builderWithExpectedSize(originalPatterns.size());
     for (String visibility : originalPatterns) {
       try {
-        patterns.add(VisibilityPatternParser.parse(cellNames, visibility));
+        patterns.add(VisibilityPatternParser.parse(cellNames, definingPath, visibility));
       } catch (IllegalArgumentException e) {
         throw new HumanReadableException(
             e,

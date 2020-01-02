@@ -174,7 +174,10 @@ public abstract class AbstractNodeBuilder<
               getDepsFromArg(populatedArg),
               ImmutableSortedSet.of(),
               ImmutableSet.of(
-                  VisibilityPatternParser.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
+                  VisibilityPatternParser.parse(
+                      null,
+                      filesystem.getRootPath().resolve("BUCK"),
+                      VisibilityPatternParser.VISIBILITY_PUBLIC)),
               ImmutableSet.of(),
               cellRoots)
           .withSelectedVersions(selectedVersions);

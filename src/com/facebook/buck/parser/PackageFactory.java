@@ -38,7 +38,7 @@ public class PackageFactory {
       Cell cell, Path packageFile, PackageMetadata rawPackage, Optional<Package> parentPackage) {
 
     String visibilityDefinerDescription =
-        String.format("the package at %s", packageFile.toString());
+        String.format("the package() at %s", packageFile.toString());
 
     ImmutableSet.Builder<VisibilityPattern> visibilityBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> withinViewBuilder = ImmutableSet.builder();
@@ -54,6 +54,7 @@ public class PackageFactory {
             cell.getCellPathResolver(),
             VisibilityAttributes.VISIBILITY,
             rawPackage.getVisibility(),
+            packageFile,
             () -> visibilityDefinerDescription));
 
     withinViewBuilder.addAll(
@@ -61,6 +62,7 @@ public class PackageFactory {
             cell.getCellPathResolver(),
             VisibilityAttributes.WITHIN_VIEW,
             rawPackage.getWithinView(),
+            packageFile,
             () -> visibilityDefinerDescription));
 
     return ImmutablePackage.of(visibilityBuilder.build(), withinViewBuilder.build());

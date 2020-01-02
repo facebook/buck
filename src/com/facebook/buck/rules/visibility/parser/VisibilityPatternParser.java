@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.annotations.VisibleForTesting;
+import java.nio.file.Path;
 
 public class VisibilityPatternParser {
   public static final String VISIBILITY_PUBLIC = "PUBLIC";
@@ -33,12 +34,20 @@ public class VisibilityPatternParser {
   private static final BuildTargetMatcherParser<BuildTargetMatcher> buildTargetPatternParser =
       BuildTargetMatcherParser.forVisibilityArgument();
 
-  public static VisibilityPattern parse(CellPathResolver cellNames, String buildTargetPattern) {
+  /**
+   * @param cellNames Known cell names in the workspace, used to resolve which cell the {@param
+   *     buildTargetPattern} belongs.
+   * @param definingPath Path of the file defining the {@param buildTargetPattern}.
+   * @param buildTargetPattern The build target pattern to parse.
+   * @return
+   */
+  public static VisibilityPattern parse(
+      CellPathResolver cellNames, Path definingPath, String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
-      return ImmutablePublicVisibilityPattern.of();
+      return ImmutablePublicVisibilityPattern.of(definingPath);
     } else {
       return ImmutableBuildTargetVisibilityPattern.of(
-          buildTargetPatternParser.parse(cellNames, buildTargetPattern));
+          buildTargetPatternParser.parse(cellNames, buildTargetPattern), definingPath);
     }
   }
 
@@ -49,6 +58,10 @@ public class VisibilityPatternParser {
 
     @JsonProperty("pattern")
     abstract BuildTargetMatcher getViewerPattern();
+
+    @Override
+    @JsonProperty("definingPath")
+    public abstract Path getDefiningPath();
 
     @Override
     @JsonIgnore
@@ -65,7 +78,11 @@ public class VisibilityPatternParser {
 
   @BuckStyleValue
   @JsonDeserialize
-  static class PublicVisibilityPattern implements VisibilityPattern {
+  abstract static class PublicVisibilityPattern implements VisibilityPattern {
+
+    @Override
+    @JsonProperty("definingPath")
+    public abstract Path getDefiningPath();
 
     @Override
     @JsonIgnore
