@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -81,6 +82,11 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
           .setName("macosx")
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
           .setAppIncludesFrameworks(true)
+          .build();
+  public static final ApplePlatform DRIVERKIT =
+      ApplePlatform.builder()
+          .setName("driverkit")
+          .setArchitectures(ImmutableList.of("armv7", "arm64", "i386", "x86_64"))
           .build();
 
   /** The full name of the platform. For example: {@code macosx}. */
@@ -161,12 +167,49 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
             WATCHSIMULATOR,
             APPLETVOS,
             APPLETVSIMULATOR,
-            MACOSX)) {
+            MACOSX,
+            DRIVERKIT)) {
       if (name.equals(platform.getName())) {
         return platform;
       }
     }
     return ApplePlatform.builder().setName(name).build();
+  }
+
+  public static ImmutableList<ApplePlatform> getAllPlatforms() {
+    return ImmutableList.of(
+        IPHONEOS,
+        IPHONESIMULATOR,
+        WATCHOS,
+        WATCHSIMULATOR,
+        APPLETVOS,
+        APPLETVSIMULATOR,
+        MACOSX,
+        DRIVERKIT);
+  }
+
+  public static boolean isPlatformFlavor(Flavor flavor) {
+    for (ApplePlatform platform : getAllPlatforms()) {
+      if (flavor.getName().startsWith(platform.getName())) {
+        String[] parts = flavor.getName().split("\\-");
+        if (parts.length > 1 && platform.getArchitectures().contains(parts[1])) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  public static Optional<String> findAppleSdkName(Flavor flavor) {
+    if (!isPlatformFlavor(flavor)) {
+      return Optional.empty();
+    }
+    for (ApplePlatform platform : getAllPlatforms()) {
+      if (flavor.getName().startsWith(platform.getName())) {
+        return Optional.of(flavor.getName().split("\\-")[0]);
+      }
+    }
+    return Optional.empty();
   }
 
   @Override

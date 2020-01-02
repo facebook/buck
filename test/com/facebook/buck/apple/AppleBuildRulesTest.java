@@ -78,7 +78,7 @@ public class AppleBuildRulesTest {
 
   @Test
   public void testAppleTestIsXcodeTargetTestBuildRuleType() {
-    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo:xctest#iphoneos-armv7");
     BuildTarget testLibraryTarget =
         BuildTargetFactory.newInstance("//foo:xctest#apple-test-library");
     ActionGraphBuilder graphBuilder =

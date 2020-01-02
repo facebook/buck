@@ -124,7 +124,7 @@ public class MultiarchFileTest {
         ((Flavored) descriptionFactory.get())
             .hasFlavors(
                 ImmutableSet.of(
-                    InternalFlavor.of("iphoneos-i386"), InternalFlavor.of("iphoneos-x86_64")),
+                    InternalFlavor.of("iphoneos-armv7"), InternalFlavor.of("iphoneos-arm64")),
                 UnconfiguredTargetConfiguration.INSTANCE));
   }
 
@@ -132,7 +132,7 @@ public class MultiarchFileTest {
   @Test
   public void descriptionWithMultiplePlatformArgsShouldGenerateMultiarchFile() {
     BuildTarget target =
-        BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64");
+        BuildTargetFactory.newInstance("//foo:thing#iphoneos-armv7,iphoneos-arm64");
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(target).build()));
@@ -169,7 +169,7 @@ public class MultiarchFileTest {
     try {
       nodeBuilderFactory
           .getNodeBuilder(
-              BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386,macosx-x86_64"))
+              BuildTargetFactory.newInstance("//foo:xctest#iphoneos-armv7,macosx-x86_64"))
           .build(graphBuilder);
     } catch (HumanReadableException e) {
       exception = e;
@@ -196,7 +196,7 @@ public class MultiarchFileTest {
         nodeBuilderFactory
             .getNodeBuilder(
                 BuildTargetFactory.newInstance(
-                    "//foo:xctest#" + "iphoneos-i386,iphoneos-x86_64," + flavor))
+                    "//foo:xctest#" + "iphoneos-armv7,iphoneos-arm64," + flavor))
             .build(graphBuilder);
       } catch (HumanReadableException e) {
         exception = e;
@@ -212,7 +212,7 @@ public class MultiarchFileTest {
   @Test
   public void propagatesSingleArchRulesAndTheirDsymDepsAsDsymDeps() {
     BuildTarget target =
-        BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64");
+        BuildTargetFactory.newInstance("//foo:thing#iphoneos-armv7,iphoneos-arm64");
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(target).build()));
