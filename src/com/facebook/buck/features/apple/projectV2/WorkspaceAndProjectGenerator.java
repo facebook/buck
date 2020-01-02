@@ -21,6 +21,7 @@ import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
+import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.xcode.XCScheme;
@@ -39,8 +40,10 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.apple.common.CopyInXcode;
@@ -290,6 +293,8 @@ public class WorkspaceAndProjectGenerator {
         schemeUngroupedTestTargets,
         targetToProjectPathMap,
         buildTargetToPBXTarget);
+
+    requiredBuildTargetsBuilder.addAll(getModularNodesToGenerate());
 
     Path workspacePath = workspaceGenerator.writeWorkspace();
     return new Result(workspacePath, xcodeProjectWriteOptions.project());
@@ -715,6 +720,38 @@ public class WorkspaceAndProjectGenerator {
       testsBuilder.add(extraTestTarget);
     }
     return testsBuilder.build();
+  }
+
+  @SuppressWarnings("unchecked")
+  private ImmutableSet<BuildTarget> getModularNodesToGenerate() {
+    return projectGraph.getNodes().stream()
+        .filter(
+            modularNode ->
+                modularNode.getConstructorArg() instanceof AppleNativeTargetDescriptionArg)
+        .filter(NodeHelper::isModularAppleLibrary)
+        .map(
+            nativeTargetNode -> {
+              TargetNode<AppleNativeTargetDescriptionArg> modularNode =
+                  (TargetNode<AppleNativeTargetDescriptionArg>) nativeTargetNode;
+              HeaderMode headerMode =
+                  HeaderMode.forModuleMapMode(
+                      modularNode
+                          .getConstructorArg()
+                          .getModulemapMode()
+                          .orElse(appleConfig.moduleMapMode()));
+              return modularNode
+                  .getBuildTarget()
+                  .withoutFlavors(CxxLibraryDescription.LIBRARY_TYPE.getFlavors())
+                  .withAppendedFlavors(
+                      CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
+                      // Use the default flavor, which should be iphonesimulatorx86_64
+                      // In essence, the flavor doesn't really matter since we are just dealing
+                      // with headers here and not compiling anything. We just need to expose them
+                      // for module maps.
+                      defaultCxxPlatform.getFlavor(),
+                      headerMode.getFlavor());
+            })
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   /**
