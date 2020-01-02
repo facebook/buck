@@ -102,8 +102,11 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.features.apple.common.Xcconfig;
 import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.features.halide.HalideLibraryBuilder;
 import com.facebook.buck.features.halide.HalideLibraryDescription;
@@ -137,6 +140,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -674,6 +678,85 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(
             "foo/foo.m", Optional.empty(),
             "bar.m", Optional.empty()));
+  }
+
+  @Test
+  public void testModularLibraryHasCorrectSwiftIncludePaths() throws IOException, ParseException {
+    BuildTarget frameworkBundleTarget = BuildTargetFactory.newInstance("//foo", "framework");
+    BuildTarget frameworkLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget appBundleTarget = BuildTargetFactory.newInstance("//product", "app");
+    BuildTarget appBinaryTarget = BuildTargetFactory.newInstance("//product", "binary");
+
+    String configName = "Default";
+
+    TargetNode<?> frameworkLibNode =
+        AppleLibraryBuilder.createBuilder(frameworkLibTarget)
+            .setSrcs(ImmutableSortedSet.of())
+            .setHeaders(
+                ImmutableSortedSet.of(
+                    FakeSourcePath.of("HeaderGroup1/foo.h"),
+                    FakeSourcePath.of("HeaderGroup2/baz.h")))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("HeaderGroup1/bar.h")))
+            .setConfigs(ImmutableSortedMap.of(configName, ImmutableMap.of()))
+            .setModular(true)
+            .build();
+
+    TargetNode<?> frameworkBundleNode =
+        AppleBundleBuilder.createBuilder(frameworkBundleTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(frameworkLibTarget)
+            .build();
+
+    TargetNode<?> appBinaryNode =
+        AppleLibraryBuilder.createBuilder(appBinaryTarget)
+            .setSrcs(ImmutableSortedSet.of())
+            .setDeps(ImmutableSortedSet.of(frameworkBundleTarget))
+            .setConfigs(ImmutableSortedMap.of(configName, ImmutableMap.of()))
+            .build();
+
+    TargetNode<?> appBundleNode =
+        AppleBundleBuilder.createBuilder(appBundleTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(appBinaryTarget)
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGenerator(
+            ImmutableSet.of(frameworkLibNode, frameworkBundleNode, appBinaryNode, appBundleNode),
+            ImmutableSet.of(frameworkBundleNode, appBinaryNode, appBundleNode),
+            appBundleTarget,
+            ProjectGeneratorOptions.builder().build(),
+            ImmutableSet.of(),
+            Optional.empty());
+
+    projectGenerator.createXcodeProjects();
+
+    FakeProjectFilesystem frameworkBundleFileSystem =
+        (FakeProjectFilesystem) frameworkBundleNode.getFilesystem();
+    Path expectedXcConfigPath =
+        BuildConfiguration.getXcconfigPath(
+            frameworkBundleFileSystem, frameworkBundleTarget, "Debug");
+    String xccConfigContents =
+        frameworkBundleFileSystem.readFileIfItExists(expectedXcConfigPath).get();
+    Xcconfig config = Xcconfig.fromString(xccConfigContents);
+    assertTrue(config.containsKey("SWIFT_INCLUDE_PATHS"));
+
+    Path symlinkPath =
+        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+            projectFilesystem,
+            NodeHelper.getModularMapTarget(
+                frameworkLibNode,
+                HeaderMode.SYMLINK_TREE_WITH_UMBRELLA_HEADER_MODULEMAP,
+                DEFAULT_PLATFORM),
+            HeaderVisibility.PUBLIC);
+    ImmutableList<String> expectedIncludes =
+        ImmutableList.of(
+            "$(inherited)",
+            "$BUILT_PRODUCTS_DIR",
+            projectFilesystem.resolve(symlinkPath).toString());
+    assertEquals(Optional.of(expectedIncludes), config.getKey("SWIFT_INCLUDE_PATHS"));
   }
 
   @Test

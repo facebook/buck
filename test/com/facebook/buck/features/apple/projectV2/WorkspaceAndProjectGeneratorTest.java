@@ -61,6 +61,7 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -687,6 +688,57 @@ public class WorkspaceAndProjectGeneratorTest {
         mainSchemeBuildAction.getBuildActionEntries().get(2),
         withNameAndBuildingFor(
             "BazLib", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY)));
+  }
+
+  @Test
+  public void targetsWithModularDepsAreBuilt() throws IOException {
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "FooLib");
+    TargetNode<AppleLibraryDescriptionArg> fooLib =
+        AppleLibraryBuilder.createBuilder(fooLibTarget).setModular(true).build();
+
+    TargetNode<XcodeWorkspaceConfigDescriptionArg> workspaceNode =
+        XcodeWorkspaceConfigBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//foo", "workspace"))
+            .setWorkspaceName(Optional.of("workspace"))
+            .setSrcTarget(Optional.of(fooLibTarget))
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(fooLib, workspaceNode);
+
+    WorkspaceAndProjectGenerator generator =
+        new WorkspaceAndProjectGenerator(
+            xcodeDescriptions,
+            rootCell,
+            targetGraph,
+            workspaceNode.getConstructorArg(),
+            workspaceNode.getBuildTarget(),
+            ProjectGeneratorOptions.builder()
+                .setShouldIncludeTests(true)
+                .setShouldIncludeDependenciesTests(true)
+                .build(),
+            FocusedTargetMatcher.noFocus(),
+            false /* parallelizeBuild */,
+            DEFAULT_PLATFORM,
+            ImmutableSet.of(),
+            "BUCK",
+            getActionGraphBuilderForNodeFunction(targetGraph),
+            getFakeBuckEventBus(),
+            TestRuleKeyConfigurationFactory.create(),
+            halideBuckConfig,
+            cxxBuckConfig,
+            appleConfig,
+            swiftBuckConfig,
+            Optional.empty());
+    generator.generateWorkspaceAndDependentProjects();
+
+    BuildTarget expectedTarget =
+        NodeHelper.getModularMapTarget(
+            fooLib, HeaderMode.forModuleMapMode(appleConfig.moduleMapMode()), DEFAULT_PLATFORM);
+
+    assertThat(generator.getRequiredBuildTargets(), hasSize(1));
+    assertThat(
+        generator.getRequiredBuildTargets().stream().findFirst().get().getFullyQualifiedName(),
+        equalTo(expectedTarget.getFullyQualifiedName()));
   }
 
   @Test

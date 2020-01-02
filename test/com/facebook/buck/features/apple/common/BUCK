@@ -13,6 +13,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/features/apple/common:common",
         "//third-party/java/junit:junit",
+        "//third-party/java/guava:guava",
     ],
 )
 
