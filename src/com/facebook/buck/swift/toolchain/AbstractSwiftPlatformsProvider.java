@@ -28,7 +28,7 @@ public interface AbstractSwiftPlatformsProvider extends Toolchain {
   String DEFAULT_NAME = "swift-platforms";
 
   @Value.Parameter
-  FlavorDomain<SwiftPlatform> getSwiftCxxPlatforms();
+  FlavorDomain<UnresolvedSwiftPlatform> getUnresolvedSwiftPlatforms();
 
   @Override
   default String getName() {

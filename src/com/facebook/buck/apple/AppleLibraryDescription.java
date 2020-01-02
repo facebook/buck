@@ -87,6 +87,7 @@ import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftRuntimeNativeLinkableGroup;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
+import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
@@ -1061,11 +1062,12 @@ public class AppleLibraryDescription
             SwiftPlatformsProvider.DEFAULT_NAME,
             target.getTargetConfiguration(),
             SwiftPlatformsProvider.class);
-    FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain =
-        swiftPlatformsProvider.getSwiftCxxPlatforms();
+    FlavorDomain<UnresolvedSwiftPlatform> swiftPlatformFlavorDomain =
+        swiftPlatformsProvider.getUnresolvedSwiftPlatforms();
 
     BuildTarget targetWithPlatform = target.withAppendedFlavors(platform.getFlavor());
-    Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(targetWithPlatform);
+    Optional<SwiftPlatform> swiftPlatform =
+        swiftPlatformFlavorDomain.getRequiredValue(targetWithPlatform).resolve(graphBuilder);
     TargetConfiguration targetConfiguration = target.getTargetConfiguration();
     Optional<ImmutableList<NativeLinkableGroup>> swiftRuntimeNativeLinkables =
         swiftPlatform.map(

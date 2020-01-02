@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -67,8 +68,10 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
+import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -85,7 +88,10 @@ import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 public class SwiftLibraryDescription
-    implements DescriptionWithTargetGraph<SwiftLibraryDescriptionArg>, Flavored {
+    implements DescriptionWithTargetGraph<SwiftLibraryDescriptionArg>,
+        Flavored,
+        ImplicitDepsInferringDescription<
+            SwiftLibraryDescription.AbstractSwiftLibraryDescriptionArg> {
 
   static final Flavor SWIFT_COMPANION_FLAVOR = InternalFlavor.of("swift-companion");
   static final Flavor SWIFT_COMPILE_FLAVOR = InternalFlavor.of("swift-compile");
@@ -93,6 +99,21 @@ public class SwiftLibraryDescription
   private static final Set<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(
           SWIFT_COMPANION_FLAVOR, SWIFT_COMPILE_FLAVOR, LinkerMapMode.NO_LINKER_MAP.getFlavor());
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      AbstractSwiftLibraryDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    getSwiftPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
+        .getValues()
+        .forEach(
+            platform ->
+                extraDepsBuilder.addAll(
+                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
+  }
 
   public enum Type implements FlavorConvertible {
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
@@ -183,14 +204,8 @@ public class SwiftLibraryDescription
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     params = params.withExtraDeps(filteredExtraDeps);
 
-    SwiftPlatformsProvider swiftPlatformsProvider =
-        toolchainProvider.getByName(
-            SwiftPlatformsProvider.DEFAULT_NAME,
-            buildTarget.getTargetConfiguration(),
-            SwiftPlatformsProvider.class);
-
-    FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain =
-        swiftPlatformsProvider.getSwiftCxxPlatforms();
+    FlavorDomain<UnresolvedSwiftPlatform> swiftPlatformFlavorDomain =
+        getSwiftPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
@@ -199,7 +214,8 @@ public class SwiftLibraryDescription
       // TODO(cjhopman): This doesn't properly handle parse time deps...
       CxxPlatform cxxPlatform =
           platform.get().getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
-      Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(buildTarget);
+      Optional<SwiftPlatform> swiftPlatform =
+          swiftPlatformFlavorDomain.getRequiredValue(buildTarget).resolve(graphBuilder);
       if (!swiftPlatform.isPresent()) {
         throw new HumanReadableException("Platform %s is missing swift compiler", cxxPlatform);
       }
@@ -418,6 +434,16 @@ public class SwiftLibraryDescription
             inputBuilder.build(),
             Optional.empty(),
             cellPathResolver));
+  }
+
+  private FlavorDomain<UnresolvedSwiftPlatform> getSwiftPlatformsFlavorDomain(
+      TargetConfiguration toolchainTargetConfiguration) {
+    SwiftPlatformsProvider switftPlatformsProvider =
+        toolchainProvider.getByName(
+            SwiftPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            SwiftPlatformsProvider.class);
+    return switftPlatformsProvider.getUnresolvedSwiftPlatforms();
   }
 
   public Optional<BuildRule> createCompanionBuildRule(

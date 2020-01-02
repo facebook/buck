@@ -49,7 +49,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -78,7 +78,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final Optional<SourcePath> bridgingHeader;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
-  private final FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain;
+  private final FlavorDomain<UnresolvedSwiftPlatform> swiftPlatformFlavorDomain;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final Linkage linkage;
 
@@ -88,7 +88,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       Collection<? extends BuildRule> exportedDeps,
-      FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain,
+      FlavorDomain<UnresolvedSwiftPlatform> swiftPlatformFlavorDomain,
       Optional<SourcePath> bridgingHeader,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
@@ -142,7 +142,13 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     }
     SwiftRuntimeNativeLinkableGroup swiftRuntimeNativeLinkable =
         new SwiftRuntimeNativeLinkableGroup(
-            swiftPlatformFlavorDomain.getValue(cxxPlatform.getFlavor()),
+            swiftPlatformFlavorDomain
+                .getValue(cxxPlatform.getFlavor())
+                .resolve(graphBuilder)
+                .orElseThrow(
+                    () ->
+                        new IllegalStateException(
+                            "swift platform does not exist: " + cxxPlatform.getFlavor().getName())),
             getBuildTarget().getTargetConfiguration());
     return RichStream.from(exportedDeps)
         .filter(NativeLinkableGroup.class)

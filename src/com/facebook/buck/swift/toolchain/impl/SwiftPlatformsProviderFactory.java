@@ -24,8 +24,8 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
+import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
@@ -45,18 +45,18 @@ public class SwiftPlatformsProviderFactory implements ToolchainFactory<SwiftPlat
     return Optional.of(SwiftPlatformsProvider.of(createSwiftPlatforms(appleCxxPlatformsProvider)));
   }
 
-  private static FlavorDomain<SwiftPlatform> createSwiftPlatforms(
+  private static FlavorDomain<UnresolvedSwiftPlatform> createSwiftPlatforms(
       AppleCxxPlatformsProvider appleCxxPlatformsProvider) {
 
     FlavorDomain<AppleCxxPlatform> appleCxxPlatforms =
         appleCxxPlatformsProvider.getAppleCxxPlatforms();
 
-    ImmutableMap.Builder<Flavor, SwiftPlatform> swiftPlatforms = ImmutableMap.builder();
+    ImmutableMap.Builder<Flavor, UnresolvedSwiftPlatform> swiftPlatforms = ImmutableMap.builder();
     for (Flavor flavor : appleCxxPlatforms.getFlavors()) {
-      appleCxxPlatforms
-          .getValue(flavor)
-          .getSwiftPlatform()
-          .ifPresent(swiftPlatform -> swiftPlatforms.put(flavor, swiftPlatform));
+      swiftPlatforms.put(
+          flavor,
+          StaticUnresolvedSwiftPlatform.of(
+              appleCxxPlatforms.getValue(flavor).getSwiftPlatform(), flavor));
     }
 
     return new FlavorDomain<>("Swift Platform", swiftPlatforms.build());

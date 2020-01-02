@@ -51,12 +51,12 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
-import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
+import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
+import com.facebook.buck.swift.toolchain.impl.StaticUnresolvedSwiftPlatform;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -248,18 +248,21 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_WATCHOS_ARMV7K_PLATFORM,
           DEFAULT_WATCHOS_ARM6432_PLATFORM);
 
-  public static final FlavorDomain<SwiftPlatform> DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN =
-      new FlavorDomain<>(
+  public static final FlavorDomain<UnresolvedSwiftPlatform> DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN =
+      FlavorDomain.of(
           "Fake Swift Platform",
-          ImmutableMap.of(
-              DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor(),
-              DEFAULT_IPHONEOS_I386_PLATFORM.getSwiftPlatform().get(),
-              DEFAULT_IPHONEOS_X86_64_PLATFORM.getFlavor(),
-              DEFAULT_IPHONEOS_X86_64_PLATFORM.getSwiftPlatform().get(),
-              DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor(),
-              DEFAULT_MACOSX_X86_64_PLATFORM.getSwiftPlatform().get(),
-              DEFAULT_WATCHOS_ARMV7K_PLATFORM.getFlavor(),
-              DEFAULT_WATCHOS_ARMV7K_PLATFORM.getSwiftPlatform().get()));
+          StaticUnresolvedSwiftPlatform.of(
+              DEFAULT_IPHONEOS_I386_PLATFORM.getSwiftPlatform(),
+              DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor()),
+          StaticUnresolvedSwiftPlatform.of(
+              DEFAULT_IPHONEOS_X86_64_PLATFORM.getSwiftPlatform(),
+              DEFAULT_IPHONEOS_X86_64_PLATFORM.getFlavor()),
+          StaticUnresolvedSwiftPlatform.of(
+              DEFAULT_MACOSX_X86_64_PLATFORM.getSwiftPlatform(),
+              DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor()),
+          StaticUnresolvedSwiftPlatform.of(
+              DEFAULT_WATCHOS_ARMV7K_PLATFORM.getSwiftPlatform(),
+              DEFAULT_WATCHOS_ARMV7K_PLATFORM.getFlavor()));
 
   public static SwiftLibraryDescription createSwiftLibraryDescription(BuckConfig buckConfig) {
     return new SwiftLibraryDescription(
@@ -367,7 +370,7 @@ public class FakeAppleRuleDescriptions {
           LIBRARY_DESCRIPTION);
 
   private static ToolchainProvider createTestToolchainProviderForSwiftPlatform(
-      FlavorDomain<SwiftPlatform> swiftFlavorDomain) {
+      FlavorDomain<UnresolvedSwiftPlatform> swiftFlavorDomain) {
     return new ToolchainProviderBuilder()
         .withToolchain(
             SwiftPlatformsProvider.DEFAULT_NAME, SwiftPlatformsProvider.of(swiftFlavorDomain))
@@ -395,7 +398,7 @@ public class FakeAppleRuleDescriptions {
 
   private static ToolchainProvider createTestToolchainProvider(
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
-      FlavorDomain<SwiftPlatform> swiftFlavorDomain) {
+      FlavorDomain<UnresolvedSwiftPlatform> swiftFlavorDomain) {
     return new ToolchainProviderBuilder()
         .withToolchain(
             AppleCxxPlatformsProvider.DEFAULT_NAME,
