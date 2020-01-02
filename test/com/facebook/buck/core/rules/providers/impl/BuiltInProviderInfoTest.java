@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.syntax.Argument;
+import com.google.devtools.build.lib.syntax.DictionaryLiteral;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
@@ -35,12 +36,17 @@ import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.StringLiteral;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
 import java.util.Set;
 import org.hamcrest.Matchers;
 import org.immutables.value.Value;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class BuiltInProviderInfoTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @ImmutableInfo(
       args = {"str", "my_info"},
@@ -93,6 +99,26 @@ public class BuiltInProviderInfoTest {
         BuiltInProvider.of(ImmutableInfoWithNoDefaultValOnAnnotation.class);
 
     public abstract Integer val();
+  }
+
+  @ImmutableInfo(
+      args = {"str_list", "my_info"},
+      defaultSkylarkValues = {"{\"foo\":\"bar\"}", "1"})
+  public abstract static class SomeInfoWithInstantiate
+      extends BuiltInProviderInfo<SomeInfoWithInstantiate> {
+    public static final BuiltInProvider<SomeInfoWithInstantiate> PROVIDER =
+        BuiltInProvider.of(ImmutableSomeInfoWithInstantiate.class);
+
+    public abstract ImmutableList<String> str_list();
+
+    public abstract String myInfo();
+
+    public static SomeInfoWithInstantiate instantiateFromSkylark(
+        SkylarkDict<String, String> s, int myInfo) throws EvalException {
+      Map<String, String> validated = s.getContents(String.class, String.class, "stuff");
+      return new ImmutableSomeInfoWithInstantiate(
+          ImmutableList.copyOf(validated.keySet()), Integer.toString(myInfo));
+    }
   }
 
   @Test
@@ -218,5 +244,90 @@ public class BuiltInProviderInfoTest {
             ImmutableList.of(new Argument.Keyword(new Identifier("val"), new IntegerLiteral(2))));
 
     assertEquals(new ImmutableInfoWithNoDefaultValOnAnnotation(2), ast.eval(env));
+  }
+
+  @Test
+  public void instantiatesFromStaticMethodIfPresent() throws InterruptedException, EvalException {
+    Mutability mutability = Mutability.create("providertest");
+    Environment env =
+        Environment.builder(mutability)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+            .setGlobals(
+                Environment.GlobalFrame.createForBuiltins(
+                    ImmutableMap.of(
+                        SomeInfoWithInstantiate.PROVIDER.getName(),
+                        SomeInfoWithInstantiate.PROVIDER)))
+            .build();
+
+    FuncallExpression ast =
+        new FuncallExpression(
+            new Identifier("SomeInfoWithInstantiate"),
+            ImmutableList.of(
+                new Argument.Keyword(
+                    new Identifier("str_list"),
+                    new DictionaryLiteral(
+                        ImmutableList.of(
+                            new DictionaryLiteral.DictionaryEntryLiteral(
+                                new StringLiteral("d"), new StringLiteral("d_value"))))),
+                new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(4))));
+
+    Object o = ast.eval(env);
+    assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiate.class));
+    SomeInfoWithInstantiate someInfo4 = (SomeInfoWithInstantiate) o;
+    assertEquals(ImmutableList.of("d"), someInfo4.str_list());
+    assertEquals("4", someInfo4.myInfo());
+  }
+
+  @Test
+  public void instantiatesFromStaticMethodWithDefaultValuesIfPresent()
+      throws InterruptedException, EvalException {
+    Mutability mutability = Mutability.create("providertest");
+    Environment env =
+        Environment.builder(mutability)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+            .setGlobals(
+                Environment.GlobalFrame.createForBuiltins(
+                    ImmutableMap.of(
+                        SomeInfoWithInstantiate.PROVIDER.getName(),
+                        SomeInfoWithInstantiate.PROVIDER)))
+            .build();
+
+    FuncallExpression ast =
+        new FuncallExpression(
+            new Identifier("SomeInfoWithInstantiate"),
+            ImmutableList.of(
+                new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(4))));
+
+    Object o = ast.eval(env);
+    assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiate.class));
+    SomeInfoWithInstantiate someInfo4 = (SomeInfoWithInstantiate) o;
+    assertEquals(ImmutableList.of("foo"), someInfo4.str_list());
+    assertEquals("4", someInfo4.myInfo());
+  }
+
+  @Test
+  public void validatesTypesWhenInstantiatingFromStaticMethod()
+      throws InterruptedException, EvalException {
+    Mutability mutability = Mutability.create("providertest");
+    Environment env =
+        Environment.builder(mutability)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+            .setGlobals(
+                Environment.GlobalFrame.createForBuiltins(
+                    ImmutableMap.of(
+                        SomeInfoWithInstantiate.PROVIDER.getName(),
+                        SomeInfoWithInstantiate.PROVIDER)))
+            .build();
+
+    FuncallExpression ast =
+        new FuncallExpression(
+            new Identifier("SomeInfoWithInstantiate"),
+            ImmutableList.of(
+                new Argument.Keyword(
+                    new Identifier("my_info"), new StringLiteral("not a number"))));
+
+    thrown.expect(EvalException.class);
+    thrown.expectMessage("expected value of type 'int'");
+    ast.eval(env);
   }
 }

@@ -62,6 +62,9 @@ public abstract class BuckStarlarkFunction
    * @param methodName the function name exposed to skylark
    * @param constructor the constructor that we will call as a method
    * @param namedParams a list of named parameters for skylark. The names are mapped in order to the
+   *     parameters of {@code constructor}
+   * @param defaultSkylarkValues a list of default values for parameters in skylark. The names are
+   *     mapped in order to the parameters of {@code constructor}
    */
   public BuckStarlarkFunction(
       String methodName,
@@ -75,6 +78,33 @@ public abstract class BuckStarlarkFunction
     }
     this.methodDescriptor =
         inferMethodDescriptor(methodName, method, namedParams, defaultSkylarkValues);
+  }
+
+  /**
+   * Creates a new skylark callable function of the given name that invokes the method handle. The
+   * named parameters for skylark is the list of namedParams, which is mapped in order to the end of
+   * the parameter list for the method handle.
+   *
+   * @param methodName the function name exposed to skylark
+   * @param method a method that will eventually be called in {@link #call(List, Map,
+   *     FuncallExpression, Environment)}
+   * @param namedParams a list of named parameters for skylark. The names are mapped in order to the
+   *     parameters of {@code method}
+   * @param defaultSkylarkValues a list of default values for parameters in skylark. The values are
+   *     mapped in order to the parameters of {@code method}
+   */
+  public BuckStarlarkFunction(
+      String methodName,
+      Method method,
+      List<String> namedParams,
+      List<String> defaultSkylarkValues) {
+    try {
+      this.method = lookup.unreflect(method);
+    } catch (IllegalAccessException e) {
+      throw new IllegalStateException("Unable to access the supplied method", e);
+    }
+    this.methodDescriptor =
+        inferMethodDescriptor(methodName, this.method, namedParams, defaultSkylarkValues);
   }
 
   /**

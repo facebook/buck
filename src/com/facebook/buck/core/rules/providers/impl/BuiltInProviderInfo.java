@@ -30,6 +30,11 @@ import com.facebook.buck.core.starlark.compatible.BuckStarlarkStructObject;
  * will be equivalent to the struct field name. The methods should only return Skylark compatible
  * types.
  *
+ * <p>One additional public static method may be declared, named {@code instantiateFromSkylark}.
+ * This method can take skylark compatible values, and must return an instance of this {@link T}.
+ * The number of arguments to this method must match the names specified in {@link ImmutableInfo},
+ * and is mostly used to convert types, ensure that structures are immutable, etc.
+ *
  * <p>An immutable implementation will be generated for the info.
  *
  * <p>The {@link BuiltInProviderInfo} should have a public static field containing the {@link

@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlarkFunction;
 import com.facebook.buck.core.starlark.compatible.MethodLookup;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,8 +30,11 @@ import com.google.common.collect.Lists;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.List;
+import java.util.Objects;
+import javax.annotation.Nullable;
 
 /**
  * A {@link Provider} for a {@link ProviderInfo} that is declared in java. The provider is auto
@@ -41,8 +45,10 @@ import java.util.List;
 public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarlarkFunction
     implements Provider<T> {
 
+  private static final String SKYLARK_CONSTRUCTOR_METHOD_NAME = "instantiateFromSkylark";
+
   protected final BuiltInKey<T> key;
-  private final Constructor<? extends T> infoConstructor;
+  private final Either<Constructor<? extends T>, Method> infoFactory;
 
   private BuiltInProvider(
       Class<? extends T> infoClass,
@@ -51,8 +57,19 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
       List<String> defaultSkylarkValues) {
     super(infoClass.getSimpleName(), infoConstructor, infoApiFields, defaultSkylarkValues);
     this.key = ImmutableBuiltInKey.of(infoClass);
-    this.infoConstructor = infoConstructor;
-    this.infoConstructor.setAccessible(true);
+    infoConstructor.setAccessible(true);
+    this.infoFactory = Either.ofLeft(infoConstructor);
+  }
+
+  private BuiltInProvider(
+      Class<? extends T> infoClass,
+      Method infoFactory,
+      List<String> infoApiFields,
+      List<String> defaultSkylarkValues) {
+    super(infoClass.getSimpleName(), infoFactory, infoApiFields, defaultSkylarkValues);
+    this.key = ImmutableBuiltInKey.of(infoClass);
+    infoFactory.setAccessible(true);
+    this.infoFactory = Either.ofRight(infoFactory);
   }
 
   /**
@@ -76,6 +93,8 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
     ImmutableInfo info = infoApiClass.getAnnotation(ImmutableInfo.class);
     ImmutableMap<String, Method> methodMap = MethodLookup.getMethods(infoApiClass);
     ImmutableList<String> argNames = ImmutableList.copyOf(info.args());
+    ImmutableList<String> defaultSkylarkValues = ImmutableList.copyOf(info.defaultSkylarkValues());
+
     List<Class<?>> types =
         Lists.transform(
             argNames,
@@ -87,18 +106,63 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
                         name)
                     .getReturnType());
 
+    @Nullable Method skylarkFactory = findSkylarkFactory(infoApiClass, argNames);
+
+    if (skylarkFactory != null) {
+      return new BuiltInProvider<>(infoApiClass, skylarkFactory, argNames, defaultSkylarkValues);
+    } else {
+      return fromConstructor(infoClass, infoApiClass, types, argNames, defaultSkylarkValues);
+    }
+  }
+
+  private static <U extends BuiltInProviderInfo<U>> BuiltInProvider<U> fromConstructor(
+      Class<? extends U> infoClass,
+      Class<U> infoApiClass,
+      List<Class<?>> structTypes,
+      ImmutableList<String> argNames,
+      ImmutableList<String> defaultSkylarkValues) {
+
     try {
       return new BuiltInProvider<>(
-          infoApiClass,
-          findConstructor(infoClass, types),
-          ImmutableList.copyOf(info.args()),
-          ImmutableList.copyOf(info.defaultSkylarkValues()));
+          infoApiClass, findConstructor(infoClass, structTypes), argNames, defaultSkylarkValues);
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException(
           String.format(
               "Infos must have a public constructor that initializes all struct values but %s doesn't. Expected constructor parameters %s",
-              infoClass, types));
+              infoClass, structTypes));
     }
+  }
+
+  @Nullable
+  private static <U extends BuiltInProviderInfo<U>> Method findSkylarkFactory(
+      Class<U> infoApiClass, ImmutableList<String> argNames) {
+    for (Method method : infoApiClass.getMethods()) {
+      if (method.getName().equals(SKYLARK_CONSTRUCTOR_METHOD_NAME)) {
+
+        if ((method.getModifiers() & Modifier.STATIC) == 0) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Method %s on %s must be a public static method.",
+                  SKYLARK_CONSTRUCTOR_METHOD_NAME, infoApiClass.getSimpleName()));
+        }
+        if (!method.getReturnType().equals(infoApiClass)) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Method %s on %s must return %s.",
+                  SKYLARK_CONSTRUCTOR_METHOD_NAME,
+                  infoApiClass.getSimpleName(),
+                  infoApiClass.getSimpleName()));
+        }
+        if (method.getParameterCount() != argNames.size()) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Method %s on %s must take %s arguments.",
+                  SKYLARK_CONSTRUCTOR_METHOD_NAME, infoApiClass.getSimpleName(), argNames.size()));
+        }
+        return method;
+      }
+    }
+    return null;
   }
 
   @SuppressWarnings("unchecked")
@@ -144,9 +208,12 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
    * @param args the args to the {@link BuiltInProviderInfo} being constructed
    * @return the info itself
    */
+  @SuppressWarnings("unchecked")
   public final T createInfo(Object... args)
       throws IllegalAccessException, InvocationTargetException, InstantiationException {
-    return infoConstructor.newInstance(args);
+    return infoFactory.isLeft()
+        ? infoFactory.getLeft().newInstance(args)
+        : (T) Objects.requireNonNull(infoFactory.getRight()).invoke(args);
   }
 
   @Override
