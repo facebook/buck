@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.model.targetgraph.Package;
+import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;

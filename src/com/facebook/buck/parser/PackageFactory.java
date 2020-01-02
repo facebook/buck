@@ -17,8 +17,8 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.model.targetgraph.Package;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutablePackage;
+import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.rules.visibility.VisibilityPattern;

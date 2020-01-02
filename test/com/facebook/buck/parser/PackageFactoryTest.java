@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.model.targetgraph.Package;
+import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.parser.api.ImmutablePackageMetadata;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.model.targetgraph;
+package com.facebook.buck.core.model.targetgraph.impl;
 
-import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableSet;
 
@@ -26,9 +27,10 @@ import com.google.common.collect.ImmutableSet;
  * contains metadata gathered from `PACKAGE` files of the current directory/package and all parent
  * directories/packages.
  */
-public interface Package extends DependencyStack.Element {
+@BuckStyleValue
+public abstract class Package {
 
-  ImmutableSet<VisibilityPattern> getVisibilityPatterns();
+  public abstract ImmutableSet<VisibilityPattern> getVisibilityPatterns();
 
-  ImmutableSet<VisibilityPattern> getWithinViewPatterns();
+  public abstract ImmutableSet<VisibilityPattern> getWithinViewPatterns();
 }

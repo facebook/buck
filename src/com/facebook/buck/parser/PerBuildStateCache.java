@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.model.targetgraph.Package;
+import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.base.Preconditions;
