@@ -48,6 +48,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -712,6 +713,31 @@ public class RuleKeyTest {
   }
 
   @Test
+  public void immutablesCanAddValueMethodsFromInterfacePrehashedImmutablesToRuleKeys() {
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    RuleKey first =
+        createBuilder(ruleFinder)
+            .setReflectively(
+                "value", ImmutableTestRuleKeyInterfacePrehashedImmutable.of("added-1", "ignored-1"))
+            .build(RuleKey::new);
+
+    RuleKey second =
+        createBuilder(ruleFinder)
+            .setReflectively(
+                "value", ImmutableTestRuleKeyInterfacePrehashedImmutable.of("added-1", "ignored-2"))
+            .build(RuleKey::new);
+
+    RuleKey third =
+        createBuilder(ruleFinder)
+            .setReflectively(
+                "value", ImmutableTestRuleKeyInterfacePrehashedImmutable.of("added-2", "ignored-2"))
+            .build(RuleKey::new);
+
+    assertEquals(first, second);
+    assertNotEquals(first, third);
+  }
+
+  @Test
   public void lambdaAddsPseudoClassName() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     Result<RuleKey, String> result =
@@ -737,6 +763,14 @@ public class RuleKeyTest {
 
   @BuckStyleValue
   interface TestRuleKeyInterfaceImmutable extends AddsToRuleKey {
+    @AddToRuleKey
+    String getRuleKeyValue();
+
+    String getNonRuleKeyValue();
+  }
+
+  @BuckStylePrehashedValue
+  interface TestRuleKeyInterfacePrehashedImmutable extends AddsToRuleKey {
     @AddToRuleKey
     String getRuleKeyValue();
 
