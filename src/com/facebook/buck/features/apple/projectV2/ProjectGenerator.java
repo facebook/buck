@@ -40,7 +40,6 @@ import com.facebook.buck.apple.InfoPlistSubstitution;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescriptionArg;
 import com.facebook.buck.apple.XCodeDescriptions;
-import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
@@ -1656,17 +1655,9 @@ public class ProjectGenerator {
         targetConfigNamesBuilder,
         xcconfigPathsBuilder);
 
-    ModuleMapMode moduleMapMode =
-        NodeHelper.getModuleMapMode(targetNode).orElse(appleConfig.moduleMapMode());
-
     ImmutableList<SourcePath> sourcePathsToBuild =
         headerSearchPaths.createHeaderSearchPaths(
-            headerSearchPathAttributes,
-            swiftAttributes,
-            isModularAppleLibrary,
-            options.shouldGenerateMissingUmbrellaHeader()
-                && moduleMapMode.shouldGenerateMissingUmbrellaHeader(),
-            headerSymlinkTreesBuilder);
+            headerSearchPathAttributes, headerSymlinkTreesBuilder);
     for (SourcePath sourcePath : sourcePathsToBuild) {
       addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder);
     }

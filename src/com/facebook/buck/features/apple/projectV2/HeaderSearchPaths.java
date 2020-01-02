@@ -25,11 +25,7 @@ import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.clang.HeaderMap;
-import com.facebook.buck.apple.clang.ModuleMapFactory;
 import com.facebook.buck.apple.clang.ModuleMapMode;
-import com.facebook.buck.apple.clang.UmbrellaHeader;
-import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
-import com.facebook.buck.apple.clang.VFSOverlay;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.model.BuildTarget;
@@ -55,7 +51,6 @@ import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -196,35 +191,20 @@ class HeaderSearchPaths {
 
   /**
    * Create header symlink trees for the {@link HeaderSearchPathAttributes#targetNode()} and any
-   * required header maps or generated umbrella headers for public/private headers. Populates
-   * {@param headerSymlinkTreesBuilder} with any generated header symlink paths.
+   * required header maps or generated umbrella headers for private headers. Populates {@param
+   * headerSymlinkTreesBuilder} with any generated header symlink paths.
    *
    * @return Source paths that need to be build for the {@link
    *     HeaderSearchPathAttributes#targetNode()}.
    */
   ImmutableList<SourcePath> createHeaderSearchPaths(
       HeaderSearchPathAttributes headerSearchPathAttributes,
-      SwiftAttributes swiftAttributes,
-      boolean isModularAppleLibrary,
-      boolean shouldGenerateMissingUmbrellaHeader,
       ImmutableList.Builder<Path> headerSymlinkTreesBuilder)
       throws IOException {
     CxxLibraryDescription.CommonArg arg =
         headerSearchPathAttributes.targetNode().getConstructorArg();
 
     ImmutableList.Builder<SourcePath> sourcePathsToBuildBuilder = ImmutableList.builder();
-
-    if (arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
-        || isModularAppleLibrary) {
-      createPublicHeaderSymlinkTree(
-          headerSearchPathAttributes.targetNode(),
-          headerSearchPathAttributes.publicCxxHeaders(),
-          sourcePathsToBuildBuilder,
-          isModularAppleLibrary,
-          swiftAttributes,
-          shouldGenerateMissingUmbrellaHeader,
-          headerSymlinkTreesBuilder);
-    }
 
     createPrivateHeaderSymlinkTree(
         headerSearchPathAttributes.targetNode(),
@@ -406,94 +386,6 @@ class HeaderSearchPaths {
     return output.build();
   }
 
-  private void createPublicHeaderSymlinkTree(
-      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
-      Map<Path, SourcePath> contents,
-      ImmutableList.Builder<SourcePath> sourcePathsToBuildBuilder,
-      boolean isModularAppleLibrary,
-      SwiftAttributes swiftAttributes,
-      boolean shouldGenerateUmbrellaHeaderIfMissing,
-      ImmutableList.Builder<Path> headerSymlinkTreesBuilder)
-      throws IOException {
-
-    Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC);
-
-    Optional<String> moduleName =
-        isModularAppleLibrary ? Optional.of(swiftAttributes.moduleName()) : Optional.empty();
-    ModuleMapMode moduleMapMode = getModuleMapMode(targetNode);
-    ImmutableMap<Path, Path> nonSourcePaths = swiftAttributes.publicHeaderMapEntries();
-
-    LOG.verbose(
-        "Building header symlink tree at %s with contents %s", headerSymlinkTreeRoot, contents);
-
-    ImmutableSortedMap<Path, Path> resolvedContents =
-        resolveHeaderContent(
-            contents, nonSourcePaths, headerSymlinkTreeRoot, sourcePathsToBuildBuilder);
-
-    if (!shouldUpdateSymlinkTree(
-        headerSymlinkTreeRoot, resolvedContents, moduleName, true, headerSymlinkTreesBuilder)) {
-      return;
-    }
-
-    if (moduleName.isPresent() && resolvedContents.size() > 0) {
-      if (shouldGenerateUmbrellaHeaderIfMissing) {
-        writeUmbrellaHeaderIfNeeded(
-            moduleName.get(), resolvedContents.keySet(), headerSymlinkTreeRoot);
-      }
-      boolean containsSwift = !nonSourcePaths.isEmpty();
-      if (containsSwift) {
-        projectFilesystem.writeContentsToPath(
-            ModuleMapFactory.createModuleMap(
-                    moduleName.get(),
-                    moduleMapMode,
-                    UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER)
-                .render(),
-            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
-        projectFilesystem.writeContentsToPath(
-            ModuleMapFactory.createModuleMap(
-                    moduleName.get(),
-                    moduleMapMode,
-                    UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER)
-                .render(),
-            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
-
-        Path absoluteModuleRoot =
-            projectFilesystem
-                .getRootPath()
-                .resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
-        VFSOverlay vfsOverlay =
-            new VFSOverlay(
-                ImmutableSortedMap.of(
-                    absoluteModuleRoot.resolve("module.modulemap"),
-                    absoluteModuleRoot.resolve("objc.modulemap")));
-
-        projectFilesystem.writeContentsToPath(
-            vfsOverlay.render(),
-            getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
-      } else {
-        projectFilesystem.writeContentsToPath(
-            ModuleMapFactory.createModuleMap(
-                    moduleName.get(), moduleMapMode, UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT)
-                .render(),
-            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
-      }
-      Path absoluteModuleRoot =
-          projectFilesystem.getRootPath().resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
-      VFSOverlay vfsOverlay =
-          new VFSOverlay(
-              ImmutableSortedMap.of(
-                  absoluteModuleRoot.resolve("module.modulemap"),
-                  absoluteModuleRoot.resolve("testing.modulemap")));
-
-      projectFilesystem.writeContentsToPath(
-          vfsOverlay.render(),
-          getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
-      projectFilesystem.writeContentsToPath(
-          "", // empty modulemap to allow non-modular imports for testing
-          headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("testing.modulemap"));
-    }
-  }
-
   private void createPrivateHeaderSymlinkTree(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
       ImmutableSortedMap<Path, SourcePath> contents,
@@ -516,7 +408,6 @@ class HeaderSearchPaths {
     if (!shouldUpdateSymlinkTree(
         headerSymlinkTreeRoot,
         resolvedContents,
-        Optional.empty(),
         shouldCreateHeadersSymlinks,
         headerSymlinkTreesBuilder)) {
       return;
@@ -565,14 +456,12 @@ class HeaderSearchPaths {
   private boolean shouldUpdateSymlinkTree(
       Path headerSymlinkTreeRoot,
       ImmutableSortedMap<Path, Path> resolvedContents,
-      Optional<String> moduleName,
       boolean shouldCreateHeadersSymlinks,
       ImmutableList.Builder<Path> headerSymlinkTreesBuilder)
       throws IOException {
     Path hashCodeFilePath = headerSymlinkTreeRoot.resolve(".contents-hash");
     Optional<String> currentHashCode = projectFilesystem.readFileIfItExists(hashCodeFilePath);
-    String newHashCode =
-        getHeaderSymlinkTreeHashCode(resolvedContents, moduleName, true, false).toString();
+    String newHashCode = getHeaderSymlinkTreeHashCode(resolvedContents, true, false).toString();
 
     headerSymlinkTreesBuilder.add(headerSymlinkTreeRoot);
     if (Optional.of(newHashCode).equals(currentHashCode)) {
@@ -725,22 +614,6 @@ class HeaderSearchPaths {
     }
   }
 
-  private void writeUmbrellaHeaderIfNeeded(
-      String moduleName, ImmutableSortedSet<Path> headerPaths, Path headerSymlinkTreeRoot)
-      throws IOException {
-    ImmutableList<String> headerPathStrings =
-        headerPaths.stream()
-            .map(Path::getFileName)
-            .map(Path::toString)
-            .collect(ImmutableList.toImmutableList());
-    if (!headerPathStrings.contains(moduleName + ".h")) {
-      Path umbrellaPath = headerSymlinkTreeRoot.resolve(Paths.get(moduleName, moduleName + ".h"));
-      Preconditions.checkState(!projectFilesystem.exists(umbrellaPath));
-      projectFilesystem.writeContentsToPath(
-          new UmbrellaHeader(moduleName, headerPathStrings).render(), umbrellaPath);
-    }
-  }
-
   private Path getHeaderMapRelativeSymlinkPathForEntry(
       Map.Entry<Path, ?> entry, Path headerSymlinkTreeRoot) {
     return projectCell
@@ -757,7 +630,6 @@ class HeaderSearchPaths {
 
   private HashCode getHeaderSymlinkTreeHashCode(
       ImmutableSortedMap<Path, Path> contents,
-      Optional<String> moduleName,
       boolean shouldCreateHeadersSymlinks,
       boolean shouldCreateHeaderMap) {
     Hasher hasher = Hashing.sha1().newHasher();
@@ -770,11 +642,6 @@ class HeaderSearchPaths {
     byte[] hmapStateValue = hmapState.getBytes(Charsets.UTF_8);
     hasher.putInt(hmapStateValue.length);
     hasher.putBytes(hmapStateValue);
-    if (moduleName.isPresent()) {
-      byte[] moduleNameValue = moduleName.get().getBytes(Charsets.UTF_8);
-      hasher.putInt(moduleNameValue.length);
-      hasher.putBytes(moduleNameValue);
-    }
     hasher.putInt(0);
     for (Map.Entry<Path, Path> entry : contents.entrySet()) {
       byte[] key = entry.getKey().toString().getBytes(Charsets.UTF_8);
