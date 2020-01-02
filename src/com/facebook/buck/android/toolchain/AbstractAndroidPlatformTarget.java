@@ -18,6 +18,7 @@ package com.facebook.buck.android.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -47,6 +48,7 @@ public abstract class AbstractAndroidPlatformTarget implements Toolchain, AddsTo
 
   /** This is likely something like {@code "Google Inc.:Google APIs:21"}. */
   @Value.Parameter
+  @AddToRuleKey
   public abstract String getPlatformName();
 
   @Override

@@ -114,6 +114,18 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testChangeAndroidSdkWillInvalidateRuleKey() throws IOException {
+    workspace
+        .runBuckBuild(SIMPLE_TARGET, "-c", "android.compile_sdk_version=android-28")
+        .assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(SIMPLE_TARGET);
+    workspace
+        .runBuckBuild(SIMPLE_TARGET, "-c", "android.compile_sdk_version=android-27")
+        .assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(SIMPLE_TARGET);
+  }
+
+  @Test
   public void testNonExopackageHasSecondary() throws IOException {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
 
