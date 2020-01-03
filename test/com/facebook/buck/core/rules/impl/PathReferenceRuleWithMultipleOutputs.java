@@ -36,7 +36,6 @@ import java.util.Map;
  */
 public class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
     implements HasMultipleOutputs {
-  private final ImmutableMap<OutputLabel, ImmutableSet<Path>> outputLabelToSource;
   private final ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> outputLabelsToSourcePaths;
 
   public PathReferenceRuleWithMultipleOutputs(
@@ -45,12 +44,15 @@ public class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
       Path source,
       ImmutableMap<OutputLabel, ImmutableSet<Path>> outputLabelsToOutputs) {
     super(buildTarget, projectFilesystem, source);
-    this.outputLabelToSource = outputLabelsToOutputs;
     ImmutableMap.Builder<OutputLabel, ImmutableSortedSet<SourcePath>> builder =
         ImmutableMap.builderWithExpectedSize(1 + outputLabelsToOutputs.size());
-    builder.put(
-        OutputLabel.defaultLabel(),
-        source == null ? ImmutableSortedSet.of() : ImmutableSortedSet.of(getSourcePathToOutput()));
+    if (!outputLabelsToOutputs.containsKey(OutputLabel.defaultLabel())) {
+      builder.put(
+          OutputLabel.defaultLabel(),
+          source == null
+              ? ImmutableSortedSet.of()
+              : ImmutableSortedSet.of(getSourcePathToOutput()));
+    }
     for (Map.Entry<OutputLabel, ImmutableSet<Path>> entry : outputLabelsToOutputs.entrySet()) {
       builder.put(
           entry.getKey(),

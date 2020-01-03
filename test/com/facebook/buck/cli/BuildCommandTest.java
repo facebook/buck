@@ -66,6 +66,7 @@ import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.resolver.impl.FakeActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -102,12 +103,14 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -131,15 +134,28 @@ public class BuildCommandTest {
   private TestConsole console;
   private ProjectFilesystem projectFilesystem;
   private RuleKeyCacheScope ruleKeyCacheScope;
+  private ActionGraphBuilder graphBuilder;
+  private Map<BuildRule, Optional<BuildResult>> ruleToResult;
 
   @Before
   public void setUp() {
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    graphBuilder = new TestActionGraphBuilder();
     resolver = graphBuilder.getSourcePathResolver();
-
     rootCell = new TestCellBuilder().build();
+    ruleToResult = new LinkedHashMap<>();
+    console = new TestConsole();
+    projectFilesystem = new FakeProjectFilesystem();
+    ruleKeyCacheScope =
+        new RuleKeyCacheScope() {
+          @Override
+          public TrackedRuleKeyCache getCache() {
+            return new TrackedRuleKeyCache(
+                new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker());
+          }
 
-    LinkedHashMap<BuildRule, Optional<BuildResult>> ruleToResult = new LinkedHashMap<>();
+          @Override
+          public void close() {}
+        };
 
     FakeBuildRule rule1 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule1"));
     rule1.setOutputFile("buck-out/gen/fake/rule1.txt");
@@ -164,25 +180,38 @@ public class BuildCommandTest {
     ruleToResult.put(rule4, Optional.empty());
     graphBuilder.addToIndex(rule4);
 
+    BuildRule rule5 =
+        new PathReferenceRuleWithMultipleOutputs(
+            BuildTargetFactory.newInstance("//fake:rule5"),
+            new FakeProjectFilesystem(),
+            Paths.get("default_output"),
+            ImmutableMap.of(
+                OutputLabel.of("named_1"), ImmutableSet.of(Paths.get("named_output_1"))));
+    graphBuilder.addToIndex(rule5);
+    ruleToResult.put(
+        rule5, Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
+
+    BuildRule rule6 =
+        new PathReferenceRuleWithMultipleOutputs(
+            BuildTargetFactory.newInstance("//fake:rule6"),
+            new FakeProjectFilesystem(),
+            Paths.get("default_single_output"),
+            ImmutableMap.of(
+                OutputLabel.defaultLabel(),
+                ImmutableSet.of(Paths.get("default_output1"), Paths.get("default_output_2")),
+                OutputLabel.of("named_1"),
+                ImmutableSet.of(Paths.get("named_output_1")),
+                OutputLabel.of("named_2"),
+                ImmutableSet.of(Paths.get("named_output_2"), Paths.get("named_output_22"))));
+    graphBuilder.addToIndex(rule6);
+    ruleToResult.put(
+        rule6, Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
+
     buildExecutionResult =
         BuildExecutionResult.builder()
             .setResults(ruleToResult)
             .setFailures(ImmutableSet.of(rule2Failure))
             .build();
-
-    console = new TestConsole();
-    projectFilesystem = new FakeProjectFilesystem();
-    ruleKeyCacheScope =
-        new RuleKeyCacheScope() {
-          @Override
-          public TrackedRuleKeyCache getCache() {
-            return new TrackedRuleKeyCache(
-                new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker());
-          }
-
-          @Override
-          public void close() {}
-        };
   }
 
   @Test
@@ -198,6 +227,34 @@ public class BuildCommandTest {
             Pattern.quote(
                 "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE"),
             Pattern.quote("\u001B[31mFAIL\u001B[0m //fake:rule4"),
+            Pattern.quote(
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule5 "
+                    + "BUILT_LOCALLY "
+                    + MorePaths.pathWithPlatformSeparators("default_output")),
+            Pattern.quote(
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule5[named_1] "
+                    + "BUILT_LOCALLY "
+                    + MorePaths.pathWithPlatformSeparators("named_output_1")),
+            Pattern.quote(
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6 "
+                    + "BUILT_LOCALLY "
+                    + MorePaths.pathWithPlatformSeparators("default_output1")),
+            Pattern.quote(
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6 "
+                    + "BUILT_LOCALLY "
+                    + MorePaths.pathWithPlatformSeparators("default_output_2")),
+            Pattern.quote(
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6[named_1] "
+                    + "BUILT_LOCALLY "
+                    + MorePaths.pathWithPlatformSeparators("named_output_1")),
+            Pattern.quote(
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6[named_2] "
+                    + "BUILT_LOCALLY "
+                    + MorePaths.pathWithPlatformSeparators("named_output_2")),
+            Pattern.quote(
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6[named_2] "
+                    + "BUILT_LOCALLY "
+                    + MorePaths.pathWithPlatformSeparators("named_output_22")),
             "",
             " \\*\\* Summary of failures encountered during the build \\*\\*",
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
@@ -223,6 +280,13 @@ public class BuildCommandTest {
             "FAIL //fake:rule2",
             "OK   //fake:rule3 FETCHED_FROM_CACHE",
             "FAIL //fake:rule4",
+            "OK   //fake:rule5 BUILT_LOCALLY default_output",
+            "OK   //fake:rule5\\[named_1\\] BUILT_LOCALLY named_output_1",
+            "OK   //fake:rule6 BUILT_LOCALLY default_output1",
+            "OK   //fake:rule6 BUILT_LOCALLY default_output_2",
+            "OK   //fake:rule6\\[named_1\\] BUILT_LOCALLY named_output_1",
+            "OK   //fake:rule6\\[named_2\\] BUILT_LOCALLY named_output_2",
+            "OK   //fake:rule6\\[named_2\\] BUILT_LOCALLY named_output_22",
             "",
             " \\*\\* Summary of failures encountered during the build \\*\\*",
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
@@ -248,7 +312,10 @@ public class BuildCommandTest {
             "    \"//fake:rule1\" : {",
             "      \"success\" : true,",
             "      \"type\" : \"BUILT_LOCALLY\",",
-            "      \"output\" : " + rule1TxtPath,
+            "      \"output\" : " + rule1TxtPath + ",",
+            "      \"outputs\" : {",
+            "        \"DEFAULT\" : [ " + rule1TxtPath + " ]",
+            "      }",
             "    },",
             "    \"//fake:rule2\" : {",
             "      \"success\" : false",
@@ -259,6 +326,24 @@ public class BuildCommandTest {
             "    },",
             "    \"//fake:rule4\" : {",
             "      \"success\" : false",
+            "    },",
+            "    \"//fake:rule5\" : {",
+            "      \"success\" : true,",
+            "      \"type\" : \"BUILT_LOCALLY\",",
+            "      \"output\" : \"default_output\",",
+            "      \"outputs\" : {",
+            "        \"DEFAULT\" : [ \"default_output\" ],",
+            "        \"named_1\" : [ \"named_output_1\" ]",
+            "      }",
+            "    },",
+            "    \"//fake:rule6\" : {",
+            "      \"success\" : true,",
+            "      \"type\" : \"BUILT_LOCALLY\",",
+            "      \"outputs\" : {",
+            "        \"DEFAULT\" : [ \"default_output1\", \"default_output_2\" ],",
+            "        \"named_1\" : [ \"named_output_1\" ],",
+            "        \"named_2\" : [ \"named_output_2\", \"named_output_22\" ]",
+            "      }",
             "    }",
             "  },",
             "  \"failures\" : {",
@@ -268,6 +353,40 @@ public class BuildCommandTest {
     String observedReport =
         new BuildReport(buildExecutionResult, resolver, rootCell).generateJsonBuildReport();
     assertEquals(expectedReport, observedReport);
+  }
+
+  @Test
+  public void testGenerateJsonBuildReportWithNonExistentDefaultOutput() throws IOException {
+    exception.expect(IllegalStateException.class);
+    exception.expectMessage(
+        "Default output group must exist in path_reference_rule_with_multiple_outputs rule //fake:rule7");
+
+    BuildRule rule7 =
+        new PathReferenceRuleWithMultipleOutputs(
+            BuildTargetFactory.newInstance("//fake:rule7"),
+            new FakeProjectFilesystem(),
+            Paths.get("unused"),
+            ImmutableMap.of(
+                OutputLabel.of("named_1"), ImmutableSet.of(Paths.get("named_output_1")))) {
+          @Override
+          public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>>
+              getSourcePathsByOutputsLabels() {
+            Map<OutputLabel, ImmutableSortedSet<SourcePath>> toRemoveDefaultOutput =
+                new HashMap<>(super.getSourcePathsByOutputsLabels());
+            toRemoveDefaultOutput.remove(OutputLabel.defaultLabel());
+            return ImmutableMap.copyOf(toRemoveDefaultOutput);
+          }
+        };
+    graphBuilder.addToIndex(rule7);
+    ruleToResult.put(
+        rule7, Optional.of(BuildResult.success(rule7, BUILT_LOCALLY, CacheResult.miss())));
+    BuildExecutionResult buildResult =
+        BuildExecutionResult.builder()
+            .setResults(ruleToResult)
+            .setFailures(ImmutableSet.of())
+            .build();
+
+    new BuildReport(buildResult, resolver, rootCell).generateJsonBuildReport();
   }
 
   @Test

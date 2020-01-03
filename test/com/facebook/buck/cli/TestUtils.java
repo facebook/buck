@@ -42,12 +42,25 @@ class TestUtils {
       extension = "cmd";
       fileSeparator = "\\\\";
     }
-    String buildReportContents =
-        new String(Files.readAllBytes(buildReportPath), Charsets.UTF_8)
-            .replaceFirst(
-                "genrule-\\d+\\." + extension,
-                "genrule-" + randomNumberPlaceholder + "." + extension)
-            .replaceFirst("buck-out(.*[\\\\/])", outputPrefixPlaceholder);
+    String buildReportContents = new String(Files.readAllBytes(buildReportPath), Charsets.UTF_8);
+    String buildReportContentsToReplaceWithOutputPrefix = buildReportContents;
+    String buildReportContentsToReplaceWithRandomNumber = buildReportContents;
+
+    int randomNumberReplacerStartIndex =
+        buildReportContents.indexOf("/buck-out/tmp/genrule-".replace("/", fileSeparator));
+    if (randomNumberReplacerStartIndex != -1) {
+      buildReportContentsToReplaceWithOutputPrefix =
+          buildReportContents.substring(0, randomNumberReplacerStartIndex);
+      buildReportContentsToReplaceWithRandomNumber =
+          buildReportContents.substring(randomNumberReplacerStartIndex);
+    }
+
+    buildReportContentsToReplaceWithOutputPrefix =
+        buildReportContentsToReplaceWithOutputPrefix.replaceAll(
+            "buck-out(.*[\\\\/])", outputPrefixPlaceholder);
+    buildReportContentsToReplaceWithRandomNumber =
+        buildReportContentsToReplaceWithRandomNumber.replaceFirst(
+            "genrule-\\d+\\." + extension, "genrule-" + randomNumberPlaceholder + "." + extension);
 
     String expectedResult =
         String.format(
@@ -60,6 +73,12 @@ class TestUtils {
                     .replace("/", File.separator)
                     .replace(File.separator, fileSeparator))
             .trim();
+
+    buildReportContents =
+        randomNumberReplacerStartIndex == -1
+            ? buildReportContentsToReplaceWithOutputPrefix
+            : buildReportContentsToReplaceWithOutputPrefix
+                + buildReportContentsToReplaceWithRandomNumber;
     assertEquals(expectedResult, buildReportContents);
   }
 }

@@ -4,7 +4,10 @@
     "//:rule_with_output" : {
       "success" : true,
       "type" : "BUILT_LOCALLY",
-      "output" : "<OUTPUT_PREFIX>rule_with_output.txt"
+      "output" : "<OUTPUT_PREFIX>rule_with_output.txt",
+      "outputs" : {
+        "DEFAULT" : [ "<OUTPUT_PREFIX>rule_with_output.txt" ]
+      }
     },
     "//:failing_rule" : {
       "success" : false

@@ -32,10 +32,13 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -134,5 +137,43 @@ public class BuildReportIntegrationTest {
                     "%s")
                 .resolve("bar.txt"),
         reportRoot.get("results").get("cell2//:bar").get("output").textValue());
+  }
+
+  @Test
+  public void multipleOutputPaths() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_report", tmp).setUp();
+    Path expectedBasePath =
+        BuildTargetPaths.getGenPath(
+            new FakeProjectFilesystem(),
+            BuildTargetFactory.newInstance("//:rule_with_multiple_outputs"),
+            "%s__");
+    Path buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
+    workspace
+        .runBuckBuild(
+            "--build-report",
+            buildReport.toAbsolutePath().toString(),
+            "//:rule_with_multiple_outputs")
+        .assertSuccess();
+
+    assertTrue(Files.exists(buildReport));
+    JsonNode reportRoot = ObjectMappers.READER.readTree(ObjectMappers.createParser(buildReport));
+
+    Map<String, List<String>> outputs =
+        new ObjectMapper()
+            .convertValue(
+                reportRoot.get("results").get("//:rule_with_multiple_outputs").get("outputs"),
+                Map.class);
+    assertThat(
+        outputs.get("output1"),
+        Matchers.containsInAnyOrder(expectedBasePath.resolve("out1.txt").toString()));
+    assertThat(
+        outputs.get("output2"),
+        Matchers.containsInAnyOrder(expectedBasePath.resolve("out2.txt").toString()));
+    assertThat(
+        outputs.get("DEFAULT"),
+        Matchers.containsInAnyOrder(
+            expectedBasePath.resolve("out1.txt").toString(),
+            expectedBasePath.resolve("out2.txt").toString()));
   }
 }
