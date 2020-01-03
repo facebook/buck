@@ -50,6 +50,8 @@ public class OutputLabel implements Comparable<OutputLabel>, AddsToRuleKey {
    */
   private static final OutputLabel DEFAULT = new OutputLabel();
 
+  private static final String USER_FACING_DEFAULT_LABEL = "DEFAULT";
+
   @AddToRuleKey private final String label;
 
   private OutputLabel() {
@@ -58,6 +60,10 @@ public class OutputLabel implements Comparable<OutputLabel>, AddsToRuleKey {
 
   private OutputLabel(String label) {
     Preconditions.checkArgument(!label.isEmpty(), "Output label cannot be empty");
+    Preconditions.checkArgument(
+        !label.equals(USER_FACING_DEFAULT_LABEL),
+        "%s is a restricted output label. Use another output label",
+        USER_FACING_DEFAULT_LABEL);
     this.label = label;
   }
 
@@ -86,7 +92,7 @@ public class OutputLabel implements Comparable<OutputLabel>, AddsToRuleKey {
 
   @Override
   public String toString() {
-    return label.isEmpty() ? "<default>" : label;
+    return label.isEmpty() ? USER_FACING_DEFAULT_LABEL : label;
   }
 
   @Override
