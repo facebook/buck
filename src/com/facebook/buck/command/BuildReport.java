@@ -55,12 +55,6 @@ import javax.annotation.Nullable;
 public class BuildReport {
   private static final Logger LOG = Logger.get(BuildReport.class);
 
-  /**
-   * User-facing {@link OutputLabel} to print for {@link OutputLabel#defaultLabel()} (instead of
-   * "<default>".
-   */
-  private static final OutputLabel USER_FACING_DEFAULT_LABEL = OutputLabel.of("DEFAULT");
-
   private final BuildExecutionResult buildExecutionResult;
   private final SourcePathResolverAdapter pathResolver;
   private final Cell rootCell;
@@ -97,7 +91,7 @@ public class BuildReport {
       if (success.isPresent()) {
         successIndicator = ansi.asHighlightedSuccessText("OK  ");
         successType = success.get().name();
-        outputPathsByLabels = getMultipleOutputPaths(rule, false);
+        outputPathsByLabels = getMultipleOutputPaths(rule);
       } else {
         successIndicator = ansi.asHighlightedFailureText("FAIL");
         successType = null;
@@ -219,7 +213,7 @@ public class BuildReport {
         } else {
           value.put("output", getRuleOutputPath(rule));
         }
-        value.put("outputs", getMultipleOutputPaths(rule, true));
+        value.put("outputs", getMultipleOutputPaths(rule));
       }
       results.put(rule.getFullyQualifiedName(), value);
     }
@@ -267,8 +261,7 @@ public class BuildReport {
    * output group is valid.
    */
   @Nullable
-  private ImmutableMap<OutputLabel, ImmutableSet<Path>> getMultipleOutputPaths(
-      BuildRule rule, boolean shouldChangeDefaultLabel) {
+  private ImmutableMap<OutputLabel, ImmutableSet<Path>> getMultipleOutputPaths(BuildRule rule) {
     if (rule instanceof HasMultipleOutputs) {
       ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
       ImmutableSet<Map.Entry<OutputLabel, ImmutableSortedSet<SourcePath>>> labelsToSourcePaths =
@@ -283,11 +276,7 @@ public class BuildReport {
         for (SourcePath sourcePath : sourcePaths) {
           pathBuilderForLabel.add(relativizeSourcePathToProjectRoot(projectFilesystem, sourcePath));
         }
-        OutputLabel label = labelToSourcePaths.getKey();
-        if (shouldChangeDefaultLabel && label.isDefault()) {
-          label = USER_FACING_DEFAULT_LABEL;
-        }
-        allPathsBuilder.put(label, pathBuilderForLabel.build());
+        allPathsBuilder.put(labelToSourcePaths.getKey(), pathBuilderForLabel.build());
       }
       return allPathsBuilder.build();
     }
@@ -295,9 +284,7 @@ public class BuildReport {
     if (output == null) {
       return null;
     }
-    return ImmutableMap.of(
-        shouldChangeDefaultLabel ? USER_FACING_DEFAULT_LABEL : OutputLabel.defaultLabel(),
-        ImmutableSet.of(output));
+    return ImmutableMap.of(OutputLabel.defaultLabel(), ImmutableSet.of(output));
   }
 
   /**
