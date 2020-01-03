@@ -136,10 +136,14 @@ abstract class AbstractPythonResolvedPackageComponents {
         (destination, source) -> {
 
           // Record all packages that do and don't contain an `__init__.py`.
+          String ext = MorePaths.getFileExtension(destination);
           if (getDefaultInitPy().isPresent()
-              // TODO(agallagher): This shouldn't be necessary, but currently, prebuilt module dirs
-              //  can include files that aren't really modules.
-              && PythonUtil.isModuleExt(MorePaths.getFileExtension(destination))) {
+                  // TODO(agallagher): This shouldn't be necessary, but currently, prebuilt module
+                  // dirs
+                  //  can include files that aren't really modules.
+                  // TODO(agallagher): Why do we need to handle `.pyi` types too?
+                  && (PythonUtil.isModuleExt(ext))
+              || ext.equals("pyi")) {
             // Record all "packages" we see as we go.
             for (Path pkg = destination.getParent();
                 pkg != null && !packages.contains(pkg);
