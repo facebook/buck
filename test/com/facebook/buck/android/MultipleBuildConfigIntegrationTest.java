@@ -35,7 +35,7 @@ public class MultipleBuildConfigIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   /** Regression test for https://github.com/facebook/buck/issues/187. */
-  @Test
+  @Test(timeout=6000000)
   public void testAndroidBinarySupportsMultipleBuildConfigs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);

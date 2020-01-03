@@ -94,7 +94,7 @@ public class RobolectricTestRuleIntegrationTest {
     workspace.runBuckTest("//java/com/sample/lib:test_robolectric_runtime_dep").assertSuccess();
   }
 
-  @Test
+  @Test(timeout=600000)
   public void robolectricTestBuildsWithBinaryResources() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);

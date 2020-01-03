@@ -39,7 +39,7 @@ public class AndroidResourceLibraryDepIntegrationTest {
     workspace.setUp();
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testModifyingLibraryDependencyDoesNotCauseRebuilt() throws IOException {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     String appTarget = "//apps/sample:app_res_lib_dep";

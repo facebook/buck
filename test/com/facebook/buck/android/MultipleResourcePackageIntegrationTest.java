@@ -44,7 +44,7 @@ public class MultipleResourcePackageIntegrationTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testRDotJavaFilesPerPackage() throws IOException {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_with_multiple_rdot_java_packages").assertSuccess();

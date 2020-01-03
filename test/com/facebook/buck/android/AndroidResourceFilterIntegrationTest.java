@@ -84,7 +84,7 @@ public class AndroidResourceFilterIntegrationTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testApkWithoutResourceFilter() throws IOException {
     String target = "//apps/sample:app";
     ProcessResult result = workspace.runBuckCommand("build", target);
@@ -107,7 +107,7 @@ public class AndroidResourceFilterIntegrationTest {
     }
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testApkWithMdpiFilter() throws IOException {
     String target = "//apps/sample:app_mdpi";
     ProcessResult result = workspace.runBuckCommand("build", target);
@@ -130,7 +130,7 @@ public class AndroidResourceFilterIntegrationTest {
     }
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testModifyingImageRebuildsResourcesFilter() throws IOException {
     String target = "//apps/sample:app_mdpi";
     ProcessResult result = workspace.runBuckBuild(target);
@@ -164,7 +164,7 @@ public class AndroidResourceFilterIntegrationTest {
     assertNotEquals(firstImageCrc, secondImageCrc);
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testApkWithXhdpiAndHdpiFilter() throws IOException {
     String target = "//apps/sample:app_hdpi_xhdpi";
     ProcessResult result = workspace.runBuckCommand("build", target);
@@ -187,7 +187,7 @@ public class AndroidResourceFilterIntegrationTest {
     }
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testPostFilterResourcesCmd() throws IOException {
     String target = "//apps/sample:app_post_filter_cmd";
     ProcessResult result = workspace.runBuckBuild(target);
@@ -243,12 +243,12 @@ public class AndroidResourceFilterIntegrationTest {
     assertTrue("Didn't find custom_drawables line", foundCustomDrawables);
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testPostFilterResourcesAndBanDuplicates() {
     workspace.runBuckBuild("//apps/sample:app_post_filter_no_dups").assertSuccess();
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testApkWithStringsAsAssets() throws IOException {
     String target = "//apps/sample:app_comp_str";
     ProcessResult result = workspace.runBuckCommand("build", target);
@@ -263,7 +263,7 @@ public class AndroidResourceFilterIntegrationTest {
     zipInspector.assertFileExists("assets/strings/fr.fbstr");
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testStringArtifactsAreCached() throws IOException {
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
@@ -282,7 +282,7 @@ public class AndroidResourceFilterIntegrationTest {
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testApkWithStringsAsAssetsAndResourceFilter() throws IOException {
     String target = "//apps/sample:app_comp_str_xhdpi";
     ProcessResult result = workspace.runBuckBuild(target);
@@ -307,7 +307,7 @@ public class AndroidResourceFilterIntegrationTest {
     }
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testAsset() throws IOException {
     workspace.enableDirCache();
     String target = "//apps/sample:app";
@@ -336,7 +336,7 @@ public class AndroidResourceFilterIntegrationTest {
     assertNotEquals("Rebuilt APK file must include the new asset file.", firstCrc, secondCrc);
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testEnglishBuildDoesntContainFrenchStrings()
       throws IOException, InterruptedException {
     String target = "//apps/sample:app";
@@ -360,7 +360,7 @@ public class AndroidResourceFilterIntegrationTest {
     assertEquals(1, matchingLines);
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testEnglishBuildDoesntContainFrenchStringsAapt2()
       throws IOException, InterruptedException {
     // TODO(dreiss): Remove this when aapt2 is everywhere.

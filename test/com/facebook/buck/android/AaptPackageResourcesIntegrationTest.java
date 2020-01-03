@@ -56,13 +56,13 @@ public class AaptPackageResourcesIntegrationTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testIgnoredFileIsIgnoredByAapt() throws Exception {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_deps_resource_with_ignored_file").assertSuccess();
   }
 
-  @Test
+  @Test(timeout=600000)
   public void testAaptPackageIsScrubbed() throws IOException {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckBuild(MAIN_BUILD_TARGET).assertSuccess();
