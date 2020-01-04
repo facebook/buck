@@ -18,13 +18,11 @@ package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** A pattern matches build targets that have the specified ancestor directory. */
-@Value.Immutable(builder = false, copy = false)
-@BuckStylePackageVisibleTuple
-abstract class AbstractSubdirectoryBuildTargetMatcher implements BuildTargetMatcher {
+@BuckStyleValue
+abstract class SubdirectoryBuildTargetMatcher implements BuildTargetMatcher {
 
   /**
    * Base path of the build target in the ancestor directory. It is expected to match the value

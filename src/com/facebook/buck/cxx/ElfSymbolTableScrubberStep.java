@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfHeader;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
@@ -41,12 +41,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.immutables.value.Value;
 
 /** A step which scrubs an ELF symbol table of information relevant to dynamic linking. */
-@Value.Immutable
-@BuckStylePackageVisibleTuple
-abstract class AbstractElfSymbolTableScrubberStep implements Step {
+@BuckStyleValue
+abstract class ElfSymbolTableScrubberStep implements Step {
 
   @VisibleForTesting static final int STABLE_SECTION = 1;
 

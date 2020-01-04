@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -51,7 +51,6 @@ import java.util.SortedSet;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 /**
  * The step that reports dependencies not used during Java compilation.
@@ -61,11 +60,10 @@ import org.immutables.value.Value;
  * are resolved to the corresponding targets and reported back to the user either as an error (which
  * halt the build) or as a warning.
  */
-@Value.Immutable(builder = false, copy = false)
-@BuckStylePackageVisibleTuple
-public abstract class AbstractUnusedDependenciesFinder implements Step {
+@BuckStyleValue
+public abstract class UnusedDependenciesFinder implements Step {
 
-  private static final Logger LOG = Logger.get(AbstractUnusedDependenciesFinder.class);
+  private static final Logger LOG = Logger.get(UnusedDependenciesFinder.class);
 
   public abstract BuildTarget getBuildTarget();
 

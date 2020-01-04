@@ -21,7 +21,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.MachoDylibStubParams;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
@@ -29,12 +29,10 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
-import org.immutables.value.Value;
 
 /** Factor which can create rules for scrubbed dylib stubs */
-@Value.Immutable
-@BuckStylePackageVisibleTuple
-public abstract class AbstractMachoDylibStubRuleFactory implements SharedLibraryInterfaceFactory {
+@BuckStyleValue
+public abstract class MachoDylibStubRuleFactory implements SharedLibraryInterfaceFactory {
 
   abstract Tool getStrip();
 
@@ -60,6 +58,6 @@ public abstract class AbstractMachoDylibStubRuleFactory implements SharedLibrary
   }
 
   public static MachoDylibStubRuleFactory from(MachoDylibStubParams params) {
-    return MachoDylibStubRuleFactory.of(params.getStrip());
+    return ImmutableMachoDylibStubRuleFactory.of(params.getStrip());
   }
 }

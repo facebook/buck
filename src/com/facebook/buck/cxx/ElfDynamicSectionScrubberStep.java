@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
@@ -37,15 +37,13 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * A step which scrubs all information from the ".dynamic" section of an ELF file which is
  * irrelevant at link time.
  */
-@Value.Immutable
-@BuckStylePackageVisibleTuple
-abstract class AbstractElfDynamicSectionScrubberStep implements Step {
+@BuckStyleValue
+abstract class ElfDynamicSectionScrubberStep implements Step {
 
   static final String SECTION = ".dynamic";
 

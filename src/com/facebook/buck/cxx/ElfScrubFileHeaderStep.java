@@ -19,24 +19,22 @@ package com.facebook.buck.cxx;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
+import com.facebook.buck.cxx.toolchain.elf.ElfHeader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import org.immutables.value.Value;
 
 /** A step which zeros out the program headers of an ELF file. */
-@Value.Immutable
-@BuckStylePackageVisibleTuple
-abstract class AbstractElfClearProgramHeadersStep implements Step {
+@BuckStyleValue
+abstract class ElfScrubFileHeaderStep implements Step {
 
   abstract ProjectFilesystem getFilesystem();
 
@@ -51,24 +49,27 @@ abstract class AbstractElfClearProgramHeadersStep implements Step {
             StandardOpenOption.WRITE)) {
       MappedByteBuffer buffer = channel.map(READ_WRITE, 0, channel.size());
       Elf elf = new Elf(buffer);
-      Preconditions.checkState(
-          elf.header.e_phoff == (int) elf.header.e_phoff,
-          "program headers are expected to be within 4GB of beginning of file");
-      buffer.position((int) elf.header.e_phoff);
-      for (int index = 0; index < elf.header.e_phnum * elf.header.e_phentsize; index++) {
-        buffer.put((byte) 0);
-      }
+      ElfHeader header = elf.header;
+
+      // Clear the `e_entry` entry.
+      header = header.withEntry(0);
+
+      // Position the buffer to the beginning of the file header.
+      buffer.position(0);
+
+      // Write the new header back out.
+      header.write(buffer);
     }
     return StepExecutionResults.SUCCESS;
   }
 
   @Override
   public final String getShortName() {
-    return "clear_program_headers";
+    return "scrub_file_header";
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "Clear ELF program headers in " + getPath();
+    return "Scrub the ELF file header in " + getPath();
   }
 }

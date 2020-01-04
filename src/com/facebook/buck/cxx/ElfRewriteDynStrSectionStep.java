@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
@@ -45,15 +45,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * A step which rewrites the dynamic string using the strings currently being used. This is useful
  * after removing symbols from the dynamic symbol table to compact the string table.
  */
-@Value.Immutable
-@BuckStylePackageVisibleTuple
-abstract class AbstractElfRewriteDynStrSectionStep implements Step {
+@BuckStyleValue
+abstract class ElfRewriteDynStrSectionStep implements Step {
 
   private static final String DYNAMIC = ".dynamic";
   private static final String DYNSTR = ".dynstr";

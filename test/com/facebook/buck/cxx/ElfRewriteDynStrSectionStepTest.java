@@ -68,7 +68,7 @@ public class ElfRewriteDynStrSectionStepTest {
     Path lib = tmp.getRoot().getFileSystem().getPath("libfoo.so");
     ImmutableSet<String> originalStrings = readDynStr(lib);
     ElfRewriteDynStrSectionStep step =
-        ElfRewriteDynStrSectionStep.of(
+        ImmutableElfRewriteDynStrSectionStep.of(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()), lib);
     step.execute(TestExecutionContext.newInstance());
     ImmutableSet<String> rewrittenStrings = readDynStr(lib);

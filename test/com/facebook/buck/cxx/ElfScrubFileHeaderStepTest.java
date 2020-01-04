@@ -39,7 +39,7 @@ public class ElfScrubFileHeaderStepTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "elf_shared_lib", tmp);
     workspace.setUp();
     ElfScrubFileHeaderStep step =
-        ElfScrubFileHeaderStep.of(
+        ImmutableElfScrubFileHeaderStep.of(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             tmp.getRoot().getFileSystem().getPath("libfoo.so"));
     step.execute(TestExecutionContext.newInstance());

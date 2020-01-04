@@ -19,21 +19,19 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Consumer;
-import org.immutables.value.Value;
 
 /**
  * An {@link Arg} implementation that represents a thin archive. As opposed to normal archives, thin
  * archives also need to propagate their inputs as build time deps to consumers, since they only
  * embed relative paths to the inputs, which need to exist at build time.
  */
-@Value.Immutable
-@BuckStylePackageVisibleTuple
-abstract class AbstractThinArchiveArg implements Arg, HasSourcePath {
+@BuckStyleValue
+abstract class ThinArchiveArg implements Arg, HasSourcePath {
 
   @Override
   @AddToRuleKey

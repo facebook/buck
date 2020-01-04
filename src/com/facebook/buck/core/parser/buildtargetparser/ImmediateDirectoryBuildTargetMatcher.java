@@ -17,35 +17,31 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
-import org.immutables.value.Value;
+import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/** A pattern that matches only one build target. */
-@Value.Immutable(builder = false, copy = false)
-@BuckStylePackageVisibleTuple
-abstract class AbstractSingletonBuildTargetMatcher implements BuildTargetMatcher {
+/** A pattern matches build targets that are all in the same directory. */
+@BuckStyleValue
+abstract class ImmediateDirectoryBuildTargetMatcher implements BuildTargetMatcher {
 
-  protected abstract UnconfiguredBuildTarget getTarget();
+  protected abstract CellRelativePath getCellRelativeBasePath();
 
   /**
-   * @return true if the given target not null and has the same fullyQualifiedName, otherwise return
+   * @return true if the given target not null and has the same basePathWithSlash, otherwise return
    *     false.
    */
   @Override
   public boolean matches(BuildTarget target) {
-    return this.getTarget().getCell().equals(target.getCell())
-        && this.getTarget().getBaseName().equals(target.getBaseName())
-        && this.getTarget().getName().equals(target.getShortName());
+    return getCellRelativeBasePath().equals(target.getCellRelativeBasePath());
   }
 
   @Override
   public String getCellFreeRepresentation() {
-    return getTarget().getBaseName() + ":" + getTarget().getName();
+    return "//" + getCellRelativeBasePath().getPath() + ":";
   }
 
   @Override
   public String toString() {
-    return getTarget().toString();
+    return getCellRelativeBasePath() + ":";
   }
 }

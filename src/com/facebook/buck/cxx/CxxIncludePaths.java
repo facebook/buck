@@ -20,7 +20,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.args.StringArg;
@@ -36,11 +36,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStylePackageVisibleTuple
-abstract class AbstractCxxIncludePaths implements AddsToRuleKey {
+@BuckStyleValue
+abstract class CxxIncludePaths implements AddsToRuleKey {
 
   /** Paths added with {@code -I} */
   @CustomFieldBehavior(DefaultFieldSerialization.class)
@@ -65,7 +63,7 @@ abstract class AbstractCxxIncludePaths implements AddsToRuleKey {
       fpathBuilder.addAll(item.getFPaths());
     }
 
-    return CxxIncludePaths.of(ipathBuilder.build(), fpathBuilder.build());
+    return ImmutableCxxIncludePaths.of(ipathBuilder.build(), fpathBuilder.build());
   }
 
   public static CxxIncludePaths empty() {

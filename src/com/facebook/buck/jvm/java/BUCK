@@ -306,7 +306,7 @@ java_library_with_plugins(
     name = "rules",
     srcs = [
         "AbstractDefaultJavaLibraryClasspaths.java",
-        "AbstractUnusedDependenciesFinder.java",
+        "UnusedDependenciesFinder.java",
         "BuiltInJavac.java",
         "CalculateClassAbi.java",
         "CalculateSourceAbi.java",

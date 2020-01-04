@@ -20,7 +20,7 @@ import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -41,9 +41,8 @@ import org.immutables.value.Value;
 /**
  * A step which extracts specific sections from an ELF file and compacts them into a new ELF file.
  */
-@Value.Immutable
-@BuckStylePackageVisibleTuple
-abstract class AbstractElfCompactSectionsStep implements Step {
+@BuckStyleValue
+abstract class ElfCompactSectionsStep implements Step {
 
   private static final long SHF_ALLOC = 0x2L;
 

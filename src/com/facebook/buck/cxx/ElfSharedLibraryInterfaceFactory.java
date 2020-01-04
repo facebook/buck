@@ -21,7 +21,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
@@ -29,11 +29,9 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStylePackageVisibleTuple
-abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibraryInterfaceFactory {
+@BuckStyleValue
+abstract class ElfSharedLibraryInterfaceFactory implements SharedLibraryInterfaceFactory {
 
   abstract ToolProvider getObjcopy();
 
@@ -75,7 +73,7 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
   }
 
   public static ElfSharedLibraryInterfaceFactory from(ElfSharedLibraryInterfaceParams params) {
-    return ElfSharedLibraryInterfaceFactory.of(
+    return ImmutableElfSharedLibraryInterfaceFactory.of(
         params.getObjcopy(), params.isRemoveUndefinedSymbols());
   }
 }
