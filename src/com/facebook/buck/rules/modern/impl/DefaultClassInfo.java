@@ -25,6 +25,7 @@ import com.facebook.buck.core.rulekey.MissingExcludeReporter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.FieldInfo;
@@ -270,6 +271,7 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
     // annotations.
     return clazz.getAnnotation(BuckStyleImmutable.class) != null
         || clazz.getAnnotation(BuckStylePrehashedValue.class) != null
+        || clazz.getAnnotation(BuckStyleValueWithBuilder.class) != null
         || clazz.getAnnotation(BuckStyleValue.class) != null;
   }
 

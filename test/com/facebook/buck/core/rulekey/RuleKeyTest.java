@@ -48,6 +48,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.log.ConsoleHandler;
@@ -736,6 +737,43 @@ public class RuleKeyTest {
   }
 
   @Test
+  public void immutablesCanAddValueMethodsFromInterfaceBuilderImmutablesToRuleKeys() {
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    RuleKey first =
+        createBuilder(ruleFinder)
+            .setReflectively(
+                "value",
+                ImmutableTestRuleKeyInterfaceBuilderImmutable.builder()
+                    .setRuleKeyValue("added-1")
+                    .setNonRuleKeyValue("ignored-1")
+                    .build())
+            .build(RuleKey::new);
+
+    RuleKey second =
+        createBuilder(ruleFinder)
+            .setReflectively(
+                "value",
+                ImmutableTestRuleKeyInterfaceBuilderImmutable.builder()
+                    .setRuleKeyValue("added-1")
+                    .setNonRuleKeyValue("ignored-2")
+                    .build())
+            .build(RuleKey::new);
+
+    RuleKey third =
+        createBuilder(ruleFinder)
+            .setReflectively(
+                "value",
+                ImmutableTestRuleKeyInterfaceBuilderImmutable.builder()
+                    .setRuleKeyValue("added-2")
+                    .setNonRuleKeyValue("ignored-2")
+                    .build())
+            .build(RuleKey::new);
+
+    assertEquals(first, second);
+    assertNotEquals(first, third);
+  }
+
+  @Test
   public void lambdaAddsPseudoClassName() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     Result<RuleKey, String> result =
@@ -769,6 +807,14 @@ public class RuleKeyTest {
 
   @BuckStylePrehashedValue
   interface TestRuleKeyInterfacePrehashedImmutable extends AddsToRuleKey {
+    @AddToRuleKey
+    String getRuleKeyValue();
+
+    String getNonRuleKeyValue();
+  }
+
+  @BuckStyleValueWithBuilder
+  interface TestRuleKeyInterfaceBuilderImmutable extends AddsToRuleKey {
     @AddToRuleKey
     String getRuleKeyValue();
 
