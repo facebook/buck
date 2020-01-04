@@ -46,7 +46,6 @@ import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -835,22 +834,11 @@ public class RuleKeyTest {
     abstract int getValue();
   }
 
-  @Value.Immutable
-  @BuckStylePackageVisibleImmutable
-  abstract static class AbstractTestPackageVisibleImmutable implements AddsToRuleKey {
-    @AddToRuleKey
-    abstract int getValue();
-  }
-
   @Test
   public void packageVisibleImmutablesCanUseAddToRuleKey() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     createBuilder(ruleFinder)
         .setReflectively("value", ImmutableTestPackageVisibleTuple.of(0))
-        .build(RuleKey::new);
-
-    createBuilder(ruleFinder)
-        .setReflectively("value", TestPackageVisibleImmutable.builder().setValue(0).build())
         .build(RuleKey::new);
   }
 

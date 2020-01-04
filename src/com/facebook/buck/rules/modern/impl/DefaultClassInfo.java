@@ -23,7 +23,6 @@ import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.MissingExcludeReporter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
@@ -270,7 +269,6 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
     // Value.Immutable only has CLASS retention, so we need to detect this based on our own
     // annotations.
     return clazz.getAnnotation(BuckStyleImmutable.class) != null
-        || clazz.getAnnotation(BuckStylePackageVisibleImmutable.class) != null
         || clazz.getAnnotation(BuckStylePrehashedValue.class) != null
         || clazz.getAnnotation(BuckStyleValue.class) != null;
   }
