@@ -22,8 +22,8 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
-import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -243,7 +243,7 @@ public class MultiarchFileInfosTest {
     return buildRules;
   }
 
-  private FlavorDomain<UnresolvedAppleCxxPlatform> getAppleCxxPlatformFlavorDomain() {
+  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformFlavorDomain() {
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
             .withToolchain(
@@ -257,6 +257,6 @@ public class MultiarchFileInfosTest {
             AppleCxxPlatformsProvider.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
             AppleCxxPlatformsProvider.class);
-    return appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
+    return appleCxxPlatformsProvider.getAppleCxxPlatforms();
   }
 }

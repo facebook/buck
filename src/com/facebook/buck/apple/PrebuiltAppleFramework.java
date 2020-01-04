@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
-import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
@@ -78,7 +79,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final Optional<Pattern> supportedPlatformsRegex;
-  private final FlavorDomain<UnresolvedAppleCxxPlatform> applePlatformFlavorDomain;
+  private final FlavorDomain<AppleCxxPlatform> applePlatformFlavorDomain;
 
   private final LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
       CacheBuilder.newBuilder().build(CacheLoader.from(this::getNativeLinkableInputUncached));
@@ -87,33 +88,26 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
       new TransitiveCxxPreprocessorInputCache(this);
   private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
       LegacyNativeLinkableGroup.getNativeLinkableCache(this);
-  private final ActionGraphBuilder graphBuilder;
 
   public PrebuiltAppleFramework(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      ActionGraphBuilder graphBuilder,
+      SourcePathResolverAdapter pathResolver,
       SourcePath frameworkPath,
       Linkage preferredLinkage,
       ImmutableSet<FrameworkPath> frameworks,
       Optional<Pattern> supportedPlatformsRegex,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
-      FlavorDomain<UnresolvedAppleCxxPlatform> applePlatformFlavorDomain) {
+      FlavorDomain<AppleCxxPlatform> applePlatformFlavorDomain) {
     super(buildTarget, projectFilesystem, params);
-    this.graphBuilder = graphBuilder;
     this.frameworkPath = frameworkPath;
     this.exportedLinkerFlags = exportedLinkerFlags;
     this.preferredLinkage = preferredLinkage;
     this.frameworks = frameworks;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
 
-    this.frameworkName =
-        graphBuilder
-            .getSourcePathResolver()
-            .getAbsolutePath(frameworkPath)
-            .getFileName()
-            .toString();
+    this.frameworkName = pathResolver.getAbsolutePath(frameworkPath).getFileName().toString();
     this.out =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
             .resolve(frameworkName);
@@ -241,14 +235,11 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
 
     frameworkPaths.add(FrameworkPath.ofSourcePath(getSourcePathToOutput()));
     if (type == Linker.LinkableDepType.SHARED) {
-      Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
+      Optional<AppleCxxPlatform> appleCxxPlatform =
           applePlatformFlavorDomain.getValue(ImmutableSet.of(cxxPlatform.getFlavor()));
       boolean isMacTarget =
           appleCxxPlatform
-              .map(
-                  p ->
-                      p.resolve(graphBuilder).getAppleSdk().getApplePlatform().getType()
-                          == ApplePlatformType.MAC)
+              .map(p -> p.getAppleSdk().getApplePlatform().getType() == ApplePlatformType.MAC)
               .orElse(false);
       String loaderPath = isMacTarget ? "@loader_path/../Frameworks" : "@loader_path/Frameworks";
       String executablePath =

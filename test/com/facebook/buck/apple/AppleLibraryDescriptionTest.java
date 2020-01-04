@@ -149,7 +149,7 @@ public class AppleLibraryDescriptionTest {
         CxxLibraryDescriptionArg.builder().from(libNode.getConstructorArg());
 
     AppleDescriptions.populateCxxLibraryDescriptionArg(
-        buildRuleResolver,
+        buildRuleResolver.getSourcePathResolver(),
         delegateArgBuilder,
         Optional.empty(),
         libNode.getConstructorArg(),

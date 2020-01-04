@@ -24,7 +24,6 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
-import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -323,9 +322,8 @@ public class AppleLibraryDescription
 
             // TODO(mgd): Must handle 'default' platform
             AppleCxxPlatform applePlatform =
-                getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
+                getAppleCxxPlatformDomain(buildTarget.getTargetConfiguration())
                     .getValue(buildTarget)
-                    .map(unresolved -> unresolved.resolve(graphBuilder))
                     .orElseThrow(IllegalArgumentException::new);
 
             ImmutableSet<CxxPreprocessorInput> preprocessorInputs =
@@ -431,7 +429,7 @@ public class AppleLibraryDescription
     return AppleDescriptions.createAppleBundle(
         xcodeDescriptions,
         cxxPlatformsProvider,
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()),
+        getAppleCxxPlatformDomain(buildTarget.getTargetConfiguration()),
         targetGraph,
         buildTarget,
         projectFilesystem,
@@ -551,7 +549,7 @@ public class AppleLibraryDescription
             .getValue(buildTarget)
             .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries()),
         cxxPlatformsProvider,
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()),
+        getAppleCxxPlatformDomain(buildTarget.getTargetConfiguration()),
         cxxBuckConfig.shouldCacheStrip());
   }
 
@@ -595,7 +593,7 @@ public class AppleLibraryDescription
           multiarchFileInfo.get(),
           thinRules.build(),
           cxxBuckConfig,
-          getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()));
+          getAppleCxxPlatformDomain(buildTarget.getTargetConfiguration()));
     } else {
       return requireSingleArchUnstrippedBuildRule(
           context,
@@ -624,13 +622,12 @@ public class AppleLibraryDescription
           ImmutableSortedSet<BuildTarget> extraCxxDeps,
           CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxDeps) {
 
-    Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
-            .getValue(buildTarget);
+    Optional<AppleCxxPlatform> appleCxxPlatform =
+        getAppleCxxPlatformDomain(buildTarget.getTargetConfiguration()).getValue(buildTarget);
 
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
     AppleDescriptions.populateCxxLibraryDescriptionArg(
-        graphBuilder, delegateArg, appleCxxPlatform, args, buildTarget);
+        graphBuilder.getSourcePathResolver(), delegateArg, appleCxxPlatform, args, buildTarget);
 
     BuildRuleParams newParams;
     Optional<BuildRule> swiftCompanionBuildRule =
@@ -955,13 +952,12 @@ public class AppleLibraryDescription
       CellPathResolver cellRoots,
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) {
-    Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
-            .getValue(buildTarget);
+    Optional<AppleCxxPlatform> appleCxxPlatform =
+        getAppleCxxPlatformDomain(buildTarget.getTargetConfiguration()).getValue(buildTarget);
 
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
     AppleDescriptions.populateCxxLibraryDescriptionArg(
-        graphBuilder, delegateArg, appleCxxPlatform, args, buildTarget);
+        graphBuilder.getSourcePathResolver(), delegateArg, appleCxxPlatform, args, buildTarget);
     return cxxLibraryMetadataFactory.createMetadata(
         buildTarget, graphBuilder, cellRoots, delegateArg.build(), metadataClass);
   }
@@ -997,12 +993,8 @@ public class AppleLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     MultiarchFileInfos.checkTargetSupportsMultiarch(buildTarget);
-    getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
-        .getValues()
-        .forEach(
-            platform ->
-                targetGraphOnlyDepsBuilder.addAll(
-                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
+    targetGraphOnlyDepsBuilder.addAll(
+        cxxLibraryFactory.getPlatformParseTimeDeps(buildTarget.getTargetConfiguration()));
   }
 
   public static boolean isNotStaticallyLinkedLibraryNode(
@@ -1125,7 +1117,7 @@ public class AppleLibraryDescription
         });
   }
 
-  private FlavorDomain<UnresolvedAppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
+  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformDomain(
       TargetConfiguration toolchainTargetConfiguration) {
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
         toolchainProvider.getByName(
@@ -1133,7 +1125,7 @@ public class AppleLibraryDescription
             toolchainTargetConfiguration,
             AppleCxxPlatformsProvider.class);
 
-    return appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
+    return appleCxxPlatformsProvider.getAppleCxxPlatforms();
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider(

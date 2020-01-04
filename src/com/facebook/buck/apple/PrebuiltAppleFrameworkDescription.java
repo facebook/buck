@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
-import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
@@ -65,14 +65,14 @@ public class PrebuiltAppleFrameworkDescription
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
-  private FlavorDomain<UnresolvedAppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
+  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
       TargetConfiguration toolchainTargetConfiguration) {
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
         toolchainProvider.getByName(
             AppleCxxPlatformsProvider.DEFAULT_NAME,
             toolchainTargetConfiguration,
             AppleCxxPlatformsProvider.class);
-    return appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
+    return appleCxxPlatformsProvider.getAppleCxxPlatforms();
   }
 
   @Override
@@ -81,7 +81,7 @@ public class PrebuiltAppleFrameworkDescription
     // This class supports flavors that other apple targets support.
     // It's mainly there to be compatible with other apple rules which blindly add flavor tags to
     // all its targets.
-    FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain =
+    FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
         getAppleCxxPlatformsFlavorDomain(toolchainTargetConfiguration);
     return RichStream.from(flavors)
         .allMatch(
@@ -120,7 +120,7 @@ public class PrebuiltAppleFrameworkDescription
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        context.getActionGraphBuilder(),
+        context.getActionGraphBuilder().getSourcePathResolver(),
         args.getFramework(),
         args.getPreferredLinkage(),
         args.getFrameworks(),

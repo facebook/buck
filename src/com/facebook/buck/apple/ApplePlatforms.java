@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
-import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -53,23 +52,21 @@ public class ApplePlatforms {
   public static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(
       BuildRuleResolver ruleResolver,
       CxxPlatformsProvider cxxPlatformsProvider,
-      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       BuildTarget target,
       Optional<Flavor> defaultPlatform,
       Optional<MultiarchFileInfo> fatBinaryInfo) {
     AppleCxxPlatform appleCxxPlatform;
     if (fatBinaryInfo.isPresent()) {
       appleCxxPlatform =
-          appleCxxPlatformFlavorDomain
-              .getValue(fatBinaryInfo.get().getRepresentativePlatformFlavor())
-              .resolve(ruleResolver);
+          appleCxxPlatformFlavorDomain.getValue(
+              fatBinaryInfo.get().getRepresentativePlatformFlavor());
     } else {
       CxxPlatform cxxPlatform =
           getCxxPlatformForBuildTarget(cxxPlatformsProvider, target, defaultPlatform)
               .resolve(ruleResolver, target.getTargetConfiguration());
       try {
-        appleCxxPlatform =
-            appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor()).resolve(ruleResolver);
+        appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
       } catch (FlavorDomainException e) {
         throw new HumanReadableException(
             e,

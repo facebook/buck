@@ -26,7 +26,6 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
-import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -39,7 +38,6 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
@@ -281,8 +279,8 @@ public class AppleDescriptions {
   }
 
   private static void populateCxxConstructorArg(
-      BuildRuleResolver ruleResolver,
-      Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform,
+      SourcePathResolverAdapter resolver,
+      Optional<AppleCxxPlatform> appleCxxPlatform,
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget,
       Consumer<ImmutableSortedSet<SourceWithFlags>> setSrcs,
@@ -290,7 +288,6 @@ public class AppleDescriptions {
       Consumer<String> setHeaderNamespace,
       Consumer<StringWithMacros> addCompilerFlags) {
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(arg, buildTarget);
-    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
     // The resulting cxx constructor arg will have no exported headers and both headers and exported
     // headers specified in the apple arg will be available with both public and private include
     // styles.
@@ -325,19 +322,14 @@ public class AppleDescriptions {
     setHeaderNamespace.accept("");
 
     if (appleCxxPlatform.isPresent()) {
-      String platformVersion = appleCxxPlatform.get().resolve(ruleResolver).getMinVersion();
+      String platformVersion = appleCxxPlatform.get().getMinVersion();
       Optional<String> targetVersion = arg.getTargetSdkVersion();
 
       // If the target has a different target SDK version from the overall platform, we add
       // a compiler flag to override that base version with the per-target version.
       if (targetVersion.isPresent() && platformVersion != targetVersion.get()) {
         String versionFlag =
-            appleCxxPlatform
-                    .get()
-                    .resolve(ruleResolver)
-                    .getAppleSdk()
-                    .getApplePlatform()
-                    .getMinVersionFlagPrefix()
+            appleCxxPlatform.get().getAppleSdk().getApplePlatform().getMinVersionFlagPrefix()
                 + targetVersion.get();
         addCompilerFlags.accept(StringWithMacros.of(ImmutableList.of(Either.ofLeft(versionFlag))));
       }
@@ -345,13 +337,13 @@ public class AppleDescriptions {
   }
 
   public static void populateCxxBinaryDescriptionArg(
-      ActionGraphBuilder graphBuilder,
+      SourcePathResolverAdapter resolver,
       CxxBinaryDescriptionArg.Builder output,
-      Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform,
+      Optional<AppleCxxPlatform> appleCxxPlatform,
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget) {
     populateCxxConstructorArg(
-        graphBuilder,
+        resolver,
         appleCxxPlatform,
         arg,
         buildTarget,
@@ -363,14 +355,13 @@ public class AppleDescriptions {
   }
 
   public static void populateCxxLibraryDescriptionArg(
-      BuildRuleResolver ruleResolver,
+      SourcePathResolverAdapter resolver,
       CxxLibraryDescriptionArg.Builder output,
-      Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform,
+      Optional<AppleCxxPlatform> appleCxxPlatform,
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget) {
-    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
     populateCxxConstructorArg(
-        ruleResolver,
+        resolver,
         appleCxxPlatform,
         arg,
         buildTarget,
@@ -565,7 +556,7 @@ public class AppleDescriptions {
       HasAppleDebugSymbolDeps unstrippedBinaryRule,
       AppleDebugFormat debugFormat,
       CxxPlatformsProvider cxxPlatformsProvider,
-      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatforms,
       boolean shouldCacheStrips) {
     // Target used as the base target of AppleDebuggableBinary.
 
@@ -599,7 +590,7 @@ public class AppleDescriptions {
       ActionGraphBuilder graphBuilder,
       HasAppleDebugSymbolDeps unstrippedBinaryRule,
       CxxPlatformsProvider cxxPlatformsProvider,
-      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatforms,
       boolean isCacheable) {
     return (AppleDsym)
         graphBuilder.computeIfAbsent(
@@ -637,7 +628,7 @@ public class AppleDescriptions {
   static AppleBundle createAppleBundle(
       XCodeDescriptions xcodeDescriptions,
       CxxPlatformsProvider cxxPlatformsProvider,
-      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatforms,
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
