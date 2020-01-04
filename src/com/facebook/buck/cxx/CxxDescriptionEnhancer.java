@@ -1628,7 +1628,7 @@ public class CxxDescriptionEnhancer {
     // graphBuilder for the parts that don't.
     BuildRule buildRule = graphBuilder.requireRule(buildTarget);
     sourcePaths.add(buildRule.getSourcePathToOutput());
-    return Optional.of(CxxCompilationDatabaseDependencies.of(sourcePaths.build()));
+    return Optional.of(ImmutableCxxCompilationDatabaseDependencies.of(sourcePaths.build()));
   }
 
   /**

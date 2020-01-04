@@ -16,14 +16,16 @@
 
 package com.facebook.buck.parser.cache.impl;
 
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.nio.file.Path;
+import java.util.Optional;
 
-/** An entry representing the configuration of the remote parser cache */
-@Value.Immutable(builder = false, copy = false)
-@BuckStylePackageVisibleImmutable
-abstract class AbstractParserRemoteCacheEntry {
+/** Class that implements the parser cache configuration. */
+@BuckStyleValue
+abstract class ParserDirCacheEntry {
+  /** Gets the location for local cache. */
+  abstract Optional<Path> getDirCacheLocation();
+
   /** Gets the mode set for this cache entry. */
-  @Value.Parameter
-  abstract ParserCacheAccessMode getRemoteCacheMode();
+  abstract ParserCacheAccessMode getDirCacheMode();
 }
