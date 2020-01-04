@@ -17,18 +17,16 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * A structure to be passed through components of the C/C++/ObjC build (BuildRules, Steps, etc.) so
  * they may add data for diagnostics or logging.
  */
-@Value.Immutable
-@BuckStylePackageVisibleImmutable
-abstract class AbstractCxxLogInfo {
+@BuckStyleValue
+abstract class CxxLogInfo {
   /** The (fully-flavored) target being built. */
   public abstract Optional<BuildTarget> getTarget();
 

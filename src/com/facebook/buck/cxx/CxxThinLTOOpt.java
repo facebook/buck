@@ -180,11 +180,10 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
           compilerDelegate.getPreArgfileArgs(),
           compilerDelegate.getCompiler(),
           Optional.of(
-              CxxLogInfo.builder()
-                  .setTarget(targetName)
-                  .setSourcePath(relativeInputPath)
-                  .setOutputPath(resolvedOutput)
-                  .build()));
+              ImmutableCxxLogInfo.of(
+                  Optional.ofNullable(targetName),
+                  Optional.ofNullable(relativeInputPath),
+                  Optional.ofNullable(resolvedOutput))));
     }
 
     @Override
