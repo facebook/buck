@@ -27,7 +27,6 @@ import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.cxx.OmnibusLibraries;
-import com.facebook.buck.cxx.OmnibusLibrary;
 import com.facebook.buck.cxx.OmnibusRoot;
 import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -63,7 +62,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -408,15 +406,13 @@ public class PythonUtil {
 
       // Add all remaining libraries as native libraries.
       if (!libraries.getLibraries().isEmpty()) {
-        allComponents.putNativeLibraries(
-            buildTarget,
-            PythonMappedComponents.of(
-                libraries.getLibraries().stream()
-                    .collect(
-                        ImmutableSortedMap.toImmutableSortedMap(
-                            Ordering.natural(),
-                            l -> Paths.get(l.getSoname()),
-                            OmnibusLibrary::getPath))));
+        libraries.getLibraries().stream()
+            .forEach(
+                lib ->
+                    allComponents.putNativeLibraries(
+                        buildTarget,
+                        PythonMappedComponents.of(
+                            ImmutableSortedMap.of(Paths.get(lib.getSoname()), lib.getPath()))));
       }
     } else {
 
