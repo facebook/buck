@@ -566,9 +566,7 @@ public class AppleLibraryDescription
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSortedSet<BuildTarget> extraCxxDeps,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInput) {
-    Optional<MultiarchFileInfo> multiarchFileInfo =
-        MultiarchFileInfos.create(
-            getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()), buildTarget);
+    Optional<MultiarchFileInfo> multiarchFileInfo = MultiarchFileInfos.create(buildTarget);
     if (multiarchFileInfo.isPresent()) {
       ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
       for (BuildTarget thinTarget : multiarchFileInfo.get().getThinTargets()) {

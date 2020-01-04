@@ -249,8 +249,7 @@ public class AppleTestDescription
     FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain =
         getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
 
-    Optional<MultiarchFileInfo> multiarchFileInfo =
-        MultiarchFileInfos.create(appleCxxPlatformFlavorDomain, buildTarget);
+    Optional<MultiarchFileInfo> multiarchFileInfo = MultiarchFileInfos.create(buildTarget);
     AppleCxxPlatform appleCxxPlatform;
     ImmutableList<CxxPlatform> cxxPlatforms;
     TargetConfiguration targetConfiguration = buildTarget.getTargetConfiguration();

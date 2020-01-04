@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
-import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -39,6 +38,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.util.Objects;
@@ -58,8 +58,7 @@ public class MultiarchFileInfos {
    * @return non-empty when the target represents a fat binary.
    * @throws HumanReadableException when the target is a fat binary but has incompatible flavors.
    */
-  public static Optional<MultiarchFileInfo> create(
-      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms, BuildTarget target) {
+  public static Optional<MultiarchFileInfo> create(BuildTarget target) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
         generateThinFlavors(target.getFlavors());
     if (thinFlavorSets.size() <= 1) { // Actually a thin binary
@@ -71,11 +70,15 @@ public class MultiarchFileInfos {
     Flavor representativePlatformFlavor = null;
     String sdkName = null;
     for (SortedSet<Flavor> flavorSet : thinFlavorSets) {
-      UnresolvedAppleCxxPlatform cxxPlatform =
-          Objects.requireNonNull(appleCxxPlatforms.getValue(flavorSet).orElse(null));
-      Flavor platformFlavor = cxxPlatform.getFlavor();
+      Set<Flavor> platformFlavors =
+          flavorSet.stream().filter(Flavors::isPlatformFlavor).collect(Collectors.toSet());
+      if (platformFlavors.size() != 1) {
+        throw new HumanReadableException(
+            "%s: Can't find single platform flavor. Found: %s", target, platformFlavors);
+      }
+      Flavor platformFlavor = Objects.requireNonNull(Iterables.getFirst(platformFlavors, null));
       String platformSdkName =
-          ApplePlatform.findAppleSdkName(platformFlavor).orElseThrow(RuntimeException::new);
+          Flavors.findAppleSdkName(platformFlavor).orElseThrow(RuntimeException::new);
       if (sdkName == null) {
         sdkName = platformSdkName;
         representativePlatformFlavor = platformFlavor;
@@ -91,7 +94,9 @@ public class MultiarchFileInfos {
             .setFatTarget(target)
             .setRepresentativePlatformFlavor(Objects.requireNonNull(representativePlatformFlavor));
 
-    BuildTarget platformFreeTarget = target.withoutFlavors(appleCxxPlatforms.getFlavors());
+    Set<Flavor> targetPlatformFlavors =
+        target.getFlavors().stream().filter(Flavors::isPlatformFlavor).collect(Collectors.toSet());
+    BuildTarget platformFreeTarget = target.withoutFlavors(targetPlatformFlavors);
     for (SortedSet<Flavor> flavorSet : thinFlavorSets) {
       builder.addThinTargets(platformFreeTarget.withFlavors(flavorSet));
     }
@@ -128,11 +133,11 @@ public class MultiarchFileInfos {
       SortedSet<Flavor> flavors) {
     Set<Flavor> platformFreeFlavors =
         flavors.stream()
-            .filter(flavor -> !ApplePlatform.isPlatformFlavor(flavor))
+            .filter(flavor -> !Flavors.isPlatformFlavor(flavor))
             .collect(Collectors.toSet());
     ImmutableList.Builder<ImmutableSortedSet<Flavor>> thinTargetsBuilder = ImmutableList.builder();
     for (Flavor flavor : flavors) {
-      if (ApplePlatform.isPlatformFlavor(flavor)) {
+      if (Flavors.isPlatformFlavor(flavor)) {
         thinTargetsBuilder.add(
             ImmutableSortedSet.<Flavor>naturalOrder()
                 .addAll(platformFreeFlavors)

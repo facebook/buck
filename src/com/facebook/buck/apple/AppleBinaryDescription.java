@@ -440,8 +440,7 @@ public class AppleBinaryDescription
       buildTarget = buildTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
     }
 
-    Optional<MultiarchFileInfo> fatBinaryInfo =
-        MultiarchFileInfos.create(appleCxxPlatformsFlavorDomain, buildTarget);
+    Optional<MultiarchFileInfo> fatBinaryInfo = MultiarchFileInfos.create(buildTarget);
     if (fatBinaryInfo.isPresent()) {
       if (shouldUseStubBinary(buildTarget, args)) {
         BuildTarget thinTarget = Iterables.getFirst(fatBinaryInfo.get().getThinTargets(), null);

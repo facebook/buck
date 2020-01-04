@@ -120,7 +120,7 @@ public class SwiftLibraryIntegrationTest {
             "lib.so",
             ImmutableSortedSet.of());
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-arm64");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
     BuildRuleParams params =
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(depRule));
 
@@ -143,7 +143,7 @@ public class SwiftLibraryIntegrationTest {
 
   @Test
   public void testSwiftCompileAndLinkArgs() throws NoSuchBuildTargetException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-arm64");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
     BuildTarget swiftCompileTarget =
         buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -260,7 +260,7 @@ public class SwiftLibraryIntegrationTest {
   public void testEmitModuleDocArgsAreIncludedInCompilerCommand() {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-arm64");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
     BuildTarget swiftCompileTarget =
         buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();

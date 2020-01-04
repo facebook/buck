@@ -73,7 +73,7 @@ public class ExternallyBuiltApplePackageTest {
     config =
         ImmutableApplePackageConfigAndPlatformInfo.of(
             AppleConfig.ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),
-            FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_ARMV7_PLATFORM);
+            FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_I386_PLATFORM);
   }
 
   @Test
@@ -102,7 +102,7 @@ public class ExternallyBuiltApplePackageTest {
         step.getEnvironmentVariables(TestExecutionContext.newInstance()),
         hasEntry(
             "SDKROOT",
-            FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_ARMV7_PLATFORM
+            FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_I386_PLATFORM
                 .getAppleSdkPaths()
                 .getSdkPath()
                 .toString()));

@@ -173,23 +173,23 @@ public class FakeAppleRuleDescriptions {
         }
       };
 
-  public static final AppleCxxPlatform DEFAULT_IPHONEOS_ARMV7_PLATFORM =
+  public static final AppleCxxPlatform DEFAULT_IPHONEOS_I386_PLATFORM =
       AppleCxxPlatforms.buildWithXcodeToolFinder(
           FAKE_PROJECT_FILESYSTEM,
           DEFAULT_IPHONEOS_SDK,
           "8.0",
-          "armv7",
+          "i386",
           DEFAULT_IPHONEOS_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
           new XcodeToolFinder(DEFAULT_BUCK_CONFIG.getView(AppleConfig.class)),
           FAKE_XCODE_BUILD_VERSION_CACHE);
 
-  public static final AppleCxxPlatform DEFAULT_IPHONEOS_ARM64_PLATFORM =
+  public static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithXcodeToolFinder(
           FAKE_PROJECT_FILESYSTEM,
           DEFAULT_IPHONEOS_SDK,
           "8.0",
-          "arm64",
+          "x86_64",
           DEFAULT_IPHONEOS_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
           new XcodeToolFinder(DEFAULT_BUCK_CONFIG.getView(AppleConfig.class)),
@@ -236,8 +236,8 @@ public class FakeAppleRuleDescriptions {
       FlavorDomain.of(
           "Fake iPhone C/C++ Platform",
           DEFAULT_PLATFORM,
-          new StaticUnresolvedCxxPlatform(DEFAULT_IPHONEOS_ARMV7_PLATFORM.getCxxPlatform()),
-          new StaticUnresolvedCxxPlatform(DEFAULT_IPHONEOS_ARM64_PLATFORM.getCxxPlatform()),
+          new StaticUnresolvedCxxPlatform(DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform()),
+          new StaticUnresolvedCxxPlatform(DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform()),
           new StaticUnresolvedCxxPlatform(DEFAULT_MACOSX_X86_64_PLATFORM.getCxxPlatform()),
           new StaticUnresolvedCxxPlatform(DEFAULT_WATCHOS_ARMV7K_PLATFORM.getCxxPlatform()));
 
@@ -246,9 +246,9 @@ public class FakeAppleRuleDescriptions {
           FlavorDomain.of(
               "Fake Apple C++ Platforms",
               StaticUnresolvedAppleCxxPlatform.of(
-                  DEFAULT_IPHONEOS_ARMV7_PLATFORM, DEFAULT_IPHONEOS_ARMV7_PLATFORM.getFlavor()),
+                  DEFAULT_IPHONEOS_I386_PLATFORM, DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor()),
               StaticUnresolvedAppleCxxPlatform.of(
-                  DEFAULT_IPHONEOS_ARM64_PLATFORM, DEFAULT_IPHONEOS_ARM64_PLATFORM.getFlavor()),
+                  DEFAULT_IPHONEOS_X86_64_PLATFORM, DEFAULT_IPHONEOS_X86_64_PLATFORM.getFlavor()),
               StaticUnresolvedAppleCxxPlatform.of(
                   DEFAULT_MACOSX_X86_64_PLATFORM, DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor()),
               StaticUnresolvedAppleCxxPlatform.of(
@@ -260,11 +260,11 @@ public class FakeAppleRuleDescriptions {
       FlavorDomain.of(
           "Fake Swift Platform",
           StaticUnresolvedSwiftPlatform.of(
-              DEFAULT_IPHONEOS_ARMV7_PLATFORM.getSwiftPlatform(),
-              DEFAULT_IPHONEOS_ARMV7_PLATFORM.getFlavor()),
+              DEFAULT_IPHONEOS_I386_PLATFORM.getSwiftPlatform(),
+              DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor()),
           StaticUnresolvedSwiftPlatform.of(
-              DEFAULT_IPHONEOS_ARM64_PLATFORM.getSwiftPlatform(),
-              DEFAULT_IPHONEOS_ARM64_PLATFORM.getFlavor()),
+              DEFAULT_IPHONEOS_X86_64_PLATFORM.getSwiftPlatform(),
+              DEFAULT_IPHONEOS_X86_64_PLATFORM.getFlavor()),
           StaticUnresolvedSwiftPlatform.of(
               DEFAULT_MACOSX_X86_64_PLATFORM.getSwiftPlatform(),
               DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor()),
@@ -326,7 +326,7 @@ public class FakeAppleRuleDescriptions {
                 CxxPlatformsProvider.DEFAULT_NAME,
                 CxxPlatformsProvider.of(
                     new StaticUnresolvedCxxPlatform(
-                        DEFAULT_IPHONEOS_ARMV7_PLATFORM.getCxxPlatform()),
+                        DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform()),
                     DEFAULT_APPLE_FLAVOR_DOMAIN))
             .build();
     CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =

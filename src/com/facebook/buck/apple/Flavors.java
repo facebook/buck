@@ -21,14 +21,37 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 public class Flavors {
+
+  private static final ImmutableList<String> DEFAULT_SDK_FLAVORS =
+      ImmutableList.of(
+          "appletvos",
+          "iphoneos",
+          "watchos",
+          "macosx",
+          "driverkit",
+          "watchsimulator",
+          "appletvsimulator",
+          "iphonesimulator");
+  private static final ImmutableList<String> DEFAULT_ARCH_FLAVORS =
+      ImmutableList.of("arm64", "arm64_32", "armv7", "armv7k", "i386", "x86_64");
+  private static final Pattern PLATFORM_FLAVOR_PATTERN =
+      Pattern.compile(
+          "("
+              + String.join("|", DEFAULT_SDK_FLAVORS)
+              + ").*\\-("
+              + String.join("|", DEFAULT_ARCH_FLAVORS)
+              + ")");
 
   private Flavors() {}
 
@@ -110,5 +133,24 @@ public class Flavors {
     }
 
     return deps;
+  }
+
+  /**
+   * @param flavor to check
+   * @return if it is the apple platform flavor.
+   */
+  public static boolean isPlatformFlavor(Flavor flavor) {
+    return PLATFORM_FLAVOR_PATTERN.matcher(flavor.getName()).matches();
+  }
+
+  /**
+   * @param flavor to check
+   * @return name of Apple SDK extracted from this flavor or Optional.empty()
+   */
+  public static Optional<String> findAppleSdkName(Flavor flavor) {
+    if (!isPlatformFlavor(flavor)) {
+      return Optional.empty();
+    }
+    return Optional.of(flavor.getName().split("-", 2)[0]);
   }
 }

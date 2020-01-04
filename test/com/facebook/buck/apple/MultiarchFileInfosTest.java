@@ -130,8 +130,7 @@ public class MultiarchFileInfosTest {
     BuildTarget fatBuildTarget =
         BuildTargetFactory.newInstance("//fake/rule:output#watchos-arm64_32,watchos-armv7k");
 
-    MultiarchFileInfo multiarchFileInfo =
-        MultiarchFileInfos.create(getAppleCxxPlatformFlavorDomain(), fatBuildTarget).get();
+    MultiarchFileInfo multiarchFileInfo = MultiarchFileInfos.create(fatBuildTarget).get();
 
     FakeBuildRule rule1 =
         new FakeBuildRule(BuildTargetFactory.newInstance("//fake/rule:output#watchos-arm64_32"));
@@ -165,8 +164,7 @@ public class MultiarchFileInfosTest {
     BuildTarget fatBuildTarget =
         BuildTargetFactory.newInstance("//fake/rule:output#watchos-arm64_32,watchos-armv7k");
 
-    MultiarchFileInfo multiarchFileInfo =
-        MultiarchFileInfos.create(getAppleCxxPlatformFlavorDomain(), fatBuildTarget).get();
+    MultiarchFileInfo multiarchFileInfo = MultiarchFileInfos.create(fatBuildTarget).get();
 
     FakeBuildRule rule1 =
         new FakeBuildRule(BuildTargetFactory.newInstance("//fake/rule:output#watchos-arm64_32"));
@@ -200,8 +198,7 @@ public class MultiarchFileInfosTest {
     BuildTarget fatBuildTarget =
         BuildTargetFactory.newInstance("//fake/rule:output#watchos-arm64_32,watchos-armv7k");
 
-    MultiarchFileInfo multiarchFileInfo =
-        MultiarchFileInfos.create(getAppleCxxPlatformFlavorDomain(), fatBuildTarget).get();
+    MultiarchFileInfo multiarchFileInfo = MultiarchFileInfos.create(fatBuildTarget).get();
 
     FakeBuildRule rule1 =
         new FakeBuildRule(BuildTargetFactory.newInstance("//fake/rule:output#watchos-arm64_32"));
