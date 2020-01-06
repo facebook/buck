@@ -1,5 +1,4 @@
 [repositories]
-  buck_testlib = .
 
 [ndk]
   ndk_version = 17

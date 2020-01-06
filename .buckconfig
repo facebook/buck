@@ -2,7 +2,6 @@
 [repositories]
     buck = .
     buck_bazel_skylib = ./third-party/skylark/bazel-skylib
-    buck_testlib = test/com/facebook/buck/testutil/integration/testlibs
 [java]
     ; Indicates that any folder named src or test
     ; are folders that contain Java code.
