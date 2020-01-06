@@ -22,6 +22,7 @@ import com.facebook.buck.edenfs.EdenMount;
 import com.facebook.buck.edenfs.EdenProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.ProjectFilesystemDelegatePair;
 import com.facebook.buck.util.config.Config;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -38,7 +39,12 @@ public final class ProjectFilesystemDelegateFactory {
   private ProjectFilesystemDelegateFactory() {}
 
   /** Must always create a new delegate for the specified {@code root}. */
-  public static ProjectFilesystemDelegate newInstance(Path root, Config config) {
+  public static ProjectFilesystemDelegatePair newInstance(Path root, Config config) {
+    return new ProjectFilesystemDelegatePair(
+        getGeneralDelegate(root, config), new DefaultProjectFilesystemDelegate(root));
+  }
+
+  private static ProjectFilesystemDelegate getGeneralDelegate(Path root, Config config) {
     Optional<EdenClientPool> pool = EdenClientPool.tryToCreateEdenClientPool(root);
 
     if (pool.isPresent()) {

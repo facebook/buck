@@ -132,7 +132,9 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   public static DefaultFileHashCache createBuckOutFileHashCache(
       ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
     return new DefaultFileHashCache(
-        projectFilesystem, (path) -> !isInBuckOut(projectFilesystem, path), fileHashCacheMode);
+        projectFilesystem.createBuckOutProjectFilesystem(),
+        (path) -> !isInBuckOut(projectFilesystem, path),
+        fileHashCacheMode);
   }
 
   public static DefaultFileHashCache createDefaultFileHashCache(

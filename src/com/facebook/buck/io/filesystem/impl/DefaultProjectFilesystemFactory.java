@@ -22,6 +22,7 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.filesystem.ProjectFilesystemDelegatePair;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
@@ -63,11 +64,14 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       Config config,
       Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
     BuckPaths buckPaths = getConfiguredBuckPaths(cellName, root, config, embeddedCellBuckOutInfo);
+    ProjectFilesystemDelegatePair delegatePair =
+        ProjectFilesystemDelegateFactory.newInstance(root, config);
     return new DefaultProjectFilesystem(
         root,
         extractIgnorePaths(root, config, buckPaths, embeddedCellBuckOutInfo),
         buckPaths,
-        ProjectFilesystemDelegateFactory.newInstance(root, config),
+        delegatePair.getGeneralDelegate(),
+        delegatePair,
         getWindowsFSInstance());
   }
 

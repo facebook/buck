@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.ProjectFilesystemDelegatePair;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.MoreSuppliers;
@@ -91,7 +92,7 @@ import java.util.jar.Manifest;
 import javax.annotation.Nullable;
 
 /** An injectable service for interacting with the filesystem relative to the project root. */
-public class DefaultProjectFilesystem implements ProjectFilesystem {
+public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
   private final Path edenMagicPathElement;
 
@@ -104,7 +105,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   /** Supplier that returns an absolute path that is guaranteed to exist. */
   private final Supplier<Path> tmpDir;
 
-  private final ProjectFilesystemDelegate delegate;
+  private ProjectFilesystemDelegate delegate;
+  private final ProjectFilesystemDelegatePair delegatePair;
   @Nullable private final WindowsFS winFSInstance;
 
   // Defaults to false, and so paths should be valid.
@@ -123,7 +125,16 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   protected DefaultProjectFilesystem(
       CanonicalCellName cellName,
       Path root,
-      ProjectFilesystemDelegate projectFilesystemDelegate,
+      ProjectFilesystemDelegate delegate,
+      @Nullable WindowsFS winFSInstance) {
+    this(cellName, root, new ProjectFilesystemDelegatePair(delegate, delegate), winFSInstance);
+  }
+  /** This function should be only used in tests, because it ignores hashes-in-path buckconfig. */
+  @VisibleForTesting
+  protected DefaultProjectFilesystem(
+      CanonicalCellName cellName,
+      Path root,
+      ProjectFilesystemDelegatePair projectFilesystemDelegatePair,
       @Nullable WindowsFS winFSInstance) {
     this(
         root,
@@ -133,7 +144,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
             root,
             // This function is only used in tests, so it's OK to not query buckconfig here
             BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_COFIG_HASH),
-        projectFilesystemDelegate,
+        projectFilesystemDelegatePair.getGeneralDelegate(),
+        projectFilesystemDelegatePair,
         winFSInstance);
   }
 
@@ -143,6 +155,22 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       BuckPaths buckPaths,
       ProjectFilesystemDelegate delegate,
       @Nullable WindowsFS winFSInstance) {
+    this(
+        root,
+        blackListedPaths,
+        buckPaths,
+        delegate,
+        new ProjectFilesystemDelegatePair(delegate, delegate),
+        winFSInstance);
+  }
+
+  public DefaultProjectFilesystem(
+      Path root,
+      ImmutableSet<PathMatcher> blackListedPaths,
+      BuckPaths buckPaths,
+      ProjectFilesystemDelegate delegate,
+      ProjectFilesystemDelegatePair delegatePair,
+      @Nullable WindowsFS winFSInstance) {
     if (shouldVerifyConstructorArguments()) {
       Preconditions.checkArgument(Files.isDirectory(root), "%s must be a directory", root);
       Preconditions.checkArgument(root.isAbsolute(), "Expected absolute path. Got <%s>.", root);
@@ -150,6 +178,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
 
     this.projectRoot = MorePaths.normalize(root);
     this.delegate = delegate;
+    this.delegatePair = delegatePair;
     this.ignoreValidityOfPaths = false;
     this.blackListedPaths =
         FluentIterable.from(blackListedPaths)
@@ -226,6 +255,36 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       return toReturn;
     }
     return Iterables.getOnlyElement(filtered);
+  }
+
+  @Override
+  public DefaultProjectFilesystem clone() throws CloneNotSupportedException {
+    return (DefaultProjectFilesystem) super.clone();
+  }
+
+  protected DefaultProjectFilesystem useBuckOutProjectDelegate() {
+    delegate = delegatePair.getBuckOutDelegate();
+    return this;
+  }
+
+  @Override
+  public DefaultProjectFilesystem createBuckOutProjectFilesystem() {
+    // This method is used to generate the proper delegate for a buck-out path at creation time of
+    // the FileHashCache. This avoids having to check the path on each lookup to determine if we're
+    // in a buck-out path.
+    try {
+      // If the delegate is already the proper one for a buck-out path, then we don't need to do
+      // anything here.
+      if (delegate == delegatePair.getBuckOutDelegate()) {
+        return this;
+      }
+      // Otherwise, we need to make sure the delegate is set properly. The DefaultProjectFilesystem
+      // may be used in other places, so we must clone the object so we don't set the delegate to
+      // the buck-out delegate when the filesystem may be used in non-buck-out cells.
+      return clone().useBuckOutProjectDelegate();
+    } catch (CloneNotSupportedException e) {
+      throw new UnsupportedOperationException(e);
+    }
   }
 
   @Override

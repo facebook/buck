@@ -342,6 +342,11 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   }
 
   @Override
+  public FakeProjectFilesystem clone() throws CloneNotSupportedException {
+    return (FakeProjectFilesystem) super.clone();
+  }
+
+  @Override
   protected boolean shouldVerifyConstructorArguments() {
     return false;
   }
