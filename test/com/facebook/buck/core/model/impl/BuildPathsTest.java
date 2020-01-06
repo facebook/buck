@@ -28,6 +28,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Test;
@@ -112,7 +113,8 @@ public class BuildPathsTest {
 
     assertTrue(Iterables.contains(hashedGenPath, hash));
     assertFalse(Iterables.contains(legacyGenPath, hash));
-    assertEquals(legacyGenPath, BuildPaths.removeHashFrom(hashedGenPath, buildTarget));
+    assertEquals(legacyGenPath, BuildPaths.removeHashFrom(hashedGenPath, buildTarget).get());
+    assertEquals(Optional.empty(), BuildPaths.removeHashFrom(legacyGenPath, buildTarget));
   }
 
   @Test
@@ -136,6 +138,7 @@ public class BuildPathsTest {
 
     assertTrue(Iterables.contains(hashedGenPath, hash));
     assertFalse(Iterables.contains(legacyGenPath, hash));
-    assertEquals(legacyGenPath, BuildPaths.removeHashFrom(hashedGenPath, buildTarget));
+    assertEquals(legacyGenPath, BuildPaths.removeHashFrom(hashedGenPath, buildTarget).get());
+    assertEquals(Optional.empty(), BuildPaths.removeHashFrom(legacyGenPath, buildTarget));
   }
 }

@@ -649,7 +649,7 @@ public class BuildCommandIntegrationTest {
         workspace.resolve(
             BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
                 .resolveSibling("binary.jar"));
-    Path hardlink = BuildPaths.removeHashFrom(expected, target);
+    Path hardlink = BuildPaths.removeHashFrom(expected, target).get();
 
     assertTrue("File not found " + expected.toString(), Files.exists(expected));
     assertTrue("File not found " + hardlink.toString(), Files.exists(hardlink));
@@ -670,7 +670,7 @@ public class BuildCommandIntegrationTest {
         workspace.resolve(
             BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
                 .resolveSibling("binary.jar"));
-    Path symlink = BuildPaths.removeHashFrom(expected, target);
+    Path symlink = BuildPaths.removeHashFrom(expected, target).get();
 
     assertTrue("File not found " + expected.toString(), Files.exists(expected));
     assertTrue("File not found " + symlink.toString(), Files.exists(symlink));
@@ -687,10 +687,11 @@ public class BuildCommandIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:binary");
     Path hardlink =
         BuildPaths.removeHashFrom(
-            workspace.resolve(
-                BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
-                    .resolveSibling("binary.jar")),
-            target);
+                workspace.resolve(
+                    BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                        .resolveSibling("binary.jar")),
+                target)
+            .get();
 
     workspace.runBuckBuild("--show-output", "//:binary").assertSuccess();
     assertTrue(Files.exists(hardlink));
@@ -709,10 +710,11 @@ public class BuildCommandIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:dir");
     Path symlink =
         BuildPaths.removeHashFrom(
-            workspace.resolve(
-                BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
-                    .resolve("output")),
-            target);
+                workspace.resolve(
+                    BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                        .resolve("output")),
+                target)
+            .get();
 
     workspace.runBuckBuild("--show-output", "//:dir").assertSuccess();
     assertTrue(Files.isSymbolicLink(symlink));

@@ -676,8 +676,15 @@ public class BuildCommand extends AbstractCommand {
       return;
     }
     Path absolutePathWithHash = outputPath.get().toAbsolutePath();
-    Path absolutePathWithoutHash =
+    Optional<Path> maybeAbsolutePathWithoutHash =
         BuildPaths.removeHashFrom(absolutePathWithHash, rule.getBuildTarget());
+    if (!maybeAbsolutePathWithoutHash.isPresent()) {
+      // hash was not found, for example `export_file` rule outputs files in source directory, not
+      // in buck-out
+      // so we don't create any links
+      return;
+    }
+    Path absolutePathWithoutHash = maybeAbsolutePathWithoutHash.get();
     Files.deleteIfExists(absolutePathWithoutHash);
     Files.createDirectories(absolutePathWithoutHash.getParent());
 
