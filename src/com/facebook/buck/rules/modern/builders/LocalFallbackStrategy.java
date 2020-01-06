@@ -322,7 +322,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     }
 
     private void handleLocalBuildFailedWithException(Throwable t) {
-      LOG.error(t, "Local fallback for one build rule failed as well for [%s].", buildTarget);
+      LOG.warn(t, "Local fallback for one build rule failed as well for [%s].", buildTarget);
       completeCombinedFutureWithException(t, remoteBuildResult.get(), Result.EXCEPTION);
     }
 
