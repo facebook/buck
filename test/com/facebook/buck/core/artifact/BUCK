@@ -21,9 +21,9 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = ["//src/com/facebook/buck/core/artifact:artifact"],
     visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/core/model/impl:impl",
     ],
+    exported_deps = ["//src/com/facebook/buck/core/artifact:artifact"],
 )

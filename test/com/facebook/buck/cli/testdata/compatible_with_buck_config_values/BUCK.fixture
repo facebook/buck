@@ -1,5 +1,5 @@
 config_setting(
-    name="config",
+    name = "config",
     values = {
         "section.config": "true",
     },

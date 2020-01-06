@@ -17,8 +17,8 @@ def _output_list_rule_impl(ctx):
 
 output_list_rule = rule(
     attrs = {
-        "outputs": attr.output_list(),
         "contents": attr.string(),
+        "outputs": attr.output_list(),
     },
     implementation = _output_list_rule_impl,
 )

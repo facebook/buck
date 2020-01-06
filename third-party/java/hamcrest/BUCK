@@ -1,9 +1,5 @@
 java_library(
     name = "hamcrest",
-    exported_deps = [
-        ":hamcrest-junit",
-        ":java-hamcrest",
-    ],
     licenses = [
         "LICENSE.txt",
     ],
@@ -12,6 +8,10 @@ java_library(
         "//third-party/java/junit:junit",
     ],
     deps = [],
+    exported_deps = [
+        ":hamcrest-junit",
+        ":java-hamcrest",
+    ],
 )
 
 prebuilt_jar(

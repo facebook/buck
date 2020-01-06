@@ -12,13 +12,13 @@ java_annotation_processor(
 
 java_library(
     name = "immutables",
+    visibility = [
+        "PUBLIC",
+    ],
     exported_deps = [
         ":builder",
         ":value",
         "//src/com/facebook/buck/core/util/immutables/resources:resources",
-    ],
-    visibility = [
-        "PUBLIC",
     ],
 )
 

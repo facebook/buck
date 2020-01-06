@@ -57,9 +57,6 @@ java_library(
         ["*.java"],
         exclude = STANDARD_INTEGRATION_TEST_SRCS + STANDARD_TEST_SRCS + UTILS_SRCS,
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/toolchain:toolchain",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -198,6 +195,9 @@ java_library(
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
         "//third-party/java/xz-java-1.5:xz",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/toolchain:toolchain",
     ],
 )
 

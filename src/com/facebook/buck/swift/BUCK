@@ -5,9 +5,6 @@ java_library_with_plugins(
     srcs = glob(
         ["*.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/description/arg:arg",
-    ],
     tests = [
         "//test/com/facebook/buck/swift:integration",
         "//test/com/facebook/buck/swift:unit",
@@ -44,5 +41,8 @@ java_library_with_plugins(
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
     ],
 )

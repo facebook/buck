@@ -1,2 +1,2 @@
 def my_rule():
-  return None
+    return None

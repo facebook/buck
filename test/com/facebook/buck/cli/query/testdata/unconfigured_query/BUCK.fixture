@@ -21,8 +21,8 @@ cxx_library(
 cxx_library(
     name = "6",
     deps = select({
-        ":macos": [":1"],
         ":linux": [":2"],
+        ":macos": [":1"],
         "DEFAULT": [],
     }),
 )

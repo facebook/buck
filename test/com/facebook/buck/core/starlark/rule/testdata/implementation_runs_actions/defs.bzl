@@ -42,19 +42,19 @@ exit 0
 def _invalid_types_impl(ctx):
     t = ctx.attr.type
     if t == "outputs":
-        ctx.actions.run(outputs=[1], inputs=[], executable="echo", arguments=[],short_name=None,env=None)
+        ctx.actions.run(outputs = [1], inputs = [], executable = "echo", arguments = [], short_name = None, env = None)
     elif t == "inputs":
-        ctx.actions.run(outputs=[], inputs=[1], executable="echo", arguments=[],short_name=None,env=None)
+        ctx.actions.run(outputs = [], inputs = [1], executable = "echo", arguments = [], short_name = None, env = None)
     elif t == "arguments":
-        ctx.actions.run(outputs=[], inputs=[], executable="echo", arguments=[1],short_name=None,env=None)
+        ctx.actions.run(outputs = [], inputs = [], executable = "echo", arguments = [1], short_name = None, env = None)
     elif t == "env":
-        ctx.actions.run(outputs=[], inputs=[], executable="echo", arguments=[],short_name=None,env={"foo": 1})
+        ctx.actions.run(outputs = [], inputs = [], executable = "echo", arguments = [], short_name = None, env = {"foo": 1})
     else:
         fail("invalid failure type")
 
 def _test_file_impl(ctx):
     f = ctx.actions.declare_file(ctx.attr.script_name)
-    ctx.actions.write(f, ctx.attr.script, is_executable=True)
+    ctx.actions.write(f, ctx.attr.script, is_executable = True)
 
 def _impl(ctx):
     f = ctx.actions.declare_file("out.txt")
@@ -63,10 +63,10 @@ def _impl(ctx):
 
     executable = None
     for src in ctx.attr.srcs:
-      if src.owner.name == "exe":
-          executable = src
-      else:
-          src_args.add(src)
+        if src.owner.name == "exe":
+            executable = src
+        else:
+            src_args.add(src)
 
     if executable == None:
         fail("Expected an executable named 'exe'")
@@ -79,19 +79,19 @@ def _impl(ctx):
         if ctx.attr.use_env:
             env["CUSTOM_ENV"] = "CUSTOM"
     ctx.actions.run(
-        outputs=[f],
-        inputs=[executable],
-        executable=executable,
-        arguments=["--out", src_args, "--bar", args],
+        outputs = [f],
+        inputs = [executable],
+        executable = executable,
+        arguments = ["--out", src_args, "--bar", args],
         env = env,
     )
 
 my_rule = rule(
     attrs = {
-        "script": attr.string(),
-        "exit_code": attr.int(),
-        "use_env": attr.bool(),
         "srcs": attr.source_list(),
+        "exit_code": attr.int(),
+        "script": attr.string(),
+        "use_env": attr.bool(),
     },
     implementation = _impl,
 )

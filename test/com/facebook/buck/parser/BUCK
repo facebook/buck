@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 # This test is huge, so we run it by itself.
 PARSER_TEST_SRCS = [
@@ -161,14 +161,6 @@ java_library(
             "ParserBenchmark.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/config:config",
-        "//src/com/facebook/buck/core/files:files",
-        "//src/com/facebook/buck/core/graph/transformation/executor:executor",
-        "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
-        "//src/com/facebook/buck/core/rules/knowntypes/provider:provider",
-        "//src/com/facebook/buck/parser:parser",
-    ],
     visibility = [
         "//test/...",
     ],
@@ -181,6 +173,14 @@ java_library(
         "//src/com/facebook/buck/util:util",
         "//test/com/facebook/buck/core/rules/knowntypes:testutil",
         "//test/com/facebook/buck/event:testutil",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/files:files",
+        "//src/com/facebook/buck/core/graph/transformation/executor:executor",
+        "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/rules/knowntypes/provider:provider",
+        "//src/com/facebook/buck/parser:parser",
     ],
 )
 
@@ -473,6 +473,9 @@ java_test(
 java_library(
     name = "parser_benchmark_lib",
     srcs = ["ParserBenchmark.java"],
+    visibility = [
+        "//test/com/facebook/buck/benchmarks/...",
+    ],
     exported_deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
@@ -596,9 +599,6 @@ java_library(
         "//third-party/java/okio:okio",
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
-    ],
-    visibility = [
-        "//test/com/facebook/buck/benchmarks/...",
     ],
 )
 

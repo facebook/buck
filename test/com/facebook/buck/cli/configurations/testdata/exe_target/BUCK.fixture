@@ -43,8 +43,8 @@ platform(
 python_binary(
     name = "b",
     main = select({
-        ":c-t": "b-target.py",
         ":c-h": "b-host.py",
+        ":c-t": "b-target.py",
     }),
 )
 

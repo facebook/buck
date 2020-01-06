@@ -29,14 +29,14 @@ def _impl(ctx):
 my_rule = rule(
     attrs = {
         "int": attr.int(),
+        "int_list": attr.int_list(default = [
+            1,
+            2,
+        ]),
         "string": attr.string(),
         "string_list": attr.string_list(default = [
             "foo",
             "bar",
-        ]),
-        "int_list": attr.int_list(default = [
-            1,
-            2,
         ]),
         "_hidden": attr.source_list(default = ["main.cpp"]),
     },

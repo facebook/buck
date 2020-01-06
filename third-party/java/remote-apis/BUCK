@@ -29,6 +29,6 @@ prebuilt_jar(
 java_library(
     name = "remote-apis",
     srcs = [],
-    exported_deps = [":prebuilt"] + DEPS,
     visibility = ["PUBLIC"],
+    exported_deps = [":prebuilt"] + DEPS,
 )

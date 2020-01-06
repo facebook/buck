@@ -1,10 +1,10 @@
 java_library(
     name = "thrift",
     srcs = ["ThriftRuleKeyLogger.java"],
+    visibility = ["PUBLIC"],
     exported_deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/core/util/log:log",
         "//third-party/java/jsr:jsr305",
     ],
-    visibility = ["PUBLIC"],
 )

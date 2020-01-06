@@ -1,10 +1,9 @@
+load("@buck_bazel_skylib//lib:dicts.bzl", "dicts")
 load(
     "//tools/build_rules:module_rules.bzl",
     "convert_modules_to_external_resources",
     "convert_modules_to_resources",
-    "get_module_binary",
 )
-load("@buck_bazel_skylib//lib:dicts.bzl", "dicts")
 load("//tools/build_rules:python_rules.bzl", "interpreter_override_args")
 load(":defs.bzl", "get_gen_buck_info_command")
 
@@ -94,14 +93,14 @@ genrule(
 RESOURCES_NOT_AFFECTING_BUILD_ARTIFACTS = {
     "android_agent_path": "//assets/android:agent.apk",
     "buck_build_type_info": ":gen_build_type_info",
-    "legacy_fix_script": "//programs/fixes/source_only_abi:fix",
     "jacoco_agent_jar": "//third-party/java/jacoco:agent",
+    "legacy_fix_script": "//programs/fixes/source_only_abi:fix",
     # The name of this resource is important, since it needs to have this filename in the PEX.
     "libjcocoa.dylib": "//third-party/java/ObjCBridge:libjcocoa.dylib",
     "logging_config_file": "//config:logging.properties",
+    "path_to_isolated_trampoline": "//src/com/facebook/buck/rules/modern/builders:trampoline",
     "report_generator_jar": "//src/com/facebook/buck/jvm/java/coverage:report-generator",
     "testrunner_classes": "//src/com/facebook/buck/testrunner:testrunner-bin-fixed",
-    "path_to_isolated_trampoline": "//src/com/facebook/buck/rules/modern/builders:trampoline",
 }
 
 # The name of the version info flag. If trying to do a deeper build, we need to ensure
@@ -115,15 +114,15 @@ RESOURCES_VERSION_INFO_NAME = "buck_package_info"
 # set to True.
 RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
     "bootstrapper_jar": "//src/com/facebook/buck/cli/bootstrapper:bootstrapper",
-    "buckfilesystem_jar": "//src/com/facebook/buck/core/filesystems:filesystems",
     "buck_server": "//src/com/facebook/buck/cli:main-fixed",
+    "buckfilesystem_jar": "//src/com/facebook/buck/core/filesystems:filesystems",
     "dx": "//third-party/java/dx:etc_dx",
     "native_exopackage_fake_path": "//assets/android:native-exopackage-fakes.apk",
     "path_to_pathlib_py": "//third-party/py/pathlib:pathlib.py",
     "path_to_pywatchman": "//third-party/py/pywatchman:pywatchman-archive",
     "path_to_sh_binary_template": "//src/com/facebook/buck/shell:sh_binary_template",
-    "path_to_typing": "//third-party/py:typing-archive",
     "path_to_six_py": "//third-party/py/six:six.py",
+    "path_to_typing": "//third-party/py:typing-archive",
 }
 
 BUCK_MODULES = {

@@ -8,13 +8,13 @@ apple_bundle(
 apple_bundle(
     name = "DemoAppWithAssetCatalogCompilationOptions",
     asset_catalogs_compilation_options = {
-        "notices": False,
-        "warnings": False,
-        "errors": False,
         "compress_pngs": False,
+        "errors": False,
+        "extra_flags": ["--print-contents"],
+        "notices": False,
         "optimization": "time",
         "output_format": "xml1",
-        "extra_flags": ["--print-contents"],
+        "warnings": False,
     },
     binary = ":DemoAppBinary",
     extension = "app",

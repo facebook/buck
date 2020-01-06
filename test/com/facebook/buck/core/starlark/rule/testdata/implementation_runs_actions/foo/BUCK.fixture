@@ -1,4 +1,4 @@
-load("//:defs.bzl", "test_script", "my_rule", "invalid_types")
+load("//:defs.bzl", "invalid_types", "my_rule", "test_script")
 
 test_script(name = "exe")
 

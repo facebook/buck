@@ -11,9 +11,6 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/apple:apple",
-    ],
     visibility = [
         "//test/...",
     ],
@@ -140,6 +137,9 @@ java_library(
         "//third-party/java/plexus:plexus-utils",
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/apple:apple",
     ],
 )
 # These are separate from the rest of the tests so we can run

@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 
 java_library_with_plugins(
     name = "file",
@@ -15,13 +15,6 @@ java_library_with_plugins(
         "RemoteFile.java",
         "RemoteFileBinary.java",
         "RemoteFileDescription.java",
-    ],
-    exported_deps = [
-        "//src/com/facebook/buck/core/description/arg:arg",
-        "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
-        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
-        "//src/com/facebook/buck/core/rules/tool:tool",
-        "//src/com/facebook/buck/file/downloader:downloader",
     ],
     visibility = [
         "//src/com/facebook/buck/cli:cli",
@@ -55,6 +48,13 @@ java_library_with_plugins(
         "//src/com/facebook/buck/zip:zip",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
+        "//src/com/facebook/buck/core/rules/tool:tool",
+        "//src/com/facebook/buck/file/downloader:downloader",
     ],
 )
 

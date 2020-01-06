@@ -123,10 +123,6 @@ java_library(
         ["*.java"],
         exclude = TEST_SRCS,
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/cell:cell",
-        "//third-party/java/nailgun:nailgun",
-    ],
     visibility = [
         "//test/...",
         "//tools/...",
@@ -269,6 +265,10 @@ java_library(
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
         "//third-party/java/zstd-jni:zstd-jni",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell:cell",
+        "//third-party/java/nailgun:nailgun",
     ],
 )
 

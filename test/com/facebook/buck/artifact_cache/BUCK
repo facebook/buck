@@ -203,6 +203,12 @@ java_library(
     srcs = [
         "SQLiteArtifactCacheBenchmark.java",
     ],
+    visibility = [
+        "//test/com/facebook/buck/benchmarks/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/artifact_cache:artifact_cache",
+    ],
     exported_deps = [
         "//src/com/facebook/buck/artifact_cache:impl",
         "//src/com/facebook/buck/core/build/engine/buildinfo:buildinfo",
@@ -217,12 +223,6 @@ java_library(
         "//third-party/java/caliper:caliper",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
-    ],
-    visibility = [
-        "//test/com/facebook/buck/benchmarks/...",
-    ],
-    deps = [
-        "//src/com/facebook/buck/artifact_cache:artifact_cache",
     ],
 )
 

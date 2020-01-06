@@ -1,4 +1,4 @@
-load("//programs:defs.bzl", "get_release_version", "get_release_timestamp")
+load("//programs:defs.bzl", "get_release_timestamp", "get_release_version")
 
 version = get_release_version()
 

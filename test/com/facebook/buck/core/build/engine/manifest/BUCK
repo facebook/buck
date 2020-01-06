@@ -1,5 +1,3 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
-
 java_test(
     name = "manifest",
     srcs = glob(
@@ -24,12 +22,12 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/build/engine/manifest:manifest",
-        "//src/com/facebook/buck/core/rulekey:rulekey",
-    ],
     visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/util/types:types",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/build/engine/manifest:manifest",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
     ],
 )

@@ -1,15 +1,15 @@
 java_library(
     name = "jmh",
-    exported_deps = [
-        ":jmh-core",
-        ":jmh-generator-annprocess",
-    ],
     visibility = [
         "//test/...",
     ],
     deps = [
         "//third-party/java/commons-math3:commons-math3",
         "//third-party/java/jopt-simple:jopt-simple",
+    ],
+    exported_deps = [
+        ":jmh-core",
+        ":jmh-generator-annprocess",
     ],
 )
 

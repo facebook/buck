@@ -1,4 +1,4 @@
-load("//:defs.bzl", "add", "add_all", "add_failure", "add_all_failure", "add_args_failure", "add_all_args_failure")
+load("//:defs.bzl", "add", "add_all", "add_all_args_failure", "add_all_failure", "add_args_failure", "add_failure")
 
 add(name = "add")
 

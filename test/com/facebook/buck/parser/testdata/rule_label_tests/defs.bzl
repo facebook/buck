@@ -21,7 +21,7 @@ def test_from_root_cell():
     _assert_equal(Label("//foo/bar:baz").relative("//wiz:quux"), Label("//wiz:quux"))
     _assert_equal(Label("@repo//foo/bar:baz").relative("//wiz:quux"), Label("@repo//wiz:quux"))
     _assert_equal(Label("@repo//foo/bar:baz").relative("//visibility:public"), Label("//visibility:public"))
-    _assert_equal(Label("@repo//foo/bar:baz").relative("@other//wiz:quux"), Label("@other//wiz:quux") )
+    _assert_equal(Label("@repo//foo/bar:baz").relative("@other//wiz:quux"), Label("@other//wiz:quux"))
 
 def test_loaded_from_root_including_cell():
     """ Tests to run from subdir/BUCK """
@@ -39,7 +39,7 @@ def test_loaded_from_root_including_cell():
     _assert_equal(Label("//foo/bar:baz").relative("//wiz:quux"), Label("//wiz:quux"))
     _assert_equal(Label("@repo//foo/bar:baz").relative("//wiz:quux"), Label("@repo//wiz:quux"))
     _assert_equal(Label("@repo//foo/bar:baz").relative("//visibility:public"), Label("//visibility:public"))
-    _assert_equal(Label("@repo//foo/bar:baz").relative("@other//wiz:quux"), Label("@other//wiz:quux") )
+    _assert_equal(Label("@repo//foo/bar:baz").relative("@other//wiz:quux"), Label("@other//wiz:quux"))
 
 def test_from_child_cell():
     """ Tests to run from cell/BUCK (in cell @b) """
@@ -63,4 +63,4 @@ def test_from_child_cell():
     _assert_equal(Label("//foo/bar:baz").relative("//wiz:quux"), Label("//wiz:quux"))
     _assert_equal(Label("@repo//foo/bar:baz").relative("//wiz:quux"), Label("@repo//wiz:quux"))
     _assert_equal(Label("@repo//foo/bar:baz").relative("//visibility:public"), Label("//visibility:public"))
-    _assert_equal(Label("@repo//foo/bar:baz").relative("@other//wiz:quux"), Label("@other//wiz:quux") )
+    _assert_equal(Label("@repo//foo/bar:baz").relative("@other//wiz:quux"), Label("@other//wiz:quux"))

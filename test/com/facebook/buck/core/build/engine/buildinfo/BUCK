@@ -1,5 +1,3 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
-
 java_test(
     name = "buildinfo",
     srcs = glob(

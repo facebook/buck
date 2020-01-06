@@ -8,9 +8,6 @@ java_library(
             "*Test.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/model/impl:impl",
-    ],
     visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
@@ -19,6 +16,9 @@ java_library(
         "//src/com/facebook/buck/util/stream:stream",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/impl:impl",
     ],
 )
 

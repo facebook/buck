@@ -1,13 +1,13 @@
 java_library(
     name = "toolprovider",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/toolchain/tool:tool",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules:rules",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/toolchain/tool:tool",
     ],
 )

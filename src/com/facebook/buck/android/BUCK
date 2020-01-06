@@ -1,11 +1,11 @@
 load(
+    "//tools/build_rules:file_alias.bzl",
+    "file_alias",
+)
+load(
     "//tools/build_rules:java_rules.bzl",
     "java_immutables_library",
     "java_library_with_plugins",
-)
-load(
-    "//tools/build_rules:file_alias.bzl",
-    "file_alias",
 )
 
 BUCK_CONFIG_SRCS = [
@@ -17,9 +17,6 @@ BUCK_CONFIG_SRCS = [
 java_immutables_library(
     name = "config",
     srcs = BUCK_CONFIG_SRCS,
-    exported_deps = [
-        "//src/com/facebook/buck/util/randomizedtrial:randomizedtrial",
-    ],
     tests = [
         "//test/com/facebook/buck/android:unit",
     ],
@@ -33,6 +30,9 @@ java_immutables_library(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/rules/tool/config:config",
         "//src/com/facebook/buck/util/environment:platform",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/util/randomizedtrial:randomizedtrial",
     ],
 )
 
@@ -149,16 +149,6 @@ RULES_SRCS = [
 java_library_with_plugins(
     name = "rules",
     srcs = RULES_SRCS,
-    exported_deps = [
-        ":utils",
-        "//src/com/facebook/buck/android/packageable:packageable",
-        "//src/com/facebook/buck/core/description/arg:arg",
-        "//src/com/facebook/buck/core/rules:rules",
-        "//src/com/facebook/buck/core/rules/impl:impl",
-        "//src/com/facebook/buck/core/rules/schedule:schedule",
-        "//src/com/facebook/buck/jvm/java:support",
-        "//src/com/facebook/buck/rules/keys:keys",
-    ],
     resources = [
         ":android-tools-common.jar",
         ":ddmlib.jar",
@@ -264,6 +254,16 @@ java_library_with_plugins(
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jsr:jsr305",
     ],
+    exported_deps = [
+        ":utils",
+        "//src/com/facebook/buck/android/packageable:packageable",
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/rules/schedule:schedule",
+        "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/rules/keys:keys",
+    ],
 )
 
 file_alias(
@@ -339,10 +339,6 @@ HELPERS_SRCS = [
 java_immutables_library(
     name = "helpers",
     srcs = HELPERS_SRCS,
-    exported_deps = [
-        "//src/com/facebook/buck/android/device:device",
-        "//src/com/facebook/buck/core/toolchain:toolchain",
-    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -381,6 +377,10 @@ java_immutables_library(
         "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/android:ddmlib",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/android/device:device",
+        "//src/com/facebook/buck/core/toolchain:toolchain",
+    ],
 )
 
 UTILS_SRCS = [
@@ -391,12 +391,6 @@ UTILS_SRCS = [
 java_immutables_library(
     name = "utils",
     srcs = UTILS_SRCS,
-    exported_deps = [
-        "//src/com/facebook/buck/android:utils_api",
-        "//src/com/facebook/buck/android/toolchain:toolchain",
-        "//src/com/facebook/buck/android/toolchain/common:common",
-        "//third-party/java/android:ddmlib",
-    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -416,6 +410,12 @@ java_immutables_library(
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/xml:xml",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/android:utils_api",
+        "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/android/toolchain/common:common",
+        "//third-party/java/android:ddmlib",
     ],
 )
 
@@ -456,9 +456,6 @@ java_immutables_library(
         exclude = BUCK_CONFIG_SRCS + RULES_SRCS +
                   SPLIT_DEX_SRCS + UTILS_API_SRCS + UTILS_SRCS + HELPERS_SRCS,
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/step:step",
-    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -530,5 +527,8 @@ java_immutables_library(
         "//third-party/java/dx:dx",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-databind",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/step:step",
     ],
 )

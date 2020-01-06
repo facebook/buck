@@ -1,5 +1,3 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
-
 java_library(
     name = "testutil",
     srcs = glob(
@@ -8,13 +6,13 @@ java_library(
             "*Test.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/rules/keys/config:config",
-    ],
     visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/module/impl:impl",
         "//src/com/facebook/buck/rules/keys/config/impl:impl",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/rules/keys/config:config",
     ],
 )

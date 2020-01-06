@@ -6,10 +6,6 @@ load(
 java_immutables_library(
     name = "step",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/android/device:device",
-        "//src/com/facebook/buck/core/build/execution/context:context",
-    ],
     tests = [
         "//test/com/facebook/buck/step:step",
     ],
@@ -36,5 +32,9 @@ java_immutables_library(
         "//third-party/java/bazel:bazel",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/remote-apis:remote-apis",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/android/device:device",
+        "//src/com/facebook/buck/core/build/execution/context:context",
     ],
 )

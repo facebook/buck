@@ -6,6 +6,7 @@ prebuilt_jar(
 java_library(
     name = "bundletool",
     srcs = [],
+    visibility = ["PUBLIC"],
     exported_deps = [
         ":prebuilt",
         "//third-party/java/aapt2-proto:aapt2-proto",
@@ -13,5 +14,4 @@ java_library(
         "//third-party/java/protobuf:protobuf",
         "//third-party/java/protobuf:protobuf-util",
     ],
-    visibility = ["PUBLIC"],
 )

@@ -1,9 +1,6 @@
 java_library(
     name = "compatible",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//third-party/java/bazel:bazel",
-    ],
     tests = [
         "//test/com/facebook/buck/core/starlark/compatible:compatible",
     ],
@@ -11,5 +8,8 @@ java_library(
     deps = [
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//third-party/java/bazel:bazel",
     ],
 )

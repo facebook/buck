@@ -6,10 +6,6 @@ java_library(
         ["*.java"],
         exclude = glob(["*Test.java"]),
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/cxx/config:config",
-        "//src/com/facebook/buck/cxx/toolchain:toolchain",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -31,6 +27,10 @@ java_library(
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/cxx/config:config",
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
     ],
 )
 

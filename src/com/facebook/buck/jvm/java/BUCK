@@ -123,8 +123,6 @@ java_immutables_library(
         "AbstractCompilerOutputPaths.java",
         "AbstractCompilerParameters.java",
         "AbstractJarParameters.java",
-        "JavaOptions.java",
-        "JavacExecutionContext.java",
         "AbstractJavacLanguageLevelOptions.java",
         "AbstractJavacOptions.java",
         "AbstractJavacPluginJsr199Fields.java",
@@ -158,10 +156,12 @@ java_immutables_library(
         "JavaInMemoryFileObject.java",
         "JavaLibraryClasspathProvider.java",
         "JavaNoOpFileObject.java",
+        "JavaOptions.java",
         "JavaPaths.java",
         "Javac.java",
         "JavacErrorParser.java",
         "JavacEventSinkToBuckEventBusBridge.java",
+        "JavacExecutionContext.java",
         "JavacProvider.java",
         "JdkProvidedInMemoryJavac.java",
         "Jsr199Javac.java",
@@ -178,10 +178,6 @@ java_immutables_library(
         "ResolvedJavacPluginProperties.java",
         "StandardJavaFileManagerFactory.java",
         "TracingProcessorWrapper.java",
-    ],
-    exported_deps = [
-        "//src/com/facebook/buck/jvm/core:core",
-        "//src/com/facebook/buck/jvm/java/abi:abi",
     ],
     provided_deps = [
         # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
@@ -261,6 +257,10 @@ java_immutables_library(
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/jvm/core:core",
+        "//src/com/facebook/buck/jvm/java/abi:abi",
+    ],
 )
 
 java_library(
@@ -268,9 +268,6 @@ java_library(
     srcs = [
         "DefaultJavaPackageFinder.java",
         "ResourcesRootPackageFinder.java",
-    ],
-    exported_deps = [
-        "//src/com/facebook/buck/io/filesystem:filesystem",
     ],
     visibility = [
         "PUBLIC",
@@ -300,13 +297,15 @@ java_library(
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+    ],
 )
 
 java_library_with_plugins(
     name = "rules",
     srcs = [
         "AbstractDefaultJavaLibraryClasspaths.java",
-        "UnusedDependenciesFinder.java",
         "BuiltInJavac.java",
         "CalculateClassAbi.java",
         "CalculateSourceAbi.java",
@@ -357,16 +356,9 @@ java_library_with_plugins(
         "PrebuiltJar.java",
         "PrebuiltJarDescription.java",
         "StandardJavacPlugin.java",
+        "UnusedDependenciesFinder.java",
         "UnusedDependenciesFinderFactory.java",
         "ZipArchiveDependencySupplier.java",
-    ],
-    exported_deps = [
-        "//src/com/facebook/buck/core/description/arg:arg",
-        "//src/com/facebook/buck/core/rules/pipeline:pipeline",
-        "//src/com/facebook/buck/jvm/java/abi/source/api:api",
-        "//src/com/facebook/buck/rules/macros:types",
-        "//src/com/facebook/buck/rules/modern:modern",
-        "//src/com/facebook/buck/util/types:types",
     ],
     resources = [
         "FatJar.java",
@@ -476,18 +468,26 @@ java_library_with_plugins(
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/rules/pipeline:pipeline",
+        "//src/com/facebook/buck/jvm/java/abi/source/api:api",
+        "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/util/types:types",
+    ],
 )
 
 java_immutables_library(
     name = "steps",
     srcs = [
-        "DiffAbisStep.java",
         "AbstractJUnitJvmArgs.java",
         "AccumulateClassNamesStep.java",
         "CalculateClassAbiStep.java",
         "ClasspathChecker.java",
         "CompileToJarStepFactory.java",
         "CopyResourcesStep.java",
+        "DiffAbisStep.java",
         "GenerateCodeCoverageReportStep.java",
         "JUnitStep.java",
         "JacocoConstants.java",

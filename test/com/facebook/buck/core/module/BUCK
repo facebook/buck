@@ -7,11 +7,11 @@ java_library(
             "*Test.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/module:module",
-    ],
     visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/core/module/impl:impl",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/module:module",
     ],
 )

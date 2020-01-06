@@ -9,14 +9,6 @@ java_library(
             "*Test.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/io/filesystem/impl:impl",
-        "//src/com/facebook/buck/io/windowsfs:windowsfs",
-        "//src/com/facebook/buck/util/cache:cache",
-        "//src/com/facebook/buck/util/hashing:hashing",
-        "//src/com/facebook/buck/util/timing:timing",
-        "//third-party/java/junit:junit",
-    ],
     visibility = [
         "//test/...",
         "//test/com/facebook/buck/parser/cache/impl:cache",
@@ -75,6 +67,14 @@ java_library(
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
         "//third-party/java/nailgun:nailgun",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/io/windowsfs:windowsfs",
+        "//src/com/facebook/buck/util/cache:cache",
+        "//src/com/facebook/buck/util/hashing:hashing",
+        "//src/com/facebook/buck/util/timing:timing",
+        "//third-party/java/junit:junit",
     ],
 )
 

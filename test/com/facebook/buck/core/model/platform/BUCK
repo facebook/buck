@@ -8,10 +8,10 @@ java_library(
             "*Test.java",
         ],
     ),
+    visibility = ["//test/..."],
     exported_deps = [
         "//src/com/facebook/buck/core/model/platform:platform",
     ],
-    visibility = ["//test/..."],
 )
 
 standard_java_test(

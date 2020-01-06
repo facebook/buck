@@ -1,6 +1,12 @@
 java_library(
     name = "action",
     srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
     exported_deps = [
         "//src/com/facebook/buck/core/build/buildable/context:context",
         "//src/com/facebook/buck/core/build/context:context",
@@ -8,11 +14,5 @@ java_library(
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/sourcepath:sourcepath",
         "//src/com/facebook/buck/step:step",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//third-party/java/guava:guava",
     ],
 )

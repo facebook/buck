@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
     name = "impl",
@@ -37,12 +37,12 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
-    ],
     visibility = [
         "//test/...",
     ],
     deps = [
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
     ],
 )

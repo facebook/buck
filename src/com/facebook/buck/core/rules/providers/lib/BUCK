@@ -3,12 +3,12 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "lib",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/artifact:artifact",
-        "//src/com/facebook/buck/core/rules/providers/impl:impl",
-    ],
     tests = [
         "//test/com/facebook/buck/core/rules/providers/lib:lib",
     ],
     visibility = ["PUBLIC"],
+    exported_deps = [
+        "//src/com/facebook/buck/core/artifact:artifact",
+        "//src/com/facebook/buck/core/rules/providers/impl:impl",
+    ],
 )

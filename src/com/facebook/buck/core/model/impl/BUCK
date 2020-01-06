@@ -3,11 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "impl",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/model:model",
-        "//src/com/facebook/buck/core/model/platform:platform",
-        "//src/com/facebook/buck/io/filesystem:filesystem",
-    ],
     tests = [
         "//test/com/facebook/buck/core/model/impl:impl",
     ],
@@ -24,5 +19,10 @@ java_immutables_library(
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-core",
         "//third-party/java/jackson:jackson-databind",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/platform:platform",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
     ],
 )

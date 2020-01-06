@@ -1,4 +1,4 @@
-load("//subdir:foo.bzl", "some_rule", "macro")
+load("//subdir:foo.bzl", "macro", "some_rule")
 
 some_rule(
     name = "target1",

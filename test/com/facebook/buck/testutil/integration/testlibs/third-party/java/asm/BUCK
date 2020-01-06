@@ -1,15 +1,15 @@
 java_library(
     name = "asm",
+    visibility = [
+        "PUBLIC",
+    ],
     exported_deps = [
-        ":asm-jar",
         ":asm-analysis",
         ":asm-commons",
+        ":asm-jar",
         ":asm-tree",
         ":asm-util",
         ":asm-xml",
-    ],
-    visibility = [
-        "PUBLIC",
     ],
 )
 

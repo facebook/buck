@@ -1,9 +1,6 @@
 java_library(
     name = "core",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        ":packagefinder",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/model:model",
@@ -15,6 +12,9 @@ java_library(
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        ":packagefinder",
     ],
 )
 

@@ -1,9 +1,6 @@
 java_library(
     name = "unarchive",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/util:util",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/io:io",
@@ -16,5 +13,8 @@ java_library(
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/zstd-jni:zstd-jni",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/util:util",
     ],
 )

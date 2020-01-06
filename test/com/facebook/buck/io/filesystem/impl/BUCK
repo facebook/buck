@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test", "standard_java_benchmark")
+load("//tools/build_rules:java_rules.bzl", "standard_java_benchmark")
 
 java_library(
     name = "testutil",
@@ -9,10 +9,6 @@ java_library(
             "*Test.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/io/filesystem/impl:impl",
-        "//test/com/facebook/buck/util/timing:testutil",
-    ],
     visibility = [
         "//test/...",
     ],
@@ -27,6 +23,10 @@ java_library(
         "//third-party/java/guava:guava",
         "//third-party/java/jimfs:jimfs",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//test/com/facebook/buck/util/timing:testutil",
     ],
 )
 

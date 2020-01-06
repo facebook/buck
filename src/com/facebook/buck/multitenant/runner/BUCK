@@ -32,9 +32,6 @@ kotlin_library(
         ["*.kt"],
         exclude = MAIN,
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/cell/nameresolver:nameresolver",
-    ],
     visibility = [
         "//src/com/facebook/buck/multitenant/...",
         "//test/com/facebook/buck/multitenant/...",
@@ -46,5 +43,8 @@ kotlin_library(
         "//src/com/facebook/buck/multitenant/service:service",
         "//src/com/facebook/buck/query:query",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell/nameresolver:nameresolver",
     ],
 )

@@ -1,5 +1,9 @@
 java_library(
     name = "eclipse_jdt",
+    licenses = [
+        "LICENSE.html",
+    ],
+    visibility = ["//src/com/facebook/buck/jvm/java:autodeps"],
     exported_deps = [
         ":contenttype",
         ":equinox-common",
@@ -10,10 +14,6 @@ java_library(
         ":resources",
         ":runtime",
     ],
-    licenses = [
-        "LICENSE.html",
-    ],
-    visibility = ["//src/com/facebook/buck/jvm/java:autodeps"],
 )
 
 prebuilt_jar(

@@ -11,10 +11,6 @@ MAIN_FOR_TEST = [
 java_library(
     name = "mainfortests",
     srcs = MAIN_FOR_TEST,
-    exported_deps = [
-        "//src/com/facebook/buck/cli:cli",
-        "//src/com/facebook/buck/support/bgtasks:bgtasks",
-    ],
     visibility = [
         "//test/...",
     ],
@@ -23,6 +19,10 @@ java_library(
         "//src/com/facebook/buck/core/rules/knowntypes/provider:provider",
         "//src/com/facebook/buck/util/environment:environment",
         "//third-party/java/nailgun:nailgun",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/support/bgtasks:bgtasks",
     ],
 )
 

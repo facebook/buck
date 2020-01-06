@@ -1,5 +1,9 @@
 java_library(
     name = "mockk",
+    visibility = [
+        "//test/...",
+        "//tools/ideabuck/tests/...",
+    ],
     exported_deps = [
         ":byte-buddy",
         ":byte-buddy-agent",
@@ -10,10 +14,6 @@ java_library(
         ":mockk-jar",
         "//third-party/java/kotlin:kotlin-reflect",
         "//third-party/java/objenesis:objenesis",
-    ],
-    visibility = [
-        "//test/...",
-        "//tools/ideabuck/tests/...",
     ],
 )
 

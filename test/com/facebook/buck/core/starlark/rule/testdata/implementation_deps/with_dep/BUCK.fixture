@@ -1,4 +1,4 @@
-load("//with_dep:defs.bzl", "write_file", "noop")
+load("//with_dep:defs.bzl", "noop", "write_file")
 
 write_file(
     name = "default",

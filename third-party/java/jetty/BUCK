@@ -9,9 +9,6 @@ prebuilt_jar(
 
 java_library(
     name = "jetty",
-    exported_deps = [
-        ":jetty-all",
-    ],
     visibility = [
         "//src/com/facebook/buck/httpserver:",
         "//test/com/facebook/buck/artifact_cache:artifact_cache",
@@ -28,4 +25,7 @@ java_library(
         "//tools/ideabuck:ideabuck-lib",
     ],
     deps = [],
+    exported_deps = [
+        ":jetty-all",
+    ],
 )

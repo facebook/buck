@@ -70,14 +70,14 @@ java_library(
             "*Test.java",
         ],
     ),
+    visibility = ["//test/..."],
+    deps = [
+        "//test/com/facebook/buck/core/cell:testutil",
+    ],
     exported_deps = [
         "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
         "//src/com/facebook/buck/util:util",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
-    ],
-    visibility = ["//test/..."],
-    deps = [
-        "//test/com/facebook/buck/core/cell:testutil",
     ],
 )

@@ -8,10 +8,6 @@ java_immutables_library(
     srcs = glob(
         ["*.java"],
     ),
-    exported_deps = [
-        "//src-gen:protobuf",
-        "//src/com/facebook/buck/remoteexecution/interfaces:interfaces",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -33,5 +29,9 @@ java_immutables_library(
         "//third-party/java/fbthrift:fbthrift",
         "//third-party/java/jackson:jackson-core",
         "//third-party/java/remote-apis:remote-apis",
+    ],
+    exported_deps = [
+        "//src-gen:protobuf",
+        "//src/com/facebook/buck/remoteexecution/interfaces:interfaces",
     ],
 )

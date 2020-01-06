@@ -1,11 +1,11 @@
 prebuilt_jar(
-  name = 'kiwi',
-  binary_jar = 'kiwi-current.jar',
-  visibility = ['PUBLIC'],
+    name = "kiwi",
+    binary_jar = "kiwi-current.jar",
+    visibility = ["PUBLIC"],
 )
 
 android_prebuilt_aar(
-  name = 'card-io',
-  aar = 'card-io.aar',
-  visibility = ['PUBLIC'],
+    name = "card-io",
+    aar = "card-io.aar",
+    visibility = ["PUBLIC"],
 )

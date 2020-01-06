@@ -27,11 +27,6 @@ java_library_with_plugins(
         "TestSuite.java",
         "TestSuiteDescription.java",
     ],
-    exported_deps = [
-        "//src/com/facebook/buck/core/description/arg:arg",
-        "//src/com/facebook/buck/core/rules/tool:tool",
-        "//src/com/facebook/buck/rules/coercer:coercer",
-    ],
     tests = [
         "//test/com/facebook/buck/shell:shell",
     ],
@@ -84,6 +79,11 @@ java_library_with_plugins(
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/stringtemplate:stringtemplate",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/rules/tool:tool",
+        "//src/com/facebook/buck/rules/coercer:coercer",
     ],
 )
 
