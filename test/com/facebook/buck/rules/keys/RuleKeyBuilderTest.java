@@ -64,7 +64,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.Test;
 
@@ -216,6 +218,8 @@ public class RuleKeyBuilderTest {
           ImmutableMap.of(42, 42),
           ImmutableList.of(ImmutableList.of(1, 2, 3, 4)),
           ImmutableList.of(ImmutableList.of(1, 2), ImmutableList.of(3, 4)),
+          (Supplier<Stream<Object>>) () -> Stream.of(ImmutableList.of(42), SOURCE_PATH_1),
+          (Supplier<Stream<Object>>) () -> Stream.of(ImmutableList.of(42), SOURCE_PATH_2),
         };
 
     List<RuleKey> ruleKeys = new ArrayList<>();

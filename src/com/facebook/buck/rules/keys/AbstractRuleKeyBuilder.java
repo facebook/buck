@@ -31,6 +31,7 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
@@ -38,6 +39,7 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -143,6 +145,24 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> {
           }
         }
         return this;
+      }
+    }
+
+    if (val instanceof Stream) {
+      try (RuleKeyScopedHasher.ContainerScope containerScope =
+          scopedHasher.containerScope(RuleKeyHasher.Container.LIST)) {
+        ((Stream<?>) val)
+            .forEach(
+                o -> {
+                  try (Scope ignored = containerScope.elementScope()) {
+                    setReflectively(o);
+                  } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                  }
+                });
+        return this;
+      } catch (UncheckedIOException e) {
+        throw e.getCause();
       }
     }
 
