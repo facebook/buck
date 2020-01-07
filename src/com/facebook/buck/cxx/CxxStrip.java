@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -36,7 +37,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -65,6 +65,7 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
   private final boolean isCacheable;
 
   private SourcePathRuleFinder ruleFinder;
+  private BuildableSupport.DepsSupplier depsSupplier;
 
   public CxxStrip(
       BuildTarget buildTarget,
@@ -82,6 +83,7 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
     this.strip = strip;
     this.isCacheable = isCacheable;
     this.output = output;
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
 
     Preconditions.checkArgument(
         buildTarget.getFlavors().contains(RULE_FLAVOR),
@@ -125,7 +127,7 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(unstrippedBinary));
+    return depsSupplier.get();
   }
 
   @Override
@@ -162,5 +164,6 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
   @Override
   public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
     this.ruleFinder = ruleResolver;
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
   }
 }
