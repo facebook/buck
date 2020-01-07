@@ -17,8 +17,6 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.FlavorDomain;
-import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
@@ -30,13 +28,6 @@ public abstract class CxxPlatformsProvider implements Toolchain {
   public abstract UnresolvedCxxPlatform getDefaultUnresolvedCxxPlatform();
 
   public abstract FlavorDomain<UnresolvedCxxPlatform> getUnresolvedCxxPlatforms();
-
-  public FlavorDomain<CxxPlatform> getResolvedCxxPlatforms(
-      BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
-    FlavorDomain<UnresolvedCxxPlatform> providers = getUnresolvedCxxPlatforms();
-    return providers.map(
-        providers.getName(), provider -> provider.resolve(resolver, targetConfiguration));
-  }
 
   @Override
   public String getName() {

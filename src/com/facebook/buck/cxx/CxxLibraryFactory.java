@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -103,22 +102,28 @@ public class CxxLibraryFactory {
 
     CxxPlatformsProvider cxxPlatformsProvider =
         getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
-    FlavorDomain<CxxPlatform> cxxPlatforms =
-        cxxPlatformsProvider.getResolvedCxxPlatforms(
-            graphBuilder, buildTarget.getTargetConfiguration());
     Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor();
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, CxxLibraryDescription.Type>> type =
         CxxLibraryDescription.getLibType(buildTarget);
-    Optional<CxxPlatform> platform = cxxPlatforms.getValue(buildTarget);
+    Optional<CxxPlatform> platform =
+        cxxPlatformsProvider
+            .getUnresolvedCxxPlatforms()
+            .getValue(buildTarget)
+            .map(
+                unresolved ->
+                    unresolved.resolve(graphBuilder, buildTarget.getTargetConfiguration()));
     CxxDeps cxxDeps = CxxDeps.builder().addDeps(args.getCxxDeps()).addDeps(extraDeps).build();
 
     Supplier<CxxPlatform> cxxPlatformOrDefaultSupplier =
         () ->
             platform.orElse(
-                cxxPlatforms.getValue(args.getDefaultPlatform().orElse(defaultCxxFlavor)));
+                cxxPlatformsProvider
+                    .getUnresolvedCxxPlatforms()
+                    .getValue(args.getDefaultPlatform().orElse(defaultCxxFlavor))
+                    .resolve(graphBuilder, buildTarget.getTargetConfiguration()));
 
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       CxxPlatform cxxPlatformOrDefault = cxxPlatformOrDefaultSupplier.get();
