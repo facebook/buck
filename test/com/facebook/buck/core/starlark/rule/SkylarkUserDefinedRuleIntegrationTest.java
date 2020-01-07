@@ -416,8 +416,12 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     workspace.setUp();
 
+    // TODO(pjameson): Write args out to file so we can validate their values
     workspace.runBuckBuild("//:add").assertSuccess();
     workspace.runBuckBuild("//:add_all").assertSuccess();
+    workspace.runBuckBuild("//:init").assertSuccess();
+    workspace.runBuckBuild("//:init_list").assertSuccess();
+
     assertThat(
         workspace.runBuckBuild("//:add_failure").assertFailure().getStderr(),
         Matchers.containsString("expected value of type"));
@@ -429,6 +433,12 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         Matchers.containsString("expected value of type"));
     assertThat(
         workspace.runBuckBuild("//:add_all_args_failure").assertFailure().getStderr(),
+        Matchers.containsString("Invalid command line argument type"));
+    assertThat(
+        workspace.runBuckBuild("//:init_failure").assertFailure().getStderr(),
+        Matchers.containsString("Invalid command line argument type"));
+    assertThat(
+        workspace.runBuckBuild("//:init_list_failure").assertFailure().getStderr(),
         Matchers.containsString("Invalid command line argument type"));
   }
 

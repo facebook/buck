@@ -79,6 +79,5 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
             type = SkylarkList.class),
       },
       useLocation = true)
-  CommandLineArgsBuilderApi addAll(SkylarkList<Object> values, Location location)
-      throws EvalException;
+  CommandLineArgsBuilderApi addAll(SkylarkList<?> values, Location location) throws EvalException;
 }

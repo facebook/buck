@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
+import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.nio.file.InvalidPathException;
@@ -97,8 +98,16 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
   }
 
   @Override
-  public CommandLineArgsBuilderApi args() {
-    return new CommandLineArgsBuilder();
+  public CommandLineArgsBuilderApi args(Object args, Location location) throws EvalException {
+    CommandLineArgsBuilder builder = new CommandLineArgsBuilder();
+    if (!EvalUtils.isNullOrNone(args)) {
+      if (args instanceof SkylarkList) {
+        builder.addAll((SkylarkList<?>) args, location);
+      } else {
+        builder.add(args, Runtime.UNBOUND, location);
+      }
+    }
+    return builder;
   }
 
   private static Object validateStringOrArg(Object arg) throws CommandLineArgException {

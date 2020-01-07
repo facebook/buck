@@ -71,7 +71,7 @@ def _impl(ctx):
     if executable == None:
         fail("Expected an executable named 'exe'")
 
-    args = ctx.actions.args().add_all(["some", "arg", "here"])
+    args = ctx.actions.args(["some"]).add_all(["arg", "here"])
 
     env = None
     if ctx.attr.exit_code != 0 or ctx.attr.use_env:

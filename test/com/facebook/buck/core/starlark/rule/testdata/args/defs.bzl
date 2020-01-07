@@ -18,6 +18,19 @@ def _add_args_failure_impl(ctx):
 def _add_all_args_failure_impl(ctx):
     ctx.actions.args().add_all([ctx.actions.args()])
 
+def _init_impl(ctx):
+    ctx.actions.args(2)
+    ctx.actions.args("--foo")
+
+def _init_failure_impl(ctx):
+    ctx.actions.args({})
+
+def _init_list_impl(ctx):
+    ctx.actions.args([2, "--foo", "bar"])
+
+def _init_list_failure_impl(ctx):
+    ctx.actions.args([{}])
+
 add = rule(
     attrs = {},
     implementation = _add_impl,
@@ -46,4 +59,23 @@ add_args_failure = rule(
 add_all_args_failure = rule(
     attrs = {},
     implementation = _add_all_args_failure_impl,
+)
+
+init = rule(
+    attrs = {},
+    implementation = _init_impl,
+)
+
+init_failure = rule(
+    attrs = {},
+    implementation = _init_failure_impl,
+)
+init_list = rule(
+    attrs = {},
+    implementation = _init_list_impl,
+)
+
+init_list_failure = rule(
+    attrs = {},
+    implementation = _init_list_failure_impl,
 )
