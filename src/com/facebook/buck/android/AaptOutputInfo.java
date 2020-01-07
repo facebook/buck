@@ -17,17 +17,15 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
  * Encapsulates information about a rule that runs "aapt", for consumption by downstream rules.
  *
  * <p>We break this data out into a separate object to allow different implementations of aapt.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractAaptOutputInfo {
+@BuckStyleValue
+abstract class AaptOutputInfo {
   public abstract SourcePath getPathToRDotTxt();
 
   public abstract SourcePath getPrimaryResourcesApkPath();

@@ -17,7 +17,7 @@
 package com.facebook.buck.test;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.external.elements.TestResultsExternalInterface;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
@@ -26,9 +26,8 @@ import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** Represents the test results from multiple test cases. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractTestResults implements TestResultsExternalInterface<TestCaseSummary> {
+@BuckStyleValueWithBuilder
+public abstract class TestResults implements TestResultsExternalInterface<TestCaseSummary> {
 
   @Value.Parameter
   public abstract BuildTarget getBuildTarget();
@@ -112,4 +111,18 @@ abstract class AbstractTestResults implements TestResultsExternalInterface<TestC
   public String toString() {
     return String.format("%s (success=%s) %s", super.toString(), isSuccess(), getTestCases());
   }
+
+  public static TestResults of(
+      BuildTarget buildTarget,
+      ImmutableList<TestCaseSummary> testCases,
+      ImmutableSet<String> contacts,
+      ImmutableSet<String> labels) {
+    return ImmutableTestResults.of(buildTarget, testCases, contacts, labels);
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableTestResults.Builder {}
 }

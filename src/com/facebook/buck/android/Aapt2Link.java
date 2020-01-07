@@ -207,15 +207,11 @@ public class Aapt2Link extends AbstractBuildRule {
   }
 
   public AaptOutputInfo getAaptOutputInfo() {
-    return AaptOutputInfo.builder()
-        .setPathToRDotTxt(ExplicitBuildTargetSourcePath.of(getBuildTarget(), getRDotTxtPath()))
-        .setPrimaryResourcesApkPath(
-            ExplicitBuildTargetSourcePath.of(getBuildTarget(), getResourceApkPath()))
-        .setAndroidManifestXml(
-            ExplicitBuildTargetSourcePath.of(getBuildTarget(), getFinalManifestPath()))
-        .setAaptGeneratedProguardConfigFile(
-            ExplicitBuildTargetSourcePath.of(getBuildTarget(), getProguardConfigPath()))
-        .build();
+    return ImmutableAaptOutputInfo.of(
+        ExplicitBuildTargetSourcePath.of(getBuildTarget(), getRDotTxtPath()),
+        ExplicitBuildTargetSourcePath.of(getBuildTarget(), getResourceApkPath()),
+        ExplicitBuildTargetSourcePath.of(getBuildTarget(), getFinalManifestPath()),
+        ExplicitBuildTargetSourcePath.of(getBuildTarget(), getProguardConfigPath()));
   }
 
   class Aapt2LinkStep extends ShellStep {

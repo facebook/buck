@@ -16,7 +16,7 @@
 
 package com.facebook.buck.test;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.collect.ImmutableMap;
 import java.util.EnumSet;
@@ -24,9 +24,8 @@ import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractTestRunningOptions {
+@BuckStyleValueWithBuilder
+public abstract class TestRunningOptions {
 
   @Value.Default
   public boolean isCodeCoverageEnabled() {
@@ -74,4 +73,10 @@ abstract class AbstractTestRunningOptions {
   public abstract Optional<String> getCoverageIncludes();
 
   public abstract Optional<String> getJavaTempDir();
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableTestRunningOptions.Builder {}
 }

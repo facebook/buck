@@ -393,14 +393,10 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testPlatformSourcesAndHeaders() {
-    SourceWithFlags androidSource =
-        SourceWithFlags.builder().setSourcePath(FakeSourcePath.of("androidFile.cpp")).build();
+    SourceWithFlags androidSource = SourceWithFlags.of(FakeSourcePath.of("androidFile.cpp"));
     SourceWithFlags iOSAndSimulatorSource =
-        SourceWithFlags.builder()
-            .setSourcePath(FakeSourcePath.of("iOSAndSimulatorFile.cpp"))
-            .build();
-    SourceWithFlags macOSSource =
-        SourceWithFlags.builder().setSourcePath(FakeSourcePath.of("macOSFile.cpp")).build();
+        SourceWithFlags.of(FakeSourcePath.of("iOSAndSimulatorFile.cpp"));
+    SourceWithFlags macOSSource = SourceWithFlags.of(FakeSourcePath.of("macOSFile.cpp"));
 
     Pattern androidPattern = Pattern.compile("android");
     Pattern simulatorPattern = Pattern.compile("^iphonesim.*");

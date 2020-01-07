@@ -17,7 +17,7 @@
 package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -25,11 +25,9 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Attributes that are specific to target's containing Swift code. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractSwiftAttributes {
+@BuckStyleValueWithBuilder
+abstract class SwiftAttributes {
 
-  @Value.Parameter
   abstract TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode();
 
   /** The module name of the Swift target. */

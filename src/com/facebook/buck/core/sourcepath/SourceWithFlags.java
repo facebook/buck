@@ -18,31 +18,26 @@ package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
-import java.util.List;
-import org.immutables.value.Value;
 
 /**
  * Simple type representing a {@link com.facebook.buck.core.sourcepath.SourcePath} and a list of
  * file-specific flags.
  */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractSourceWithFlags
-    implements Comparable<AbstractSourceWithFlags>, AddsToRuleKey {
+@BuckStyleValue
+public abstract class SourceWithFlags implements Comparable<SourceWithFlags>, AddsToRuleKey {
 
-  @Value.Parameter
   @AddToRuleKey
   public abstract SourcePath getSourcePath();
 
-  @Value.Parameter
   @AddToRuleKey
-  public abstract List<String> getFlags();
+  public abstract ImmutableList<String> getFlags();
 
   @Override
-  public int compareTo(AbstractSourceWithFlags that) {
+  public int compareTo(SourceWithFlags that) {
     if (this == that) {
       return 0;
     }
@@ -54,6 +49,14 @@ abstract class AbstractSourceWithFlags
   }
 
   public static SourceWithFlags of(SourcePath sourcePath) {
-    return SourceWithFlags.builder().setSourcePath(sourcePath).build();
+    return of(sourcePath, ImmutableList.of());
+  }
+
+  public static SourceWithFlags of(SourcePath sourcePath, ImmutableList<String> flags) {
+    return ImmutableSourceWithFlags.of(sourcePath, flags);
+  }
+
+  public SourceWithFlags withSourcePath(SourcePath sourcePath) {
+    return of(sourcePath, getFlags());
   }
 }
