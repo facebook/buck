@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.toolchain;
+package com.facebook.buck.skylark.parser;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableSet;
+import com.google.devtools.build.lib.syntax.Environment;
 
 /**
- * Contains basic information about a {@link Toolchain} that can be used to identify and construct
- * an instance of a particular Toolchain.
+ * Captures {@link Environment} and information related to its parsing like all {@link
+ * com.google.devtools.build.lib.vfs.Path} used in order to create this environment.
  */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public interface AbstractToolchainDescriptor<T extends Toolchain> {
-  @Value.Parameter
-  String getName();
+@BuckStyleValue
+public abstract class EnvironmentData {
+  public abstract Environment getEnvironment();
 
-  @Value.Parameter
-  Class<T> getToolchainClass();
-
-  @Value.Parameter
-  Class<? extends ToolchainFactory<T>> getToolchainFactoryClass();
+  public abstract ImmutableSet<String> getLoadedPaths();
 }

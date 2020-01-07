@@ -14,27 +14,23 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.features.go;
+package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-public abstract class AbstractGoToolchain implements Toolchain {
+@BuckStyleValue
+public interface HaskellPlatformsProvider extends Toolchain {
 
-  public static final String DEFAULT_NAME = "go-toolchain";
+  String DEFAULT_NAME = "haskell-platforms";
 
-  @Value.Parameter
-  public abstract FlavorDomain<GoPlatform> getPlatformFlavorDomain();
+  HaskellPlatform getDefaultHaskellPlatform();
 
-  @Value.Parameter
-  public abstract GoPlatform getDefaultPlatform();
+  FlavorDomain<HaskellPlatform> getHaskellPlatforms();
 
   @Override
-  public String getName() {
+  default String getName() {
     return DEFAULT_NAME;
   }
 }

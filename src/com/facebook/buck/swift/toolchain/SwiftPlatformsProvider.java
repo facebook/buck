@@ -18,20 +18,21 @@ package com.facebook.buck.swift.toolchain;
 
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-public interface AbstractSwiftPlatformsProvider extends Toolchain {
+@BuckStyleValue
+public interface SwiftPlatformsProvider extends Toolchain {
 
   String DEFAULT_NAME = "swift-platforms";
 
-  @Value.Parameter
   FlavorDomain<UnresolvedSwiftPlatform> getUnresolvedSwiftPlatforms();
 
   @Override
   default String getName() {
     return DEFAULT_NAME;
+  }
+
+  static SwiftPlatformsProvider of(FlavorDomain<UnresolvedSwiftPlatform> swiftCxxPlatforms) {
+    return ImmutableSwiftPlatformsProvider.of(swiftCxxPlatforms);
   }
 }

@@ -18,23 +18,23 @@ package com.facebook.buck.features.python.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public abstract class AbstractPythonVersion implements AddsToRuleKey {
+@BuckStyleValue
+public abstract class PythonVersion implements AddsToRuleKey {
 
-  @Value.Parameter
   @AddToRuleKey
   public abstract String getInterpreterName();
 
-  @Value.Parameter
   @AddToRuleKey
   public abstract String getVersionString(); // X.Y
 
   @Override
   public String toString() {
     return getInterpreterName() + " " + getVersionString();
+  }
+
+  public static PythonVersion of(String interpreterName, String versionString) {
+    return ImmutablePythonVersion.of(interpreterName, versionString);
   }
 }

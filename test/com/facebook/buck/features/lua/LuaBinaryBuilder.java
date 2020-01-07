@@ -48,7 +48,7 @@ public class LuaBinaryBuilder
             new ToolchainProviderBuilder()
                 .withToolchain(
                     LuaPlatformsProvider.DEFAULT_NAME,
-                    LuaPlatformsProvider.of(defaultPlatform, luaPlatforms))
+                    ImmutableLuaPlatformsProvider.of(defaultPlatform, luaPlatforms))
                 .withToolchain(
                     PythonPlatformsProvider.DEFAULT_NAME,
                     PythonPlatformsProvider.of(pythonPlatforms))

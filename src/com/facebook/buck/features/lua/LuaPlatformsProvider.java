@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.features.haskell;
+package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-public interface AbstractHaskellPlatformsProvider extends Toolchain {
+@BuckStyleValue
+public interface LuaPlatformsProvider extends Toolchain {
 
-  String DEFAULT_NAME = "haskell-platforms";
+  String DEFAULT_NAME = "lua-platforms";
 
-  @Value.Parameter
-  HaskellPlatform getDefaultHaskellPlatform();
+  LuaPlatform getDefaultLuaPlatform();
 
-  @Value.Parameter
-  FlavorDomain<HaskellPlatform> getHaskellPlatforms();
+  FlavorDomain<LuaPlatform> getLuaPlatforms();
 
   @Override
   default String getName() {

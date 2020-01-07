@@ -16,7 +16,7 @@
 
 package com.facebook.buck.skylark.parser;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.parser.api.ImmutablePackageMetadata;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
@@ -25,18 +25,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Parse result containing build/package rules and package defined in build or package files and
  * supporting metadata.
  */
-@Value.Immutable(builder = false)
-@BuckStyleImmutable
-abstract class AbstractParseResult {
+@BuckStyleValue
+public abstract class ParseResult {
 
   /** Contains the package defined in a package file. */
-  @Value.Parameter
   public abstract ImmutablePackageMetadata getPackage();
 
   /**
@@ -45,14 +42,12 @@ abstract class AbstractParseResult {
    *
    * <p>For example {"name": "my_rule", ...}
    */
-  @Value.Parameter
   public abstract ImmutableMap<String, Map<String, Object>> getRawRules();
 
   /**
    * Returns a set of extension paths that were loaded explicitly or transitively when parsing
    * current build or package file.
    */
-  @Value.Parameter
   public abstract ImmutableSet<String> getLoadedPaths();
 
   /**
@@ -60,11 +55,19 @@ abstract class AbstractParseResult {
    *
    * <p>The schema is section->key->value
    */
-  @Value.Parameter
   public abstract ImmutableMap<String, ImmutableMap<String, Optional<String>>>
       getReadConfigurationOptions();
 
   /** @return A list of {@link GlobSpec} with the corresponding set of expanded paths. */
-  @Value.Parameter
   public abstract ImmutableList<GlobSpecWithResult> getGlobManifestWithResult();
+
+  static ParseResult of(
+      ImmutablePackageMetadata getPackage,
+      Map<String, ? extends Map<String, Object>> rawRules,
+      Iterable<String> loadedPaths,
+      Map<String, ? extends ImmutableMap<String, Optional<String>>> readConfigurationOptions,
+      Iterable<? extends GlobSpecWithResult> globManifestWithResult) {
+    return ImmutableParseResult.of(
+        getPackage, rawRules, loadedPaths, readConfigurationOptions, globManifestWithResult);
+  }
 }

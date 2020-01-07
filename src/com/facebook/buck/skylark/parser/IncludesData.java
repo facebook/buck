@@ -16,27 +16,22 @@
 
 package com.facebook.buck.skylark.parser;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSet;
-import org.immutables.value.Value;
 
 /**
  * Captures information related to all included extensions used in order to load the main build
  * spec. The main purpose of extra information is to properly capture all dependent information to
  * obtain the loaded files without full execution of the build spec.
  */
-@Value.Immutable(builder = false)
-@BuckStyleImmutable
-abstract class AbstractIncludesData {
+@BuckStyleValue
+abstract class IncludesData {
   /** @return a path from which the extension was loaded from */
-  @Value.Parameter
   public abstract com.google.devtools.build.lib.vfs.Path getPath();
 
   /** @return a set of dependencies that were required to evaluate this extension */
-  @Value.Parameter
   public abstract ImmutableSet<IncludesData> getDependencies();
 
   /** @return the set of files loaded in order to parse this extension. */
-  @Value.Parameter
   public abstract ImmutableSet<String> getLoadTransitiveClosure();
 }

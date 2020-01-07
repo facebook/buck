@@ -18,19 +18,20 @@ package com.facebook.buck.features.python.toolchain;
 
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-public interface AbstractPythonPlatformsProvider extends Toolchain {
+@BuckStyleValue
+public interface PythonPlatformsProvider extends Toolchain {
   String DEFAULT_NAME = "python-platforms";
 
-  @Value.Parameter
   FlavorDomain<PythonPlatform> getPythonPlatforms();
 
   @Override
   default String getName() {
     return DEFAULT_NAME;
+  }
+
+  static PythonPlatformsProvider of(FlavorDomain<PythonPlatform> pythonPlatforms) {
+    return ImmutablePythonPlatformsProvider.of(pythonPlatforms);
   }
 }

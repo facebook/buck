@@ -14,27 +14,23 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.features.lua;
+package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-public interface AbstractLuaPlatformsProvider extends Toolchain {
+@BuckStyleValue
+public abstract class GoToolchain implements Toolchain {
 
-  String DEFAULT_NAME = "lua-platforms";
+  public static final String DEFAULT_NAME = "go-toolchain";
 
-  @Value.Parameter
-  LuaPlatform getDefaultLuaPlatform();
+  public abstract FlavorDomain<GoPlatform> getPlatformFlavorDomain();
 
-  @Value.Parameter
-  FlavorDomain<LuaPlatform> getLuaPlatforms();
+  public abstract GoPlatform getDefaultPlatform();
 
   @Override
-  default String getName() {
+  public String getName() {
     return DEFAULT_NAME;
   }
 }

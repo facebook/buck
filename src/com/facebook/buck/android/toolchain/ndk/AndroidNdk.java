@@ -18,7 +18,7 @@ package com.facebook.buck.android.toolchain.ndk;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.toolchain.ComparableToolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.ExecutableFinder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,9 +26,8 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Part of Android toolchain that provides access to Android NDK */
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-public abstract class AbstractAndroidNdk implements ComparableToolchain {
+@BuckStyleValue
+public abstract class AndroidNdk implements ComparableToolchain {
   public static final String DEFAULT_NAME = "android-ndk-location";
 
   @Override
@@ -36,17 +35,13 @@ public abstract class AbstractAndroidNdk implements ComparableToolchain {
     return DEFAULT_NAME;
   }
 
-  @Value.Parameter
   public abstract String getNdkVersion();
 
-  @Value.Parameter
   public abstract Path getNdkRootPath();
 
   /** Escaping logic can be different and depends on the version of Android NDK. */
-  @Value.Parameter
   public abstract boolean shouldEscapeCFlagsInDoubleQuotes();
 
-  @Value.Parameter
   @Value.Auxiliary
   protected abstract ExecutableFinder getExecutableFinder();
 
@@ -58,5 +53,14 @@ public abstract class AbstractAndroidNdk implements ComparableToolchain {
       throw new HumanReadableException("Unable to find ndk-build in " + getNdkRootPath());
     }
     return ndkBuild.get();
+  }
+
+  public static AndroidNdk of(
+      String ndkVersion,
+      Path ndkRootPath,
+      boolean shouldEscapeCFlagsInDoubleQuotes,
+      ExecutableFinder executableFinder) {
+    return ImmutableAndroidNdk.of(
+        ndkVersion, ndkRootPath, shouldEscapeCFlagsInDoubleQuotes, executableFinder);
   }
 }

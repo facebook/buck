@@ -18,13 +18,11 @@ package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Container for {@link RustPlatform}s. */
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-public interface AbstractRustToolchain extends Toolchain {
+@BuckStyleValue
+public interface RustToolchain extends Toolchain {
   String DEFAULT_NAME = "rust-platforms";
 
   @Override
@@ -32,9 +30,13 @@ public interface AbstractRustToolchain extends Toolchain {
     return DEFAULT_NAME;
   }
 
-  @Value.Parameter
   UnresolvedRustPlatform getDefaultRustPlatform();
 
-  @Value.Parameter
   FlavorDomain<UnresolvedRustPlatform> getRustPlatforms();
+
+  static RustToolchain of(
+      UnresolvedRustPlatform defaultRustPlatform,
+      FlavorDomain<UnresolvedRustPlatform> rustPlatforms) {
+    return ImmutableRustToolchain.of(defaultRustPlatform, rustPlatforms);
+  }
 }
