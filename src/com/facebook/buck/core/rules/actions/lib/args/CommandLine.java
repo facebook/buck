@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.actions.lib.args;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 
 /**
  * Information needed to execute a command line program. In the future this may include things like
@@ -25,5 +26,7 @@ import com.google.common.collect.ImmutableList;
  */
 @BuckStyleValue
 public interface CommandLine {
+  ImmutableSortedMap<String, String> getEnvironmentVariables();
+
   ImmutableList<String> getCommandLineArgs();
 }

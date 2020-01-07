@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.actions.lib.args;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import java.util.stream.Stream;
 
 /**
@@ -39,6 +40,11 @@ class ListCommandLineArgs implements CommandLineArgs {
    */
   ListCommandLineArgs(ImmutableList<Object> objects) {
     this.objects = objects;
+  }
+
+  @Override
+  public ImmutableSortedMap<String, String> getEnvironmentVariables() {
+    return ImmutableSortedMap.of();
   }
 
   @Override

@@ -16,7 +16,9 @@
 
 package com.facebook.buck.core.rules.actions.lib.args;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import java.util.stream.Stream;
 
 /**
@@ -35,6 +37,22 @@ class AggregateCommandLineArgs implements CommandLineArgs {
   @Override
   public int getEstimatedArgsCount() {
     return args.stream().map(CommandLineArgs::getEstimatedArgsCount).reduce(0, Integer::sum);
+  }
+
+  @Override
+  public ImmutableSortedMap<String, String> getEnvironmentVariables() {
+    ImmutableSortedMap.Builder<String, String> builder = ImmutableSortedMap.naturalOrder();
+    try {
+      for (CommandLineArgs arg : args) {
+        builder.putAll(arg.getEnvironmentVariables());
+      }
+      return builder.build();
+    } catch (IllegalArgumentException e) {
+      // Thrown if two arguments have the same keys
+      // TODO(pjameson): Decide if we want to have a way to override instead
+      throw new HumanReadableException(
+          e, "Error getting commandline arguments: %s", e.getMessage());
+    }
   }
 
   @Override

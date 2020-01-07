@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.actions.lib.args;
 
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Streams;
 
 /**
@@ -35,12 +36,13 @@ public class ExecCompatibleCommandLineBuilder implements CommandLineBuilder {
 
   @Override
   public CommandLine build(CommandLineArgs commandLineArgs) {
+    ImmutableSortedMap<String, String> env = commandLineArgs.getEnvironmentVariables();
     ImmutableList.Builder<String> builder =
         ImmutableList.builderWithExpectedSize(commandLineArgs.getEstimatedArgsCount());
     Streams.mapWithIndex(
             commandLineArgs.getArgs(),
             (o, i) -> CommandLineArgStringifier.asString(filesystem, i == 0, o))
         .forEach(builder::add);
-    return ImmutableCommandLine.of(builder.build());
+    return ImmutableCommandLine.of(env, builder.build());
   }
 }

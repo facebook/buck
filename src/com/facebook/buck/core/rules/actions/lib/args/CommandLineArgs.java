@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.actions.lib.args;
 
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.google.common.collect.ImmutableSortedMap;
 import java.util.stream.Stream;
 
 /**
@@ -30,6 +31,12 @@ import java.util.stream.Stream;
  * collections.
  */
 public interface CommandLineArgs extends AddsToRuleKey {
+
+  /**
+   * @return Get a map of all environment variables that need to be added to execute this program.
+   */
+  ImmutableSortedMap<String, String> getEnvironmentVariables();
+
   /**
    * @return Get a stream of all raw argument objects that can be stringified with something like
    *     {@link CommandLineArgStringifier#asString(ArtifactFilesystem, boolean, Object)}

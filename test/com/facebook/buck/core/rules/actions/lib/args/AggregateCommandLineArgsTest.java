@@ -24,10 +24,37 @@ import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Paths;
+import java.util.stream.Stream;
 import org.junit.Test;
 
 public class AggregateCommandLineArgsTest {
+
+  static class EnvCommandLineArgs implements CommandLineArgs {
+    private final ImmutableSortedMap<String, String> env;
+    private final ImmutableList<Object> args;
+
+    EnvCommandLineArgs(ImmutableSortedMap<String, String> env, ImmutableList<Object> args) {
+      this.env = env;
+      this.args = args;
+    }
+
+    @Override
+    public ImmutableSortedMap<String, String> getEnvironmentVariables() {
+      return env;
+    }
+
+    @Override
+    public Stream<Object> getArgs() {
+      return args.stream();
+    }
+
+    @Override
+    public int getEstimatedArgsCount() {
+      return args.size();
+    }
+  }
 
   @Test
   public void returnsProperStreamAndArgCount() {
@@ -40,9 +67,14 @@ public class AggregateCommandLineArgsTest {
     CommandLineArgs args =
         new AggregateCommandLineArgs(
             ImmutableList.of(
-                CommandLineArgsFactory.from(ImmutableList.of(path1)),
-                CommandLineArgsFactory.from(ImmutableList.of(path2, 1)),
+                new EnvCommandLineArgs(
+                    ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1)),
+                new EnvCommandLineArgs(
+                    ImmutableSortedMap.of("BAZ", "baz_val"), ImmutableList.of(path2, 1)),
                 CommandLineArgsFactory.from(ImmutableList.of("foo", "bar"))));
+
+    CommandLine cli =
+        new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem)).build(args);
 
     assertEquals(
         ImmutableList.of(
@@ -51,9 +83,9 @@ public class AggregateCommandLineArgsTest {
             "1",
             "foo",
             "bar"),
-        new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem))
-            .build(args)
-            .getCommandLineArgs());
+        cli.getCommandLineArgs());
     assertEquals(5, args.getEstimatedArgsCount());
+    assertEquals(
+        ImmutableSortedMap.of("FOO", "foo_val", "BAZ", "baz_val"), cli.getEnvironmentVariables());
   }
 }
