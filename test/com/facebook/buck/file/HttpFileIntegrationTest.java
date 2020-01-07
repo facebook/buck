@@ -20,9 +20,11 @@ import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
@@ -51,6 +53,7 @@ public class HttpFileIntegrationTest {
   private HttpdForTests.CapturingHttpHandler httpdHandler;
   private HttpdForTests httpd;
   private static final String echoDotSh = "#!/bin/sh\necho \"Hello, world\"";
+  private static final String echoDotBat = "@echo off\necho Hello, world";
   private ProjectWorkspace workspace;
 
   @Before
@@ -60,6 +63,7 @@ public class HttpFileIntegrationTest {
         new HttpdForTests.CapturingHttpHandler(
             ImmutableMap.<String, byte[]>builder()
                 .put("/foo/bar/echo.sh", echoDotSh.getBytes(Charsets.UTF_8))
+                .put("/foo/bar/echo.bat", echoDotBat.getBytes(Charsets.UTF_8))
                 .put(
                     "/package/artifact_name/version/artifact_name-version-classifier.zip",
                     echoDotSh.getBytes(Charsets.UTF_8))
@@ -103,9 +107,9 @@ public class HttpFileIntegrationTest {
 
     Assert.assertTrue(Files.exists(workspace.resolve(outputPath)));
     Assert.assertTrue(Files.isExecutable(workspace.resolve(outputPath)));
-    Assert.assertEquals(echoDotSh, workspace.getFileContents(outputPath));
-    Assert.assertEquals(ImmutableList.of("/foo/bar/echo.sh"), httpdHandler.getRequestedPaths());
-    Assert.assertEquals(
+    assertEquals(echoDotSh, workspace.getFileContents(outputPath));
+    assertEquals(ImmutableList.of("/foo/bar/echo.sh"), httpdHandler.getRequestedPaths());
+    assertEquals(
         0, Files.walk(workspace.resolve(scratchPath)).filter(Files::isRegularFile).count());
   }
 
@@ -127,9 +131,9 @@ public class HttpFileIntegrationTest {
 
     Assert.assertTrue(Files.exists(workspace.resolve(outputPath)));
     Assert.assertFalse(Files.isExecutable(workspace.resolve(outputPath)));
-    Assert.assertEquals(echoDotSh, workspace.getFileContents(outputPath));
-    Assert.assertEquals(ImmutableList.of("/foo/bar/echo.sh"), httpdHandler.getRequestedPaths());
-    Assert.assertEquals(
+    assertEquals(echoDotSh, workspace.getFileContents(outputPath));
+    assertEquals(ImmutableList.of("/foo/bar/echo.sh"), httpdHandler.getRequestedPaths());
+    assertEquals(
         0, Files.walk(workspace.resolve(scratchPath)).filter(Files::isRegularFile).count());
   }
 
@@ -153,9 +157,8 @@ public class HttpFileIntegrationTest {
         matchesPattern(
             Pattern.compile(".*Unable to download http://.*/invalid_path.*", Pattern.DOTALL)));
     Assert.assertFalse(Files.exists(workspace.resolve(outputPath)));
-    Assert.assertEquals(
-        ImmutableList.of("/invalid_path", "/missing"), httpdHandler.getRequestedPaths());
-    Assert.assertEquals(
+    assertEquals(ImmutableList.of("/invalid_path", "/missing"), httpdHandler.getRequestedPaths());
+    assertEquals(
         0, Files.walk(workspace.resolve(scratchPath)).filter(Files::isRegularFile).count());
   }
 
@@ -181,12 +184,11 @@ public class HttpFileIntegrationTest {
         Matchers.containsString(
             "/foo/bar/echo.sh (hashes do not match. Expected 534be6d331e8f1ab7892f19e8fe23db4907bdc54f517a8b22adc82e69b6b1093, saw 2c7ae82268c1bab8d048a76405a6f7f39c2d95791df37ad2c36cb9252ee3a6ca)"));
     Assert.assertFalse(Files.exists(workspace.resolve(outputPath)));
-    Assert.assertEquals(ImmutableList.of("/foo/bar/echo.sh"), httpdHandler.getRequestedPaths());
-    Assert.assertEquals(
+    assertEquals(ImmutableList.of("/foo/bar/echo.sh"), httpdHandler.getRequestedPaths());
+    assertEquals(
         1, Files.walk(workspace.resolve(scratchPath)).filter(Files::isRegularFile).count());
     Assert.assertTrue(Files.exists(workspace.resolve(scratchPath).resolve("echo_bad_hash.sh")));
-    Assert.assertEquals(
-        echoDotSh, workspace.getFileContents(scratchPath.resolve("echo_bad_hash.sh")));
+    assertEquals(echoDotSh, workspace.getFileContents(scratchPath.resolve("echo_bad_hash.sh")));
   }
 
   @Test
@@ -201,9 +203,9 @@ public class HttpFileIntegrationTest {
     workspace.runBuckCommand("fetch", "//:echo.sh").assertSuccess();
 
     Assert.assertTrue(Files.exists(workspace.resolve(outputPath)));
-    Assert.assertEquals(echoDotSh, workspace.getFileContents(outputPath));
-    Assert.assertEquals(ImmutableList.of("/foo/bar/echo.sh"), httpdHandler.getRequestedPaths());
-    Assert.assertEquals(
+    assertEquals(echoDotSh, workspace.getFileContents(outputPath));
+    assertEquals(ImmutableList.of("/foo/bar/echo.sh"), httpdHandler.getRequestedPaths());
+    assertEquals(
         0, Files.walk(workspace.resolve(scratchPath)).filter(Files::isRegularFile).count());
   }
 
@@ -222,9 +224,9 @@ public class HttpFileIntegrationTest {
     workspace.runBuckCommand("fetch", "//:echo_with_out.sh").assertSuccess();
 
     Assert.assertTrue(Files.exists(workspace.resolve(outputPath)));
-    Assert.assertEquals(echoDotSh, workspace.getFileContents(outputPath));
-    Assert.assertEquals(ImmutableList.of("/foo/bar/echo.sh"), httpdHandler.getRequestedPaths());
-    Assert.assertEquals(
+    assertEquals(echoDotSh, workspace.getFileContents(outputPath));
+    assertEquals(ImmutableList.of("/foo/bar/echo.sh"), httpdHandler.getRequestedPaths());
+    assertEquals(
         0, Files.walk(workspace.resolve(scratchPath)).filter(Files::isRegularFile).count());
   }
 
@@ -245,11 +247,67 @@ public class HttpFileIntegrationTest {
     workspace.runBuckCommand("fetch", "//:echo_from_maven.sh").assertSuccess();
 
     Assert.assertTrue(Files.exists(workspace.resolve(outputPath)));
-    Assert.assertEquals(echoDotSh, workspace.getFileContents(outputPath));
-    Assert.assertEquals(
+    assertEquals(echoDotSh, workspace.getFileContents(outputPath));
+    assertEquals(
         ImmutableList.of("/package/artifact_name/version/artifact_name-version-classifier.zip"),
         httpdHandler.getRequestedPaths());
-    Assert.assertEquals(
+    assertEquals(
         0, Files.walk(workspace.resolve(scratchPath)).filter(Files::isRegularFile).count());
+  }
+
+  @Test
+  public void canBeUsedAsDependencyInRuleAnalysis() throws IOException {
+    workspace.setUp();
+    rewriteBuckFileTemplate();
+
+    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "skylark");
+    workspace.addBuckConfigLocalOption("parser", "enable_user_defined_rules", "true");
+    workspace.addBuckConfigLocalOption("rule_analysis", "mode", "PROVIDER_COMPATIBLE");
+    workspace.addBuckConfigLocalOption("download", "in_build", "true");
+
+    String exeTarget = "//rag:copy_executable.sh";
+    String nonExeTarget = "//rag:copy_with_out.sh";
+    Path expectedExePath =
+        workspace
+            .getProjectFileSystem()
+            .resolve(
+                BuildPaths.getGenDir(
+                        workspace.getProjectFileSystem(), BuildTargetFactory.newInstance(exeTarget))
+                    .resolve("echo_executable.sh"));
+    Path expectedNonExePath =
+        workspace
+            .getProjectFileSystem()
+            .resolve(
+                BuildPaths.getGenDir(
+                        workspace.getProjectFileSystem(),
+                        BuildTargetFactory.newInstance(nonExeTarget))
+                    .resolve("some_file.sh"));
+
+    Path outputExec = workspace.buildAndReturnOutput(exeTarget);
+    Path outputNonExec = workspace.buildAndReturnOutput(nonExeTarget);
+
+    assertEquals(echoDotSh, workspace.getProjectFileSystem().readFileIfItExists(outputExec).get());
+    assertEquals(
+        echoDotSh, workspace.getProjectFileSystem().readFileIfItExists(outputNonExec).get());
+    assertEquals(expectedExePath, outputExec);
+    assertEquals(expectedNonExePath, outputNonExec);
+  }
+
+  @Test
+  public void canBeExecutedWithBuckRun() throws IOException {
+    workspace.setUp();
+    rewriteBuckFileTemplate();
+
+    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "skylark");
+    workspace.addBuckConfigLocalOption("parser", "enable_user_defined_rules", "true");
+    workspace.addBuckConfigLocalOption("rule_analysis", "mode", "PROVIDER_COMPATIBLE");
+    workspace.addBuckConfigLocalOption("download", "in_build", "true");
+
+    String target =
+        Platform.detect().getType().isWindows()
+            ? "//:echo_executable.bat"
+            : "//:echo_executable.sh";
+    ProcessResult output = workspace.runBuckCommand("run", target).assertSuccess();
+    assertEquals("Hello, world", output.getStdout().trim());
   }
 }

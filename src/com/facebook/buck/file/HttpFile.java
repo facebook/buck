@@ -72,8 +72,12 @@ public class HttpFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.sha256 = sha256;
     this.downloader = downloader;
     this.executable = executable;
+    this.output = outputPath(projectFilesystem, buildTarget, out);
+  }
 
-    output = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s/" + out);
+  static Path outputPath(ProjectFilesystem filesystem, BuildTarget target, String outFilename) {
+    // TODO(pjameson): Convert this to use BuildPaths instead of BuildTargetPaths
+    return BuildTargetPaths.getGenPath(filesystem, target, "%s").resolve(outFilename);
   }
 
   @Override

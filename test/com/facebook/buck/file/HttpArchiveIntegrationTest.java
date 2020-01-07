@@ -785,4 +785,17 @@ public class HttpArchiveIntegrationTest {
     Assert.assertEquals(
         0, Files.walk(workspace.resolve(scratchDownloadPath)).filter(Files::isRegularFile).count());
   }
+
+  @Test
+  public void canBeUsedAsDependencyInRuleAnalysis() throws IOException {
+    workspace.setUp();
+    rewriteBuckFileTemplate(workspace);
+
+    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "skylark");
+    workspace.addBuckConfigLocalOption("parser", "enable_user_defined_rules", "true");
+    workspace.addBuckConfigLocalOption("rule_analysis", "mode", "PROVIDER_COMPATIBLE");
+    workspace.addBuckConfigLocalOption("download", "in_build", "true");
+
+    workspace.runBuckBuild("//rag:expect_path").assertSuccess();
+  }
 }

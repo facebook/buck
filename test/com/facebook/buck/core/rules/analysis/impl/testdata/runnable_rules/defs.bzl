@@ -1,8 +1,7 @@
 def _impl(ctx):
     output = ctx.actions.copy_file(ctx.attr.script, ctx.attr.script.basename)
 
-    all_args = ctx.actions.args()
-    all_args.add_all([output, "foo", 1, Label("//foo:bar")])
+    all_args = ctx.actions.args([output, "foo", 1, Label("//foo:bar")])
     env = {"CUSTOM_ENV": "some-string", "EXIT_CODE": str(ctx.attr.exit)}
 
     return [
