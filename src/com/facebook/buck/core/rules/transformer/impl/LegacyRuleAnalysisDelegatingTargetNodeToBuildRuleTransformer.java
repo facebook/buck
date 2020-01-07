@@ -32,6 +32,8 @@ import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.lib.RunInfo;
+import com.facebook.buck.core.rules.tool.RuleAnalysisLegacyBinaryBuildRuleView;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableCollection;
@@ -80,13 +82,27 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
             Optional.of(((ActionWrapperData) Iterables.getOnlyElement(actions)).getAction());
       }
 
-      return new RuleAnalysisLegacyBuildRuleView(
-          legacyRuleDescription.getConstructorArgType().getTypeName(),
-          result.getBuildTarget(),
-          correspondingAction,
-          graphBuilder,
-          targetNode.getFilesystem(),
-          result.getProviderInfos());
+      ProviderInfoCollection providerInfos = result.getProviderInfos();
+      return providerInfos
+          .get(RunInfo.PROVIDER)
+          .<BuildRule>map(
+              info ->
+                  new RuleAnalysisLegacyBinaryBuildRuleView(
+                      legacyRuleDescription.getConstructorArgType().getTypeName(),
+                      result.getBuildTarget(),
+                      correspondingAction,
+                      graphBuilder,
+                      targetNode.getFilesystem(),
+                      providerInfos))
+          .orElseGet(
+              () ->
+                  new RuleAnalysisLegacyBuildRuleView(
+                      legacyRuleDescription.getConstructorArgType().getTypeName(),
+                      result.getBuildTarget(),
+                      correspondingAction,
+                      graphBuilder,
+                      targetNode.getFilesystem(),
+                      providerInfos));
     }
 
     return delegate.transform(

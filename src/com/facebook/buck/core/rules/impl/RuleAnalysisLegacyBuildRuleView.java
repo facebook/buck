@@ -65,7 +65,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
    * @param action the action of the result for which we want to provide the {@link BuildRule} view
    * @param ruleResolver the current {@link BuildRuleResolver} to query dependent rules
    * @param projectFilesystem the filesystem
-   * @param providerInfoCollection
+   * @param providerInfoCollection the providers returned by this build target
    */
   public RuleAnalysisLegacyBuildRuleView(
       String type,

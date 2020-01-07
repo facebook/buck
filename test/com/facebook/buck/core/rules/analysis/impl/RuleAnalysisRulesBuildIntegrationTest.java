@@ -22,11 +22,14 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.events.Location;
@@ -406,6 +409,47 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     parser.close();
 
     assertThat(data, ruleOutputToMatchers(output));
+  }
+
+  @Test
+  public void ruleAnalysisRulesReturningRunInfoCanBeRun() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "runnable_rules", tmp);
+
+    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "skylark");
+    workspace.addBuckConfigLocalOption("parser", "enable_user_defined_rules", "true");
+    workspace.addBuckConfigLocalOption("rule_analysis", "mode", "PROVIDER_COMPATIBLE");
+
+    String successTarget =
+        Platform.detect().getType().isWindows()
+            ? "//:runnable_bat_success"
+            : "//:runnable_sh_success";
+    String failureTarget =
+        Platform.detect().getType().isWindows()
+            ? "//:runnable_bat_failure"
+            : "//:runnable_sh_failure";
+
+    String rootString = workspace.getProjectFileSystem().getRootPath().toAbsolutePath().toString();
+    String expected =
+        Joiner.on(System.lineSeparator())
+            .join(
+                ImmutableList.of(
+                    "pwd: " + rootString,
+                    "ENV: some-string",
+                    "EXIT_CODE: %s",
+                    "arg[foo]",
+                    "arg[1]",
+                    "arg[//foo:bar]"))
+            .trim();
+
+    workspace.setUp();
+    ProcessResult successRun = workspace.runBuckCommand("run", successTarget).assertSuccess();
+    // Note we don't look at more specific exit codes because the integration framework makes this
+    // harder to do.
+    ProcessResult failureRun = workspace.runBuckCommand("run", failureTarget).assertFailure();
+
+    assertEquals(String.format(expected, "0"), successRun.getStdout().trim());
+    assertEquals(String.format(expected, "100"), failureRun.getStdout().trim());
   }
 
   private static class RuleOutput {
