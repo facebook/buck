@@ -35,7 +35,6 @@ import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -96,7 +95,7 @@ public abstract class UnusedDependenciesFinder implements Step {
 
     Optional<String> message = messageHandler.getFinalMessage();
     if (message.isPresent()) {
-      return ImmutableStepExecutionResult.builder()
+      return StepExecutionResult.builder()
           .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
           .setStderr(message)
           .build();

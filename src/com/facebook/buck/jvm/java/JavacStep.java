@@ -24,7 +24,6 @@ import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -124,7 +123,7 @@ public class JavacStep implements Step {
     } else {
       returnedStderr = Optional.empty();
     }
-    return ImmutableStepExecutionResult.builder()
+    return StepExecutionResult.builder()
         .setExitCode(declaredDepsBuildResult)
         .setStderr(returnedStderr)
         .build();

@@ -16,15 +16,13 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Exit code, command and stderr info from the executed step */
-@Value.Immutable(builder = true, copy = false, prehash = false)
-@BuckStyleValue
+@BuckStyleValueWithBuilder
 public interface StepExecutionResult {
 
   int getExitCode();
@@ -41,15 +39,21 @@ public interface StepExecutionResult {
 
   /** Creates {@code StepExecutionResult} from {@code exitCode} */
   static StepExecutionResult of(int exitCode) {
-    return ImmutableStepExecutionResult.builder().setExitCode(exitCode).build();
+    return new Builder().setExitCode(exitCode).build();
   }
 
   /** Creates {@code StepExecutionResult} from {@code ProcessExecutor.Result} */
   static StepExecutionResult of(ProcessExecutor.Result result) {
-    return ImmutableStepExecutionResult.builder()
+    return new Builder()
         .setExitCode(result.getExitCode())
         .setExecutedCommand(result.getCommand())
         .setStderr(result.getStderr())
         .build();
   }
+
+  static Builder builder() {
+    return new Builder();
+  }
+
+  class Builder extends ImmutableStepExecutionResult.Builder {}
 }

@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -58,7 +57,7 @@ public abstract class DiffAbisStep implements Step {
         LOG.info(message);
         return StepExecutionResults.SUCCESS;
       case FAIL:
-        return ImmutableStepExecutionResult.builder()
+        return StepExecutionResult.builder()
             .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
             .setStderr(Optional.of(message))
             .build();

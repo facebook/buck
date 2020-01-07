@@ -21,7 +21,6 @@ import static com.google.common.collect.Iterables.transform;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -112,7 +111,7 @@ public class KotlincStep implements Step {
       } else {
         returnedStderr = Optional.empty();
       }
-      return ImmutableStepExecutionResult.builder()
+      return StepExecutionResult.builder()
           .setExitCode(declaredDepsBuildResult)
           .setStderr(returnedStderr)
           .build();

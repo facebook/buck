@@ -32,7 +32,6 @@ import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.facebook.buck.rules.modern.builders.LocalFallbackStrategy.FallbackStrategyBuildResult;
 import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TestExecutionContext;
@@ -174,7 +173,7 @@ public class LocalFallbackStrategyTest {
                       }
                     },
                     executionContext,
-                    ImmutableStepExecutionResult.builder().setExitCode(1).setStderr("").build(),
+                    StepExecutionResult.builder().setExitCode(1).setStderr("").build(),
                     executedActionMetadata)))
         .times(2);
     BuildResult localResult = successBuildResult("//local/did:though");
@@ -298,7 +297,7 @@ public class LocalFallbackStrategyTest {
               }
             },
             executionContext,
-            ImmutableStepExecutionResult.builder().setExitCode(1).setStderr("").build());
+            StepExecutionResult.builder().setExitCode(1).setStderr("").build());
     EasyMock.expect(strategyBuildResult.getBuildResult())
         .andReturn(Futures.immediateFailedFuture(exception))
         .times(2);

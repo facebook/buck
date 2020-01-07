@@ -37,7 +37,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.testutil.ProcessResult;
@@ -497,7 +496,7 @@ public class BuildCommandErrorsIntegrationTest {
           new AbstractExecutionStep("step_with_exit_code_" + exitCode) {
             @Override
             public StepExecutionResult execute(ExecutionContext context) {
-              return ImmutableStepExecutionResult.builder()
+              return StepExecutionResult.builder()
                   .setExitCode(exitCode)
                   .setStderr(Optional.of(message))
                   .build();

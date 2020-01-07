@@ -44,7 +44,7 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -104,10 +104,7 @@ public class ActionExecutionStepTest {
         new CapturingConsoleEventListener();
     testEventBus.register(consoleEventListener);
     assertEquals(
-        ImmutableStepExecutionResult.builder()
-            .setExitCode(0)
-            .setStderr(Optional.of("my std err"))
-            .build(),
+        StepExecutionResult.builder().setExitCode(0).setStderr(Optional.of("my std err")).build(),
         step.execute(
             ExecutionContext.of(
                 Console.createNullConsole(),
@@ -163,10 +160,7 @@ public class ActionExecutionStepTest {
 
     assertFalse(projectFilesystem.exists(packagePath));
     assertEquals(
-        ImmutableStepExecutionResult.builder()
-            .setExitCode(-1)
-            .setStderr(Optional.of("my std err"))
-            .build(),
+        StepExecutionResult.builder().setExitCode(-1).setStderr(Optional.of("my std err")).build(),
         step.execute(
             ExecutionContext.of(
                 Console.createNullConsole(),
@@ -219,10 +213,7 @@ public class ActionExecutionStepTest {
 
     assertTrue(projectFilesystem.exists(expectedPath));
     assertEquals(
-        ImmutableStepExecutionResult.builder()
-            .setExitCode(-1)
-            .setStderr(Optional.of("my std err"))
-            .build(),
+        StepExecutionResult.builder().setExitCode(-1).setStderr(Optional.of("my std err")).build(),
         step.execute(
             ExecutionContext.of(
                 Console.createNullConsole(),
