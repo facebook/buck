@@ -44,6 +44,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import org.junit.Before;
@@ -81,11 +82,7 @@ public class TestResultFormatterTest {
     return new TestResultFormatter(
         new Ansi(false),
         Verbosity.COMMANDS,
-        TestResultSummaryVerbosity.builder()
-            .setIncludeStdOut(false)
-            .setIncludeStdErr(false)
-            .setMaxDebugLogLines(logLines)
-            .build(),
+        TestResultSummaryVerbosity.of(false, false, OptionalInt.of(logLines)),
         Locale.US,
         Optional.of(logPath),
         TimeZone.getTimeZone("America/Los_Angeles"));

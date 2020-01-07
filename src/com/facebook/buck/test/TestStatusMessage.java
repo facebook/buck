@@ -16,20 +16,19 @@
 
 package com.facebook.buck.test;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.logging.Level;
-import org.immutables.value.Value;
 
 /** Represents a diagnostic message issued during a test. */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractTestStatusMessage {
-  @Value.Parameter
+@BuckStyleValue
+public interface TestStatusMessage {
   String getMessage();
 
-  @Value.Parameter
   Level getLevel();
 
-  @Value.Parameter
   long getTimestampMillis();
+
+  static TestStatusMessage of(String message, Level level, long timestampMillis) {
+    return ImmutableTestStatusMessage.of(message, level, timestampMillis);
+  }
 }

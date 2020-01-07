@@ -18,11 +18,10 @@ package com.facebook.buck.core.linkgroup;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ComparisonChain;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import org.immutables.value.Value;
 
 /**
  * Represents how a single build target should be mapped to a link group.
@@ -35,13 +34,11 @@ import org.immutables.value.Value;
  *   ],
  * </pre>
  *
- * In this case, {@link AbstractCxxLinkGroupMappingTarget} represents the tuple <code>
+ * In this case, {@link CxxLinkGroupMappingTarget} represents the tuple <code>
  * ("//Some:Target", "tree")</code>.
  */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractCxxLinkGroupMappingTarget
-    implements Comparable<AbstractCxxLinkGroupMappingTarget> {
+@BuckStyleValue
+public abstract class CxxLinkGroupMappingTarget implements Comparable<CxxLinkGroupMappingTarget> {
 
   /**
    * Defines how nodes should be included starting from the root as specified by the build target.
@@ -53,20 +50,24 @@ abstract class AbstractCxxLinkGroupMappingTarget
     NODE,
   }
 
-  @Value.Parameter
   @AddToRuleKey
   public abstract BuildTarget getBuildTarget();
 
-  @Value.Parameter
   @AddToRuleKey
   public abstract Traversal getTraversal();
 
-  @Value.Parameter
   @AddToRuleKey
   public abstract Optional<Pattern> getLabelPattern();
 
+  public static CxxLinkGroupMappingTarget of(
+      BuildTarget buildTarget,
+      CxxLinkGroupMappingTarget.Traversal traversal,
+      Optional<? extends Pattern> labelPattern) {
+    return ImmutableCxxLinkGroupMappingTarget.of(buildTarget, traversal, labelPattern);
+  }
+
   @Override
-  public int compareTo(AbstractCxxLinkGroupMappingTarget that) {
+  public int compareTo(CxxLinkGroupMappingTarget that) {
     if (this == that) {
       return 0;
     }
@@ -82,7 +83,7 @@ abstract class AbstractCxxLinkGroupMappingTarget
         .result();
   }
 
-  private int compareLabelPattern(AbstractCxxLinkGroupMappingTarget that) {
+  private int compareLabelPattern(CxxLinkGroupMappingTarget that) {
     Optional<Pattern> thisLabelPattern = this.getLabelPattern();
     Optional<Pattern> thatLabelPattern = that.getLabelPattern();
 

@@ -16,18 +16,23 @@
 
 package com.facebook.buck.test.config;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.OptionalInt;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractTestResultSummaryVerbosity {
-  @Value.Parameter
+@BuckStyleValue
+public interface TestResultSummaryVerbosity {
   boolean getIncludeStdErr();
 
-  @Value.Parameter
   boolean getIncludeStdOut();
 
   OptionalInt getMaxDebugLogLines();
+
+  static TestResultSummaryVerbosity of(boolean includeStdErr, boolean includeStdOut) {
+    return of(includeStdErr, includeStdOut, OptionalInt.empty());
+  }
+
+  static TestResultSummaryVerbosity of(
+      boolean includeStdErr, boolean includeStdOut, OptionalInt maxDebugLogLines) {
+    return ImmutableTestResultSummaryVerbosity.of(includeStdErr, includeStdOut, maxDebugLogLines);
+  }
 }

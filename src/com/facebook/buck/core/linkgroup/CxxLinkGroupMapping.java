@@ -17,11 +17,10 @@
 package com.facebook.buck.core.linkgroup;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
-import java.util.List;
-import org.immutables.value.Value;
 
 /**
  * Represents a single mapping which specifies which targets belong to a link group.
@@ -34,24 +33,26 @@ import org.immutables.value.Value;
  *   ],
  * </pre>
  *
- * In this case, {@link AbstractCxxLinkGroupMapping} represents the tuple <code>
+ * In this case, {@link CxxLinkGroupMapping} represents the tuple <code>
  * ("group_name", [mapping1, mapping2])</code>. Each mapping (e.g., <code>mapping1</code>) is
- * represented by {@link AbstractCxxLinkGroupMappingTarget}.
+ * represented by {@link CxxLinkGroupMappingTarget}.
  */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractCxxLinkGroupMapping implements Comparable<AbstractCxxLinkGroupMapping> {
+@BuckStyleValue
+public abstract class CxxLinkGroupMapping implements Comparable<CxxLinkGroupMapping> {
 
-  @Value.Parameter
   @AddToRuleKey
   public abstract String getLinkGroup();
 
-  @Value.Parameter
   @AddToRuleKey
-  public abstract List<CxxLinkGroupMappingTarget> getMappingTargets();
+  public abstract ImmutableList<CxxLinkGroupMappingTarget> getMappingTargets();
+
+  public static CxxLinkGroupMapping of(
+      String linkGroup, ImmutableList<CxxLinkGroupMappingTarget> mappingTargets) {
+    return ImmutableCxxLinkGroupMapping.of(linkGroup, mappingTargets);
+  }
 
   @Override
-  public int compareTo(AbstractCxxLinkGroupMapping that) {
+  public int compareTo(CxxLinkGroupMapping that) {
     if (this == that) {
       return 0;
     }

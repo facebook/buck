@@ -65,11 +65,7 @@ public class XcodeNativeTargetGenerator {
    * @return Attributes parsed from the target node.
    */
   GeneratedTargetAttributes generate() {
-    GeneratedTargetAttributes.Builder builder = GeneratedTargetAttributes.builder();
-
-    builder.setProductType(getProductType(targetNode, targetGraph));
-
-    return builder.build();
+    return ImmutableGeneratedTargetAttributes.of(getProductType(targetNode, targetGraph));
   }
 
   /**

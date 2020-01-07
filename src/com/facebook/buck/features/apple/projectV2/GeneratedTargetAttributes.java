@@ -17,17 +17,15 @@
 package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Output of {@link XcodeNativeTargetGenerator} containing information about the Xcode Native
  * Target.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractGeneratedTargetAttributes {
+@BuckStyleValue
+abstract class GeneratedTargetAttributes {
 
   public abstract Optional<ProductType> productType();
 }

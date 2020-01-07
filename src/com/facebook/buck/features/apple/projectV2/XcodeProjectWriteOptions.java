@@ -17,16 +17,14 @@
 package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** Options for writing to an Xcode project */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractXcodeProjectWriteOptions {
+@BuckStyleValue
+abstract class XcodeProjectWriteOptions {
   /** The project being written to. */
-  @Value.Parameter
   public abstract PBXProject project();
 
   /**
@@ -34,7 +32,6 @@ abstract class AbstractXcodeProjectWriteOptions {
    *
    * <p>e.g. if this is "/home/me/projects/MyApp.xcodepoj, then this would be "/home/me/projects"
    */
-  @Value.Parameter
   public abstract Path sourceRoot();
 
   /** The absolute path to the .xcodeproj */
@@ -46,5 +43,9 @@ abstract class AbstractXcodeProjectWriteOptions {
   @Value.Lazy
   public Path projectFilePath() {
     return this.xcodeProjPath().resolve("project.pbxproj");
+  }
+
+  public static XcodeProjectWriteOptions of(PBXProject project, Path sourceRoot) {
+    return ImmutableXcodeProjectWriteOptions.of(project, sourceRoot);
   }
 }
