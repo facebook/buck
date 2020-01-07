@@ -19,12 +19,16 @@ package com.facebook.buck.core.rules.providers.lib;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
+import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLine;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
+import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
 import com.facebook.buck.core.rules.actions.lib.args.ExecCompatibleCommandLineBuilder;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -39,6 +43,8 @@ import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -148,5 +154,34 @@ public class RunInfoTest {
 
     assertEquals(ImmutableList.of(), cli.getCommandLineArgs());
     assertEquals(ImmutableMap.of(), cli.getEnvironmentVariables());
+  }
+
+  @Test
+  public void returnsCorrectCliArgsAndEnv() throws EvalException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path txtPath = Paths.get("subdir", "file.txt");
+    try (Mutability mut = Mutability.create("test")) {
+      Artifact artifact = ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, txtPath));
+      Environment environment = getEnv(mut);
+      SkylarkDict<String, String> env =
+          SkylarkDict.of(environment, "foo", "foo_val", "bar", "bar_val");
+      SkylarkList.MutableList<Object> args =
+          SkylarkList.MutableList.of(
+              environment, CommandLineArgsFactory.from(ImmutableList.of("arg1", "arg2")), artifact);
+
+      RunInfo info = RunInfo.instantiateFromSkylark(env, args);
+
+      // Make sure we're freezing properly
+      args.add("arg3", Location.BUILTIN, mut);
+      env.pop("foo", "", Location.BUILTIN, environment);
+
+      CommandLine cli =
+          new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem)).build(info);
+
+      assertEquals(ImmutableList.of("arg1", "arg2", txtPath.toString()), cli.getCommandLineArgs());
+      assertEquals(
+          ImmutableMap.of("foo", "foo_val", "bar", "bar_val"), cli.getEnvironmentVariables());
+      assertEquals(3, info.getEstimatedArgsCount());
+    }
   }
 }

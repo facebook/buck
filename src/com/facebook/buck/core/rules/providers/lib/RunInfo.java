@@ -26,10 +26,12 @@ import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * The standard {@link com.facebook.buck.core.rules.providers.Provider} that describes how to run a
@@ -38,7 +40,7 @@ import java.util.Map;
 @ImmutableInfo(
     args = {"env", "args"},
     defaultSkylarkValues = {"{}", "[]"})
-public abstract class RunInfo extends BuiltInProviderInfo<RunInfo> {
+public abstract class RunInfo extends BuiltInProviderInfo<RunInfo> implements CommandLineArgs {
 
   public static final BuiltInProvider<RunInfo> PROVIDER =
       BuiltInProvider.of(ImmutableRunInfo.class);
@@ -76,5 +78,23 @@ public abstract class RunInfo extends BuiltInProviderInfo<RunInfo> {
     }
 
     return new ImmutableRunInfo(validatedEnv, commandLineArgs);
+  }
+
+  @Override
+  public ImmutableSortedMap<String, String> getEnvironmentVariables() {
+    return ImmutableSortedMap.<String, String>naturalOrder()
+        .putAll(env())
+        .putAll(args().getEnvironmentVariables())
+        .build();
+  }
+
+  @Override
+  public Stream<Object> getArgs() {
+    return args().getArgs();
+  }
+
+  @Override
+  public int getEstimatedArgsCount() {
+    return args().getEstimatedArgsCount();
   }
 }
