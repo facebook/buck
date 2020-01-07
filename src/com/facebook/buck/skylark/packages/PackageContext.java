@@ -16,37 +16,41 @@
 
 package com.facebook.buck.skylark.packages;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.events.EventHandler;
-import org.immutables.value.Value;
+import java.util.Map;
 
 /** Exposes package information to Skylark functions. */
-@Value.Immutable(builder = false)
-@BuckStyleImmutable
-abstract class AbstractPackageContext {
+@BuckStyleValue
+public abstract class PackageContext {
   /** Returns a globber instance that can resolve paths relative to current package. */
-  @Value.Parameter
   public abstract Globber getGlobber();
 
   /**
    * Returns a raw map of configuration options defined in {@code .buckconfig} file and passed
    * through a {@code --config} command line option.
    */
-  @Value.Parameter
   public abstract ImmutableMap<String, ImmutableMap<String, String>> getRawConfig();
 
   /** Returns a package identifier of the build file that is being parsed. */
-  @Value.Parameter
   public abstract PackageIdentifier getPackageIdentifier();
 
   /** @return The event handler for reporting events during package parsing. */
-  @Value.Parameter
   public abstract EventHandler getEventHandler();
 
   /** Gets objects that were implciitly loaded */
-  @Value.Parameter
   public abstract ImmutableMap<String, Object> getImplicitlyLoadedSymbols();
+
+  public static PackageContext of(
+      Globber globber,
+      Map<String, ? extends ImmutableMap<String, String>> rawConfig,
+      PackageIdentifier packageIdentifier,
+      EventHandler eventHandler,
+      Map<String, ? extends Object> implicitlyLoadedSymbols) {
+    return ImmutablePackageContext.of(
+        globber, rawConfig, packageIdentifier, eventHandler, implicitlyLoadedSymbols);
+  }
 }

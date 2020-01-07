@@ -57,7 +57,7 @@ public class DotnetToolchainSupplier implements ToolchainSupplier {
               .setName(Paths.get("csc"))
               .setEnvironment(context.getEnvironment())
               .build();
-      return Optional.of(DotnetToolchain.of(dotnetBuckConfig, systemCsharpCompiler));
+      return Optional.of(ImmutableDotnetToolchain.of(dotnetBuckConfig, systemCsharpCompiler));
     }
   }
 }

@@ -154,7 +154,7 @@ public class BuildFileManifestPojoizerTest {
     BuildFileManifestPojoizer pojoizer =
         BuildFileManifestPojoizer.of()
             .addPojoTransformer(
-                PojoTransformer.of(
+                BuildFileManifestPojoizer.PojoTransformer.of(
                     customClass.getClass(), obj -> ImmutableList.of(customClass.prop1)));
     assertEquals(ImmutableList.of(customClass.prop1), pojoizer.convertToPojo(customClass));
   }
@@ -167,7 +167,8 @@ public class BuildFileManifestPojoizerTest {
     BuildFileManifestPojoizer pojoizer =
         BuildFileManifestPojoizer.of()
             .addPojoTransformer(
-                PojoTransformer.of(list.getClass(), obj -> ((ArrayList<String>) obj).get(0)));
+                BuildFileManifestPojoizer.PojoTransformer.of(
+                    list.getClass(), obj -> ((ArrayList<String>) obj).get(0)));
 
     assertEquals("a", pojoizer.convertToPojo(list));
   }
@@ -181,7 +182,7 @@ public class BuildFileManifestPojoizerTest {
     BuildFileManifestPojoizer pojoizer = BuildFileManifestPojoizer.of();
 
     pojoizer.addPojoTransformer(
-        PojoTransformer.of(
+        BuildFileManifestPojoizer.PojoTransformer.of(
             recursiveClass.getClass(),
             obj -> {
               CustomClass<Object> rclass = (CustomClass<Object>) obj;

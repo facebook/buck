@@ -24,21 +24,17 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
-import org.immutables.value.Value;
 
 /** Matches all {@link TargetNode} objects in a repository that match the specification. */
-@Value.Immutable(builder = false)
+@BuckStyleValue
 public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
 
   @Override
-  @Value.Parameter
   public abstract BuildFileSpec getBuildFileSpec();
 
-  @Value.Default
-  public boolean onlyTests() {
-    return false;
-  }
+  public abstract boolean onlyTests();
 
   @Override
   public TargetType getTargetType() {
@@ -77,5 +73,13 @@ public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
             ? BuildTargetPattern.Kind.RECURSIVE
             : BuildTargetPattern.Kind.PACKAGE,
         "");
+  }
+
+  public static TargetNodePredicateSpec of(BuildFileSpec buildFileSpec) {
+    return of(buildFileSpec, false);
+  }
+
+  public static TargetNodePredicateSpec of(BuildFileSpec buildFileSpec, boolean onlyTests) {
+    return ImmutableTargetNodePredicateSpec.of(buildFileSpec, onlyTests);
   }
 }

@@ -18,17 +18,14 @@ package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@BuckStyleImmutable
-@Value.Immutable(builder = false, copy = false)
-abstract class AbstractDummyConfigurationRule implements ConfigurationRule {
+@BuckStyleValue
+public abstract class DummyConfigurationRule implements ConfigurationRule {
   @Override
-  @Value.Parameter
   public abstract BuildTarget getBuildTarget();
 
   public static DummyConfigurationRule of(BuildTarget target) {
-    return DummyConfigurationRule.of(target);
+    return ImmutableDummyConfigurationRule.of(target);
   }
 }

@@ -25,12 +25,12 @@ public class BuildTargetMatcherTargetNodeParser extends BuildTargetMatcherParser
 
   @Override
   public TargetNodeSpec createForDescendants(CellRelativePath cellRelativePath) {
-    return ImmutableTargetNodePredicateSpec.of(BuildFileSpec.fromRecursivePath(cellRelativePath));
+    return TargetNodePredicateSpec.of(BuildFileSpec.fromRecursivePath(cellRelativePath));
   }
 
   @Override
   public TargetNodeSpec createForChildren(CellRelativePath cellRelativePath) {
-    return ImmutableTargetNodePredicateSpec.of(BuildFileSpec.fromPath(cellRelativePath));
+    return TargetNodePredicateSpec.of(BuildFileSpec.fromPath(cellRelativePath));
   }
 
   @Override

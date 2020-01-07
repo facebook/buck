@@ -19,19 +19,15 @@ package com.facebook.buck.features.dotnet;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Toolchain for dotnet */
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-abstract class AbstractDotnetToolchain implements Toolchain {
+@BuckStyleValue
+abstract class DotnetToolchain implements Toolchain {
   static final String DEFAULT_NAME = "dotnet-toolchain";
 
-  @Value.Parameter
   abstract DotnetBuckConfig getDotnetBuckConfig();
 
-  @Value.Parameter
   abstract SystemToolProvider getSystemCsharpCompiler();
 
   public ToolProvider getCsharpCompiler() {

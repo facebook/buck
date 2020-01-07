@@ -492,11 +492,11 @@ public class TestCommand extends BuildCommand {
                       parsingContext,
                       ImmutableList.of(
                           ImmutableTargetNodePredicateSpec.of(
-                                  BuildFileSpec.fromRecursivePath(
-                                      new ImmutableCellRelativePath(
-                                          params.getCell().getCanonicalName(),
-                                          ForwardRelativePath.of(""))))
-                              .withOnlyTests(true)),
+                              BuildFileSpec.fromRecursivePath(
+                                  new ImmutableCellRelativePath(
+                                      params.getCell().getCanonicalName(),
+                                      ForwardRelativePath.of(""))),
+                              true)),
                       params.getTargetConfiguration());
           targetGraphCreationResult = targetGraphCreationResult.withBuildTargets(ImmutableSet.of());
 

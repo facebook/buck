@@ -94,7 +94,7 @@ import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.parser.spec.BuildFileSpec;
 import com.facebook.buck.parser.spec.BuildTargetSpec;
 import com.facebook.buck.parser.spec.ImmutableBuildTargetSpec;
-import com.facebook.buck.parser.spec.ImmutableTargetNodePredicateSpec;
+import com.facebook.buck.parser.spec.TargetNodePredicateSpec;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -2616,7 +2616,7 @@ public class ParserWithConfigurableAttributesTest {
                 .buildTargetGraphWithTopLevelConfigurationTargets(
                     parsingContext,
                     ImmutableList.of(
-                        ImmutableTargetNodePredicateSpec.of(
+                        TargetNodePredicateSpec.of(
                             BuildFileSpec.fromRecursivePath(
                                 new ImmutableCellRelativePath(
                                     parsingContext.getCell().getCanonicalName(),

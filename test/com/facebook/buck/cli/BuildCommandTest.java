@@ -70,7 +70,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.spec.BuildFileSpec;
 import com.facebook.buck.parser.spec.BuildTargetSpec;
-import com.facebook.buck.parser.spec.ImmutableTargetNodePredicateSpec;
+import com.facebook.buck.parser.spec.TargetNodePredicateSpec;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -241,7 +241,7 @@ public class BuildCommandTest {
 
     ImmutableList<TargetNodeSpec> targetNodeSpecs =
         ImmutableList.of(
-            ImmutableTargetNodePredicateSpec.of(
+            TargetNodePredicateSpec.of(
                 BuildFileSpec.fromUnconfiguredBuildTarget(
                     UnconfiguredBuildTargetFactoryForTests.newInstance(
                         projectFilesystem, buildTargetName))));

@@ -76,7 +76,7 @@ import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.spec.BuildFileSpec;
-import com.facebook.buck.parser.spec.ImmutableTargetNodePredicateSpec;
+import com.facebook.buck.parser.spec.TargetNodePredicateSpec;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -610,7 +610,7 @@ public class TargetsCommand extends AbstractCommand {
               .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext,
                   ImmutableList.of(
-                      ImmutableTargetNodePredicateSpec.of(
+                      TargetNodePredicateSpec.of(
                           BuildFileSpec.fromRecursivePath(
                               new ImmutableCellRelativePath(
                                   params.getCell().getCanonicalName(),
@@ -736,7 +736,7 @@ public class TargetsCommand extends AbstractCommand {
                   .buildTargetGraphWithTopLevelConfigurationTargets(
                       parsingContext,
                       ImmutableList.of(
-                          ImmutableTargetNodePredicateSpec.of(
+                          TargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
                                   new ImmutableCellRelativePath(
                                       params.getCell().getCanonicalName(),
