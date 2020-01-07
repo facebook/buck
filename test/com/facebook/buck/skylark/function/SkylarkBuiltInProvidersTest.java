@@ -19,13 +19,15 @@ package com.facebook.buck.skylark.function;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
+import com.facebook.buck.core.rules.providers.lib.RunInfo;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
 public class SkylarkBuiltInProvidersTest {
   @Test
   public void providersAreCorrect() {
-    ImmutableMap<String, Object> expected = ImmutableMap.of("DefaultInfo", DefaultInfo.PROVIDER);
+    ImmutableMap<String, Object> expected =
+        ImmutableMap.of("DefaultInfo", DefaultInfo.PROVIDER, "RunInfo", RunInfo.PROVIDER);
     assertEquals(expected, SkylarkBuiltInProviders.PROVIDERS);
   }
 }
