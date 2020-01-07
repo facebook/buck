@@ -18,16 +18,14 @@ package com.facebook.buck.android.toolchain.ndk;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Adds Android-specific tools to {@link CxxPlatform}. */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractNdkCxxPlatform {
+@BuckStyleValueWithBuilder
+public interface NdkCxxPlatform {
 
   CxxPlatform getCxxPlatform();
 
@@ -37,4 +35,10 @@ interface AbstractNdkCxxPlatform {
 
   /** @return the {@link Path} to the C/C++ runtime library, if one is required. */
   Optional<SourcePath> getCxxSharedRuntimePath();
+
+  static Builder builder() {
+    return new Builder();
+  }
+
+  class Builder extends ImmutableNdkCxxPlatform.Builder {}
 }

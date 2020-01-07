@@ -51,12 +51,11 @@ public class LuaBuckConfig {
                 .getToolProvider(section, "lua")
                 .orElseGet(
                     () ->
-                        SystemToolProvider.builder()
-                            .setExecutableFinder(finder)
-                            .setSourcePathConverter(delegate::getPathSourcePath)
-                            .setName(Paths.get("lua"))
-                            .setEnvironment(delegate.getEnvironment())
-                            .build()))
+                        SystemToolProvider.of(
+                            finder,
+                            delegate::getPathSourcePath,
+                            Paths.get("lua"),
+                            delegate.getEnvironment())))
         .setLuaCxxLibraryTarget(
             delegate.getBuildTarget(section, "cxx_library", targetConfiguration))
         .setStarterType(

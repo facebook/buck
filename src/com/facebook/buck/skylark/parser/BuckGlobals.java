@@ -19,7 +19,7 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.skylark.function.SkylarkBuiltInProviders;
 import com.facebook.buck.skylark.function.SkylarkFunctionModule;
 import com.facebook.buck.skylark.function.SkylarkProviderFunction;
@@ -38,7 +38,6 @@ import com.google.devtools.build.lib.syntax.Environment.GlobalFrame;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.MethodLibrary;
 import com.google.devtools.build.lib.syntax.Runtime;
-import org.immutables.value.Value;
 import org.immutables.value.Value.Lazy;
 
 /**
@@ -48,9 +47,8 @@ import org.immutables.value.Value.Lazy;
  * performance and easier maintenance, since there is only one place to check for variable
  * definitions.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractBuckGlobals {
+@BuckStyleValueWithBuilder
+public abstract class BuckGlobals {
 
   static {
     /**
@@ -134,7 +132,7 @@ abstract class AbstractBuckGlobals {
    * native.cxx_library}.
    */
   @Lazy
-  ClassObject getNativeModule() {
+  public ClassObject getNativeModule() {
     ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
     builder.putAll(getBuckRuleFunctions());
     addNativeModuleFunctions(builder);
@@ -157,4 +155,10 @@ abstract class AbstractBuckGlobals {
     Runtime.addConstantsToBuilder(builder);
     MethodLibrary.addBindingsToBuilder(builder);
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableBuckGlobals.Builder {}
 }

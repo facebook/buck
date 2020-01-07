@@ -19,16 +19,14 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractCxxRawHeaders extends CxxHeaders {
+@BuckStyleValue
+public abstract class CxxRawHeaders extends CxxHeaders {
   @Override
   @AddToRuleKey
   public final CxxPreprocessables.IncludeType getIncludeType() {
@@ -58,7 +56,10 @@ abstract class AbstractCxxRawHeaders extends CxxHeaders {
     }
   }
 
-  @Value.Parameter
   @AddToRuleKey
   abstract ImmutableSortedSet<SourcePath> getHeaders();
+
+  public static CxxRawHeaders of(ImmutableSortedSet<SourcePath> headers) {
+    return ImmutableCxxRawHeaders.of(headers);
+  }
 }

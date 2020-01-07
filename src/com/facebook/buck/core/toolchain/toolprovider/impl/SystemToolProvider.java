@@ -24,11 +24,12 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.ExecutableFinder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import org.immutables.value.Value;
@@ -36,16 +37,15 @@ import org.immutables.value.Value;
 /**
  * A {@link ToolProvider} which returns a {@link HashedFileTool} found from searching the system.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractSystemToolProvider implements ToolProvider {
+@BuckStyleValue
+public abstract class SystemToolProvider implements ToolProvider {
   abstract ExecutableFinder getExecutableFinder();
-
-  abstract ImmutableMap<String, String> getEnvironment();
 
   abstract Function<Path, SourcePath> getSourcePathConverter();
 
   abstract Path getName();
+
+  abstract ImmutableMap<String, String> getEnvironment();
 
   abstract Optional<String> getSource();
 
@@ -72,5 +72,23 @@ abstract class AbstractSystemToolProvider implements ToolProvider {
   @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
     return ImmutableList.of();
+  }
+
+  public static SystemToolProvider of(
+      ExecutableFinder executableFinder,
+      Function<Path, SourcePath> sourcePathConverter,
+      Path name,
+      Map<String, ? extends String> environment,
+      Optional<String> source) {
+    return ImmutableSystemToolProvider.of(
+        executableFinder, sourcePathConverter, name, environment, source);
+  }
+
+  public static SystemToolProvider of(
+      ExecutableFinder executableFinder,
+      Function<Path, SourcePath> sourcePathConverter,
+      Path name,
+      Map<String, ? extends String> environment) {
+    return of(executableFinder, sourcePathConverter, name, environment, Optional.empty());
   }
 }
