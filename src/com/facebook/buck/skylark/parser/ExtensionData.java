@@ -16,39 +16,37 @@
 
 package com.facebook.buck.skylark.parser;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.syntax.Environment.Extension;
-import org.immutables.value.Value;
 
 /**
  * Captures {@link Extension} and information related to its parsing like all other extensions used
  * in order to load it. The main purpose of extra information is to properly captured all dependent
  * information for caching purposes.
  */
-@Value.Immutable(builder = false)
-@BuckStyleImmutable
-abstract class AbstractExtensionData {
+@BuckStyleValue
+abstract class ExtensionData {
   /** @return an extension with its bindings */
-  @Value.Parameter
   public abstract Extension getExtension();
 
   /** @return a path from which the extension was loaded from */
-  @Value.Parameter
   public abstract com.google.devtools.build.lib.vfs.Path getPath();
 
   /** @return a set of dependencies that were required to evaluate this extension */
-  @Value.Parameter
   public abstract ImmutableSet<ExtensionData> getDependencies();
 
   /** @return a load function label that triggered load of this extension */
-  @Value.Parameter
   public abstract String getImportString();
 
   /**
    * @return the list of files loaded in order to parse this extension including the path of this
    *     extension, which is the first element of the list.
    */
-  @Value.Parameter
   public abstract ImmutableSet<String> getLoadTransitiveClosure();
+
+  ExtensionData withImportString(String importString) {
+    return ImmutableExtensionData.of(
+        getExtension(), getPath(), getDependencies(), importString, getLoadTransitiveClosure());
+  }
 }

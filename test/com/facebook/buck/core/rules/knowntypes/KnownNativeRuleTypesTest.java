@@ -21,12 +21,12 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProvider;
@@ -55,7 +55,7 @@ public class KnownNativeRuleTypesTest {
 
   @Test(expected = IllegalStateException.class)
   public void whenRegisteringDescriptionsWithSameTypeErrorIsThrown() {
-    ImmutableList<DescriptionWithTargetGraph<?>> buildDescriptions =
+    ImmutableList<Description<?>> buildDescriptions =
         ImmutableList.of(
             new KnownRuleTestDescription("Foo"),
             new KnownRuleTestDescription("Bar"),

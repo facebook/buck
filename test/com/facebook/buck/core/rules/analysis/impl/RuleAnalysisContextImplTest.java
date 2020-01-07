@@ -30,9 +30,9 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
@@ -203,8 +203,7 @@ public class RuleAnalysisContextImplTest {
         ImmutableSortedSet.of(context.actionRegistry().declareArtifact(Paths.get("output")));
     FakeAction.FakeActionExecuteLambda actionFunction =
         (srcs, inputs1, outputs1, ctx) ->
-            ImmutableActionExecutionSuccess.of(
-                Optional.empty(), Optional.empty(), ImmutableList.of());
+            ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of());
 
     new FakeAction(
         context.actionRegistry(), ImmutableSortedSet.of(), inputs, outputs, actionFunction);

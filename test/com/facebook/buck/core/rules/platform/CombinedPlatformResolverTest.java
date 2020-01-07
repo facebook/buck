@@ -104,7 +104,7 @@ public class CombinedPlatformResolverTest {
             }
             if (buildTarget.equals(basePlatformTarget)) {
               return ruleClass.cast(
-                  PlatformRule.of(
+                  ImmutablePlatformRule.of(
                       basePlatformTarget,
                       "base_platform",
                       ImmutableSet.of(baseConstraintValue),
@@ -112,7 +112,7 @@ public class CombinedPlatformResolverTest {
             }
             if (buildTarget.equals(nestedPlatform1Target)) {
               return ruleClass.cast(
-                  PlatformRule.of(
+                  ImmutablePlatformRule.of(
                       nestedPlatform1Target,
                       "nested_platform_1",
                       ImmutableSet.of(nestedConstraintValue1),
@@ -120,7 +120,7 @@ public class CombinedPlatformResolverTest {
             }
             if (buildTarget.equals(nestedPlatform2Target)) {
               return ruleClass.cast(
-                  PlatformRule.of(
+                  ImmutablePlatformRule.of(
                       nestedPlatform2Target,
                       "nested_platform_2",
                       ImmutableSet.of(nestedConstraintValue2),

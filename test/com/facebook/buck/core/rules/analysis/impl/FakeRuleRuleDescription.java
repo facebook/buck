@@ -21,9 +21,8 @@ import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
@@ -57,10 +56,10 @@ public class FakeRuleRuleDescription implements RuleDescription<FakeRuleDescript
               fileout.write("testcontent".getBytes(Charsets.UTF_8));
             }
           } catch (IOException e) {
-            return ImmutableActionExecutionFailure.of(
+            return ActionExecutionResult.failure(
                 Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
           }
-          return ImmutableActionExecutionSuccess.of(
+          return ActionExecutionResult.success(
               Optional.empty(), Optional.empty(), ImmutableList.of());
         };
 

@@ -33,9 +33,9 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.actions.Action;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.resolver.impl.FakeActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -90,8 +90,7 @@ public class RuleKeyBuilderTest {
   static {
     FakeAction.FakeActionExecuteLambda executeLambda =
         (ignored, ignored1, ignored2, ignored3) ->
-            ImmutableActionExecutionSuccess.of(
-                Optional.empty(), Optional.empty(), ImmutableList.of());
+            ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of());
 
     ActionRegistryForTests actionRegistry = new ActionRegistryForTests(TARGET_1);
     ACTION_1 =

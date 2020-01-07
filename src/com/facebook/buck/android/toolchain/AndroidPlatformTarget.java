@@ -23,7 +23,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableCollection;
 import java.nio.file.Path;
 import java.util.List;
@@ -34,9 +34,8 @@ import org.immutables.value.Value;
  * Represents a platform to target for Android. Eventually, it should be possible to construct an
  * arbitrary platform target, but currently, we only recognize a fixed set of targets.
  */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public abstract class AbstractAndroidPlatformTarget implements Toolchain, AddsToRuleKey {
+@BuckStyleValue
+public abstract class AndroidPlatformTarget implements Toolchain, AddsToRuleKey {
   public static final String DEFAULT_NAME = "android-platform-target";
 
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "android-23";
@@ -47,7 +46,6 @@ public abstract class AbstractAndroidPlatformTarget implements Toolchain, AddsTo
   }
 
   /** This is likely something like {@code "Google Inc.:Google APIs:21"}. */
-  @Value.Parameter
   @AddToRuleKey
   public abstract String getPlatformName();
 
@@ -56,41 +54,29 @@ public abstract class AbstractAndroidPlatformTarget implements Toolchain, AddsTo
     return getPlatformName();
   }
 
-  @Value.Parameter
   public abstract Path getAndroidJar();
 
   /** @return bootclasspath entries as absolute {@link Path}s */
-  @Value.Parameter
   public abstract List<Path> getBootclasspathEntries();
 
-  @Value.Parameter
   public abstract Supplier<Tool> getAaptExecutable();
 
-  @Value.Parameter
   public abstract ToolProvider getAapt2ToolProvider();
 
-  @Value.Parameter
   public abstract Path getAdbExecutable();
 
-  @Value.Parameter
   public abstract Path getAidlExecutable();
 
-  @Value.Parameter
   public abstract Path getZipalignExecutable();
 
-  @Value.Parameter
   public abstract Path getDxExecutable();
 
-  @Value.Parameter
   public abstract Path getAndroidFrameworkIdlFile();
 
-  @Value.Parameter
   public abstract Path getProguardJar();
 
-  @Value.Parameter
   public abstract Path getProguardConfig();
 
-  @Value.Parameter
   public abstract Path getOptimizedProguardConfig();
 
   /** Process aapt2 tool's parse dependencies and adds them to the {@code builder} */
@@ -98,5 +84,35 @@ public abstract class AbstractAndroidPlatformTarget implements Toolchain, AddsTo
   public void addParseTimeDeps(
       ImmutableCollection.Builder<BuildTarget> builder, TargetConfiguration targetConfiguration) {
     builder.addAll(getAapt2ToolProvider().getParseTimeDeps(targetConfiguration));
+  }
+
+  public static AndroidPlatformTarget of(
+      String platformName,
+      Path androidJar,
+      List<Path> bootclasspathEntries,
+      Supplier<Tool> aaptExecutable,
+      ToolProvider aapt2ToolProvider,
+      Path adbExecutable,
+      Path aidlExecutable,
+      Path zipalignExecutable,
+      Path dxExecutable,
+      Path androidFrameworkIdlFile,
+      Path proguardJar,
+      Path proguardConfig,
+      Path optimizedProguardConfig) {
+    return ImmutableAndroidPlatformTarget.of(
+        platformName,
+        androidJar,
+        bootclasspathEntries,
+        aaptExecutable,
+        aapt2ToolProvider,
+        adbExecutable,
+        aidlExecutable,
+        zipalignExecutable,
+        dxExecutable,
+        androidFrameworkIdlFile,
+        proguardJar,
+        proguardConfig,
+        optimizedProguardConfig);
   }
 }

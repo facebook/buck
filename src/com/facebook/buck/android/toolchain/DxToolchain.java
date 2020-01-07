@@ -14,28 +14,26 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.io;
+package com.facebook.buck.android.toolchain;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import java.nio.file.Path;
-import org.immutables.value.Value;
+import com.facebook.buck.core.toolchain.Toolchain;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
-@BuckStyleImmutable
-@Value.Immutable(builder = false)
-public abstract class AbstractArchiveMemberPath {
-  @Value.Parameter
-  public abstract Path getArchivePath();
+@BuckStyleValue
+public interface DxToolchain extends Toolchain {
 
-  @Value.Parameter
-  public abstract Path getMemberPath();
+  String DEFAULT_NAME = "dx-toolchain";
 
-  @Value.Auxiliary
-  public boolean isAbsolute() {
-    return getArchivePath().isAbsolute();
-  }
+  /** Executor service exclusively for the smart dexing step. */
+  ListeningExecutorService getDxExecutorService();
 
   @Override
-  public String toString() {
-    return getArchivePath() + "!/" + getMemberPath();
+  default String getName() {
+    return DEFAULT_NAME;
+  }
+
+  static DxToolchain of(ListeningExecutorService dxExecutorService) {
+    return ImmutableDxToolchain.of(dxExecutorService);
   }
 }

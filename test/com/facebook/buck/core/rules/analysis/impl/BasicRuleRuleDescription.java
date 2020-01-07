@@ -26,8 +26,6 @@ import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
@@ -113,10 +111,10 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
                   ObjectMappers.WRITER.writeValueAsString(data).getBytes(Charsets.UTF_8));
 
             } catch (IOException e) {
-              return ImmutableActionExecutionFailure.of(
+              return ActionExecutionResult.failure(
                   Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
             }
-            return ImmutableActionExecutionSuccess.of(
+            return ActionExecutionResult.success(
                 Optional.empty(), Optional.empty(), ImmutableList.of());
           }
         };

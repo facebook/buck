@@ -19,24 +19,22 @@ package com.facebook.buck.android.toolchain.ndk;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.BaseToolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsSupplier;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import java.util.Map;
 import java.util.Objects;
-import org.immutables.value.Value;
 
 /** Provides all {@link NdkCxxPlatform}s by {@link TargetCpuType}. */
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-public abstract class AbstractNdkCxxPlatformsProvider extends BaseToolchain
+@BuckStyleValue
+public abstract class NdkCxxPlatformsProvider extends BaseToolchain
     implements CxxPlatformsSupplier {
   public static final String DEFAULT_NAME = "ndk-cxx-platforms";
 
   /** @return all {@link UnresolvedNdkCxxPlatform}s by {@link TargetCpuType}. */
-  @Value.Parameter
   public abstract ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> getNdkCxxPlatforms();
 
   /** @return all resolved {@link NdkCxxPlatform}s by {@link TargetCpuType}. */
@@ -63,5 +61,10 @@ public abstract class AbstractNdkCxxPlatformsProvider extends BaseToolchain
   @Override
   public String getName() {
     return DEFAULT_NAME;
+  }
+
+  public static NdkCxxPlatformsProvider of(
+      Map<TargetCpuType, ? extends UnresolvedNdkCxxPlatform> ndkCxxPlatforms) {
+    return ImmutableNdkCxxPlatformsProvider.of(ndkCxxPlatforms);
   }
 }

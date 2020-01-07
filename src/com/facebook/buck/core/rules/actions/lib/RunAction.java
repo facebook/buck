@@ -24,8 +24,6 @@ import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLine;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
@@ -82,11 +80,11 @@ public class RunAction extends AbstractAction {
     try {
       commandLine = new ExecCompatibleCommandLineBuilder(filesystem).build(args);
     } catch (CommandLineArgException e) {
-      return ImmutableActionExecutionFailure.of(
+      return ActionExecutionResult.failure(
           Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
     }
     if (commandLine.getCommandLineArgs().isEmpty()) {
-      return ImmutableActionExecutionFailure.of(
+      return ActionExecutionResult.failure(
           Optional.empty(),
           Optional.empty(),
           ImmutableList.of(),
@@ -110,16 +108,16 @@ public class RunAction extends AbstractAction {
       Optional<String> stderr = result.getStderr();
       ImmutableList<String> command = result.getCommand();
       if (result.getExitCode() == 0) {
-        return ImmutableActionExecutionSuccess.of(stdout, stderr, command);
+        return ActionExecutionResult.success(stdout, stderr, command);
       } else {
-        return ImmutableActionExecutionFailure.of(
+        return ActionExecutionResult.failure(
             stdout,
             stderr,
             command,
             Optional.of(new ProcessExecutionFailedException(result.getExitCode())));
       }
     } catch (InterruptedException | IOException e) {
-      return ImmutableActionExecutionFailure.of(
+      return ActionExecutionResult.failure(
           Optional.empty(), Optional.empty(), stringifiedCommandLine, Optional.of(e));
     }
   }

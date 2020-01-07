@@ -25,7 +25,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Preconditions;
@@ -37,14 +37,11 @@ import java.util.function.Function;
 import org.immutables.value.Value;
 
 /** Provides access to rule types. */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public abstract class AbstractKnownNativeRuleTypes implements KnownRuleTypes {
+@BuckStyleValue
+public abstract class KnownNativeRuleTypes implements KnownRuleTypes {
 
-  @Value.Parameter
   public abstract ImmutableList<Description<?>> getKnownBuildDescriptions();
 
-  @Value.Parameter
   public abstract ImmutableList<ConfigurationRuleDescription<?, ?>>
       getKnownConfigurationDescriptions();
 
@@ -119,5 +116,11 @@ public abstract class AbstractKnownNativeRuleTypes implements KnownRuleTypes {
         isBuildRule != isConfiguration,
         "constructor arg must be either build or configuration: %s",
         description.getConstructorArgType().getName());
+  }
+
+  public static KnownNativeRuleTypes of(
+      ImmutableList<Description<?>> knownBuildDescriptions,
+      ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions) {
+    return ImmutableKnownNativeRuleTypes.of(knownBuildDescriptions, knownConfigurationDescriptions);
   }
 }

@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -25,22 +25,18 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Simple type representing a list of {@link SourceWithFlags}. */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-abstract class AbstractSourceWithFlagsList {
+@BuckStyleValue
+public abstract class SourceWithFlagsList {
 
   public enum Type {
     UNNAMED,
     NAMED,
   }
 
-  @Value.Parameter
   public abstract Type getType();
 
-  @Value.Parameter
   public abstract Optional<ImmutableSortedSet<SourceWithFlags>> getUnnamedSources();
 
-  @Value.Parameter
   public abstract Optional<ImmutableSortedMap<String, SourceWithFlags>> getNamedSources();
 
   @Value.Check
@@ -61,11 +57,12 @@ abstract class AbstractSourceWithFlagsList {
 
   public static SourceWithFlagsList ofUnnamedSources(
       ImmutableSortedSet<SourceWithFlags> unnamedSources) {
-    return SourceWithFlagsList.of(Type.UNNAMED, Optional.of(unnamedSources), Optional.empty());
+    return ImmutableSourceWithFlagsList.of(
+        Type.UNNAMED, Optional.of(unnamedSources), Optional.empty());
   }
 
   public static SourceWithFlagsList ofNamedSources(
       ImmutableSortedMap<String, SourceWithFlags> namedSources) {
-    return SourceWithFlagsList.of(Type.NAMED, Optional.empty(), Optional.of(namedSources));
+    return ImmutableSourceWithFlagsList.of(Type.NAMED, Optional.empty(), Optional.of(namedSources));
   }
 }

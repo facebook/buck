@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -60,7 +61,7 @@ public class AuditRuleTypesCommandTest {
 
   private static class AnotherBuildRuleDescription extends SomeBuildRuleDescription {}
 
-  private static final ImmutableList<DescriptionWithTargetGraph<?>> DESCRIPTIONS =
+  private static final ImmutableList<Description<?>> DESCRIPTIONS =
       ImmutableList.of(new SomeBuildRuleDescription(), new AnotherBuildRuleDescription());
 
   @Before

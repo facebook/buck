@@ -29,10 +29,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -83,7 +82,7 @@ public class ActionExecutionStepTest {
               Iterables.getOnlyElement(outputs).asBound().getSourcePath());
           ctx.logError(new RuntimeException("message"), "my error %s", 1);
           ctx.postEvent(ConsoleEvent.info("my test info"));
-          return ImmutableActionExecutionSuccess.of(
+          return ActionExecutionResult.success(
               Optional.empty(), Optional.of("my std err"), ImmutableList.of());
         };
 
@@ -139,8 +138,8 @@ public class ActionExecutionStepTest {
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
 
-    ImmutableActionExecutionFailure result =
-        ImmutableActionExecutionFailure.of(
+    ActionExecutionResult.ActionExecutionFailure result =
+        ActionExecutionResult.failure(
             Optional.empty(), Optional.of("my std err"), ImmutableList.of(), Optional.empty());
 
     ActionRegistryForTests actionFactoryForTests = new ActionRegistryForTests(buildTarget);
@@ -189,8 +188,8 @@ public class ActionExecutionStepTest {
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
 
-    ImmutableActionExecutionFailure result =
-        ImmutableActionExecutionFailure.of(
+    ActionExecutionResult.ActionExecutionFailure result =
+        ActionExecutionResult.failure(
             Optional.empty(), Optional.of("my std err"), ImmutableList.of(), Optional.empty());
 
     ActionRegistryForTests actionFactoryForTests = new ActionRegistryForTests(buildTarget);

@@ -34,12 +34,12 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
 import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
@@ -111,8 +111,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
 
     FakeAction.FakeActionExecuteLambda depActionFunction =
         (srcs, ins, outs, ctx) ->
-            ImmutableActionExecutionSuccess.of(
-                Optional.empty(), Optional.empty(), ImmutableList.of());
+            ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of());
 
     ActionRegistry actionRegistry =
         new DefaultActionRegistry(depTarget, actionAnalysisRegistry, filesystem);
@@ -141,7 +140,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
               ExplicitBuildTargetSourcePath.of(buildTarget, packagePath.resolve(outpath)),
               Iterables.getOnlyElement(outs).asBound().getSourcePath());
           functionCalled.set(true);
-          return ImmutableActionExecutionSuccess.of(
+          return ActionExecutionResult.success(
               Optional.empty(), Optional.empty(), ImmutableList.of());
         };
 

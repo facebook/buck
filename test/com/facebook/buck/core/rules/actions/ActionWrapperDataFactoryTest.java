@@ -75,8 +75,7 @@ public class ActionWrapperDataFactoryTest {
 
     FakeAction.FakeActionExecuteLambda executeFunc =
         (srcs, inputs1, outputs1, executionContext) ->
-            ImmutableActionExecutionSuccess.of(
-                Optional.empty(), Optional.empty(), ImmutableList.of());
+            ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of());
 
     new FakeAction(actionRegistry, ImmutableSortedSet.of(), inputs, outputs, executeFunc);
 
@@ -121,8 +120,7 @@ public class ActionWrapperDataFactoryTest {
 
     FakeAction.FakeActionExecuteLambda executeFunc =
         (srcs, inputs1, outputs1, executionContext) ->
-            ImmutableActionExecutionSuccess.of(
-                Optional.empty(), Optional.empty(), ImmutableList.of());
+            ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of());
 
     new FakeAction(
         actionRegistry,

@@ -581,7 +581,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private @Nullable ExtensionData lookupExtensionForImport(
       com.google.devtools.build.lib.vfs.Path path, String importString) {
     ExtensionData ext = extensionDataCache.getIfPresent(path);
-    return ext == null ? ext : ExtensionData.copyOf(ext).withImportString(importString);
+    return ext == null ? ext : ext.withImportString(importString);
   }
 
   /**
@@ -673,7 +673,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       loadedExtension = new Extension(extensionEnv);
     }
 
-    return ExtensionData.of(
+    return ImmutableExtensionData.of(
         loadedExtension,
         load.getPath(),
         dependencies,

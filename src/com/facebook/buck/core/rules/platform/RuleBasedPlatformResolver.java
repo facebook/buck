@@ -44,18 +44,22 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
   @Override
   public NamedPlatform getPlatform(BuildTarget buildTarget, DependencyStack dependencyStack) {
 
-    GraphTraversableWithPayloadAndDependencyStack<BuildTarget, PlatformRule> traversable =
-        (target, dependencyStack1) -> {
-          PlatformRule platformRule = getPlatformRule(target, dependencyStack1);
-          return new Pair<>(platformRule, platformRule.getDeps().iterator());
-        };
+    GraphTraversableWithPayloadAndDependencyStack<BuildTarget, PlatformDescription.PlatformRule>
+        traversable =
+            (target, dependencyStack1) -> {
+              PlatformDescription.PlatformRule platformRule =
+                  getPlatformRule(target, dependencyStack1);
+              return new Pair<>(platformRule, platformRule.getDeps().iterator());
+            };
 
-    AcyclicDepthFirstPostOrderTraversalWithPayloadAndDependencyStack<BuildTarget, PlatformRule>
+    AcyclicDepthFirstPostOrderTraversalWithPayloadAndDependencyStack<
+            BuildTarget, PlatformDescription.PlatformRule>
         platformTraversal =
             new AcyclicDepthFirstPostOrderTraversalWithPayloadAndDependencyStack<>(
                 traversable, DependencyStack::child);
 
-    LinkedHashMap<BuildTarget, Pair<PlatformRule, DependencyStack>> platformTargets;
+    LinkedHashMap<BuildTarget, Pair<PlatformDescription.PlatformRule, DependencyStack>>
+        platformTargets;
     try {
       platformTargets = platformTraversal.traverse(ImmutableList.of(buildTarget));
     } catch (CycleException e) {
@@ -71,15 +75,16 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
     return new ConstraintBasedPlatform(buildTarget, constraintValues);
   }
 
-  private PlatformRule getPlatformRule(BuildTarget buildTarget, DependencyStack dependencyStack) {
+  private PlatformDescription.PlatformRule getPlatformRule(
+      BuildTarget buildTarget, DependencyStack dependencyStack) {
     ConfigurationRule configurationRule =
         configurationRuleResolver.getRule(buildTarget, ConfigurationRule.class, dependencyStack);
-    if (!(configurationRule instanceof PlatformRule)) {
+    if (!(configurationRule instanceof PlatformDescription.PlatformRule)) {
       throw new HumanReadableException(
           dependencyStack,
           "%s is used as a target platform, but not declared using `platform` rule",
           buildTarget.getFullyQualifiedName());
     }
-    return (PlatformRule) configurationRule;
+    return (PlatformDescription.PlatformRule) configurationRule;
   }
 }

@@ -33,11 +33,11 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
@@ -170,7 +170,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
 
                   FakeAction.FakeActionExecuteLambda actionFunction =
                       (ignored, ignored1, ignored2, ignored3) ->
-                          ImmutableActionExecutionSuccess.of(
+                          ActionExecutionResult.success(
                               Optional.empty(), Optional.empty(), ImmutableList.of());
 
                   new FakeAction(

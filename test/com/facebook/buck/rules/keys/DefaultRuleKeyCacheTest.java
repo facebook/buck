@@ -22,9 +22,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -80,7 +80,7 @@ public class DefaultRuleKeyCacheTest {
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
             (ignored, ignored1, ignored2, ignored3) ->
-                ImmutableActionExecutionSuccess.of(
+                ActionExecutionResult.success(
                     Optional.empty(), Optional.empty(), ImmutableList.of()));
     cache.get(fakeAction, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()));
     assertTrue(internalCache.isCached(fakeAction));

@@ -18,7 +18,7 @@ package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.OutputLabel;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Utility class for parsing output labels from build targets. */
 public class BuildTargetOutputLabelParser {
@@ -64,12 +64,10 @@ public class BuildTargetOutputLabelParser {
    * output label, the type of build target is intentionally left free-form to accommodate the
    * myriad build target types we have.
    */
-  @Value.Immutable(builder = false)
+  @BuckStyleValue
   public abstract static class TargetWithOutputLabel {
-    @Value.Parameter
     public abstract String getTargetName();
 
-    @Value.Parameter
     public abstract OutputLabel getOutputLabel();
   }
 }

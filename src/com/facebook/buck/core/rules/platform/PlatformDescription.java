@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
@@ -49,7 +50,7 @@ import org.immutables.value.Value;
  * </pre>
  */
 public class PlatformDescription
-    implements ConfigurationRuleDescription<PlatformArg, PlatformRule> {
+    implements ConfigurationRuleDescription<PlatformArg, PlatformDescription.PlatformRule> {
 
   @Override
   public Class<PlatformArg> getConstructorArgType() {
@@ -86,7 +87,7 @@ public class PlatformDescription
             .map(ConstraintValueRule::getConstraintValue)
             .collect(ImmutableSet.toImmutableSet()));
 
-    return PlatformRule.of(
+    return ImmutablePlatformRule.of(
         buildTarget,
         arg.getName(),
         constraintValueRules,
@@ -114,20 +115,15 @@ public class PlatformDescription
   }
 
   /** {@code platform} rule. */
-  @BuckStyleImmutable
-  @Value.Immutable(builder = false, copy = false)
-  interface AbstractPlatformRule extends ConfigurationRule {
-    @Value.Parameter
+  @BuckStyleValue
+  interface PlatformRule extends ConfigurationRule {
     @Override
     BuildTarget getBuildTarget();
 
-    @Value.Parameter
     String getName();
 
-    @Value.Parameter
     ImmutableSet<ConstraintValueRule> getConstrainValuesRules();
 
-    @Value.Parameter
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getDeps();
   }
