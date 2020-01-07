@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import java.nio.file.Path;
@@ -64,7 +63,7 @@ class SimplePackageSpec {
 
     CanonicalCellName cell =
         cellNameResolver.getName(Optional.of(cellName).filter(s -> !s.isEmpty()));
-    return new SimplePackageSpec(new ImmutableCellRelativePath(cell, basePath));
+    return new SimplePackageSpec(CellRelativePath.of(cell, basePath));
   }
 
   @Override

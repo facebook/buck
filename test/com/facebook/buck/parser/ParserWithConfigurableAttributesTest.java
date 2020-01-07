@@ -52,7 +52,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -2618,7 +2618,7 @@ public class ParserWithConfigurableAttributesTest {
                     ImmutableList.of(
                         TargetNodePredicateSpec.of(
                             BuildFileSpec.fromRecursivePath(
-                                new ImmutableCellRelativePath(
+                                CellRelativePath.of(
                                     parsingContext.getCell().getCanonicalName(),
                                     ForwardRelativePath.of(""))))),
                     Optional.empty())

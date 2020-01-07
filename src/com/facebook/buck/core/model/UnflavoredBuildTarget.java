@@ -89,7 +89,7 @@ public class UnflavoredBuildTarget
   /** A constructor. */
   public static UnflavoredBuildTarget of(
       CanonicalCellName cell, BaseName baseName, String localName) {
-    return of(new ImmutableCellRelativePath(cell, baseName.getPath()), localName);
+    return of(CellRelativePath.of(cell, baseName.getPath()), localName);
   }
 
   public CanonicalCellName getCell() {

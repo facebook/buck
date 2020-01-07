@@ -23,7 +23,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -137,8 +137,7 @@ public class ParserBenchmark {
         ImmutableList.of(
             TargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(
-                    new ImmutableCellRelativePath(
-                        cell.getCanonicalName(), ForwardRelativePath.of(""))))),
+                    CellRelativePath.of(cell.getCanonicalName(), ForwardRelativePath.of(""))))),
         Optional.empty());
   }
 }

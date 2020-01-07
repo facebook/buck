@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
@@ -54,6 +54,6 @@ public class UnflavoredBuildTargetFactory {
               basePath, otherBasePath));
     }
     return UnflavoredBuildTarget.of(
-        new ImmutableCellRelativePath(cellName, ForwardRelativePath.of(basePath)), name);
+        CellRelativePath.of(cellName, ForwardRelativePath.of(basePath)), name);
   }
 }

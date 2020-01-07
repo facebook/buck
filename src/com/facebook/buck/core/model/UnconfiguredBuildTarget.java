@@ -213,7 +213,7 @@ public class UnconfiguredBuildTarget
   /** A constructor */
   public static UnconfiguredBuildTarget of(
       CanonicalCellName cell, BaseName baseName, String name, ImmutableSortedSet<Flavor> flavors) {
-    return of(new ImmutableCellRelativePath(cell, baseName.getPath()), name, flavors);
+    return of(CellRelativePath.of(cell, baseName.getPath()), name, flavors);
   }
 
   @JsonCreator

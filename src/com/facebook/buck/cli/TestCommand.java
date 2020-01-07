@@ -30,7 +30,7 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -493,7 +493,7 @@ public class TestCommand extends BuildCommand {
                       ImmutableList.of(
                           ImmutableTargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
-                                  new ImmutableCellRelativePath(
+                                  CellRelativePath.of(
                                       params.getCell().getCanonicalName(),
                                       ForwardRelativePath.of(""))),
                               true)),

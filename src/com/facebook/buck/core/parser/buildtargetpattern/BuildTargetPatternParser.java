@@ -19,7 +19,7 @@ package com.facebook.buck.core.parser.buildtargetpattern;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import java.util.Optional;
@@ -148,7 +148,7 @@ public class BuildTargetPatternParser {
         cellNameResolver.getName(cellName.isEmpty() ? Optional.empty() : Optional.of(cellName));
 
     return ImmutableBuildTargetPattern.of(
-        new ImmutableCellRelativePath(canonicalCellName, basePath), kind, targetName);
+        CellRelativePath.of(canonicalCellName, basePath), kind, targetName);
   }
 
   private static void check(boolean condition, String pattern, String message, Object... args)

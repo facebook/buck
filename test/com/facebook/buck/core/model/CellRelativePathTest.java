@@ -28,29 +28,28 @@ public class CellRelativePathTest {
   public void testToString() {
     assertEquals(
         "foo//bar/baz",
-        new ImmutableCellRelativePath(
+        CellRelativePath.of(
                 CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelativePath.of("bar/baz"))
             .toString());
     assertEquals(
         "//bar/baz",
-        new ImmutableCellRelativePath(
-                CanonicalCellName.rootCell(), ForwardRelativePath.of("bar/baz"))
+        CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("bar/baz"))
             .toString());
   }
 
   @Test
   public void startsWith() {
     CellRelativePath fooBarBaz =
-        new ImmutableCellRelativePath(
+        CellRelativePath.of(
             CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelativePath.of("bar/baz"));
     CellRelativePath fooBar =
-        new ImmutableCellRelativePath(
+        CellRelativePath.of(
             CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelativePath.of("bar"));
     CellRelativePath foo =
-        new ImmutableCellRelativePath(
+        CellRelativePath.of(
             CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelativePath.of(""));
     CellRelativePath bar =
-        new ImmutableCellRelativePath(
+        CellRelativePath.of(
             CanonicalCellName.unsafeOf(Optional.of("bar")), ForwardRelativePath.of(""));
 
     CellRelativePath[] paths = {

@@ -32,7 +32,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -612,7 +612,7 @@ public class TargetsCommand extends AbstractCommand {
                   ImmutableList.of(
                       TargetNodePredicateSpec.of(
                           BuildFileSpec.fromRecursivePath(
-                              new ImmutableCellRelativePath(
+                              CellRelativePath.of(
                                   params.getCell().getCanonicalName(),
                                   ForwardRelativePath.of(""))))),
                   params.getTargetConfiguration());
@@ -738,7 +738,7 @@ public class TargetsCommand extends AbstractCommand {
                       ImmutableList.of(
                           TargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
-                                  new ImmutableCellRelativePath(
+                                  CellRelativePath.of(
                                       params.getCell().getCanonicalName(),
                                       ForwardRelativePath.of(""))))),
                       params.getTargetConfiguration())
