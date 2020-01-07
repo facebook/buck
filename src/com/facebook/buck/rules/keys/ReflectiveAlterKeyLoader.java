@@ -22,6 +22,7 @@ import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.MissingExcludeReporter;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.Action;
+import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -162,7 +163,8 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
     return current.getAnnotation(BuckStyleImmutable.class) != null
         || current.getAnnotation(BuckStylePrehashedValue.class) != null
         || current.getAnnotation(BuckStyleValueWithBuilder.class) != null
-        || current.getAnnotation(BuckStyleValue.class) != null;
+        || current.getAnnotation(BuckStyleValue.class) != null
+        || current.getAnnotation(ImmutableInfo.class) != null;
   }
 
   private AlterRuleKey createAlterRuleKey(ValueExtractor valueExtractor, boolean stringify) {

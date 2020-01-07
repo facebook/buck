@@ -38,6 +38,7 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -886,6 +887,34 @@ public class RuleKeyTest {
     createBuilder(ruleFinder)
         .setReflectively("value", ImmutableTestPackageVisibleTuple.of(0))
         .build(RuleKey::new);
+  }
+
+  @ImmutableInfo(args = {"value"})
+  abstract static class TestProviderInfo implements AddsToRuleKey {
+    @AddToRuleKey
+    abstract TestRuleKeyAbstractImmutable value();
+
+    static TestProviderInfo of(TestRuleKeyAbstractImmutable rka) {
+      return new ImmutableTestProviderInfo(rka);
+    }
+  }
+
+  @Test
+  public void providerInfoCanUseAddToRuleKey() {
+    TestRuleKeyAbstractImmutable rka1 = ImmutableTestRuleKeyAbstractImmutable.of("foo", "bar");
+    TestRuleKeyAbstractImmutable rka2 = ImmutableTestRuleKeyAbstractImmutable.of("not_foot", "bar");
+    TestRuleKeyAbstractImmutable rka3 = ImmutableTestRuleKeyAbstractImmutable.of("foo", "not_bar");
+    TestProviderInfo providerInfo1 = TestProviderInfo.of(rka1);
+    TestProviderInfo providerInfo2 = TestProviderInfo.of(rka2);
+    TestProviderInfo providerInfo3 = TestProviderInfo.of(rka3);
+
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    HashCode rk1 = createBuilder(ruleFinder).setReflectively("value", providerInfo1).build();
+    HashCode rk2 = createBuilder(ruleFinder).setReflectively("value", providerInfo2).build();
+    HashCode rk3 = createBuilder(ruleFinder).setReflectively("value", providerInfo3).build();
+
+    assertNotEquals(rk1, rk2);
+    assertEquals(rk1, rk3);
   }
 
   @BuckStyleValue
