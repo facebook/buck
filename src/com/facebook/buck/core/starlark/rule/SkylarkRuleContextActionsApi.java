@@ -54,6 +54,24 @@ public interface SkylarkRuleContextActionsApi {
   Artifact declareFile(String path, Location location) throws EvalException;
 
   @SkylarkCallable(
+      name = "copy_file",
+      doc = "Copies a file",
+      useLocation = true,
+      parameters = {
+        @Param(name = "src", doc = "The file to copy", type = Artifact.class, named = true),
+        @Param(
+            name = "dest",
+            doc =
+                "The destination to copy to. This may either be a file declared with "
+                    + "`declare_file`, or a string that will be used to declare a new file "
+                    + "(which is returned by this function)",
+            type = Object.class,
+            allowedTypes = {@ParamType(type = Artifact.class), @ParamType(type = String.class)},
+            named = true),
+      })
+  Artifact copyFile(Artifact src, Object dest, Location location) throws EvalException;
+
+  @SkylarkCallable(
       name = "write",
       doc =
           "Creates a file write action. When the action is executed, it will write the given "

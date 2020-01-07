@@ -665,4 +665,30 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         workspace.runBuckBuild("//:empty_path").assertFailure().getStderr(),
         Matchers.containsString("Path '' in target '//:empty_path' was empty"));
   }
+
+  @Test
+  public void copyFileCopiesFile() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_copies_files", tmp);
+
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    Path outputPath1 =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:write_string"))
+            .resolve("out.txt");
+    Path outputPath2 =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:copy_string"))
+            .resolve("out_string.txt");
+    Path outputPath3 =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:copy_artifact"))
+            .resolve("out_artifact.txt");
+    String expected = "some contents";
+
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:copy_artifact").assertSuccess();
+    assertEquals(expected, filesystem.readFileIfItExists(outputPath1).get().trim());
+    assertEquals(expected, filesystem.readFileIfItExists(outputPath2).get().trim());
+    assertEquals(expected, filesystem.readFileIfItExists(outputPath3).get().trim());
+  }
 }

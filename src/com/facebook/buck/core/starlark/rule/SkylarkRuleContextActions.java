@@ -20,6 +20,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactDeclarationException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
+import com.facebook.buck.core.rules.actions.lib.CopyAction;
 import com.facebook.buck.core.rules.actions.lib.RunAction;
 import com.facebook.buck.core.rules.actions.lib.WriteAction;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
@@ -27,6 +28,7 @@ import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilder;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilderApi;
+import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.util.CommandLineException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -63,6 +65,24 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
     } catch (ArtifactDeclarationException e) {
       throw new EvalException(location, e.getHumanReadableErrorMessage());
     }
+  }
+
+  @Override
+  public Artifact copyFile(Artifact src, Object dest, Location location) throws EvalException {
+    Artifact destArtifact;
+    if (dest instanceof String) {
+      destArtifact = declareFile((String) dest, location);
+    } else if (dest instanceof Artifact) {
+      destArtifact = (Artifact) dest;
+    } else {
+      /**
+       * Should not be hit; these types are validated in {@link
+       * SkylarkRuleContextActionsApi#copyFile(Artifact, Object, Location)} decorator
+       */
+      throw new EvalException(location, "Invalid dest object provided");
+    }
+    new CopyAction(registry, src, destArtifact, CopySourceMode.FILE);
+    return destArtifact;
   }
 
   @Override
