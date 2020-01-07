@@ -19,18 +19,16 @@ package com.facebook.buck.features.haskell;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Supplier;
-import org.immutables.value.Value;
 
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractHaskellPlatform implements FlavorConvertible {
+@BuckStyleValueWithBuilder
+abstract class HaskellPlatform implements FlavorConvertible {
 
   // TODO: For now, we rely on Haskell platforms having the same "name" as the C/C++ platforms they
   // wrap, due to having to lookup the Haskell platform in the C/C++ interfaces that Haskell rules
@@ -114,4 +112,10 @@ abstract class AbstractHaskellPlatform implements FlavorConvertible {
 
   /** @return the {@link CxxPlatform} to use for C/C++ dependencies. */
   abstract CxxPlatform getCxxPlatform();
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableHaskellPlatform.Builder {}
 }

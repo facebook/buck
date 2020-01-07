@@ -106,18 +106,12 @@ public class HaskellPrebuiltLibraryDescription
         }
         HaskellPackage pkg = pkgBuilder.build();
 
-        return HaskellCompileInput.builder()
-            .addAllFlags(args.getExportedCompilerFlags())
-            .setPackage(pkg)
-            .build();
+        return ImmutableHaskellCompileInput.of(args.getExportedCompilerFlags(), pkg);
       }
 
       @Override
       public HaskellHaddockInput getHaddockInput(HaskellPlatform platform) {
-        return HaskellHaddockInput.builder()
-            .addAllInterfaces(ImmutableList.of())
-            .addAllHaddockOutputDirs(ImmutableList.of())
-            .build();
+        return ImmutableHaskellHaddockInput.of(ImmutableList.of(), ImmutableList.of());
       }
 
       public NativeLinkableInput getNativeLinkableInput(

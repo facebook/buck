@@ -16,22 +16,15 @@
 
 package com.facebook.buck.features.haskell;
 
-import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableSet;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/**
- * Information that contributes to a haskell haddock job. Dependencies (e.g. `haskell_library`
- * rules) export this object to their dependent's compilations.
- */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractHaskellHaddockInput {
+@BuckStyleValue
+abstract class HaskellVersion {
 
-  /** @return any haskell interfaces used */
-  ImmutableSet<SourcePath> getInterfaces();
+  public abstract Integer getMajorVersion();
 
-  /** @return any output directories used */
-  ImmutableSet<SourcePath> getHaddockOutputDirs();
+  @Override
+  public String toString() {
+    return getMajorVersion().toString();
+  }
 }

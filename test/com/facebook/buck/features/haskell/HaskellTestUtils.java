@@ -43,7 +43,7 @@ class HaskellTestUtils {
           .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setPackager(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setHaddock(new ConstantToolProvider(new CommandTool.Builder().build()))
-          .setHaskellVersion(HaskellVersion.of(8))
+          .setHaskellVersion(ImmutableHaskellVersion.of(8))
           .setShouldCacheLinks(true)
           .setShouldUseArgsfile(false)
           .setSupportExposePackage(false)
@@ -118,7 +118,7 @@ class HaskellTestUtils {
             "Cannot match version from `ghc --version` output (using %s): %s",
             versionPattern, output),
         matcher.matches());
-    return HaskellVersion.of(Integer.valueOf(matcher.group(1)));
+    return ImmutableHaskellVersion.of(Integer.valueOf(matcher.group(1)));
   }
 
   static String formatHaskellConfig(HaskellVersion version) {

@@ -693,7 +693,7 @@ public class HaskellLibraryDescription
                 allDeps.get(graphBuilder, platform.getCxxPlatform()),
                 depType,
                 hsProfile);
-        return HaskellCompileInput.builder().setPackage(rule.getPackage()).build();
+        return ImmutableHaskellCompileInput.of(ImmutableList.of(), rule.getPackage());
       }
 
       @Override
@@ -701,10 +701,7 @@ public class HaskellLibraryDescription
         BuildTarget target =
             buildTarget.withAppendedFlavors(Type.HADDOCK.getFlavor(), platform.getFlavor());
         HaskellHaddockLibRule rule = (HaskellHaddockLibRule) graphBuilder.requireRule(target);
-        return HaskellHaddockInput.builder()
-            .addAllInterfaces(rule.getInterfaces())
-            .addAllHaddockOutputDirs(rule.getHaddockOutputDirs())
-            .build();
+        return ImmutableHaskellHaddockInput.of(rule.getInterfaces(), rule.getHaddockOutputDirs());
       }
 
       @Override

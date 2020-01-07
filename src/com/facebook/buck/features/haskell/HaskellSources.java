@@ -23,20 +23,20 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Map;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractHaskellSources implements AddsToRuleKey {
+@BuckStyleValue
+abstract class HaskellSources implements AddsToRuleKey {
 
   @AddToRuleKey
   @Value.NaturalOrder
@@ -48,15 +48,20 @@ abstract class AbstractHaskellSources implements AddsToRuleKey {
       HaskellPlatform platform,
       String parameter,
       SourceSortedSet sources) {
-    HaskellSources.Builder builder = HaskellSources.builder();
+    ImmutableMap<String, SourcePath> namedMap =
+        sources.toNameMap(target, graphBuilder.getSourcePathResolver(), parameter);
+
+    ImmutableMap.Builder<HaskellSourceModule, SourcePath> moduleMap =
+        ImmutableMap.builderWithExpectedSize(namedMap.size());
+
     for (Map.Entry<String, SourcePath> ent :
         sources.toNameMap(target, graphBuilder.getSourcePathResolver(), parameter).entrySet()) {
-      builder.putModuleMap(
+      moduleMap.put(
           HaskellSourceModule.from(ent.getKey()),
           CxxGenruleDescription.fixupSourcePath(
               graphBuilder, platform.getCxxPlatform(), ent.getValue()));
     }
-    return builder.build();
+    return ImmutableHaskellSources.of(moduleMap.build());
   }
 
   public ImmutableSortedSet<String> getModuleNames() {

@@ -61,6 +61,7 @@ import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -331,9 +332,9 @@ public class HaskellDescriptionUtils {
                 Optional.empty(),
                 Optional.empty(),
                 ImmutableList.of(),
-                HaskellSources.builder()
-                    .putModuleMap(HaskellSourceModule.UNUSED, emptyModule.getSourcePathToOutput())
-                    .build()));
+                ImmutableHaskellSources.of(
+                    ImmutableMap.of(
+                        HaskellSourceModule.UNUSED, emptyModule.getSourcePathToOutput()))));
     BuildTarget emptyArchiveTarget = target.withAppendedFlavors(InternalFlavor.of("empty-archive"));
     Archive emptyArchive =
         graphBuilder.addToIndex(

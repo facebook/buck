@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.PreprocessorFlags;
@@ -38,9 +38,8 @@ import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 /** Common haskell compilation flags shared by haskell_library and haddock_library. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractHaskellCompilerFlags implements AddsToRuleKey {
+@BuckStyleValueWithBuilder
+abstract class HaskellCompilerFlags implements AddsToRuleKey {
 
   /** Additional flags passed to Haskell compiler */
   @AddToRuleKey
@@ -135,4 +134,10 @@ abstract class AbstractHaskellCompilerFlags implements AddsToRuleKey {
                 .iterator())
         .build();
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableHaskellCompilerFlags.Builder {}
 }

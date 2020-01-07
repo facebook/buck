@@ -18,19 +18,16 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.collect.ComparisonChain;
 import java.io.File;
-import org.immutables.value.Value;
 
 /**
  * A single node in a module graph. It can be either a regular Haskell source module or a hs-boot
  * source module.
  */
-@BuckStyleImmutable
-@Value.Immutable(prehash = true)
-abstract class AbstractHaskellSourceModule
-    implements Comparable<AbstractHaskellSourceModule>, AddsToRuleKey {
+@BuckStylePrehashedValue
+abstract class HaskellSourceModule implements Comparable<HaskellSourceModule>, AddsToRuleKey {
 
   static final HaskellSourceModule UNUSED = HaskellSourceModule.from("Unused.hs");
 
@@ -55,11 +52,9 @@ abstract class AbstractHaskellSourceModule
   abstract SourceType getSourceType();
 
   public static HaskellSourceModule from(String name) {
-    HaskellSourceModule.Builder builder = HaskellSourceModule.builder();
-    return builder
-        .setModuleName(name.substring(0, name.lastIndexOf('.')).replace(File.separatorChar, '.'))
-        .setSourceType(name.endsWith("-boot") ? SourceType.HsBootFile : SourceType.HsSrcFile)
-        .build();
+    return ImmutableHaskellSourceModule.of(
+        name.substring(0, name.lastIndexOf('.')).replace(File.separatorChar, '.'),
+        name.endsWith("-boot") ? SourceType.HsBootFile : SourceType.HsSrcFile);
   }
 
   public String getOutputPath(String suffix) {
@@ -79,7 +74,7 @@ abstract class AbstractHaskellSourceModule
   }
 
   @Override
-  public int compareTo(AbstractHaskellSourceModule that) {
+  public int compareTo(HaskellSourceModule that) {
     if (this == that) {
       return 0;
     }

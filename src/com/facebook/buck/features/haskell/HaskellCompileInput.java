@@ -16,18 +16,19 @@
 
 package com.facebook.buck.features.haskell;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableList;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractHaskellVersion {
+/**
+ * Information that contributes to a haskell compilation job. Dependencies (e.g. `haskell_library`
+ * rules) export this object to their dependent's compilations.
+ */
+@BuckStyleValue
+interface HaskellCompileInput {
 
-  @Value.Parameter
-  public abstract Integer getMajorVersion();
+  /** @return any haskell compilation flags to include in the top-level compile job. */
+  ImmutableList<String> getFlags();
 
-  @Override
-  public String toString() {
-    return getMajorVersion().toString();
-  }
+  /** @return haskell package produced by this compile job. */
+  HaskellPackage getPackage();
 }

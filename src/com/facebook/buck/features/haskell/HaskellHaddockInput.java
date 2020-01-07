@@ -16,21 +16,20 @@
 
 package com.facebook.buck.features.haskell;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableList;
-import org.immutables.value.Value;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableSet;
 
 /**
- * Information that contributes to a haskell compilation job. Dependencies (e.g. `haskell_library`
+ * Information that contributes to a haskell haddock job. Dependencies (e.g. `haskell_library`
  * rules) export this object to their dependent's compilations.
  */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractHaskellCompileInput {
+@BuckStyleValue
+interface HaskellHaddockInput {
 
-  /** @return any haskell compilation flags to include in the top-level compile job. */
-  ImmutableList<String> getFlags();
+  /** @return any haskell interfaces used */
+  ImmutableSet<SourcePath> getInterfaces();
 
-  /** @return haskell package produced by this compile job. */
-  HaskellPackage getPackage();
+  /** @return any output directories used */
+  ImmutableSet<SourcePath> getHaddockOutputDirs();
 }

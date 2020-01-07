@@ -16,13 +16,12 @@
 
 package com.facebook.buck.features.apple.project;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import org.immutables.value.Value;
 
 /** Options for how {@link ProjectGenerator} generates Xcode projects. */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractProjectGeneratorOptions {
+@BuckStyleValueWithBuilder
+interface ProjectGeneratorOptions {
   /** Use short BuildTarget name instead of full name for targets */
   @Value.Default
   default boolean shouldUseShortNamesForTargets() {
@@ -109,4 +108,10 @@ interface AbstractProjectGeneratorOptions {
   default boolean shouldLinkSystemSwift() {
     return true;
   }
+
+  static Builder builder() {
+    return new Builder();
+  }
+
+  class Builder extends ImmutableProjectGeneratorOptions.Builder {}
 }

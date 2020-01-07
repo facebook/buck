@@ -21,16 +21,15 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 /** Represents a Haskell package used as a dependency during compilation. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractHaskellPackage implements AddsToRuleKey {
+@BuckStyleValueWithBuilder
+abstract class HaskellPackage implements AddsToRuleKey {
 
   /** @return the package identifying information (i.e. name, version, identifier). */
   @AddToRuleKey
@@ -63,4 +62,10 @@ abstract class AbstractHaskellPackage implements AddsToRuleKey {
   public final String getIdentifier() {
     return getInfo().getIdentifier();
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableHaskellPackage.Builder {}
 }
