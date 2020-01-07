@@ -389,24 +389,44 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   }
 
   /**
+   * @returns {@code true} if details about paths that violate package boundaries, but were marked
+   *     as excepted paths (See {@link #getBuckPackageBoundaryExceptions()})), should be written to
+   *     the log.
+   */
+  @Value.Lazy
+  public boolean getLogPackageBoundaryExceptionViolations() {
+    return getDelegate()
+        .getBooleanValue("project", "log_package_boundary_exception_violations", false);
+  }
+
+  /** How package boundary violation should be enforced */
+  public enum PackageBoundaryEnforcement {
+    DISABLED,
+    WARN,
+    ENFORCE,
+  }
+
+  /**
    * Whether the cell is enforcing buck package boundaries for the package at the passed path.
    *
    * @param path Path of package (or file in a package) relative to the cell root.
+   * @return How to enforce buck package boundaries for {@code path}
    */
-  public boolean isEnforcingBuckPackageBoundaries(Path path) {
+  public PackageBoundaryEnforcement getPackageBoundaryEnforcementPolicy(Path path) {
     if (!getEnforceBuckPackageBoundary()) {
-      return false;
+      return PackageBoundaryEnforcement.DISABLED;
     }
 
     Path absolutePath = getDelegate().getFilesystem().resolve(path);
-
     ImmutableList<Path> exceptions = getBuckPackageBoundaryExceptions();
     for (Path exception : exceptions) {
       if (absolutePath.startsWith(exception)) {
-        return false;
+        return getLogPackageBoundaryExceptionViolations()
+            ? PackageBoundaryEnforcement.WARN
+            : PackageBoundaryEnforcement.DISABLED;
       }
     }
-    return true;
+    return PackageBoundaryEnforcement.ENFORCE;
   }
 
   /**

@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
@@ -34,6 +35,7 @@ import java.util.Optional;
 public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
 
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
+  private static final Logger LOG = Logger.get(ThrowingPackageBoundaryChecker.class);
 
   public ThrowingPackageBoundaryChecker(LoadingCache<Cell, BuildFileTree> buildFileTrees) {
     this.buildFileTrees = buildFileTrees;
@@ -49,9 +51,11 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
             .getPath()
             .toPath(targetCell.getFilesystem().getFileSystem());
 
-    if (!targetCell
-        .getBuckConfigView(ParserConfig.class)
-        .isEnforcingBuckPackageBoundaries(basePath)) {
+    ParserConfig.PackageBoundaryEnforcement enforcing =
+        targetCell
+            .getBuckConfigView(ParserConfig.class)
+            .getPackageBoundaryEnforcementPolicy(basePath);
+    if (enforcing == ParserConfig.PackageBoundaryEnforcement.DISABLED) {
       return;
     }
 
@@ -60,8 +64,9 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
 
     for (Path path : paths) {
       if (!isBasePathEmpty && !path.startsWith(basePath)) {
-        throw new HumanReadableException(
-            "'%s' in '%s' refers to a parent directory.", basePath.relativize(path), target);
+        String formatString = "'%s' in '%s' refers to a parent directory.";
+        warnOrError(enforcing, formatString, basePath.relativize(path), target);
+        continue;
       }
 
       Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
@@ -83,7 +88,7 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
         Path buckFile = ancestor.get().resolve(buildFileName);
         // TODO(cjhopman): If we want to manually split error message lines ourselves, we should
         // have a utility to do it correctly after formatting instead of doing it manually.
-        throw new HumanReadableException(
+        String formatString =
             "The target '%1$s' tried to reference '%2$s'.\n"
                 + "This is not allowed because '%2$s' can only be referenced from '%3$s' \n"
                 + "which is its closest parent '%4$s' file.\n"
@@ -94,9 +99,21 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
                 + "More info at:\nhttps://buck.build/concept/build_rule.html\n"
                 + "\n"
                 + "This issue might also be caused by a bug in buckd's caching.\n"
-                + "Please check whether using `buck kill` resolves it.",
-            target, path, buckFile, buildFileName);
+                + "Please check whether using `buck kill` resolves it.";
+
+        warnOrError(enforcing, formatString, target, path, buckFile, buildFileName);
       }
+    }
+  }
+
+  private static void warnOrError(
+      ParserConfig.PackageBoundaryEnforcement enforcing,
+      String formatString,
+      Object... formatArgs) {
+    if (enforcing == ParserConfig.PackageBoundaryEnforcement.ENFORCE) {
+      throw new HumanReadableException(formatString, formatArgs);
+    } else {
+      LOG.warn(formatString, formatArgs);
     }
   }
 }
