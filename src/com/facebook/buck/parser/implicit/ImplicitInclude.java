@@ -17,26 +17,24 @@
 package com.facebook.buck.parser.implicit;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.SkylarkImport;
 import java.util.Arrays;
+import java.util.Map;
 import org.immutables.value.Value;
 
 /** Represents a load path and symbols that should be implicitly included in a build file */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public abstract class AbstractImplicitInclude {
+@BuckStyleValue
+public abstract class ImplicitInclude {
   @JsonIgnore
-  @Value.Parameter
   abstract String getRawImportLabel();
 
   @JsonProperty("load_symbols")
-  @Value.Parameter
-  abstract ImmutableMap<String, String> getSymbols();
+  public abstract ImmutableMap<String, String> getSymbols();
 
   @JsonProperty("load_path")
   @Value.Derived
@@ -141,5 +139,9 @@ public abstract class AbstractImplicitInclude {
           "Provided configuration %s specifies an empty symbol alias", configurationString);
     }
     symbolBuilder.put(alias, symbol);
+  }
+
+  public static ImplicitInclude of(String rawImportLabel, Map<String, ? extends String> symbols) {
+    return ImmutableImplicitInclude.of(rawImportLabel, symbols);
   }
 }

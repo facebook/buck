@@ -17,12 +17,11 @@
 package com.facebook.buck.support.bgtasks;
 
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Wrapper class for {@link BackgroundTask} that includes data generated/ managed by the {@link
@@ -41,7 +40,7 @@ class ManagedBackgroundTask<T> {
 
   protected ManagedBackgroundTask(BackgroundTask<T> task, BuildId buildId) {
     this.task = task;
-    this.id = TaskId.of(task.getName(), buildId);
+    this.id = ImmutableTaskId.of(task.getName(), buildId);
     this.toCancel = false;
     this.future = SettableFuture.create();
   }
@@ -82,7 +81,7 @@ class ManagedBackgroundTask<T> {
     return task.getAction().getClass();
   }
 
-  Optional<Timeout> getTimeout() {
+  Optional<BackgroundTask.Timeout> getTimeout() {
     return task.getTimeout();
   }
 
@@ -95,13 +94,10 @@ class ManagedBackgroundTask<T> {
   }
 
   /** Task ID object for {@link ManagedBackgroundTask}. */
-  @Value.Immutable(builder = false)
-  @BuckStyleImmutable
-  abstract static class AbstractTaskId {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class TaskId {
     abstract String name();
 
-    @Value.Parameter
     abstract BuildId buildId();
   }
 }

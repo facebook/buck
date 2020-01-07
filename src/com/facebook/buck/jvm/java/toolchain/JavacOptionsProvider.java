@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.apple.toolchain;
+package com.facebook.buck.jvm.java.toolchain;
 
 import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableList;
-import java.util.function.Supplier;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.jvm.java.JavacOptions;
 
-/** A collection of code sign identities. */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public interface AbstractCodeSignIdentityStore extends Toolchain {
-  String DEFAULT_NAME = "apple-code-sign-identities";
+@BuckStyleValue
+public interface JavacOptionsProvider extends Toolchain {
 
-  @Value.Parameter
-  Supplier<ImmutableList<CodeSignIdentity>> getIdentitiesSupplier();
+  String DEFAULT_NAME = "javac-options";
+
+  JavacOptions getJavacOptions();
 
   @Override
   default String getName() {
     return DEFAULT_NAME;
+  }
+
+  static JavacOptionsProvider of(JavacOptions javacOptions) {
+    return ImmutableJavacOptionsProvider.of(javacOptions);
   }
 }

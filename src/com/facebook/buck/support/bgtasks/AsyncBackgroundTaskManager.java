@@ -160,7 +160,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   }
 
   private void addTimeoutIfNeeded(Future<?> taskHandler, ManagedBackgroundTask<?> task) {
-    Optional<Timeout> timeout = task.getTimeout();
+    Optional<BackgroundTask.Timeout> timeout = task.getTimeout();
     if (timeout.isPresent()) {
       timeoutPool.schedule(
           () -> {

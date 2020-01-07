@@ -45,7 +45,6 @@ import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
-import com.facebook.buck.support.bgtasks.Timeout;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
@@ -124,7 +123,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             .setAction(new ArtifactCachesCloseAction())
             .setActionArgs(artifactCaches)
             .setName("ArtifactCaches_close")
-            .setTimeout(Timeout.of(TIMEOUT_SECONDS, TimeUnit.SECONDS))
+            .setTimeout(BackgroundTask.Timeout.of(TIMEOUT_SECONDS, TimeUnit.SECONDS))
             .build();
     managerScope.schedule(closeTask);
 

@@ -21,9 +21,9 @@ import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetOutputLabelParser;
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.util.function.BiFunction;
-import org.immutables.value.Value;
 
 /**
  * Coercer that coerces a build target into type T and attaches an output label, if any. The
@@ -62,21 +62,16 @@ abstract class TargetWithOutputsTypeCoercer<T, U> extends LeafTypeCoercer<U> {
   }
 
   /** Wrapper for values needed for perform coercion. */
-  @Value.Immutable(builder = false)
+  @BuckStyleValue
   abstract static class CoerceParameters {
-    @Value.Parameter
     abstract CellPathResolver getCellRoots();
 
-    @Value.Parameter
     abstract ProjectFilesystem getFilesystem();
 
-    @Value.Parameter
     abstract ForwardRelativePath getPathRelativeToProjectRoot();
 
-    @Value.Parameter
     abstract TargetConfiguration getTargetConfiguration();
 
-    @Value.Parameter
     abstract TargetConfiguration getHostConfiguration();
   }
 }

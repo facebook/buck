@@ -16,22 +16,22 @@
 
 package com.facebook.buck.remoteexecution.event.listener.model;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
-import org.immutables.value.Value;
 
 /** Information specific to Remote Execution. */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-interface AbstractReSessionData {
+@BuckStyleValue
+public interface ReSessionData {
 
-  @Value.Parameter
   RESessionID getReSessionId();
 
-  @Value.Parameter
   String getReSessionLabel();
 
-  @Value.Parameter
   ModernBuildRuleBuildStrategy getStrategy();
+
+  static ReSessionData of(
+      RESessionID reSessionId, String reSessionLabel, ModernBuildRuleBuildStrategy strategy) {
+    return ImmutableReSessionData.of(reSessionId, reSessionLabel, strategy);
+  }
 }

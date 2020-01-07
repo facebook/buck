@@ -14,24 +14,26 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android.toolchain;
+package com.facebook.buck.apple.toolchain;
 
-import com.facebook.buck.core.toolchain.ComparableToolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import java.nio.file.Path;
-import org.immutables.value.Value;
+import com.facebook.buck.core.toolchain.Toolchain;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableList;
+import java.util.function.Supplier;
 
-/** Part of Android toolchain that provides access to Android SDK */
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-public interface AbstractAndroidSdkLocation extends ComparableToolchain {
-  String DEFAULT_NAME = "android-sdk-location";
+/** A collection of code sign identities. */
+@BuckStyleValue
+public interface CodeSignIdentityStore extends Toolchain {
+  String DEFAULT_NAME = "apple-code-sign-identities";
 
-  @Value.Parameter
-  Path getSdkRootPath();
+  Supplier<ImmutableList<CodeSignIdentity>> getIdentitiesSupplier();
 
   @Override
   default String getName() {
     return DEFAULT_NAME;
+  }
+
+  static CodeSignIdentityStore of(Supplier<ImmutableList<CodeSignIdentity>> identitiesSupplier) {
+    return ImmutableCodeSignIdentityStore.of(identitiesSupplier);
   }
 }

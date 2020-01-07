@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.toolchain;
+package com.facebook.buck.android.toolchain;
 
-import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.jvm.java.JavacOptions;
-import org.immutables.value.Value;
+import com.facebook.buck.core.toolchain.ComparableToolchain;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.nio.file.Path;
 
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public interface AbstractJavacOptionsProvider extends Toolchain {
+/** Part of Android toolchain that provides access to Android SDK */
+@BuckStyleValue
+public interface AndroidSdkLocation extends ComparableToolchain {
+  String DEFAULT_NAME = "android-sdk-location";
 
-  String DEFAULT_NAME = "javac-options";
-
-  @Value.Parameter
-  JavacOptions getJavacOptions();
+  Path getSdkRootPath();
 
   @Override
   default String getName() {
     return DEFAULT_NAME;
+  }
+
+  static AndroidSdkLocation of(Path sdkRootPath) {
+    return ImmutableAndroidSdkLocation.of(sdkRootPath);
   }
 }

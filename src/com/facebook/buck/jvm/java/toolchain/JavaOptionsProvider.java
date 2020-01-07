@@ -19,15 +19,13 @@ package com.facebook.buck.jvm.java.toolchain;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.util.MoreFunctions;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public abstract class AbstractJavaOptionsProvider implements Toolchain {
+@BuckStyleValue
+public abstract class JavaOptionsProvider implements Toolchain {
   public static final String DEFAULT_NAME = "java-options";
 
   @Override
@@ -35,10 +33,8 @@ public abstract class AbstractJavaOptionsProvider implements Toolchain {
     return DEFAULT_NAME;
   }
 
-  @Value.Parameter
   abstract JavaOptions getJavaOptions();
 
-  @Value.Parameter
   abstract JavaOptions getJavaOptionsForTests();
 
   private static JavaOptionsProvider getDefault(
@@ -55,5 +51,9 @@ public abstract class AbstractJavaOptionsProvider implements Toolchain {
   public static Function<TargetConfiguration, JavaOptions> getDefaultJavaOptionsForTests(
       ToolchainProvider provider) {
     return MoreFunctions.memoize(c -> getDefault(provider, c).getJavaOptionsForTests());
+  }
+
+  public static JavaOptionsProvider of(JavaOptions javaOptions, JavaOptions javaOptionsForTests) {
+    return ImmutableJavaOptionsProvider.of(javaOptions, javaOptionsForTests);
   }
 }

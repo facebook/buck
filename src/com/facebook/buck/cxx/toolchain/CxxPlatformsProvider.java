@@ -20,19 +20,15 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-public abstract class AbstractCxxPlatformsProvider implements Toolchain {
+@BuckStyleValue
+public abstract class CxxPlatformsProvider implements Toolchain {
 
   public static final String DEFAULT_NAME = "cxx-platforms";
 
-  @Value.Parameter
   public abstract UnresolvedCxxPlatform getDefaultUnresolvedCxxPlatform();
 
-  @Value.Parameter
   public abstract FlavorDomain<UnresolvedCxxPlatform> getUnresolvedCxxPlatforms();
 
   public FlavorDomain<CxxPlatform> getResolvedCxxPlatforms(
@@ -45,5 +41,11 @@ public abstract class AbstractCxxPlatformsProvider implements Toolchain {
   @Override
   public String getName() {
     return DEFAULT_NAME;
+  }
+
+  public static CxxPlatformsProvider of(
+      UnresolvedCxxPlatform defaultUnresolvedCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> unresolvedCxxPlatforms) {
+    return ImmutableCxxPlatformsProvider.of(defaultUnresolvedCxxPlatform, unresolvedCxxPlatforms);
   }
 }
