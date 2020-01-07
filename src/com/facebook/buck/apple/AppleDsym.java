@@ -164,7 +164,11 @@ public class AppleDsym extends AbstractBuildRule
   public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
     return ImmutableList.of(
         new RegisterDebugSymbolsStep(
-            unstrippedBinarySourcePath, lldb, context.getSourcePathResolver(), dsymOutputPath));
+            getProjectFilesystem(),
+            unstrippedBinarySourcePath,
+            lldb,
+            context.getSourcePathResolver(),
+            dsymOutputPath));
   }
 
   @Override
