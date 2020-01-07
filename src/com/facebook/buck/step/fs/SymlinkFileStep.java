@@ -17,7 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -25,21 +25,16 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Joiner;
 import java.io.IOException;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractSymlinkFileStep implements Step {
+@BuckStyleValue
+public abstract class SymlinkFileStep implements Step {
 
-  @Value.Parameter
   // TODO(dwh): Remove filesystem when ignored files are removed.
   protected abstract ProjectFilesystem getFilesystem();
 
-  @Value.Parameter
   // TODO(dwh): Require this to be one of absolute or relative.
   protected abstract Path getExistingFile();
 
-  @Value.Parameter
   // TODO(dwh): Require this to be absolute.
   protected abstract Path getDesiredLink();
 
@@ -70,5 +65,10 @@ abstract class AbstractSymlinkFileStep implements Step {
     Path desiredLinkPath = getAbsoluteDesiredLinkPath();
     getFilesystem().createSymLink(desiredLinkPath, existingFilePath, /* force */ true);
     return StepExecutionResults.SUCCESS;
+  }
+
+  public static SymlinkFileStep of(
+      ProjectFilesystem filesystem, Path existingFile, Path desiredLink) {
+    return ImmutableSymlinkFileStep.of(filesystem, existingFile, desiredLink);
   }
 }

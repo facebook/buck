@@ -298,7 +298,7 @@ public class IjProjectTemplateDataPreparer {
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
-  public ImmutableSet<DependencyEntry> getDependencies(IjModule module) {
+  public ImmutableSet<IjDependencyListBuilder.DependencyEntry> getDependencies(IjModule module) {
     ImmutableMap<IjProjectElement, DependencyType> deps = moduleGraph.getDepsFor(module);
     IjDependencyListBuilder dependencyListBuilder = new IjDependencyListBuilder();
 

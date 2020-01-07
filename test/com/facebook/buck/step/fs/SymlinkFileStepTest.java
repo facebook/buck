@@ -56,12 +56,10 @@ public class SymlinkFileStepTest {
     target.delete();
 
     SymlinkFileStep step =
-        SymlinkFileStep.builder()
-            .setFilesystem(
-                TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath()))
-            .setExistingFile(Paths.get(source.getName()))
-            .setDesiredLink(Paths.get(target.getName()))
-            .build();
+        SymlinkFileStep.of(
+            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath()),
+            Paths.get(source.getName()),
+            Paths.get(target.getName()));
     step.execute(context);
     // Run twice to ensure we can overwrite an existing symlink
     step.execute(context);
@@ -103,11 +101,7 @@ public class SymlinkFileStepTest {
 
     tmpDir.newFile("dummy");
     SymlinkFileStep symlinkStep =
-        SymlinkFileStep.builder()
-            .setFilesystem(projectFilesystem)
-            .setExistingFile(Paths.get("dummy"))
-            .setDesiredLink(Paths.get("my_symlink"))
-            .build();
+        SymlinkFileStep.of(projectFilesystem, Paths.get("dummy"), Paths.get("my_symlink"));
     int exitCode = symlinkStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
     assertTrue(java.nio.file.Files.isSymbolicLink(symlink));

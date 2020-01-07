@@ -292,12 +292,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     public StepExecutionResult execute(ExecutionContext context) throws IOException {
       Path src = resolver.getRelativePath(lib).toRealPath();
       Path dest = symlinkDir.resolve(name);
-      SymlinkFileStep.Builder sl = SymlinkFileStep.builder();
-      return sl.setFilesystem(getProjectFilesystem())
-          .setExistingFile(src)
-          .setDesiredLink(dest)
-          .build()
-          .execute(context);
+      return SymlinkFileStep.of(getProjectFilesystem(), src, dest).execute(context);
     }
   }
 

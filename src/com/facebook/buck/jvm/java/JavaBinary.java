@@ -142,11 +142,10 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   context.getBuildCellRootPath(), getProjectFilesystem(), stagingRoot)));
 
       commands.add(
-          SymlinkFileStep.builder()
-              .setFilesystem(getProjectFilesystem())
-              .setExistingFile(context.getSourcePathResolver().getAbsolutePath(metaInfDirectory))
-              .setDesiredLink(stagingTarget)
-              .build());
+          SymlinkFileStep.of(
+              getProjectFilesystem(),
+              context.getSourcePathResolver().getAbsolutePath(metaInfDirectory),
+              stagingTarget));
 
       includePaths =
           ImmutableSortedSet.<Path>naturalOrder()

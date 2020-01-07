@@ -17,7 +17,7 @@
 package com.facebook.buck.parser.options;
 
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
@@ -29,30 +29,29 @@ import java.util.List;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractProjectBuildFileParserOptions {
-  abstract Path getProjectRoot();
+@BuckStyleValueWithBuilder
+public abstract class ProjectBuildFileParserOptions {
+  public abstract Path getProjectRoot();
 
-  abstract ImmutableMap<String, Path> getCellRoots();
+  public abstract ImmutableMap<String, Path> getCellRoots();
 
-  abstract String getPythonInterpreter();
+  public abstract String getPythonInterpreter();
 
-  abstract Optional<String> getPythonModuleSearchPath();
+  public abstract Optional<String> getPythonModuleSearchPath();
 
-  abstract boolean getAllowEmptyGlobs();
+  public abstract boolean getAllowEmptyGlobs();
 
-  abstract ImmutableSet<PathMatcher> getIgnorePaths();
+  public abstract ImmutableSet<PathMatcher> getIgnorePaths();
 
-  abstract String getBuildFileName();
+  public abstract String getBuildFileName();
 
-  abstract List<String> getDefaultIncludes();
+  public abstract List<String> getDefaultIncludes();
 
-  abstract ImmutableMap<String, ImplicitInclude> getPackageImplicitIncludes();
+  public abstract ImmutableMap<String, ImplicitInclude> getPackageImplicitIncludes();
 
-  abstract ImmutableSet<BaseDescription<?>> getDescriptions();
+  public abstract ImmutableSet<BaseDescription<?>> getDescriptions();
 
-  abstract ImmutableMap<String, ImmutableMap<String, String>> getRawConfig();
+  public abstract ImmutableMap<String, ImmutableMap<String, String>> getRawConfig();
 
   @Value.Default
   public String getCellName() {
@@ -75,7 +74,7 @@ abstract class AbstractProjectBuildFileParserOptions {
   }
 
   @Value.Default
-  Watchman getWatchman() {
+  public Watchman getWatchman() {
     return WatchmanFactory.NULL_WATCHMAN;
   }
 
@@ -84,9 +83,9 @@ abstract class AbstractProjectBuildFileParserOptions {
     return false;
   }
 
-  abstract Optional<Long> getWatchmanQueryTimeoutMs();
+  public abstract Optional<Long> getWatchmanQueryTimeoutMs();
 
-  abstract List<String> getBuildFileImportWhitelist();
+  public abstract List<String> getBuildFileImportWhitelist();
 
   @Value.Default
   public boolean getDisableImplicitNativeRules() {
@@ -102,4 +101,10 @@ abstract class AbstractProjectBuildFileParserOptions {
   public boolean isWarnAboutDeprecatedSyntax() {
     return true;
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableProjectBuildFileParserOptions.Builder {}
 }

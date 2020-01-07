@@ -128,11 +128,10 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   getProjectFilesystem(),
                   fatJarDir.resolve(resource).getParent())));
       steps.add(
-          SymlinkFileStep.builder()
-              .setFilesystem(getProjectFilesystem())
-              .setExistingFile(context.getSourcePathResolver().getAbsolutePath(entry.getValue()))
-              .setDesiredLink(fatJarDir.resolve(resource))
-              .build());
+          SymlinkFileStep.of(
+              getProjectFilesystem(),
+              context.getSourcePathResolver().getAbsolutePath(entry.getValue()),
+              fatJarDir.resolve(resource)));
     }
     ImmutableMap<String, String> sonameToResourceMap = sonameToResourceMapBuilder.build();
 
@@ -160,11 +159,10 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem(),
                 fatJarDir.resolve(FAT_JAR_INNER_JAR).getParent())));
     steps.add(
-        SymlinkFileStep.builder()
-            .setFilesystem(getProjectFilesystem())
-            .setExistingFile(context.getSourcePathResolver().getAbsolutePath(innerJar))
-            .setDesiredLink(fatJarDir.resolve(FAT_JAR_INNER_JAR))
-            .build());
+        SymlinkFileStep.of(
+            getProjectFilesystem(),
+            context.getSourcePathResolver().getAbsolutePath(innerJar),
+            fatJarDir.resolve(FAT_JAR_INNER_JAR)));
 
     // Build the final fat JAR from the structure we've layed out above.  We first package the
     // fat jar resources (e.g. native libs) using the "stored" compression level, to avoid

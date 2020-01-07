@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.project.intellij;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -77,14 +77,14 @@ public class IjDependencyListBuilder {
    * The design of this classes API is tied to how the corresponding StringTemplate template
    * interacts with it.
    */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractDependencyEntry implements Comparable<AbstractDependencyEntry> {
-    protected abstract Optional<DependencyEntryData> getData();
+  @BuckStyleValue
+  public abstract static class DependencyEntry implements Comparable<DependencyEntry> {
 
-    protected abstract Type getType();
+    public abstract Type getType();
 
-    protected abstract SortOrder getSortOrder();
+    public abstract SortOrder getSortOrder();
+
+    public abstract Optional<DependencyEntryData> getData();
 
     @Nullable
     public DependencyEntryData getModule() {
@@ -110,7 +110,7 @@ public class IjDependencyListBuilder {
     }
 
     @Override
-    public int compareTo(AbstractDependencyEntry o) {
+    public int compareTo(DependencyEntry o) {
       if (this == o) {
         return 0;
       }
@@ -129,9 +129,8 @@ public class IjDependencyListBuilder {
     }
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractDependencyEntryData {
+  @BuckStyleValue
+  abstract static class DependencyEntryData {
     public abstract String getName();
 
     public abstract Scope getScope();
@@ -147,44 +146,26 @@ public class IjDependencyListBuilder {
 
   public void addModule(String name, Scope scope, boolean exported) {
     builder.add(
-        DependencyEntry.builder()
-            .setType(Type.MODULE)
-            .setSortOrder(SortOrder.MODULE)
-            .setData(
-                DependencyEntryData.builder()
-                    .setName(name)
-                    .setScope(scope)
-                    .setExported(exported)
-                    .build())
-            .build());
+        ImmutableDependencyEntry.of(
+            Type.MODULE,
+            SortOrder.MODULE,
+            Optional.of(ImmutableDependencyEntryData.of(name, scope, exported))));
   }
 
   public void addCompiledShadow(String name) {
     builder.add(
-        DependencyEntry.builder()
-            .setType(Type.LIBRARY)
-            .setSortOrder(SortOrder.COMPILED_SHADOW)
-            .setData(
-                DependencyEntryData.builder()
-                    .setName(name)
-                    .setScope(Scope.PROVIDED)
-                    .setExported(true)
-                    .build())
-            .build());
+        ImmutableDependencyEntry.of(
+            Type.LIBRARY,
+            SortOrder.COMPILED_SHADOW,
+            Optional.of(ImmutableDependencyEntryData.of(name, Scope.PROVIDED, true))));
   }
 
   public void addLibrary(String name, Scope scope, boolean exported) {
     builder.add(
-        DependencyEntry.builder()
-            .setType(Type.LIBRARY)
-            .setSortOrder(SortOrder.LIBRARY)
-            .setData(
-                DependencyEntryData.builder()
-                    .setName(name)
-                    .setScope(scope)
-                    .setExported(exported)
-                    .build())
-            .build());
+        ImmutableDependencyEntry.of(
+            Type.LIBRARY,
+            SortOrder.LIBRARY,
+            Optional.of(ImmutableDependencyEntryData.of(name, scope, exported))));
   }
 
   public ImmutableSet<DependencyEntry> build() {

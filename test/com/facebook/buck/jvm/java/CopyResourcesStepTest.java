@@ -95,20 +95,17 @@ public class CopyResourcesStepTest {
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target1.getParent())),
-            SymlinkFileStep.builder()
-                .setFilesystem(filesystem)
-                .setExistingFile(filesystem.resolve("android/java/src/com/facebook/base/data.json"))
-                .setDesiredLink(target1)
-                .build(),
+            SymlinkFileStep.of(
+                filesystem,
+                filesystem.resolve("android/java/src/com/facebook/base/data.json"),
+                target1),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target.getParent())),
-            SymlinkFileStep.builder()
-                .setFilesystem(filesystem)
-                .setExistingFile(
-                    filesystem.resolve("android/java/src/com/facebook/common/util/data.json"))
-                .setDesiredLink(target)
-                .build());
+            SymlinkFileStep.of(
+                filesystem,
+                filesystem.resolve("android/java/src/com/facebook/common/util/data.json"),
+                target));
     assertEquals(expected, step.buildSteps());
   }
 
@@ -165,20 +162,17 @@ public class CopyResourcesStepTest {
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target1.getParent())),
-            SymlinkFileStep.builder()
-                .setFilesystem(filesystem)
-                .setExistingFile(filesystem.resolve("android/java/src/com/facebook/base/data.json"))
-                .setDesiredLink(target1)
-                .build(),
+            SymlinkFileStep.of(
+                filesystem,
+                filesystem.resolve("android/java/src/com/facebook/base/data.json"),
+                target1),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target.getParent())),
-            SymlinkFileStep.builder()
-                .setFilesystem(filesystem)
-                .setExistingFile(
-                    filesystem.resolve("android/java/src/com/facebook/common/util/data.json"))
-                .setDesiredLink(target)
-                .build());
+            SymlinkFileStep.of(
+                filesystem,
+                filesystem.resolve("android/java/src/com/facebook/common/util/data.json"),
+                target));
     assertEquals(expected, step.buildSteps());
   }
 
@@ -241,20 +235,17 @@ public class CopyResourcesStepTest {
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target1.getParent())),
-            SymlinkFileStep.builder()
-                .setFilesystem(filesystem)
-                .setExistingFile(filesystem.resolve("android/java/src/com/facebook/base/data.json"))
-                .setDesiredLink(target1)
-                .build(),
+            SymlinkFileStep.of(
+                filesystem,
+                filesystem.resolve("android/java/src/com/facebook/base/data.json"),
+                target1),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target.getParent())),
-            SymlinkFileStep.builder()
-                .setFilesystem(filesystem)
-                .setExistingFile(
-                    filesystem.resolve("android/java/src/com/facebook/common/util/data.json"))
-                .setDesiredLink(target)
-                .build());
+            SymlinkFileStep.of(
+                filesystem,
+                filesystem.resolve("android/java/src/com/facebook/common/util/data.json"),
+                target));
     assertEquals(expected, step.buildSteps());
   }
 

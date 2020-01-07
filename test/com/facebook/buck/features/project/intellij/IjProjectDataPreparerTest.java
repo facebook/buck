@@ -127,11 +127,10 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            DependencyEntryData.builder()
-                                .setName("third_party_guava")
-                                .setScope(IjDependencyListBuilder.Scope.COMPILE)
-                                .setExported(false)
-                                .build()))))));
+                            ImmutableDependencyEntryData.of(
+                                "third_party_guava",
+                                IjDependencyListBuilder.Scope.COMPILE,
+                                false)))))));
   }
 
   @Test
@@ -223,11 +222,10 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            DependencyEntryData.builder()
-                                .setName("___dep_java_com_example")
-                                .setScope(IjDependencyListBuilder.Scope.COMPILE)
-                                .setExported(false)
-                                .build()))))));
+                            ImmutableDependencyEntryData.of(
+                                "___dep_java_com_example",
+                                IjDependencyListBuilder.Scope.COMPILE,
+                                false)))))));
   }
 
   @Test
@@ -305,9 +303,6 @@ public class IjProjectDataPreparerTest {
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseInlineTestsTargetNode),
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseTargetNode));
 
-    DependencyEntryData.Builder dependencyEntryBuilder =
-        DependencyEntryData.builder().setExported(false);
-
     assertThat(
         dataPreparer.getDependencies(baseModule),
         contains(
@@ -317,31 +312,30 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            DependencyEntryData.builder()
-                                .setExported(true)
-                                .setName("//java/com/example/base:tests")
-                                .setScope(IjDependencyListBuilder.Scope.PROVIDED)
-                                .build())))),
+                            ImmutableDependencyEntryData.of(
+                                "//java/com/example/base:tests",
+                                IjDependencyListBuilder.Scope.PROVIDED,
+                                true))))),
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
                 hasProperty(
                     "data",
                     equalTo(
                         Optional.of(
-                            dependencyEntryBuilder
-                                .setName(guavaLibrary.getName())
-                                .setScope(IjDependencyListBuilder.Scope.COMPILE)
-                                .build())))),
+                            ImmutableDependencyEntryData.of(
+                                guavaLibrary.getName(),
+                                IjDependencyListBuilder.Scope.COMPILE,
+                                false))))),
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
                 hasProperty(
                     "data",
                     equalTo(
                         Optional.of(
-                            dependencyEntryBuilder
-                                .setName(hamcrestLibrary.getName())
-                                .setScope(IjDependencyListBuilder.Scope.COMPILE)
-                                .build()))))));
+                            ImmutableDependencyEntryData.of(
+                                hamcrestLibrary.getName(),
+                                IjDependencyListBuilder.Scope.COMPILE,
+                                false)))))));
 
     assertThat(
         dataPreparer.getDependencies(baseTestModule),
@@ -352,20 +346,20 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            dependencyEntryBuilder
-                                .setName(baseModule.getName())
-                                .setScope(IjDependencyListBuilder.Scope.TEST)
-                                .build())))),
+                            ImmutableDependencyEntryData.of(
+                                baseModule.getName(),
+                                IjDependencyListBuilder.Scope.TEST,
+                                false))))),
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
                 hasProperty(
                     "data",
                     equalTo(
                         Optional.of(
-                            dependencyEntryBuilder
-                                .setName(hamcrestLibrary.getName())
-                                .setScope(IjDependencyListBuilder.Scope.TEST)
-                                .build()))))));
+                            ImmutableDependencyEntryData.of(
+                                hamcrestLibrary.getName(),
+                                IjDependencyListBuilder.Scope.TEST,
+                                false)))))));
   }
 
   @Test

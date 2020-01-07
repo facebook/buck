@@ -141,11 +141,10 @@ public class CopyResourcesStep implements Step {
               BuildCellRelativePath.fromCellRelativePath(
                   buildContext.getBuildCellRootPath(), filesystem, target.getParent())));
       allSteps.add(
-          SymlinkFileStep.builder()
-              .setFilesystem(filesystem)
-              .setExistingFile(buildContext.getSourcePathResolver().getAbsolutePath(rawResource))
-              .setDesiredLink(target)
-              .build());
+          SymlinkFileStep.of(
+              filesystem,
+              buildContext.getSourcePathResolver().getAbsolutePath(rawResource),
+              target));
     }
     return allSteps.build();
   }
