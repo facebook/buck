@@ -31,7 +31,7 @@ import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
@@ -64,135 +64,93 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
-import org.immutables.value.Value;
 import org.pf4j.PluginManager;
 
-@Value.Immutable(builder = false)
-@BuckStyleImmutable
-public abstract class AbstractCommandRunnerParams {
-  @Value.Parameter
+@BuckStyleValue
+public abstract class CommandRunnerParams {
+
   public abstract Console getConsole();
 
-  @Value.Parameter
   public abstract InputStream getStdIn();
 
-  @Value.Parameter
   public abstract Cell getCell();
 
-  @Value.Parameter
   public abstract Watchman getWatchman();
 
-  @Value.Parameter
   public abstract InstrumentedVersionedTargetGraphCache getVersionedTargetGraphCache();
 
-  @Value.Parameter
   public abstract ArtifactCacheFactory getArtifactCacheFactory();
 
-  @Value.Parameter
   public abstract TypeCoercerFactory getTypeCoercerFactory();
 
-  @Value.Parameter
   public abstract UnconfiguredBuildTargetViewFactory getUnconfiguredBuildTargetFactory();
 
-  @Value.Parameter
   public abstract Optional<TargetConfiguration> getTargetConfiguration();
 
-  @Value.Parameter
   public abstract Optional<TargetConfiguration> getHostConfiguration();
 
-  @Value.Parameter
   public abstract TargetConfigurationSerializer getTargetConfigurationSerializer();
 
-  @Value.Parameter
   public abstract Parser getParser();
 
-  @Value.Parameter
   public abstract BuckEventBus getBuckEventBus();
 
-  @Value.Parameter
   public abstract Platform getPlatform();
 
-  @Value.Parameter
   public abstract ImmutableMap<String, String> getEnvironment();
 
-  @Value.Parameter
   public abstract JavaPackageFinder getJavaPackageFinder();
 
-  @Value.Parameter
   public abstract Clock getClock();
 
-  @Value.Parameter
   public abstract VersionControlStatsGenerator getVersionControlStatsGenerator();
 
-  @Value.Parameter
   public abstract Optional<ProcessManager> getProcessManager();
 
-  @Value.Parameter
   public abstract Optional<WebServer> getWebServer();
 
-  @Value.Parameter
   public abstract ConcurrentMap<String, WorkerProcessPool> getPersistentWorkerPools();
 
-  @Value.Parameter
   public abstract BuckConfig getBuckConfig();
 
-  @Value.Parameter
   public abstract StackedFileHashCache getFileHashCache();
 
-  @Value.Parameter
-  public abstract Map<ExecutorPool, ListeningExecutorService> getExecutors();
+  public abstract ImmutableMap<ExecutorPool, ListeningExecutorService> getExecutors();
 
-  @Value.Parameter
   public abstract ScheduledExecutorService getScheduledExecutor();
 
-  @Value.Parameter
   public abstract BuildEnvironmentDescription getBuildEnvironmentDescription();
 
-  @Value.Parameter
   public abstract ActionGraphProvider getActionGraphProvider();
 
-  @Value.Parameter
   public abstract KnownRuleTypesProvider getKnownRuleTypesProvider();
 
-  @Value.Parameter
   public abstract BuildInfoStoreManager getBuildInfoStoreManager();
 
-  @Value.Parameter
   public abstract Optional<InvocationInfo> getInvocationInfo();
 
-  @Value.Parameter
   public abstract Optional<RuleKeyCacheRecycler<RuleKey>> getDefaultRuleKeyFactoryCacheRecycler();
 
-  @Value.Parameter
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 
-  @Value.Parameter
   public abstract RuleKeyConfiguration getRuleKeyConfiguration();
 
-  @Value.Parameter
   public abstract ProcessExecutor getProcessExecutor();
 
-  @Value.Parameter
   public abstract ExecutableFinder getExecutableFinder();
 
-  @Value.Parameter
   public abstract PluginManager getPluginManager();
 
-  @Value.Parameter
   public abstract BuckModuleManager getBuckModuleManager();
 
-  @Value.Parameter
   public abstract CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
       getDepsAwareExecutorSupplier();
 
-  @Value.Parameter
   public abstract MetadataProvider getMetadataProvider();
 
-  @Value.Parameter
   public abstract ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
       getManifestServiceSupplier();
 
@@ -200,7 +158,6 @@ public abstract class AbstractCommandRunnerParams {
    * @return {@link BuckGlobalState} object which is a set of objects bearing the data reflecting
    *     filesystem state and thus shared between commands
    */
-  @Value.Parameter
   public abstract BuckGlobalState getGlobalState();
 
   /**
@@ -209,7 +166,6 @@ public abstract class AbstractCommandRunnerParams {
    *     executes buck from the project root, so this is not the same as most {@code getCwd()} style
    *     functions.
    */
-  @Value.Parameter
   public abstract Path getClientWorkingDir();
 
   /**
@@ -235,5 +191,103 @@ public abstract class AbstractCommandRunnerParams {
         .setRuleKeyConfiguration(getRuleKeyConfiguration())
         .setManifestService(manifestService)
         .build();
+  }
+
+  public CommandRunnerParams withArtifactCacheFactory(ArtifactCacheFactory artifactCacheFactory) {
+    if (artifactCacheFactory == getArtifactCacheFactory()) {
+      return this;
+    }
+    return ImmutableCommandRunnerParams.of(
+        getConsole(),
+        getStdIn(),
+        getCell(),
+        getWatchman(),
+        getVersionedTargetGraphCache(),
+        artifactCacheFactory,
+        getTypeCoercerFactory(),
+        getUnconfiguredBuildTargetFactory(),
+        getTargetConfiguration(),
+        getHostConfiguration(),
+        getTargetConfigurationSerializer(),
+        getParser(),
+        getBuckEventBus(),
+        getPlatform(),
+        getEnvironment(),
+        getJavaPackageFinder(),
+        getClock(),
+        getVersionControlStatsGenerator(),
+        getProcessManager(),
+        getWebServer(),
+        getPersistentWorkerPools(),
+        getBuckConfig(),
+        getFileHashCache(),
+        getExecutors(),
+        getScheduledExecutor(),
+        getBuildEnvironmentDescription(),
+        getActionGraphProvider(),
+        getKnownRuleTypesProvider(),
+        getBuildInfoStoreManager(),
+        getInvocationInfo(),
+        getDefaultRuleKeyFactoryCacheRecycler(),
+        getProjectFilesystemFactory(),
+        getRuleKeyConfiguration(),
+        getProcessExecutor(),
+        getExecutableFinder(),
+        getPluginManager(),
+        getBuckModuleManager(),
+        getDepsAwareExecutorSupplier(),
+        getMetadataProvider(),
+        getManifestServiceSupplier(),
+        getGlobalState(),
+        getClientWorkingDir());
+  }
+
+  public CommandRunnerParams withBuckConfig(BuckConfig buckConfig) {
+    if (buckConfig == getBuckConfig()) {
+      return this;
+    }
+    return ImmutableCommandRunnerParams.of(
+        getConsole(),
+        getStdIn(),
+        getCell(),
+        getWatchman(),
+        getVersionedTargetGraphCache(),
+        getArtifactCacheFactory(),
+        getTypeCoercerFactory(),
+        getUnconfiguredBuildTargetFactory(),
+        getTargetConfiguration(),
+        getHostConfiguration(),
+        getTargetConfigurationSerializer(),
+        getParser(),
+        getBuckEventBus(),
+        getPlatform(),
+        getEnvironment(),
+        getJavaPackageFinder(),
+        getClock(),
+        getVersionControlStatsGenerator(),
+        getProcessManager(),
+        getWebServer(),
+        getPersistentWorkerPools(),
+        buckConfig,
+        getFileHashCache(),
+        getExecutors(),
+        getScheduledExecutor(),
+        getBuildEnvironmentDescription(),
+        getActionGraphProvider(),
+        getKnownRuleTypesProvider(),
+        getBuildInfoStoreManager(),
+        getInvocationInfo(),
+        getDefaultRuleKeyFactoryCacheRecycler(),
+        getProjectFilesystemFactory(),
+        getRuleKeyConfiguration(),
+        getProcessExecutor(),
+        getExecutableFinder(),
+        getPluginManager(),
+        getBuckModuleManager(),
+        getDepsAwareExecutorSupplier(),
+        getMetadataProvider(),
+        getManifestServiceSupplier(),
+        getGlobalState(),
+        getClientWorkingDir());
   }
 }

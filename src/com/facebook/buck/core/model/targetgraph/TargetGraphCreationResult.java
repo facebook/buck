@@ -17,13 +17,11 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.collect.ImmutableSet;
-import org.immutables.value.Value;
 
 /** Contains information produced as a result of the phase of target graph creation. */
-@Value.Immutable(builder = false, copy = true, prehash = true)
-@BuckStyleValue
+@BuckStylePrehashedValue
 public abstract class TargetGraphCreationResult {
 
   /**
@@ -43,9 +41,12 @@ public abstract class TargetGraphCreationResult {
   public abstract ImmutableSet<BuildTarget> getBuildTargets();
 
   /** Copies this object with replacing the target graph. */
-  public abstract TargetGraphCreationResult withTargetGraph(TargetGraph targetGraph);
+  public TargetGraphCreationResult withTargetGraph(TargetGraph targetGraph) {
+    return ImmutableTargetGraphCreationResult.of(targetGraph, getBuildTargets());
+  }
 
   /** Copies this object with replacing the top level targets. */
-  public abstract TargetGraphCreationResult withBuildTargets(
-      Iterable<? extends BuildTarget> elements);
+  public TargetGraphCreationResult withBuildTargets(Iterable<? extends BuildTarget> elements) {
+    return ImmutableTargetGraphCreationResult.of(getTargetGraph(), elements);
+  }
 }

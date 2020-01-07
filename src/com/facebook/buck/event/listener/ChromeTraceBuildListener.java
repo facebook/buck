@@ -252,8 +252,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Override
   public void close() {
-    ChromeTraceBuildListenerCloseArgs args =
-        ChromeTraceBuildListenerCloseArgs.of(
+    ChromeTraceBuildListenerCloseAction.ChromeTraceBuildListenerCloseArgs args =
+        ImmutableChromeTraceBuildListenerCloseArgs.of(
             outputExecutor,
             tracePath,
             chromeTraceWriter,
@@ -265,8 +265,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
     ChromeTraceBuildListenerCloseAction closeAction = new ChromeTraceBuildListenerCloseAction();
 
-    BackgroundTask<ChromeTraceBuildListenerCloseArgs> task =
-        ImmutableBackgroundTask.<ChromeTraceBuildListenerCloseArgs>builder()
+    BackgroundTask<ChromeTraceBuildListenerCloseAction.ChromeTraceBuildListenerCloseArgs> task =
+        ImmutableBackgroundTask
+            .<ChromeTraceBuildListenerCloseAction.ChromeTraceBuildListenerCloseArgs>builder()
             .setAction(closeAction)
             .setActionArgs(args)
             .setName("ChromeTraceBuildListener_close")

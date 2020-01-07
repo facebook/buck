@@ -17,7 +17,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.event.chrome_trace.ChromeTraceWriter;
@@ -36,40 +36,32 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import org.immutables.value.Value;
 
 /** TaskAction implementation for the close() logic in {@link ChromeTraceBuildListener}. */
-class ChromeTraceBuildListenerCloseAction implements TaskAction<ChromeTraceBuildListenerCloseArgs> {
+class ChromeTraceBuildListenerCloseAction
+    implements TaskAction<ChromeTraceBuildListenerCloseAction.ChromeTraceBuildListenerCloseArgs> {
 
   private static final Logger LOG = Logger.get(ChromeTraceBuildListener.class);
   private static final int TIMEOUT_SECONDS = 30;
 
   /** Abstract class holding arguments to close() logic. */
-  @Value.Immutable(builder = false)
-  @BuckStyleImmutable
-  public abstract static class AbstractChromeTraceBuildListenerCloseArgs {
-    @Value.Parameter
+  @BuckStyleValue
+  public abstract static class ChromeTraceBuildListenerCloseArgs {
+
     public abstract ExecutorService getOutputExecutor();
 
-    @Value.Parameter
     public abstract Path getTracePath();
 
-    @Value.Parameter
     public abstract ChromeTraceWriter getChromeTraceWriter();
 
-    @Value.Parameter
     public abstract OutputStream getTraceStream();
 
-    @Value.Parameter
     public abstract ChromeTraceBuckConfig getConfig();
 
-    @Value.Parameter
     public abstract Path getLogDirectoryPath();
 
-    @Value.Parameter
     public abstract BuildId getBuildId();
 
-    @Value.Parameter
     public abstract ProjectFilesystem getProjectFilesystem();
   }
 

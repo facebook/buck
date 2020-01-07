@@ -18,21 +18,17 @@ package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsSupplier;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.google.common.collect.ImmutableMap;
-import org.immutables.value.Value;
 
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-public abstract class AbstractAppleCxxPlatformsProvider implements CxxPlatformsSupplier {
+@BuckStyleValue
+public abstract class AppleCxxPlatformsProvider implements CxxPlatformsSupplier {
 
   public static final String DEFAULT_NAME = "apple-cxx-platforms";
 
-  @Value.Parameter
   public abstract FlavorDomain<AppleCxxPlatform> getAppleCxxPlatforms();
 
   /** @return {@link CxxPlatform} of all {@link AppleCxxPlatform}s */
@@ -52,5 +48,9 @@ public abstract class AbstractAppleCxxPlatformsProvider implements CxxPlatformsS
   @Override
   public String getName() {
     return DEFAULT_NAME;
+  }
+
+  public static AppleCxxPlatformsProvider of(FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
+    return ImmutableAppleCxxPlatformsProvider.of(appleCxxPlatforms);
   }
 }

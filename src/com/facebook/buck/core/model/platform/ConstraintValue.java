@@ -17,17 +17,17 @@
 package com.facebook.buck.core.model.platform;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 
 /** Represents a constraint defined using {@code constraint_value}. */
-@BuckStyleImmutable
-@Value.Immutable(builder = false, copy = false, prehash = true)
-public abstract class AbstractConstraintValue {
+@BuckStylePrehashedValue
+public abstract class ConstraintValue {
 
-  @Value.Parameter
   public abstract BuildTarget getBuildTarget();
 
-  @Value.Parameter
   public abstract ConstraintSetting getConstraintSetting();
+
+  public static ConstraintValue of(BuildTarget buildTarget, ConstraintSetting constraintSetting) {
+    return ImmutableConstraintValue.of(buildTarget, constraintSetting);
+  }
 }

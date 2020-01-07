@@ -174,7 +174,7 @@ public class CommandRunnerParamsForTesting {
             new TargetConfigurationSerializerForTests(cell.getCellPathResolver()),
             FakeClock.doNotCare());
 
-    return CommandRunnerParams.of(
+    return ImmutableCommandRunnerParams.of(
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
         cell,

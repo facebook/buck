@@ -23,9 +23,9 @@ import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationId
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.graph.MutableGraph;
-import org.immutables.value.Value;
 
 /**
  * Demonstration of usage of {@link GraphComputation}.
@@ -35,12 +35,11 @@ import org.immutables.value.Value;
  */
 public class ChildrenAdder implements GraphComputation<LongNode, LongNode> {
 
-  @Value.Immutable(builder = false, copy = false, prehash = true)
+  @BuckStylePrehashedValue
   public abstract static class LongNode implements ComputeKey<LongNode>, ComputeResult {
     public static final ComputationIdentifier<LongNode> IDENTIFIER =
         ClassBasedComputationIdentifier.of(LongNode.class, LongNode.class);
 
-    @Value.Parameter
     public abstract long get();
 
     @Override

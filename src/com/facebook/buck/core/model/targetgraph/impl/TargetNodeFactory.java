@@ -207,7 +207,7 @@ public class TargetNodeFactory implements NodeCopier {
     // ImplicitDepsInferringDescriptions may give different results for deps based on flavors.
     //
     // Note that this method strips away selected versions, and may be buggy because of it.
-    return ImmutableTargetNode.of(
+    return TargetNodeImpl.of(
         buildTarget,
         this,
         description,

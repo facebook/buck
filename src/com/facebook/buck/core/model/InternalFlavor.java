@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.immutables.value.Value;
@@ -26,13 +26,11 @@ import org.immutables.value.Value;
  * irrelevant to the end user. Historically, all flavors were converted to internal, some need to be
  * moved to UserFlavor.
  */
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
+@BuckStylePrehashedValue
 @JsonDeserialize
-abstract class AbstractInternalFlavor implements Flavor {
+public abstract class InternalFlavor implements Flavor {
 
   @Override
-  @Value.Parameter
   @JsonProperty("name")
   public abstract String getName();
 
@@ -59,5 +57,9 @@ abstract class AbstractInternalFlavor implements Flavor {
   @Override
   public int hashCode() {
     return this.getName().hashCode();
+  }
+
+  public static InternalFlavor of(String name) {
+    return ImmutableInternalFlavor.of(name);
   }
 }

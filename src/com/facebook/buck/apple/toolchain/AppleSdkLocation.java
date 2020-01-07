@@ -17,22 +17,23 @@
 package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.core.toolchain.ComparableToolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
-import org.immutables.value.Value;
-import org.immutables.value.Value.Parameter;
+import java.util.Map;
 
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public interface AbstractAppleSdkLocation extends ComparableToolchain {
+@BuckStyleValue
+public interface AppleSdkLocation extends ComparableToolchain {
 
   String DEFAULT_NAME = "apple-sdk-location";
 
-  @Parameter
   ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths();
 
   @Override
   default String getName() {
     return DEFAULT_NAME;
+  }
+
+  static AppleSdkLocation of(Map<? extends AppleSdk, ? extends AppleSdkPaths> appleSdkPaths) {
+    return ImmutableAppleSdkLocation.of(appleSdkPaths);
   }
 }

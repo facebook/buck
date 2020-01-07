@@ -14,23 +14,29 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.toolchain;
+package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.nio.file.Path;
 
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public interface AbstractJavaCxxPlatformProvider extends Toolchain {
-  String DEFAULT_NAME = "java-cxx-platform";
+/**
+ * The value of {@code [apple] xcode_developer_dir_for_tests} if present. Otherwise this falls back
+ * to {@code [apple] xcode_developer_dir} and finally {@code xcode-select --print-path}.
+ */
+@BuckStyleValue
+public interface AppleDeveloperDirectoryForTestsProvider extends Toolchain {
 
-  @Value.Parameter
-  UnresolvedCxxPlatform getDefaultJavaCxxPlatform();
+  String DEFAULT_NAME = "apple-developer-directory-for-tests";
+
+  Path getAppleDeveloperDirectoryForTests();
 
   @Override
   default String getName() {
     return DEFAULT_NAME;
+  }
+
+  static AppleDeveloperDirectoryForTestsProvider of(Path appleDeveloperDirectoryForTests) {
+    return ImmutableAppleDeveloperDirectoryForTestsProvider.of(appleDeveloperDirectoryForTests);
   }
 }

@@ -19,31 +19,26 @@ package com.facebook.buck.core.model.targetgraph.impl;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import org.immutables.value.Value;
 
 /** Immutable implementation of {@link UnconfiguredTargetNode}. */
-@Value.Immutable(builder = false, copy = false, prehash = true)
-@BuckStyleImmutable
+@BuckStylePrehashedValue
 @JsonDeserialize
-public abstract class AbstractImmutableUnconfiguredTargetNode implements UnconfiguredTargetNode {
+public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTargetNode {
   @Override
-  @Value.Parameter
   @JsonProperty("buildTarget")
   public abstract UnconfiguredBuildTarget getBuildTarget();
 
   @Override
-  @Value.Parameter
   @JsonProperty("ruleType")
   public abstract RuleType getRuleType();
 
   @Override
-  @Value.Parameter
   @JsonProperty("attributes")
   public abstract ImmutableMap<String, Object> getAttributes();
 
@@ -51,12 +46,20 @@ public abstract class AbstractImmutableUnconfiguredTargetNode implements Unconfi
   // TODO: should we move them out of UnconfiguredTargetNode to TargetNode ?
 
   @Override
-  @Value.Parameter
   @JsonProperty("visibilityPatterns")
   public abstract ImmutableSet<VisibilityPattern> getVisibilityPatterns();
 
   @Override
-  @Value.Parameter
   @JsonProperty("withinViewPatterns")
   public abstract ImmutableSet<VisibilityPattern> getWithinViewPatterns();
+
+  public static UnconfiguredTargetNode of(
+      UnconfiguredBuildTarget buildTarget,
+      RuleType ruleType,
+      ImmutableMap<String, Object> attributes,
+      ImmutableSet<VisibilityPattern> visibilityPatterns,
+      ImmutableSet<VisibilityPattern> withinViewPatterns) {
+    return ImmutableImmutableUnconfiguredTargetNode.of(
+        buildTarget, ruleType, attributes, visibilityPatterns, withinViewPatterns);
+  }
 }

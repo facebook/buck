@@ -1441,7 +1441,7 @@ public final class MainRunner {
           try {
             exitCode =
                 command.run(
-                    CommandRunnerParams.of(
+                    ImmutableCommandRunnerParams.of(
                         printConsole,
                         stdIn,
                         rootCell,

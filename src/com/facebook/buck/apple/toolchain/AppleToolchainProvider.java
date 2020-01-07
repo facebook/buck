@@ -16,23 +16,23 @@
 
 package com.facebook.buck.apple.toolchain;
 
-import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import java.nio.file.Path;
-import org.immutables.value.Value;
+import com.facebook.buck.core.toolchain.ComparableToolchain;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 
-/** Provides access to Apple developer directory. */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public interface AbstractAppleDeveloperDirectoryProvider extends Toolchain {
+@BuckStyleValue
+public interface AppleToolchainProvider extends ComparableToolchain {
+  String DEFAULT_NAME = "apple-toolchain-provider";
 
-  String DEFAULT_NAME = "apple-developer-directory";
-
-  @Value.Parameter
-  Path getAppleDeveloperDirectory();
+  ImmutableMap<String, AppleToolchain> getAppleToolchains();
 
   @Override
   default String getName() {
     return DEFAULT_NAME;
+  }
+
+  static AppleToolchainProvider of(Map<String, ? extends AppleToolchain> appleToolchains) {
+    return ImmutableAppleToolchainProvider.of(appleToolchains);
   }
 }

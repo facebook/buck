@@ -26,7 +26,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.NodeCopier;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.visibility.VisibilityChecker;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
@@ -47,9 +47,8 @@ import org.immutables.value.Value;
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */
-@BuckStyleImmutable
-@Value.Immutable(builder = false, prehash = true)
-abstract class AbstractImmutableTargetNode<T extends ConstructorArg> implements TargetNode<T> {
+@BuckStylePrehashedValue
+public abstract class TargetNodeImpl<T extends ConstructorArg> implements TargetNode<T> {
 
   @Value.Check
   protected void check() {
@@ -60,11 +59,9 @@ abstract class AbstractImmutableTargetNode<T extends ConstructorArg> implements 
         getBuildTarget());
   }
 
-  @Value.Parameter
   @Override
   public abstract BuildTarget getBuildTarget();
 
-  @Value.Parameter
   @Override
   public abstract NodeCopier getNodeCopier();
 
@@ -72,28 +69,23 @@ abstract class AbstractImmutableTargetNode<T extends ConstructorArg> implements 
   // from the `equals`/`hashCode` implementation of `TargetNode`.  This should be fine, as we
   // already rely on restarting the daemon if the descriptions change in any meaningful way to
   // maintain parser cache integrity.
-  @Value.Parameter
+
   @Value.Auxiliary
   @Override
   public abstract BaseDescription<T> getDescription();
 
-  @Value.Parameter
   @Override
   public abstract T getConstructorArg();
 
-  @Value.Parameter
   @Override
   public abstract ProjectFilesystem getFilesystem();
 
-  @Value.Parameter
   @Override
   public abstract ImmutableSet<Path> getInputs();
 
-  @Value.Parameter
   @Override
   public abstract ImmutableSet<BuildTarget> getDeclaredDeps();
 
-  @Value.Parameter
   @Override
   public abstract ImmutableSortedSet<BuildTarget> getExtraDeps();
 
@@ -106,27 +98,21 @@ abstract class AbstractImmutableTargetNode<T extends ConstructorArg> implements 
    * against the TargetGraph (e.g. detecting the names of rules of a certain type) but don't use the
    * output of those detected rules.
    */
-  @Value.Parameter
   @Override
   public abstract ImmutableSortedSet<BuildTarget> getTargetGraphOnlyDeps();
 
-  @Value.Parameter
   @Override
   public abstract ImmutableSortedSet<BuildTarget> getConfigurationDeps();
 
-  @Value.Parameter
   @Override
   public abstract CellPathResolver getCellNames();
 
-  @Value.Parameter
   @Override
   public abstract ImmutableSet<VisibilityPattern> getVisibilityPatterns();
 
-  @Value.Parameter
   @Override
   public abstract ImmutableSet<VisibilityPattern> getWithinViewPatterns();
 
-  @Value.Parameter
   @Override
   public abstract Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions();
 
@@ -187,11 +173,173 @@ abstract class AbstractImmutableTargetNode<T extends ConstructorArg> implements 
 
   @Override
   public TargetNode<T> copyWithFlavors(ImmutableSet<Flavor> flavors) {
-    return getNodeCopier().copyNodeWithFlavors(ImmutableTargetNode.copyOf(this), flavors);
+    return getNodeCopier().copyNodeWithFlavors(this, flavors);
   }
 
   @Override
-  public TargetNode<T> withFlavors(ImmutableSet<Flavor> flavors) {
-    return ImmutableTargetNode.copyOf(this).withBuildTarget(getBuildTarget().withFlavors(flavors));
+  public TargetNodeImpl<T> withFlavors(ImmutableSet<Flavor> flavors) {
+    return ImmutableTargetNodeImpl.of(
+        getBuildTarget().withFlavors(flavors),
+        getNodeCopier(),
+        getDescription(),
+        getConstructorArg(),
+        getFilesystem(),
+        getInputs(),
+        getDeclaredDeps(),
+        getExtraDeps(),
+        getTargetGraphOnlyDeps(),
+        getConfigurationDeps(),
+        getCellNames(),
+        getVisibilityPatterns(),
+        getWithinViewPatterns(),
+        getSelectedVersions());
+  }
+
+  @Override
+  public TargetNodeImpl<T> withBuildTarget(BuildTarget buildTarget) {
+    return ImmutableTargetNodeImpl.of(
+        buildTarget,
+        getNodeCopier(),
+        getDescription(),
+        getConstructorArg(),
+        getFilesystem(),
+        getInputs(),
+        getDeclaredDeps(),
+        getExtraDeps(),
+        getTargetGraphOnlyDeps(),
+        getConfigurationDeps(),
+        getCellNames(),
+        getVisibilityPatterns(),
+        getWithinViewPatterns(),
+        getSelectedVersions());
+  }
+
+  @Override
+  public TargetNodeImpl<T> withConstructorArg(T constructorArg) {
+    return ImmutableTargetNodeImpl.of(
+        getBuildTarget(),
+        getNodeCopier(),
+        getDescription(),
+        constructorArg,
+        getFilesystem(),
+        getInputs(),
+        getDeclaredDeps(),
+        getExtraDeps(),
+        getTargetGraphOnlyDeps(),
+        getConfigurationDeps(),
+        getCellNames(),
+        getVisibilityPatterns(),
+        getWithinViewPatterns(),
+        getSelectedVersions());
+  }
+
+  @Override
+  public TargetNodeImpl<T> withDeclaredDeps(Iterable<? extends BuildTarget> declaredDeps) {
+    return ImmutableTargetNodeImpl.of(
+        getBuildTarget(),
+        getNodeCopier(),
+        getDescription(),
+        getConstructorArg(),
+        getFilesystem(),
+        getInputs(),
+        declaredDeps,
+        getExtraDeps(),
+        getTargetGraphOnlyDeps(),
+        getConfigurationDeps(),
+        getCellNames(),
+        getVisibilityPatterns(),
+        getWithinViewPatterns(),
+        getSelectedVersions());
+  }
+
+  @Override
+  public TargetNodeImpl<T> withExtraDeps(ImmutableSortedSet<BuildTarget> extraDeps) {
+    return ImmutableTargetNodeImpl.of(
+        getBuildTarget(),
+        getNodeCopier(),
+        getDescription(),
+        getConstructorArg(),
+        getFilesystem(),
+        getInputs(),
+        getDeclaredDeps(),
+        extraDeps,
+        getTargetGraphOnlyDeps(),
+        getConfigurationDeps(),
+        getCellNames(),
+        getVisibilityPatterns(),
+        getWithinViewPatterns(),
+        getSelectedVersions());
+  }
+
+  @Override
+  public TargetNodeImpl<T> withTargetGraphOnlyDeps(
+      ImmutableSortedSet<BuildTarget> targetGraphOnlyDeps) {
+    return ImmutableTargetNodeImpl.of(
+        getBuildTarget(),
+        getNodeCopier(),
+        getDescription(),
+        getConstructorArg(),
+        getFilesystem(),
+        getInputs(),
+        getDeclaredDeps(),
+        getExtraDeps(),
+        targetGraphOnlyDeps,
+        getConfigurationDeps(),
+        getCellNames(),
+        getVisibilityPatterns(),
+        getWithinViewPatterns(),
+        getSelectedVersions());
+  }
+
+  @Override
+  public TargetNodeImpl<T> withSelectedVersions(
+      Optional<? extends ImmutableMap<BuildTarget, Version>> selectedVersions) {
+    return ImmutableTargetNodeImpl.of(
+        getBuildTarget(),
+        getNodeCopier(),
+        getDescription(),
+        getConstructorArg(),
+        getFilesystem(),
+        getInputs(),
+        getDeclaredDeps(),
+        getExtraDeps(),
+        getTargetGraphOnlyDeps(),
+        getConfigurationDeps(),
+        getCellNames(),
+        getVisibilityPatterns(),
+        getWithinViewPatterns(),
+        selectedVersions);
+  }
+
+  public static <T extends ConstructorArg> TargetNodeImpl<T> of(
+      BuildTarget buildTarget,
+      NodeCopier nodeCopier,
+      BaseDescription<T> description,
+      T constructorArg,
+      ProjectFilesystem filesystem,
+      ImmutableSet<Path> inputs,
+      ImmutableSet<BuildTarget> declaredDeps,
+      ImmutableSortedSet<BuildTarget> extraDeps,
+      ImmutableSortedSet<BuildTarget> targetGraphOnlyDeps,
+      ImmutableSortedSet<BuildTarget> configurationDeps,
+      CellPathResolver cellNames,
+      ImmutableSet<VisibilityPattern> visibilityPatterns,
+      ImmutableSet<VisibilityPattern> withinViewPatterns,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
+    return ImmutableTargetNodeImpl.of(
+        buildTarget,
+        nodeCopier,
+        description,
+        constructorArg,
+        filesystem,
+        inputs,
+        declaredDeps,
+        extraDeps,
+        targetGraphOnlyDeps,
+        configurationDeps,
+        cellNames,
+        visibilityPatterns,
+        withinViewPatterns,
+        selectedVersions);
   }
 }

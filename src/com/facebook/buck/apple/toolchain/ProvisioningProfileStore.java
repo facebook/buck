@@ -22,7 +22,7 @@ import com.dd.plist.NSObject;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.toolchain.Toolchain;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
@@ -38,12 +38,10 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 /** A collection of provisioning profiles. */
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-public abstract class AbstractProvisioningProfileStore implements AddsToRuleKey, Toolchain {
+@BuckStyleValue
+public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolchain {
   public static final Optional<ImmutableMap<String, NSObject>> MATCH_ANY_ENTITLEMENT =
       Optional.empty();
   public static final Optional<ImmutableList<CodeSignIdentity>> MATCH_ANY_IDENTITY =
@@ -65,7 +63,6 @@ public abstract class AbstractProvisioningProfileStore implements AddsToRuleKey,
           "com.apple.developer.ubiquity-container-identifiers",
           "com.apple.developer.ubiquity-kvstore-identifier");
 
-  @Value.Parameter
   public abstract Supplier<ImmutableList<ProvisioningProfileMetadata>>
       getProvisioningProfilesSupplier();
 
@@ -264,5 +261,10 @@ public abstract class AbstractProvisioningProfileStore implements AddsToRuleKey,
   @Override
   public String getName() {
     return DEFAULT_NAME;
+  }
+
+  public static ProvisioningProfileStore of(
+      Supplier<ImmutableList<ProvisioningProfileMetadata>> provisioningProfilesSupplier) {
+    return ImmutableProvisioningProfileStore.of(provisioningProfilesSupplier);
   }
 }
