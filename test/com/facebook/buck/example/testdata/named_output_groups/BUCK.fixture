@@ -1,0 +1,47 @@
+load("//:defs.bzl", "delicious")
+
+# Run any of the following:
+#   buck build //:fuud[ika]
+#   buck build //:fuud[maguro]
+#   buck build //:fuud[unagi]
+#   buck build //:fuud[ikura]
+#   buck build //:fuud[hotate]
+#   buck build //:fuud[toro]
+#   buck build //:fuud[saba]
+#   buck build //:fuud[hokkigai]
+delicious(
+    name = "fuud",
+    foods = [
+        "ika",
+        "maguro",
+        "unagi",
+        "ikura",
+        "hotate",
+        "toro",
+        "saba",
+        "hokkigai",
+    ],
+)
+
+# Named outputs can be used in src of any other rule
+export_file(
+    name = "i_ate_it",
+    src = ":fuud[unagi]",
+    out = "still_yummy.txt",
+)
+
+# Named outputs can be used in src or srcs of any other rule
+# Run any of the following:
+#   buck build //:still_delicious[toro]
+#   buck build //:still_delicious[saba]
+#   buck build //:still_delicious[hokkigai]
+delicious(
+    name = "still_delicious",
+    foods = [
+        "saba",
+        "hokkigai",
+    ],
+    srcs = [
+        ":fuud[toro]",
+    ],
+)
