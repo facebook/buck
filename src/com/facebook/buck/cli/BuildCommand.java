@@ -411,8 +411,7 @@ public class BuildCommand extends AbstractCommand {
     }
 
     TargetGraphCreationResult targetGraphForLocalBuild =
-        ActionAndTargetGraphs.getTargetGraphForLocalBuild(
-            unversionedTargetGraph, versionedTargetGraph);
+        ActionAndTargetGraphs.getTargetGraph(unversionedTargetGraph, versionedTargetGraph);
     checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
     ActionGraphAndBuilder actionGraph =
         createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger);
@@ -583,8 +582,7 @@ public class BuildCommand extends AbstractCommand {
       showOutputs(params, graphsAndBuildTargets, ruleKeyCacheScope);
     }
     if (outputPathForSingleBuildTarget != null) {
-      BuildTarget loneTarget =
-          Iterables.getOnlyElement(graphs.getTargetGraphForLocalBuild().getBuildTargets());
+      BuildTarget loneTarget = Iterables.getOnlyElement(graphs.getTargetGraph().getBuildTargets());
       BuildRule rule =
           graphs.getActionGraphAndBuilder().getActionGraphBuilder().getRule(loneTarget);
       if (!rule.outputFileCanBeCopied()) {

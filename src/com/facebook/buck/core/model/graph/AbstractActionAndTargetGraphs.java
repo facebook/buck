@@ -25,8 +25,8 @@ import org.immutables.value.Value;
 
 /**
  * Container class for {@link ActionGraphAndBuilder} and {@link TargetGraphCreationResult}. Also
- * contains helper methods for which {@link TargetGraph} to use for local and distributed builds
- * ({@link com.facebook.buck.versions.VersionedTargetGraph} vs un-versioned).
+ * contains helper methods to choose which {@link TargetGraph} to use ({@link
+ * com.facebook.buck.versions.VersionedTargetGraph} vs un-versioned).
  */
 @Value.Immutable
 @BuckStyleImmutable
@@ -38,26 +38,17 @@ abstract class AbstractActionAndTargetGraphs {
 
   public abstract ActionGraphAndBuilder getActionGraphAndBuilder();
 
-  /**
-   * Helper method to choose versioned vs un-versioned {@link TargetGraph} to use for local builds.
-   */
-  public static TargetGraphCreationResult getTargetGraphForLocalBuild(
+  /** Helper method to choose versioned vs un-versioned {@link TargetGraph}. */
+  public static TargetGraphCreationResult getTargetGraph(
       TargetGraphCreationResult unversionedTargetGraph,
       Optional<TargetGraphCreationResult> versionedTargetGraph) {
-    // If a versioned target graph was produced then we always use this for the local build,
+    // If a versioned target graph was produced then we always use it,
     // otherwise the unversioned graph is used.
     return versionedTargetGraph.orElse(unversionedTargetGraph);
   }
 
-  /** Helper method to get the appropriate {@link TargetGraph} to use for local builds. */
-  public TargetGraphCreationResult getTargetGraphForLocalBuild() {
-    return getTargetGraphForLocalBuild(getUnversionedTargetGraph(), getVersionedTargetGraph());
-  }
-
-  /** Helper method to get the appropriate {@link TargetGraph} to use for distributed builds. */
-  public TargetGraphCreationResult getTargetGraphForDistributedBuild() {
-    // Distributed builds serialize and send the unversioned target graph,
-    // and then deserialize and version remotely.
-    return getUnversionedTargetGraph();
+  /** Helper method to get the appropriate {@link TargetGraph}. */
+  public TargetGraphCreationResult getTargetGraph() {
+    return getTargetGraph(getUnversionedTargetGraph(), getVersionedTargetGraph());
   }
 }
