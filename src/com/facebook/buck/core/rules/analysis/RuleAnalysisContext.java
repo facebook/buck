@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.analysis;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
+import com.facebook.buck.core.rules.analysis.context.DependencyOnlyRuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.BuckEventBus;
@@ -42,24 +43,28 @@ import java.util.Map;
  * their corresponding {@link com.google.devtools.build.lib.packages.InfoInterface}s. It will also
  * offer ways to register {@link com.facebook.buck.step.Step}s.
  */
-public interface RuleAnalysisContext {
+public interface RuleAnalysisContext extends DependencyOnlyRuleAnalysisContext {
 
   /**
    * @return a map of the {@link ProviderInfoCollection} of the providers propagated by each of the
    *     dependencies requested.
    */
+  @Override
   Map<BuildTarget, ProviderInfoCollection> resolveDeps(Iterable<BuildTarget> deps);
 
   /** same as {@link #resolveDeps(Iterable)} but for one dep */
+  @Override
   ProviderInfoCollection resolveDep(BuildTarget dep);
 
   /**
    * @return a list of the {@link Artifact} of the sources of the providers propagated by each of
    *     the source paths requested.
    */
+  @Override
   ImmutableSortedSet<Artifact> resolveSrcs(Iterable<SourcePath> srcs);
 
   /** same as {@link #resolveSrcs(Iterable)} but for one src */
+  @Override
   Artifact resolveSrc(SourcePath src);
 
   /**
