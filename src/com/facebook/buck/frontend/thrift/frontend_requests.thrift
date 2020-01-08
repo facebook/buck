@@ -85,7 +85,7 @@ struct FetchRuleKeyLogsRequest {
 
   2: optional string repository;
   3: optional string scheduleType;
-  4: optional bool distributedBuildModeEnabled;
+  // 4: DEPRECATED.
 }
 
 struct FetchRuleKeyLogsResponse {
