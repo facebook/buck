@@ -272,6 +272,7 @@ public class Omnibus {
       ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
+      ImmutableList<? extends Arg> extraLdFlags,
       OmnibusSpec spec,
       SourcePath omnibus,
       NativeLinkTarget root,
@@ -279,6 +280,9 @@ public class Omnibus {
       Optional<Path> output) {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    // Add any extra flags to the link.
+    argsBuilder.addAll(extraLdFlags);
 
     // Since the dummy omnibus library doesn't actually contain any symbols, make sure the linker
     // won't drop its runtime reference to it.
@@ -428,6 +432,7 @@ public class Omnibus {
       ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
+      ImmutableList<? extends Arg> extraLdFlags,
       OmnibusSpec spec,
       SourcePath omnibus,
       NativeLinkTarget root) {
@@ -438,6 +443,7 @@ public class Omnibus {
         graphBuilder,
         cxxBuckConfig,
         cxxPlatform,
+        extraLdFlags,
         spec,
         omnibus,
         root,
@@ -452,6 +458,7 @@ public class Omnibus {
       ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
+      ImmutableList<? extends Arg> extraLdFlags,
       OmnibusSpec spec,
       SourcePath omnibus,
       NativeLinkTarget root) {
@@ -462,6 +469,7 @@ public class Omnibus {
         graphBuilder,
         cxxBuckConfig,
         cxxPlatform,
+        extraLdFlags,
         spec,
         omnibus,
         root,
@@ -623,7 +631,7 @@ public class Omnibus {
       ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      ImmutableList<? extends Arg> extraOmnibusLdflags,
+      ImmutableList<? extends Arg> extraLdflags,
       Iterable<? extends NativeLinkTarget> nativeLinkTargetRoots,
       Iterable<? extends NativeLinkable> nativeLinkableRoots) {
 
@@ -642,7 +650,7 @@ public class Omnibus {
             graphBuilder,
             cxxBuckConfig,
             cxxPlatform,
-            extraOmnibusLdflags);
+            extraLdflags);
 
     // Create rule for each of the root nodes, linking against the dummy omnibus library above.
     for (NativeLinkTarget target : spec.getRoots().values()) {
@@ -658,6 +666,7 @@ public class Omnibus {
             graphBuilder,
             cxxBuckConfig,
             cxxPlatform,
+            extraLdflags,
             spec,
             dummyOmnibus,
             target);
@@ -670,6 +679,7 @@ public class Omnibus {
                 graphBuilder,
                 cxxBuckConfig,
                 cxxPlatform,
+                extraLdflags,
                 spec,
                 dummyOmnibus,
                 target);
@@ -689,7 +699,7 @@ public class Omnibus {
               graphBuilder,
               cxxBuckConfig,
               cxxPlatform,
-              extraOmnibusLdflags,
+              extraLdflags,
               spec);
       libs.addLibraries(omnibus);
       realOmnibus = Optional.of(omnibus.getPath());
@@ -707,6 +717,7 @@ public class Omnibus {
                 graphBuilder,
                 cxxBuckConfig,
                 cxxPlatform,
+                extraLdflags,
                 spec,
                 realOmnibus.orElse(dummyOmnibus),
                 target);

@@ -329,14 +329,12 @@ public class CxxLibraryFactory {
                 cxxPlatform,
                 args,
                 cxxDeps.get(ruleResolverInner, cxxPlatform),
-                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-                    args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform),
+                ImmutableList.of(),
                 CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                     args.getExportedLinkerFlags(),
                     args.getExportedPlatformLinkerFlags(),
                     cxxPlatform),
-                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-                    args.getPostLinkerFlags(), args.getPostPlatformLinkerFlags(), cxxPlatform),
+                ImmutableList.of(),
                 CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                     args.getExportedPostLinkerFlags(),
                     args.getExportedPostPlatformLinkerFlags(),

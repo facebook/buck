@@ -76,6 +76,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
@@ -198,17 +199,7 @@ public class CxxLuaExtensionDescription
                 PicType.PIC)
             .requirePreprocessAndCompileRules(srcs);
 
-    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
-    CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-            args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
-        .stream()
-        .map(macrosConverter::convert)
-        .forEach(argsBuilder::add);
-
-    // Add object files into the args.
-    argsBuilder.addAll(SourcePathArg.from(picObjects.values()));
-
-    return argsBuilder.build();
+    return SourcePathArg.from(picObjects.values());
   }
 
   private BuildRule createExtensionBuildRule(
@@ -221,6 +212,9 @@ public class CxxLuaExtensionDescription
     CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
     String extensionName = getExtensionName(buildTarget, cxxPlatform);
     Path extensionPath = getExtensionPath(projectFilesystem, buildTarget, cxxPlatform);
+    StringWithMacrosConverter macrosConverter =
+        CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+            buildTarget, cellRoots, graphBuilder, cxxPlatform);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
@@ -247,7 +241,13 @@ public class CxxLuaExtensionDescription
         ImmutableSet.of(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
-            .setArgs(
+            .addAllArgs(
+                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                        args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
+                    .stream()
+                    .map(macrosConverter::convert)
+                    .collect(Collectors.toList()))
+            .addAllArgs(
                 getExtensionArgs(
                     buildTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
                     projectFilesystem,

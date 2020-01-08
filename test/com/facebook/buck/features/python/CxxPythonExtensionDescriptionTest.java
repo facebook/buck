@@ -421,7 +421,8 @@ public class CxxPythonExtensionDescriptionTest {
         rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     NativeLinkableInput input =
         nativeLinkTarget.getNativeLinkTargetInput(graphBuilder, pathResolver);
-    assertThat(Arg.stringify(input.getArgs(), pathResolver), Matchers.hasItems("--flag"));
+    assertThat(
+        Arg.stringify(input.getArgs(), pathResolver), Matchers.not(Matchers.hasItems("--flag")));
   }
 
   @Test

@@ -83,6 +83,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
@@ -252,14 +253,6 @@ public class CxxPythonExtensionDescription
       ImmutableSet<BuildRule> deps) {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
-    CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-            args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
-        .stream()
-        .map(
-            CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
-                    target, cellRoots, graphBuilder, cxxPlatform)
-                ::convert)
-        .forEach(argsBuilder::add);
 
     // Embed a origin-relative library path into the binary so it can find the shared libraries.
     argsBuilder.addAll(
@@ -347,7 +340,16 @@ public class CxxPythonExtensionDescription
         ImmutableSet.of(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
-            .setArgs(
+            .addAllArgs(
+                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                        args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
+                    .stream()
+                    .map(
+                        CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                                buildTarget, cellRoots, graphBuilder, cxxPlatform)
+                            ::convert)
+                    .collect(Collectors.toList()))
+            .addAllArgs(
                 getExtensionArgs(
                     buildTarget.withoutFlavors(LinkerMapMode.FLAVOR_DOMAIN.getFlavors()),
                     projectFilesystem,

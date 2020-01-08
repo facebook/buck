@@ -22,7 +22,12 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -40,5 +45,21 @@ public class CxxLuaExtensionDescriptionTest {
     assertThat(
         Paths.get(extension.getModule(CxxPlatformUtils.DEFAULT_PLATFORM)),
         Matchers.equalTo(Paths.get("hello/world/rule.so")));
+  }
+
+  @Test
+  public void nativeLinkTargetInput() {
+    CxxLuaExtensionBuilder builder =
+        new CxxLuaExtensionBuilder(BuildTargetFactory.newInstance("//:rule"));
+    builder.setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("--flag")));
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
+    CxxLuaExtension rule = builder.build(graphBuilder);
+    NativeLinkableInput input =
+        rule.getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getNativeLinkTargetInput(graphBuilder, pathResolver);
+    assertThat(
+        Arg.stringify(input.getArgs(), pathResolver), Matchers.not(Matchers.hasItems("--flag")));
   }
 }

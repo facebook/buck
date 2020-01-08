@@ -1131,7 +1131,10 @@ public class CxxLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, graphBuilder.getSourcePathResolver());
     assertThat(
         Arg.stringify(input.getArgs(), graphBuilder.getSourcePathResolver()),
-        hasItems("--flag", "--exported-flag"));
+        not(hasItem("--flag")));
+    assertThat(
+        Arg.stringify(input.getArgs(), graphBuilder.getSourcePathResolver()),
+        hasItem("--exported-flag"));
   }
 
   @Test

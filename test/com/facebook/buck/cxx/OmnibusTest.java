@@ -463,7 +463,7 @@ public class OmnibusTest {
         Arg.stringify(
             getCxxLinkRule(graphBuilder, libs.get(root.getBuildTarget().toString())).getArgs(),
             pathResolver),
-        Matchers.not(Matchers.hasItem(flag)));
+        Matchers.hasItem(flag));
     assertThat(
         Arg.stringify(
             getCxxLinkRule(graphBuilder, libs.get("libomnibus.so")).getArgs(), pathResolver),
