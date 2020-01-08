@@ -151,7 +151,6 @@ public class ThriftArtifactCacheTest {
         new ThriftArtifactCache(
             networkArgs,
             "/nice_as_well",
-            false,
             new BuildId("aabb"),
             0,
             0,
@@ -354,7 +353,6 @@ public class ThriftArtifactCacheTest {
         new ThriftArtifactCache(
             networkArgs,
             "/nice_as_well",
-            false,
             new BuildId("aabb"),
             0,
             0,
@@ -446,7 +444,6 @@ public class ThriftArtifactCacheTest {
         new ThriftArtifactCache(
             networkArgs,
             "/nice_as_well",
-            false,
             new BuildId("aabb"),
             1,
             1,
@@ -511,7 +508,6 @@ public class ThriftArtifactCacheTest {
         new ThriftArtifactCache(
             networkArgs,
             "/nice_as_well",
-            false,
             new BuildId("aabb"),
             0,
             0,

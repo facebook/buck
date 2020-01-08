@@ -184,34 +184,27 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     return builder;
   }
 
-  @Override
-  public ArtifactCache newInstance() {
-    return newInstance(false);
-  }
-
   /**
    * Creates a new instance of the cache for use during a build.
    *
-   * @param distributedBuildModeEnabled true if this is a distributed build
    * @return ArtifactCache instance
    */
   @Override
-  public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
-    return newInstanceInternal(ImmutableSet.of(), distributedBuildModeEnabled);
+  public ArtifactCache newInstance() {
+    return newInstanceInternal(ImmutableSet.of());
   }
 
   @Override
-  public ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled) {
-    return newInstanceInternal(ImmutableSet.of(local), distributedBuildModeEnabled);
+  public ArtifactCache remoteOnlyInstance() {
+    return newInstanceInternal(ImmutableSet.of(local));
   }
 
   @Override
-  public ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled) {
-    return newInstanceInternal(ImmutableSet.of(remote), distributedBuildModeEnabled);
+  public ArtifactCache localOnlyInstance() {
+    return newInstanceInternal(ImmutableSet.of(remote));
   }
 
-  private ArtifactCache newInstanceInternal(
-      ImmutableSet<CacheType> cacheTypeBlacklist, boolean distributedBuildModeEnabled) {
+  private ArtifactCache newInstanceInternal(ImmutableSet<CacheType> cacheTypeBlacklist) {
     ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
     buckEventBus.post(started);
 
@@ -227,7 +220,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             httpFetchExecutorService,
             dirWriteExecutorService,
             cacheTypeBlacklist,
-            distributedBuildModeEnabled,
             producerId,
             producerHostname,
             clientCertificateHandler);
@@ -292,7 +284,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService httpFetchExecutorService,
       ListeningExecutorService dirWriteExecutorService,
       ImmutableSet<CacheType> cacheTypeBlacklist,
-      boolean distributedBuildModeEnabled,
       String producerId,
       String producerHostname,
       Optional<ClientCertificateHandler> clientCertificateHandler) {
@@ -364,7 +355,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                   new ThriftArtifactCache(
                       args,
                       buckConfig.getHybridThriftEndpoint().get(),
-                      distributedBuildModeEnabled,
                       buckEventBus.getBuildId(),
                       getMultiFetchLimit(buckConfig),
                       buckConfig.getHttpFetchConcurrency(),

@@ -85,7 +85,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   private final Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final String hybridThriftEndpoint;
-  private final boolean distributedBuildModeEnabled;
   private final BuildId buildId;
   private final int multiFetchLimit;
   private final int concurrencyLevel;
@@ -96,7 +95,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   public ThriftArtifactCache(
       NetworkCacheArgs args,
       String hybridThriftEndpoint,
-      boolean distributedBuildModeEnabled,
       BuildId buildId,
       int multiFetchLimit,
       int concurrencyLevel,
@@ -111,7 +109,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     this.concurrencyLevel = concurrencyLevel;
     this.multiCheckEnabled = multiCheckEnabled;
     this.hybridThriftEndpoint = hybridThriftEndpoint;
-    this.distributedBuildModeEnabled = distributedBuildModeEnabled;
     this.producerId = producerId;
     this.producerHostname = producerHostname;
   }
@@ -128,7 +125,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     fetchRequest.setRuleKey(thriftRuleKey);
     fetchRequest.setRepository(getRepository());
     fetchRequest.setScheduleType(scheduleType);
-    fetchRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
 
     if (target != null) {
       fetchRequest.setBuildTarget(target.getFullyQualifiedName());
@@ -381,7 +377,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
     containsRequest.setRepository(getRepository());
     containsRequest.setScheduleType(scheduleType);
-    containsRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
 
     BuckCacheRequest cacheRequest = newCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.CONTAINS);
@@ -453,7 +448,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     BuckCacheMultiFetchRequest multiFetchRequest = new BuckCacheMultiFetchRequest();
     multiFetchRequest.setRepository(getRepository());
     multiFetchRequest.setScheduleType(scheduleType);
-    multiFetchRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
     keys.forEach(k -> multiFetchRequest.addToRuleKeys(toThriftRuleKey(k)));
     targets.forEach(t -> multiFetchRequest.addToBuildTargets(t));
 
@@ -714,7 +708,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             artifact,
             getRepository(),
             scheduleType,
-            distributedBuildModeEnabled,
             producerId,
             producerHostname,
             artifact.size());
@@ -796,7 +789,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       ByteSource file,
       String repository,
       String scheduleType,
-      boolean distributedBuildModeEnabled,
       String producerId,
       String producerHostname,
       long artifactSize)
@@ -824,7 +816,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     metadata.setArtifactPayloadMd5(ThriftArtifactCacheProtocol.computeMd5Hash(file));
     metadata.setRepository(repository);
     metadata.setScheduleType(scheduleType);
-    metadata.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
     metadata.setProducerId(producerId);
     metadata.setProducerHostname(producerHostname);
     metadata.setBuildTimeMs(info.getBuildTimeMs());
@@ -868,7 +859,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             .collect(Collectors.toList());
 
     BuckCacheDeleteRequest deleteRequest = new BuckCacheDeleteRequest();
-    deleteRequest.setDistributedBuildModeEnabledIsSet(distributedBuildModeEnabled);
     deleteRequest.setRepository(getRepository());
     deleteRequest.setRuleKeys(ruleKeysThrift);
     deleteRequest.setScheduleType(scheduleType);

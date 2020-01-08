@@ -71,9 +71,6 @@ public class CacheCommand extends AbstractCommand {
   @Nullable
   private String outputDir = null;
 
-  @Option(name = "--distributed", usage = "If the request is for our distributed system.")
-  private boolean isRequestForDistributed = false;
-
   @Option(
       name = "--rule-key-with-target",
       usage =
@@ -161,8 +158,7 @@ public class CacheCommand extends AbstractCommand {
     BuildEvent.Started started = BuildEvent.started(getArguments());
 
     List<ArtifactRunner> results = null;
-    try (ArtifactCache cache =
-            params.getArtifactCacheFactory().newInstance(isRequestForDistributed);
+    try (ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
         CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
       WeightedListeningExecutorService executor = pool.getWeightedListeningExecutorService();

@@ -899,7 +899,6 @@ public class BuildCommand extends AbstractCommand {
             new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
             executor,
             isKeepGoing(),
-            false,
             ruleKeyCacheScope,
             getBuildEngineMode(),
             ruleKeyLogger,

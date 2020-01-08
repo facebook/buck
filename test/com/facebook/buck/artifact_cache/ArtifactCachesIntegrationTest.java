@@ -347,8 +347,7 @@ public class ArtifactCachesIntegrationTest {
 
       CacheResult result;
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         result =
             artifactCache
@@ -387,8 +386,7 @@ public class ArtifactCachesIntegrationTest {
 
       CacheResult result;
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         result =
             artifactCache
@@ -431,8 +429,7 @@ public class ArtifactCachesIntegrationTest {
 
       CacheResult result;
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         result =
             artifactCache
@@ -472,8 +469,7 @@ public class ArtifactCachesIntegrationTest {
 
       CacheResult result;
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         result =
             artifactCache
@@ -516,8 +512,7 @@ public class ArtifactCachesIntegrationTest {
               "http_client_tls_ca = " + caCertPath.toString());
 
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         artifactCache
             .store(
@@ -554,8 +549,7 @@ public class ArtifactCachesIntegrationTest {
               "http_client_tls_ca = " + caCertPath.toString());
 
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         artifactCache
             .store(
@@ -596,8 +590,7 @@ public class ArtifactCachesIntegrationTest {
               "http_client_tls_ca = " + caCertPath.toString());
 
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         artifactCache
             .store(
@@ -635,8 +628,7 @@ public class ArtifactCachesIntegrationTest {
               "http_client_tls_ca = " + caCertPath.toString());
 
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         artifactCache
             .store(
