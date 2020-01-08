@@ -719,4 +719,21 @@ public class BuildCommandIntegrationTest {
     workspace.runBuckBuild("--show-output", "//:dir").assertSuccess();
     assertTrue(Files.isSymbolicLink(symlink));
   }
+
+  @Test
+  public void usesHashedBuckConfigOptionForRuleCaching() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "buck_out_config_target_hash", tmp);
+    workspace.setUp();
+
+    String fullyQualifiedName = "//:binary";
+
+    workspace.runBuckBuild("--show-output", fullyQualifiedName).assertSuccess();
+
+    workspace.addBuckConfigLocalOption("project", "buck_out_include_target_config_hash", "false");
+
+    assertThat(
+        workspace.runBuckBuild("--show-output", fullyQualifiedName).assertSuccess().getStderr(),
+        Matchers.containsString("100.0% CACHE MISS"));
+  }
 }

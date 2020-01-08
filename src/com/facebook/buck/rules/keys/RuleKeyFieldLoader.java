@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.module.BuckModuleHashStrategy;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.Action;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -47,8 +48,10 @@ public class RuleKeyFieldLoader {
 
     // We currently cache items using their full buck-out path, so make sure this is reflected in
     // the rule key.
-    Path buckOutPath = buildRule.getProjectFilesystem().getBuckPaths().getConfiguredBuckOut();
+    BuckPaths buckPaths = buildRule.getProjectFilesystem().getBuckPaths();
+    Path buckOutPath = buckPaths.getConfiguredBuckOut();
     builder.setReflectively(".out", buckOutPath.toString());
+    builder.setReflectively(".hashed_buck_out_paths", buckPaths.shouldIncludeTargetConfigHash());
 
     AlterRuleKeys.amendKey(builder, buildRule);
   }
