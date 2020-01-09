@@ -212,6 +212,15 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
     return Optional.empty();
   }
 
+  public static ApplePlatform fromFlavor(Flavor flavor) {
+    return of(
+        findAppleSdkName(flavor)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Can't find ApplePlatform for flavor: " + flavor)));
+  }
+
   @Override
   public int compareTo(AbstractApplePlatform other) {
     if (this == other) {

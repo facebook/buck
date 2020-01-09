@@ -123,6 +123,7 @@ public class AppleDescriptionProvider implements DescriptionProvider {
             cxxBuckConfig,
             swiftBuckConfig,
             appleLibraryDescription),
-        new SceneKitAssetsDescription());
+        new SceneKitAssetsDescription(),
+        new ApplePlatformDescription());
   }
 }
