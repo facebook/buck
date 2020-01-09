@@ -65,7 +65,8 @@ public class RuleKeyFieldLoader {
             action.getOutputs(),
             output ->
                 Objects.requireNonNull(output.asBound().asBuildArtifact())
-                    .getSourcePath()
+                    .getOutputPath()
+                    .toString()
                     .hashCode()));
 
     AlterRuleKeys.amendKey(builder, action);

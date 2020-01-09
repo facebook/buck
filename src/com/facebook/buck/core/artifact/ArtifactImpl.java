@@ -114,7 +114,8 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   /** @return the output path relative to the {@link #getPackagePath()} */
-  Path getOutputPath() {
+  @Override
+  public Path getOutputPath() {
     return outputPath;
   }
 

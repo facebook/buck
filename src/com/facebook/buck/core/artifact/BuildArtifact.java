@@ -19,6 +19,7 @@ package com.facebook.buck.core.artifact;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import java.nio.file.Path;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -40,4 +41,7 @@ public interface BuildArtifact extends Artifact {
 
   /** @return the path to the artifact */
   ExplicitBuildTargetSourcePath getSourcePath();
+
+  /** @return the path the user intends to write to relative to the assigned package path. */
+  Path getOutputPath();
 }
