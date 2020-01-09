@@ -39,7 +39,8 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -74,6 +75,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import java.nio.file.Path;
@@ -84,6 +86,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -91,7 +94,7 @@ import java.util.stream.Stream;
 /**
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
  */
-public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class AppleBundle extends AbstractBuildRule
     implements NativeTestable, BuildRuleWithBinary, HasRuntimeDeps, BinaryBuildRule {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
@@ -183,6 +186,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final boolean verifyResources;
 
   private final Duration codesignTimeout;
+  private final BuildRuleParams buildRuleParams;
+  private BuildableSupport.DepsSupplier depsSupplier;
 
   AppleBundle(
       BuildTarget buildTarget,
@@ -218,7 +223,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean copySwiftStdlibToFrameworks,
       boolean useLipoThin,
       boolean useEntitlementsWhenAdhocCodeSigning) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
+    this.buildRuleParams = params;
     this.extension =
         extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
     this.productName = productName;
@@ -292,6 +298,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.copySwiftStdlibToFrameworks = copySwiftStdlibToFrameworks;
     this.useLipoThin = useLipoThin;
     this.useEntitlementsWhenAdhocCodeSigning = useEntitlementsWhenAdhocCodeSigning;
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -1051,5 +1058,16 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return new CommandTool.Builder()
         .addArg(SourcePathArg.of(PathSourcePath.of(getProjectFilesystem(), bundleBinaryPath)))
         .build();
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return Stream.concat(depsSupplier.get().stream(), buildRuleParams.getBuildDeps().stream())
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+  }
+
+  @Override
+  public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleResolver);
   }
 }
