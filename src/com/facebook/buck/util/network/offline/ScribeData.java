@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.versions;
+package com.facebook.buck.util.network.offline;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableMap;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractVersionUniverse {
+@BuckStyleValue
+@JsonSerialize(as = ImmutableScribeData.class)
+@JsonDeserialize(as = ImmutableScribeData.class)
+abstract class ScribeData {
+  public abstract String getCategory();
 
-  @Value.Parameter
-  public abstract ImmutableMap<BuildTarget, Version> getVersions();
+  public abstract ImmutableList<String> getLines();
+
+  public abstract Optional<Integer> getBucket();
 }

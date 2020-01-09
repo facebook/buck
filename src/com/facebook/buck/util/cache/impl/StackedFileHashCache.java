@@ -19,7 +19,6 @@ package com.facebook.buck.util.cache.impl;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -177,18 +176,19 @@ public class StackedFileHashCache implements FileHashCache {
 
   @Override
   public FileHashCacheVerificationResult verify() throws IOException {
-    FileHashCacheVerificationResult.Builder builder = FileHashCacheVerificationResult.builder();
+    ImmutableList.Builder<String> verificationErrors = ImmutableList.builder();
     int cachesExamined = 1;
     int filesExamined = 0;
 
     for (ProjectFileHashCache cache : caches) {
-      FileHashCacheVerificationResult result = cache.verify();
+      FileHashCache.FileHashCacheVerificationResult result = cache.verify();
       cachesExamined += result.getCachesExamined();
       filesExamined += result.getFilesExamined();
-      builder.addAllVerificationErrors(result.getVerificationErrors());
+      verificationErrors.addAll(result.getVerificationErrors());
     }
 
-    return builder.setCachesExamined(cachesExamined).setFilesExamined(filesExamined).build();
+    return FileHashCacheVerificationResult.of(
+        cachesExamined, filesExamined, verificationErrors.build());
   }
 
   @Override

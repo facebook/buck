@@ -22,17 +22,16 @@ import java.util.Optional;
 public class TestBuildEnvironmentDescription {
 
   public static final BuildEnvironmentDescription INSTANCE =
-      BuildEnvironmentDescription.builder()
-          .setUser("test_user")
-          .setHostname("test_hostname")
-          .setOs("test_os")
-          .setAvailableCores(1)
-          .setSystemMemory(1024L)
-          .setBuckDirty(Optional.of(false))
-          .setBuckCommit("test_commit")
-          .setJavaVersion("test_java_version")
-          .setJsonProtocolVersion(1)
-          .build();
+      BuildEnvironmentDescription.of(
+          "test_user",
+          "test_hostname",
+          "test_os",
+          1,
+          1024L,
+          Optional.of(false),
+          "test_commit",
+          "test_java_version",
+          1);
 
   private TestBuildEnvironmentDescription() {}
 }

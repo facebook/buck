@@ -21,9 +21,9 @@ import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.facebook.buck.util.cache.JarHashCodeAndFileType;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -315,8 +314,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public FileHashCacheVerificationResult verify() throws IOException {
-    List<String> errors = new ArrayList<>();
+  public FileHashCache.FileHashCacheVerificationResult verify() throws IOException {
+    ImmutableList.Builder<String> errors = ImmutableList.builder();
     Map<Path, HashCodeAndFileType> cacheMap = fileHashCacheEngine.asMap();
     for (Map.Entry<Path, HashCodeAndFileType> entry : cacheMap.entrySet()) {
       Path path = entry.getKey();
@@ -326,11 +325,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         errors.add(path.toString());
       }
     }
-    return FileHashCacheVerificationResult.builder()
-        .setCachesExamined(1)
-        .setFilesExamined(cacheMap.size())
-        .addAllVerificationErrors(errors)
-        .build();
+    return FileHashCache.FileHashCacheVerificationResult.of(1, cacheMap.size(), errors.build());
   }
 
   @Override

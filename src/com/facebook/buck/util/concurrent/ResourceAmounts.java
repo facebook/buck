@@ -16,41 +16,37 @@
 
 package com.facebook.buck.util.concurrent;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable(copy = true, singleton = true)
-@BuckStyleImmutable
-abstract class AbstractResourceAmounts {
-  @Value.Parameter
-  @Value.Default
-  public int getCpu() {
-    return 0;
-  }
+@BuckStyleValue
+public abstract class ResourceAmounts {
 
-  @Value.Parameter
-  @Value.Default
-  public int getMemory() {
-    return 0;
-  }
+  private static final ResourceAmounts ZERO = ImmutableResourceAmounts.of(0, 0, 0, 0);
 
-  @Value.Parameter
-  @Value.Default
-  public int getDiskIO() {
-    return 0;
-  }
+  public abstract int getCpu();
 
-  @Value.Parameter
-  @Value.Default
-  public int getNetworkIO() {
-    return 0;
-  }
+  public abstract int getMemory();
+
+  public abstract int getDiskIO();
+
+  public abstract int getNetworkIO();
 
   /** If you add or remove resource types above please make sure you update the number below. */
   public static final int RESOURCE_TYPE_COUNT = 4;
 
   public static ResourceAmounts zero() {
-    return ResourceAmounts.of();
+    return ZERO;
+  }
+
+  public static ResourceAmounts of() {
+    return ZERO;
+  }
+
+  public static ResourceAmounts of(int cpu, int memory, int diskIO, int networkIO) {
+    if (cpu == 0 && memory == 0 && diskIO == 0 && networkIO == 0) {
+      return ZERO;
+    }
+    return ImmutableResourceAmounts.of(cpu, memory, diskIO, networkIO);
   }
 
   public ResourceAmounts append(ResourceAmounts amounts) {

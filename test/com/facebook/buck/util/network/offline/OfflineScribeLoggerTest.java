@@ -205,10 +205,8 @@ public class OfflineScribeLoggerTest {
         byte[] scribeData =
             ObjectMappers.WRITER
                 .writeValueAsString(
-                    ScribeData.builder()
-                        .setCategory(category)
-                        .setLines(ImmutableList.of(line, line, line, line))
-                        .build())
+                    ImmutableScribeData.of(
+                        category, ImmutableList.of(line, line, line, line), Optional.empty()))
                 .getBytes(Charsets.UTF_8);
         logFileStoreStream.write(scribeData);
       }

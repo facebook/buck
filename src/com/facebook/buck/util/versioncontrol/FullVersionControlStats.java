@@ -16,17 +16,21 @@
 
 package com.facebook.buck.util.versioncontrol;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.InputStream;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractFullVersionControlStats extends CommonSlowVersionControlStats {
+@BuckStyleValueWithBuilder
+public interface FullVersionControlStats extends CommonSlowVersionControlStats {
 
   /* The diff between base and current revision if it exists */
   @JsonIgnore
   Optional<VersionControlSupplier<InputStream>> getDiff();
+
+  static Builder builder() {
+    return new Builder();
+  }
+
+  class Builder extends ImmutableFullVersionControlStats.Builder {}
 }

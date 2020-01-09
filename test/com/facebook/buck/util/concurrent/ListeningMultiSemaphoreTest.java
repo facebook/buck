@@ -217,11 +217,6 @@ public class ListeningMultiSemaphoreTest {
   }
 
   private static ResourceAmounts amountsOfCpuAndMemory(int cpu, int memory) {
-    return ResourceAmounts.builder()
-        .setCpu(cpu)
-        .setMemory(memory)
-        .setDiskIO(0)
-        .setNetworkIO(0)
-        .build();
+    return ResourceAmounts.of(cpu, memory, 0, 0);
   }
 }

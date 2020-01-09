@@ -45,7 +45,7 @@ public interface ProjectFileHashCache extends ProjectFileHashLoader {
 
   void set(Path path, HashCode hashCode) throws IOException;
 
-  default FileHashCacheVerificationResult verify() throws IOException {
+  default FileHashCache.FileHashCacheVerificationResult verify() throws IOException {
     throw new RuntimeException(
         "ProjectFileHashCache class " + getClass().getName() + " does not support verification.");
   }

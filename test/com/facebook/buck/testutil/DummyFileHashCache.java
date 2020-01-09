@@ -17,7 +17,6 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
@@ -51,10 +50,7 @@ public class DummyFileHashCache implements FileHashCache {
   public void set(Path path, HashCode hashCode) {}
 
   @Override
-  public FileHashCacheVerificationResult verify() {
-    return FileHashCacheVerificationResult.builder()
-        .setCachesExamined(1)
-        .setFilesExamined(0)
-        .build();
+  public FileHashCache.FileHashCacheVerificationResult verify() {
+    return FileHashCache.FileHashCacheVerificationResult.of(1, 0);
   }
 }

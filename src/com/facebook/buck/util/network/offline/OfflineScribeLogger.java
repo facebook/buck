@@ -166,12 +166,7 @@ public class OfflineScribeLogger extends ScribeLogger {
               try {
                 scribeData =
                     ObjectMappers.WRITER
-                        .writeValueAsString(
-                            ScribeData.builder()
-                                .setCategory(category)
-                                .setLines(lines)
-                                .setBucket(bucket)
-                                .build())
+                        .writeValueAsString(ImmutableScribeData.of(category, lines, bucket))
                         .getBytes(Charsets.UTF_8);
               } catch (Exception e) {
                 if (categoriesReportedAnError.add(category)) {

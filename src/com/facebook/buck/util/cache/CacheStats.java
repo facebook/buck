@@ -16,14 +16,12 @@
 
 package com.facebook.buck.util.cache;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Class containing various cache statistics */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractCacheStats {
+@BuckStyleValueWithBuilder
+public abstract class CacheStats {
   // the number of hits on cache
   public abstract Optional<Long> getHitCount();
   // the number of misses on cache
@@ -115,9 +113,8 @@ abstract class AbstractCacheStats {
    * value of 0. If only one CacheStats specifies the field, the unspecified value is treated as 0.
    * If non of the CacheStats specifies the field, the field will be empty.
    *
-   * @param stats1 the stats before the arithmetic operator
-   * @param stats2 the stats after the arithmetic operator
-   * @return stats1 +/- stats2
+   * @param stats the stats after the arithmetic operator
+   * @return this +/- stats
    */
   public CacheStats subtract(CacheStats stats) {
     return aggregate(this, stats, false);
@@ -127,8 +124,13 @@ abstract class AbstractCacheStats {
     return aggregate(this, stats, true);
   }
 
-  private static CacheStats aggregate(
-      AbstractCacheStats stats1, AbstractCacheStats stats2, boolean addOrMinus) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableCacheStats.Builder {}
+
+  private static CacheStats aggregate(CacheStats stats1, CacheStats stats2, boolean addOrMinus) {
     return CacheStats.builder()
         .setHitCount(aggregateFields(stats1.getHitCount(), stats2.getHitCount(), addOrMinus))
         .setMissCount(aggregateFields(stats1.getMissCount(), stats2.getMissCount(), addOrMinus))

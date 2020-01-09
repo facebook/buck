@@ -30,7 +30,6 @@ import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
@@ -47,7 +46,7 @@ public class VerifyCachesCommand extends AbstractCommand {
   private boolean shouldDump = false;
 
   private boolean verifyFileHashCache(PrintStream stdOut, FileHashCache cache) throws IOException {
-    FileHashCacheVerificationResult result = cache.verify();
+    FileHashCache.FileHashCacheVerificationResult result = cache.verify();
     stdOut.println("Examined " + result.getCachesExamined() + " caches.");
     stdOut.println("Examined " + result.getFilesExamined() + " files.");
     if (result.getVerificationErrors().isEmpty()) {
