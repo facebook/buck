@@ -120,12 +120,8 @@ public class GroovyTestDescription
     JavaLibrary testsLibrary = graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, cellRoots, graphBuilder, JavaTestDescription.MACRO_EXPANDERS);
     return new JavaTest(
         buildTarget,
         projectFilesystem,

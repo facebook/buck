@@ -23,7 +23,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.CompositeArg;
 import com.facebook.buck.rules.args.SanitizedArg;
@@ -40,38 +40,72 @@ import org.immutables.value.Value;
 
 /**
  * Converts a {@link StringWithMacros} into an {@link Arg}. Performs conversion eagerly, and meant
- * as a replacement for the lazy {@link StringWithMacrosArg}.
+ * as a replacement for the lazy {@link Arg}.
  *
  * <p>As this holds a reference to an {@link ActionGraphBuilder}, instances of this object should
  * not be capture by anything in the action graph.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractStringWithMacrosConverter {
+@BuckStyleValue
+public abstract class StringWithMacrosConverter {
 
-  @Value.Parameter
-  abstract BuildTarget getBuildTarget();
+  public abstract BuildTarget getBuildTarget();
 
-  @Value.Parameter
-  abstract CellPathResolver getCellPathResolver();
+  public abstract CellPathResolver getCellPathResolver();
 
-  @Value.Parameter
-  abstract ActionGraphBuilder getActionGraphBuilder();
+  public abstract ActionGraphBuilder getActionGraphBuilder();
 
-  @Value.Parameter
-  abstract ImmutableList<MacroExpander<? extends Macro, ?>> getExpanders();
+  public abstract ImmutableList<MacroExpander<? extends Macro, ?>> getExpanders();
 
-  abstract Optional<Function<String, String>> getSanitizer();
+  public abstract Optional<Function<String, String>> getSanitizer();
 
-  @Value.Default
-  @Value.Auxiliary
-  @SuppressWarnings("PMD.LooseCoupling")
-  HashMap<Macro, Object> getPrecomputedWorkCache() {
-    return new HashMap<>();
+  public static StringWithMacrosConverter of(
+      BuildTarget buildTarget,
+      CellPathResolver cellPathResolver,
+      ActionGraphBuilder actionGraphBuilder,
+      ImmutableList<MacroExpander<? extends Macro, ?>> expanders) {
+    return of(
+        buildTarget,
+        cellPathResolver,
+        actionGraphBuilder,
+        expanders,
+        Optional.empty(),
+        new HashMap<>());
   }
 
+  public static StringWithMacrosConverter of(
+      BuildTarget buildTarget,
+      CellPathResolver cellPathResolver,
+      ActionGraphBuilder actionGraphBuilder,
+      ImmutableList<MacroExpander<? extends Macro, ?>> expanders,
+      Optional<Function<String, String>> sanitizer) {
+    return of(
+        buildTarget, cellPathResolver, actionGraphBuilder, expanders, sanitizer, new HashMap<>());
+  }
+
+  @SuppressWarnings("PMD.LooseCoupling")
+  public static StringWithMacrosConverter of(
+      BuildTarget buildTarget,
+      CellPathResolver cellPathResolver,
+      ActionGraphBuilder actionGraphBuilder,
+      ImmutableList<MacroExpander<? extends Macro, ?>> expanders,
+      Optional<Function<String, String>> sanitizer,
+      HashMap<Macro, Object> precomputedWorkCache) {
+    return ImmutableStringWithMacrosConverter.of(
+        buildTarget,
+        cellPathResolver,
+        actionGraphBuilder,
+        expanders,
+        sanitizer,
+        precomputedWorkCache);
+  }
+
+  @Value.Auxiliary
+  @SuppressWarnings("PMD.LooseCoupling")
+  public abstract HashMap<Macro, Object> getPrecomputedWorkCache();
+
   @Value.Derived
-  ImmutableMap<Class<? extends Macro>, MacroExpander<? extends Macro, ?>> getClassExpanders() {
+  public ImmutableMap<Class<? extends Macro>, MacroExpander<? extends Macro, ?>>
+      getClassExpanders() {
     ImmutableMap.Builder<Class<? extends Macro>, MacroExpander<? extends Macro, ?>> builder =
         ImmutableMap.builder();
     for (MacroExpander<? extends Macro, ?> expander : getExpanders()) {

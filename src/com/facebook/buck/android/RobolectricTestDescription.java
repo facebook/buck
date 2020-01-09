@@ -190,12 +190,11 @@ public class RobolectricTestDescription
             /* skipNonUnionRDotJava */ false);
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(context.getCellPathResolver())
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver(),
+            graphBuilder,
+            JavaTestDescription.MACRO_EXPANDERS);
     ImmutableList<Arg> vmArgs =
         ImmutableList.copyOf(Lists.transform(args.getVmArgs(), macrosConverter::convert));
 

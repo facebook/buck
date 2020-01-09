@@ -48,12 +48,8 @@ public class RedexArgsHelper {
         androidBuckConfig.getRedexTool(graphBuilder, buildTarget.getTargetConfiguration());
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(MacroExpandersForAndroidRules.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, cellRoots, graphBuilder, MacroExpandersForAndroidRules.MACRO_EXPANDERS);
     List<Arg> redexExtraArgsList =
         redexExtraArgs.stream().map(macrosConverter::convert).collect(Collectors.toList());
 

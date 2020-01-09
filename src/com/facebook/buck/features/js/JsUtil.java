@@ -32,10 +32,10 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
-import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.shell.WorkerTool;
@@ -55,21 +55,19 @@ import java.util.function.Consumer;
 
 public class JsUtil {
 
-  private static final ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
-      MACRO_EXPANDERS =
-          ImmutableList.of(
-              /**
-               * Expands JSON with macros, escaping macro values for interpolation into quoted
-               * strings.
-               */
-              new LocationMacroExpander() {
-                @Override
-                protected Arg expand(
-                    SourcePathResolverAdapter resolver, LocationMacro macro, BuildRule rule)
-                    throws MacroException {
-                  return new JsArg(super.expand(resolver, macro, rule));
-                }
-              });
+  private static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(
+          /**
+           * Expands JSON with macros, escaping macro values for interpolation into quoted strings.
+           */
+          new LocationMacroExpander() {
+            @Override
+            protected Arg expand(
+                SourcePathResolverAdapter resolver, LocationMacro macro, BuildRule rule)
+                throws MacroException {
+              return new JsArg(super.expand(resolver, macro, rule));
+            }
+          });
 
   private static class JsArg extends ProxyArg {
 

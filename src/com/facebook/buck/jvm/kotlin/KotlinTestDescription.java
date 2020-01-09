@@ -133,12 +133,11 @@ public class KotlinTestDescription
         graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(context.getCellPathResolver())
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver(),
+            graphBuilder,
+            JavaTestDescription.MACRO_EXPANDERS);
     return new JavaTest(
         buildTarget,
         projectFilesystem,

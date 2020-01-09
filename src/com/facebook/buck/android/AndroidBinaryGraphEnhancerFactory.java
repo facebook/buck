@@ -246,12 +246,8 @@ public class AndroidBinaryGraphEnhancerFactory {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots) {
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(MacroExpandersForAndroidRules.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, cellRoots, graphBuilder, MacroExpandersForAndroidRules.MACRO_EXPANDERS);
     return arg.getPostFilterResourcesCmd().map(macrosConverter::convert);
   }
 
@@ -261,12 +257,8 @@ public class AndroidBinaryGraphEnhancerFactory {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots) {
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(MacroExpandersForAndroidRules.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, cellRoots, graphBuilder, MacroExpandersForAndroidRules.MACRO_EXPANDERS);
     return arg.getPreprocessJavaClassesBash().map(macrosConverter::convert);
   }
 }

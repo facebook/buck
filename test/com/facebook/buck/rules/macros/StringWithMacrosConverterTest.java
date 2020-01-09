@@ -35,6 +35,7 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -43,8 +44,8 @@ public class StringWithMacrosConverterTest {
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:rule");
   private static final CellPathResolver CELL_ROOTS =
       TestCellPathResolver.get(new FakeProjectFilesystem());
-  private static final ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
-      MACRO_EXPANDERS = ImmutableList.of(new LocationMacroExpander());
+  private static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(new LocationMacroExpander());
 
   @Test
   public void noMacros() {
@@ -96,13 +97,8 @@ public class StringWithMacrosConverterTest {
   public void sanitization() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(TARGET)
-            .setCellPathResolver(CELL_ROOTS)
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(MACRO_EXPANDERS)
-            .setSanitizer(s -> "something else")
-            .build();
+        StringWithMacrosConverter.of(
+            TARGET, CELL_ROOTS, graphBuilder, MACRO_EXPANDERS, Optional.of(s -> "something else"));
     assertThat(
         converter.convert(StringWithMacrosUtils.format("something")),
         Matchers.equalTo(SanitizedArg.create(s -> "something else", "something")));

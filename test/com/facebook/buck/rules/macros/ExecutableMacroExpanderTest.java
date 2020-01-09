@@ -45,6 +45,7 @@ import com.facebook.buck.rules.args.ToolArg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -66,12 +67,11 @@ public class ExecutableMacroExpanderTest {
 
   private void createConverter(BuildTarget buildTarget) {
     converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellPathResolver)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(new ExecutableMacroExpander<>(ExecutableMacro.class))
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            cellPathResolver,
+            graphBuilder,
+            ImmutableList.of(new ExecutableMacroExpander<>(ExecutableMacro.class)));
   }
 
   @Test

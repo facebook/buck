@@ -171,12 +171,7 @@ public class JavaTestDescription
     params = params.copyAppendingExtraDeps(testsLibrary);
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(buildTarget, cellRoots, graphBuilder, MACRO_EXPANDERS);
     List<Arg> vmArgs = Lists.transform(args.getVmArgs(), macrosConverter::convert);
 
     Optional<BuildTarget> runner = args.getRunner();

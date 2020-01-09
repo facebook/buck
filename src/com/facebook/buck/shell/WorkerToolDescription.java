@@ -104,12 +104,8 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
             .collect(ImmutableList.toImmutableList()));
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(context.getCellPathResolver())
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, context.getCellPathResolver(), graphBuilder, MACRO_EXPANDERS);
 
     if (args.getArgs().isLeft()) {
       builder.addArg(new SingleStringMacroArg(macrosConverter.convert(args.getArgs().getLeft())));

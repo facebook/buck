@@ -337,12 +337,8 @@ public class PythonTestDescription
 
     CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(PythonUtil.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, cellRoots, graphBuilder, PythonUtil.MACRO_EXPANDERS);
     PythonPackageComponents allComponents =
         PythonUtil.getAllComponents(
             cellRoots,

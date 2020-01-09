@@ -34,6 +34,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,12 +53,11 @@ public class AbsoluteOutputMacroExpanderTest {
     cellPathResolver = TestCellBuilder.createCellRoots(projectFilesystem);
     graphBuilder = new TestActionGraphBuilder();
     converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellPathResolver)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(new AbsoluteOutputMacroExpander())
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            cellPathResolver,
+            graphBuilder,
+            ImmutableList.of(new AbsoluteOutputMacroExpander()));
     return graphBuilder;
   }
 

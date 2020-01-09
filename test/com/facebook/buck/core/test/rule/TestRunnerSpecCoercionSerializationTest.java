@@ -49,12 +49,11 @@ public class TestRunnerSpecCoercionSerializationTest {
   private final CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
 
   private StringWithMacrosConverter getConverter(ActionGraphBuilder graphBuilder, BuildRule rule) {
-    return StringWithMacrosConverter.builder()
-        .setBuildTarget(rule.getBuildTarget())
-        .setCellPathResolver(cellPathResolver)
-        .setActionGraphBuilder(graphBuilder)
-        .addExpanders(new AbsoluteOutputMacroExpander())
-        .build();
+    return StringWithMacrosConverter.of(
+        rule.getBuildTarget(),
+        cellPathResolver,
+        graphBuilder,
+        ImmutableList.of(new AbsoluteOutputMacroExpander()));
   }
 
   @Test

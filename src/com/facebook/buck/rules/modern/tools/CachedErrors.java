@@ -16,17 +16,15 @@
 
 package com.facebook.buck.rules.modern.tools;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.util.types.Pair;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.BiConsumer;
-import org.immutables.value.Value;
 
 /** A node in the graph of found paths/errors for the IsolationChecker. */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractCachedErrors {
+@BuckStyleValueWithBuilder
+interface CachedErrors {
   List<Pair<String, Path>> getPaths();
 
   List<Pair<String, Throwable>> getExceptions();

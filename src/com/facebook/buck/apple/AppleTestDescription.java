@@ -386,13 +386,11 @@ public class AppleTestDescription
       ExternalTestRunner runner = (ExternalTestRunner) runnerRule;
 
       StringWithMacrosConverter macrosConverter =
-          StringWithMacrosConverter.builder()
-              .setBuildTarget(buildTarget)
-              .setCellPathResolver(context.getCellPathResolver())
-              .setActionGraphBuilder(graphBuilder)
-              .setExpanders(
-                  ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander()))
-              .build();
+          StringWithMacrosConverter.of(
+              buildTarget,
+              context.getCellPathResolver(),
+              graphBuilder,
+              ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander()));
 
       return new AppleTestX(
           runner.getBinary(),

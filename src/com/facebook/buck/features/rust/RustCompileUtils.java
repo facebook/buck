@@ -50,8 +50,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.environment.Architecture;
@@ -834,17 +834,16 @@ public class RustCompileUtils {
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       CxxPlatform cxxPlatform) {
-    ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>> expanders =
+    ImmutableList<MacroExpander<? extends Macro, ?>> expanders =
         ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander());
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(context.getCellPathResolver())
-            .setActionGraphBuilder(context.getActionGraphBuilder())
-            .setExpanders(expanders)
-            .setSanitizer(cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty()))
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver(),
+            context.getActionGraphBuilder(),
+            expanders,
+            Optional.of(cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty())));
 
     return macrosConverter;
   }

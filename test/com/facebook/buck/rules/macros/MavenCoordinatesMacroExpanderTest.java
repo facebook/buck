@@ -39,6 +39,7 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -118,12 +119,8 @@ public class MavenCoordinatesMacroExpanderTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(target)
-            .setCellPathResolver(cellPathResolver)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(expander)
-            .build();
+        StringWithMacrosConverter.of(
+            target, cellPathResolver, graphBuilder, ImmutableList.of(expander));
 
     String input = "$(maven_coords //:java)";
 
@@ -140,12 +137,8 @@ public class MavenCoordinatesMacroExpanderTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(target)
-            .setCellPathResolver(cellPathResolver)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(expander)
-            .build();
+        StringWithMacrosConverter.of(
+            target, cellPathResolver, graphBuilder, ImmutableList.of(expander));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("no rule //:foo");

@@ -41,7 +41,7 @@ import com.facebook.buck.rules.modern.impl.AbstractValueVisitor;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ExcludedValueTypeInfo;
-import com.facebook.buck.rules.modern.tools.CachedErrors.Builder;
+import com.facebook.buck.rules.modern.tools.ImmutableCachedErrors.Builder;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -274,7 +274,7 @@ public class IsolationChecker {
       VisitorDelegate delegate) {
     CachedErrors results = resultsCache.get(instance);
     if (results == null) {
-      Builder builder = CachedErrors.builder();
+      Builder builder = ImmutableCachedErrors.builder();
       Visitor visitor =
           new Visitor(
               "",

@@ -42,6 +42,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -89,13 +90,13 @@ public class QueryTargetsMacroExpanderTest {
     rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
 
     converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(ruleNode.getBuildTarget())
-            .setCellPathResolver(cellNames)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(expander)
-            .setPrecomputedWorkCache(cache)
-            .build();
+        StringWithMacrosConverter.of(
+            ruleNode.getBuildTarget(),
+            cellNames,
+            graphBuilder,
+            ImmutableList.of(expander),
+            Optional.empty(),
+            cache);
   }
 
   @Test

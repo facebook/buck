@@ -26,12 +26,12 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.environment.Platform;
@@ -45,12 +45,11 @@ import org.immutables.value.Value;
 public class CommandAliasDescription
     implements DescriptionWithTargetGraph<CommandAliasDescriptionArg> {
 
-  private final ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
-      MACRO_EXPANDERS =
-          ImmutableList.of(
-              new ExecutableMacroExpander<>(ExecutableMacro.class),
-              new ExecutableMacroExpander<>(ExecutableTargetMacro.class),
-              new LocationMacroExpander());
+  private final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(
+          new ExecutableMacroExpander<>(ExecutableMacro.class),
+          new ExecutableMacroExpander<>(ExecutableTargetMacro.class),
+          new LocationMacroExpander());
   private final Platform platform;
 
   public CommandAliasDescription(Platform platform) {
