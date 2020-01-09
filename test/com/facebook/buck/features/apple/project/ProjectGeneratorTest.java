@@ -5719,7 +5719,6 @@ public class ProjectGeneratorTest {
         BuildTargetFactory.newInstance(
             "//foo",
             "framework_1",
-            DEFAULT_FLAVOR,
             CxxDescriptionEnhancer.SHARED_FLAVOR,
             InternalFlavor.of("iphoneos-arm64"));
     TargetNode<?> framework1FlavoredNode =

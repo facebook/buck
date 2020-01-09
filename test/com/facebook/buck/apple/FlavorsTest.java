@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -32,7 +31,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.junit.Test;
 
 public class FlavorsTest {
@@ -96,28 +94,5 @@ public class FlavorsTest {
     } catch (HumanReadableException e) {
       assertTrue(e.getMessage().contains("already has flavor"));
     }
-  }
-
-  @Test
-  public void testPlatformFlavorsDetection() {
-    assertTrue(Flavors.isPlatformFlavor(InternalFlavor.of("iphoneos-armv7")));
-    assertFalse(Flavors.isPlatformFlavor(InternalFlavor.of("iphoneos-armv7abc")));
-    assertFalse(Flavors.isPlatformFlavor(InternalFlavor.of("abciphoneos-armv7")));
-    assertFalse(Flavors.isPlatformFlavor(InternalFlavor.of("iphoneosarmv7")));
-    assertTrue(Flavors.isPlatformFlavor(InternalFlavor.of("macosx11.1-x86_64")));
-  }
-
-  @Test
-  public void testAppleSDKNameExtraction() {
-    assertEquals(
-        Flavors.findAppleSdkName(InternalFlavor.of("watchos-armv7")), Optional.of("watchos"));
-    assertEquals(
-        Flavors.findAppleSdkName(InternalFlavor.of("iphoneos-armv7abc")), Optional.empty());
-    assertEquals(
-        Flavors.findAppleSdkName(InternalFlavor.of("abciphoneos-armv7")), Optional.empty());
-    assertEquals(Flavors.findAppleSdkName(InternalFlavor.of("iphoneosarmv7")), Optional.empty());
-    assertEquals(
-        Flavors.findAppleSdkName(InternalFlavor.of("iphonesimulator11.1-x86_64")),
-        Optional.of("iphonesimulator11.1"));
   }
 }

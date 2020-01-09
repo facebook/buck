@@ -246,7 +246,8 @@ public class AppleBundleDescription
 
     FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain =
         getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
-    Optional<MultiarchFileInfo> fatBinaryInfo = MultiarchFileInfos.create(buildTarget);
+    Optional<MultiarchFileInfo> fatBinaryInfo =
+        MultiarchFileInfos.create(appleCxxPlatformsFlavorDomain, buildTarget);
     UnresolvedCxxPlatform cxxPlatform;
     if (fatBinaryInfo.isPresent()) {
       UnresolvedAppleCxxPlatform appleCxxPlatform =
@@ -371,7 +372,7 @@ public class AppleBundleDescription
             appleCxxPlatforms,
             buildTarget,
             args.getDefaultPlatform(),
-            MultiarchFileInfos.create(buildTarget));
+            MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
     BuildTarget binaryTarget =
         AppleDescriptions.getTargetPlatformBinary(
             args.getBinary(), args.getPlatformBinary(), appleCxxPlatform.getFlavor());

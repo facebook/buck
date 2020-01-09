@@ -617,7 +617,8 @@ public class AppleDescriptions {
                       appleCxxPlatforms,
                       unstrippedBinaryRule.getBuildTarget(),
                       Optional.empty(),
-                      MultiarchFileInfos.create(unstrippedBinaryRule.getBuildTarget()));
+                      MultiarchFileInfos.create(
+                          appleCxxPlatforms, unstrippedBinaryRule.getBuildTarget()));
               return new AppleDsym(
                   dsymBuildTarget,
                   projectFilesystem,
@@ -677,7 +678,7 @@ public class AppleDescriptions {
             appleCxxPlatforms,
             buildTarget,
             defaultPlatform,
-            MultiarchFileInfos.create(buildTarget));
+            MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
     BuildTarget binaryTarget =
         getTargetPlatformBinary(binary, platformBinary, appleCxxPlatform.getFlavor());
 
