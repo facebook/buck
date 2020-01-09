@@ -24,6 +24,7 @@ import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
+import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
@@ -245,7 +246,7 @@ public class AppleTestDescription
       extraFlavorsBuilder.add(defaultCxxFlavor);
     }
 
-    FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain =
+    FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain =
         getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
 
     Optional<MultiarchFileInfo> multiarchFileInfo = MultiarchFileInfos.create(buildTarget);
@@ -265,8 +266,9 @@ public class AppleTestDescription
       }
       cxxPlatforms = cxxPlatformBuilder.build();
       appleCxxPlatform =
-          appleCxxPlatformFlavorDomain.getValue(
-              multiarchFileInfo.get().getRepresentativePlatformFlavor());
+          appleCxxPlatformFlavorDomain
+              .getValue(multiarchFileInfo.get().getRepresentativePlatformFlavor())
+              .resolve(graphBuilder);
     } else {
       CxxPlatform cxxPlatform =
           ApplePlatforms.getCxxPlatformForBuildTarget(
@@ -274,7 +276,8 @@ public class AppleTestDescription
               .resolve(graphBuilder, buildTarget.getTargetConfiguration());
       cxxPlatforms = ImmutableList.of(cxxPlatform);
       appleCxxPlatform =
-          verifyAppleCxxPlatform(appleCxxPlatformFlavorDomain, cxxPlatform, buildTarget);
+          verifyAppleCxxPlatform(appleCxxPlatformFlavorDomain, cxxPlatform, buildTarget)
+              .resolve(graphBuilder);
     }
 
     Optional<TestHostInfo> testHostWithTargetApp = Optional.empty();
@@ -457,23 +460,23 @@ public class AppleTestDescription
         appleConfig.getIdbPath());
   }
 
-  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
+  private FlavorDomain<UnresolvedAppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
       TargetConfiguration toolchainTargetConfiguration) {
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
         toolchainProvider.getByName(
             AppleCxxPlatformsProvider.DEFAULT_NAME,
             toolchainTargetConfiguration,
             AppleCxxPlatformsProvider.class);
-    FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain =
-        appleCxxPlatformsProvider.getAppleCxxPlatforms();
+    FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain =
+        appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
     return appleCxxPlatformFlavorDomain;
   }
 
-  private AppleCxxPlatform verifyAppleCxxPlatform(
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
+  private UnresolvedAppleCxxPlatform verifyAppleCxxPlatform(
+      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain,
       CxxPlatform cxxPlatform,
       BuildTarget buildTarget) {
-    AppleCxxPlatform appleCxxPlatform;
+    UnresolvedAppleCxxPlatform appleCxxPlatform;
     try {
       appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
     } catch (FlavorDomainException e) {
@@ -524,10 +527,11 @@ public class AppleTestDescription
         ApplePlatforms.getCxxPlatformForBuildTarget(
                 cxxPlatformsProvider, buildTarget, args.getDefaultPlatform())
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
-    FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain =
+    FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain =
         getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
     AppleCxxPlatform appleCxxPlatform =
-        verifyAppleCxxPlatform(appleCxxPlatformFlavorDomain, cxxPlatform, buildTarget);
+        verifyAppleCxxPlatform(appleCxxPlatformFlavorDomain, cxxPlatform, buildTarget)
+            .resolve(graphBuilder);
     TargetGraph targetGraph = context.getTargetGraph();
     AppleBundleResources collectedResources =
         AppleResources.collectResourceDirsAndFiles(
@@ -758,6 +762,12 @@ public class AppleTestDescription
               extraDepsBuilder.addAll(
                   platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
     }
+    getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
+        .getValues()
+        .forEach(
+            platform ->
+                targetGraphOnlyDepsBuilder.addAll(
+                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
   }
 
   private AppleBundle getBuildRuleForTestHostAppTarget(

@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsSupplier;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
-import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.google.common.collect.ImmutableMap;
 
 @BuckStyleValue
@@ -29,18 +28,19 @@ public abstract class AppleCxxPlatformsProvider implements CxxPlatformsSupplier 
 
   public static final String DEFAULT_NAME = "apple-cxx-platforms";
 
-  public abstract FlavorDomain<AppleCxxPlatform> getAppleCxxPlatforms();
+  public abstract FlavorDomain<UnresolvedAppleCxxPlatform> getUnresolvedAppleCxxPlatforms();
 
-  /** @return {@link CxxPlatform} of all {@link AppleCxxPlatform}s */
+  /** @return {@link UnresolvedCxxPlatform} of all {@link UnresolvedAppleCxxPlatform}s */
   @Override
-  public ImmutableMap<Flavor, UnresolvedCxxPlatform> getCxxPlatforms() {
+  public ImmutableMap<Flavor, UnresolvedCxxPlatform> getUnresolvedCxxPlatforms() {
     ImmutableMap.Builder<Flavor, UnresolvedCxxPlatform> cxxSystemPlatformsBuilder =
         ImmutableMap.builder();
 
-    for (AppleCxxPlatform appleCxxPlatform : getAppleCxxPlatforms().getValues()) {
+    for (UnresolvedAppleCxxPlatform appleCxxPlatform :
+        getUnresolvedAppleCxxPlatforms().getValues()) {
       cxxSystemPlatformsBuilder.put(
-          appleCxxPlatform.getCxxPlatform().getFlavor(),
-          new StaticUnresolvedCxxPlatform(appleCxxPlatform.getCxxPlatform()));
+          appleCxxPlatform.getUnresolvedCxxPlatform().getFlavor(),
+          appleCxxPlatform.getUnresolvedCxxPlatform());
     }
     return cxxSystemPlatformsBuilder.build();
   }
@@ -50,7 +50,8 @@ public abstract class AppleCxxPlatformsProvider implements CxxPlatformsSupplier 
     return DEFAULT_NAME;
   }
 
-  public static AppleCxxPlatformsProvider of(FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
+  public static AppleCxxPlatformsProvider of(
+      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms) {
     return ImmutableAppleCxxPlatformsProvider.of(appleCxxPlatforms);
   }
 }

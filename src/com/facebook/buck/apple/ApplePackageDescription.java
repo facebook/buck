@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDefaultPlatform;
@@ -84,7 +85,7 @@ public class ApplePackageDescription
         graphBuilder.getRule(propagateFlavorsToTarget(buildTarget, args.getBundle()));
 
     Optional<ImmutableApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
-        getApplePackageConfig(buildTarget, args.getDefaultPlatform());
+        getApplePackageConfig(buildTarget, args.getDefaultPlatform(), graphBuilder);
 
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(
@@ -138,13 +139,19 @@ public class ApplePackageDescription
           toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
     }
     extraDepsBuilder.add(propagateFlavorsToTarget(buildTarget, constructorArg.getBundle()));
+    getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
+        .getValues()
+        .forEach(
+            platform ->
+                targetGraphOnlyDepsBuilder.addAll(
+                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
   }
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
       TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(
-        ImmutableSet.of(getAppleCxxPlatformFlavorDomain(toolchainTargetConfiguration)));
+        ImmutableSet.of(getAppleCxxPlatformsFlavorDomain(toolchainTargetConfiguration)));
   }
 
   @Override
@@ -175,9 +182,9 @@ public class ApplePackageDescription
    * @throws HumanReadableException if there are multiple possible package configs.
    */
   private Optional<ImmutableApplePackageConfigAndPlatformInfo> getApplePackageConfig(
-      BuildTarget target, Optional<Flavor> defaultPlatform) {
-    FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain =
-        getAppleCxxPlatformFlavorDomain(target.getTargetConfiguration());
+      BuildTarget target, Optional<Flavor> defaultPlatform, ActionGraphBuilder graphBuilder) {
+    FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain =
+        getAppleCxxPlatformsFlavorDomain(target.getTargetConfiguration());
     Set<Flavor> platformFlavors =
         getPlatformFlavorsOrDefault(target, defaultPlatform, appleCxxPlatformFlavorDomain);
 
@@ -187,7 +194,8 @@ public class ApplePackageDescription
         MultimapBuilder.hashKeys().arrayListValues().build();
 
     for (Flavor flavor : platformFlavors) {
-      AppleCxxPlatform platform = appleCxxPlatformFlavorDomain.getValue(flavor);
+      AppleCxxPlatform platform =
+          appleCxxPlatformFlavorDomain.getValue(flavor).resolve(graphBuilder);
       Optional<AppleConfig.ApplePackageConfig> packageConfig =
           config.getPackageConfigForPlatform(platform.getAppleSdk().getApplePlatform());
       packageConfigs.put(
@@ -211,7 +219,7 @@ public class ApplePackageDescription
   private ImmutableSet<Flavor> getPlatformFlavorsOrDefault(
       BuildTarget target,
       Optional<Flavor> defaultPlatform,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
+      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain) {
 
     Sets.SetView<Flavor> intersection =
         Sets.intersection(appleCxxPlatformFlavorDomain.getFlavors(), target.getFlavors());
@@ -232,13 +240,13 @@ public class ApplePackageDescription
     }
   }
 
-  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformFlavorDomain(
+  private FlavorDomain<UnresolvedAppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
       TargetConfiguration toolchainTargetConfiguration) {
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
         toolchainProvider.getByName(
             AppleCxxPlatformsProvider.DEFAULT_NAME,
             toolchainTargetConfiguration,
             AppleCxxPlatformsProvider.class);
-    return appleCxxPlatformsProvider.getAppleCxxPlatforms();
+    return appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
   }
 }

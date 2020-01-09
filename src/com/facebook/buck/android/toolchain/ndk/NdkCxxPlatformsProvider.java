@@ -47,7 +47,7 @@ public abstract class NdkCxxPlatformsProvider extends BaseToolchain
 
   /** @return {@link CxxPlatform} of all {@link NdkCxxPlatform}s */
   @Override
-  public ImmutableMap<Flavor, UnresolvedCxxPlatform> getCxxPlatforms() {
+  public ImmutableMap<Flavor, UnresolvedCxxPlatform> getUnresolvedCxxPlatforms() {
     ImmutableMap.Builder<Flavor, UnresolvedCxxPlatform> cxxSystemPlatformsBuilder =
         ImmutableMap.builder();
 

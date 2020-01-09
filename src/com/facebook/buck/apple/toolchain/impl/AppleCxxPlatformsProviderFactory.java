@@ -23,6 +23,7 @@ import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
+import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
@@ -75,7 +76,7 @@ public class AppleCxxPlatformsProviderFactory
     }
   }
 
-  private static FlavorDomain<AppleCxxPlatform> create(
+  private static FlavorDomain<UnresolvedAppleCxxPlatform> create(
       BuckConfig config,
       ProjectFilesystem filesystem,
       Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths,
@@ -84,7 +85,11 @@ public class AppleCxxPlatformsProviderFactory
         AppleCxxPlatforms.buildAppleCxxPlatforms(
             appleSdkPaths, appleToolchains, filesystem, config);
     checkApplePlatforms(appleCxxPlatforms);
-    return FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
+    ImmutableList<UnresolvedAppleCxxPlatform> unresolvedAppleCxxPlatforms =
+        appleCxxPlatforms.stream()
+            .map(platform -> StaticUnresolvedAppleCxxPlatform.of(platform, platform.getFlavor()))
+            .collect(ImmutableList.toImmutableList());
+    return FlavorDomain.from("Apple C++ Platform", unresolvedAppleCxxPlatforms);
   }
 
   private static void checkApplePlatforms(ImmutableList<AppleCxxPlatform> appleCxxPlatforms) {
