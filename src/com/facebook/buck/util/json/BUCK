@@ -22,5 +22,7 @@ java_library(
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/kotlin:kotlin-reflect",
         "//third-party/java/kotlin:kotlin-stdlib",
+        "//third-party/java/protobuf:protobuf",
+        "//third-party/java/protobuf:protobuf-util",
     ],
 )
