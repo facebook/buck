@@ -18,6 +18,7 @@ package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -88,6 +89,23 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
           .setName("driverkit")
           .setArchitectures(ImmutableList.of("armv7", "arm64", "i386", "x86_64"))
           .build();
+  public static final ImmutableList<ApplePlatform> ALL_PLATFORMS =
+      ImmutableList.of(
+          IPHONEOS,
+          IPHONESIMULATOR,
+          WATCHOS,
+          WATCHSIMULATOR,
+          APPLETVOS,
+          APPLETVSIMULATOR,
+          MACOSX,
+          DRIVERKIT);
+  public static final ImmutableList<Flavor> ALL_PLATFORM_FLAVORS =
+      ALL_PLATFORMS.stream()
+          .flatMap(
+              platform ->
+                  platform.getArchitectures().stream()
+                      .map(arch -> InternalFlavor.of(platform.getName() + "-" + arch)))
+          .collect(ImmutableList.toImmutableList());
 
   /** The full name of the platform. For example: {@code macosx}. */
   public abstract String getName();
@@ -159,16 +177,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   }
 
   public static ApplePlatform of(String name) {
-    for (ApplePlatform platform :
-        ImmutableList.of(
-            IPHONEOS,
-            IPHONESIMULATOR,
-            WATCHOS,
-            WATCHSIMULATOR,
-            APPLETVOS,
-            APPLETVSIMULATOR,
-            MACOSX,
-            DRIVERKIT)) {
+    for (ApplePlatform platform : ALL_PLATFORMS) {
       if (name.equals(platform.getName())) {
         return platform;
       }
@@ -176,20 +185,8 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
     return ApplePlatform.builder().setName(name).build();
   }
 
-  public static ImmutableList<ApplePlatform> getAllPlatforms() {
-    return ImmutableList.of(
-        IPHONEOS,
-        IPHONESIMULATOR,
-        WATCHOS,
-        WATCHSIMULATOR,
-        APPLETVOS,
-        APPLETVSIMULATOR,
-        MACOSX,
-        DRIVERKIT);
-  }
-
   public static boolean isPlatformFlavor(Flavor flavor) {
-    for (ApplePlatform platform : getAllPlatforms()) {
+    for (ApplePlatform platform : ALL_PLATFORMS) {
       if (flavor.getName().startsWith(platform.getName())) {
         String[] parts = flavor.getName().split("\\-");
         if (parts.length > 1 && platform.getArchitectures().contains(parts[1])) {
@@ -204,12 +201,19 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
     if (!isPlatformFlavor(flavor)) {
       return Optional.empty();
     }
-    for (ApplePlatform platform : getAllPlatforms()) {
+    for (ApplePlatform platform : ALL_PLATFORMS) {
       if (flavor.getName().startsWith(platform.getName())) {
         return Optional.of(flavor.getName().split("\\-")[0]);
       }
     }
     return Optional.empty();
+  }
+
+  public static Optional<String> findArchitecture(Flavor flavor) {
+    if (!isPlatformFlavor(flavor)) {
+      return Optional.empty();
+    }
+    return Optional.of(flavor.getName().split("\\-")[1]);
   }
 
   public static ApplePlatform fromFlavor(Flavor flavor) {
