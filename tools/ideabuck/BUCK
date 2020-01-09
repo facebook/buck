@@ -45,7 +45,7 @@ java_library(
     source = "1.8",
     target = "1.8",
     visibility = [
-        "//tools/ideabuck/...",
+        "PUBLIC",
     ],
     deps = [
         "//src/com/facebook/buck/event/external:external_lib",
@@ -77,6 +77,13 @@ java_library(
     visibility = [
         "PUBLIC",
     ],
+)
+
+java_library(
+    name = "meta-inf",
+    resources = glob(["resources/META-INF/**/*"]),
+    resources_root = "resources/",
+    visibility = ["PUBLIC"],
 )
 
 java_binary(
