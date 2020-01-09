@@ -16,8 +16,6 @@
 
 package com.facebook.buck.slb;
 
-import static com.facebook.buck.slb.AbstractClientSideSlbConfig.MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE;
-
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.net.URI;
@@ -42,7 +40,7 @@ public class ServerHealthState {
   private @Nullable IOException lastException;
 
   public ServerHealthState(URI server) {
-    this(server, MAX_STORED_SAMPLES, MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE);
+    this(server, MAX_STORED_SAMPLES, ClientSideSlbConfig.MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE);
   }
 
   public ServerHealthState(URI server, int minSamplesToReportError) {

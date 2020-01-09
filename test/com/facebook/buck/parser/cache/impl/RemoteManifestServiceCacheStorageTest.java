@@ -221,21 +221,13 @@ public class RemoteManifestServiceCacheStorageTest {
     Path buildPath = filesystem.getPath("Foo/Bar");
 
     GlobSpec globSpec =
-        GlobSpec.builder()
-            .setExclude(ImmutableList.of("excludeSpec"))
-            .setInclude(ImmutableList.of("includeSpec"))
-            .setExcludeDirectories(true)
-            .build();
+        GlobSpec.of(ImmutableList.of("excludeSpec"), ImmutableList.of("includeSpec"), true);
     ImmutableSet<String> globs = ImmutableSet.of("FooBar.java");
     ImmutableList.Builder<GlobSpecWithResult> globSpecsBuilder = ImmutableList.builder();
     globSpecsBuilder.add(GlobSpecWithResult.of(globSpec, globs));
 
     globSpec =
-        GlobSpec.builder()
-            .setExclude(ImmutableList.of("excludeSpec1"))
-            .setInclude(ImmutableList.of("includeSpec1"))
-            .setExcludeDirectories(false)
-            .build();
+        GlobSpec.of(ImmutableList.of("excludeSpec1"), ImmutableList.of("includeSpec1"), false);
     globs = ImmutableSet.of("BarFoo.java");
     globSpecsBuilder.add(GlobSpecWithResult.of(globSpec, globs));
     ImmutableList<GlobSpecWithResult> globSpecs = globSpecsBuilder.build();

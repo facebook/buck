@@ -20,24 +20,21 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Used to provide a {@link SwiftPlatform} that is fully specified before parsing/configuration
  * (specified in .buckconfig, for example).
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractStaticUnresolvedSwiftPlatform implements UnresolvedSwiftPlatform {
-  @Value.Parameter
+@BuckStyleValue
+public abstract class StaticUnresolvedSwiftPlatform implements UnresolvedSwiftPlatform {
+
   public abstract Optional<SwiftPlatform> getStaticallyResolvedInstance();
 
-  @Value.Parameter
   @Override
   public abstract Flavor getFlavor();
 
@@ -50,5 +47,10 @@ abstract class AbstractStaticUnresolvedSwiftPlatform implements UnresolvedSwiftP
   @Override
   public Optional<SwiftPlatform> resolve(BuildRuleResolver ruleResolver) {
     return getStaticallyResolvedInstance();
+  }
+
+  public static StaticUnresolvedSwiftPlatform of(
+      Optional<? extends SwiftPlatform> staticallyResolvedInstance, Flavor flavor) {
+    return ImmutableStaticUnresolvedSwiftPlatform.of(staticallyResolvedInstance, flavor);
   }
 }

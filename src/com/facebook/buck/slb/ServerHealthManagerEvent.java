@@ -16,7 +16,7 @@
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.google.common.collect.ImmutableList;
@@ -45,9 +45,8 @@ public class ServerHealthManagerEvent extends AbstractBuckEvent {
     return this.getClass().getName();
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractPerServerData {
+  @BuckStyleValueWithBuilder
+  public abstract static class PerServerData {
     public abstract URI getServer();
 
     @Value.Default
@@ -61,9 +60,8 @@ public class ServerHealthManagerEvent extends AbstractBuckEvent {
     }
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractServerHealthManagerEventData {
+  @BuckStyleValueWithBuilder
+  public abstract static class ServerHealthManagerEventData {
 
     @Value.Default
     public boolean noHealthyServersAvailable() {

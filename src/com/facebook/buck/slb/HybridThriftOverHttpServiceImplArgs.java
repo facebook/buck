@@ -16,29 +16,33 @@
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractHybridThriftOverHttpServiceImplArgs {
+@BuckStyleValue
+public abstract class HybridThriftOverHttpServiceImplArgs {
 
   public static final String DEFAULT_HYBRID_THRIFT_PATH = "/hybrid_thrift";
 
-  @Value.Parameter
   public abstract HttpService getService();
 
-  @Value.Parameter
   public abstract ListeningExecutorService getExecutor();
 
-  @Value.Default
-  public ThriftProtocol getThriftProtocol() {
-    return ThriftProtocol.COMPACT;
+  public abstract ThriftProtocol getThriftProtocol();
+
+  public abstract String getHybridThriftPath();
+
+  public static HybridThriftOverHttpServiceImplArgs of(
+      HttpService service, ListeningExecutorService executor) {
+    return of(service, executor, ThriftProtocol.COMPACT, DEFAULT_HYBRID_THRIFT_PATH);
   }
 
-  @Value.Default
-  public String getHybridThriftPath() {
-    return DEFAULT_HYBRID_THRIFT_PATH;
+  public static HybridThriftOverHttpServiceImplArgs of(
+      HttpService service,
+      ListeningExecutorService executor,
+      ThriftProtocol thriftProtocol,
+      String hybridThriftPath) {
+    return ImmutableHybridThriftOverHttpServiceImplArgs.of(
+        service, executor, thriftProtocol, hybridThriftPath);
   }
 }

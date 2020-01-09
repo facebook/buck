@@ -16,24 +16,26 @@
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractThriftOverHttpServiceConfig {
+@BuckStyleValue
+public abstract class ThriftOverHttpServiceConfig {
 
   public static final String DEFAULT_THRIFT_PATH = "/thrift";
 
-  @Value.Parameter
   public abstract HttpService getService();
 
   public ThriftProtocol getThriftProtocol() {
     return ThriftProtocol.BINARY;
   }
 
-  @Value.Default
-  public String getThriftPath() {
-    return DEFAULT_THRIFT_PATH;
+  public abstract String getThriftPath();
+
+  public static ThriftOverHttpServiceConfig of(HttpService service) {
+    return of(service, DEFAULT_THRIFT_PATH);
+  }
+
+  public static ThriftOverHttpServiceConfig of(HttpService service, String thriftPath) {
+    return ImmutableThriftOverHttpServiceConfig.of(service, thriftPath);
   }
 }

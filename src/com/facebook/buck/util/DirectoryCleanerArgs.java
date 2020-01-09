@@ -16,15 +16,13 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractDirectoryCleanerArgs {
+@BuckStyleValueWithBuilder
+public abstract class DirectoryCleanerArgs {
 
-  @Value.Parameter
   public abstract DirectoryCleaner.PathSelector getPathSelector();
 
   @Value.Default
@@ -43,4 +41,10 @@ abstract class AbstractDirectoryCleanerArgs {
   }
 
   public abstract Optional<Long> getMaxBytesAfterDeletion();
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableDirectoryCleanerArgs.Builder {}
 }

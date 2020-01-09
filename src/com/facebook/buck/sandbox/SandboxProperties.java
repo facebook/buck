@@ -16,14 +16,12 @@
 
 package com.facebook.buck.sandbox;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableSet;
-import org.immutables.value.Value;
 
 /** A set of properties for a single execution of a process under a sandbox. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractSandboxProperties {
+@BuckStyleValueWithBuilder
+public abstract class SandboxProperties {
 
   /** Paths that are not allowed to be read during process execution. */
   public abstract ImmutableSet<String> getDeniedToReadPaths();
@@ -36,4 +34,10 @@ abstract class AbstractSandboxProperties {
 
   /** Paths that are allowed to be writen during process execution. */
   public abstract ImmutableSet<String> getAllowedToWritePaths();
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableSandboxProperties.Builder {}
 }

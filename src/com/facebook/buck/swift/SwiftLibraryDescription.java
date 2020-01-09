@@ -317,12 +317,7 @@ public class SwiftLibraryDescription
           swiftBuckConfig,
           buildTarget,
           args.getTargetSdkVersion()
-              .map(
-                  version ->
-                      SwiftTargetTriple.builder()
-                          .from(swiftPlatform.get().getSwiftTarget())
-                          .setTargetSdkVersion(version)
-                          .build())
+              .map(version -> swiftPlatform.get().getSwiftTarget().withTargetSdkVersion(version))
               .orElse(swiftPlatform.get().getSwiftTarget()),
           projectFilesystem,
           params.copyAppendingExtraDeps(

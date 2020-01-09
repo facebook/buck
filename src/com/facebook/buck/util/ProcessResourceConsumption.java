@@ -16,39 +16,29 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 /** Represents resource consumption counters of a {@link Process}. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractProcessResourceConsumption {
-  @Value.Parameter
+@BuckStyleValue
+public abstract class ProcessResourceConsumption {
+
   public abstract long getMemResident();
 
-  @Value.Parameter
   public abstract long getMemSize();
 
-  @Value.Parameter
   public abstract long getCpuReal();
 
-  @Value.Parameter
   public abstract long getCpuUser();
 
-  @Value.Parameter
   public abstract long getCpuSys();
 
-  @Value.Parameter
   public abstract long getCpuTotal();
 
-  @Value.Parameter
   public abstract long getIoBytesRead();
 
-  @Value.Parameter
   public abstract long getIoBytesWritten();
 
-  @Value.Parameter
   public abstract long getIoTotal();
 
   @Nullable
@@ -60,17 +50,16 @@ abstract class AbstractProcessResourceConsumption {
     if (r2 == null) {
       return r1;
     }
-    return ProcessResourceConsumption.builder()
-        .setMemResident(Math.max(r1.getMemResident(), r2.getMemResident()))
-        .setMemSize(Math.max(r1.getMemSize(), r2.getMemSize()))
-        .setCpuReal(Math.max(r1.getCpuReal(), r2.getCpuReal()))
-        .setCpuUser(Math.max(r1.getCpuUser(), r2.getCpuUser()))
-        .setCpuSys(Math.max(r1.getCpuSys(), r2.getCpuSys()))
-        .setCpuTotal(Math.max(r1.getCpuTotal(), r2.getCpuTotal()))
-        .setIoBytesRead(Math.max(r1.getIoBytesRead(), r2.getIoBytesRead()))
-        .setIoBytesWritten(Math.max(r1.getIoBytesWritten(), r2.getIoBytesWritten()))
-        .setIoTotal(Math.max(r1.getIoTotal(), r2.getIoTotal()))
-        .build();
+    return ImmutableProcessResourceConsumption.of(
+        Math.max(r1.getMemResident(), r2.getMemResident()),
+        Math.max(r1.getMemSize(), r2.getMemSize()),
+        Math.max(r1.getCpuReal(), r2.getCpuReal()),
+        Math.max(r1.getCpuUser(), r2.getCpuUser()),
+        Math.max(r1.getCpuSys(), r2.getCpuSys()),
+        Math.max(r1.getCpuTotal(), r2.getCpuTotal()),
+        Math.max(r1.getIoBytesRead(), r2.getIoBytesRead()),
+        Math.max(r1.getIoBytesWritten(), r2.getIoBytesWritten()),
+        Math.max(r1.getIoTotal(), r2.getIoTotal()));
   }
 
   @Nullable
@@ -84,16 +73,37 @@ abstract class AbstractProcessResourceConsumption {
     }
     // For some stats such as cpu_real, parent's consumption already includes child's consumption,
     // so we just take max instead of sum to avoid double counting.
-    return ProcessResourceConsumption.builder()
-        .setMemResident(r1.getMemResident() + r2.getMemResident())
-        .setMemSize(r1.getMemSize() + r2.getMemSize())
-        .setCpuReal(Math.max(r1.getCpuReal(), r2.getCpuReal()))
-        .setCpuUser(r1.getCpuUser() + r2.getCpuUser())
-        .setCpuSys(r1.getCpuSys() + r2.getCpuSys())
-        .setCpuTotal(r1.getCpuTotal() + r2.getCpuTotal())
-        .setIoBytesRead(r1.getIoBytesRead() + r2.getIoBytesRead())
-        .setIoBytesWritten(r1.getIoBytesWritten() + r2.getIoBytesWritten())
-        .setIoTotal(r1.getIoTotal() + r2.getIoTotal())
-        .build();
+    return ImmutableProcessResourceConsumption.of(
+        r1.getMemResident() + r2.getMemResident(),
+        r1.getMemSize() + r2.getMemSize(),
+        Math.max(r1.getCpuReal(), r2.getCpuReal()),
+        r1.getCpuUser() + r2.getCpuUser(),
+        r1.getCpuSys() + r2.getCpuSys(),
+        r1.getCpuTotal() + r2.getCpuTotal(),
+        r1.getIoBytesRead() + r2.getIoBytesRead(),
+        r1.getIoBytesWritten() + r2.getIoBytesWritten(),
+        r1.getIoTotal() + r2.getIoTotal());
+  }
+
+  public static ProcessResourceConsumption of(
+      long memResident,
+      long memSize,
+      long cpuReal,
+      long cpuUser,
+      long cpuSys,
+      long cpuTotal,
+      long ioBytesRead,
+      long ioBytesWritten,
+      long ioTotal) {
+    return ImmutableProcessResourceConsumption.of(
+        memResident,
+        memSize,
+        cpuReal,
+        cpuUser,
+        cpuSys,
+        cpuTotal,
+        ioBytesRead,
+        ioBytesWritten,
+        ioTotal);
   }
 }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
@@ -24,9 +24,8 @@ import java.net.URI;
 import java.util.concurrent.TimeUnit;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractClientSideSlbConfig {
+@BuckStyleValueWithBuilder
+abstract class ClientSideSlbConfig {
 
   // Defaults
   public static final String PING_ENDPOINT = "/status.php";

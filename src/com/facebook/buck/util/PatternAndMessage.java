@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
@@ -25,18 +25,20 @@ import org.immutables.value.Value;
  * A class that holds a pattern and a message related to this pattern. Example usage: if the pattern
  * matches, throw the message.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractPatternAndMessage {
-  @Value.Parameter
-  abstract Pattern getPattern();
+@BuckStyleValue
+public abstract class PatternAndMessage {
 
-  @Value.Parameter
-  abstract String getMessage();
+  public abstract Pattern getPattern();
+
+  public abstract String getMessage();
 
   @Value.Check
   protected void check() {
     Preconditions.checkArgument(getPattern().toString().compareTo("*") != 0);
     Preconditions.checkArgument(getMessage() != null && !getMessage().isEmpty());
+  }
+
+  public static PatternAndMessage of(Pattern pattern, String message) {
+    return ImmutablePatternAndMessage.of(pattern, message);
   }
 }

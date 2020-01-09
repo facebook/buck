@@ -54,21 +54,13 @@ public class BuildFileManifestSerializerTest {
 
   private static BuildFileManifest createFakeManifest(ImmutableMap<String, Optional<String>> envs) {
     GlobSpec globSpec =
-        GlobSpec.builder()
-            .setExclude(ImmutableList.of("excludeSpec"))
-            .setInclude(ImmutableList.of("includeSpec"))
-            .setExcludeDirectories(true)
-            .build();
+        GlobSpec.of(ImmutableList.of("excludeSpec"), ImmutableList.of("includeSpec"), true);
     ImmutableSet<String> globs = ImmutableSet.of("FooBar.java");
     ImmutableList.Builder<GlobSpecWithResult> globSpecBuilder = ImmutableList.builder();
     globSpecBuilder.add(GlobSpecWithResult.of(globSpec, globs));
 
     globSpec =
-        GlobSpec.builder()
-            .setExclude(ImmutableList.of("excludeSpec1"))
-            .setInclude(ImmutableList.of("includeSpec1"))
-            .setExcludeDirectories(false)
-            .build();
+        GlobSpec.of(ImmutableList.of("excludeSpec1"), ImmutableList.of("includeSpec1"), false);
     globs = ImmutableSet.of("BarFoo.java");
     globSpecBuilder.add(GlobSpecWithResult.of(globSpec, globs));
     ImmutableList<GlobSpecWithResult> globSpecs = globSpecBuilder.build();

@@ -339,17 +339,7 @@ public class ProcessTrackerTest {
   }
 
   private static ProcessResourceConsumption createConsumption(long cpu, long mem, long io) {
-    return ProcessResourceConsumption.builder()
-        .setMemResident(0)
-        .setMemSize(mem)
-        .setCpuReal(cpu)
-        .setCpuUser(1)
-        .setCpuSys(2)
-        .setCpuTotal(3)
-        .setIoBytesRead(io)
-        .setIoBytesWritten(0)
-        .setIoTotal(io)
-        .build();
+    return ProcessResourceConsumption.of(0, mem, cpu, 1, 2, 3, io, 0, io);
   }
 
   private static ProcessExecutorParams createParams(String executable) {

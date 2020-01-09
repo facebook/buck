@@ -16,17 +16,15 @@
 
 package com.facebook.buck.skylark.io;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Collection;
-import org.immutables.value.Value;
 
 /** Glob specification includes parameters that affect glob evaluation within a single package. */
-@BuckStyleImmutable
-@Value.Immutable
-@JsonDeserialize(builder = GlobSpec.Builder.class)
-abstract class AbstractGlobSpec {
+@BuckStyleValue
+@JsonDeserialize(as = ImmutableGlobSpec.class)
+public abstract class GlobSpec {
   /** Wildcards of paths that should be returned. */
   @JsonProperty("include")
   public abstract Collection<String> getInclude();
@@ -38,4 +36,9 @@ abstract class AbstractGlobSpec {
   /** Whether directories should be excluded from the glob expansion. */
   @JsonProperty("includeDirectories")
   public abstract boolean getExcludeDirectories();
+
+  public static GlobSpec of(
+      Collection<String> include, Collection<String> exclude, boolean excludeDirectories) {
+    return ImmutableGlobSpec.of(include, exclude, excludeDirectories);
+  }
 }

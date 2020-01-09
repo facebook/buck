@@ -18,8 +18,7 @@ package com.facebook.buck.swift.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
  * Expresses the target platform for Swift compilation. For more details, see the LLVM
@@ -27,9 +26,8 @@ import org.immutables.value.Value;
  *
  * <p>https://clang.llvm.org/docs/CrossCompilation.html#target-triple
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractSwiftTargetTriple implements AddsToRuleKey {
+@BuckStyleValue
+public abstract class SwiftTargetTriple implements AddsToRuleKey {
   @AddToRuleKey
   public abstract String getArchitecture();
 
@@ -44,5 +42,17 @@ abstract class AbstractSwiftTargetTriple implements AddsToRuleKey {
 
   public String getTriple() {
     return getArchitecture() + "-" + getVendor() + "-" + getPlatformName() + getTargetSdkVersion();
+  }
+
+  public static SwiftTargetTriple of(
+      String architecture, String vendor, String platformName, String targetSdkVersion) {
+    return ImmutableSwiftTargetTriple.of(architecture, vendor, platformName, targetSdkVersion);
+  }
+
+  public SwiftTargetTriple withTargetSdkVersion(String targetSdkVersion) {
+    if (targetSdkVersion.equals(getTargetSdkVersion())) {
+      return this;
+    }
+    return of(getArchitecture(), getVendor(), getPlatformName(), targetSdkVersion);
   }
 }

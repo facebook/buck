@@ -225,11 +225,7 @@ public class SkylarkProjectBuildFileParserTest {
             buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(Collections.singletonList("f*"))
-                        .setExclude(Collections.EMPTY_LIST)
-                        .setExcludeDirectories(false)
-                        .build(),
+                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
                     ImmutableSet.of("file2", "file1"))));
 
     assertTrue(result);
@@ -253,11 +249,7 @@ public class SkylarkProjectBuildFileParserTest {
             buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(Collections.singletonList("f*"))
-                        .setExclude(Collections.EMPTY_LIST)
-                        .setExcludeDirectories(false)
-                        .build(),
+                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
                     ImmutableSet.of("file3", "file1"))));
 
     assertFalse(result);
@@ -281,11 +273,7 @@ public class SkylarkProjectBuildFileParserTest {
             buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(Collections.singletonList("f*"))
-                        .setExclude(Collections.EMPTY_LIST)
-                        .setExcludeDirectories(false)
-                        .build(),
+                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
                     ImmutableSet.of("file1"))));
 
     assertFalse(result);
@@ -308,11 +296,7 @@ public class SkylarkProjectBuildFileParserTest {
             buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(Collections.singletonList("f*"))
-                        .setExclude(Collections.EMPTY_LIST)
-                        .setExcludeDirectories(false)
-                        .build(),
+                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
                     ImmutableSet.of("file1", "file2"))));
 
     assertFalse(result);
@@ -334,11 +318,7 @@ public class SkylarkProjectBuildFileParserTest {
             buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(Collections.singletonList("f*"))
-                        .setExclude(Collections.EMPTY_LIST)
-                        .setExcludeDirectories(false)
-                        .build(),
+                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
                     ImmutableSet.of())));
 
     assertTrue(result);
@@ -393,11 +373,7 @@ public class SkylarkProjectBuildFileParserTest {
         equalTo(
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(ImmutableList.of("f*"))
-                        .setExclude(ImmutableList.of())
-                        .setExcludeDirectories(true)
-                        .build(),
+                    GlobSpec.of(ImmutableList.of("f*"), ImmutableList.of(), true),
                     ImmutableSet.of("file1", "file2")))));
   }
 

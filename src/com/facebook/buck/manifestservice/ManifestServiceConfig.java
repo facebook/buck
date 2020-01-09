@@ -64,10 +64,7 @@ public class ManifestServiceConfig {
             .build();
     HttpService httpService = new LoadBalancedService(slb, client, eventBus);
     HybridThriftOverHttpServiceImplArgs args =
-        HybridThriftOverHttpServiceImplArgs.builder()
-            .setExecutor(executor)
-            .setService(httpService)
-            .build();
+        HybridThriftOverHttpServiceImplArgs.of(httpService, executor);
     HybridThriftOverHttpServiceImpl<BuckCacheRequest, BuckCacheResponse> hybridThriftService =
         new HybridThriftOverHttpServiceImpl<>(args);
     return new ThriftManifestService(hybridThriftService, executor);

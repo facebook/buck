@@ -40,7 +40,7 @@ public class ThriftOverHttpServiceTest {
   @Before
   public void setUp() {
     httpService = EasyMock.createNiceMock(HttpService.class);
-    config = ThriftOverHttpServiceConfig.builder().setService(httpService).build();
+    config = ThriftOverHttpServiceConfig.of(httpService);
     service = new ThriftOverHttpServiceImpl<FrontendRequest, FrontendResponse>(config);
   }
 

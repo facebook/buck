@@ -14,7 +14,7 @@ java_library(
 )
 
 IO_SRCS = [
-    "AbstractDirectoryCleanerArgs.java",
+    "DirectoryCleanerArgs.java",
     "AnsiEnvironmentChecking.java",
     "DefaultFilteredDirectoryCopier.java",
     "DirectoryCleaner.java",
@@ -49,8 +49,8 @@ java_immutables_library(
 )
 
 PROCESS_EXECUTOR_SRCS = [
-    "AbstractProcessExecutorParams.java",
-    "AbstractProcessResourceConsumption.java",
+    "ProcessExecutorParams.java",
+    "ProcessResourceConsumption.java",
     "Ansi.java",
     "BgProcessKiller.java",
     "CapturingPrintStream.java",

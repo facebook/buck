@@ -39,7 +39,6 @@ import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
-import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -106,12 +105,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         preprocessorFlags,
         underlyingModule.isPresent(),
         args.getTargetSdkVersion()
-            .map(
-                version ->
-                    SwiftTargetTriple.builder()
-                        .from(swiftPlatform.getSwiftTarget())
-                        .setTargetSdkVersion(version)
-                        .build()));
+            .map(version -> swiftPlatform.getSwiftTarget().withTargetSdkVersion(version)));
   }
 
   /**

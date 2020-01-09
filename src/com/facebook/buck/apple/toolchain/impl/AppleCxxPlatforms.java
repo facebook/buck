@@ -469,12 +469,11 @@ public class AppleCxxPlatforms {
     AppleSdkPaths.Builder swiftSdkPathsBuilder = AppleSdkPaths.builder().from(sdkPaths);
     Optional<SwiftPlatform> swiftPlatform =
         getSwiftPlatform(
-            SwiftTargetTriple.builder()
-                .setArchitecture(targetArchitecture)
-                .setVendor("apple")
-                .setPlatformName(applePlatform.getSwiftName().orElse(applePlatform.getName()))
-                .setTargetSdkVersion(minVersion)
-                .build(),
+            SwiftTargetTriple.of(
+                targetArchitecture,
+                "apple",
+                applePlatform.getSwiftName().orElse(applePlatform.getName()),
+                minVersion),
             version,
             targetSdk,
             swiftSdkPathsBuilder.build(),

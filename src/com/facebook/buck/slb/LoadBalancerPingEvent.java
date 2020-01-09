@@ -16,13 +16,13 @@
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.google.common.collect.ImmutableList;
 import java.net.URI;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class LoadBalancerPingEvent extends AbstractBuckEvent {
   private final LoadBalancerPingEventData data;
@@ -46,9 +46,8 @@ public class LoadBalancerPingEvent extends AbstractBuckEvent {
     return this.getClass().getName();
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractPerServerPingData {
+  @BuckStyleValueWithBuilder
+  public interface PerServerPingData {
     URI getServer();
 
     Optional<Exception> getException();
@@ -56,9 +55,8 @@ public class LoadBalancerPingEvent extends AbstractBuckEvent {
     Optional<Long> getPingRequestLatencyMillis();
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractLoadBalancerPingEventData {
+  @BuckStyleValue
+  public interface LoadBalancerPingEventData {
     ImmutableList<PerServerPingData> getPerServerData();
   }
 }

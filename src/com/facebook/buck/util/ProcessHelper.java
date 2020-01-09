@@ -120,17 +120,16 @@ public class ProcessHelper {
     if (process == null) {
       return null;
     }
-    return ProcessResourceConsumption.builder()
-        .setMemResident(process.getResidentSetSize())
-        .setMemSize(process.getVirtualSize())
-        .setCpuReal(process.getUpTime())
-        .setCpuUser(process.getUserTime())
-        .setCpuSys(process.getKernelTime())
-        .setCpuTotal(process.getUserTime() + process.getKernelTime())
-        .setIoBytesRead(process.getBytesRead())
-        .setIoBytesWritten(process.getBytesWritten())
-        .setIoTotal(process.getBytesRead() + process.getBytesWritten())
-        .build();
+    return ProcessResourceConsumption.of(
+        process.getResidentSetSize(),
+        process.getVirtualSize(),
+        process.getUpTime(),
+        process.getUserTime(),
+        process.getKernelTime(),
+        process.getUserTime() + process.getKernelTime(),
+        process.getBytesRead(),
+        process.getBytesWritten(),
+        process.getBytesRead() + process.getBytesWritten());
   }
 
   /** @return whether the process has finished executing or not. */

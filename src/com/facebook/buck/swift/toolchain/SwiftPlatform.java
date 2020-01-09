@@ -17,17 +17,15 @@
 package com.facebook.buck.swift.toolchain;
 
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
-import org.immutables.value.Value;
 
 /** Interface describing a Swift toolchain and platform to build for. */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractSwiftPlatform {
+@BuckStyleValueWithBuilder
+public interface SwiftPlatform {
 
   Tool getSwiftc();
 
@@ -38,20 +36,20 @@ interface AbstractSwiftPlatform {
    *     the directory will contain libs like libswiftCore.dylib and others. The libs will be passed
    *     to swift-stdlib-tool for inclusion in the app bundle.
    */
-  Set<Path> getSwiftRuntimePathsForBundling();
+  ImmutableSet<Path> getSwiftRuntimePathsForBundling();
 
   /**
    * @return A set of directories which contain the Swift runtime as dynamic libraries. On macOS,
    *     the directory will contain the .tbd libs like libSwiftCore.tbd and others. The libs will be
    *     passed during the link step.
    */
-  Set<Path> getSwiftRuntimePathsForLinking();
+  ImmutableSet<Path> getSwiftRuntimePathsForLinking();
 
   /**
    * @return A set of directories which contain the Swift runtime as static libraries. On macOS, the
    *     directory will contain libs like libswiftCore.a and others.
    */
-  Set<Path> getSwiftStaticRuntimePaths();
+  ImmutableSet<Path> getSwiftStaticRuntimePaths();
 
   /**
    * @return A set of search paths used by the dynamic linker loader to find of linked shared
@@ -65,4 +63,10 @@ interface AbstractSwiftPlatform {
    *     x86_64-apple-ios9.0
    */
   SwiftTargetTriple getSwiftTarget();
+
+  static Builder builder() {
+    return new Builder();
+  }
+
+  class Builder extends ImmutableSwiftPlatform.Builder {}
 }
