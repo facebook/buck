@@ -12,6 +12,8 @@ define_impl("codesign")
 
 define_impl("dsymutil")
 
+define_impl("dsymutil_workaround")
+
 define_impl("lipo")
 
 define_impl("lldb")

@@ -49,7 +49,6 @@ public class ApplePlatformDescription
       throw new HumanReadableException(
           "Expected %s to be an instance of cxx_platform.", cxxPlatformRule.getBuildTarget());
     }
-
     return new ApplePlatformBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
@@ -125,5 +124,8 @@ public class ApplePlatformDescription
 
     /** Target for the swift toolchain which should be used for this SDK. */
     Optional<BuildTarget> getSwiftToolchain();
+
+    /** If work around for dsymutil should be used. */
+    Optional<Boolean> getWorkAroundDsymutilLtoStackOverflowBug();
   }
 }

@@ -104,4 +104,32 @@ public class AppleToolchainIntegrationTest {
             rootPath, rootPath, rootPath, rootPath),
         workspace.getFileContents(output.resolve("TestApp")));
   }
+
+  @Test
+  public void testBuildWithDsymutilWorkaround() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_toolchain", tmp);
+    CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
+    workspace.addBuckConfigLocalOption(
+        "apple", "toolchain_target", "//apple_toolchain:toolchain_dsymutil");
+    workspace.setUp();
+    Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64");
+    assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
+    Path rootPath = workspace.getProjectFileSystem().getRootPath();
+    assertEquals(
+        String.format(
+            "strip:%n"
+                + "linker: input:%n"
+                + "buck-out/gen/TestLib#iphoneos-arm64,static/libTestLib.static.secret%n"
+                + "archive:%n"
+                + "object: compile output: source code 1%n"
+                + "object: compile output: source code 2%n"
+                + "ranlib applied.%n"
+                + "linker: fpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
+                + "linker: frameworks: Foundation,UIKit%n"
+                + "linker: lpath:  %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
+                + "linker: libs:  objc%n",
+            rootPath, rootPath),
+        workspace.getFileContents(output.resolve("TestApp")));
+  }
 }

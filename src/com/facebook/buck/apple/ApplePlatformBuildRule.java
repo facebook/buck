@@ -26,6 +26,8 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -68,6 +70,15 @@ public class ApplePlatformBuildRule extends NoopBuildRule {
   }
 
   public AppleCxxPlatform.Builder getAppleCxxPlatformBuilder() {
+    // We are seeing a stack overflow in dsymutil during (fat) LTO
+    // builds. Upstream dsymutil was patched to avoid recursion in the
+    // offending path in https://reviews.llvm.org/D48899, and
+    // https://reviews.llvm.org/D45172 mentioned that there is much
+    // more stack space available when single threaded.
+    Tool dsymutil = Tools.resolveTool(descriptionArgs.getDsymutil(), actionGraphBuilder);
+    if (descriptionArgs.getWorkAroundDsymutilLtoStackOverflowBug().orElse(false)) {
+      dsymutil = new CommandTool.Builder(dsymutil).addArg("-num-threads=1").build();
+    }
     return AppleCxxPlatform.builder()
         .setMinVersion(descriptionArgs.getMinVersion())
         .setBuildVersion(descriptionArgs.getBuildVersion())
@@ -80,7 +91,7 @@ public class ApplePlatformBuildRule extends NoopBuildRule {
                 .getCopySceneKitAssets()
                 .map(path -> Tools.resolveTool(path, actionGraphBuilder)))
         .setXctest(Tools.resolveTool(descriptionArgs.getXctest(), actionGraphBuilder))
-        .setDsymutil(Tools.resolveTool(descriptionArgs.getDsymutil(), actionGraphBuilder))
+        .setDsymutil(dsymutil)
         .setLipo(Tools.resolveTool(descriptionArgs.getLipo(), actionGraphBuilder))
         .setLldb(Tools.resolveTool(descriptionArgs.getLldb(), actionGraphBuilder))
         .setCodesignProvider(ToolProviders.getToolProvider(descriptionArgs.getCodesign()))
