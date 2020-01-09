@@ -150,7 +150,7 @@ public class ArtifactFilesystemTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildArtifactFactory factory = new BuildArtifactFactory(buildTarget, filesystem);
     ActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID("a"));
 
     ImmutableSet<Artifact> artifacts =
         ImmutableSet.of(
@@ -174,7 +174,7 @@ public class ArtifactFilesystemTest {
 
     BuildArtifactFactory factory = new BuildArtifactFactory(buildTarget, filesystem);
     ActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID("a"));
 
     BuildArtifact artifact =
         factory.createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN).materialize(key);

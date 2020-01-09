@@ -58,9 +58,9 @@ class CapturingActionRegistry implements ActionRegistry {
   }
 
   @Override
-  public void registerActionAnalysisDataForAction(Action action) throws ActionCreationException {
+  public String registerActionAnalysisDataForAction(Action action) throws ActionCreationException {
     outputs.addAll(action.getOutputs());
-    delegate.registerActionAnalysisDataForAction(action);
+    return delegate.registerActionAnalysisDataForAction(action);
   }
 
   @Override

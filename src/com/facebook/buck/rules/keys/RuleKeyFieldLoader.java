@@ -57,7 +57,7 @@ public class RuleKeyFieldLoader {
   }
 
   private void setFields(AbstractRuleKeyBuilder<?> builder, Action action) {
-    builder.setReflectively(".short_name", action.getShortName());
+    builder.setReflectively(".id", action.getID());
     builder.setReflectively(".inputs", action.getInputs());
     builder.setReflectively(
         ".outputs",

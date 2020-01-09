@@ -54,7 +54,7 @@ public class ArtifactImplTest {
     assertFalse(artifact.isBound());
 
     ImmutableActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     BuildArtifact materialized = artifact.materialize(key);
 
     assertTrue(materialized.isBound());
@@ -200,7 +200,7 @@ public class ArtifactImplTest {
     assertEquals(artifact1.hashCode(), artifact2.hashCode());
 
     ImmutableActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
 
     artifact1 = (ArtifactImpl) artifact1.materialize(key);
     artifact2 = (ArtifactImpl) artifact2.materialize(key);
@@ -231,9 +231,9 @@ public class ArtifactImplTest {
         ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), Location.BUILTIN);
 
     ImmutableActionAnalysisDataKey key1 =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     ImmutableActionAnalysisDataKey key2 =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
 
     artifact1 = (ArtifactImpl) artifact1.materialize(key1);
     artifact2 = (ArtifactImpl) artifact2.materialize(key2);
@@ -249,9 +249,9 @@ public class ArtifactImplTest {
         Location.fromPathAndStartColumn(
             PathFragment.create("foo").getChild("bar.bzl"), 0, 5, new Location.LineAndColumn(3, 4));
     ImmutableActionAnalysisDataKey key1 =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     ImmutableActionAnalysisDataKey key2 =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
 
     ArtifactImpl declaredWithLocation =
         ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), location);

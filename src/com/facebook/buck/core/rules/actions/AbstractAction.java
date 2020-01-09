@@ -34,6 +34,7 @@ public abstract class AbstractAction implements Action {
   protected final ImmutableSortedSet<Artifact> inputs;
   protected final ImmutableSortedSet<Artifact> outputs;
   protected final String shortName;
+  private final String id;
 
   /**
    * @param registry the {@link DefaultActionRegistry} to registry this action for.
@@ -51,7 +52,7 @@ public abstract class AbstractAction implements Action {
     this.owner = registry.getOwner();
     this.shortName = shortName;
 
-    registry.registerActionAnalysisDataForAction(this);
+    this.id = registry.registerActionAnalysisDataForAction(this);
   }
 
   @Override
@@ -81,7 +82,14 @@ public abstract class AbstractAction implements Action {
   }
 
   @Override
+  public final String getID() {
+    return id;
+  }
+
+  @Override
   public BuildTarget getBuildTarget() {
+    // TODO: this should no longer extend build engine action, and this build target is no longer
+    // relevant
     return getOwner();
   }
 

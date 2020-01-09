@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableSortedSet;
  */
 public interface Action extends BuildEngineAction {
 
-  /** @return the identifier to the creator of this action */
+  /** @return the build target of the rule analysis that created of this action */
   BuildTarget getOwner();
 
   /** @return the set of inputs required to complete this action */
@@ -45,6 +45,9 @@ public interface Action extends BuildEngineAction {
    * @return a name for this action to be printed to console when executing and for logging purposes
    */
   String getShortName();
+
+  /** @return the short name of this action as an ID */
+  String getID();
 
   /**
    * Executes this action as part of the build

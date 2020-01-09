@@ -111,7 +111,7 @@ public class RuleAnalysisContextImplTest {
 
     ActionAnalysisData actionAnalysisData1 =
         new ActionAnalysisData() {
-          private final ActionAnalysisDataKey key = getNewKey(buildTarget, new ID() {});
+          private final ActionAnalysisDataKey key = getNewKey(buildTarget, new ID("a"));
 
           @Override
           public ActionAnalysisDataKey getKey() {
@@ -127,7 +127,7 @@ public class RuleAnalysisContextImplTest {
 
     ActionAnalysisData actionAnalysisData2 =
         new ActionAnalysisData() {
-          private final ActionAnalysisDataKey key = getNewKey(buildTarget, new ID() {});
+          private final ActionAnalysisDataKey key = getNewKey(buildTarget, new ID("a"));
 
           @Override
           public ActionAnalysisDataKey getKey() {
@@ -156,7 +156,7 @@ public class RuleAnalysisContextImplTest {
 
     ActionAnalysisDataKey key =
         new ActionAnalysisDataKey() {
-          private final ID id = new ID() {};
+          private final ID id = new ID("a");
 
           @Override
           public BuildTarget getBuildTarget() {
