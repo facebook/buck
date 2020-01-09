@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "java_test")
 APPLE_TEST_INTEGRATION_TEST_SRCS = [
     "AppleTestIntegrationTest.java",
     "AppleBundleIntegrationTest.java",
+    "AppleToolchainIntegrationTest.java",
 ]
 
 java_library(
@@ -161,6 +162,7 @@ java_test(
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
+        "//src/com/facebook/buck/features/python/toolchain/impl:impl",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/util:constants",
         "//src/com/facebook/buck/util:process_executor",
@@ -169,6 +171,7 @@ java_test(
         "//src/com/facebook/buck/util/json:json",
         "//test/com/facebook/buck/apple:testutil",
         "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/cxx:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
