@@ -32,7 +32,7 @@ class SomeAction extends AbstractAction {
   private final String a;
 
   protected SomeAction(ActionRegistry actionRegistry, int i, String a) {
-    super(actionRegistry, ImmutableSortedSet.of(), ImmutableSortedSet.of());
+    super(actionRegistry, ImmutableSortedSet.of(), ImmutableSortedSet.of(), "some");
     this.i = i;
     this.a = a;
   }
@@ -43,14 +43,9 @@ class SomeAction extends AbstractAction {
       ImmutableSortedSet<Artifact> outputs,
       int i,
       String a) {
-    super(actionRegistry, inputs, outputs);
+    super(actionRegistry, inputs, outputs, "some");
     this.i = i;
     this.a = a;
-  }
-
-  @Override
-  public String getShortName() {
-    return "some";
   }
 
   @Override

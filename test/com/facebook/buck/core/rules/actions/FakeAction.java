@@ -35,15 +35,11 @@ public class FakeAction extends AbstractAction {
       ImmutableSortedSet<Artifact> deps,
       ImmutableSortedSet<Artifact> outputs,
       FakeActionExecuteLambda executeFunction) {
-    super(actionRegistry, ImmutableSortedSet.copyOf(Sets.union(srcs, deps)), outputs);
+    super(
+        actionRegistry, ImmutableSortedSet.copyOf(Sets.union(srcs, deps)), outputs, "fake-action");
     this.hasheableWrapper = new HashableWrapper(executeFunction);
     this.srcs = srcs;
     this.deps = deps;
-  }
-
-  @Override
-  public String getShortName() {
-    return "fake-action";
   }
 
   @Override

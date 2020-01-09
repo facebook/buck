@@ -40,7 +40,6 @@ import java.util.Optional;
 
 /** Action that runs command line applications with provided arguments and environment */
 public class RunAction extends AbstractAction {
-  private final String shortName;
   private final CommandLineArgs args;
   private final ImmutableMap<String, String> env;
 
@@ -62,15 +61,9 @@ public class RunAction extends AbstractAction {
       String shortName,
       CommandLineArgs args,
       ImmutableMap<String, String> env) {
-    super(registry, inputs, outputs);
-    this.shortName = shortName;
+    super(registry, inputs, outputs, shortName);
     this.args = args;
     this.env = env;
-  }
-
-  @Override
-  public String getShortName() {
-    return shortName;
   }
 
   @Override

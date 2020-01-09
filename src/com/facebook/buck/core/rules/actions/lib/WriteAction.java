@@ -54,14 +54,9 @@ public class WriteAction extends AbstractAction {
       ImmutableSortedSet<Artifact> outputs,
       String contents,
       boolean isExecutable) {
-    super(actionRegistry, inputs, outputs);
+    super(actionRegistry, inputs, outputs, "write");
     this.contents = contents;
     this.isExecutable = isExecutable;
-  }
-
-  @Override
-  public String getShortName() {
-    return "write";
   }
 
   @Override

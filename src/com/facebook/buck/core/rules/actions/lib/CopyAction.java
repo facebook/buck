@@ -46,13 +46,12 @@ public class CopyAction extends AbstractAction {
    */
   public CopyAction(
       ActionRegistry actionRegistry, Artifact input, Artifact output, CopySourceMode mode) {
-    super(actionRegistry, ImmutableSortedSet.of(input), ImmutableSortedSet.of(output));
+    super(
+        actionRegistry,
+        ImmutableSortedSet.of(input),
+        ImmutableSortedSet.of(output),
+        String.format("copy <%s>", mode));
     this.mode = mode;
-  }
-
-  @Override
-  public String getShortName() {
-    return String.format("copy <%s>", mode);
   }
 
   @Override

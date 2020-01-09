@@ -33,6 +33,7 @@ public abstract class AbstractAction implements Action {
   protected final BuildTarget owner;
   protected final ImmutableSortedSet<Artifact> inputs;
   protected final ImmutableSortedSet<Artifact> outputs;
+  protected final String shortName;
 
   /**
    * @param registry the {@link DefaultActionRegistry} to registry this action for.
@@ -43,10 +44,12 @@ public abstract class AbstractAction implements Action {
   protected AbstractAction(
       ActionRegistry registry,
       ImmutableSortedSet<Artifact> inputs,
-      ImmutableSortedSet<Artifact> outputs) {
+      ImmutableSortedSet<Artifact> outputs,
+      String shortName) {
     this.inputs = inputs;
     this.outputs = outputs;
     this.owner = registry.getOwner();
+    this.shortName = shortName;
 
     registry.registerActionAnalysisDataForAction(this);
   }
@@ -70,6 +73,11 @@ public abstract class AbstractAction implements Action {
   public ImmutableSortedSet<SourcePath> getSourcePathOutputs() {
     return ImmutableSortedSet.copyOf(
         Iterables.transform(getOutputs(), artifact -> artifact.asBound().getSourcePath()));
+  }
+
+  @Override
+  public final String getShortName() {
+    return shortName;
   }
 
   @Override
