@@ -77,6 +77,7 @@ import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.spec.BuildFileSpec;
 import com.facebook.buck.parser.spec.TargetNodePredicateSpec;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -520,9 +521,12 @@ public class TargetsCommand extends AbstractCommand {
       return ExitCode.SUCCESS;
     }
 
+    ImmutableList<TargetNodeSpec> targetNodeSpecs = getTargetNodeSpecs(params);
+
     // plain or json output
     TargetGraphCreationResult targetGraphAndBuildTargetsForShowRules =
-        buildTargetGraphAndTargetsForShowRules(params, executor, descriptionClasses);
+        buildTargetGraphAndTargetsForShowRules(
+            params, targetNodeSpecs, executor, descriptionClasses);
     boolean useVersioning =
         isShowRuleKey || isShowOutput || isShowOutputs || isShowFullOutput
             ? params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()
@@ -606,8 +610,21 @@ public class TargetsCommand extends AbstractCommand {
     }
   }
 
+  private ImmutableList<TargetNodeSpec> getTargetNodeSpecs(CommandRunnerParams params) {
+    if (arguments.isEmpty()) {
+      return ImmutableList.of(
+          TargetNodePredicateSpec.of(
+              BuildFileSpec.fromRecursivePath(
+                  CellRelativePath.of(
+                      params.getCell().getCanonicalName(), ForwardRelativePath.of("")))));
+    }
+    return parseArgumentsAsTargetNodeSpecs(
+        params.getCell(), params.getClientWorkingDir(), arguments, params.getBuckConfig());
+  }
+
   private TargetGraphCreationResult buildTargetGraphAndTargetsForShowRules(
       CommandRunnerParams params,
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       ListeningExecutorService executor,
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses)
       throws InterruptedException, BuildFileParseException, IOException {
@@ -621,14 +638,7 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphWithTopLevelConfigurationTargets(
-                  parsingContext,
-                  ImmutableList.of(
-                      TargetNodePredicateSpec.of(
-                          BuildFileSpec.fromRecursivePath(
-                              CellRelativePath.of(
-                                  params.getCell().getCanonicalName(),
-                                  ForwardRelativePath.of(""))))),
-                  params.getTargetConfiguration());
+                  parsingContext, targetNodeSpecs, params.getTargetConfiguration());
       SortedMap<String, TargetNode<?>> matchingNodes =
           getMatchingNodes(params, completeTargetGraphAndBuildTargets, descriptionClasses);
 
@@ -644,11 +654,7 @@ public class TargetsCommand extends AbstractCommand {
               .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext.withApplyDefaultFlavorsMode(
                       ParserConfig.ApplyDefaultFlavorsMode.DISABLED),
-                  parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(),
-                      params.getClientWorkingDir(),
-                      arguments,
-                      params.getBuckConfig()),
+                  targetNodeSpecs,
                   params.getTargetConfiguration()),
           descriptionClasses);
     }
