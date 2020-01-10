@@ -34,7 +34,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.PathReferenceRuleWithMultipleOutputs;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -46,10 +45,8 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -272,39 +269,5 @@ public class BuildReportTest {
     String observedReport =
         new BuildReport(buildExecutionResult, resolver, rootCell).generateJsonBuildReport();
     assertEquals(expectedReport, observedReport);
-  }
-
-  @Test
-  public void testGenerateJsonBuildReportWithNonExistentDefaultOutput() throws IOException {
-    exception.expect(IllegalStateException.class);
-    exception.expectMessage(
-        "Default output group must exist in path_reference_rule_with_multiple_outputs rule //fake:rule7");
-
-    BuildRule rule7 =
-        new PathReferenceRuleWithMultipleOutputs(
-            BuildTargetFactory.newInstance("//fake:rule7"),
-            new FakeProjectFilesystem(),
-            Paths.get("unused"),
-            ImmutableMap.of(
-                OutputLabel.of("named_1"), ImmutableSet.of(Paths.get("named_output_1")))) {
-          @Override
-          public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>>
-              getSourcePathsByOutputsLabels() {
-            Map<OutputLabel, ImmutableSortedSet<SourcePath>> toRemoveDefaultOutput =
-                new HashMap<>(super.getSourcePathsByOutputsLabels());
-            toRemoveDefaultOutput.remove(OutputLabel.defaultLabel());
-            return ImmutableMap.copyOf(toRemoveDefaultOutput);
-          }
-        };
-    graphBuilder.addToIndex(rule7);
-    ruleToResult.put(
-        rule7, Optional.of(BuildResult.success(rule7, BUILT_LOCALLY, CacheResult.miss())));
-    BuildExecutionResult buildResult =
-        BuildExecutionResult.builder()
-            .setResults(ruleToResult)
-            .setFailures(ImmutableSet.of())
-            .build();
-
-    new BuildReport(buildResult, resolver, rootCell).generateJsonBuildReport();
   }
 }
