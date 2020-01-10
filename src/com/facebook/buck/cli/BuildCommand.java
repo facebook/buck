@@ -47,7 +47,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.FileSerializationOutputRuleDepsListener;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -348,14 +347,11 @@ public class BuildCommand extends AbstractCommand {
       Function<ImmutableList<TargetNodeSpec>, ImmutableList<TargetNodeSpec>> targetNodeSpecEnhancer,
       ImmutableSet<String> additionalTargets)
       throws Exception {
-    if (showOutput
-        && params.getConsole().getAnsi().isAnsiTerminal()
-        && params.getBuckConfig().getView(CliConfig.class).getEnableShowOutputWarning()) {
-      params
-          .getBuckEventBus()
-          .post(
-              ConsoleEvent.warning(
-                  "--show-output is being deprecated. Use --show-outputs instead. Note that with --show-outputs, multiple files may be printed for each individual build target."));
+    if (showOutput) {
+      CommandHelper.maybePrintShowOutputWarning(
+          params.getBuckConfig().getView(CliConfig.class),
+          params.getConsole().getAnsi(),
+          params.getBuckEventBus());
     }
     if (!additionalTargets.isEmpty()) {
       this.arguments.addAll(additionalTargets);

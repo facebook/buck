@@ -201,6 +201,12 @@ public class TargetsCommand extends AbstractCommand {
   private boolean isShowOutput;
 
   @Option(
+      name = "--show-outputs",
+      usage =
+          "Print paths to outputs, relative to the cell path, for each rule after the rule name.")
+  private boolean isShowOutputs;
+
+  @Option(
       name = "--show-full-output",
       aliases = {"--show_full_output"},
       usage = "Print the absolute path to the output, for each rule after the rule name.")
@@ -480,6 +486,12 @@ public class TargetsCommand extends AbstractCommand {
   private ExitCode runWithExecutor(CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, CycleException,
           VersionException {
+    if (isShowOutput) {
+      CommandHelper.maybePrintShowOutputWarning(
+          params.getBuckConfig().getView(CliConfig.class),
+          params.getConsole().getAnsi(),
+          params.getBuckEventBus());
+    }
     Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses =
         getDescriptionClassFromParams(params);
     if (!descriptionClasses.isPresent()) {
@@ -489,6 +501,7 @@ public class TargetsCommand extends AbstractCommand {
     // shortcut to old plain simple format
     if (!(isShowCellPath
         || isShowOutput
+        || isShowOutputs
         || isShowFullOutput
         || isShowRuleKey
         || isShowTargetHash)) {
@@ -511,7 +524,7 @@ public class TargetsCommand extends AbstractCommand {
     TargetGraphCreationResult targetGraphAndBuildTargetsForShowRules =
         buildTargetGraphAndTargetsForShowRules(params, executor, descriptionClasses);
     boolean useVersioning =
-        isShowRuleKey || isShowOutput || isShowFullOutput
+        isShowRuleKey || isShowOutput || isShowOutputs || isShowFullOutput
             ? params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()
             : params.getBuckConfig().getView(BuildBuckConfig.class).getTargetsVersions();
     targetGraphAndBuildTargetsForShowRules =
@@ -1080,7 +1093,7 @@ public class TargetsCommand extends AbstractCommand {
     Optional<ParallelRuleKeyCalculator<RuleKey>> ruleKeyCalculator = Optional.empty();
 
     try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
-      if (isShowRuleKey || isShowOutput || isShowFullOutput) {
+      if (isShowRuleKey || isShowOutput || isShowOutputs || isShowFullOutput) {
         ActionGraphAndBuilder result =
             params
                 .getActionGraphProvider()
@@ -1187,7 +1200,7 @@ public class TargetsCommand extends AbstractCommand {
           }
           BuildRule rule = graphBuilder.requireRule(target);
           builder.setRuleType(rule.getType());
-          if (isShowOutput || isShowFullOutput) {
+          if (isShowOutput || isShowOutputs || isShowFullOutput) {
             SourcePathResolverAdapter sourcePathResolverAdapter =
                 graphBuilder.getSourcePathResolver();
             PathUtils.getUserFacingOutputPath(
