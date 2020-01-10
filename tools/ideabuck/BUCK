@@ -56,10 +56,10 @@ java_library(
         "//third-party/java/jackson:jackson-datatype-guava",
         "//third-party/java/jackson:jackson-mrbean",
         "//third-party/java/jetty:jetty",
-        "//tools/psi-grammar:grammar",
     ],
     exported_deps = [
         ":api",
+        "//tools/psi-grammar:grammar",
     ],
 )
 
