@@ -36,9 +36,9 @@ public class MultipleOutputsIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "named_output_groups", tmp).setUp();
 
-    Path result = workspace.buildAndReturnOutput("//:fuud[ika]");
+    Path result = workspace.buildAndReturnOutput("//:sushi[ika]");
     assertEquals("ika.txt", result.getFileName().toString());
-    assertEquals("ika is yummy" + System.lineSeparator(), workspace.getFileContents(result));
+    assertEquals("ika " + System.lineSeparator(), workspace.getFileContents(result));
   }
 
   @Test
@@ -46,9 +46,9 @@ public class MultipleOutputsIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "named_output_groups", tmp).setUp();
 
-    Path result = workspace.buildAndReturnOutput("//:i_ate_it");
-    assertEquals("still_yummy.txt", result.getFileName().toString());
-    assertEquals("unagi is yummy" + System.lineSeparator(), workspace.getFileContents(result));
+    Path result = workspace.buildAndReturnOutput("//:unagi");
+    assertEquals("yummy.txt", result.getFileName().toString());
+    assertEquals("unagi " + System.lineSeparator(), workspace.getFileContents(result));
   }
 
   @Test
@@ -56,19 +56,28 @@ public class MultipleOutputsIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "named_output_groups", tmp).setUp();
 
-    Path result = workspace.buildAndReturnOutput("//:still_delicious[toro]");
-    assertEquals("toro.txt", result.getFileName().toString());
-    assertEquals("toro is yummy" + System.lineSeparator(), workspace.getFileContents(result));
+    Path result = workspace.buildAndReturnOutput("//:i_ate_it[out.txt]");
+    assertEquals("out.txt", result.getFileName().toString());
+    assertEquals(
+        "I ate maguro yellowtail unagi",
+        workspace.getFileContents(result).replace(System.lineSeparator(), "").trim());
+
+    result = workspace.buildAndReturnOutput("//:i_ate_ika[delicious.txt]");
+    assertEquals("delicious.txt", result.getFileName().toString());
+    assertEquals(
+        "I ate ika", workspace.getFileContents(result).replace(System.lineSeparator(), "").trim());
   }
 
   @Test
   public void showOutputsReturnsCorrectPath() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "named_output_groups", tmp).setUp();
-    String targetWithLabel = "//:fuud[maguro]";
+    String targetWithLabel = "//:sushi[maguro]";
     Path expectedPath =
         BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(), BuildTargetFactory.newInstance("//:fuud"), "%s__")
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance("//:sushi"),
+                "%s__")
             .resolve("maguro.txt");
 
     ProcessResult result =
