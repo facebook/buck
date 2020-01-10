@@ -250,6 +250,7 @@ java_library_with_plugins(
         "//third-party/java/android:ddmlib",
         "//third-party/java/aosp:aosp",
         "//third-party/java/commons-compress:commons-compress",
+        "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jsr:jsr305",
