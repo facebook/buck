@@ -35,10 +35,12 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TestExecutionContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.grpc.Status;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -153,7 +155,7 @@ public class LocalFallbackStrategyTest {
   }
 
   @Test
-  public void testExitCode() throws ExecutionException, InterruptedException {
+  public void testExitCode() throws ExecutionException, InterruptedException, IOException {
     Capture<LocalFallbackEvent> eventCapture = Capture.newInstance(CaptureType.ALL);
     eventBus.post(EasyMock.capture(eventCapture));
     EasyMock.expectLastCall().times(2);
@@ -162,19 +164,23 @@ public class LocalFallbackStrategyTest {
     ExecutedActionMetadata executedActionMetadata =
         ExecutedActionMetadata.newBuilder().setWorker(mockWorker).build();
 
+    StepFailedException exc =
+        StepFailedException.createForFailingStepWithExitCode(
+            new AbstractExecutionStep("remote_execution") {
+              @Override
+              public StepExecutionResult execute(ExecutionContext context) {
+                throw new RuntimeException();
+              }
+            },
+            executionContext,
+            StepExecutionResult.builder().setExitCode(1).setStderr("").build(),
+            executedActionMetadata);
+
+    // Just here to test if this is serializable by jackson, as we do Log.warn this.
+    new ObjectMapper().writeValueAsString(exc);
+
     EasyMock.expect(strategyBuildResult.getBuildResult())
-        .andReturn(
-            Futures.immediateFailedFuture(
-                StepFailedException.createForFailingStepWithExitCode(
-                    new AbstractExecutionStep("remote_execution") {
-                      @Override
-                      public StepExecutionResult execute(ExecutionContext context) {
-                        throw new RuntimeException();
-                      }
-                    },
-                    executionContext,
-                    StepExecutionResult.builder().setExitCode(1).setStderr("").build(),
-                    executedActionMetadata)))
+        .andReturn(Futures.immediateFailedFuture(exc))
         .times(2);
     BuildResult localResult = successBuildResult("//local/did:though");
     EasyMock.expect(buildStrategyContext.runWithDefaultBehavior())

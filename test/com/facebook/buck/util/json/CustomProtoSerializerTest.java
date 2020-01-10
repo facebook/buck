@@ -22,12 +22,13 @@ import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.io.IOException;
+import java.util.Optional;
 import org.junit.Test;
 
 public class CustomProtoSerializerTest {
   static class ClassWithProto {
-    @JsonSerialize(using = CustomProtoSerializer.class)
-    public ExecutedActionMetadata executedActionMetadata;
+    @JsonSerialize(using = CustomOptionalProtoSerializer.class)
+    public Optional<ExecutedActionMetadata> executedActionMetadata;
   }
 
   @Test
@@ -35,7 +36,7 @@ public class CustomProtoSerializerTest {
     ExecutedActionMetadata executedActionMetadata =
         ExecutedActionMetadata.newBuilder().setWorker("abc").build();
     ClassWithProto classWithProto = new ClassWithProto();
-    classWithProto.executedActionMetadata = executedActionMetadata;
+    classWithProto.executedActionMetadata = Optional.of(executedActionMetadata);
     assertEquals(
         "{\"executedActionMetadata\":\"{\\n  \\\"worker\\\": \\\"abc\\\"\\n}\"}",
         new ObjectMapper().writeValueAsString(classWithProto));

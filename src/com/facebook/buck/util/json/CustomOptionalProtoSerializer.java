@@ -22,15 +22,24 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Custom serializer for ProtoBuf classes as jackson is not able to serialize them.
  * https://stackoverflow.com/questions/51588778/convert-a-protobuf-to-json-using-jackson
  */
-public class CustomProtoSerializer extends JsonSerializer<Message> {
+public class CustomOptionalProtoSerializer extends JsonSerializer<Optional<Message>> {
   @Override
-  public void serialize(Message message, JsonGenerator gen, SerializerProvider serializers)
+  public void serialize(
+      Optional<Message> message, JsonGenerator gen, SerializerProvider serializers)
       throws IOException {
-    gen.writeString(JsonFormat.printer().print(message));
+    if (message.isPresent()) {
+      try {
+        gen.writeString(JsonFormat.printer().print(message.get()));
+        // Lets add this so we don't get unnecessary errors trying to print logs
+      } catch (IOException e) {
+        gen.writeString("Unexpected error trying to serialize proto object");
+      }
+    }
   }
 }
